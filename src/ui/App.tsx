@@ -1,10 +1,12 @@
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { useStore, type Tab } from '../store';
 import { UI } from '../content/strings';
 import { Create } from './screens/Create';
 import { Home } from './screens/Home';
 import { LeagueTab, PlayerTab, RecordsTab, SeasonTab } from './screens/Tabs';
 import { Retirement } from './screens/Retirement';
+
+const HOST_THEME = typeof document !== 'undefined' ? document.documentElement.getAttribute('data-theme') : null;
 
 const ICONS: Record<Tab, ReactNode> = {
   home: <path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" />,
@@ -42,6 +44,21 @@ function ThemeButton() {
   );
 }
 
+/** Two taps to abandon a career (browser confirm dialogs are not available everywhere). */
+function NewButton({ retired, onReset }: { retired: boolean; onReset: () => void }) {
+  const [armed, setArmed] = useState(false);
+  useEffect(() => {
+    if (!armed) return;
+    const t = setTimeout(() => setArmed(false), 3000);
+    return () => clearTimeout(t);
+  }, [armed]);
+  return (
+    <button className="icon-btn" onClick={() => (retired || armed ? onReset() : setArmed(true))}>
+      {armed ? 'Tap again to quit' : 'New'}
+    </button>
+  );
+}
+
 export function App() {
   const game = useStore((s) => s.game);
   const tab = useStore((s) => s.tab);
@@ -50,8 +67,11 @@ export function App() {
 
   useEffect(() => {
     const root = document.documentElement;
-    if (theme === 'auto') root.removeAttribute('data-theme');
-    else root.setAttribute('data-theme', theme);
+    // "Auto" goes back to whatever the host page set (or the OS setting if nothing)
+    if (theme === 'auto') {
+      if (HOST_THEME) root.setAttribute('data-theme', HOST_THEME);
+      else root.removeAttribute('data-theme');
+    } else root.setAttribute('data-theme', theme);
   }, [theme]);
 
   if (!game) return <Create />;
@@ -66,14 +86,7 @@ export function App() {
           </div>
           <div className="top-right">
             <ThemeButton />
-            <button
-              className="icon-btn"
-              onClick={() => {
-                if (retired || window.confirm('Abandon this career and start over?')) reset();
-              }}
-            >
-              New
-            </button>
+            <NewButton retired={retired} onReset={reset} />
           </div>
         </header>
         {tab === 'home' && (retired ? <Retirement g={game} /> : <Home g={game} />)}
