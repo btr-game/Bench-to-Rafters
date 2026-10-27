@@ -125,3 +125,13 @@ to meet the balance targets in §15. Every tunable number lives in `src/engine/b
 - **Balance test tolerance:** ±30% of the target range, widened to two binomial standard errors
   for rare outcomes (300 careers cannot resolve ±30% of a 1% target). `KNOWN_GAPS` in
   `tests/balance.test.ts` lists targets still outside ±30%; Phase 5 must empty it.
+
+## UI (Phase 2)
+
+- **No saves yet** (§16 "Later"); refreshing the page ends the career. The state is JSON-safe,
+  so adding localStorage saves later is a small change.
+- **Theme:** Auto / Dark / Light toggle in the top bar, remembered in localStorage.
+- **League tab:** generated players' stat lines are made at the end of the regular season, so
+  during the season the tab lists top players by OVR, and scoring leaders once the season is done.
+- **Season summary** lists only award races where the player finished top 10.
+- **Headlines and comments that quote stats** are used only for seasons of 12+ PPG.

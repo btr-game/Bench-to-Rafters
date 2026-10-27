@@ -1,0 +1,73 @@
+/* Design tokens. Arena concourse: cool grey, near-black ink, basketball orange.
+   The LED scoreboard stays dark in both themes and is the one loud element. */
+:root {
+  --bg: #eceef1;
+  --surface: #ffffff;
+  --surface-2: #f4f5f7;
+  --ink: #141821;
+  --muted: #5a6371;
+  --line: #d3d8df;
+  --accent: #d24e17;
+  --accent-ink: #ffffff;
+  --accent-soft: #fbe4d8;
+  --good: #1d7f47;
+  --bad: #be3328;
+  --warn: #9a6a12;
+  --gold: #b8860b;
+  --board: #0c0e12;
+  --board-line: #262b33;
+  --board-ink: #e9ecef;
+  --board-muted: #8a929d;
+  --led: #ffb02e;
+  --scrim: rgba(8, 10, 14, 0.58);
+  --f-display: 'Big Shoulders Display', 'Arial Narrow', Impact, sans-serif;
+  --f-body: 'Archivo', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --f-mono: 'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
+  --r: 10px;
+  --tabbar-h: 62px;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg: #0f1217;
+    --surface: #171b22;
+    --surface-2: #1e232b;
+    --ink: #e7eaee;
+    --muted: #98a1ad;
+    --line: #2c333d;
+    --accent: #ff6b2c;
+    --accent-ink: #1a0a02;
+    --accent-soft: #3a2014;
+    --good: #45b975;
+    --bad: #f06b60;
+    --warn: #e2aa3c;
+    --gold: #e7b93f;
+    --board: #07090c;
+    --board-line: #232830;
+    --board-muted: #858d98;
+    --scrim: rgba(0, 0, 0, 0.66);
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme='dark'] {
+  --bg: #0f1217;
+  --surface: #171b22;
+  --surface-2: #1e232b;
+  --ink: #e7eaee;
+  --muted: #98a1ad;
+  --line: #2c333d;
+  --accent: #ff6b2c;
+  --accent-ink: #1a0a02;
+  --accent-soft: #3a2014;
+  --good: #45b975;
+  --bad: #f06b60;
+  --warn: #e2aa3c;
+  --gold: #e7b93f;
+  --board: #07090c;
+  --board-line: #232830;
+  --board-muted: #858d98;
+  --scrim: rgba(0, 0, 0, 0.66);
+  color-scheme: dark;
+}

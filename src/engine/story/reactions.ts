@@ -42,12 +42,16 @@ export function reactionsForSeason(s: GameState, rec: SeasonRecord): Reaction {
     award: rec.awards[0] ?? '',
     age: String(s.player.age),
   };
-  const pool = [...COMMENTS[mood]];
+  const ppg = perGame(rec.line, 'pts');
+  const brag = (t: string) => ppg >= 12 || !/\{(ppg|rpg|apg)\}/.test(t);
+  const pool = COMMENTS[mood].filter((c) => brag(c.text));
   const comments: Reaction['comments'] = [];
   for (let i = 0; i < 3 && pool.length > 0; i++) {
     const idx = Math.floor(r() * pool.length);
     const c = pool.splice(idx, 1)[0];
     comments.push({ user: pick(HANDLES), text: fill(c.text, vars), tone: c.tone, likes: Math.round(5 + r() * (mood === 'great' ? 4000 : 400)), ago: `${1 + Math.floor(r() * 58)} min ago` });
   }
-  return { headline: fill(pick(HEADLINES[mood]), vars), source: pick(SOURCES[stageKey as keyof typeof SOURCES]), comments };
+  // stat-heavy headlines and comments only when the stats are worth bragging about
+  const heads = HEADLINES[mood].filter(brag);
+  return { headline: fill(pick(heads.length ? heads : HEADLINES[mood]), vars), source: pick(SOURCES[stageKey as keyof typeof SOURCES]), comments };
 }
