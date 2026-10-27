@@ -1,0 +1,94 @@
+// All UI text lives here so a Korean version is easy later.
+
+import type { AttrKey, HalfPlan, LevelKey, Pos, RoleKey } from '../engine/types';
+
+export const NAMES = {
+  attr: {
+    SHT: 'Shooting',
+    FIN: 'Finishing',
+    PLY: 'Playmaking',
+    PER: 'Perimeter D',
+    INT: 'Interior D',
+    REB: 'Rebounding',
+    ATH: 'Athleticism',
+    IQ: 'Basketball IQ',
+  } as Record<AttrKey, string>,
+  attrBlurb: {
+    SHT: '3P%, mid-range, free throws',
+    FIN: 'Shots at the rim, getting fouled',
+    PLY: 'Assists, fewer turnovers',
+    PER: 'Steals, guarding the perimeter',
+    INT: 'Blocks, protecting the rim',
+    REB: 'Rebounds',
+    ATH: 'A little of everything, durability',
+    IQ: 'Efficiency, coach trust',
+  } as Record<AttrKey, string>,
+  pos: { PG: 'Point guard', SG: 'Shooting guard', SF: 'Small forward', PF: 'Power forward', C: 'Center' } as Record<Pos, string>,
+  role: {
+    key: 'Key player',
+    starter: 'Starter',
+    sixth: 'Sixth man',
+    rotation: 'Rotation',
+    bench: 'End of bench',
+    deep: 'Deep bench',
+  } as Record<RoleKey, string>,
+  plan: {
+    balanced: 'Balanced',
+    grind: 'Grind',
+    recovery: 'Recovery',
+    spotlight: 'Spotlight',
+    teamfirst: 'Team first',
+  } as Record<HalfPlan, string>,
+  level: {
+    HSJV: 'HS JV',
+    HSV: 'HS Varsity',
+    NCAA: 'NCAA',
+    GL: 'G League',
+    EU: 'EuroLeague',
+    NBA: 'NBA',
+  } as Record<LevelKey, string>,
+};
+
+export const UI = {
+  appName: 'Bench to Rafters',
+  tagline: 'From a freshman nobody knows to a jersey in the rafters.',
+  tabs: { home: 'Home', season: 'Season', player: 'Player', league: 'League', records: 'Records' },
+  create: {
+    steps: ['Identity', 'Archetype', 'Focus', 'Confirm'],
+    random: 'Random',
+    name: 'Name',
+    number: 'Jersey number',
+    hometown: 'Hometown',
+    school: 'High school',
+    position: 'Position',
+    otherCandidates: 'See other candidates',
+    focusHelp: 'Pick two focus stats. They grow ×1.8; the rest grow ×0.85.',
+    start: 'Start freshman season',
+    next: 'Next',
+    back: 'Back',
+    equalNote: 'Every card totals 320. Talent is hidden: potential, growth curve and durability are rolled when you start.',
+  },
+  hub: {
+    playFirst: 'Play first half',
+    playSecond: 'Play second half',
+    toOffseason: 'Go to the offseason',
+    nextSeason: (y: number) => `Start the ${y}–${String(y + 1).slice(2)} season`,
+    todo: 'To do',
+    nothingPending: 'Nothing pending.',
+  },
+  fictional: 'Fictional reactions',
+  newCareer: 'Start a new career',
+};
+
+export const MILESTONES: { key: string; label: string }[] = [
+  { key: 'jv', label: 'JV' },
+  { key: 'varsity', label: 'Varsity' },
+  { key: 'committed', label: 'Committed' },
+  { key: 'drafted', label: 'Drafted' },
+  { key: 'debut', label: 'NBA debut' },
+  { key: 'thirty', label: '30-point game' },
+  { key: 'allstar', label: 'All-Star' },
+  { key: 'champion', label: 'Champion' },
+  { key: 'mvp', label: 'MVP' },
+  { key: 'rafters', label: 'Rafters' },
+];
