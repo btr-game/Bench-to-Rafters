@@ -165,7 +165,7 @@ export const SUDDEN_DECLINE = { fromAge: 31, chance: 0.08, min: 4, max: 8 };
 export const DECLINE_NOISE = 0.3;
 
 // §7 injuries
-export const BASE_INJURY = 0.0135; // per game played
+export const BASE_INJURY = 0.0118; // per game played
 export const INJURY_AGE_MULT = (age: number): number => (age < 24 ? 0.85 : age < 30 ? 1 : age < 34 ? 1.2 : 1.4);
 export const INJURY_SEVERITY: { key: 'dtd' | 'minor' | 'major' | 'season'; share: number; days: [number, number] }[] = [
   { key: 'dtd', share: 0.5, days: [2, 6] },
@@ -416,4 +416,4 @@ export const REP = {
   ] as [number, string][],
 };
 
-export const EVENTS = { midseasonMax: 2, offseasonMax: 2, midseasonChance: 0.9, secondChance: 0.4, offseasonChance: 0.85 };
+export const EVENTS = { midseasonMax: 2, offseasonMax: 2, midseasonChance: 0.9, secondChance: 0.5, offseasonChance: 0.85 };

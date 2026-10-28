@@ -1,5 +1,6 @@
 import type { GameState, SeasonRecord } from '../../engine/types';
-import { prompt } from '../../engine/flow';
+import { canRetire, prompt } from '../../engine/flow';
+import { useState } from 'react';
 import { LEVELS } from '../../engine/balance';
 import { NAMES, UI } from '../../content/strings';
 import { useStore } from '../../store';
@@ -190,6 +191,34 @@ function Todo({ g }: { g: GameState }) {
   );
 }
 
+function RetireCard({ g }: { g: GameState }) {
+  const retire = useStore((s) => s.retire);
+  const [armed, setArmed] = useState(false);
+  return (
+    <section className="card stack">
+      <div className="sec-title">Your call</div>
+      <p className="small muted">
+        You can hang it up between any two seasons. At {g.player.age}, with {g.history.filter((h) => h.level === 'NBA').length} NBA season
+        {g.history.filter((h) => h.level === 'NBA').length === 1 ? '' : 's'} behind you.
+      </p>
+      {armed ? (
+        <div className="row" style={{ gap: 8 }}>
+          <button className="btn danger" onClick={retire}>
+            Yes, retire now
+          </button>
+          <button className="btn ghost" onClick={() => setArmed(false)}>
+            Keep playing
+          </button>
+        </div>
+      ) : (
+        <button className="btn ghost" onClick={() => setArmed(true)}>
+          Retire
+        </button>
+      )}
+    </section>
+  );
+}
+
 export function Home({ g }: { g: GameState }) {
   const advance = useStore((s) => s.advance);
   const pr = prompt(g);
@@ -219,6 +248,7 @@ export function Home({ g }: { g: GameState }) {
           <MilestoneStrip reached={g.milestones} />
         </section>
         <Todo g={g} />
+        {canRetire(g) && <RetireCard g={g} />}
         {g.feed[0] && (
           <section className="card">
             <ReactionCard r={g.feed[0]} />

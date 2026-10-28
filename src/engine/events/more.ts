@@ -6,6 +6,7 @@ import type { AttrKey, GameState, Stage } from '../types';
 import { adjust, logDecision, pushMoment, rankOnRoster, userOvr } from '../career/common';
 import { marketValue, fmtMoney } from '../economy/salary';
 import type { EventChoice, EventDef } from './defs';
+import { pathOf } from '../career/origin';
 
 const ALL: Stage[] = ['HS', 'NCAA', 'GL', 'EU', 'INT', 'NBA'];
 const PRO: Stage[] = ['GL', 'EU', 'INT', 'NBA'];
@@ -87,7 +88,7 @@ export const MORE_EVENTS: EventDef[] = [
     id: 'powerhouse',
     stages: ['HS'],
     phase: 'off',
-    when: (s) => s.hsYear <= 3 && !s.flags.powerhouse,
+    when: (s) => s.hsYear <= 3 && !s.flags.powerhouse && pathOf(s) === 'us',
     weight: 0.8,
     cooldownSeasons: 9,
     oncePerCareer: true,

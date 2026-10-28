@@ -4,8 +4,9 @@ import type { Decision, GameState } from '../types';
 import { logDecision, pushDecision } from '../career/common';
 import { EVENTS as BASE_EVENTS, type EventChoice, type EventDef } from './defs';
 import { MORE_EVENTS } from './more';
+import { RISK_EVENTS } from './risks';
 
-const EVENTS: EventDef[] = [...BASE_EVENTS, ...MORE_EVENTS];
+const EVENTS: EventDef[] = [...BASE_EVENTS, ...MORE_EVENTS, ...RISK_EVENTS];
 
 function eligible(s: GameState, phase: 'mid' | 'off'): EventDef[] {
   return EVENTS.filter((e) => {

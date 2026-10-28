@@ -187,3 +187,63 @@ to meet the balance targets in §15. Every tunable number lives in `src/engine/b
   recruits and big-money CBA offers late in a career.
 - **Scouting report:** tier for the current OVR, a projected peak range and odds for the NBA,
   All-Star, All-NBA, Hall of Fame and MVP. The odds curves were fitted to harness data.
+
+## Playtest round 3 (Oct 2026)
+
+Feedback: no visible growth numbers or event percentages; too easy; a wider spread of
+careers; choose the dominant hand; full playoffs and tournaments instead of results; players
+from other countries; a stricter OVR scale; MVP voting and fictional award winners; slightly
+fewer injuries but other risks; more events and purchases; retire any season; bigger text.
+
+- **Hidden numbers:** plan outcomes and shop items are described in words. Event choices show
+  a risk level (Low, Medium, High) instead of odds.
+- **OVR scale:** 80 is an All-Star, 85 All-NBA 2nd team, 90 All-NBA 1st team, 95 an MVP, 97
+  the all-time greats, and 98-99 is beyond them. Attributes may pass 99 (up to the caps) so
+  the top of the scale is reachable; OVR itself stops at 99.
+- **Spread:** potential is lognormal (base 45, mu 2.97, sigma 0.6, max 103). Over 1,000
+  careers the average peak is 65.9 (random choices) and 69.6 (smart choices), standard
+  deviation about 12. About 1 in 20 careers peaks near 50 and about 1 in 20 smart careers
+  peaks at 96 or above.
+- **NBA world on the new scale:** the draft pool uses the same lognormal shape (mu 2.84,
+  sigma 0.46). The league averages about 40 players at 80+, 15-18 at 85+, about 5 at 90+ and
+  one at 95+. Free agents no longer flock to strong teams (pull 0.5 to 0.12), which had built
+  superteams with 75-win seasons. The world now warms up for 12 seasons so it starts in
+  steady state.
+- **Box scores at the top:** shot volume flattens above a scoring rating of 78 and shooting
+  efficiency above an attribute of 85, so a 95 averages about 29 points, not 38. The league
+  scoring leader averages about 32 PPG. Morale now helps or hurts around a neutral 75 (it was
+  a free boost for the player), and generated players' weak hand scales with OVR.
+- **Scouting report:** new tiers on the scale above, odds refitted to harness data, and a new
+  All-NBA 1st team row.
+- **Dominant hand:** picked at creation. Lefties get a small finishing edge; the weak-hand
+  meter and training plan follow the chosen hand.
+- **Postseason:** every series keeps its game scores. The NBA bracket shows the play-in,
+  Finals MVP and East and West Finals MVPs (chosen from series lines); other levels get a
+  Final Four Most Outstanding Player or finals MVP. A recap page follows every postseason.
+  MVP voting shows the top five with OVR and stats. The NBA record book lists each season's
+  champion, Finals MVP, MVP, Rookie of the Year, DPOY and scoring champion, including seasons
+  before and outside the player's NBA career.
+- **Tournaments:** the NBA Cup, national teams, conference tournaments and high school
+  nationals record every game, the group table and how the rest of the bracket went.
+- **International players (real routes as of 2026):** half of careers start outside the US,
+  in 22 countries. Europeans grow up in a club academy (Real Madrid, ASVEL, Žalgiris...), can
+  be called up to the first team at 16-17 and declare for the draft from 19 (automatic at 22),
+  like Dončić and Wembanyama. NBA Academy Africa and Latin America players, Canadians,
+  Australians (NBA Global Academy) and Asian players can move to a US prep school for
+  exposure; otherwise they get their home routes: NBL Next Stars, the B.League, KBL or CBA.
+  US colleges see less of players who stay home (one star fewer for college offers). Youth
+  leagues, opponents and the national team follow the player's country; McDonald's and high
+  school nationals are US-only. Over 1,500 careers each path reaches the NBA at 58-68%.
+- **Risks and events:** base injury rate 0.0135 to 0.0118 per game. New non-injury risks:
+  burnout, illness, a nightclub fight, a betting investigation, failing a class, a crooked
+  financial adviser, a feud with the team star, a coach firing, performance anxiety, a car
+  accident. Suspensions now cost a number of games. Also new: a poster-dunk moment, a
+  foundation, a new baby. A second mid-season event happens half the time (was 40%).
+- **Shop:** 58 items (was 37), up to $60M (a stake in a pro club, a private island, a
+  longevity clinic, a personal skills staff). Six items in stock, up to three purchases.
+- **Retire any season:** after high school, a Retire button (with a confirmation) is
+  available between any two seasons.
+- **Text:** body text 15 to 16.5px, small text and labels 1.5px larger, and bold text a step
+  larger than the text around it.
+- **Harness targets** were reset to this design (see `scripts/harness.ts`); every target and
+  league calibration check passes.

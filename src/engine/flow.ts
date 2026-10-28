@@ -7,7 +7,7 @@ import { createPlayer, type CreateInput } from './player/create';
 import { ovrOf } from './player/ovr';
 import { BASE_YEAR } from './economy/salary';
 import { activeLeague, assignToGl, beginSeason, playHalf } from './career/season';
-import { beginOffseason, resolveOffseasonDecision } from './career/offseason';
+import { beginOffseason, resolveOffseasonDecision, retireNow } from './career/offseason';
 import { runWorldDraft } from './career/nbaYear';
 import { resolveEvent } from './events/resolver';
 import { resolveShop } from './economy/shop';
@@ -170,6 +170,19 @@ export function advance(s: GameState): void {
 /** The UI calls this after showing the front story page. */
 export function dismissMoment(s: GameState): void {
   s.moments.shift();
+}
+
+/** Retiring by choice: possible between any two seasons (season summary or offseason). */
+export function canRetire(s: GameState): boolean {
+  // once his playing days are a job (after high school or a youth academy)
+  return (s.step === 'summary' || s.step === 'offseason') && s.stage !== 'HS';
+}
+
+export function retireByChoice(s: GameState): void {
+  if (!canRetire(s)) return;
+  s.moments = [];
+  retireNow(s, s.player.age < 30 ? 'Walked away early, on his own terms.' : 'Chose to call it a career.');
+  finishCareer(s);
 }
 
 function finishCareer(s: GameState): void {

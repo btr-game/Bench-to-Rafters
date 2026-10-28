@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { advance, choose, newGame, prompt } from '../src/engine/flow';
+import { advance, canRetire, choose, newGame, prompt, retireByChoice } from '../src/engine/flow';
 import { makeRng, next, normal } from '../src/engine/rng';
 import type { GameState } from '../src/engine/types';
 import { runCareer } from '../scripts/harness';
@@ -150,5 +150,28 @@ describe('international origins', () => {
       if (s.flags.earlyPro && s.draftedBy) draftedFromEurope++;
     }
     expect(draftedFromEurope).toBeGreaterThan(0);
+  });
+});
+
+describe('retire any season', () => {
+  it('can retire between seasons once past high school, and not before', () => {
+    const s = newGame(11, { name: 'X', number: 1, pos: 'PG', archetype: 0, focus: ['PLY', 'IQ'] });
+    let sawHsSummary = false;
+    for (let steps = 0; steps < 3000; steps++) {
+      if (s.step === 'summary' && s.stage === 'HS') {
+        sawHsSummary = true;
+        expect(canRetire(s)).toBe(false);
+      }
+      if (canRetire(s)) break;
+      const pr = prompt(s);
+      if (pr.type === 'retired') break;
+      if (pr.type === 'decision') choose(s, pr.decision.choices.find((c) => !c.disabled)!.id);
+      else advance(s);
+    }
+    expect(sawHsSummary).toBe(true);
+    expect(canRetire(s)).toBe(true);
+    retireByChoice(s);
+    expect(s.step).toBe('retired');
+    expect(prompt(s).type).toBe('retired');
   });
 });

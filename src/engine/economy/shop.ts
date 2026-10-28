@@ -1,4 +1,4 @@
-// Offseason shop: a random stock of five items, up to two purchases per summer.
+// Offseason shop: a random stock of six items, up to three purchases per summer.
 
 import { ATTR_MAX, ATTRS } from '../balance';
 import { clamp, shuffle } from '../rng';
@@ -7,7 +7,7 @@ import { SHOP_ITEMS, type ShopItem } from '../../content/shop';
 import { logDecision, pushDecision } from '../career/common';
 import { fmtMoney } from './salary';
 
-export const MAX_PURCHASES = 2;
+export const MAX_PURCHASES = 3;
 
 const HELPS: Record<string, string> = {
   SHT: 'your shooting',
@@ -42,9 +42,9 @@ function stock(s: GameState): string[] {
   const items = shuffle(s.rng, [...SHOP_ITEMS]);
   const affordable = items.filter((i) => i.price <= bank).sort((a, b) => b.price - a.price);
   // the best things you can afford, plus a couple of things to save up for
-  const picks = [...affordable.slice(0, 2), ...shuffle(s.rng, affordable.slice(2)).slice(0, 1)];
-  const dream = items.filter((i) => i.price > bank && i.price < Math.max(0.002, bank * 40)).slice(0, 5 - picks.length);
-  return [...picks, ...dream].slice(0, 5).map((i) => i.id);
+  const picks = [...affordable.slice(0, 3), ...shuffle(s.rng, affordable.slice(3)).slice(0, 1)];
+  const dream = items.filter((i) => i.price > bank && i.price < Math.max(0.002, bank * 40)).slice(0, 6 - picks.length);
+  return [...picks, ...dream].slice(0, 6).map((i) => i.id);
 }
 
 export function pushShop(s: GameState, ids?: string[], bought = 0): void {

@@ -3,7 +3,7 @@
 
 import { create } from 'zustand';
 import type { GameLog, GameState } from './engine/types';
-import { advance as engineAdvance, choose as engineChoose, dismissMoment, newGame, type CreateInput } from './engine/flow';
+import { advance as engineAdvance, choose as engineChoose, dismissMoment, newGame, retireByChoice, type CreateInput } from './engine/flow';
 import { seasonLabel } from './ui/format';
 
 export type Tab = 'home' | 'season' | 'player' | 'league' | 'records';
@@ -23,6 +23,7 @@ interface Store {
   choose: (choiceId: string) => void;
   advance: () => void;
   dismissMoment: () => void;
+  retire: () => void;
   endTransition: () => void;
   reset: () => void;
   setTab: (t: Tab) => void;
@@ -91,6 +92,14 @@ export const useStore = create<Store>((set, get) => ({
       transition = { kind: 'season', label: seasonLabel(next.year), sub: t ? t.name : '', color: t?.color ?? '#2A2F36' };
     }
     set({ game: next, tab: 'home', transition });
+    top();
+  },
+  retire: () => {
+    const g = get().game;
+    if (!g) return;
+    const next = structuredClone(g);
+    retireByChoice(next);
+    set({ game: next, tab: 'home', transition: null });
     top();
   },
   dismissMoment: () => {

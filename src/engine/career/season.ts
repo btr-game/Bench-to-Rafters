@@ -198,6 +198,9 @@ function makeHook(s: GameState, league: League, level: LevelKey, acc: HalfAcc, s
     if (p.injury && p.injury.key !== 'dtd') {
       acc.injuredGames++;
       season.injuredGames++;
+    } else if (s.flags.suspendGames > 0 && !post) {
+      // serving a suspension
+      s.flags.suspendGames -= 1;
     } else if (!season.ineligibleHalf || post) {
       minutes = rollMinutes(rng, season.role, level, !!post);
       if (p.injury && p.injury.key === 'dtd') minutes = chance(rng, 0.5) ? 0 : Math.round(minutes * 0.85);
@@ -429,7 +432,7 @@ function postseason(s: GameState, league: League, hook: UserGameHook): { result:
     const bracket = level === 'HSV' ? hsPlayoffs(rng, league, hook) : level === 'GL' || level === 'INT' ? glPlayoffs(rng, league, hook) : euPlayoffs(rng, league, hook);
     league.bracket = bracket;
     const ex = bracketExit(bracket, team.id);
-    const name = level === 'HSV' ? 'State champion' : level === 'GL' ? 'G League champion' : level === 'INT' ? `${team.conf} champion` : 'EuroLeague champion';
+    const name = level === 'HSV' ? (league.label ? `${league.label} champion` : 'State champion') : level === 'GL' ? 'G League champion' : level === 'INT' ? `${team.conf} champion` : 'EuroLeague champion';
     if (ex.champion) return { result: name, champion: true, madePost: true };
     if (!ex.lastRound) return { result: level === 'HSV' ? 'Missed the state playoffs' : 'Missed the playoffs', champion: false, madePost: false };
     return { result: `Lost in the ${ex.lastRound}`, champion: false, madePost: true };
