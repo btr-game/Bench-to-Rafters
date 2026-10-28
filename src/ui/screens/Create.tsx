@@ -82,8 +82,8 @@ export function Create() {
           Bench<span>to Rafters</span>
         </h1>
         <p className="lede">
-          Start as a 14-year-old freshman fighting for JV minutes. Choose college, the G League or Europe after senior year, get drafted, and find
-          out whether your jersey ends up hanging in the rafters.
+          Start at 14, in an American high school or a club academy somewhere in the world. Find your road to the NBA through college, Europe or
+          the G League, get drafted, and find out whether your jersey ends up hanging in the rafters.
         </p>
       </section>
       <div className="stepper" aria-label="Steps">
