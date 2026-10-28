@@ -2,6 +2,7 @@
 
 import { LegacyTierList } from '../components/Legacy';
 import { TrophyCabinet, trophyItems } from '../components/Trophies';
+import { CareerHighs } from '../components/Highs';
 import { NbaBracket } from '../components/NbaBracket';
 import { useState } from 'react';
 import type { GameState, League, SeasonRecord, SeriesResult, StatLine, Team } from '../../engine/types';
@@ -582,6 +583,7 @@ export function RecordsTab({ g }: { g: GameState }) {
         </Card>
       )}
       <TrophyCabinet g={g} />
+      <CareerHighs g={g} />
       <LegacyTierList g={g} />
       <Card title="Career totals" kicker={`Legacy score ${legacyScore(g)}`}>
         {nbaT.gp > 0 && (

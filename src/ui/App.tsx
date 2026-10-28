@@ -1,3 +1,4 @@
+import { GuideButton } from './components/Guide';
 import { useEffect, useState, type ReactNode } from 'react';
 import { useStore, type Tab } from '../store';
 import { UI } from '../content/strings';
@@ -86,6 +87,7 @@ export function App() {
             Bench to <span>Rafters</span>
           </div>
           <div className="top-right">
+            <GuideButton />
             <ThemeButton />
             <NewButton retired={retired} onReset={reset} />
           </div>

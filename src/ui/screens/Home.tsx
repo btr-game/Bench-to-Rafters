@@ -10,6 +10,7 @@ import { ScoutCard } from '../components/ScoutCard';
 import { DecisionView } from './Decision';
 import { fmtMoney, ht, ordinal, pg, seasonLabel, signed } from '../format';
 import { team } from '../selectors';
+import { breakthroughBar } from '../../engine/career/breakthrough';
 import { perGame } from '../../engine/sim/statModel';
 
 export function SeasonSummary({ rec }: { rec: SeasonRecord }) {
@@ -45,6 +46,17 @@ export function SeasonSummary({ rec }: { rec: SeasonRecord }) {
         </p>
       )}
       {rec.awards.length > 0 && <Banners items={rec.awards.map((a) => ({ label: a, gold: /Champion|MVP|Player of the Year|champion/.test(a) }))} />}
+      {rec.breakthrough && (
+        <div className="unlock-banner">
+          <span className="unlock-tag">Breakthrough</span>
+          <span>{rec.breakthrough} Focus change unlocked for this offseason.</span>
+        </div>
+      )}
+      {rec.newHighs && rec.newHighs.length > 0 && (
+        <div className="small">
+          <b>New NBA career high{rec.newHighs.length > 1 ? 's' : ''}:</b> {rec.newHighs.join(', ')}
+        </div>
+      )}
       {rec.races.some((r) => r.userRank !== null && r.userRank <= 10) && (
         <ul className="small" style={{ paddingLeft: 18 }}>
           {rec.races
@@ -198,14 +210,22 @@ function FocusCard({ g }: { g: GameState }) {
   const [pick, setPick] = useState<AttrKey[]>(p.focus);
   const toggle = (k: AttrKey) => setPick((f) => (f.includes(k) ? f.filter((x) => x !== k) : f.length >= 2 ? [f[1], k] : [...f, k]));
   const same = pick.length === 2 && pick.every((k) => p.focus.includes(k));
+  const b = g.breakthrough;
   return (
-    <section className="card stack">
-      <div className="row">
-        <div className="sec-title">Focus stats</div>
-        <div className="spacer" />
-        <span className="small muted">{p.focus.map((k) => NAMES.attr[k]).join(' + ')}</span>
+    <section className="card stack focus-unlocked">
+      <div className="unlock-banner">
+        <span className="unlock-tag">Unlocked</span>
+        <b>Breakthrough season: pick two new focus stats</b>
       </div>
-      <p className="small muted">Focus stats grow about twice as fast. Move your focus around to fill out every rating.</p>
+      {b && (
+        <p className="small" style={{ margin: 0 }}>
+          {b.ovr >= breakthroughBar(p.age).ovr ? `Your OVR jumped ${b.ovr} this season.` : `Your ${NAMES.attr[b.key].toLowerCase()} jumped ${b.gain} this season.`} Focus stats grow about twice
+          as fast. This chance lasts until next season starts; the next one comes with your next breakthrough.
+        </p>
+      )}
+      <div className="row">
+        <span className="small muted">Now: {p.focus.map((k) => NAMES.attr[k]).join(' + ')}</span>
+      </div>
       <div className="focus-grid">
         {ATTRS.map((k) => (
           <button key={k} className={`choice${pick.includes(k) ? ' selected' : ''}`} aria-pressed={pick.includes(k)} onClick={() => toggle(k)}>
@@ -215,9 +235,61 @@ function FocusCard({ g }: { g: GameState }) {
           </button>
         ))}
       </div>
-      <button className="btn ghost" disabled={pick.length !== 2 || same} onClick={() => change(pick)}>
+      <button className="btn" disabled={pick.length !== 2 || same} onClick={() => change(pick)}>
         {same ? 'Pick two new focus stats' : `Focus on ${pick.map((k) => NAMES.attr[k]).join(' and ')}`}
       </button>
+    </section>
+  );
+}
+
+/** Everything he can change between seasons, in one place near the top of the screen. */
+function OffseasonMoves({ g }: { g: GameState }) {
+  const focusOpen = canChangeFocus(g);
+  // a size problem opens the position card straight away
+  const [open, setOpen] = useState<'position' | 'number' | 'retire' | null>(heightMismatch(g) && canChangePosition(g) ? 'position' : null);
+  const p = g.player;
+  const bar = breakthroughBar(p.age);
+  const focusDone = g.flags.focusYear === g.year;
+  const tiles: { id: 'focus' | 'position' | 'number' | 'retire'; label: string; sub: string; state: 'hot' | 'ready' | 'locked'; show: boolean }[] = [
+    {
+      id: 'focus',
+      label: 'Focus stats',
+      sub: focusDone ? 'Changed this offseason' : focusOpen ? 'Unlocked by your breakthrough' : `Locked: needs a breakthrough season (OVR +${bar.ovr} or one rating +${bar.attr} at your age)`,
+      state: focusOpen ? 'hot' : 'locked',
+      show: true,
+    },
+    { id: 'position', label: 'Position', sub: heightMismatch(g) ? 'Size check: another spot fits you' : `${NAMES.pos[p.pos]} · one move a summer`, state: canChangePosition(g) ? (heightMismatch(g) ? 'hot' : 'ready') : 'locked', show: true },
+    { id: 'number', label: 'Jersey number', sub: `Now #${p.number}`, state: 'ready', show: g.stage !== 'RETIRED' },
+    { id: 'retire', label: 'Retire', sub: 'Hang it up on your terms', state: 'ready', show: canRetire(g) },
+  ];
+  return (
+    <section className="card stack moves">
+      <div className="row">
+        <div className="sec-title">Offseason moves</div>
+        <div className="spacer" />
+        <span className="small muted">Between seasons only</span>
+      </div>
+      <div className="move-tiles">
+        {tiles
+          .filter((x) => x.show)
+          .map((x) => (
+            <button
+              key={x.id}
+              className={`move-tile ${x.state}${open === x.id ? ' on' : ''}`}
+              disabled={x.state === 'locked'}
+              aria-expanded={x.id === 'focus' ? focusOpen : open === x.id}
+              onClick={() => x.id !== 'focus' && setOpen(open === x.id ? null : (x.id as 'position' | 'number' | 'retire'))}
+            >
+              {x.state === 'hot' && <span className="unlock-tag">New</span>}
+              <b>{x.label}</b>
+              <small>{x.sub}</small>
+            </button>
+          ))}
+      </div>
+      {focusOpen && <FocusCard g={g} />}
+      {open === 'position' && canChangePosition(g) && <PositionCard g={g} />}
+      {open === 'number' && <NumberCard g={g} />}
+      {open === 'retire' && canRetire(g) && <RetireCard g={g} />}
     </section>
   );
 }
@@ -358,15 +430,13 @@ export function Home({ g }: { g: GameState }) {
             )}
           </div>
         </section>
+        {g.step === 'offseason' && g.stage !== 'RETIRED' && <OffseasonMoves g={g} />}
         <section className="card stack">
           <div className="sec-title">Milestones</div>
           <MilestoneStrip reached={g.milestones} />
         </section>
         <Todo g={g} />
-        {canChangePosition(g) && <PositionCard g={g} />}
-        {canChangeFocus(g) && <FocusCard g={g} />}
-        {g.step === 'offseason' && g.stage !== 'RETIRED' && <NumberCard g={g} />}
-        {canRetire(g) && <RetireCard g={g} />}
+        {g.step === 'summary' && canRetire(g) && <RetireCard g={g} />}
         {g.feed[0] && (
           <section className="card">
             <ReactionCard r={g.feed[0]} />

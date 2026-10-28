@@ -63,6 +63,17 @@ export const REROLL_SPREAD = 3;
 export const FOCUS_MULT = 1.8;
 export const NON_FOCUS_MULT = 0.85;
 export const MAX_FOCUS_CHANGES = 99;
+/**
+ * A breakthrough season unlocks a focus change (career/breakthrough.ts): OVR or any single
+ * rating up at least this much in one season. Set at about the 77th percentile of seasons at
+ * each age (60 simulated careers), so roughly one season in four qualifies.
+ */
+export const FOCUS_BREAKTHROUGH: { upTo: number; ovr: number; attr: number }[] = [
+  { upTo: 17, ovr: 5.5, attr: 10.5 },
+  { upTo: 21, ovr: 2.6, attr: 6.2 },
+  { upTo: 25, ovr: 1.2, attr: 3.6 },
+  { upTo: 99, ovr: 0.7, attr: 2.6 },
+];
 
 // §6 hidden traits
 // Potential is right-skewed: base + exp(Normal(mu, sigma)). For the player this gives a

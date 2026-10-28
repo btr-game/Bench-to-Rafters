@@ -433,3 +433,15 @@ nationality; event results that really differ; rare mold-breaking players; heigh
   arena catwalk with a banner per team (team colour, number, name, years) and the case for
   each. The career page keeps a small version that reopens it; without one, it shows the team
   he came closest with and what was missing.
+- **Focus changes are earned:** a breakthrough season (OVR or any single rating up at least
+  5.5/10.5 by 17, 2.6/6.2 by 21, 1.2/3.6 by 25, 0.7/2.6 after; about the top quarter of
+  seasons at every age) unlocks a focus change for that offseason only. About one season in
+  four qualifies, instead of every offseason, which had made the game too easy.
+- **Offseason moves:** focus, position, jersey number and retirement sit together in one
+  panel right under the main card between seasons; an unlocked focus change glows and opens
+  by itself, and a locked one says what it takes.
+- **Career highs:** best single game in points, rebounds, assists, steals, blocks and threes,
+  in the NBA and at any level (opponent, season, playoff round). New NBA highs show in the
+  season summary.
+- **Guide:** a header button explains every feature and where it lives (a dot marks it until
+  first opened).

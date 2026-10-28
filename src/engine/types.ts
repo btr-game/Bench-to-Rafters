@@ -38,6 +38,16 @@ export interface StatLine {
   fta: number;
 }
 
+export type HighKey = 'pts' | 'reb' | 'ast' | 'stl' | 'blk' | 'tpm';
+export interface CareerHigh {
+  v: number;
+  year: number;
+  level: LevelKey;
+  team: string;
+  opp: string;
+  post?: string; // round name when it came in the postseason
+}
+
 export interface GameLog {
   n: number; // game number
   opp: string;
@@ -236,6 +246,8 @@ export interface SeasonRecord {
   races: AwardRace[];
   salary: number;
   bestGame: GameLog | null;
+  newHighs?: string[]; // NBA career highs set this season
+  breakthrough?: string; // what made it a breakthrough season
   holdout?: boolean;
 }
 
@@ -437,6 +449,9 @@ export interface GameState {
   postSnap?: { snap: GameState; picks: string[] };
   // only inside a postseason replay
   live?: import('./career/live').LiveState;
+  // the last breakthrough season (career/breakthrough.ts): it unlocks a focus change that offseason
+  breakthrough?: { year: number; ovr: number; key: AttrKey; gain: number } | null;
+  highs?: { nba: Partial<Record<HighKey, CareerHigh>>; all: Partial<Record<HighKey, CareerHigh>> };
   flags: Record<string, number>; // small story switches (powerhouse school, power agent...)
   schoolColor: string;
 }

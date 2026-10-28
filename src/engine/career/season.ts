@@ -1,5 +1,6 @@
 // The in-season loop: preseason → first half → midseason → second half + postseason.
 
+import { evaluateBreakthrough, updateHighs } from './breakthrough';
 import { edgeOf, youthGrowthMult } from './nationality';
 import {
   WEAR,
@@ -702,7 +703,10 @@ function finishSeason(s: GameState): void {
 
   const ovrEnd = userOvr(s);
   p.peakOvr = Math.max(p.peakOvr, ovrEnd);
+  // a breakthrough season earns a focus change; career highs from every game he played
+  const breakthrough = evaluateBreakthrough(s, season);
   const allGames = [...season.games, ...season.postGames].filter((g) => g.line);
+  const newHighs = updateHighs(s, allGames, level, team.name);
   const bestGame = allGames.reduce<GameLog | null>((b, g) => (!b || gameScore(g.line!) > gameScore(b.line!) ? g : b), null);
   const rec: SeasonRecord = {
     year: s.year,
@@ -724,6 +728,8 @@ function finishSeason(s: GameState): void {
     races: aw.races,
     salary,
     bestGame,
+    newHighs,
+    breakthrough: breakthrough || undefined,
   };
   s.history.push(rec);
   // G League assignment shows as its own row

@@ -7,6 +7,7 @@ import { useStore } from '../../store';
 import { Card, ReactionCard } from '../components/bits';
 import { HistoryTable } from './Tabs';
 import { TrophyCabinet } from '../components/Trophies';
+import { CareerHighs } from '../components/Highs';
 import { RaftersPage, RaftersSummary } from '../components/Rafters';
 import { fmtMoney, seasonLabel } from '../format';
 import { compareCareer } from '../../engine/awards/compare';
@@ -221,6 +222,7 @@ export function Retirement({ g }: { g: GameState }) {
       </Card>
       <Championships g={g} />
       {g.awards.length > 0 && <TrophyCabinet g={g} />}
+      <CareerHighs g={g} />
       <LegacyTierList g={g} />
       {g.feed[0] && (
         <Card title="The last word">
