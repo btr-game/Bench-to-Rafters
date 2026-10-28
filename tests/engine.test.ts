@@ -3,6 +3,7 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { advance, canChangePosition, canRetire, changePosition, choose, newGame, positionOptions, prompt, retireByChoice } from '../src/engine/flow';
 import { ovrOf } from '../src/engine/player/ovr';
+import { compareCareer, rankModelFit } from '../src/engine/awards/compare';
 import { makeRng, next, normal } from '../src/engine/rng';
 import type { GameState } from '../src/engine/types';
 import { runCareer } from '../scripts/harness';
@@ -228,5 +229,17 @@ describe('playable postseason', () => {
     expect(seasonsWithLive).toBeGreaterThan(0);
     expect(s.postSnap === undefined || s.step === 'postseason').toBe(true);
     expect(() => JSON.parse(JSON.stringify(s))).not.toThrow();
+  });
+});
+
+describe('career comparison model', () => {
+  it('fits the all-time order of its 100 players reasonably', () => {
+    const f = rankModelFit();
+    expect(f.spearman).toBeGreaterThan(0.75);
+  });
+  it('only compares careers that peaked at 80+', () => {
+    const s = newGame(3, { name: 'X', number: 1, pos: 'SG', archetype: 0, focus: ['SHT', 'IQ'] });
+    s.player.peakOvr = 72;
+    expect(compareCareer(s).eligible).toBe(false);
   });
 });

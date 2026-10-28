@@ -8,6 +8,79 @@ import { useStore } from '../../store';
 import { Banners, Card, ReactionCard } from '../components/bits';
 import { HistoryTable, trophyItems } from './Tabs';
 import { fmtMoney, seasonLabel } from '../format';
+import { compareCareer } from '../../engine/awards/compare';
+
+function CareerAnalysis({ g }: { g: GameState }) {
+  const c = compareCareer(g);
+  if (!c.eligible) {
+    return (
+      <Card title="Among the all-time greats" kicker="Career analysis">
+        <p className="muted small">{c.reason}</p>
+      </Card>
+    );
+  }
+  return (
+    <Card title="Among the all-time greats" kicker="Career analysis · model vs 100 real legends">
+      <div className="row">
+        <div>
+          <div className="kicker">Projected all-time rank</div>
+          <div className="verdict" style={{ fontSize: 44 }}>
+            {c.rank! <= 100 ? `No. ${c.rank}` : 'Outside the top 100'}
+          </div>
+        </div>
+      </div>
+      <div className="stack" style={{ gap: 6 }}>
+        {c.analysis!.map((x, i) => (
+          <p key={i} style={{ margin: 0 }}>
+            {x}
+          </p>
+        ))}
+      </div>
+      <div className="sec-title" style={{ marginTop: 12 }}>
+        Closest careers
+      </div>
+      <div className="stack" style={{ gap: 6 }}>
+        {c.comps!.map((x) => (
+          <div key={x.name} className="mvp">
+            <div className="row">
+              <b>{x.name}</b>
+              <div className="spacer" />
+              <span className="num">{x.similarity}% similar</span>
+            </div>
+            <div className="small muted">
+              All-time No. {x.rank} · {x.line} · {x.honours}
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="tbl-wrap" style={{ marginTop: 12 }}>
+        <table>
+          <thead>
+            <tr>
+              <th className="l">Stat</th>
+              <th>You</th>
+              <th>Rank among the 100</th>
+            </tr>
+          </thead>
+          <tbody>
+            {c.standing!.map((r) => (
+              <tr key={r.label}>
+                <td className="l">{r.label}</td>
+                <td>{r.you}</td>
+                <td>{r.rankAmong <= 100 ? `${r.rankAmong}` : '—'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="muted small">
+        The comparison set is 100 of the greatest NBA players with approximate career averages and honours through 2024–25. Comparables come
+        from a nearest-neighbour search over scoring, rebounding, playmaking, best season, longevity, honours, size and position; the rank comes
+        from a ridge regression trained on those players' all-time order.
+      </p>
+    </Card>
+  );
+}
 
 export function Retirement({ g }: { g: GameState }) {
   const reset = useStore((s) => s.reset);
@@ -38,6 +111,7 @@ export function Retirement({ g }: { g: GameState }) {
           </div>
         ))}
       </section>
+      <CareerAnalysis g={g} />
       <Card title="Career card" kicker={`${NAMES.pos[p.pos]} · ${p.archetype}`}>
         <div className="row">
           <div className="pc-name">{p.name}</div>

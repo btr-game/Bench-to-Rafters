@@ -33,11 +33,15 @@ export interface UserCandInput {
   prevValue: number | null;
   age: number;
   ovr?: number;
+  dpoyWins?: number; // voter fatigue: past wins make the next one harder
 }
+
+// ratings above 85 count for less: past that, voters see the stops, not the rating
+const kneeDef = (v: number) => (v > 85 ? 85 + (v - 85) * 0.4 : v);
 
 function defScore(per: number, int: number, l: StatLine, team: Team): number {
   const g = Math.max(1, l.gp);
-  return 0.3 * per + 0.3 * int + (4 * l.stl) / g + (4 * l.blk) / g + (team.w - team.l) * 0.06;
+  return 0.3 * kneeDef(per) + 0.3 * kneeDef(int) + (4 * l.stl) / g + (4 * l.blk) / g + (team.w - team.l) * 0.06;
 }
 
 export function buildCandidates(league: League, user: UserCandInput | null): Cand[] {
@@ -77,7 +81,7 @@ export function buildCandidates(league: League, user: UserCandInput | null): Can
       rookie: user.rookie,
       starter: user.line.gs >= user.line.gp / 2,
       prevValue: user.prevValue,
-      def: defScore(user.per, user.int, user.line, team),
+      def: defScore(user.per, user.int, user.line, team) - 1.5 * (user.dpoyWins ?? 0),
       isUser: true,
       age: user.age,
       ovr: user.ovr ?? 0,

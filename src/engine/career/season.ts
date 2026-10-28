@@ -573,6 +573,7 @@ function finishSeason(s: GameState): void {
     prevValue: prevNba ? valuePerGame(prevNba.line) : null,
     age: p.age,
     ovr: userOvr(s),
+    dpoyWins: s.awards.filter((a) => a.key === 'DPOY').length,
   };
   const cands = buildCandidates(league, userCand);
   let aw: AwardOutcome;
