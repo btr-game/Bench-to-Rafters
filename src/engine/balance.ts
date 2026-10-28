@@ -27,6 +27,21 @@ export const HEIGHT_RANGE: Record<Pos, [number, number]> = {
 // Full-grown height is normal around the middle of the range, so some players end up well
 // outside it (a 6'1" shooting guard, a 7'3" center). Hard limits keep it plausible.
 export const HEIGHT_DRAW = { sd: 2.3, below: 4, above: 4 };
+// Round 7: heights run from 5'9" to 7'6". Nearly everyone lands between 6'0" and 7'3"; beyond
+// that is a rare outlier, and more a burden than a gift: very small players struggle to finish
+// and defend inside, very tall ones are slow on the perimeter and break down more often.
+export const HEIGHT_LIMITS = {
+  min: 69,
+  max: 90,
+  bandLo: 72,
+  bandHi: 87,
+  outlierChance: 0.02,
+  // per inch outside the band, at creation
+  short: { FIN: -2, INT: -2, REB: -1.5, ATH: 1 } as Partial<Record<AttrKey, number>>,
+  tall: { ATH: -2.5, PER: -2.5, PLY: -1, SHT: -1 } as Partial<Record<AttrKey, number>>,
+  tallInjury: 0.12, // extra injury risk per inch above the band
+  tallWear: 0.1, // extra body wear per inch above the band
+};
 // The projection at 14 is only an estimate: the true adult height differs by this much
 // (a little skewed toward late growth spurts), and the doctors' guess sharpens each year.
 export const HEIGHT_SURPRISE = { mean: 0.3, sd: 1.7, min: -3, max: 4, growUntil: 19 };
@@ -59,17 +74,17 @@ export interface SkewDist {
   min: number;
   max: number;
 }
-export const POTENTIAL: SkewDist = { base: 45, mu: 3.36, sigma: 0.66, min: 47, max: 103 };
+export const POTENTIAL: SkewDist = { base: 40, mu: 3.25, sigma: 0.66, min: 42, max: 103 };
 
 // Difficulty modes (playtest round 6). Each sets the potential distribution, a growth
 // multiplier and an injury multiplier; the league around the player is the same.
 export type Mode = 'standard' | 'reality' | 'stars';
 // floor: in stars mode he is never further behind than a straight line from his start to
 // floor.ovr at floor.age, so every career that lasts that long reaches it
-export const MODES: Record<Mode, { name: string; blurb: string; potential: SkewDist; growth: number; injury: number; scoutMid: number; floor?: { age: number; ovr: number } }> = {
+export const MODES: Record<Mode, { name: string; blurb: string; potential: SkewDist; growth: number; injury: number; scoutMid: number; floor?: { age: number; ovr: number; until: number } }> = {
   standard: { name: 'Standard', blurb: 'Most careers peak in the 60s and 70s; the NBA is common, stardom is earned.', potential: POTENTIAL, growth: 0.94, injury: 1, scoutMid: 70 },
-  reality: { name: 'Reality hits hard', blurb: 'Like real life: most careers end short of the NBA, and those who make it fight for a spot. Every choice counts.', potential: { base: 49, mu: 2.25, sigma: 0.6, min: 50, max: 99 }, growth: 0.95, injury: 1.3, scoutMid: 50 },
-  stars: { name: 'Shoot for the stars', blurb: 'Built for greatness: every career reaches stardom, and the very top is within reach.', potential: { base: 83, mu: 1.8, sigma: 0.6, min: 85, max: 99 }, growth: 1.2, injury: 0.6, scoutMid: 93, floor: { age: 22, ovr: 80 } },
+  reality: { name: 'Reality hits hard', blurb: 'Like real life: most careers end short of the NBA, and those who make it fight for a spot. Every choice counts.', potential: { base: 45, mu: 2.25, sigma: 0.6, min: 46, max: 99 }, growth: 0.9, injury: 1.3, scoutMid: 50 },
+  stars: { name: 'Shoot for the stars', blurb: 'Built for greatness: every career reaches stardom, and the very top is within reach.', potential: { base: 83, mu: 1.8, sigma: 0.6, min: 85, max: 99 }, growth: 1.2, injury: 0.6, scoutMid: 93, floor: { age: 22, ovr: 80, until: 29 } },
 };
 // stat caps may sit above 99 so elite players can actually reach the top of the scale
 export const CAP_MAX = 99;
@@ -250,7 +265,7 @@ export const ANOMALY = { chance: 0.05, capShare: 0.6 };
 
 export const SWINGS = {
   leap: { chance: 0.005, minAge: 19, maxAge: 28, ceiling: [8, 16] as [number, number], now: [5, 9] as [number, number], rateMult: 1.3 },
-  tragedy: { chance: 0.0035, minAge: 21, wearDiv: 40, ath: [10, 15] as [number, number], other: [3, 6] as [number, number], caps: [6, 10] as [number, number], durability: 0.25, rateMult: 0.8, wear: 15, daysOut: 330 },
+  tragedy: { chance: 0.003, minAge: 21, wearDiv: 40, ath: [10, 15] as [number, number], other: [3, 6] as [number, number], caps: [6, 10] as [number, number], durability: 0.25, rateMult: 0.8, wear: 15, daysOut: 330 },
 };
 export const WEAR = {
   minutes: 3, // per half at a full share of minutes
@@ -365,7 +380,7 @@ export const STAT = {
   ftRate: { base: 0.2, fin: 0.004, ath: 0.002, min: 0.06, max: 0.55 },
   ft: { base: 0.76, sht: 0.0045, min: 0.42, max: 0.94 },
   reb36: { base: 6.4, rating: 0.17, height: 0.33, wing: 0.12, min: 1.2, max: 16 },
-  ast36: { base: 3.2, rating: 0.2, min: 0.4, max: 12 },
+  ast36: { base: 3.5, rating: 0.23, min: 0.4, max: 13 }, // round 7: a little more for playmakers
   stl36: { base: 1.0, per: 0.03, ath: 0.008, min: 0.2, max: 3 },
   blk36: { base: 0.55, int: 0.035, height: 0.12, wing: 0.06, min: 0, max: 4.2 },
   tov36: { base: 1.0, fga: 0.055, ast: 0.16, iq: 0.02, min: 0.4, max: 5 },

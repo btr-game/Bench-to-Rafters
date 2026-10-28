@@ -274,7 +274,8 @@ export const TARGETS: Record<Policy, Record<string, [number, number]>> = {
     mvp: [0.07, 0.15],
     title: [0.11, 0.19],
     hof: [0.17, 0.29],
-    undraftedOfDeclared: [0.16, 0.28],
+    // round 7: the wider spread sends more weak college seniors into the draft pool
+    undraftedOfDeclared: [0.28, 0.45],
     meanNbaSeasons: [9, 12],
     medianRetireAge: [31, 36],
   },
@@ -288,7 +289,7 @@ export const TARGETS: Record<Policy, Record<string, [number, number]>> = {
     mvp: [0.12, 0.21],
     title: [0.28, 0.4],
     hof: [0.24, 0.36],
-    undraftedOfDeclared: [0.15, 0.26],
+    undraftedOfDeclared: [0.28, 0.45],
     meanNbaSeasons: [11, 14],
     medianRetireAge: [32, 36],
   },

@@ -72,6 +72,7 @@ export interface UserPlayer {
   pos: Pos;
   archetype: string;
   anomaly?: string; // a rare gift, e.g. "Point center"
+  fit?: { name: string; conf: number }[]; // the scouts' last read on his game (player/classify.ts)
   height: number;
   fullHeight: number; // true adult height (hidden while he grows)
   heightProj: number; // the doctors' projection of fullHeight
@@ -177,6 +178,7 @@ export interface Bracket {
   champion: string;
   playIn?: SeriesResult[];
   mvps?: SeriesMvp[];
+  seeds?: Record<string, number>; // NBA: conference seed by team id
 }
 
 /** One NBA season in the league's record book (fictional players). */

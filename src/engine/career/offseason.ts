@@ -1,6 +1,7 @@
 // Offseason: aging, programs, summer program, and every path decision
 // (recruiting, draft, contracts, free agency, retirement).
 
+import { reclassify } from '../player/classify';
 import { pushMilitary } from './nationality';
 import { ATTR_MAX, GROWTH_RATE_AGE, MODES, POSITIONS, WEAR, FA_INTEREST, OFFSEASON_DAYS, REP, RETIRE, ATTRS, TEAM_OPTION } from '../balance';
 import { chance, clamp, int, logistic, range } from '../rng';
@@ -70,8 +71,9 @@ export function beginOffseason(s: GameState): void {
   // the body recovers a little every summer, and less as he gets older
   p.wear = clamp((p.wear ?? 0) - WEAR.summerRest + Math.max(0, p.age - 25) * WEAR.agePerYear, 0, 100);
   // shoot-for-the-stars mode: never too far behind the path to the floor
+  // (only through the prime: after 29 age hits stars as hard as anyone)
   const floor = MODES[s.mode ?? 'standard'].floor;
-  if (floor) {
+  if (floor && p.age <= floor.until) {
     const start = ovrOf(p.startAttrs, p.pos);
     const want = start + (floor.ovr - start) * clamp((p.age - 14) / (floor.age - 14), 0, 1);
     const now = userOvr(s);
@@ -85,6 +87,12 @@ export function beginOffseason(s: GameState): void {
   else if (aging.change < -0.5) note(s, `Age is catching up: OVR ${aging.change.toFixed(1)} this summer.`);
   applyPrograms(s);
   updateScouting(s.rng, p);
+  // the scouts re-read what kind of player he has become
+  const read = reclassify(p);
+  if (read) {
+    note(s, read);
+    logDecision(s, 'archetype', read);
+  }
   p.rep = clamp(p.rep * REP.decay, 0, 100);
   healDays(p, OFFSEASON_DAYS);
   p.injuryMultNext = 1;

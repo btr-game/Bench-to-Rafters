@@ -11,8 +11,10 @@ The full design is in [`SPEC.md`](SPEC.md). Choices made where the spec was ambi
 
 - **Standard**: most careers peak in the 60s and 70s (average in the low 70s); the NBA is
   common, stardom is earned.
-- **Reality hits hard**: like real life, almost nobody makes the NBA.
-- **Shoot for the stars**: every career reaches All-Star level (80+); 99 is within reach.
+- **Reality hits hard**: most careers end short of the NBA (peaks average about 60), and those
+  who make it fight for a spot.
+- **Shoot for the stars**: every career reaches stardom, centred in the early 90s; the very top
+  is within reach but not easy.
 
 Balance reports (Word) are in [`docs/reports/`](docs/reports/).
 

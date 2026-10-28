@@ -1,6 +1,6 @@
 // More turning points (§11): bigger swings, real risks and some shown odds.
 
-import { ATTR_MAX, ROLE_ORDER } from '../balance';
+import { ATTR_MAX, HEIGHT_LIMITS, ROLE_ORDER } from '../balance';
 import { chance, clamp, int, pick, range, type Rng } from '../rng';
 import type { AttrKey, GameState, Stage } from '../types';
 import { adjust, logDecision, pushMoment, rankOnRoster, userOvr } from '../career/common';
@@ -46,6 +46,14 @@ function tradeAway(s: GameState, rng: Rng): string {
   return `You are a ${target.short} now.`;
 }
 
+/** A late two-inch spurt, never past 7'6". */
+function growTwo(s: GameState): void {
+  const add = Math.max(0, Math.min(2, HEIGHT_LIMITS.max - s.player.fullHeight));
+  s.player.height += add;
+  s.player.fullHeight += add;
+  s.player.heightProj = Math.min(HEIGHT_LIMITS.max, s.player.heightProj + add);
+}
+
 export const MORE_EVENTS: EventDef[] = [
   {
     id: 'growthspurt',
@@ -62,9 +70,7 @@ export const MORE_EVENTS: EventDef[] = [
         label: 'Learn to play big',
         detail: 'Rebounding and interior D up, shooting touch down for now',
         resolve: (s) => {
-          s.player.height += 2;
-          s.player.fullHeight += 2;
-          s.player.heightProj += 2;
+          growTwo(s);
           s.player.wingspan += 2;
           bump(s, 'REB', 3);
           bump(s, 'INT', 2);
@@ -76,9 +82,7 @@ export const MORE_EVENTS: EventDef[] = [
         label: 'Keep your guard skills sharp',
         detail: 'Taller, same game',
         resolve: (s) => {
-          s.player.height += 2;
-          s.player.fullHeight += 2;
-          s.player.heightProj += 2;
+          growTwo(s);
           s.player.wingspan += 1;
           bump(s, 'PLY', 1);
           return ok('Taller, and still handling it like a guard.');

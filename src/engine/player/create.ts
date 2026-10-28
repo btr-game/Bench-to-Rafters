@@ -9,6 +9,7 @@ import {
   HEIGHT_DRAW,
   HEIGHT_RANGE,
   HEIGHT_SURPRISE,
+  HEIGHT_LIMITS,
   START_SHIFT,
   GROWTH_RATE,
   CAP_MAX,
@@ -18,7 +19,7 @@ import {
   REROLL_SPREAD,
   SCOUT_NOISE,
 } from '../balance';
-import { clamp, int, next, normal, range, weightedIndex, type Rng } from '../rng';
+import { chance, clamp, int, next, normal, range, weightedIndex, type Rng } from '../rng';
 import type { AttrKey, Attrs, Pos, UserPlayer } from '../types';
 import { ARCHETYPES } from './archetypes';
 import { ovrOf } from './ovr';
@@ -72,10 +73,22 @@ function buildPlayer(rng: Rng, input: CreateInput): UserPlayer {
   const card = { ...(input.attrs ?? arch.attrs) };
   const [hMin, hMax] = HEIGHT_RANGE[input.pos];
   const mid = (hMin + hMax) / 2 + (arch.height ?? 0);
-  const projected = input.height ?? Math.round(clamp(normal(rng, mid, HEIGHT_DRAW.sd), hMin - HEIGHT_DRAW.below, hMax + HEIGHT_DRAW.above));
-  // what the doctors cannot see yet
-  const surprise = input.height ? 0 : Math.round(clamp(normal(rng, HEIGHT_SURPRISE.mean, HEIGHT_SURPRISE.sd), HEIGHT_SURPRISE.min, HEIGHT_SURPRISE.max));
-  const fullHeight = projected + surprise;
+  // nearly everyone ends up 6'0"-7'3" (redrawn rather than clamped, so the edges do not pile
+  // up); a rare few fall outside it, as far as 5'9" or 7'6"
+  const H = HEIGHT_LIMITS;
+  let projected = 0;
+  let surprise = 0;
+  for (let tries = 0; tries < 12; tries++) {
+    projected = input.height ?? Math.round(clamp(normal(rng, mid, HEIGHT_DRAW.sd), hMin - HEIGHT_DRAW.below, hMax + HEIGHT_DRAW.above));
+    // what the doctors cannot see yet
+    surprise = input.height ? 0 : Math.round(clamp(normal(rng, HEIGHT_SURPRISE.mean, HEIGHT_SURPRISE.sd), HEIGHT_SURPRISE.min, HEIGHT_SURPRISE.max));
+    if (input.height || (projected + surprise >= H.bandLo && projected + surprise <= H.bandHi)) break;
+  }
+  let fullHeight = clamp(projected + surprise, H.bandLo, H.bandHi);
+  if (!input.height && chance(rng, H.outlierChance)) {
+    const tall = input.pos === 'C' || input.pos === 'PF' || (input.pos === 'SF' && chance(rng, 0.5));
+    fullHeight = tall ? int(rng, H.bandHi + 1, H.max) : int(rng, H.min, H.bandLo - 1);
+  } else if (input.height) fullHeight = clamp(input.height, H.min, H.max);
   // some 14-year-olds are nearly done growing, others have half a foot to go
   const height = fullHeight - weightedPick(rng, [[1, 2], [2, 3], [3, 3], [4, 2], [5, 1.2], [6, 0.8], [7, 0.4]]);
   const mode = MODES[input.mode ?? 'standard'];
@@ -94,7 +107,9 @@ function buildPlayer(rng: Rng, input: CreateInput): UserPlayer {
   const attrs = {} as Attrs;
   for (const k of ATTRS) {
     const tall = (HEIGHT_ATTR[k] ?? 0) * dh;
-    attrs[k] = Math.round(clamp(card[k] + shift + tall + int(rng, -START_SHIFT.jitter, START_SHIFT.jitter), 5, 99));
+    const extreme = heightExtreme(fullHeight);
+    const odd = (extreme > 0 ? (H.tall[k] ?? 0) * extreme : extreme < 0 ? (H.short[k] ?? 0) * -extreme : 0);
+    attrs[k] = Math.round(clamp(card[k] + shift + tall + odd + int(rng, -START_SHIFT.jitter, START_SHIFT.jitter), 5, 99));
   }
   return {
     name: input.name,
@@ -138,6 +153,11 @@ function buildPlayer(rng: Rng, input: CreateInput): UserPlayer {
     wear: 0,
     growthRate: Math.round(clamp(Math.exp(normal(rng, 0, GROWTH_RATE.sd) + GROWTH_RATE.startW * (ovrOf(attrs, input.pos) - START_SHIFT.target)), GROWTH_RATE.min, GROWTH_RATE.max) * 1000) / 1000,
   };
+}
+
+/** Inches outside the usual 6'0"-7'3" band: negative when shorter, positive when taller. */
+export function heightExtreme(h: number): number {
+  return h < HEIGHT_LIMITS.bandLo ? h - HEIGHT_LIMITS.bandLo : h > HEIGHT_LIMITS.bandHi ? h - HEIGHT_LIMITS.bandHi : 0;
 }
 
 export function gradeFor(p: number): string {

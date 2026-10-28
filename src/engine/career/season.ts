@@ -3,6 +3,7 @@
 import { edgeOf, youthGrowthMult } from './nationality';
 import {
   WEAR,
+  HEIGHT_LIMITS,
   GAME_POINTS,
   GROWTH_RATE,
   MODES,
@@ -437,7 +438,8 @@ function growthAfterHalf(s: GameState, acc: HalfAcc, level: LevelKey, ovr: numbe
     morale: p.morale,
   });
   // body wear from this half: minutes played and how hard the plan pushed the body
-  p.wear = clamp((p.wear ?? 0) + share * WEAR.minutes + (plan.injury - 1) * WEAR.plan, 0, 100);
+  const tallWear = 1 + Math.max(0, p.fullHeight - HEIGHT_LIMITS.bandHi) * HEIGHT_LIMITS.tallWear;
+  p.wear = clamp((p.wear ?? 0) + (share * WEAR.minutes + (plan.injury - 1) * WEAR.plan) * tallWear, 0, 100);
   if (plan.rangeGain) p.range = clamp(p.range + plan.rangeGain * outcome.growth, 0, 99);
   if (plan.offhandGain) p.offhand = clamp(p.offhand + plan.offhandGain * outcome.growth, 0, 99);
   if (outcome.injury) p.injuryMultNext *= outcome.injury;

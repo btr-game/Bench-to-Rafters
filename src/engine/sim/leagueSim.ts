@@ -191,7 +191,7 @@ export function nbaPlayoffs(rng: Rng, league: League, hook: UserGameHook | null)
   const fin = playSeries(rng, league, a, b, 7, 'NBA Finals', hook);
   const rounds = east.rounds.map((r, i) => ({ name: r.name, series: [...r.series, ...west.rounds[i].series] }));
   rounds.push({ name: 'NBA Finals', series: [fin.result] });
-  return { bracket: { rounds, champion: fin.winner.id, playIn: playInSeries }, playIn, seeds: seedMap };
+  return { bracket: { rounds, champion: fin.winner.id, playIn: playInSeries, seeds: seedMap }, playIn, seeds: seedMap };
 }
 
 // ---------- NCAA: March Madness (64-team field) ----------

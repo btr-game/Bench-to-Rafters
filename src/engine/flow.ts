@@ -5,7 +5,7 @@ import { resolveMilitary } from './career/nationality';
 import { ANOMALIES } from './player/anomaly';
 import { makeRng } from './rng';
 import type { Decision, GameState, HalfPlan, Step } from './types';
-import { createPlayer, type CreateInput } from './player/create';
+import { createPlayer, heightExtreme, type CreateInput } from './player/create';
 import { ovrOf } from './player/ovr';
 import { BASE_YEAR } from './economy/salary';
 import { activeLeague, assignToGl, beginSeason, playHalf, runPostseason } from './career/season';
@@ -90,6 +90,9 @@ export function newGame(seed: number, input: CreateInput): GameState {
   );
   const gift = ANOMALIES.find((a) => a.name === player.anomaly);
   if (gift) intro.lines.push(`A rare one: ${gift.name.toLowerCase()}. ${gift.text}.`);
+  const odd = heightExtreme(player.heightProj);
+  if (odd > 0) intro.lines.push('Projected to be one of the tallest players anywhere: a huge target inside, but slow on the perimeter and hard on the body');
+  else if (odd < 0) intro.lines.push('Projected to be one of the smallest players anywhere: quick, but every shot near the rim is a fight');
   pushMoment(s, { kind: 'intro', title: player.highSchool, text: intro.text, color: s.schoolColor, lines: intro.lines });
   logDecision(s, 'start', `Enrolled at ${player.highSchool} in ${player.hometown} as a ${input.pos}, ${player.archetype}.`);
   beginSeason(s);

@@ -1,5 +1,5 @@
 import type { GameState } from '../../engine/types';
-import { hallOfFame, legacyScore, nbaCareerPoints, raftersTeams, verdictFor } from '../../engine/awards/legacy';
+import { hallOfFame, nbaCareerPoints, raftersTeams, verdictFor } from '../../engine/awards/legacy';
 import { valuePerGame, perGame } from '../../engine/sim/statModel';
 import { LEVELS, MODES } from '../../engine/balance';
 import { NAMES, UI } from '../../content/strings';
@@ -9,28 +9,25 @@ import { Banners, Card, ReactionCard } from '../components/bits';
 import { HistoryTable, trophyItems } from './Tabs';
 import { fmtMoney, seasonLabel } from '../format';
 import { compareCareer } from '../../engine/awards/compare';
+import { LegacyRankCard, LegacyTierList } from '../components/Legacy';
+import { legacyIndex } from '../../engine/awards/tiers';
+import { canShareFiles, downloadCareerCard, shareCareerCard } from '../share';
+import { useState } from 'react';
 
 function CareerAnalysis({ g }: { g: GameState }) {
   const c = compareCareer(g);
   if (!c.eligible) {
     return (
-      <Card title="Among the all-time greats" kicker="Career analysis">
+      <Card title="Closest careers among the greats" kicker="Career analysis">
         <p className="muted small">{c.reason}</p>
       </Card>
     );
   }
   return (
-    <Card title="Among the all-time greats" kicker="Career analysis · model vs 100 real legends">
-      <div className="row">
-        <div>
-          <div className="kicker">Projected all-time rank</div>
-          <div className="verdict" style={{ fontSize: 44 }}>
-            {c.rank! <= 100 ? `No. ${c.rank}` : 'Outside the top 100'}
-          </div>
-        </div>
-      </div>
+    <Card title="Closest careers among the greats" kicker="Career analysis · style model vs 100 real legends">
       <div className="stack" style={{ gap: 6 }}>
-        {c.analysis!.map((x, i) => (
+        {/* the ranking itself comes from the legacy tier list above; this card compares styles */}
+        {c.analysis!.slice(1).map((x, i) => (
           <p key={i} style={{ margin: 0 }}>
             {x}
           </p>
@@ -75,10 +72,41 @@ function CareerAnalysis({ g }: { g: GameState }) {
       </div>
       <p className="muted small">
         The comparison set is 100 of the greatest NBA players with approximate career averages and honours through 2024–25. Comparables come
-        from a nearest-neighbour search over scoring, rebounding, playmaking, best season, longevity, honours, size and position; the rank comes
-        from a ridge regression trained on those players' all-time order.
+        from a nearest-neighbour search over scoring, rebounding, playmaking, best season, longevity, honours, size and position.
       </p>
     </Card>
+  );
+}
+
+function ShareBar({ g }: { g: GameState }) {
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState('');
+  const run = async (share: boolean) => {
+    setBusy(true);
+    setMsg('');
+    try {
+      if (share && (await shareCareerCard(g))) setMsg('');
+      else {
+        await downloadCareerCard(g);
+        setMsg('Career card saved as a PNG.');
+      }
+    } catch {
+      setMsg('Could not make the image in this browser.');
+    }
+    setBusy(false);
+  };
+  return (
+    <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+      <button className="btn" disabled={busy} onClick={() => run(false)}>
+        Download career card
+      </button>
+      {canShareFiles() && (
+        <button className="btn ghost" disabled={busy} onClick={() => run(true)}>
+          Share
+        </button>
+      )}
+      {msg && <span className="small muted">{msg}</span>}
+    </div>
   );
 }
 
@@ -97,7 +125,7 @@ export function Retirement({ g }: { g: GameState }) {
     <div className="stack">
       <section className="final stack" style={{ gap: 10 }}>
         <div className="kicker">
-          Retired at {g.retiredAt ?? p.age} · legacy score {legacyScore(g)} · {MODES[g.mode ?? 'standard'].name}
+          Retired at {g.retiredAt ?? p.age} · {legacyIndex(g)} legacy points · {MODES[g.mode ?? 'standard'].name}
         </div>
         <div className="verdict">{v.tier}</div>
         <p className="lede">{v.line}</p>
@@ -110,7 +138,9 @@ export function Retirement({ g }: { g: GameState }) {
             </div>
           </div>
         ))}
+        <ShareBar g={g} />
       </section>
+      <LegacyRankCard g={g} />
       <CareerAnalysis g={g} />
       <Card title="Career card" kicker={`${NAMES.pos[p.pos]} · ${p.archetype}`}>
         <div className="row">
@@ -155,6 +185,7 @@ export function Retirement({ g }: { g: GameState }) {
           <Banners items={trophyItems(g)} />
         </Card>
       )}
+      <LegacyTierList g={g} />
       {g.feed[0] && (
         <Card title="The last word">
           <ReactionCard r={g.feed[0]} />

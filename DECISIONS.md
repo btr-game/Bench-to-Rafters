@@ -353,3 +353,72 @@ extremes at 20 and 60; two plans at a time; a height warning.
   larger again (body 17.5px).
 - **Cleanup:** removed code left over from earlier rounds (an old hometown list, unused
   helpers, pennant-banner styles and unused layout utilities).
+
+## Round 7 (playtest feedback)
+
+Feedback: a tougher high school bar (60 OVR = 5-star); no decorative emojis; focus changes
+more often; a 99 cap; Finals MVP (it already existed); an easier Reality mode (average ~60);
+Stars centred in the early 90s; a shareable final page; the old award banners back; rare
+career-changing swings; a separate difficulty page; a season-end archetype read; a legacy
+tier list and all-time ranking; injury load that shapes aging; aging that hits hard by 35 in
+every mode; more rating events; jersey number changes; an NBA-style bracket; choosable
+nationality; event results that really differ; rare mold-breaking players; heights from
+5'9" to 7'6"; a few more assists.
+
+- **Recruiting:** a senior-equivalent score (OVR + 3.5 per year left + small potential and
+  buzz terms) is ranked against a normal class (mean 41.3, sd 7.7): about 60 OVR as a senior
+  is a 5-star. Americans get +2.5 on that score, Canadians +1.
+- **Caps:** every rating stops at 99. The starting card shapes the ceilings less (0.2 per
+  point). Focus can change once every offseason (from the Home screen) and through events.
+- **Event outcomes:** each choice rolls a tier: breakthrough 10%, better 22%, as expected 42%,
+  mixed 17%, backfired 9%. The good parts of the result are scaled by one factor and the bad
+  parts by another (a backfire keeps 0-25% of the good and 140-200% of the bad), and lucky or
+  unlucky twists with their own text (a trick from a teammate, a tweaked hamstring, a viral
+  clip) are added. A gamble that already failed cannot become a breakthrough. The result card
+  shows the tier as a coloured tag.
+- **Rating events:** ten new events that build ratings directly (a shooting camp, post
+  footwork, a summer of handles, a defensive guru, plyometrics, the glass, pro runs, a new
+  move, fixing the weak spot, film with the coaches).
+- **Swings:** the leap (0.5% a year x growth rate, ages 19-28: ceiling +8-16, ratings +5-9,
+  faster growth) and the tragedy (0.3% a year x durability x wear, from 21: a torn ACL that
+  cuts athleticism and its ceiling for good). About 5-7% of careers see each.
+- **Body wear (0-100):** minutes and hard plans add to it, injuries add more, summers and the
+  rest program take a little off, health purchases help. Aging is scaled by 0.6 + wear/50, so
+  a fresh body ages at about 0.6x and a ground-down one at up to 2.6x. Decline starts at 27-31
+  by body type, a little later for fast learners (capped at 2 years). Standard players are
+  about 22 points off their peak at 35 (15 with low wear, 25 with high wear).
+- **Stars floor:** only through age 29, so aging hits stars too (about 28 points by 35).
+- **Bug fix:** fast learners' younger "body clock" pushed a 14-year-old below the start of the
+  growth table, so a high hidden growth rate meant no growth at all in the early teens (one
+  test player stayed at OVR 34 to 18 with potential 84). The clock now never goes below 14.
+- **Modes (100-career sims, smart policy):** Standard potential base 40, mu 3.25, growth
+  x0.94: mean peak about 73. Reality base 45, growth x0.9: mean about 60, about 30% play in
+  the NBA. Stars base 83, mu 1.8, max 99, growth x1.2: mean about 92, about 5% reach 98.5+.
+  The harness's undrafted-of-declared target moved to 0.28-0.45 (the wider spread sends more
+  weak seniors into the draft pool).
+- **Nationality:** chosen at creation or left to the game. USA and Canada: recruiting edge.
+  Europe: EuroLeague contracts pay 1.3x and judge his role 3 OVR higher. Africa: 0.9x growth
+  at home as a teenager until a US prep school; Latin America 0.95x. South Korea: about 18
+  months of military service with the Sangmu army team (a KBL season on army pay) between 23
+  and 28, offered when his contract is up and forced at 28, unless an Asian Games gold or an
+  Olympic medal exempts him. Asian nations now play the Asian Games.
+- **Rare players:** 5% of careers start with a mold-breaking gift (point center, rebounding
+  guard, shot-blocking guard, point forward, shooting big, switchable big, post-up guard): a
+  big boost in one skill with a ceiling to match.
+- **Archetype AI:** each offseason a nearest-prototype classifier (rating shapes, softmax over
+  distances) re-reads his game; the label changes when another archetype clearly fits better,
+  and a rare mold can be recognised later in a career. The Player tab shows the top three.
+- **Legacy tier list:** S (Hall of Fame, a jersey in the rafters, MVP, Finals MVP) down to D.
+  Legacy points = the legacy score + 10 for the Hall (14 on the first ballot) + 6 per team
+  that hangs his jersey (up to 3). The same weights score the 100 legends, and his rank among
+  them is the headline on the final page; the style model now only finds the closest careers.
+- **Share:** the final page draws a career card (PNG) that can be downloaded or sent through
+  the phone's share sheet.
+- **Bracket:** the NBA postseason is drawn like the league's graphic: West left, East right,
+  seeds, team marks and series wins converging on the Finals and a champions banner.
+- **Heights:** 5'9" to 7'6". About 98% land between 6'0" and 7'3" (redrawn, not clamped). The
+  rare outliers pay for it: very small players lose finishing, interior defense and
+  rebounding; very tall ones lose athleticism and perimeter defense, get hurt 12% more often
+  and wear 10% faster per inch over 7'3".
+- **Assists:** per-36 assists base 3.5 (was 3.2), +0.23 per playmaking point over the level
+  (was 0.2), cap 13. The best playmakers now post 8-9 a game.

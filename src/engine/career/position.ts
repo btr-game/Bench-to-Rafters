@@ -6,6 +6,7 @@
 import { HEIGHT_RANGE, POSITIONS } from '../balance';
 import type { GameState, Pos } from '../types';
 import { ovrOf } from '../player/ovr';
+import { classify } from '../player/classify';
 import { adjust, logDecision } from './common';
 import { NAMES } from '../../content/strings';
 
@@ -65,6 +66,8 @@ export function setPosition(s: GameState, pos: Pos, byCoach = false): string {
   if (from === pos) return '';
   const before = ovrOf(p.attrs, from);
   p.pos = pos;
+  // archetypes belong to a position: take the closest one at the new spot
+  p.archetype = classify(p.attrs, pos).find((f) => !f.rare)!.name;
   const after = ovrOf(p.attrs, pos);
   if (!byCoach) {
     s.flags.posYear = s.year;

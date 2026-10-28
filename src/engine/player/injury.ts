@@ -1,4 +1,4 @@
-import { BASE_INJURY, WEAR, HALF_PLANS, type PlanDef, INJURY_AGE_MULT, INJURY_SEVERITY, INJURY_TOLL } from '../balance';
+import { BASE_INJURY, HEIGHT_LIMITS, WEAR, HALF_PLANS, type PlanDef, INJURY_AGE_MULT, INJURY_SEVERITY, INJURY_TOLL } from '../balance';
 import { ovrOf } from './ovr';
 import { chance, int, pick, shuffle, weightedIndex, type Rng } from '../rng';
 import type { HalfPlan, Injury, UserPlayer } from '../types';
@@ -12,7 +12,9 @@ const NAMES: Record<Injury['key'], string[]> = {
 
 export function injuryChance(p: UserPlayer, plan: HalfPlan | PlanDef, minutes: number): number {
   const fatigue = 0.5 + minutes / 60;
-  return BASE_INJURY * p.durability * (typeof plan === 'string' ? HALF_PLANS[plan] : plan).injury * fatigue * INJURY_AGE_MULT(p.age) * p.injuryMultNext;
+  // very tall bodies break down more often
+  const tall = Math.max(0, p.fullHeight - HEIGHT_LIMITS.bandHi) * HEIGHT_LIMITS.tallInjury;
+  return (1 + tall) * BASE_INJURY * p.durability * (typeof plan === 'string' ? HALF_PLANS[plan] : plan).injury * fatigue * INJURY_AGE_MULT(p.age) * p.injuryMultNext;
 }
 
 /** Rolls for an injury after a game. Mutates the player and returns the injury if one happened. */

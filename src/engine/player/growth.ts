@@ -45,7 +45,9 @@ export function primeShift(p: UserPlayer): number {
 }
 
 export function baseRate(p: UserPlayer, minutesFactor: number): number {
-  const age = p.age - primeShift(p);
+  // the shift only moves the back end of the curve: a young body clock never drops a teenager
+  // below the start of the table (which would mean no growth at all)
+  const age = Math.max(BASE_RATE[0][0], p.age - primeShift(p));
   if (p.growthType === 'early') {
     if (age < EARLY_BLOOMER.youngBefore) return standardRate(age) * EARLY_BLOOMER.youngBoost;
     return standardRate(age + EARLY_BLOOMER.plateauEarlier);

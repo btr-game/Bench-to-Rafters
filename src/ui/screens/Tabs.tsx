@@ -1,5 +1,7 @@
 // Season, Player, League and Records tabs.
 
+import { LegacyTierList } from '../components/Legacy';
+import { NbaBracket } from '../components/NbaBracket';
 import { useState } from 'react';
 import type { GameState, League, SeasonRecord, SeriesResult, StatLine, Team } from '../../engine/types';
 import { LEVELS } from '../../engine/balance';
@@ -162,8 +164,11 @@ function BracketView({ g }: { g: GameState }) {
   const name = (id: string) => lg.teams.find((t) => t.id === id)?.short ?? id;
   const rounds = lg.level === 'NCAA' ? b.rounds.slice(2) : b.rounds;
   const mine = (x: SeriesResult) => x.a === g.teamId || x.b === g.teamId;
+  const graphic = lg.level === 'NBA' && b.rounds.length === 4;
   return (
     <div className="bracket">
+      {graphic && <NbaBracket bracket={b} league={lg} userTeamId={g.teamId} />}
+      {graphic && <div className="sec-title">Every series</div>}
       {b.playIn && b.playIn.length > 0 && (
         <div className="round">
           <div className="kicker">Play-In Tournament</div>
@@ -282,6 +287,13 @@ export function PlayerTab({ g }: { g: GameState }) {
             <div>
               <dt>Shoots</dt>
               <dd>{p.hand === 'L' ? 'Left-handed' : 'Right-handed'}</dd>
+            </div>
+            <div style={{ gridColumn: '1 / -1' }}>
+              <dt>Scouts' read on your game</dt>
+              <dd>
+                {(p.fit ?? [{ name: p.archetype, conf: 1 }]).map((f) => `${f.name} ${Math.round(f.conf * 100)}%`).join(' · ')}
+                {p.anomaly ? ` · rare: ${p.anomaly}` : ''}
+              </dd>
             </div>
             <div>
               <dt>Captain</dt>
@@ -573,6 +585,7 @@ export function RecordsTab({ g }: { g: GameState }) {
         </Card>
       )}
       <Card title="Trophy cabinet">{g.awards.length === 0 ? <p className="muted">Empty, for now.</p> : <Banners items={trophyItems(g)} />}</Card>
+      <LegacyTierList g={g} />
       <Card title="Career totals" kicker={`Legacy score ${legacyScore(g)}`}>
         {nbaT.gp > 0 && (
           <>

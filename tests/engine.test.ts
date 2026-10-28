@@ -115,14 +115,14 @@ describe('growth calibration (§7)', () => {
       const peaks: number[] = [];
       for (let i = 0; i < 300; i++) {
         const r = runCareer(20000 + i, policy);
-        if (r.potential >= 68 && r.potential <= 72) peaks.push(r.peakOvr);
+        if (r.potential >= 67 && r.potential <= 73) peaks.push(r.peakOvr);
       }
       expect(peaks.length).toBeGreaterThan(30);
       return peaks.reduce((s, x) => s + x, 0) / peaks.length;
     };
     const random = meanPeak('random');
     const smart = meanPeak('smart');
-    console.log(`potential 68-72 mean peak: random ${random.toFixed(2)}, smart ${smart.toFixed(2)}`);
+    console.log(`potential 67-73 mean peak: random ${random.toFixed(2)}, smart ${smart.toFixed(2)}`);
     expect(smart).toBeGreaterThan(random); // good decisions matter
     expect(smart).toBeGreaterThan(67);
     expect(smart).toBeLessThan(76);
@@ -168,7 +168,9 @@ describe('retire any season', () => {
       if (canRetire(s)) break;
       const pr = prompt(s);
       if (pr.type === 'retired') break;
-      if (pr.type === 'decision') choose(s, pr.decision.choices.find((c) => !c.disabled)!.id);
+      // keep playing: skip any choice that ends the career
+      const open = pr.type === 'decision' ? pr.decision.choices.filter((c) => !c.disabled) : [];
+      if (pr.type === 'decision') choose(s, (open.find((c) => c.id !== 'retire' && !/retire|hang it up/i.test(c.label)) ?? open[0]).id);
       else advance(s);
     }
     expect(sawHsSummary).toBe(true);

@@ -61,6 +61,12 @@ export function legacyScore(s: GameState): number {
       case 'CUPMVP':
         pts += 0.75;
         break;
+      case 'ASIANGOLD':
+        pts += 0.5;
+        break;
+      case 'ASIANMEDAL':
+        pts += 0.25;
+        break;
     }
   }
   pts += nbaCareerPoints(s) / LEGACY.pointsPer;
