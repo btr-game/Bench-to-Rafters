@@ -148,9 +148,39 @@ export interface Team {
   coach?: number; // NBA only: persistent team factor added to roster strength
 }
 
+export interface SeriesResult {
+  a: string;
+  b: string;
+  wa: number;
+  wb: number;
+  winner: string;
+  games?: [number, number][]; // a's score, b's score
+  label?: string;
+}
+
+export interface SeriesMvp {
+  award: string;
+  name: string;
+  team: string;
+  line: string;
+  isUser: boolean;
+}
+
 export interface Bracket {
-  rounds: { name: string; series: { a: string; b: string; wa: number; wb: number; winner: string }[] }[];
+  rounds: { name: string; series: SeriesResult[] }[];
   champion: string;
+  playIn?: SeriesResult[];
+  mvps?: SeriesMvp[];
+}
+
+/** One NBA season in the league's record book (fictional players). */
+export interface NbaYearRecord {
+  year: number;
+  champion: string;
+  runnerUp: string;
+  finals: string; // e.g. "4–2"
+  finalsMvp: SeriesMvp | null;
+  awards: { award: string; name: string; team: string; ovr: number; line: string; isUser: boolean }[];
 }
 
 export interface League {
@@ -167,7 +197,7 @@ export interface League {
 export interface AwardRace {
   award: string;
   userRank: number | null;
-  top: { name: string; team: string; value: number }[];
+  top: { name: string; team: string; value: number; line?: string; ovr?: number; isUser?: boolean }[];
 }
 
 export interface AwardWin {
@@ -207,6 +237,9 @@ export interface TourneyRecord {
   result: string;
   medal?: 'gold' | 'silver' | 'bronze';
   line: StatLine | null;
+  games?: GameLog[];
+  // how the rest of the event went: other results and the champion
+  notes?: string[];
 }
 
 export interface DecisionLogEntry {
@@ -327,6 +360,8 @@ export interface Moment {
   lines?: string[];
   game?: GameLog & { level: LevelKey; teamShort: string };
   pick?: number;
+  // result tables shown under the story: finals, series scores, MVPs
+  recap?: { heading: string; rows: string[] }[];
 }
 
 export interface GameState {
@@ -375,6 +410,7 @@ export interface GameState {
   moments: Moment[]; // story pages waiting to be shown
   purchases: string[]; // shop item ids ever bought
   tournaments: TourneyRecord[];
+  nbaHistory: NbaYearRecord[];
   flags: Record<string, number>; // small story switches (powerhouse school, power agent...)
   schoolColor: string;
 }

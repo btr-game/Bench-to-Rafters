@@ -1,7 +1,9 @@
 // One NBA year for the world: season (when the user is not in it), draft and offseason.
 
 import type { DraftPick, GameState } from '../types';
-import { resetSeasonLines } from '../sim/genStats';
+import { accumulateHalf, resetSeasonLines } from '../sim/genStats';
+import { buildCandidates, nbaAwards } from '../awards/awards';
+import { playoffMvps, recordNbaYear } from '../awards/playoffs';
 import { nbaPlayoffs, playRounds } from '../sim/leagueSim';
 import { boardScore, draftOrder, generateClass, mockRange, runDraft, type DraftPickResult, type Prospect } from '../world/draft';
 import { nbaOffseason } from '../world/nbaWorld';
@@ -10,18 +12,21 @@ import { ovrOf } from '../player/ovr';
 import { DRAFT } from '../balance';
 
 /** Simulates a full NBA season by team strength (the user is not in the league). */
-export function quickNbaSeason(s: GameState): void {
+export function quickNbaSeason(s: GameState, year = s.year): void {
   const nba = s.nba!;
   resetSeasonLines(nba);
   nba.userTeamId = null;
-  // no stat lines: nobody needs award races for a season the user is not in
   playRounds(s.rng, nba, 82, null);
+  // season lines so the league has award winners and a record book
+  accumulateHalf(s.rng, nba, 82, null, 2);
   nba.bracket = nbaPlayoffs(s.rng, nba, null).bracket;
+  playoffMvps(s.rng, nba, nba.bracket, null);
+  recordNbaYear(s, nba, nbaAwards(buildCandidates(nba, null)), year);
 }
 
 export function warmUpNba(s: GameState, years: number): void {
   for (let i = 0; i < years; i++) {
-    quickNbaSeason(s);
+    quickNbaSeason(s, s.year - years + i);
     runWorldDraft(s, null);
   }
 }

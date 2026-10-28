@@ -162,6 +162,24 @@ function buildPlays(m: Moment, name: string): Play[] {
   return plays;
 }
 
+function Recap({ m }: { m: Moment }) {
+  if (!m.recap || m.recap.length === 0) return null;
+  return (
+    <div className="recap">
+      {m.recap.map((sec, i) => (
+        <div key={i} className="recap-sec" style={{ animationDelay: `${0.3 + i * 0.15}s` }}>
+          <div className="kicker on-dark">{sec.heading}</div>
+          {sec.rows.map((r, k) => (
+            <div key={k} className="recap-row">
+              {r}
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function TitleGame({ m, g }: { m: Moment; g: GameState }) {
   const plays = useMemo(() => buildPlays(m, g.player.name), [m, g.player.name]);
   const n = plays.length;
@@ -207,10 +225,13 @@ function TitleGame({ m, g }: { m: Moment; g: GameState }) {
         ))}
       </div>
       {done ? (
-        <div className="champ-banner">
-          <span>Champions</span>
-          <b>{m.title}</b>
-        </div>
+        <>
+          <div className="champ-banner">
+            <span>Champions</span>
+            <b>{m.title}</b>
+          </div>
+          <Recap m={m} />
+        </>
       ) : (
         <button className="btn ghost-dark" onClick={skip}>
           Skip to the final buzzer
@@ -296,6 +317,7 @@ function MomentPage({ m, g }: { m: Moment; g: GameState }) {
                 </div>
               ))
             )}
+            <Recap m={m} />
           </div>
         )}
         <button ref={ref} className="btn moment-btn" onClick={dismiss}>

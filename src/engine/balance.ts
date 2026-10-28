@@ -238,6 +238,8 @@ export const TRUST_ROLE = { up: 70, down: 30 };
 // §9 game sim
 export const WIN_SCALE = 4.5;
 export const HOME_COURT = 1.2;
+// average points per team per game, by level
+export const GAME_POINTS: Record<LevelKey, number> = { HSJV: 48, HSV: 56, NCAA: 72, GL: 115, EU: 82, INT: 85, NBA: 113 };
 export const IMPACT_MULT = 0.25;
 export const USAGE_TEMP = 24; // lower = stars take more shots
 export const USAGE_KNEE = { at: 78, slope: 0.35 };

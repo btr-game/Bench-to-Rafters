@@ -18,6 +18,7 @@ export interface Cand {
   def: number;
   isUser: boolean;
   age: number;
+  ovr: number;
 }
 
 export interface UserCandInput {
@@ -31,6 +32,7 @@ export interface UserCandInput {
   int: number;
   prevValue: number | null;
   age: number;
+  ovr?: number;
 }
 
 function defScore(per: number, int: number, l: StatLine, team: Team): number {
@@ -58,6 +60,7 @@ export function buildCandidates(league: League, user: UserCandInput | null): Can
         def: defScore(a.PER, a.INT, p.s, t),
         isUser: false,
         age: p.age,
+        ovr: p.ovr,
       });
     }
   }
@@ -77,6 +80,7 @@ export function buildCandidates(league: League, user: UserCandInput | null): Can
       def: defScore(user.per, user.int, user.line, team),
       isUser: true,
       age: user.age,
+      ovr: user.ovr ?? 0,
     });
   }
   return out;
@@ -95,8 +99,21 @@ function race(award: string, ranked: Cand[], scoreOf: (c: Cand) => number, n = 3
   return {
     award,
     userRank: userIdx >= 0 ? userIdx + 1 : null,
-    top: ranked.slice(0, n).map((c) => ({ name: c.name, team: c.team.abbr, value: Math.round(scoreOf(c) * 10) / 10 })),
+    top: ranked.slice(0, n).map((c) => ({
+      name: c.name,
+      team: c.team.abbr,
+      value: Math.round(scoreOf(c) * 10) / 10,
+      line: statText(c.line),
+      ovr: Math.round(c.ovr),
+      isUser: c.isUser,
+    })),
   };
+}
+
+/** "27.4 PTS · 8.1 REB · 6.3 AST" */
+export function statText(l: StatLine): string {
+  if (l.gp <= 0) return '';
+  return `${perGame(l, 'pts').toFixed(1)} PTS · ${perGame(l, 'reb').toFixed(1)} REB · ${perGame(l, 'ast').toFixed(1)} AST`;
 }
 
 const minGames = (level: LevelKey): number => Math.round(LEVELS[level].games * MIN_GAMES_AWARD_FRAC);
@@ -107,7 +124,7 @@ export function nbaAwards(cands: Cand[]): AwardOutcome {
   const elig = cands.filter((c) => c.line.gp >= g65);
   const mvpScore = (c: Cand) => c.value + (c.team.w - 41) * 0.25;
   const mvp = [...elig].sort((a, b) => mvpScore(b) - mvpScore(a));
-  out.races.push(race('MVP', mvp, mvpScore));
+  out.races.push(race('MVP', mvp, mvpScore, 5));
   if (mvp[0]) {
     if (mvp[0].isUser) out.wins.push({ key: 'MVP', label: 'MVP' });
     else out.winners.push({ key: 'MVP', name: mvp[0].name, team: mvp[0].team.abbr });
@@ -130,14 +147,14 @@ export function nbaAwards(cands: Cand[]): AwardOutcome {
     });
   }
   const rookies = cands.filter((c) => c.rookie && c.line.gp >= 30).sort((a, b) => b.value - a.value);
-  if (rookies.some((c) => c.isUser)) out.races.push(race('Rookie of the Year', rookies, (c) => c.value));
+  if (rookies.length > 0) out.races.push(race('Rookie of the Year', rookies, (c) => c.value));
   rookies.slice(0, 10).forEach((c, i) => {
     if (!c.isUser) return;
     out.wins.push(i === 0 ? { key: 'ROY', label: 'Rookie of the Year' } : { key: 'ALLROOKIE', label: 'All-Rookie Team' });
   });
   const dpoy = cands.filter((c) => c.line.gp >= g65 && c.line.min / c.line.gp >= 24).sort((a, b) => b.def - a.def);
   if (dpoy[0]?.isUser) out.wins.push({ key: 'DPOY', label: 'Defensive Player of the Year' });
-  if (dpoy.some((c) => c.isUser)) out.races.push(race('DPOY', dpoy, (c) => c.def));
+  if (dpoy.length > 0) out.races.push(race('DPOY', dpoy, (c) => c.def));
   const sixth = cands.filter((c) => c.line.gp >= 50 && c.line.gs < c.line.gp / 2).sort((a, b) => b.value - a.value);
   if (sixth[0]?.isUser) out.wins.push({ key: 'SIXTH', label: 'Sixth Man of the Year' });
   const mip = cands

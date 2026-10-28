@@ -72,6 +72,7 @@ export function newGame(seed: number, input: CreateInput): GameState {
     moments: [],
     purchases: [],
     tournaments: [],
+    nbaHistory: [],
     flags: {},
     schoolColor: '',
   };

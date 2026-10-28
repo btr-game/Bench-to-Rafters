@@ -3,10 +3,10 @@
 // game, and national-team events (youth World Cups, FIBA World Cup, Olympics).
 
 import { DEEP_BENCH, FAN_VOTE, LEVELS, MORALE_PERF, ROLE_MINUTES } from '../balance';
-import { chance, clamp, int, logistic, normal, pick, range, shuffle } from '../rng';
+import { chance, clamp, int, logistic, normal, range, shuffle } from '../rng';
 import type { GameLog, GameState, LevelKey, RoleKey, StatLine, Team, TourneyRecord } from '../types';
 import { expected, expectedGameScore, gameScore, sampleGame, usageWeight, valuePerGame, genProfile, genUsageWeight, perGame } from './statModel';
-import { winProb, standings } from './leagueSim';
+import { scoreFor, winProb, standings } from './leagueSim';
 import { rollInjury } from '../player/injury';
 import { ovrOf } from '../player/ovr';
 import { adjust, logDecision, pushDecision, pushMoment, rankOnRoster } from '../career/common';
@@ -84,19 +84,53 @@ function record(s: GameState, r: TourneyRecord): void {
   if (s.tournaments.length > 60) s.tournaments.shift();
 }
 
-/** Single-elimination run for the player's side. Returns games and how far he went. */
+/** One game between two other teams: the winner and a score line. */
+function otherGame(s: GameState, level: LevelKey, a: Opp, b: Opp, round: string): { winner: Opp; text: string } {
+  const aWon = chance(s.rng, winProb(a.strength, b.strength, 0));
+  const [x, y] = scoreFor(s.rng, level, a.strength - b.strength, aWon);
+  const [w, l, sw, sl] = aWon ? [a, b, x, y] : [b, a, y, x];
+  return { winner: w, text: `${round}: ${w.name} ${sw}, ${l.name} ${sl}` };
+}
+
+/**
+ * Single-elimination run for the player's side. Returns games and how far he went. If he
+ * goes out, the team that beat him plays on against the rest of the path, so the event
+ * still gets a champion and a final score (`notes`).
+ */
 function knockout(s: GameState, level: LevelKey, role: RoleKey, my: Opp, opps: Opp[], rounds: string[], neutral = true) {
   const games: GameLog[] = [];
+  const notes: string[] = [];
   let reached = 0;
-  if (opps.length === 0) return { games, won: false, lostIn: rounds[0] ?? null, reached };
+  if (opps.length === 0) return { games, won: false, lostIn: rounds[0] ?? null, reached, notes, champion: null as string | null };
   for (let i = 0; i < rounds.length; i++) {
-    const g = exhibitionGame(s, level, role, my, opps[i % opps.length], rounds[i], { neutral });
+    const opp = opps[i % opps.length];
+    const g = exhibitionGame(s, level, role, my, opp, rounds[i], { neutral });
     g.log.n = games.length + 1;
     games.push(g.log);
-    if (!g.win) return { games, won: false, lostIn: rounds[i], reached };
+    if (!g.win) {
+      let cur = opp;
+      for (let j = i + 1; j < rounds.length; j++) {
+        const other = opps[j % opps.length];
+        if (other === cur) continue;
+        const r = otherGame(s, level, cur, other, rounds[j]);
+        notes.push(r.text);
+        cur = r.winner;
+      }
+      notes.push(`Champion: ${cur.name}`);
+      return { games, won: false, lostIn: rounds[i], reached, notes, champion: cur.name };
+    }
     reached = i + 1;
   }
-  return { games, won: true, lostIn: null as string | null, reached };
+  notes.push(`Champion: ${my.name}`);
+  return { games, won: true, lostIn: null as string | null, reached, notes, champion: my.name };
+}
+
+/** Result tables for a tournament page: the player's games, then the rest of the event. */
+export function tourneyRecap(games: GameLog[], notes: string[], myName: string): { heading: string; rows: string[] }[] {
+  const rows = games.map((g) => `${g.post ?? 'Game'}: ${g.res} ${g.us}–${g.them} vs ${g.opp}${g.line ? ` · ${g.line.pts} pts, ${g.line.reb} reb, ${g.line.ast} ast` : ''}`);
+  const out = [{ heading: `${myName}'s games`, rows }];
+  if (notes.length > 0) out.push({ heading: 'Around the bracket', rows: notes });
+  return out;
 }
 
 // ---------- NBA ----------
@@ -128,7 +162,7 @@ export function nbaPreseason(s: GameState): void {
   s.player.trust = adjust(s.player.trust, delta);
   season.preReport = ratio >= 1.15 ? 'You lit up the preseason. The coaches are rethinking the rotation.' : ratio <= 0.85 ? 'A rough preseason. You have work to do to earn minutes.' : 'A solid, quiet preseason.';
   const line = sumLines(games.map((g) => g.line));
-  record(s, { year: s.year, name: 'NBA preseason', team: team.name, result: `${games.filter((g) => g.res === 'W').length}–${games.filter((g) => g.res === 'L').length}`, line });
+  record(s, { year: s.year, name: 'NBA preseason', team: team.name, result: `${games.filter((g) => g.res === 'W').length}–${games.filter((g) => g.res === 'L').length}`, line, games });
 }
 
 /** The NBA Cup knockout in Las Vegas after the first half: the best four records per conference. */
@@ -138,9 +172,19 @@ export function nbaCup(s: GameState): void {
   const field = ['East', 'West'].flatMap((c) => standings(nba.teams.filter((t) => t.conf === c)).slice(0, 4));
   const season = s.season!;
   if (!field.includes(team)) {
-    // the Cup goes on without him
-    const champ = pick(s.rng, field.slice(0, 4).concat(field.slice(4, 6)));
-    season.cupResult = `Did not make the NBA Cup knockouts. ${champ.name} won the Cup.`;
+    // the Cup goes on without him: a real eight-team bracket in Las Vegas
+    let alive: Opp[] = shuffle(s.rng, field.map((t) => ({ name: t.name, short: t.short, strength: t.strength })));
+    const notes: string[] = [];
+    for (const round of ['Quarterfinal', 'Semifinal', 'Final']) {
+      const next: Opp[] = [];
+      for (let i = 0; i + 1 < alive.length; i += 2) {
+        const r = otherGame(s, 'NBA', alive[i], alive[i + 1], round);
+        notes.push(r.text);
+        next.push(r.winner);
+      }
+      alive = next;
+    }
+    season.cupResult = `Did not make the NBA Cup knockouts. ${alive[0].name} won the Cup. ${notes[notes.length - 1]}.`;
     return;
   }
   const others = shuffle(s.rng, field.filter((t) => t !== team));
@@ -154,9 +198,9 @@ export function nbaCup(s: GameState): void {
     const final = run.games[run.games.length - 1];
     const mvp = line && valuePerGame(line) >= 24;
     if (mvp) s.awards.push({ year: s.year, level: 'NBA', key: 'CUPMVP', label: 'NBA Cup MVP' });
-    pushMoment(s, { kind: 'title', title: 'NBA Cup champion', teamName: team.name, color: team.color, text: `${team.name} win the NBA Cup in Las Vegas.`, game: { ...final, level: 'NBA', teamShort: team.short }, lines: mvp ? ['NBA Cup MVP'] : [] });
-  } else season.cupResult = `Lost in the ${run.lostIn}`;
-  record(s, { year: s.year, name: 'NBA Cup', team: team.name, result: season.cupResult, line });
+    pushMoment(s, { kind: 'title', title: 'NBA Cup champion', teamName: team.name, color: team.color, text: `${team.name} win the NBA Cup in Las Vegas.`, game: { ...final, level: 'NBA', teamShort: team.short }, lines: mvp ? ['NBA Cup MVP'] : [], recap: tourneyRecap(run.games, [], team.short) });
+  } else season.cupResult = `Lost in the ${run.lostIn}. ${run.champion} won the Cup.`;
+  record(s, { year: s.year, name: 'NBA Cup', team: team.name, result: run.won ? 'Champion' : `Lost in the ${run.lostIn}`, line, games: run.games, notes: run.notes });
 }
 
 /**
@@ -231,6 +275,7 @@ export function conferenceTournament(s: GameState, team: Team, confTeams: Team[]
     team.strength += 0.5;
     s.awards.push({ year: s.year, level: 'NCAA', key: 'CONFTOURN', label: `${team.conf} tournament champion` });
   }
+  record(s, { year: s.year, name: `${team.conf} tournament`, team: team.name, result: run.won ? 'Champion' : `Lost in the ${run.lostIn?.toLowerCase()}`, line: sumLines(run.games.map((g) => g.line)), games: run.games, notes: run.notes });
   return { won: run.won, text: run.won ? `${team.conf} tournament champion` : `Lost in the ${run.lostIn?.toLowerCase()}`, games: run.games };
 }
 
@@ -248,13 +293,14 @@ export function hsNationals(s: GameState, team: Team): void {
   ]);
   const line = sumLines(run.games.map((g) => g.line));
   const result = run.won ? 'National Prep Invitational champion' : `Lost in the ${run.lostIn?.toLowerCase()}`;
-  record(s, { year: s.year, name: 'National Prep Invitational', team: team.name, result, line });
+  record(s, { year: s.year, name: 'National Prep Invitational', team: team.name, result, line, games: run.games, notes: run.notes });
+  const recap = tourneyRecap(run.games, run.won ? [] : run.notes, team.short);
   if (run.won) {
     s.awards.push({ year: s.year, level: 'HSV', key: 'HSNATL', label: 'National Prep Invitational champion' });
     const final = run.games[run.games.length - 1];
-    pushMoment(s, { kind: 'title', title: 'National champions', teamName: team.name, color: team.color, text: `${team.name} win the National Prep Invitational.`, game: { ...final, level: 'HSV', teamShort: team.short }, lines: [] });
+    pushMoment(s, { kind: 'title', title: 'National champions', teamName: team.name, color: team.color, text: `${team.name} win the National Prep Invitational.`, game: { ...final, level: 'HSV', teamShort: team.short }, lines: [], recap });
   } else {
-    pushMoment(s, { kind: 'tournament', title: 'National Prep Invitational', color: team.color, teamName: team.name, text: `${team.name} were invited to nationals. ${result}.`, lines: [lineText(line)] });
+    pushMoment(s, { kind: 'tournament', title: 'National Prep Invitational', color: team.color, teamName: team.name, text: `${team.name} were invited to nationals. ${result}.`, lines: [lineText(line)], recap });
   }
   s.player.rep = clamp(s.player.rep + (run.won ? 6 : 3), 0, 100);
 }
@@ -266,7 +312,7 @@ export function mcdonaldsGame(s: GameState): void {
     lines.push('Game MVP');
     s.player.rep = clamp(s.player.rep + 4, 0, 100);
   }
-  record(s, { year: s.year, name: "McDonald's All-American Game", team: 'All-Americans', result: g.win ? 'Won' : 'Lost', line: g.log.line });
+  record(s, { year: s.year, name: "McDonald's All-American Game", team: 'All-Americans', result: g.win ? 'Won' : 'Lost', line: g.log.line, games: [g.log] });
   pushMoment(s, { kind: 'tournament', title: "McDonald's All-American Game", color: '#C8102E', text: 'The best 24 seniors in the country, one night.', lines });
 }
 
@@ -341,11 +387,22 @@ export function resolveNationalTeam(s: GameState, data: Record<string, unknown>,
   const groupOpps = shuffle(s.rng, [...pool]).slice(0, 3);
   const games: GameLog[] = [];
   let groupWins = 0;
+  const table = new Map<string, number>([[nation, 0], ...groupOpps.map((o) => [o.name, 0] as [string, number])]);
   for (const o of groupOpps) {
     const g = exhibitionGame(s, level, role, my, o, 'Group stage', { neutral: true });
     games.push(g.log);
     if (g.win) groupWins++;
+    table.set(g.win ? nation : o.name, table.get(g.win ? nation : o.name)! + 1);
   }
+  // the other group games
+  const notes: string[] = [];
+  for (let i = 0; i < groupOpps.length; i++)
+    for (let j = i + 1; j < groupOpps.length; j++) {
+      const r = otherGame(s, level, groupOpps[i], groupOpps[j], 'Group stage');
+      notes.push(r.text);
+      table.set(r.winner.name, table.get(r.winner.name)! + 1);
+    }
+  notes.push(`Group table: ${[...table.entries()].sort((a, b) => b[1] - a[1]).map(([n, w]) => `${n} ${w}–${groupOpps.length - w}`).join(' · ')}`);
   let result: string;
   let medal: 'gold' | 'silver' | 'bronze' | undefined;
   if (groupWins < 2) result = 'Out in the group stage';
@@ -353,6 +410,7 @@ export function resolveNationalTeam(s: GameState, data: Record<string, unknown>,
     const strong = [...pool].sort((a, b) => b.strength - a.strength);
     const run = knockout(s, level, role, my, [strong[int(s.rng, 4, 8)], strong[int(s.rng, 1, 3)], strong[0].name === nation ? strong[1] : strong[0]], ['Quarterfinal', 'Semifinal', 'Final']);
     games.push(...run.games);
+    notes.push(...run.notes);
     if (run.won) {
       result = 'Gold medal';
       medal = 'gold';
@@ -368,7 +426,13 @@ export function resolveNationalTeam(s: GameState, data: Record<string, unknown>,
   }
   games.forEach((g, i) => (g.n = i + 1));
   const line = sumLines(games.map((g) => g.line));
-  record(s, { year: s.year + 1, name, team: nation, result, medal, line });
+  if (groupWins < 2) {
+    // the knockout rounds go on without them
+    const top = [...pool].sort((a, b) => b.strength + normal(s.rng, 0, 2) - a.strength)[0];
+    notes.push(`Champion: ${top.name}`);
+  }
+  record(s, { year: s.year + 1, name, team: nation, result, medal, line, games, notes });
+  const recap = tourneyRecap(games, notes, nation);
   s.player.rep = clamp(s.player.rep + (medal === 'gold' ? 8 : medal ? 5 : 3), 0, 100);
   s.player.morale = adjust(s.player.morale, medal ? 6 : -2);
   s.player.injuryMultNext *= 1.1;
@@ -379,9 +443,9 @@ export function resolveNationalTeam(s: GameState, data: Record<string, unknown>,
   logDecision(s, 'national', `Played for ${nation} at the ${name}: ${result.toLowerCase()}.`);
   const final = games[games.length - 1];
   if (medal === 'gold') {
-    pushMoment(s, { kind: 'title', title: `${name} gold`, teamName: nation, color: nation === 'USA' ? '#002868' : '#CD2E3A', text: `${nation} win gold at the ${name}.`, game: { ...final, level, teamShort: nation }, lines: [] });
+    pushMoment(s, { kind: 'title', title: `${name} gold`, teamName: nation, color: nation === 'USA' ? '#002868' : '#CD2E3A', text: `${nation} win gold at the ${name}.`, game: { ...final, level, teamShort: nation }, lines: [], recap });
   } else {
-    pushMoment(s, { kind: 'tournament', title: name, teamName: nation, color: nation === 'USA' ? '#002868' : '#CD2E3A', text: `${nation} at the ${name}: ${result}.`, lines: [lineText(line)] });
+    pushMoment(s, { kind: 'tournament', title: name, teamName: nation, color: nation === 'USA' ? '#002868' : '#CD2E3A', text: `${nation} at the ${name}: ${result}.`, lines: [lineText(line)], recap });
   }
   return `${name}: ${result}.`;
 }

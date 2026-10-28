@@ -1,6 +1,7 @@
 // The in-season loop: preseason → first half → midseason → second half + postseason.
 
 import {
+  GAME_POINTS,
   AGENT_CUT,
   DEEP_BENCH,
   FORM,
@@ -49,6 +50,7 @@ import {
 import { buildEu, buildGl, buildHs, buildInt, buildNba, buildNcaa, schoolRoster, USER_SCHOOL_ID } from '../world/leagues';
 import { rosterStrength } from '../world/gen';
 import { buildCandidates, nbaAwards, simpleAwards, type AwardOutcome } from '../awards/awards';
+import { playoffMvps, postseasonRecap, recordNbaYear } from '../awards/playoffs';
 import { adjust, conferenceRank, milestone, pushDecision, pushMoment, rankOnRoster, roleWithTrust, teamById, userOvr } from './common';
 import { queueMidseasonEvents } from '../events/resolver';
 import { allStarWeekend, conferenceTournament, hsNationals, mcdonaldsGame, nbaCup, nbaPreseason } from '../sim/tournaments';
@@ -173,7 +175,6 @@ function rollMinutes(rng: Rng, role: RoleKey, level: LevelKey, post: boolean): n
   return clamp(Math.round(((range(rng, a, b) + bump) * len) / 48), 0, len);
 }
 
-const BASE_SCORE: Record<LevelKey, number> = { HSJV: 48, HSV: 56, NCAA: 72, GL: 115, EU: 82, INT: 85, NBA: 113 };
 
 function makeHook(s: GameState, league: League, level: LevelKey, acc: HalfAcc, slot: UserSlot): UserGameHook {
   const L = LEVELS[level];
@@ -182,7 +183,7 @@ function makeHook(s: GameState, league: League, level: LevelKey, acc: HalfAcc, s
   const replacement = sorted[Math.min(sorted.length - 1, Math.max(0, slot.rank - 1))]?.ovr ?? L.avg;
   const usageMean = teamUsageMean(level, team.roster, slot);
   const daysPerGame = L.seasonDays / L.games;
-  return (opp: Team, home: boolean, post?: string) => {
+  const hook: UserGameHook = (opp: Team, home: boolean, post?: string) => {
     const season = s.season!;
     const p = s.player;
     const rng = s.rng;
@@ -228,12 +229,13 @@ function makeHook(s: GameState, league: League, level: LevelKey, acc: HalfAcc, s
     const impact = line ? (ovr - replacement) * (minutes / L.gameLen) * IMPACT_MULT : 0;
     const boost = line ? plan.teamBoost : 0;
     const win = chance(rng, winProb(team.strength + impact + boost, opp.strength, post && level !== 'NBA' ? 0 : home ? 1 : -1));
-    let us = Math.round(BASE_SCORE[level] + normal(rng, 0, 9));
+    let us = Math.round(GAME_POINTS[level] + normal(rng, 0, 9));
     if (line && line.pts > us - 15) us = line.pts + int(rng, 15, 30);
     const margin = int(rng, 1, 18);
     const them = win ? Math.max(20, us - margin) : us + margin;
     const log: GameLog = { n: (post ? season.postGames : season.games).length + 1, opp: opp.short, home, res: win ? 'W' : 'L', us, them, line, post };
     (post ? season.postGames : season.games).push(log);
+    hook.last = { us, them };
     if (line && level === 'NBA') {
       s.nbaGames++;
       milestone(s, 'debut');
@@ -241,6 +243,7 @@ function makeHook(s: GameState, league: League, level: LevelKey, acc: HalfAcc, s
     }
     return win;
   };
+  return hook;
 }
 
 function userSlot(s: GameState, team: Team, level: LevelKey): UserSlot {
@@ -452,6 +455,8 @@ function finishSeason(s: GameState): void {
   const slot = userSlot(s, team, level);
   const hook = makeHook(s, league, level, acc, slot);
   const post = postseason(s, league, hook);
+  const mvps = league.bracket ? playoffMvps(s.rng, league, league.bracket, { teamId: team.id, name: p.name, games: season.postGames }) : [];
+  const recap = league.bracket ? postseasonRecap(league, league.bracket) : [];
   if (level === 'HSV') {
     const rank = standings(league.teams).indexOf(team) + 1;
     if (post.champion || (rank <= 2 && team.strength >= 50) || s.flags.powerhouse) hsNationals(s, team);
@@ -473,6 +478,7 @@ function finishSeason(s: GameState): void {
     int: p.attrs.INT,
     prevValue: prevNba ? valuePerGame(prevNba.line) : null,
     age: p.age,
+    ovr: userOvr(s),
   };
   const cands = buildCandidates(league, userCand);
   let aw: AwardOutcome;
@@ -481,6 +487,7 @@ function finishSeason(s: GameState): void {
     // the All-Star team was picked at midseason; keep the season record consistent with it
     aw.wins = aw.wins.filter((w) => w.key !== 'ALLSTAR');
     if (season.allStar) aw.wins.push({ key: 'ALLSTAR', label: 'All-Star' });
+    recordNbaYear(s, league, aw, s.year);
   }
   else aw = simpleAwards(league, cands, level === 'NCAA' ? team.conf : null);
   const labels: string[] = aw.wins.map((w) => w.label);
@@ -493,18 +500,16 @@ function finishSeason(s: GameState): void {
       keys.push({ key: isKey ? 'TITLEKEY' : 'TITLE', label: 'NBA Champion' });
       labels.push('Champion');
       milestone(s, 'champion');
-      // Finals MVP: user's playoff value vs the team's best players
-      const userPv = postLine.gp > 0 ? valuePerGame(postLine) : 0;
-      const best = Math.max(...team.roster.slice(0, 3).map((g) => (g.s ? valuePerGame(g.s) : 0) * range(s.rng, 0.85, 1.15)));
-      if (userPv > best) {
-        keys.push({ key: 'FMVP', label: 'Finals MVP' });
-        labels.push('Finals MVP');
-      }
     } else {
       const key = level === 'NCAA' ? 'NCAATITLE' : level === 'EU' ? 'EUTITLE' : level === 'GL' ? 'GLTITLE' : level === 'INT' ? 'INTTITLE' : 'STATETITLE';
       keys.push({ key, label: post.result });
       labels.push(post.result);
     }
+  }
+  // series MVPs (Finals, conference finals, Final Four)
+  for (const m of mvps.filter((x) => x.isUser)) {
+    keys.push({ key: SERIES_MVP_KEY(level, m.award), label: m.award });
+    labels.push(m.award);
   }
   // senior-year national honours
   if (s.stage === 'HS' && s.hsYear === 4) {
@@ -532,10 +537,21 @@ function finishSeason(s: GameState): void {
         text: `${team.name} win it all. ${seasonLabel(s.year)}.`,
         game: { ...final, level, teamShort: team.short },
         lines: [],
+        recap,
       });
     }
+  } else if (league.bracket && recap.length > 0) {
+    pushMoment(s, {
+      kind: 'tournament',
+      title: POSTSEASON_TITLE[level] ?? 'The postseason',
+      teamName: team.name,
+      color: team.color,
+      text: `${teamById(league, league.bracket.champion)?.name ?? 'Someone else'} won it all. ${post.result}.`,
+      lines: [],
+      recap,
+    });
   }
-  const honours = aw.wins.map((w) => w.label).concat(keys.filter((k) => ['MCDAA', 'GATORADE', 'FMVP'].includes(k.key)).map((k) => k.label));
+  const honours = aw.wins.map((w) => w.label).concat(keys.filter((k) => ['MCDAA', 'GATORADE', 'FMVP', 'CFMVP', 'FFMOP', 'PLAYOFFMVP'].includes(k.key)).map((k) => k.label));
   if (honours.length > 0) {
     pushMoment(s, { kind: 'awards', title: honours.length > 1 ? 'Season honours' : honours[0], color: team.color, teamName: team.name, text: `${seasonLabel(s.year)} · ${team.name}`, lines: [...new Set(honours)] });
   }
@@ -633,6 +649,18 @@ function finishSeason(s: GameState): void {
   s.step = 'summary';
 }
 
+const SERIES_MVP_KEY = (level: LevelKey, award: string): string =>
+  level === 'NBA' ? (award === 'Finals MVP' ? 'FMVP' : 'CFMVP') : level === 'NCAA' ? 'FFMOP' : 'PLAYOFFMVP';
+
+const POSTSEASON_TITLE: Partial<Record<LevelKey, string>> = {
+  NBA: 'The NBA playoffs',
+  NCAA: 'March Madness',
+  EU: 'The EuroLeague playoffs',
+  GL: 'The G League playoffs',
+  INT: 'The playoffs',
+  HSV: 'The state playoffs',
+};
+
 const REP_BUMP: Record<string, number> = {
   MVP: 12,
   ALLNBA1: 8,
@@ -642,6 +670,9 @@ const REP_BUMP: Record<string, number> = {
   TITLE: 5,
   TITLEKEY: 8,
   FMVP: 8,
+  CFMVP: 3,
+  FFMOP: 4,
+  PLAYOFFMVP: 2,
   ROY: 5,
   DPOY: 5,
   SCORING: 4,

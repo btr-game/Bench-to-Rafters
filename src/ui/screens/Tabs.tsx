@@ -1,7 +1,7 @@
 // Season, Player, League and Records tabs.
 
 import { useState } from 'react';
-import type { GameState, League, SeasonRecord, StatLine, Team } from '../../engine/types';
+import type { GameState, League, SeasonRecord, SeriesResult, StatLine, Team } from '../../engine/types';
 import { LEVELS } from '../../engine/balance';
 import { standings } from '../../engine/sim/leagueSim';
 import { addLine, emptyLine, perGame } from '../../engine/sim/statModel';
@@ -11,6 +11,7 @@ import { Banners, Card, Meter, Scoreboard, type BannerItem } from '../components
 import { AttrRows } from '../components/PlayerCard';
 import { ScoutCard } from '../components/ScoutCard';
 import { fmtMoney, ht, pct, pg, seasonLabel } from '../format';
+import { ordinal } from '../../engine/career/season';
 import { league as leagueOf, ovr } from '../selectors';
 
 // ---------- Season ----------
@@ -127,32 +128,70 @@ function Standings({ g }: { g: GameState }) {
   return <StandingsTable lg={lg} teams={lg.teams} userId={g.teamId} />;
 }
 
+function SeriesRow({ x, name, me, label }: { x: SeriesResult; name: (id: string) => string; me: boolean; label?: string }) {
+  const games = x.games ?? [];
+  const head = (
+    <div className={`series${me ? ' me' : ''}`}>
+      <span>
+        {label ? <span className="muted">{label} · </span> : null}
+        {x.winner === x.a ? <b>{name(x.a)}</b> : name(x.a)} vs {x.winner === x.b ? <b>{name(x.b)}</b> : name(x.b)}
+      </span>
+      <span>{games.length === 1 ? `${games[0][0]}–${games[0][1]}` : `${x.wa}–${x.wb}`}</span>
+    </div>
+  );
+  if (games.length <= 1) return head;
+  return (
+    <details className="series-wrap">
+      <summary>{head}</summary>
+      <div className="series-games">
+        {games.map(([a, b], i) => (
+          <span key={i}>
+            Game {i + 1}: {name(x.a)} {a}, {name(x.b)} {b}
+          </span>
+        ))}
+      </div>
+    </details>
+  );
+}
+
 function BracketView({ g }: { g: GameState }) {
   const lg = leagueOf(g);
   const b = lg?.bracket;
   if (!lg || !b) return <p className="muted">The postseason bracket appears after the regular season.</p>;
   const name = (id: string) => lg.teams.find((t) => t.id === id)?.short ?? id;
   const rounds = lg.level === 'NCAA' ? b.rounds.slice(2) : b.rounds;
+  const mine = (x: SeriesResult) => x.a === g.teamId || x.b === g.teamId;
   return (
     <div className="bracket">
+      {b.playIn && b.playIn.length > 0 && (
+        <div className="round">
+          <div className="kicker">Play-In Tournament</div>
+          {b.playIn.map((x, i) => (
+            <SeriesRow key={i} x={x} name={name} me={mine(x)} label={x.label} />
+          ))}
+        </div>
+      )}
       {rounds.map((r) => (
         <div className="round" key={r.name}>
           <div className="kicker">{r.name}</div>
           {r.series
-            .filter((x) => lg.level !== 'NCAA' || r.series.length <= 16 || x.a === g.teamId || x.b === g.teamId)
+            .filter((x) => lg.level !== 'NCAA' || r.series.length <= 16 || mine(x))
             .map((x, i) => (
-              <div key={i} className={`series${x.a === g.teamId || x.b === g.teamId ? ' me' : ''}`}>
-                <span>
-                  {x.winner === x.a ? <b>{name(x.a)}</b> : name(x.a)} vs {x.winner === x.b ? <b>{name(x.b)}</b> : name(x.b)}
-                </span>
-                <span>
-                  {x.wa}–{x.wb}
-                </span>
-              </div>
+              <SeriesRow key={i} x={x} name={name} me={mine(x)} />
             ))}
         </div>
       ))}
       <div className="kicker">Champion: {name(b.champion)}</div>
+      {b.mvps && b.mvps.length > 0 && (
+        <div className="mvp-list">
+          {b.mvps.map((m, i) => (
+            <div key={i} className={`mvp small${m.isUser ? ' me' : ''}`}>
+              <b>{m.award}</b>: {m.name} ({m.team})<div className="muted">{m.line}</div>
+            </div>
+          ))}
+        </div>
+      )}
+      <p className="muted small">Tap a series to see every game.</p>
     </div>
   );
 }
@@ -273,6 +312,56 @@ export function PlayerTab({ g }: { g: GameState }) {
 
 // ---------- League ----------
 
+function NbaHistoryCard({ g }: { g: GameState }) {
+  const [all, setAll] = useState(false);
+  const rows = [...g.nbaHistory].reverse();
+  const shown = all ? rows : rows.slice(0, 8);
+  // how many MVPs each fictional player has won up to that season
+  const mvpCount = (year: number, n: string) => g.nbaHistory.filter((h) => h.year <= year && h.awards.some((a) => a.award === 'MVP' && a.name === n)).length;
+  return (
+    <Card title="NBA record book" kicker="Champions and award winners">
+      <div className="stack" style={{ gap: 10 }}>
+        {shown.map((h) => {
+          const mvp = h.awards.find((a) => a.award === 'MVP');
+          const others = h.awards.filter((a) => a.award !== 'MVP');
+          return (
+            <div key={h.year} className="history-row">
+              <div className="row">
+                <b>{seasonLabel(h.year)}</b>
+                <div className="spacer" />
+                <span className="small">
+                  🏆 <b>{h.champion}</b> def. {h.runnerUp} {h.finals}
+                </span>
+              </div>
+              {h.finalsMvp && (
+                <div className={`small${h.finalsMvp.isUser ? ' me-text' : ''}`}>
+                  Finals MVP: {h.finalsMvp.name} ({h.finalsMvp.team}) <span className="muted">{h.finalsMvp.line}</span>
+                </div>
+              )}
+              {mvp && (
+                <div className={`small${mvp.isUser ? ' me-text' : ''}`}>
+                  MVP: {mvp.name} ({mvp.team}, OVR {mvp.ovr})
+                  {mvpCount(h.year, mvp.name) > 1 ? ` · MVP #${mvpCount(h.year, mvp.name)}` : ''} <span className="muted">{mvp.line}</span>
+                </div>
+              )}
+              {others.length > 0 && (
+                <div className="small muted">
+                  {others.map((a) => `${a.award}: ${a.name} (${a.team})`).join(' · ')}
+                </div>
+              )}
+            </div>
+          );
+        })}
+        {rows.length > 8 && (
+          <button className="btn ghost" onClick={() => setAll(!all)}>
+            {all ? 'Show fewer seasons' : `Show all ${rows.length} seasons`}
+          </button>
+        )}
+      </div>
+    </Card>
+  );
+}
+
 export function LeagueTab({ g }: { g: GameState }) {
   const lg = leagueOf(g) ?? g.nba;
   if (!lg) return <Card title="League">No league data yet.</Card>;
@@ -321,15 +410,26 @@ export function LeagueTab({ g }: { g: GameState }) {
         </div>
       </Card>
       {races.length > 0 && (
-        <Card title="Last season's award races">
+        <Card title="Last season's award voting">
           {races.map((r) => (
-            <div key={r.award} className="small">
-              <b>{r.award}</b>: {r.top.map((x, i) => `${i + 1}. ${x.name} (${x.team})`).join(' · ')}
-              {r.userRank ? ` · you: ${r.userRank}` : ''}
+            <div key={r.award} className="stack" style={{ gap: 4, marginBottom: 10 }}>
+              <b>{r.award === 'MVP' ? 'MVP voting' : r.award}</b>
+              <ol className="vote-list">
+                {r.top.map((x, i) => (
+                  <li key={i} className={x.isUser ? 'me' : ''}>
+                    <span>
+                      {x.name} <span className="muted">({x.team}{x.ovr ? ` · OVR ${x.ovr}` : ''})</span>
+                    </span>
+                    {x.line && <span className="muted small">{x.line}</span>}
+                  </li>
+                ))}
+              </ol>
+              {r.userRank && r.userRank > r.top.length ? <span className="small muted">You finished {ordinal(r.userRank)}.</span> : null}
             </div>
           ))}
         </Card>
       )}
+      {g.nbaHistory.length > 0 && <NbaHistoryCard g={g} />}
     </div>
   );
 }
@@ -413,35 +513,38 @@ export function RecordsTab({ g }: { g: GameState }) {
         <p className="muted small">High school and college seasons are listed but do not count toward pro career totals.</p>
       </Card>
       {g.tournaments.length > 0 && (
-        <Card title="Tournaments">
-          <div className="tbl-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th className="l">Year</th>
-                  <th className="l">Event</th>
-                  <th className="l">Team</th>
-                  <th className="l">Result</th>
-                  <th>GP</th>
-                  <th>PTS</th>
-                </tr>
-              </thead>
-              <tbody>
-                {[...g.tournaments].reverse().map((t, i) => (
-                  <tr key={i}>
-                    <td className="l">{t.year}</td>
-                    <td className="l">{t.name}</td>
-                    <td className="l">{t.team}</td>
-                    <td className="l">
+        <Card title="Tournaments" kicker="Tap an event to see every game">
+          <div className="stack" style={{ gap: 6 }}>
+            {[...g.tournaments].reverse().map((t, i) => (
+              <details key={i} className="tourney">
+                <summary>
+                  <span className="tourney-head">
+                    <b>
                       {t.medal ? (t.medal === 'gold' ? '🥇 ' : t.medal === 'silver' ? '🥈 ' : '🥉 ') : ''}
-                      {t.result}
-                    </td>
-                    <td>{t.line?.gp ?? 0}</td>
-                    <td>{t.line ? pg(t.line, 'pts') : '—'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      {t.name}
+                    </b>
+                    <span className="muted small">
+                      {t.year} · {t.team} · {t.result}
+                    </span>
+                  </span>
+                  <span className="num small">{t.line && t.line.gp ? `${pg(t.line, 'pts')} PPG` : '—'}</span>
+                </summary>
+                <div className="series-games">
+                  {(t.games ?? []).map((gm, k) => (
+                    <span key={k}>
+                      {gm.post ?? `Game ${k + 1}`}: {gm.res} {gm.us}–{gm.them} vs {gm.opp}
+                      {gm.line ? ` · ${gm.line.pts} pts, ${gm.line.reb} reb, ${gm.line.ast} ast` : ' · DNP'}
+                    </span>
+                  ))}
+                  {(t.notes ?? []).map((n, k) => (
+                    <span key={`n${k}`} className={n.startsWith('Champion') ? 'strong' : ''}>
+                      {n}
+                    </span>
+                  ))}
+                  {!t.games && !t.notes && <span>No game details for this event.</span>}
+                </div>
+              </details>
+            ))}
           </div>
         </Card>
       )}

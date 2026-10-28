@@ -60,12 +60,15 @@ export function scoringRating(a: Attrs): number {
 
 export const usageWeight = (a: Attrs): number => Math.exp(kneed(scoringRating(a)) / USAGE_TEMP);
 
+const kneeEff = (v: number): number => (v > EFF_KNEE.at ? EFF_KNEE.at + (v - EFF_KNEE.at) * EFF_KNEE.slope : v);
+
 /** Expected per-game numbers for a player given minutes and usage multiplier. */
 export function expected(pr: Profile, level: LevelKey, minutes: number, usageMult: number, moraleMult = 1): Expected {
   const L = LEVELS[level];
   const lv = L.avg;
   // shooting efficiency flattens out at the very top of the scale
-  const a = Object.fromEntries(Object.entries(pr.attrs).map(([k, v]) => [k, v > EFF_KNEE.at ? EFF_KNEE.at + (v - EFF_KNEE.at) * EFF_KNEE.slope : v])) as Attrs;
+  const r = pr.attrs;
+  const a: Attrs = { SHT: kneeEff(r.SHT), FIN: kneeEff(r.FIN), PLY: kneeEff(r.PLY), PER: kneeEff(r.PER), INT: kneeEff(r.INT), REB: kneeEff(r.REB), ATH: kneeEff(r.ATH), IQ: kneeEff(r.IQ) };
   const f36 = minutes / 36;
   const fgaPerMin = (L.teamFga / (5 * L.gameLen)) * usageMult;
   const fga = fgaPerMin * minutes;
