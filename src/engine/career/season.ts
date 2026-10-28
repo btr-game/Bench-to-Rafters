@@ -224,7 +224,10 @@ function makeHook(s: GameState, league: League, level: LevelKey, acc: HalfAcc, s
               inj.key === 'season'
                 ? `Season over. ${p.name} goes down against ${opp.short} and the scan confirms it: ${inj.name.toLowerCase()}. A long road back, and it may never be quite the same.`
                 : `${p.name} goes down against ${opp.short}. ${inj.name}: out about ${Math.round(inj.daysOut / 7)} weeks.`,
-            lines: inj.key === 'season' ? ['Athleticism −4 to −8', 'More injury-prone from now on', 'Morale −15'] : ['Athleticism −1', 'Morale −6'],
+            lines: [
+              `OVR ${Math.round(ovrOf(p.attrs, p.pos) + (inj.ovrLoss ?? 0))} → ${Math.round(ovrOf(p.attrs, p.pos))}`,
+              ...(inj.key === 'season' ? ['More injury-prone from now on', 'His ceiling may have dropped'] : ['Athleticism took a hit']),
+            ],
           });
         }
       }

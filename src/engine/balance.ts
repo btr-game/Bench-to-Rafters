@@ -24,6 +24,14 @@ export const HEIGHT_RANGE: Record<Pos, [number, number]> = {
   PF: [79, 83],
   C: [81, 86],
 };
+// Full-grown height is normal around the middle of the range, so some players end up well
+// outside it (a 6'1" shooting guard, a 7'3" center). Hard limits keep it plausible.
+export const HEIGHT_DRAW = { sd: 2.3, below: 4, above: 4 };
+// Height against the position's norm shifts the starting card a little (per inch).
+export const HEIGHT_ATTR: Partial<Record<AttrKey, number>> = { REB: 0.8, INT: 0.6, PLY: -0.4, ATH: -0.3 };
+// How far ahead of or behind his card a 14-year-old really is (in OVR points, roughly).
+// Partly linked to potential, mostly not: there are early bloomers and late bloomers.
+export const START_SHIFT = { mean: 1.5, sd: 4.2, potW: 1.6, min: -9, max: 12, jitter: 2 };
 
 export const ARCHETYPE_TOTAL = 320;
 export const REROLL_SPREAD = 3;
@@ -43,7 +51,7 @@ export interface SkewDist {
   min: number;
   max: number;
 }
-export const POTENTIAL: SkewDist = { base: 45, mu: 2.97, sigma: 0.6, min: 47, max: 103 };
+export const POTENTIAL: SkewDist = { base: 45, mu: 3.01, sigma: 0.6, min: 47, max: 103 };
 // stat caps may sit above 99 so elite players can actually reach the top of the scale
 export const CAP_MAX = 110;
 // attributes may pass 99 (up to their caps) so a 97-99 OVR is reachable; OVR itself tops out at 99
@@ -165,7 +173,13 @@ export const SUDDEN_DECLINE = { fromAge: 31, chance: 0.08, min: 4, max: 8 };
 export const DECLINE_NOISE = 0.3;
 
 // §7 injuries
-export const BASE_INJURY = 0.0118; // per game played
+export const BASE_INJURY = 0.0092; // per game played
+// What each injury costs (attribute points); rarer than before, but they leave a mark.
+export const INJURY_TOLL = {
+  minor: { ath: [0, 1] as [number, number] },
+  major: { ath: [2, 4] as [number, number], other: [1, 3] as [number, number], capChance: 0.35, cap: [1, 3] as [number, number] },
+  season: { ath: [5, 9] as [number, number], others: 2, other: [2, 4] as [number, number], capChance: 0.7, cap: [2, 4] as [number, number] },
+};
 export const INJURY_AGE_MULT = (age: number): number => (age < 24 ? 0.85 : age < 30 ? 1 : age < 34 ? 1.2 : 1.4);
 export const INJURY_SEVERITY: { key: 'dtd' | 'minor' | 'major' | 'season'; share: number; days: [number, number] }[] = [
   { key: 'dtd', share: 0.5, days: [2, 6] },

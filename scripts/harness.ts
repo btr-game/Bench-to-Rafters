@@ -14,7 +14,7 @@ export type Policy = 'random' | 'smart';
 
 function randomInput(r: Rng, policy: Policy) {
   const pos: Pos = pick(r, POSITIONS);
-  const archetype = int(r, 0, 2);
+  const archetype = int(r, 0, ARCHETYPES[pos].length - 1);
   const arch = ARCHETYPES[pos][archetype];
   let focus = [...ATTRS].sort(() => next(r) - 0.5).slice(0, 2);
   if (policy === 'smart') {

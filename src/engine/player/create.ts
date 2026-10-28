@@ -5,7 +5,10 @@ import {
   CAP_FROM_START,
   DURABILITY_RANGE,
   GROWTH_TYPE_ODDS,
+  HEIGHT_ATTR,
+  HEIGHT_DRAW,
   HEIGHT_RANGE,
+  START_SHIFT,
   CAP_MAX,
   POTENTIAL,
   type SkewDist,
@@ -50,16 +53,28 @@ export function rerollAttrs(rng: Rng, base: Attrs): Attrs {
 }
 
 const weighted = <T>(rng: Rng, odds: [T, number][]): T => odds[weightedIndex(rng, odds.map((o) => o[1]))][0];
+const weightedPick = (rng: Rng, odds: [number, number][]): number => weighted(rng, odds);
 
 export function createPlayer(rng: Rng, input: CreateInput): UserPlayer {
   const arch = ARCHETYPES[input.pos][input.archetype];
-  const attrs = { ...(input.attrs ?? arch.attrs) };
+  const card = { ...(input.attrs ?? arch.attrs) };
   const [hMin, hMax] = HEIGHT_RANGE[input.pos];
-  const fullHeight = input.height ?? int(rng, hMin, hMax);
-  const height = fullHeight - int(rng, 1, 3);
+  const mid = (hMin + hMax) / 2 + (arch.height ?? 0);
+  const fullHeight = input.height ?? Math.round(clamp(normal(rng, mid, HEIGHT_DRAW.sd), hMin - HEIGHT_DRAW.below, hMax + HEIGHT_DRAW.above));
+  // some 14-year-olds are nearly done growing, others have half a foot to go
+  const height = fullHeight - weightedPick(rng, [[1, 2], [2, 3], [3, 3], [4, 2], [5, 1.2], [6, 0.8], [7, 0.4]]);
   const potential = drawPotential(rng, POTENTIAL);
   const caps = {} as Attrs;
-  for (const k of ATTRS) caps[k] = clamp(potential + (attrs[k] - 40) * CAP_FROM_START, 30, CAP_MAX);
+  // the ceiling comes from the card, so a head start does not raise it
+  for (const k of ATTRS) caps[k] = clamp(potential + (card[k] - 40) * CAP_FROM_START, 30, CAP_MAX);
+  const potZ = (Math.log(Math.max(1, potential - POTENTIAL.base)) - POTENTIAL.mu) / POTENTIAL.sigma;
+  const shift = clamp(START_SHIFT.potW * potZ + normal(rng, START_SHIFT.mean, START_SHIFT.sd), START_SHIFT.min, START_SHIFT.max);
+  const dh = fullHeight - (hMin + hMax) / 2;
+  const attrs = {} as Attrs;
+  for (const k of ATTRS) {
+    const tall = (HEIGHT_ATTR[k] ?? 0) * dh;
+    attrs[k] = Math.round(clamp(card[k] + shift + tall + int(rng, -START_SHIFT.jitter, START_SHIFT.jitter), 15, 99));
+  }
   return {
     name: input.name,
     number: input.number,

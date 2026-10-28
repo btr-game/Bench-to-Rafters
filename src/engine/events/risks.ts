@@ -7,6 +7,17 @@ import type { AttrKey, GameState, Stage } from '../types';
 import { adjust } from '../career/common';
 import { fmtMoney } from '../economy/salary';
 import type { EventDef } from './defs';
+import { positionOptions, setPosition } from '../career/position';
+import { ovrOf } from '../player/ovr';
+import { NAMES } from '../../content/strings';
+
+/** The adjacent spot a coach would move him to: one that fits and does not cost much OVR. */
+function coachSpot(s: GameState) {
+  const now = ovrOf(s.player.attrs, s.player.pos);
+  return positionOptions(s)
+    .filter((o) => o.allowed && o.fit === 'natural size' && o.ovr >= now - 1.5)
+    .sort((a, b) => b.ovr - a.ovr)[0];
+}
 
 const ALL: Stage[] = ['HS', 'NCAA', 'GL', 'EU', 'INT', 'NBA'];
 const PRO: Stage[] = ['GL', 'EU', 'INT', 'NBA'];
@@ -457,5 +468,41 @@ export const RISK_EVENTS: EventDef[] = [
         },
       },
     ],
+  },
+  {
+    id: 'coachpos',
+    stages: ALL,
+    phase: 'mid',
+    when: (s) => !!coachSpot(s),
+    weight: 0.7,
+    cooldownSeasons: 3,
+    title: 'A new spot',
+    text: (s) => {
+      const o = coachSpot(s);
+      return `The coach wants to try you at ${o ? NAMES.pos[o.pos].toLowerCase() : 'another position'} for the rest of the season. He thinks it fits your game.`;
+    },
+    choices: (s) => {
+      const o = coachSpot(s);
+      return [
+        {
+          label: `Move to ${o ? NAMES.pos[o.pos].toLowerCase() : 'the new spot'}`,
+          detail: 'The coach will trust you for it',
+          resolve: (st: GameState) => {
+            const spot = coachSpot(st);
+            if (!spot) return ok('The plan changed. You stay where you are.');
+            trust(st, 6);
+            return ok(setPosition(st, spot.pos, true));
+          },
+        },
+        {
+          label: 'Ask to stay where you are',
+          detail: 'He will not love it',
+          resolve: (st: GameState) => {
+            trust(st, -4);
+            return ok('He shrugs. Your spot, your responsibility.');
+          },
+        },
+      ];
+    },
   },
 ];

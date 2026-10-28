@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { advance, canRetire, choose, newGame, prompt, retireByChoice } from '../src/engine/flow';
+import { advance, canChangePosition, canRetire, changePosition, choose, newGame, positionOptions, prompt, retireByChoice } from '../src/engine/flow';
+import { ovrOf } from '../src/engine/player/ovr';
 import { makeRng, next, normal } from '../src/engine/rng';
 import type { GameState } from '../src/engine/types';
 import { runCareer } from '../scripts/harness';
@@ -132,7 +133,7 @@ describe('international origins', () => {
     expect(s.player.country).toBe('Lithuania');
     expect(s.player.hometown).toMatch(/Lithuania$/);
     expect(['Žalgiris academy', 'Rytas youth']).toContain(s.player.highSchool);
-    expect(s.league?.label).toBe('Lithuanian junior league');
+    expect(s.league?.label).toMatch(/^Lithuanian junior league/);
   });
 
   it('a European who turns pro at 16 can still be drafted from his club', () => {
@@ -173,5 +174,31 @@ describe('retire any season', () => {
     retireByChoice(s);
     expect(s.step).toBe('retired');
     expect(prompt(s).type).toBe('retired');
+  });
+});
+
+describe('variety at the start', () => {
+  it('starting OVR and height vary between players of the same archetype', () => {
+    const ovrs = new Set<number>();
+    const heights = new Set<number>();
+    for (let i = 0; i < 40; i++) {
+      const s = newGame(400 + i, { name: 'X', number: 1, pos: 'SF', archetype: 0, focus: ['SHT', 'PER'] });
+      ovrs.add(Math.round(ovrOf(s.player.attrs, 'SF')));
+      heights.add(s.player.fullHeight);
+    }
+    expect(Math.max(...ovrs) - Math.min(...ovrs)).toBeGreaterThanOrEqual(10);
+    expect(Math.max(...heights) - Math.min(...heights)).toBeGreaterThanOrEqual(6);
+  });
+
+  it('position moves: adjacent always, two spots only when the height fits', () => {
+    const s = newGame(5, { name: 'X', number: 1, pos: 'SG', archetype: 0, focus: ['SHT', 'IQ'], height: 76 });
+    s.step = 'offseason';
+    const opts = positionOptions(s);
+    expect(opts.find((o) => o.pos === 'PG')!.allowed).toBe(true);
+    expect(opts.find((o) => o.pos === 'SF')!.allowed).toBe(true);
+    expect(opts.find((o) => o.pos === 'C')!.allowed).toBe(false);
+    changePosition(s, 'SF');
+    expect(s.player.pos).toBe('SF');
+    expect(canChangePosition(s)).toBe(false); // once per offseason
   });
 });

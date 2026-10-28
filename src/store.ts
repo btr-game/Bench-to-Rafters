@@ -2,8 +2,8 @@
 // on a structured clone and swaps it in; React sees a new object each time.
 
 import { create } from 'zustand';
-import type { GameLog, GameState } from './engine/types';
-import { advance as engineAdvance, choose as engineChoose, dismissMoment, newGame, retireByChoice, type CreateInput } from './engine/flow';
+import type { GameLog, GameState, Pos } from './engine/types';
+import { advance as engineAdvance, changePosition, choose as engineChoose, dismissMoment, newGame, retireByChoice, type CreateInput } from './engine/flow';
 import { seasonLabel } from './ui/format';
 
 export type Tab = 'home' | 'season' | 'player' | 'league' | 'records';
@@ -24,6 +24,7 @@ interface Store {
   advance: () => void;
   dismissMoment: () => void;
   retire: () => void;
+  changePosition: (pos: Pos) => void;
   endTransition: () => void;
   reset: () => void;
   setTab: (t: Tab) => void;
@@ -93,6 +94,13 @@ export const useStore = create<Store>((set, get) => ({
     }
     set({ game: next, tab: 'home', transition });
     top();
+  },
+  changePosition: (pos) => {
+    const g = get().game;
+    if (!g) return;
+    const next = structuredClone(g);
+    changePosition(next, pos);
+    set({ game: next });
   },
   retire: () => {
     const g = get().game;

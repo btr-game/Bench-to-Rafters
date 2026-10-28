@@ -247,3 +247,33 @@ fewer injuries but other risks; more events and purchases; retire any season; bi
   larger than the text around it.
 - **Harness targets** were reset to this design (see `scripts/harness.ts`); every target and
   league calibration check passes.
+
+## Playtest round 4 (Oct 2026)
+
+Feedback: more archetypes (five per position), more varied starting OVR (it was always
+about 46), fewer but more costly injuries, more varied heights, and easier position changes.
+
+- **Archetypes:** five per position (25 total), each still totaling 320 and starting
+  between 40.5 and 47 OVR on its card. New: Jumbo Playmaker and Speedster (PG), Combo Guard
+  and Shot Creator (SG), Scoring Wing and Glue Guy (SF), Two-Way Forward and Playmaking Four
+  (PF), Playmaking Big and Lob Threat (C). Some shift the usual height (a Jumbo Playmaker is
+  about 4 inches taller). Generated players use all five shapes.
+- **Starting level:** the card is a typical player of that type. At tryouts every attribute
+  moves by a shared shift ~ N(+1.5, 4.2), partly linked to potential (early and late
+  bloomers both exist), plus ±2 per attribute. Starting OVR now runs about 35 to 53 (5th to
+  95th percentile). The ceiling still comes from the card, so a head start is not a higher
+  ceiling. The first story page shows the starting level and projected height.
+- **Height:** full height is normal around the middle of the position's range (sd 2.3
+  inches, up to 4 inches outside it): from 5'8" point guards to 7'6" centers. A 14-year-old
+  has 1 to 7 inches left to grow. Height against the position's norm shifts the starting
+  card (taller: more rebounding and interior defense, less playmaking and athleticism).
+- **Injuries:** base rate 0.0118 to 0.0092 per game (about 22% fewer). Each one costs more:
+  minor ones can cost a point of athleticism; major ones 2-4 athleticism plus 1-3 of another
+  stat and sometimes the athleticism ceiling; season-ending ones 5-9 athleticism, 2-4 of two
+  other stats, and usually lower ceilings. The injury page shows the OVR before and after.
+- **Positions:** every offseason the player may move one spot along PG-SG-SF-PF-C, or two
+  spots when his height fits (within an inch of the new position's range). The options show
+  his OVR at each position and whether his size fits. Coach trust drops a little. A coach may
+  also ask for a mid-season move to a spot that suits him.
+- **Balance:** potential mu 2.97 to 3.01 to make up for the heavier injuries and lower cards.
+  Every harness target passes (mean peak 65.6 random, 69.3 smart).

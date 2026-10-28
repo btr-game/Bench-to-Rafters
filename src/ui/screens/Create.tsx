@@ -200,7 +200,7 @@ export function Create() {
             <div className="spacer" />
             <div className="ovr">
               <b>{Math.round(startOvr)}</b>
-              <small>OVR</small>
+              <small>CARD</small>
             </div>
           </div>
           <div className="board">
@@ -215,7 +215,7 @@ export function Create() {
             ))}
           </div>
           <p className="muted small">
-            Focus: {focus.map((k) => NAMES.attr[k]).join(' and ')}. Height: still growing, will end up {ht(hMin)}–{ht(hMax)}. {UI.create.assignedText}
+            Focus: {focus.map((k) => NAMES.attr[k]).join(' and ')}. Height: still growing, most end up {ht(hMin + (archetype.height ?? 0))}–{ht(hMax + (archetype.height ?? 0))}, some well outside it. This card is a typical {archetype.name.toLowerCase()}; your real starting level is set at tryouts and can be several points higher or lower. {UI.create.assignedText}
           </p>
         </section>
       )}

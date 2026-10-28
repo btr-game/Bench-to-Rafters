@@ -79,6 +79,12 @@ export function newGame(seed: number, input: CreateInput): GameState {
   // the game assigns his country, where he grows up and where he plays as a teenager
   assignOrigin(s);
   const intro = introText(s);
+  const start = ovrOf(player.attrs, player.pos);
+  const ft = (x: number) => `${Math.floor(x / 12)}′${x % 12}″`;
+  intro.lines.unshift(
+    `Starting level: OVR ${Math.round(start)}, ${start >= 50 ? 'well ahead of most kids his age' : start >= 46 ? 'ahead of most kids his age' : start >= 41 ? 'about where most kids his age are' : 'raw, behind most kids his age'}`,
+    `${ft(player.height)} now; the doctors think he will grow to about ${ft(player.fullHeight)}`,
+  );
   pushMoment(s, { kind: 'intro', title: player.highSchool, text: intro.text, color: s.schoolColor, lines: intro.lines });
   logDecision(s, 'start', `Enrolled at ${player.highSchool} in ${player.hometown} as a ${input.pos}, ${player.archetype}.`);
   beginSeason(s);
@@ -190,4 +196,5 @@ function finishCareer(s: GameState): void {
 }
 
 export { activeLeague };
+export { canChangePosition, changePosition, positionOptions } from './career/position';
 export type { CreateInput };

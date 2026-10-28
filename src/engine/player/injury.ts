@@ -1,5 +1,6 @@
-import { BASE_INJURY, HALF_PLANS, INJURY_AGE_MULT, INJURY_SEVERITY } from '../balance';
-import { chance, int, pick, weightedIndex, type Rng } from '../rng';
+import { BASE_INJURY, HALF_PLANS, INJURY_AGE_MULT, INJURY_SEVERITY, INJURY_TOLL } from '../balance';
+import { ovrOf } from './ovr';
+import { chance, int, pick, shuffle, weightedIndex, type Rng } from '../rng';
 import type { HalfPlan, Injury, UserPlayer } from '../types';
 
 const NAMES: Record<Injury['key'], string[]> = {
@@ -19,19 +20,29 @@ export function rollInjury(rng: Rng, p: UserPlayer, plan: HalfPlan, minutes: num
   if (minutes <= 0 || !chance(rng, injuryChance(p, plan, minutes))) return null;
   const sev = INJURY_SEVERITY[weightedIndex(rng, INJURY_SEVERITY.map((s) => s.share))];
   const inj: Injury = { key: sev.key, name: pick(rng, NAMES[sev.key]), daysOut: int(rng, sev.days[0], sev.days[1]) };
+  const before = ovrOf(p.attrs, p.pos);
+  const hit = (k: keyof typeof p.attrs, [a, b]: [number, number]) => (p.attrs[k] = Math.max(15, p.attrs[k] - int(rng, a, b)));
+  if (sev.key === 'minor') {
+    hit('ATH', INJURY_TOLL.minor.ath);
+    p.morale = Math.max(0, p.morale - 2);
+  }
   if (sev.key === 'major') {
-    p.attrs.ATH = Math.max(15, p.attrs.ATH - 1);
-    const k = pick(rng, ['FIN', 'PER', 'REB'] as const);
-    p.attrs[k] = Math.max(15, p.attrs[k] - 1);
-    p.morale = Math.max(0, p.morale - 6);
+    const t = INJURY_TOLL.major;
+    hit('ATH', t.ath);
+    hit(pick(rng, ['FIN', 'PER', 'REB', 'SHT'] as const), t.other);
+    p.morale = Math.max(0, p.morale - 8);
+    if (chance(rng, t.capChance)) p.caps.ATH = Math.max(30, p.caps.ATH - int(rng, t.cap[0], t.cap[1]));
   }
   if (sev.key === 'season') {
-    p.attrs.ATH = Math.max(15, p.attrs.ATH - int(rng, 4, 8));
+    const t = INJURY_TOLL.season;
+    hit('ATH', t.ath);
+    for (const k of shuffle(rng, ['FIN', 'PER', 'REB', 'INT', 'SHT'] as const).slice(0, t.others)) hit(k, t.other);
     p.durability = Math.round((p.durability + 0.1) * 100) / 100; // higher multiplier = more fragile
     p.morale = Math.max(0, p.morale - 15);
-    // half the time the injury also lowers his ceiling
-    if (chance(rng, 0.5)) for (const k of ['ATH', 'FIN', 'PER'] as const) p.caps[k] = Math.max(30, p.caps[k] - 2);
+    // most of the time the injury also lowers his ceiling
+    if (chance(rng, t.capChance)) for (const k of ['ATH', 'FIN', 'PER'] as const) p.caps[k] = Math.max(30, p.caps[k] - int(rng, t.cap[0], t.cap[1]));
   }
+  inj.ovrLoss = Math.max(0, before - ovrOf(p.attrs, p.pos));
   p.injury = inj;
   return inj;
 }

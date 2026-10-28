@@ -1,9 +1,10 @@
 // Generated (fictional) players and rosters.
 
-import { HEIGHT_RANGE, POSITIONS, ROSTER_NOISE_SD, ROSTER_OFFSETS, STRENGTH_WEIGHTS } from '../balance';
+import { HEIGHT_DRAW, HEIGHT_RANGE, POSITIONS, ROSTER_NOISE_SD, ROSTER_OFFSETS, STRENGTH_WEIGHTS } from '../balance';
 import { FIRST_NAMES, LAST_NAMES } from '../../content/names';
 import { clamp, int, normal, pick, shuffle, type Rng } from '../rng';
 import type { GameState, GenPlayer, Pos } from '../types';
+import { ARCHETYPES } from '../player/archetypes';
 
 export function newId(s: GameState): number {
   return s.nextId++;
@@ -15,7 +16,7 @@ export function genName(rng: Rng): string {
 
 export function genHeight(rng: Rng, pos: Pos): number {
   const [a, b] = HEIGHT_RANGE[pos];
-  return int(rng, a, b);
+  return Math.round(clamp(normal(rng, (a + b) / 2, HEIGHT_DRAW.sd), a - HEIGHT_DRAW.below, b + HEIGHT_DRAW.above));
 }
 
 /** Potential for a generated player: young players have room to grow. */
@@ -31,7 +32,7 @@ export function genPlayer(s: GameState, ovr: number, age: number, pos?: Pos): Ge
     id: newId(s),
     name: genName(rng),
     pos: p,
-    shape: int(rng, 0, 2),
+    shape: int(rng, 0, ARCHETYPES[p].length - 1),
     age,
     ovr: clamp(ovr, 20, 97),
     pot: genPotential(rng, ovr, age),

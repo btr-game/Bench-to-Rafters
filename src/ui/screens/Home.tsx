@@ -1,5 +1,5 @@
 import type { GameState, SeasonRecord } from '../../engine/types';
-import { canRetire, prompt } from '../../engine/flow';
+import { canChangePosition, canRetire, positionOptions, prompt } from '../../engine/flow';
 import { useState } from 'react';
 import { LEVELS } from '../../engine/balance';
 import { NAMES, UI } from '../../content/strings';
@@ -8,7 +8,7 @@ import { Banners, MilestoneStrip, ReactionCard, Scoreboard } from '../components
 import { PlayerCard } from '../components/PlayerCard';
 import { ScoutCard } from '../components/ScoutCard';
 import { DecisionView } from './Decision';
-import { fmtMoney, ordinal, pg, seasonLabel, signed } from '../format';
+import { fmtMoney, ht, ordinal, pg, seasonLabel, signed } from '../format';
 import { team } from '../selectors';
 import { perGame } from '../../engine/sim/statModel';
 
@@ -191,6 +191,41 @@ function Todo({ g }: { g: GameState }) {
   );
 }
 
+function PositionCard({ g }: { g: GameState }) {
+  const change = useStore((s) => s.changePosition);
+  const [open, setOpen] = useState(false);
+  const p = g.player;
+  const opts = positionOptions(g);
+  return (
+    <section className="card stack">
+      <div className="row">
+        <div className="sec-title">Position</div>
+        <div className="spacer" />
+        <span className="small muted">
+          {NAMES.pos[p.pos]} · {ht(p.fullHeight)}
+        </span>
+      </div>
+      {open ? (
+        <div className="stack" style={{ gap: 6 }}>
+          {opts.map((o) => (
+            <button key={o.pos} className="choice" disabled={!o.allowed} onClick={() => change(o.pos)}>
+              <span className="label">
+                {NAMES.pos[o.pos]} <span className="muted">· OVR {Math.round(o.ovr)}</span>
+              </span>
+              <small>{o.fit}</small>
+            </button>
+          ))}
+          <p className="small muted">One move per offseason. Your OVR is re-weighted for the new spot, and the coach needs time to trust you there.</p>
+        </div>
+      ) : (
+        <button className="btn ghost" onClick={() => setOpen(true)}>
+          Try another position
+        </button>
+      )}
+    </section>
+  );
+}
+
 function RetireCard({ g }: { g: GameState }) {
   const retire = useStore((s) => s.retire);
   const [armed, setArmed] = useState(false);
@@ -248,6 +283,7 @@ export function Home({ g }: { g: GameState }) {
           <MilestoneStrip reached={g.milestones} />
         </section>
         <Todo g={g} />
+        {canChangePosition(g) && <PositionCard g={g} />}
         {canRetire(g) && <RetireCard g={g} />}
         {g.feed[0] && (
           <section className="card">

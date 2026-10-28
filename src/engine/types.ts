@@ -17,6 +17,7 @@ export interface Injury {
   key: 'dtd' | 'minor' | 'major' | 'season';
   name: string;
   daysOut: number;
+  ovrLoss?: number; // OVR the injury cost right away
 }
 
 export interface StatLine {
