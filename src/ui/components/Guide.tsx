@@ -42,6 +42,7 @@ const SECTIONS: { title: string; where: string; items: [string, string][] }[] = 
     items: [
       ['Legacy', 'Every honour is worth legacy points by tier: S (Hall of Fame, the rafters, MVP, Finals MVP) down to D. See the tier list in Records.'],
       ['The rafters', 'A team retires your number after 7+ seasons with a strong legacy, or 5+ seasons and a title won as a key player. It is the ultimate honour, and it gets its own page.'],
+      ['Championships', 'Titles are won by teams. Your roster\u2019s rank is in the season preview; chemistry builds with every season together, stars attract talent, and the trade deadline or an injury can swing a season. Defenders, floor generals and 3&D players add extra to winning, most of all in the playoffs. Veterans can chase a ring with a contender, and NBA players under contract can request a trade in the offseason.'],
       ['All-time rank', 'Your legacy points are ranked against 100 real legends. Download your career card to keep it.'],
     ],
   },

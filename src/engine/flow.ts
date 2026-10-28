@@ -241,4 +241,5 @@ function finishCareer(s: GameState): void {
 export { activeLeague };
 export { canChangePosition, changePosition, heightMismatch, positionOptions } from './career/position';
 export { canChangeFocus, changeFocus } from './career/focus';
+export { canRequestTrade, requestTrade } from './career/team';
 export type { CreateInput };

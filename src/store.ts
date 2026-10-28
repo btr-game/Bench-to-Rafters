@@ -2,6 +2,7 @@
 // on a structured clone and swaps it in; React sees a new object each time.
 
 import { fastForward } from './engine/fast';
+import { requestTrade } from './engine/career/team';
 import { create } from 'zustand';
 import type { AttrKey, GameLog, GameState, Pos } from './engine/types';
 import { advance as engineAdvance, changeFocus, changeNumber, changePosition, choose as engineChoose, dismissMoment, newGame, retireByChoice, type CreateInput } from './engine/flow';
@@ -28,6 +29,7 @@ interface Store {
   changePosition: (pos: Pos) => void;
   togglePlayoffs: () => void;
   toggleFast: () => void;
+  requestTrade: () => void;
   changeNumber: (n: number) => void;
   changeFocus: (keys: AttrKey[]) => void;
   endTransition: () => void;
@@ -122,6 +124,13 @@ export const useStore = create<Store>((set, get) => ({
     if (!g) return;
     const next = structuredClone(g);
     changeNumber(next, n);
+    set({ game: next });
+  },
+  requestTrade: () => {
+    const g = get().game;
+    if (!g) return;
+    const next = structuredClone(g);
+    requestTrade(next);
     set({ game: next });
   },
   toggleFast: () => {

@@ -1,5 +1,5 @@
 import type { AttrKey, GameState, SeasonRecord } from '../../engine/types';
-import { canChangeFocus, canChangePosition, canRetire, heightMismatch, positionOptions, prompt } from '../../engine/flow';
+import { canChangeFocus, canChangePosition, canRequestTrade, canRetire, heightMismatch, positionOptions, prompt } from '../../engine/flow';
 import { useState } from 'react';
 import { ATTRS, LEVELS } from '../../engine/balance';
 import { NAMES, UI } from '../../content/strings';
@@ -11,6 +11,8 @@ import { DecisionView } from './Decision';
 import { fmtMoney, ht, ordinal, pg, seasonLabel, signed } from '../format';
 import { team } from '../selectors';
 import { breakthroughBar } from '../../engine/career/breakthrough';
+import { rosterRank, winningEdge } from '../../engine/career/team';
+import { ovrOf } from '../../engine/player/ovr';
 import { perGame } from '../../engine/sim/statModel';
 
 export function SeasonSummary({ rec }: { rec: SeasonRecord }) {
@@ -171,6 +173,32 @@ function PlanOutcomes({ g, half }: { g: GameState; half?: number }) {
   );
 }
 
+/** How good his team is, and the team factors working for or against it this season. */
+function TeamOutlook({ g }: { g: GameState }) {
+  const s = g.season;
+  const lg = g.stage === 'NBA' ? g.nba : g.league;
+  if (!s || !lg || !g.teamId || lg.teams.length < 4) return null;
+  const rank = rosterRank(lg, g.teamId);
+  const n = lg.teams.length;
+  const edge = winningEdge(g.player.attrs, ovrOf(g.player.attrs, g.player.pos));
+  const tag = rank <= Math.max(1, Math.round(n * 0.1)) ? 'title contender' : rank <= Math.round(n * 0.3) ? 'playoff team' : rank <= Math.round(n * 0.6) ? 'middle of the pack' : 'rebuilding';
+  return (
+    <div className="small">
+      Roster: <b>{ordinal(rank)} of {n}</b> ({tag})
+      {(s.teamNotes ?? []).map((x) => (
+        <div key={x} className="muted">
+          {x}
+        </div>
+      ))}
+      {edge.traits.length > 0 && (
+        <div className="muted">
+          Winning player: {edge.traits.map((x) => (x === '3&D' ? x : x.toLowerCase())).join(', ')} (+{edge.regular.toFixed(1)} to the team, +{edge.playoff.toFixed(1)} in the playoffs, at full minutes)
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Context({ g }: { g: GameState }) {
   const s = g.season;
   if (g.step === 'preseason' && s) {
@@ -180,6 +208,7 @@ function Context({ g }: { g: GameState }) {
         <div>
           Projected role: <b>{NAMES.role[s.role]}</b> (number {s.roleRank} on the depth chart).
         </div>
+        <TeamOutlook g={g} />
         {s.preReport && <div className="small">{s.preReport}</div>}
         {g.contract && g.stage !== 'HS' && g.stage !== 'NCAA' && (
           <div className="muted small">
@@ -289,11 +318,11 @@ function FocusCard({ g }: { g: GameState }) {
 function OffseasonMoves({ g }: { g: GameState }) {
   const focusOpen = canChangeFocus(g);
   // a size problem opens the position card straight away
-  const [open, setOpen] = useState<'position' | 'number' | 'retire' | null>(heightMismatch(g) && canChangePosition(g) ? 'position' : null);
+  const [open, setOpen] = useState<'position' | 'number' | 'retire' | 'trade' | null>(heightMismatch(g) && canChangePosition(g) ? 'position' : null);
   const p = g.player;
   const bar = breakthroughBar(p.age);
   const focusDone = g.flags.focusYear === g.year;
-  const tiles: { id: 'focus' | 'position' | 'number' | 'retire'; label: string; sub: string; state: 'hot' | 'ready' | 'locked'; show: boolean }[] = [
+  const tiles: { id: 'focus' | 'position' | 'number' | 'retire' | 'trade'; label: string; sub: string; state: 'hot' | 'ready' | 'locked'; show: boolean }[] = [
     {
       id: 'focus',
       label: 'Focus stats',
@@ -303,6 +332,7 @@ function OffseasonMoves({ g }: { g: GameState }) {
     },
     { id: 'position', label: 'Position', sub: heightMismatch(g) ? 'Size check: another spot fits you' : `${NAMES.pos[p.pos]} · one move a summer`, state: canChangePosition(g) ? (heightMismatch(g) ? 'hot' : 'ready') : 'locked', show: true },
     { id: 'number', label: 'Jersey number', sub: `Now #${p.number}`, state: 'ready', show: g.stage !== 'RETIRED' },
+    { id: 'trade', label: 'Request a trade', sub: g.flags.tradeAsk === g.year ? 'Asked this summer' : 'Ask out for a better team', state: canRequestTrade(g) ? 'ready' : 'locked', show: g.stage === 'NBA' && !!g.contract && g.contract.years > 0 },
     { id: 'retire', label: 'Retire', sub: 'Hang it up on your terms', state: 'ready', show: canRetire(g) },
   ];
   return (
@@ -321,7 +351,7 @@ function OffseasonMoves({ g }: { g: GameState }) {
               className={`move-tile ${x.state}${open === x.id ? ' on' : ''}`}
               disabled={x.state === 'locked'}
               aria-expanded={x.id === 'focus' ? focusOpen : open === x.id}
-              onClick={() => x.id !== 'focus' && setOpen(open === x.id ? null : (x.id as 'position' | 'number' | 'retire'))}
+              onClick={() => x.id !== 'focus' && setOpen(open === x.id ? null : (x.id as 'position' | 'number' | 'retire' | 'trade'))}
             >
               {x.state === 'hot' && <span className="unlock-tag">New</span>}
               <b>{x.label}</b>
@@ -333,6 +363,7 @@ function OffseasonMoves({ g }: { g: GameState }) {
       {open === 'position' && canChangePosition(g) && <PositionCard g={g} />}
       {open === 'number' && <NumberCard g={g} />}
       {open === 'retire' && canRetire(g) && <RetireCard g={g} />}
+      {open === 'trade' && canRequestTrade(g) && <TradeCard g={g} />}
     </section>
   );
 }
@@ -396,6 +427,35 @@ function PositionCard({ g }: { g: GameState }) {
       ) : (
         <button className="btn ghost" onClick={() => setOpen(true)}>
           Try another position
+        </button>
+      )}
+    </section>
+  );
+}
+
+function TradeCard({ g }: { g: GameState }) {
+  const ask = useStore((s) => s.requestTrade);
+  const [armed, setArmed] = useState(false);
+  const rank = g.nba && g.teamId ? rosterRank(g.nba, g.teamId) : 0;
+  return (
+    <section className="card stack">
+      <div className="sec-title">Request a trade</div>
+      <p className="small muted">
+        Your team's roster ranks {ordinal(rank)} in the league. Ask out and the front office will try to move you to a better team. Better players and
+        bigger names get moved more easily. If nobody bites, your coach will not forget it.
+      </p>
+      {armed ? (
+        <div className="row" style={{ gap: 8 }}>
+          <button className="btn" onClick={ask}>
+            Yes, ask for a trade
+          </button>
+          <button className="btn ghost" onClick={() => setArmed(false)}>
+            Never mind
+          </button>
+        </div>
+      ) : (
+        <button className="btn ghost" onClick={() => setArmed(true)}>
+          Ask for a trade
         </button>
       )}
     </section>

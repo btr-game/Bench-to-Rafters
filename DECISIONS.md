@@ -516,3 +516,22 @@ nationality; event results that really differ; rare mold-breaking players; heigh
   (two offers below 76) and often Asia. Nearly every simulated career now sees a European offer.
 - **Main and side plans:** with two plans in a half, the first counts 80% and the second 45%
   (both were 65%).
+- **Team factors** (career/team.ts). Measured first: titles were already decided mostly by the
+  roster (a top-3 roster won 21.6% of seasons, a bottom-half one 0.3%, and even a 92+ player
+  only 2.7%), but most NBA seasons were spent on bottom-half rosters with no way out. Added:
+  chemistry (+0.25 a season in a row with a team, up to +0.8), star gravity (NBA, OVR 84+, up
+  to +1.0), one midseason swing in about a third of seasons (trade deadline, a teammate's
+  injury, a team that clicks, a split locker room, a coaching change; about ±0.4-1.6),
+  ring-chasing minimum offers from a top-4 contender for veterans (30+) and bench players
+  (half the time), and trade requests for NBA players under contract (succeeds 10-60%, by OVR
+  and reputation; failure costs coach trust). The season preview shows the roster's rank
+  and the factors at work. A first version was far too strong (titles in 9.8% of seasons
+  without trying, 41% when chasing); tuned to about 6% of seasons for a player who plays it
+  out (about a quarter of careers win a ring) and about 20% for one who chases rings and
+  requests trades.
+- **Winning players:** defenders, floor generals and 3&D players add team strength beyond
+  their OVR: ratings behind each trait that stand out above his own OVR count (0.10-0.14 per
+  point, scaled by level, capped at +2.5, 1.6x in the playoffs, scaled by minutes). On
+  top-8 rosters (110 careers per build): rim protector 33.1% titles a season vs post scorer
+  25.3%, floor general 28.4% vs scoring guard 24.9%, 3&D wing 27.0% vs scoring wing 20.7%, at
+  the same average peak.

@@ -335,6 +335,8 @@ export interface SeasonState {
   cupResult?: string;
   allStar?: boolean;
   allStarRank?: number;
+  teamBonus?: number; // team factors this season (career/team.ts)
+  teamNotes?: string[];
   outcomes?: { half: number; plan: HalfPlan; plan2?: HalfPlan | null; outcome: string; text: string; ovrGain: number }[];
 }
 

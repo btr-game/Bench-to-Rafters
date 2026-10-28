@@ -448,6 +448,25 @@ export const MARKET_AGE_DROP = (age: number): number => (age <= 29 ? 1 : Math.ma
 export const RETIRE = { ovrBelowPeak: 11, forcedAge: 42, vetAge: 32, vetBelowPeak: 5 };
 // NBA interest in a free agent. Teams only call when he would rank within `maxRank` on
 // their roster; veterans and little-used players get fewer calls.
+/** Team factors (career/team.ts). Strength points, added to the team in his games. */
+export const TEAM_FACTORS = {
+  chemistryPer: 0.25, // per season in a row with the team
+  chemistryMax: 0.8,
+  starFrom: 84, // NBA star gravity from this OVR
+  starPer: 0.12,
+  starMax: 1.0,
+  swingChance: 0.35, // a midseason swing in a season
+  swingScale: 0.5, // midseason swing sizes are multiplied by this
+  tradeBase: 0.25, // trade request success
+  tradePerOvr: 0.02,
+  tradeMin: 0.1,
+  tradeMax: 0.6,
+  ringChaseAge: 30, // contenders offer a minimum deal from this age, or to bench players
+  ringChaseChance: 0.5, // a contender actually has a spot
+  // winning players: team strength per rating point above his own OVR (career/team.ts winningEdge)
+  edge: { perimeter: 0.12, interior: 0.1, glass: 0.05, general: 0.13, threeAndD: 0.14, iq: 0.05, max: 2.5, playoffMult: 1.6, traitFrom: 0.4 },
+};
+
 /** NBA free agents below star level hear from Europe and Asia too (round 7). */
 export const OVERSEAS_FA = { belowOvr: 82, twoBelow: 76, asiaChance: 0.5 };
 

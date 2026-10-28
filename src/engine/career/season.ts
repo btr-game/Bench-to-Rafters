@@ -1,5 +1,7 @@
 // The in-season loop: preseason → first half → midseason → second half + postseason.
 
+import { midseasonSwing, startTeamFactors, winningEdge } from './team';
+
 import { evaluateBreakthrough, updateHighs } from './breakthrough';
 import { edgeOf, youthGrowthMult } from './nationality';
 import {
@@ -22,7 +24,7 @@ import {
   ROLE_MINUTES,
 } from '../balance';
 import { chance, clamp, int, normal, range, weightedIndex, type Rng } from '../rng';
-import type { GameLog, GameState, HalfPlan, League, LevelKey, RoleKey, SeasonRecord, SeasonState, StatLine, Team } from '../types';
+import type { Attrs, GameLog, GameState, HalfPlan, League, LevelKey, RoleKey, SeasonRecord, SeasonState, StatLine, Team } from '../types';
 import { ovrOf } from '../player/ovr';
 import { applyHalfGrowth, perfFactor } from '../player/growth';
 import { healDays, rollInjury } from '../player/injury';
@@ -65,6 +67,12 @@ import { queueMidseasonEvents } from '../events/resolver';
 import { allStarWeekend, conferenceTournament, hsNationals, mcdonaldsGame, nbaCup, nbaPreseason } from '../sim/tournaments';
 import { quickNbaSeason, warmUpNba } from './nbaYear';
 import { reactionsForSeason } from '../story/reactions';
+
+/** What he adds to winning beyond his OVR, scaled by his share of the game (career/team.ts). */
+const edgeFor = (a: Attrs, ovr: number, share: number, post: boolean): number => {
+  const e = winningEdge(a, ovr);
+  return (post ? e.playoff : e.regular) * Math.min(1, share);
+};
 
 export function activeLeague(s: GameState): League {
   return (s.stage === 'NBA' ? s.nba : s.league)!;
@@ -125,6 +133,10 @@ export function beginSeason(s: GameState): void {
     postGames: [],
     ovrStart: ovr,
     attrsStart: { ...s.player.attrs },
+    ...(() => {
+      const f = startTeamFactors(s, team);
+      return { teamBonus: f.bonus, teamNotes: f.notes };
+    })(),
     halfLines: [],
     injuredGames: 0,
     midReport: [],
@@ -239,7 +251,7 @@ function makeHook(s: GameState, league: League, level: LevelKey, acc: HalfAcc, s
             e,
             started,
             level,
-            my: team.strength + impact + plan.teamBoost,
+            my: team.strength + (season.teamBonus ?? 0) + impact + edgeFor(p.attrs, ovr, minutes / L.gameLen, true) + plan.teamBoost,
             opp: opp.strength,
             oppName: opp.name,
             homeAdv: level !== 'NBA' ? 0 : home ? 1 : -1,
@@ -274,13 +286,14 @@ function makeHook(s: GameState, league: League, level: LevelKey, acc: HalfAcc, s
     }
     healDays(p, daysPerGame * (season.plan === 'recovery' || season.plan2 === 'recovery' ? 1.3 : 1));
     const impact = line ? (ovr - replacement) * (minutes / L.gameLen) * IMPACT_MULT : 0;
-    const boost = line ? plan.teamBoost : 0;
+    // what he adds to winning beyond his OVR: defense, playmaking, 3&D (career/team.ts)
+    const boost = line ? plan.teamBoost + edgeFor(p.attrs, ovr, minutes / L.gameLen, !!post) : 0;
     let win: boolean;
     let us: number;
     let them: number;
     if (liveResult) ({ win, us, them } = liveResult);
     else {
-      win = chance(rng, winProb(team.strength + impact + boost, opp.strength, post && level !== 'NBA' ? 0 : home ? 1 : -1));
+      win = chance(rng, winProb(team.strength + (season.teamBonus ?? 0) + impact + boost, opp.strength, post && level !== 'NBA' ? 0 : home ? 1 : -1));
       us = Math.round(GAME_POINTS[level] + normal(rng, 0, 9));
       if (line && line.pts > us - 15) us = line.pts + int(rng, 15, 30);
       const margin = int(rng, 1, 18);
@@ -491,6 +504,8 @@ function beginMidseason(s: GameState, acc: HalfAcc): void {
     allStarWeekend(s, acc.line);
     if (season.cupResult) season.midReport.push(`NBA Cup: ${season.cupResult}.`);
   }
+  // a trade-deadline move, an injury, a team that clicks (career/team.ts)
+  midseasonSwing(s, league);
   queueMidseasonEvents(s);
   // the G League assignment valve for end-of-bench NBA players
   if (s.stage === 'NBA' && (season.role === 'deep' || season.role === 'bench')) {

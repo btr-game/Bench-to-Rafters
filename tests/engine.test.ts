@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { advance, canChangePosition, canRetire, changePosition, choose, newGame, positionOptions, prompt, retireByChoice } from '../src/engine/flow';
 import { fastForward } from '../src/engine/fast';
 import { startArc } from '../src/engine/events/arcs';
+import { winningEdge } from '../src/engine/career/team';
 import { ovrOf } from '../src/engine/player/ovr';
 import { compareCareer, rankModelFit } from '../src/engine/awards/compare';
 import { blendPlans } from '../src/engine/balance';
@@ -331,5 +332,20 @@ describe('round 7: fast break and storylines', () => {
     expect(chapters).toBeGreaterThanOrEqual(2);
     expect(s.arcs?.some((a) => a.id === 'jumper') ?? false).toBe(false);
     expect(s.player.attrs.SHT).toBeGreaterThan(before);
+  });
+});
+
+describe('round 7: team factors', () => {
+  it('defenders, floor generals and 3&D players add more to winning than pure scorers of the same OVR', () => {
+    const scorer = { SHT: 88, FIN: 86, PLY: 70, PER: 62, INT: 50, REB: 55, ATH: 80, IQ: 72 };
+    const stopper = { SHT: 72, FIN: 70, PLY: 66, PER: 90, INT: 60, REB: 60, ATH: 82, IQ: 80 };
+    const general = { SHT: 72, FIN: 68, PLY: 92, PER: 66, INT: 45, REB: 50, ATH: 72, IQ: 90 };
+    const edge = (a: typeof scorer) => winningEdge(a, 78);
+    expect(edge(stopper).playoff).toBeGreaterThan(edge(scorer).playoff + 0.5);
+    expect(edge(general).playoff).toBeGreaterThan(edge(scorer).playoff + 0.5);
+    expect(edge(stopper).traits).toContain('Lockdown defender');
+    expect(edge(general).traits).toContain('Floor general');
+    // the postseason weighs it more
+    expect(edge(stopper).playoff).toBeGreaterThan(edge(stopper).regular);
   });
 });
