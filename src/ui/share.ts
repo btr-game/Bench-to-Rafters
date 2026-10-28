@@ -174,9 +174,39 @@ const fileName = (g: GameState) => `${g.player.name.replace(/[^a-z0-9]+/gi, '-')
 
 const toBlob = (c: HTMLCanvasElement) => new Promise<Blob>((res, rej) => c.toBlob((b) => (b ? res(b) : rej(new Error('no image'))), 'image/png'));
 
-/** Saves the career card as a PNG. */
-export async function downloadCareerCard(g: GameState): Promise<void> {
+interface DownloadsApi {
+  save(r: { filename: string; data: Blob }): Promise<{ status: string }>;
+}
+type ClaudeHost = { use(name: string): Promise<unknown> };
+const host = (): ClaudeHost | undefined => (window as unknown as { claude?: ClaudeHost }).claude;
+
+/** Inside claude.ai the page cannot download directly; the viewer's downloads capability can. */
+async function viewerDownloads(): Promise<DownloadsApi | null> {
+  const c = host();
+  if (!c?.use) return null;
+  try {
+    return (await c.use('downloads')) as DownloadsApi | null;
+  } catch {
+    return null;
+  }
+}
+
+/** Saves the career card as a PNG. Returns a short status line for the page. */
+export async function downloadCareerCard(g: GameState): Promise<string> {
   const blob = await toBlob(await drawCareerCard(g));
+  const dl = await viewerDownloads();
+  if (dl) {
+    try {
+      await dl.save({ filename: fileName(g), data: blob });
+      return 'Career card saved as a PNG.';
+    } catch (e) {
+      const code = (e as { code?: string })?.code;
+      if (code === 'declined') return '';
+      if (code === 'rate_limited') return 'A save is already waiting for you. Try again in a moment.';
+      return 'Saving files is not available here.';
+    }
+  }
+  if (host()) return 'Saving files is not available here.';
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -185,6 +215,7 @@ export async function downloadCareerCard(g: GameState): Promise<void> {
   a.click();
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 2000);
+  return 'Career card saved as a PNG.';
 }
 
 /** Opens the share sheet with the card where the browser supports it; returns false otherwise. */
@@ -201,4 +232,5 @@ export async function shareCareerCard(g: GameState): Promise<boolean> {
   return true;
 }
 
-export const canShareFiles = (): boolean => typeof navigator !== 'undefined' && 'share' in navigator && 'canShare' in navigator;
+// inside claude.ai the save prompt already hands the file to the phone's share sheet
+export const canShareFiles = (): boolean => !host() && typeof navigator !== 'undefined' && 'share' in navigator && 'canShare' in navigator;

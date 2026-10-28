@@ -86,10 +86,7 @@ function ShareBar({ g }: { g: GameState }) {
     setMsg('');
     try {
       if (share && (await shareCareerCard(g))) setMsg('');
-      else {
-        await downloadCareerCard(g);
-        setMsg('Career card saved as a PNG.');
-      }
+      else setMsg(await downloadCareerCard(g));
     } catch {
       setMsg('Could not make the image in this browser.');
     }
