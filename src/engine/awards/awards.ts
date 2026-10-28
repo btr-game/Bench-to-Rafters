@@ -1,6 +1,6 @@
 // Awards rank the player against everyone in his league (§10).
 
-import { LEVELS, MIN_GAMES_AWARD_FRAC } from '../balance';
+import { FAN_VOTE, LEVELS, MIN_GAMES_AWARD_FRAC } from '../balance';
 import type { AwardRace, League, LevelKey, StatLine, Team } from '../types';
 import { genProfile, perGame, valuePerGame } from '../sim/statModel';
 
@@ -122,7 +122,7 @@ export function nbaAwards(cands: Cand[]): AwardOutcome {
   // All-Star: first-half value plus 20% reputation (fan vote), 12 per conference
   for (const conf of ['East', 'West']) {
     const pool = cands.filter((c) => c.team.conf === conf && c.line.gp >= 20);
-    const score = (c: Cand) => 0.8 * c.fhv + 0.2 * (c.rep / 100) * 40;
+    const score = (c: Cand) => (1 - FAN_VOTE.share) * c.fhv + FAN_VOTE.share * (c.rep / 100) * FAN_VOTE.scale;
     pool.sort((a, b) => score(b) - score(a));
     pool.slice(0, 12).forEach((c) => {
       out.allStarIds.add(c.id);
@@ -175,8 +175,8 @@ export function simpleAwards(league: League, cands: Cand[], userConf: string | n
   } else if (league.level === 'HSV') {
     if (userVal >= 0 && userVal < 10) out.wins.push({ key: 'ALLSTATE', label: 'All-State' });
     out.races.push(race('State Player of the Year', ranked, poyScore));
-  } else if (league.level === 'GL' || league.level === 'EU') {
-    const lname = league.level === 'GL' ? 'G League' : 'EuroLeague';
+  } else if (league.level === 'GL' || league.level === 'EU' || league.level === 'INT') {
+    const lname = league.level === 'GL' ? 'G League' : league.level === 'EU' ? 'EuroLeague' : (league.teams[0]?.conf ?? 'League');
     out.races.push(race(`${lname} MVP`, ranked, poyScore));
     if (ranked[0]?.isUser) out.wins.push({ key: `${league.level}MVP`, label: `${lname} MVP` });
     if (userVal >= 0 && userVal < 5) out.wins.push({ key: `${league.level}ALL`, label: `All-${lname} Team` });

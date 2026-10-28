@@ -27,8 +27,8 @@ export interface EventDef {
   choices: EventChoice[] | ((s: GameState) => EventChoice[]);
 }
 
-const ALL: Stage[] = ['HS', 'NCAA', 'GL', 'EU', 'NBA'];
-const PRO: Stage[] = ['NCAA', 'GL', 'EU', 'NBA'];
+const ALL: Stage[] = ['HS', 'NCAA', 'GL', 'EU', 'INT', 'NBA'];
+const PRO: Stage[] = ['NCAA', 'GL', 'EU', 'INT', 'NBA'];
 
 const bump = (s: GameState, k: AttrKey, v: number) => (s.player.attrs[k] = clamp(s.player.attrs[k] + v, 15, 99));
 

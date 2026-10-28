@@ -2,7 +2,10 @@ import { EVENTS as EV_RATES } from '../balance';
 import { chance, weightedIndex } from '../rng';
 import type { Decision, GameState } from '../types';
 import { logDecision, pushDecision } from '../career/common';
-import { EVENTS, type EventChoice, type EventDef } from './defs';
+import { EVENTS as BASE_EVENTS, type EventChoice, type EventDef } from './defs';
+import { MORE_EVENTS } from './more';
+
+const EVENTS: EventDef[] = [...BASE_EVENTS, ...MORE_EVENTS];
 
 function eligible(s: GameState, phase: 'mid' | 'off'): EventDef[] {
   return EVENTS.filter((e) => {
@@ -38,17 +41,20 @@ function pickOne(s: GameState, phase: 'mid' | 'off'): void {
 export function queueMidseasonEvents(s: GameState): void {
   if (!chance(s.rng, EV_RATES.midseasonChance)) return;
   pickOne(s, 'mid');
-  if (EV_RATES.midseasonMax > 1 && chance(s.rng, 0.25)) pickOne(s, 'mid');
+  if (EV_RATES.midseasonMax > 1 && chance(s.rng, EV_RATES.secondChance)) pickOne(s, 'mid');
 }
 
 export function queueOffseasonEvent(s: GameState): void {
   if (EV_RATES.offseasonMax < 1 || !chance(s.rng, EV_RATES.offseasonChance)) return;
   pickOne(s, 'off');
+  if (EV_RATES.offseasonMax > 1 && chance(s.rng, 0.35)) pickOne(s, 'off');
 }
 
 export function resolveEvent(s: GameState, d: Decision, choiceId: string): string {
   const e = EVENTS.find((x) => x.id === d.data?.eventId);
   if (!e) return '';
+  // the situation may have changed since the event was queued (a new team, a new league)
+  if (!e.stages.includes(s.stage)) return 'That moment passed. You have moved on.';
   // choices built from a function are rebuilt and matched by label
   const choices: EventChoice[] = typeof e.choices === 'function' ? e.choices(s) : e.choices;
   const label = d.choices.find((x) => x.id === choiceId)?.label;

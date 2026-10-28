@@ -1,0 +1,389 @@
+// Tournaments outside the regular season: NBA preseason, NBA Cup, All-Star weekend,
+// NCAA conference tournaments, the high school national invitational, the McDonald's
+// game, and national-team events (youth World Cups, FIBA World Cup, Olympics).
+
+import { DEEP_BENCH, FAN_VOTE, LEVELS, MORALE_PERF, ROLE_MINUTES } from '../balance';
+import { chance, clamp, int, logistic, normal, pick, range, shuffle } from '../rng';
+import type { GameLog, GameState, LevelKey, RoleKey, StatLine, Team, TourneyRecord } from '../types';
+import { expected, expectedGameScore, gameScore, sampleGame, usageWeight, valuePerGame, genProfile, genUsageWeight, perGame } from './statModel';
+import { winProb, standings } from './leagueSim';
+import { rollInjury } from '../player/injury';
+import { ovrOf } from '../player/ovr';
+import { adjust, logDecision, pushDecision, pushMoment, rankOnRoster } from '../career/common';
+import { teamUsageMean, rankMinutes } from './genStats';
+
+export interface Opp {
+  name: string;
+  short: string;
+  strength: number;
+}
+
+
+const ROLE_USAGE: Record<RoleKey, number> = { key: 1.25, starter: 1.05, sixth: 1, rotation: 0.85, bench: 0.7, deep: 0.6 };
+const BASE: Record<LevelKey, number> = { HSJV: 48, HSV: 60, NCAA: 72, GL: 112, EU: 82, INT: 84, NBA: 112 };
+
+function profile(s: GameState) {
+  const p = s.player;
+  return { attrs: p.attrs, height: p.height, wingspan: p.wingspan, range: p.range, offhand: p.offhand };
+}
+
+/** One game outside the regular season with a full box score for the player. */
+export function exhibitionGame(
+  s: GameState,
+  level: LevelKey,
+  role: RoleKey,
+  my: Opp,
+  opp: Opp,
+  label: string,
+  opts: { neutral?: boolean; injuries?: boolean; usage?: number } = {},
+): { log: GameLog; win: boolean } {
+  const rng = s.rng;
+  const p = s.player;
+  const L = LEVELS[level];
+  let line: StatLine | null = null;
+  let minutes = 0;
+  if (!p.injury || p.injury.key === 'dtd') {
+    if (role === 'deep') minutes = chance(rng, 0.5) ? int(rng, DEEP_BENCH.minutes[0], DEEP_BENCH.minutes[1] + 4) : 0;
+    else {
+      const [a, b] = ROLE_MINUTES[role];
+      minutes = Math.round((range(rng, a, b) * L.gameLen) / 48);
+    }
+    if (minutes > 0) {
+      const form = clamp(normal(rng, 1, 0.17), 0.5, 1.7);
+      const morale = MORALE_PERF(p.morale) * (1 + (form - 1) * 0.3);
+      const e = expected(profile(s), level, minutes, ROLE_USAGE[role] * (opts.usage ?? 1) * Math.pow(form, 0.8), morale);
+      line = sampleGame(rng, e, role === 'key' || role === 'starter');
+      if (opts.injuries !== false) rollInjury(rng, p, 'balanced', minutes);
+    }
+  }
+  const ovr = ovrOf(p.attrs, p.pos);
+  const impact = line ? (ovr - my.strength) * (minutes / L.gameLen) * 0.25 : 0;
+  const win = chance(rng, winProb(my.strength + impact, opp.strength, opts.neutral ? 0 : 1));
+  let us = Math.round(BASE[level] + normal(rng, 0, 9));
+  if (line && line.pts > us - 15) us = line.pts + int(rng, 15, 30);
+  const margin = int(rng, 1, 18);
+  const them = win ? Math.max(20, us - margin) : us + margin;
+  return { log: { n: 0, opp: opp.short, home: !opts.neutral, res: win ? 'W' : 'L', us, them, line, post: label }, win };
+}
+
+function sumLines(lines: (StatLine | null)[]): StatLine | null {
+  const out: StatLine = { gp: 0, gs: 0, min: 0, pts: 0, reb: 0, ast: 0, stl: 0, blk: 0, tov: 0, fgm: 0, fga: 0, tpm: 0, tpa: 0, ftm: 0, fta: 0 };
+  let any = false;
+  for (const l of lines)
+    if (l) {
+      any = true;
+      for (const k of Object.keys(out) as (keyof StatLine)[]) out[k] += l[k];
+    }
+  return any ? out : null;
+}
+
+const lineText = (l: StatLine | null) => (l && l.gp ? `${perGame(l, 'pts').toFixed(1)} PTS · ${perGame(l, 'reb').toFixed(1)} REB · ${perGame(l, 'ast').toFixed(1)} AST` : 'Did not play');
+
+function record(s: GameState, r: TourneyRecord): void {
+  s.tournaments.push(r);
+  if (s.tournaments.length > 60) s.tournaments.shift();
+}
+
+/** Single-elimination run for the player's side. Returns games and how far he went. */
+function knockout(s: GameState, level: LevelKey, role: RoleKey, my: Opp, opps: Opp[], rounds: string[], neutral = true) {
+  const games: GameLog[] = [];
+  let reached = 0;
+  if (opps.length === 0) return { games, won: false, lostIn: rounds[0] ?? null, reached };
+  for (let i = 0; i < rounds.length; i++) {
+    const g = exhibitionGame(s, level, role, my, opps[i % opps.length], rounds[i], { neutral });
+    g.log.n = games.length + 1;
+    games.push(g.log);
+    if (!g.win) return { games, won: false, lostIn: rounds[i], reached };
+    reached = i + 1;
+  }
+  return { games, won: true, lostIn: null as string | null, reached };
+}
+
+// ---------- NBA ----------
+
+/** Four preseason games before the season. Good showings earn coach trust and maybe a role. */
+export function nbaPreseason(s: GameState): void {
+  const season = s.season!;
+  const nba = s.nba!;
+  const team = nba.teams.find((t) => t.id === s.teamId)!;
+  const opps = shuffle(s.rng, nba.teams.filter((t) => t.id !== team.id)).slice(0, 4);
+  // preseason minutes are generous for young and bench players
+  const role: RoleKey = season.role === 'deep' || season.role === 'bench' ? 'rotation' : season.role;
+  let gm = 0;
+  let exp = 0;
+  const games: GameLog[] = [];
+  for (const o of opps) {
+    const g = exhibitionGame(s, 'NBA', role, { name: team.name, short: team.short, strength: team.strength - 2 }, { name: o.name, short: o.short, strength: o.strength - 2 }, 'Preseason', { injuries: false });
+    g.log.n = games.length + 1;
+    games.push(g.log);
+    if (g.log.line) {
+      gm += gameScore(g.log.line);
+      const [a, b] = ROLE_MINUTES[role];
+      exp += expectedGameScore(expected(profile(s), 'NBA', (a + b) / 2, ROLE_USAGE[role]));
+    }
+  }
+  season.preGames = games;
+  const ratio = exp > 0 ? gm / exp : 1;
+  const delta = clamp((ratio - 1) * 40, -12, 14);
+  s.player.trust = adjust(s.player.trust, delta);
+  season.preReport = ratio >= 1.15 ? 'You lit up the preseason. The coaches are rethinking the rotation.' : ratio <= 0.85 ? 'A rough preseason. You have work to do to earn minutes.' : 'A solid, quiet preseason.';
+  const line = sumLines(games.map((g) => g.line));
+  record(s, { year: s.year, name: 'NBA preseason', team: team.name, result: `${games.filter((g) => g.res === 'W').length}–${games.filter((g) => g.res === 'L').length}`, line });
+}
+
+/** The NBA Cup knockout in Las Vegas after the first half: the best four records per conference. */
+export function nbaCup(s: GameState): void {
+  const nba = s.nba!;
+  const team = nba.teams.find((t) => t.id === s.teamId)!;
+  const field = ['East', 'West'].flatMap((c) => standings(nba.teams.filter((t) => t.conf === c)).slice(0, 4));
+  const season = s.season!;
+  if (!field.includes(team)) {
+    // the Cup goes on without him
+    const champ = pick(s.rng, field.slice(0, 4).concat(field.slice(4, 6)));
+    season.cupResult = `Did not make the NBA Cup knockouts. ${champ.name} won the Cup.`;
+    return;
+  }
+  const others = shuffle(s.rng, field.filter((t) => t !== team));
+  const opp = (t: Team): Opp => ({ name: t.name, short: t.short, strength: t.strength });
+  const run = knockout(s, 'NBA', season.role, opp(team), others.slice(0, 3).map(opp), ['NBA Cup quarterfinal', 'NBA Cup semifinal', 'NBA Cup final']);
+  season.cupGames = run.games;
+  const line = sumLines(run.games.map((g) => g.line));
+  if (run.won) {
+    season.cupResult = 'NBA Cup champion';
+    s.awards.push({ year: s.year, level: 'NBA', key: 'NBACUP', label: 'NBA Cup champion' });
+    const final = run.games[run.games.length - 1];
+    const mvp = line && valuePerGame(line) >= 24;
+    if (mvp) s.awards.push({ year: s.year, level: 'NBA', key: 'CUPMVP', label: 'NBA Cup MVP' });
+    pushMoment(s, { kind: 'title', title: 'NBA Cup champion', teamName: team.name, color: team.color, text: `${team.name} win the NBA Cup in Las Vegas.`, game: { ...final, level: 'NBA', teamShort: team.short }, lines: mvp ? ['NBA Cup MVP'] : [] });
+  } else season.cupResult = `Lost in the ${run.lostIn}`;
+  record(s, { year: s.year, name: 'NBA Cup', team: team.name, result: season.cupResult, line });
+}
+
+/**
+ * All-Star selection at midseason: first-half value (expected for the league, real for the
+ * player) plus a fan vote on reputation. Then the weekend: contests and the game.
+ */
+export function allStarWeekend(s: GameState, firstHalf: StatLine): void {
+  const nba = s.nba!;
+  const season = s.season!;
+  const team = nba.teams.find((t) => t.id === s.teamId)!;
+  const p = s.player;
+  // expected first-half values for the conference
+  const vals: number[] = [];
+  for (const t of nba.teams.filter((x) => x.conf === team.conf)) {
+    const mean = teamUsageMean('NBA', t.roster, null);
+    t.roster.forEach((g, i) => {
+      const e = expected(genProfile(g), 'NBA', rankMinutes('NBA', i + 1), genUsageWeight(g) / mean);
+      const v = (e.pts + 0.9 * e.reb + 1.4 * e.ast + 2 * e.stl + 2 * e.blk - e.tov) * normal(s.rng, 1, 0.1);
+      g.firstHalfValue = v;
+      vals.push((1 - FAN_VOTE.share) * v + FAN_VOTE.share * (g.rep / 100) * FAN_VOTE.scale);
+    });
+  }
+  const mine = firstHalf.gp >= 15 ? (1 - FAN_VOTE.share) * valuePerGame(firstHalf) + FAN_VOTE.share * (p.rep / 100) * FAN_VOTE.scale : 0;
+  const rank = 1 + vals.filter((v) => v > mine).length;
+  season.allStar = rank <= 12;
+  season.allStarRank = rank;
+  const lines: string[] = [];
+  if (season.allStar) {
+    lines.push(rank <= 5 ? 'Voted an All-Star starter' : 'Named an All-Star reserve');
+    const g = exhibitionGame(s, 'NBA', rank <= 5 ? 'starter' : 'rotation', { name: team.conf, short: team.conf, strength: 85 }, { name: 'Other conference', short: team.conf === 'East' ? 'West' : 'East', strength: 85 }, 'All-Star Game', { neutral: true, injuries: false, usage: 1.2 });
+    if (g.log.line) lines.push(`All-Star Game: ${g.log.line.pts} pts, ${g.log.line.reb} reb, ${g.log.line.ast} ast (${g.win ? 'won' : 'lost'})`);
+    if (g.win && g.log.line && g.log.line.pts >= 25 && chance(s.rng, 0.5)) {
+      lines.push('All-Star Game MVP');
+      s.awards.push({ year: s.year, level: 'NBA', key: 'ASGMVP', label: 'All-Star Game MVP' });
+    }
+  } else if (s.serviceYears <= 1 && firstHalf.gp >= 10 && valuePerGame(firstHalf) >= 10) {
+    lines.push('Selected for the Rising Stars game');
+  }
+  // contests: invitations go to the right skill sets
+  if (p.attrs.SHT >= 80 && p.range >= 60 && chance(s.rng, 0.35 + (p.attrs.SHT - 80) * 0.04)) {
+    const win = chance(s.rng, clamp(0.12 + (p.attrs.SHT - 85) * 0.03 + (p.range - 70) * 0.01, 0.05, 0.6));
+    lines.push(win ? 'Won the 3-Point Contest' : 'Competed in the 3-Point Contest');
+    if (win) s.awards.push({ year: s.year, level: 'NBA', key: '3PT', label: '3-Point Contest champion' });
+  }
+  if (p.attrs.ATH >= 78 && p.age <= 27 && chance(s.rng, 0.3)) {
+    const win = chance(s.rng, clamp(0.15 + (p.attrs.ATH - 82) * 0.04, 0.05, 0.6));
+    lines.push(win ? 'Won the Slam Dunk Contest' : 'Competed in the Slam Dunk Contest');
+    if (win) s.awards.push({ year: s.year, level: 'NBA', key: 'DUNK', label: 'Slam Dunk champion' });
+  }
+  if (lines.length > 0) {
+    p.rep = clamp(p.rep + (season.allStar ? 4 : 2), 0, 100);
+    pushMoment(s, { kind: 'awards', title: season.allStar ? 'All-Star' : 'All-Star weekend', color: team.color, teamName: team.name, text: `All-Star weekend · ${s.year + 1}`, lines });
+  }
+}
+
+// ---------- college and high school ----------
+
+/** Conference tournament before March Madness. Winning helps the at-large picture. */
+export function conferenceTournament(s: GameState, team: Team, confTeams: Team[]): { won: boolean; text: string; games: GameLog[] } {
+  if (confTeams.length < 4) return { won: false, text: '', games: [] };
+  const seeds = standings(confTeams).slice(0, 8);
+  if (!seeds.includes(team)) return { won: false, text: 'Missed the conference tournament', games: [] };
+  const others = shuffle(s.rng, seeds.filter((t) => t !== team)).sort((a, b) => a.strength - b.strength);
+  const role = s.season!.role;
+  const opp = (t: Team): Opp => ({ name: t.name, short: t.short, strength: t.strength });
+  const run = knockout(s, 'NCAA', role, opp(team), [others[0], others[Math.floor(others.length / 2)], others[others.length - 1]].map(opp), [
+    'Conference quarterfinal',
+    'Conference semifinal',
+    'Conference final',
+  ]);
+  if (run.won) {
+    team.strength += 0.5;
+    s.awards.push({ year: s.year, level: 'NCAA', key: 'CONFTOURN', label: `${team.conf} tournament champion` });
+  }
+  return { won: run.won, text: run.won ? `${team.conf} tournament champion` : `Lost in the ${run.lostIn?.toLowerCase()}`, games: run.games };
+}
+
+/** National invitational for elite high school teams after the state playoffs. */
+export function hsNationals(s: GameState, team: Team): void {
+  const opps: Opp[] = ['Bayside Academy', 'Mountain Ridge Prep', 'Gulf Coast Academy', 'Canyon Prep'].map((n, i) => ({
+    name: n,
+    short: n.split(' ')[0],
+    strength: 56 + i * 0.7 + normal(s.rng, 0, 1),
+  }));
+  const run = knockout(s, 'HSV', s.season!.role, { name: team.name, short: team.short, strength: team.strength + 1 }, shuffle(s.rng, opps).slice(0, 3), [
+    'National quarterfinal',
+    'National semifinal',
+    'National final',
+  ]);
+  const line = sumLines(run.games.map((g) => g.line));
+  const result = run.won ? 'National Prep Invitational champion' : `Lost in the ${run.lostIn?.toLowerCase()}`;
+  record(s, { year: s.year, name: 'National Prep Invitational', team: team.name, result, line });
+  if (run.won) {
+    s.awards.push({ year: s.year, level: 'HSV', key: 'HSNATL', label: 'National Prep Invitational champion' });
+    const final = run.games[run.games.length - 1];
+    pushMoment(s, { kind: 'title', title: 'National champions', teamName: team.name, color: team.color, text: `${team.name} win the National Prep Invitational.`, game: { ...final, level: 'HSV', teamShort: team.short }, lines: [] });
+  } else {
+    pushMoment(s, { kind: 'tournament', title: 'National Prep Invitational', color: team.color, teamName: team.name, text: `${team.name} were invited to nationals. ${result}.`, lines: [lineText(line)] });
+  }
+  s.player.rep = clamp(s.player.rep + (run.won ? 6 : 3), 0, 100);
+}
+
+export function mcdonaldsGame(s: GameState): void {
+  const g = exhibitionGame(s, 'HSV', 'starter', { name: 'East', short: 'East', strength: 62 }, { name: 'West', short: 'West', strength: 62 }, "McDonald's All-American Game", { neutral: true, injuries: false, usage: 1.1 });
+  const lines = [g.log.line ? `${g.log.line.pts} pts, ${g.log.line.reb} reb, ${g.log.line.ast} ast (${g.win ? 'won' : 'lost'})` : 'Did not play'];
+  if (g.win && g.log.line && g.log.line.pts >= 16) {
+    lines.push('Game MVP');
+    s.player.rep = clamp(s.player.rep + 4, 0, 100);
+  }
+  record(s, { year: s.year, name: "McDonald's All-American Game", team: 'All-Americans', result: g.win ? 'Won' : 'Lost', line: g.log.line });
+  pushMoment(s, { kind: 'tournament', title: "McDonald's All-American Game", color: '#C8102E', text: 'The best 24 seniors in the country, one night.', lines });
+}
+
+// ---------- national team ----------
+
+const SENIOR: [string, number][] = [
+  ['USA', 87], ['France', 82], ['Canada', 82], ['Serbia', 81], ['Germany', 81], ['Spain', 80], ['Australia', 79], ['Greece', 79],
+  ['Slovenia', 78], ['Lithuania', 78], ['Italy', 77], ['Argentina', 76], ['Puerto Rico', 74], ['Nigeria', 74], ['Brazil', 75],
+  ['Japan', 72], ['New Zealand', 72], ['Philippines', 70], ['China', 71], ['South Korea', 68],
+];
+
+export interface NationalEvent {
+  name: string;
+  youth: boolean;
+  legacy: number; // legacy points for gold
+}
+
+/** Which national-team event happens in the summer after season `year`, for a player this age. */
+export function nationalEventFor(year: number, age: number): NationalEvent | null {
+  const summer = year + 1;
+  if (age <= 16 && summer % 2 === 0) return { name: 'FIBA U17 World Cup', youth: true, legacy: 0 };
+  if (age >= 17 && age <= 19 && summer % 2 === 1) return { name: 'FIBA U19 World Cup', youth: true, legacy: 0 };
+  if (age >= 19 && summer % 4 === 0) return { name: `${summer} Olympics`, youth: false, legacy: 3 };
+  if (age >= 19 && summer % 4 === 3) return { name: `${summer} FIBA World Cup`, youth: false, legacy: 1.5 };
+  return null;
+}
+
+export const nationOf = (s: GameState): string => (s.player.hometown.includes('Korea') ? 'South Korea' : 'USA');
+
+/** Chance of a call-up: the nation's talent pool sets the bar. */
+export function callUpChance(s: GameState, ev: NationalEvent): number {
+  const ovr = ovrOf(s.player.attrs, s.player.pos);
+  const usa = nationOf(s) === 'USA';
+  const bar = ev.youth ? (usa ? 59 + (s.player.age - 15) * 3 : 50 + (s.player.age - 15) * 2.5) : usa ? 84 : 64;
+  return logistic((ovr - bar) / 2 + s.player.rep / 40 - 0.5);
+}
+
+export function pushNationalTeam(s: GameState): void {
+  const ev = nationalEventFor(s.year, s.player.age);
+  if (!ev || s.player.injury?.key === 'season') return;
+  if (!chance(s.rng, callUpChance(s, ev))) return;
+  const nation = nationOf(s);
+  pushDecision(s, {
+    kind: 'national',
+    title: `${nation === 'USA' ? 'Team USA' : nation} calls`,
+    text: `You have been invited to play for ${nation} at the ${ev.name}. A summer of high-level games, and a long summer for your body.`,
+    choices: [
+      { id: 'accept', label: `Play for ${nation}`, detail: 'Reputation, maybe a medal. Some injury risk and a shorter rest.' },
+      { id: 'decline', label: 'Rest this summer', detail: 'Fresher legs next season.' },
+    ],
+    data: { event: ev.name, youth: ev.youth, legacy: ev.legacy },
+  });
+}
+
+export function resolveNationalTeam(s: GameState, data: Record<string, unknown>, id: string): string {
+  const name = data.event as string;
+  const youth = data.youth as boolean;
+  if (id !== 'accept') {
+    s.player.injuryMultNext *= 0.95;
+    logDecision(s, 'national', `Declined an invitation to the ${name}.`);
+    return 'You stay home and rest.';
+  }
+  const nation = nationOf(s);
+  const shift = youth ? -24 : 0;
+  const pool = SENIOR.filter(([n]) => n !== nation).map(([n, st]) => ({ name: n, short: n, strength: st + shift + normal(s.rng, 0, 1.5) }));
+  const myBase = (SENIOR.find(([n]) => n === nation)?.[1] ?? 70) + shift;
+  const ovr = ovrOf(s.player.attrs, s.player.pos);
+  const role: RoleKey = ovr >= myBase + 5 ? 'key' : ovr >= myBase ? 'starter' : ovr >= myBase - 4 ? 'rotation' : 'bench';
+  const my = { name: nation, short: nation, strength: myBase };
+  const level: LevelKey = youth ? 'NCAA' : 'NBA';
+  // group stage: three games, top two advance
+  const groupOpps = shuffle(s.rng, [...pool]).slice(0, 3);
+  const games: GameLog[] = [];
+  let groupWins = 0;
+  for (const o of groupOpps) {
+    const g = exhibitionGame(s, level, role, my, o, 'Group stage', { neutral: true });
+    games.push(g.log);
+    if (g.win) groupWins++;
+  }
+  let result: string;
+  let medal: 'gold' | 'silver' | 'bronze' | undefined;
+  if (groupWins < 2) result = 'Out in the group stage';
+  else {
+    const strong = [...pool].sort((a, b) => b.strength - a.strength);
+    const run = knockout(s, level, role, my, [strong[int(s.rng, 4, 8)], strong[int(s.rng, 1, 3)], strong[0].name === nation ? strong[1] : strong[0]], ['Quarterfinal', 'Semifinal', 'Final']);
+    games.push(...run.games);
+    if (run.won) {
+      result = 'Gold medal';
+      medal = 'gold';
+    } else if (run.reached === 2) {
+      result = 'Silver medal';
+      medal = 'silver';
+    } else if (run.reached === 1) {
+      const bronze = exhibitionGame(s, level, role, my, strong[int(s.rng, 2, 5)], 'Bronze medal game', { neutral: true });
+      games.push(bronze.log);
+      result = bronze.win ? 'Bronze medal' : 'Fourth place';
+      if (bronze.win) medal = 'bronze';
+    } else result = 'Out in the quarterfinals';
+  }
+  games.forEach((g, i) => (g.n = i + 1));
+  const line = sumLines(games.map((g) => g.line));
+  record(s, { year: s.year + 1, name, team: nation, result, medal, line });
+  s.player.rep = clamp(s.player.rep + (medal === 'gold' ? 8 : medal ? 5 : 3), 0, 100);
+  s.player.morale = adjust(s.player.morale, medal ? 6 : -2);
+  s.player.injuryMultNext *= 1.1;
+  if (medal) {
+    const key = youth ? 'YOUTHMEDAL' : name.includes('Olympics') ? (medal === 'gold' ? 'OLYGOLD' : 'OLYMEDAL') : medal === 'gold' ? 'WCGOLD' : 'WCMEDAL';
+    s.awards.push({ year: s.year + 1, level: youth ? 'NCAA' : 'NBA', key, label: `${name}: ${result}` });
+  }
+  logDecision(s, 'national', `Played for ${nation} at the ${name}: ${result.toLowerCase()}.`);
+  const final = games[games.length - 1];
+  if (medal === 'gold') {
+    pushMoment(s, { kind: 'title', title: `${name} gold`, teamName: nation, color: nation === 'USA' ? '#002868' : '#CD2E3A', text: `${nation} win gold at the ${name}.`, game: { ...final, level, teamShort: nation }, lines: [] });
+  } else {
+    pushMoment(s, { kind: 'tournament', title: name, teamName: nation, color: nation === 'USA' ? '#002868' : '#CD2E3A', text: `${nation} at the ${name}: ${result}.`, lines: [lineText(line)] });
+  }
+  return `${name}: ${result}.`;
+}
+
+export { rankOnRoster, usageWeight };

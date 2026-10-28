@@ -49,6 +49,18 @@ export function legacyScore(s: GameState): number {
       case 'EUTITLE':
         pts += LEGACY.euro;
         break;
+      case 'OLYGOLD':
+        pts += 3;
+        break;
+      case 'WCGOLD':
+      case 'NBACUP':
+        pts += 1.5;
+        break;
+      case 'OLYMEDAL':
+      case 'WCMEDAL':
+      case 'CUPMVP':
+        pts += 0.75;
+        break;
     }
   }
   pts += nbaCareerPoints(s) / LEGACY.pointsPer;
@@ -91,7 +103,7 @@ export function verdictFor(s: GameState): { tier: string; line: string } {
   const legacy = legacyScore(s);
   const nbaSeasons = s.history.filter((h) => h.level === 'NBA' && h.line.gp > 0).length;
   const glSeasons = s.history.filter((h) => h.level === 'GL').length;
-  const euSeasons = s.history.filter((h) => h.level === 'EU').length;
+  const euSeasons = s.history.filter((h) => h.level === 'EU' || h.level === 'INT').length;
   const allStar = count(s, 'ALLSTAR') + count(s, 'ALLNBA1') + count(s, 'ALLNBA2') + count(s, 'ALLNBA3') + count(s, 'MVP');
   if (legacy >= LEGACY.firstBallot) return { tier: 'First-ballot Hall of Famer', line: 'Inducted on the first ballot. There was never any doubt.' };
   if (legacy >= LEGACY.hof) return { tier: 'Hall of Famer', line: 'Springfield calls. A Hall of Fame career.' };

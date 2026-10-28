@@ -9,6 +9,7 @@ export const SOURCES = {
   NCAA: ['Campus Daily', 'Hoops Message Board', 'College Hoops Insider'],
   GL: ['G League Watch', 'Two-Way Tracker', 'Minor League Hoops'],
   EU: ['EuroHoops Forum', 'Basket Europa', 'Overseas Ballers'],
+  INT: ['Overseas Ballers', 'Asia-Pacific Hoops', 'Import Watch'],
   NBA: ['r/nba', 'NBA Twitter', 'The Ringer-style blog', 'Hoops Hype Wire'],
 };
 

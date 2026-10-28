@@ -5,9 +5,9 @@ import type { Rng } from './rng';
 export type Pos = 'PG' | 'SG' | 'SF' | 'PF' | 'C';
 export type AttrKey = 'SHT' | 'FIN' | 'PLY' | 'PER' | 'INT' | 'REB' | 'ATH' | 'IQ';
 export type Attrs = Record<AttrKey, number>;
-export type LevelKey = 'HSJV' | 'HSV' | 'NCAA' | 'GL' | 'EU' | 'NBA';
-export type Stage = 'HS' | 'NCAA' | 'GL' | 'EU' | 'NBA' | 'FA' | 'RETIRED';
-export type HalfPlan = 'balanced' | 'grind' | 'recovery' | 'spotlight' | 'teamfirst';
+export type LevelKey = 'HSJV' | 'HSV' | 'NCAA' | 'GL' | 'EU' | 'INT' | 'NBA';
+export type Stage = 'HS' | 'NCAA' | 'GL' | 'EU' | 'INT' | 'NBA' | 'FA' | 'RETIRED';
+export type HalfPlan = 'balanced' | 'grind' | 'recovery' | 'spotlight' | 'teamfirst' | 'shooting' | 'strength' | 'playmaking' | 'defense';
 export type RoleKey = 'key' | 'starter' | 'sixth' | 'rotation' | 'bench' | 'deep';
 export type GrowthType = 'early' | 'standard' | 'late';
 export type AgingProfile = 'durable' | 'normal' | 'fragile';
@@ -58,7 +58,7 @@ export interface Program {
 
 export interface Contract {
   teamId: string;
-  kind: 'rookie' | 'standard' | 'min' | 'exhibit10' | 'gl' | 'eu' | 'scholarship' | 'walkon';
+  kind: 'rookie' | 'standard' | 'min' | 'exhibit10' | 'gl' | 'eu' | 'int' | 'scholarship' | 'walkon';
   salary: number; // $M per season
   years: number; // seasons remaining including the current one
   teamOptionYears: number[]; // remaining-year counts at which the team holds an option
@@ -103,6 +103,7 @@ export interface UserPlayer {
   // temp modifiers applied next season
   injuryMultNext: number;
   declineMultNext: number;
+  growthMultNext: number;
 }
 
 export interface GenPlayer {
@@ -198,6 +199,15 @@ export interface SeasonRecord {
   holdout?: boolean;
 }
 
+export interface TourneyRecord {
+  year: number;
+  name: string;
+  team: string;
+  result: string;
+  medal?: 'gold' | 'silver' | 'bronze';
+  line: StatLine | null;
+}
+
 export interface DecisionLogEntry {
   year: number;
   age: number;
@@ -261,6 +271,14 @@ export interface SeasonState {
   summary: SeasonRecord | null;
   ineligibleHalf?: boolean;
   fuel?: boolean;
+  rhythm?: number; // streak factor for this half
+  preGames?: GameLog[];
+  preReport?: string;
+  cupGames?: GameLog[];
+  cupResult?: string;
+  allStar?: boolean;
+  allStarRank?: number;
+  outcomes?: { half: number; plan: HalfPlan; outcome: string; text: string; ovrGain: number }[];
 }
 
 export type Step =
@@ -299,7 +317,7 @@ export interface Reaction {
 /** A full-screen story page the UI shows once (commitment, draft, title, awards...). */
 export interface Moment {
   id: number;
-  kind: 'intro' | 'commit' | 'draft' | 'title' | 'awards' | 'camp';
+  kind: 'intro' | 'commit' | 'draft' | 'title' | 'awards' | 'camp' | 'injury' | 'event' | 'tournament';
   title: string;
   text: string;
   color: string;
@@ -353,5 +371,8 @@ export interface GameState {
   nbaSnapshot: { leader: number; over25: number; best: number; worst: number } | null;
   toast: string | null; // outcome of the last event choice, shown once by the UI
   moments: Moment[]; // story pages waiting to be shown
+  purchases: string[]; // shop item ids ever bought
+  tournaments: TourneyRecord[];
+  flags: Record<string, number>; // small story switches (powerhouse school, power agent...)
   schoolColor: string;
 }

@@ -11,6 +11,8 @@ import { activeLeague, assignToGl, beginSeason, playHalf } from './career/season
 import { beginOffseason, resolveOffseasonDecision } from './career/offseason';
 import { runWorldDraft } from './career/nbaYear';
 import { resolveEvent } from './events/resolver';
+import { resolveShop } from './economy/shop';
+import { resolveNationalTeam } from './sim/tournaments';
 import { logDecision, milestone, pushMoment } from './career/common';
 import { raftersTeams } from './awards/legacy';
 import { NAMES, UI } from '../content/strings';
@@ -68,6 +70,9 @@ export function newGame(seed: number, input: CreateInput): GameState {
     nbaSnapshot: null,
     toast: null,
     moments: [],
+    purchases: [],
+    tournaments: [],
+    flags: {},
     schoolColor: '',
   };
   // the game assigns where he grows up and goes to school
@@ -123,6 +128,12 @@ export function choose(s: GameState, choiceId: string): void {
       return;
     case 'event':
       s.toast = resolveEvent(s, d, choiceId) || null;
+      return;
+    case 'national':
+      s.toast = resolveNationalTeam(s, d.data ?? {}, choiceId);
+      return;
+    case 'shop':
+      s.toast = resolveShop(s, d, choiceId);
       return;
     case 'assign':
       if (choiceId === 'go') {

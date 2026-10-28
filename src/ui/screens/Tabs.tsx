@@ -9,6 +9,7 @@ import { count, legacyScore, nbaTitles } from '../../engine/awards/legacy';
 import { NAMES } from '../../content/strings';
 import { Banners, Card, Meter, Scoreboard, type BannerItem } from '../components/bits';
 import { AttrRows } from '../components/PlayerCard';
+import { ScoutCard } from '../components/ScoutCard';
 import { fmtMoney, ht, pct, pg, seasonLabel } from '../format';
 import { league as leagueOf, ovr } from '../selectors';
 
@@ -17,7 +18,7 @@ import { league as leagueOf, ovr } from '../selectors';
 function GameLogTable({ g }: { g: GameState }) {
   const s = g.season;
   if (!s) return <p className="muted">No games yet.</p>;
-  const games = [...s.games, ...s.postGames];
+  const games = [...(s.preGames ?? []), ...s.games, ...(s.cupGames ?? []), ...s.postGames];
   if (games.length === 0) return <p className="muted">The season has not started. Play the first half from Home.</p>;
   return (
     <div className="tbl-wrap" style={{ maxHeight: 420 }}>
@@ -38,7 +39,7 @@ function GameLogTable({ g }: { g: GameState }) {
         <tbody>
           {games.map((x, i) => (
             <tr key={i}>
-              <td>{x.post && x.post !== 'G League' ? 'P' : x.n}</td>
+              <td>{x.post && x.post !== 'G League' ? (x.post === 'Preseason' ? 'Pre' : x.post.startsWith('NBA Cup') ? 'Cup' : 'P') : x.n}</td>
               <td className="l">
                 {x.home ? 'vs' : '@'} {x.opp}
                 {x.post ? <span className="muted"> · {x.post}</span> : null}
@@ -183,6 +184,8 @@ export function PlayerTab({ g }: { g: GameState }) {
   const contractTeam = c && lg ? lg.teams.find((t) => t.id === c.teamId)?.name : null;
   return (
     <div className="home-grid">
+      <div className="stack">
+      <ScoutCard g={g} />
       <Card title="Ratings" kicker={`${NAMES.pos[p.pos]} · OVR ${Math.round(ovr(g))} · peak ${Math.round(p.peakOvr)}`}>
         <AttrRows g={g} compare={g.season?.attrsStart} />
         <p className="muted small">● focus stat (grows ×1.8). Changes are since the start of this season.</p>
@@ -192,6 +195,7 @@ export function PlayerTab({ g }: { g: GameState }) {
           <Meter label="Off-hand" value={p.offhand} tone="ink" />
         </div>
       </Card>
+      </div>
       <div className="stack">
         <Card title="Status">
           <div className="meters">
@@ -395,7 +399,7 @@ export function HistoryTable({ rows }: { rows: SeasonRecord[] }) {
 
 export function RecordsTab({ g }: { g: GameState }) {
   const nba = g.history.filter((h) => h.level === 'NBA');
-  const pro = g.history.filter((h) => h.level === 'NBA' || h.level === 'GL' || h.level === 'EU');
+  const pro = g.history.filter((h) => h.level === 'NBA' || h.level === 'GL' || h.level === 'EU' || h.level === 'INT');
   const nbaT = totals(nba);
   const proT = totals(pro);
   return (
@@ -404,6 +408,39 @@ export function RecordsTab({ g }: { g: GameState }) {
         {g.history.length === 0 ? <p className="muted">Your seasons show up here after the first one.</p> : <HistoryTable rows={g.history} />}
         <p className="muted small">High school and college seasons are listed but do not count toward pro career totals.</p>
       </Card>
+      {g.tournaments.length > 0 && (
+        <Card title="Tournaments">
+          <div className="tbl-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th className="l">Year</th>
+                  <th className="l">Event</th>
+                  <th className="l">Team</th>
+                  <th className="l">Result</th>
+                  <th>GP</th>
+                  <th>PTS</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[...g.tournaments].reverse().map((t, i) => (
+                  <tr key={i}>
+                    <td className="l">{t.year}</td>
+                    <td className="l">{t.name}</td>
+                    <td className="l">{t.team}</td>
+                    <td className="l">
+                      {t.medal ? (t.medal === 'gold' ? '🥇 ' : t.medal === 'silver' ? '🥈 ' : '🥉 ') : ''}
+                      {t.result}
+                    </td>
+                    <td>{t.line?.gp ?? 0}</td>
+                    <td>{t.line ? pg(t.line, 'pts') : '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
       <Card title="Trophy cabinet">{g.awards.length === 0 ? <p className="muted">Empty, for now.</p> : <Banners items={trophyItems(g)} />}</Card>
       <Card title="Career totals" kicker={`Legacy score ${legacyScore(g)}`}>
         {nbaT.gp > 0 && (

@@ -54,7 +54,7 @@ export function lastRecord(team: Team): string {
   return team.w + team.l > 0 ? `${team.w}–${team.l}` : '—';
 }
 
-export const LEVEL_RANK: Record<LevelKey, number> = { HSJV: 0, HSV: 1, NCAA: 2, GL: 3, EU: 4, NBA: 6 };
+export const LEVEL_RANK: Record<LevelKey, number> = { HSJV: 0, HSV: 1, NCAA: 2, INT: 2.8, GL: 3, EU: 4, NBA: 6 };
 
 export function repLabel(rep: number): string {
   for (const [min, label] of REP.labels) if (rep >= min) return label;

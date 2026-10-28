@@ -24,7 +24,7 @@ export function stageLine(g: GameState): string {
   const p = g.player;
   if (g.stage === 'RETIRED') return `Retired at ${g.retiredAt ?? p.age}`;
   const lvl = g.season ? LEVELS[g.season.level].short : '';
-  if (g.stage === 'HS') return `${['Freshman', 'Sophomore', 'Junior', 'Senior'][g.hsYear - 1]} · ${lvl}`;
+  if (g.stage === 'HS') return `${['Freshman', 'Sophomore', 'Junior', 'Senior', 'Post-grad'][g.hsYear - 1]} · ${lvl}`;
   if (g.stage === 'NCAA') return `${['Freshman', 'Sophomore', 'Junior', 'Senior'][Math.min(3, g.ncaaYear)]} · ${lvl}`;
   if (g.stage === 'NBA') {
     const yr = g.serviceYears + (g.step === 'offseason' ? 1 : g.step === 'summary' ? 0 : 1);

@@ -74,7 +74,9 @@ export const useStore = create<Store>((set, get) => ({
     let transition: Transition | null = null;
     if ((before.step === 'preseason' || before.step === 'midseason') && next.season) {
       const t = teamOf(next);
-      const games = [...next.season.games.slice(before.games), ...next.season.postGames.slice(before.post)];
+      const pre = before.step === 'preseason' ? (next.season.preGames ?? []) : [];
+      const cup = before.step === 'preseason' ? (next.season.cupGames ?? []) : [];
+      const games = [...pre, ...next.season.games.slice(before.games), ...cup, ...next.season.postGames.slice(before.post)];
       transition = {
         kind: 'half',
         label: before.step === 'preseason' ? 'First half' : 'Second half and postseason',

@@ -258,6 +258,9 @@ const KICKER: Record<Moment['kind'], string> = {
   title: 'Championship',
   awards: 'Honours',
   camp: 'Training camp',
+  injury: 'Injury',
+  event: 'Turning point',
+  tournament: 'Tournament',
 };
 
 function MomentPage({ m, g }: { m: Moment; g: GameState }) {

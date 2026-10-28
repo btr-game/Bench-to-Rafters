@@ -32,11 +32,19 @@ function smartChoice(s: GameState, d: Decision, r: Rng): string {
   switch (d.kind) {
     case 'plan':
       if (s.player.injury) return byId('recovery') ?? ch[0].id;
-      return s.player.age <= 24 ? 'grind' : 'balanced';
+      if (s.player.morale < 35) return 'recovery';
+      return s.player.age <= 22 ? 'grind' : s.player.age <= 27 ? 'balanced' : 'teamfirst';
     case 'summer':
       return 'skills';
+    case 'shop': {
+      // buy the priciest affordable training or recovery item
+      const buy = ch.filter((c) => c.id !== 'leave' && /Training|Recovery|Shoes/.test(String(c.tags?.[0]))).sort((a, b) => Number(b.meta?.price) - Number(a.meta?.price))[0];
+      return buy?.id ?? 'leave';
+    }
     case 'assign':
       return 'go';
+    case 'national':
+      return s.player.age < 32 ? 'accept' : 'decline';
     case 'transfer':
       return 'enter';
     case 'retirePrompt':
@@ -141,7 +149,7 @@ export function runCareer(seed: number, policy: Policy): CareerResult {
     undrafted: s.undrafted,
     drafted: s.draftedBy !== null,
     retireAge: s.retiredAt ?? s.player.age,
-    proCareer: s.history.some((h) => h.level === 'NBA' || h.level === 'GL' || h.level === 'EU'),
+    proCareer: s.history.some((h) => h.level === 'NBA' || h.level === 'GL' || h.level === 'EU' || h.level === 'INT'),
     verdict: s.verdict ?? '?',
     legacy: legacyScore(s),
     peakOvr: s.player.peakOvr,
@@ -155,6 +163,7 @@ export function runCareer(seed: number, policy: Policy): CareerResult {
 
 export interface Summary {
   n: number;
+  meanPeak: number;
   playedNba: number;
   nba5: number;
   allStar: number;
@@ -193,6 +202,7 @@ export function summarize(results: CareerResult[], ms: number): Summary {
   ];
   return {
     n,
+    meanPeak: avg(results.map((c) => c.peakOvr)),
     playedNba: frac((c) => c.playedNba),
     nba5: frac((c) => c.nbaSeasons >= 5),
     allStar: frac((c) => c.allStar),
@@ -218,32 +228,34 @@ export function summarize(results: CareerResult[], ms: number): Summary {
   };
 }
 
-// §15 targets, with the road to the NBA made easier after playtesting (Oct 2026):
-// NBA entry and draft targets are higher; NBA success targets are unchanged.
+// §15 targets, revised after playtesting (Oct 2026): the average career peaks near OVR 75,
+// reaching the NBA is common, and stardom stays the reward for good choices and luck.
 export const TARGETS: Record<Policy, Record<string, [number, number]>> = {
   random: {
-    playedNba: [0.5, 0.65],
-    nba5: [0.18, 0.3],
-    allStar: [0.03, 0.06],
-    allNba: [0.01, 0.03],
-    mvp: [0, 0.01],
-    title: [0.06, 0.12],
-    hof: [0, 0.015],
-    undraftedOfDeclared: [0.3, 0.45],
-    meanNbaSeasons: [4, 7],
-    medianRetireAge: [30, 34],
+    meanPeak: [71, 76],
+    playedNba: [0.65, 0.82],
+    nba5: [0.38, 0.55],
+    allStar: [0.1, 0.2],
+    allNba: [0.05, 0.12],
+    mvp: [0, 0.02],
+    title: [0.08, 0.18],
+    hof: [0.02, 0.07],
+    undraftedOfDeclared: [0.28, 0.45],
+    meanNbaSeasons: [6, 9],
+    medianRetireAge: [30, 35],
   },
   smart: {
-    playedNba: [0.6, 0.75],
-    nba5: [0.35, 0.5],
-    allStar: [0.1, 0.15],
-    allNba: [0.05, 0.09],
-    mvp: [0.01, 0.03],
-    title: [0.12, 0.2],
-    hof: [0.03, 0.06],
-    undraftedOfDeclared: [0.2, 0.35],
-    meanNbaSeasons: [6, 9],
-    medianRetireAge: [31, 35],
+    meanPeak: [75, 80],
+    playedNba: [0.8, 0.92],
+    nba5: [0.68, 0.85],
+    allStar: [0.25, 0.38],
+    allNba: [0.15, 0.28],
+    mvp: [0.02, 0.06],
+    title: [0.18, 0.32],
+    hof: [0.08, 0.18],
+    undraftedOfDeclared: [0.15, 0.32],
+    meanNbaSeasons: [9, 12.5],
+    medianRetireAge: [31, 36],
   },
 };
 

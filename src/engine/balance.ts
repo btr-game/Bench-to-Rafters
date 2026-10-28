@@ -34,7 +34,7 @@ export const NON_FOCUS_MULT = 0.85;
 export const MAX_FOCUS_CHANGES = 3;
 
 // §6 hidden traits
-export const POTENTIAL = { mean: 70, sd: 8, min: 52, max: 96 };
+export const POTENTIAL = { mean: 75, sd: 5.5, min: 58, max: 95 };
 export const GROWTH_TYPE_ODDS: [GrowthType, number][] = [
   ['early', 0.2],
   ['standard', 0.6],
@@ -84,17 +84,62 @@ export const PERF_FACTOR = { min: 0.9, max: 1.1, slope: 0.25 };
 export const GROWTH_RANDOM: [number, number] = [0.7, 1.3];
 export const HEALTH_MULT_OUT = 0.3;
 
-// §5 half plans
-export const HALF_PLANS: Record<
-  HalfPlan,
-  { growth: number; injury: number; morale: number; trust: number; rep: [number, number] }
-> = {
-  balanced: { growth: 1.0, injury: 1.0, morale: 0, trust: 0, rep: [0, 0] },
-  grind: { growth: 1.25, injury: 1.6, morale: -3, trust: 1, rep: [0, 0] },
-  recovery: { growth: 0.8, injury: 0.55, morale: 3, trust: 0, rep: [0, 0] },
-  spotlight: { growth: 0.85, injury: 1.0, morale: 0, trust: -2, rep: [3, 6] },
-  teamfirst: { growth: 0.95, injury: 1.0, morale: 2, trust: 6, rep: [0, 0] },
+// §5 half plans. `attrs` multiplies growth of those stats; `other` multiplies the rest.
+// `usage` scales his shot share in games, `teamBoost` adds to his team's strength.
+export interface PlanDef {
+  growth: number;
+  injury: number;
+  morale: number;
+  trust: number;
+  rep: [number, number];
+  usage: number;
+  teamBoost: number;
+  attrs?: Partial<Record<AttrKey, number>>;
+  other?: number;
+  rangeGain?: number;
+}
+export const HALF_PLANS: Record<HalfPlan, PlanDef> = {
+  balanced: { growth: 1.0, injury: 1.0, morale: 0, trust: 0, rep: [0, 0], usage: 1, teamBoost: 0 },
+  grind: { growth: 1.3, injury: 1.7, morale: -4, trust: 1, rep: [0, 0], usage: 1, teamBoost: 0 },
+  recovery: { growth: 0.75, injury: 0.5, morale: 4, trust: 0, rep: [0, 0], usage: 0.95, teamBoost: 0 },
+  spotlight: { growth: 0.85, injury: 1.05, morale: 2, trust: -3, rep: [3, 8], usage: 1.15, teamBoost: -0.3 },
+  teamfirst: { growth: 0.95, injury: 1.0, morale: 2, trust: 6, rep: [0, 1], usage: 0.88, teamBoost: 0.6 },
+  shooting: { growth: 1.0, injury: 0.95, morale: 0, trust: 0, rep: [0, 0], usage: 1.03, teamBoost: 0, attrs: { SHT: 2.4 }, other: 0.6, rangeGain: 2 },
+  strength: { growth: 1.0, injury: 1.2, morale: -1, trust: 0, rep: [0, 0], usage: 1, teamBoost: 0, attrs: { FIN: 1.9, REB: 1.9, ATH: 1.9, INT: 1.6 }, other: 0.55 },
+  playmaking: { growth: 1.0, injury: 1.0, morale: 0, trust: 2, rep: [0, 0], usage: 0.97, teamBoost: 0.2, attrs: { PLY: 2.2, IQ: 2.0 }, other: 0.6 },
+  defense: { growth: 1.0, injury: 1.05, morale: 0, trust: 3, rep: [0, 0], usage: 0.95, teamBoost: 0.3, attrs: { PER: 2.2, INT: 2.0 }, other: 0.6 },
 };
+
+// Each half rolls an outcome for the plan. Morale shifts the odds toward breakthroughs.
+export interface PlanOutcome {
+  key: string;
+  label: string;
+  weight: number;
+  growth: number;
+  morale: number;
+  trust: number;
+  injury?: number; // multiplies injury risk for the next half
+}
+export const PLAN_OUTCOMES: PlanOutcome[] = [
+  { key: 'breakthrough', label: 'Breakthrough', weight: 0.16, growth: 1.6, morale: 6, trust: 2 },
+  { key: 'steady', label: 'Steady progress', weight: 0.56, growth: 1.0, morale: 0, trust: 0 },
+  { key: 'plateau', label: 'Plateau', weight: 0.2, growth: 0.55, morale: -4, trust: 0 },
+  { key: 'setback', label: 'Setback', weight: 0.08, growth: 0.3, morale: -8, trust: -3, injury: 1.25 },
+];
+// plan-specific twists on a setback
+export const PLAN_SETBACK_TEXT: Partial<Record<HalfPlan, string>> = {
+  grind: 'Burnout: you pushed too hard and your legs went dead.',
+  spotlight: 'The attention became a distraction and the coaches noticed.',
+  strength: 'You tweaked your back in the weight room.',
+  shooting: 'You overthought your mechanics and lost your stroke.',
+};
+export const MORALE_GROWTH = (morale: number): number => (morale >= 75 ? 1.1 : morale <= 30 ? 0.8 : 1);
+// in-game effect of morale, centred on 60: ±8% shooting at the extremes
+export const MORALE_PERF = (morale: number): number => 1 + Math.max(-1, Math.min(1, (morale - 60) / 40)) * 0.08;
+// All-Star fan vote: share of the score and the scale of reputation
+export const FAN_VOTE = { share: 0.15, scale: 25 };
+// per-game form (hot and cold nights) and a streaky rhythm across a half
+export const FORM = { gameSd: 0.17, halfSd: 0.08, min: 0.5, max: 1.7, shootingShare: 0.3 };
 
 // §7 aging
 export const DECLINE_START = { durable: 32, normal: 30, fragile: 28 } as const;
@@ -105,13 +150,13 @@ export const SUDDEN_DECLINE = { fromAge: 31, chance: 0.08, min: 4, max: 8 };
 export const DECLINE_NOISE = 0.3;
 
 // §7 injuries
-export const BASE_INJURY = 0.0105; // per game played
+export const BASE_INJURY = 0.0135; // per game played
 export const INJURY_AGE_MULT = (age: number): number => (age < 24 ? 0.85 : age < 30 ? 1 : age < 34 ? 1.2 : 1.4);
 export const INJURY_SEVERITY: { key: 'dtd' | 'minor' | 'major' | 'season'; share: number; days: [number, number] }[] = [
-  { key: 'dtd', share: 0.55, days: [2, 6] },
-  { key: 'minor', share: 0.3, days: [7, 21] },
-  { key: 'major', share: 0.13, days: [30, 90] },
-  { key: 'season', share: 0.02, days: [270, 365] },
+  { key: 'dtd', share: 0.5, days: [2, 6] },
+  { key: 'minor', share: 0.3, days: [7, 24] },
+  { key: 'major', share: 0.165, days: [30, 100] },
+  { key: 'season', share: 0.035, days: [270, 365] },
 ];
 export const OFFSEASON_DAYS = 160;
 
@@ -131,11 +176,12 @@ export const LEVELS: Record<LevelKey, LevelInfo> = {
   HSV: { name: 'High school varsity', short: 'HS Varsity', avg: 45, gameLen: 32, games: 25, seasonDays: 100, teamFga: 52, pace: 1 },
   NCAA: { name: 'NCAA Division I', short: 'NCAA', avg: 55, gameLen: 40, games: 31, seasonDays: 120, teamFga: 59, pace: 1 },
   GL: { name: 'NBA G League', short: 'G League', avg: 62, gameLen: 48, games: 34, seasonDays: 140, teamFga: 90, pace: 1 },
+  INT: { name: 'Overseas league', short: 'Overseas', avg: 57, gameLen: 40, games: 30, seasonDays: 180, teamFga: 64, pace: 1 },
   EU: { name: 'EuroLeague', short: 'EuroLeague', avg: 63, gameLen: 40, games: 34, seasonDays: 200, teamFga: 64, pace: 1 },
   NBA: { name: 'NBA', short: 'NBA', avg: 72, gameLen: 48, games: 82, seasonDays: 165, teamFga: 88, pace: 1 },
 };
 export const NCAA_TIER_STRENGTH = { blue: 63, power: 60.5, major: 58, mid: 55 } as const;
-export const TEAM_STRENGTH_NOISE: Record<LevelKey, number> = { HSJV: 3, HSV: 3.5, NCAA: 1.8, GL: 1.8, EU: 1.2, NBA: 0 };
+export const TEAM_STRENGTH_NOISE: Record<LevelKey, number> = { HSJV: 3, HSV: 3.5, NCAA: 1.8, GL: 1.8, EU: 1.2, INT: 1.5, NBA: 0 };
 // Mean team strength (weighted top-9 OVR) where the spec does not list one per team.
 // `LEVELS[x].avg` (the stat model's "average rotation player") sits ~4 below this.
 export const LEAGUE_STRENGTH = { HSJV: 41, HSV: 48.5, GL: 66, NBA: 77.3 };
@@ -192,7 +238,7 @@ export const STAT = {
   stl36: { base: 1.0, per: 0.03, ath: 0.008, min: 0.2, max: 3 },
   blk36: { base: 0.55, int: 0.035, height: 0.12, wing: 0.06, min: 0, max: 4.2 },
   tov36: { base: 1.0, fga: 0.055, ast: 0.16, iq: 0.02, min: 0.4, max: 5 },
-  moraleSwing: 0.06,
+  moraleSwing: 0.12,
 };
 
 // §10 value score
@@ -281,8 +327,8 @@ export const DRAFT = {
   poolPerAge: 32,
   // the player's own board score gets this bonus (scouts know his story); it eases NBA
   // entry without weakening the league's talent pipeline
-  userBoardBonus: 4,
-  potMean: 70,
+  userBoardBonus: 2,
+  potMean: 73.5,
   potSd: 8,
   ovrNoise: 2.2,
 };
@@ -352,4 +398,4 @@ export const REP = {
   ] as [number, string][],
 };
 
-export const EVENTS = { midseasonMax: 2, offseasonMax: 1, midseasonChance: 0.55, offseasonChance: 0.5 };
+export const EVENTS = { midseasonMax: 2, offseasonMax: 2, midseasonChance: 0.9, secondChance: 0.4, offseasonChance: 0.85 };

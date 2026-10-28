@@ -233,3 +233,64 @@ export const HOMETOWN_SCHOOLS: { town: string; schools: string[]; colors: string
   { town: 'Las Vegas, NV', schools: ['Silver State Prep', 'Spring Mountain High', 'Desert Rose Catholic'], colors: ['#8A6D1F', '#7A1F2B'] },
   { town: 'Seoul, South Korea', schools: ['Hanbit International School', 'Gangnam Prep Academy'], colors: ['#1F3A7A', '#7A1F2B'] },
 ];
+
+// Other overseas leagues (level INT). Strength is mean team strength; salary in $M a year.
+export interface IntLeagueInfo {
+  key: string;
+  name: string;
+  country: string;
+  strength: number;
+  salary: [number, number];
+  teams: [string, string][];
+}
+
+export const INT_LEAGUES: IntLeagueInfo[] = [
+  {
+    key: 'NBL',
+    name: 'NBL',
+    country: 'Australia',
+    strength: 62,
+    salary: [0.15, 0.9],
+    teams: [
+      ['Sydney Kings', '#5B2A86'], ['Melbourne United', '#002B5C'], ['Perth Wildcats', '#C8102E'], ['Brisbane Bullets', '#7A1F2B'],
+      ['Adelaide 36ers', '#B3541E'], ['New Zealand Breakers', '#2A2F36'], ['Tasmania JackJumpers', '#1E5B3A'], ['Illawarra Hawks', '#B71C1C'],
+      ['Cairns Taipans', '#F28C28'], ['South East Melbourne Phoenix', '#0F5C6E'],
+    ],
+  },
+  {
+    key: 'CBA',
+    name: 'CBA',
+    country: 'China',
+    strength: 61,
+    salary: [0.4, 3.5],
+    teams: [
+      ['Guangdong Southern Tigers', '#C8102E'], ['Liaoning Flying Leopards', '#002B5C'], ['Zhejiang Lions', '#1E5B3A'], ['Shanghai Sharks', '#0F5C6E'],
+      ['Beijing Ducks', '#7A1F2B'], ['Shenzhen Leopards', '#2A2F36'], ['Xinjiang Flying Tigers', '#8A6D1F'], ['Shandong Heroes', '#B3541E'],
+      ['Qingdao Eagles', '#1F3A7A'], ['Guangzhou Loong Lions', '#5B2A86'],
+    ],
+  },
+  {
+    key: 'BLG',
+    name: 'B.League',
+    country: 'Japan',
+    strength: 59,
+    salary: [0.2, 1.4],
+    teams: [
+      ['Chiba Jets', '#C8102E'], ['Utsunomiya Brex', '#F4C300'], ['Ryukyu Golden Kings', '#5B2A86'], ['Alvark Tokyo', '#B71C1C'],
+      ['Nagoya Diamond Dolphins', '#1F3A7A'], ['Shimane Susanoo Magic', '#2A2F36'], ['Kawasaki Brave Thunders', '#7A1F2B'], ['Hiroshima Dragonflies', '#0F5C6E'],
+      ['Sunrockers Shibuya', '#8A6D1F'], ['Gunma Crane Thunders', '#1E5B3A'],
+    ],
+  },
+  {
+    key: 'KBL',
+    name: 'KBL',
+    country: 'South Korea',
+    strength: 57,
+    salary: [0.12, 0.6],
+    teams: [
+      ['Seoul SK Knights', '#C8102E'], ['Changwon LG Sakers', '#7A1F2B'], ['Suwon KT Sonicboom', '#2A2F36'], ['Anyang Jung Kwan Jang', '#B3541E'],
+      ['Ulsan Hyundai Mobis Phoebus', '#1F3A7A'], ['Busan KCC Egis', '#002B5C'], ['Wonju DB Promy', '#1E5B3A'], ['Seoul Samsung Thunders', '#0F5C6E'],
+      ['Goyang Sono Skygunners', '#5B2A86'], ['Daegu KOGAS Pegasus', '#8A6D1F'],
+    ],
+  },
+];

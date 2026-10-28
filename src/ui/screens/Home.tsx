@@ -5,6 +5,7 @@ import { NAMES, UI } from '../../content/strings';
 import { useStore } from '../../store';
 import { Banners, MilestoneStrip, ReactionCard, Scoreboard } from '../components/bits';
 import { PlayerCard } from '../components/PlayerCard';
+import { ScoutCard } from '../components/ScoutCard';
 import { DecisionView } from './Decision';
 import { fmtMoney, ordinal, pg, seasonLabel, signed } from '../format';
 import { team } from '../selectors';
@@ -79,7 +80,7 @@ function SeasonHeader({ g }: { g: GameState }) {
         </div>
         <h2>{t ? t.name : 'Offseason'}</h2>
         {g.step === 'offseason' ? (
-          <div className="muted small">{g.stage === 'NBA' || g.stage === 'GL' || g.stage === 'EU' || g.stage === 'NCAA' ? LEVELS[g.stage].name : 'High school'}</div>
+          <div className="muted small">{g.stage === 'NBA' || g.stage === 'GL' || g.stage === 'EU' || g.stage === 'INT' || g.stage === 'NCAA' ? LEVELS[g.stage].name : 'High school'}</div>
         ) : (
           s && <div className="muted small">{LEVELS[s.level].name}</div>
         )}
@@ -94,6 +95,25 @@ function SeasonHeader({ g }: { g: GameState }) {
   );
 }
 
+function PlanOutcomes({ g, half }: { g: GameState; half?: number }) {
+  const list = (g.season?.outcomes ?? []).filter((o) => half === undefined || o.half === half);
+  if (list.length === 0) return null;
+  return (
+    <div className="stack" style={{ gap: 6 }}>
+      {list.map((o, i) => (
+        <div key={i} className={`outcome ${o.outcome.split(' ')[0].toLowerCase()}`}>
+          <div className="kicker">
+            {o.half === 1 ? 'First half' : 'Second half'} · {NAMES.plan[o.plan]} · {o.outcome}
+          </div>
+          <div>
+            {o.text} <b className="num">{o.ovrGain >= 0 ? '+' : ''}{o.ovrGain.toFixed(1)} OVR</b>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function Context({ g }: { g: GameState }) {
   const s = g.season;
   if (g.step === 'preseason' && s) {
@@ -103,6 +123,7 @@ function Context({ g }: { g: GameState }) {
         <div>
           Projected role: <b>{NAMES.role[s.role]}</b> (number {s.roleRank} on the depth chart).
         </div>
+        {s.preReport && <div className="small">{s.preReport}</div>}
         {g.contract && g.stage !== 'HS' && g.stage !== 'NCAA' && (
           <div className="muted small">
             Contract: {fmtMoney(g.contract.salary)} a year, {g.contract.years} year{g.contract.years === 1 ? '' : 's'} left.
@@ -120,12 +141,23 @@ function Context({ g }: { g: GameState }) {
           {s.midReport.map((line, i) => (
             <div key={i}>{line}</div>
           ))}
+          {s.preReport && <div className="muted small">Preseason: {s.preReport}</div>}
+          {s.allStarRank !== undefined && (
+            <div className="small">{s.allStar ? '★ All-Star selection' : `All-Star voting: ${s.allStarRank}th in the conference`}</div>
+          )}
         </div>
+        <PlanOutcomes g={g} half={1} />
         {half && half.gp > 0 && <Scoreboard line={half} />}
       </div>
     );
   }
-  if (g.step === 'summary' && s?.summary) return <SeasonSummary rec={s.summary} />;
+  if (g.step === 'summary' && s?.summary)
+    return (
+      <div className="stack">
+        <SeasonSummary rec={s.summary} />
+        <PlanOutcomes g={g} />
+      </div>
+    );
   if (g.step === 'offseason') {
     return (
       <div className="recap">
@@ -166,6 +198,7 @@ export function Home({ g }: { g: GameState }) {
     <div className="home-grid">
       <div className="stack">
         <PlayerCard g={g} />
+        <ScoutCard g={g} compact />
       </div>
       <div className="stack">
         <section className="card stack">

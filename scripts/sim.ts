@@ -20,6 +20,7 @@ const policies: Policy[] = policyArg === 'both' ? ['random', 'smart'] : [policyA
 
 const pct = (x: number) => `${(x * 100).toFixed(1)}%`;
 const LABELS: Record<string, string> = {
+  meanPeak: 'Mean peak OVR',
   playedNba: 'Played at least 1 NBA game',
   nba5: '5+ NBA seasons',
   allStar: 'At least 1 All-Star',
@@ -33,10 +34,10 @@ const LABELS: Record<string, string> = {
 };
 
 function fmt(key: string, v: number): string {
-  return key === 'meanNbaSeasons' || key === 'medianRetireAge' ? v.toFixed(2) : pct(v);
+  return key === 'meanNbaSeasons' || key === 'medianRetireAge' || key === 'meanPeak' ? v.toFixed(2) : pct(v);
 }
 function fmtRange(key: string, r: [number, number]): string {
-  return key === 'meanNbaSeasons' || key === 'medianRetireAge' ? `${r[0]}–${r[1]}` : `${pct(r[0])}–${pct(r[1])}`;
+  return key === 'meanNbaSeasons' || key === 'medianRetireAge' || key === 'meanPeak' ? `${r[0]}–${r[1]}` : `${pct(r[0])}–${pct(r[1])}`;
 }
 const mark = (v: number, [a, b]: [number, number]) => (v >= a - 1e-9 && v <= b + 1e-9 ? 'OK ' : 'off');
 

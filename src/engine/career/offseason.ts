@@ -22,9 +22,11 @@ import {
   teamById,
   userOvr,
 } from './common';
-import { europeOffers, glOffer, nbaFreeAgentOffers, nbaOffer, nbaOffersForProspect, offerChoice, splitOffers } from './offers';
+import { europeOffers, glOffer, intOffers, nbaFreeAgentOffers, nbaOffer, nbaOffersForProspect, offerChoice, splitOffers } from './offers';
 import { previewDraft, runWorldDraft, teamForPick } from './nbaYear';
 import { queueOffseasonEvent } from '../events/resolver';
+import { pushShop } from '../economy/shop';
+import { pushNationalTeam } from '../sim/tournaments';
 import { beginSeason, ordinal } from './season';
 import { verdictFor } from '../awards/legacy';
 import type { Prospect } from '../world/draft';
@@ -51,7 +53,7 @@ export function beginOffseason(s: GameState): void {
   p.morale = Math.round(p.morale + (60 - p.morale) * 0.3);
   p.peakOvr = Math.max(p.peakOvr, userOvr(s));
   if (s.stage === 'HS') {
-    const job = range(s.rng, 0.0003, 0.0008);
+    const job = range(s.rng, 0.0005, 0.0015);
     p.bank += job;
     p.earnings += job;
   }
@@ -62,7 +64,7 @@ export function beginOffseason(s: GameState): void {
   switch (s.stage) {
     case 'HS':
       if (s.hsYear < 4) s.hsYear += 1;
-      else pushSplit(s);
+      else pushSplit(s); // after senior year, or after a post-grad prep year
       break;
     case 'NCAA':
       s.ncaaYear += 1;
@@ -70,6 +72,7 @@ export function beginOffseason(s: GameState): void {
       break;
     case 'GL':
     case 'EU':
+    case 'INT':
       proOffseason(s, lastShare);
       break;
     case 'NBA':
@@ -78,8 +81,11 @@ export function beginOffseason(s: GameState): void {
     default:
       break;
   }
+  p.growthMultNext = 1;
   if (s.stage !== 'RETIRED') {
+    pushNationalTeam(s);
     pushSummer(s);
+    pushShop(s);
     queueOffseasonEvent(s);
   }
 }
@@ -158,11 +164,15 @@ function pushSplit(s: GameState): void {
     });
     return;
   }
+  const choices = offers.map(offerChoice);
+  if (s.hsYear === 4 && s.stars <= 3) {
+    choices.push({ id: 'prep', label: 'Take a post-grad prep year', detail: 'One more season at a national prep academy against better players, then get recruited again.' });
+  }
   pushDecision(s, {
     kind: 'offers',
     title: 'Where next?',
     text: `${s.stars}★ recruit${s.recruitRank ? `, ranked ${ordinal(s.recruitRank)} in the national class` : ''}. Pick where you play next season.`,
-    choices: offers.map(offerChoice),
+    choices,
     data: { offers, context: 'split' },
   });
 }
@@ -315,6 +325,7 @@ function pushUndrafted(s: GameState): void {
   }
   if (ovr >= 54) offers.push(glOffer(s, ovr));
   offers.push(...europeOffers(s, ovr, ovr >= 58 ? 2 : 0));
+  offers.push(...intOffers(s, ovr, 2));
   if (offers.length === 0) {
     retireNow(s, 'No team called after the draft.');
     return;
@@ -350,7 +361,8 @@ function proContractStep(s: GameState): void {
     const fade = FA_INTEREST.minorAgeFade(s.player.age);
     if (s.stage === 'GL' && ovr >= 54 && chance(s.rng, fade)) offers.push(glOffer(s, ovr, (s.teamId ?? 'GL-LAL').replace('GL-', '')));
     offers.push(...europeOffers(s, ovr, ovr >= 60 ? 2 : ovr >= 57 ? 1 : 0));
-    if (s.stage === 'EU' && ovr >= 54 && chance(s.rng, fade)) offers.push(glOffer(s, ovr));
+    if ((s.stage === 'EU' || s.stage === 'INT') && ovr >= 54 && chance(s.rng, fade)) offers.push(glOffer(s, ovr));
+    offers.push(...intOffers(s, ovr, 2, { cba: s.player.age >= 29 }));
   }
   if (offers.length === 0) {
     if (expired) retireNow(s, 'No contract offers came.');
@@ -419,7 +431,7 @@ function pushLastChance(s: GameState, why: string): void {
     retireNow(s, 'Time catches everyone.');
     return;
   }
-  const offers: Offer[] = [...europeOffers(s, ovr, ovr >= 60 ? 2 : ovr >= 57 ? 1 : 0)];
+  const offers: Offer[] = [...europeOffers(s, ovr, ovr >= 60 ? 2 : ovr >= 57 ? 1 : 0), ...intOffers(s, ovr, 2, { cba: s.player.age >= 29 })];
   if (ovr >= 56 && chance(s.rng, FA_INTEREST.minorAgeFade(s.player.age))) offers.push(glOffer(s, ovr));
   const choices = offers.map(offerChoice);
   choices.push({ id: 'retire', label: 'Retire', detail: 'Hang them up.' });
@@ -473,7 +485,7 @@ export function signContract(s: GameState, c: Contract, stage: GameState['stage'
 
 export function signOffer(s: GameState, o: Offer, context: string, others: Offer[]): void {
   const year = s.year + 1;
-  let stage: GameState['stage'] = o.level === 'NCAA' ? 'NCAA' : o.level === 'GL' ? 'GL' : o.level === 'EU' ? 'EU' : 'NBA';
+  const stage: GameState['stage'] = o.level === 'NCAA' ? 'NCAA' : o.level === 'GL' ? 'GL' : o.level === 'EU' ? 'EU' : o.level === 'INT' ? 'INT' : 'NBA';
   if (o.kind === 'exhibit10') {
     const team = teamById(s.nba, o.teamId)!;
     const cut = team.roster[12]?.ovr ?? 67;
@@ -497,7 +509,7 @@ export function signOffer(s: GameState, o: Offer, context: string, others: Offer
     s.ncaaYear = context === 'transfer' ? s.ncaaYear : 0;
     milestone(s, 'committed');
   }
-  if (o.level === 'GL' || o.level === 'EU') milestone(s, 'committed');
+  if (o.level === 'GL' || o.level === 'EU' || o.level === 'INT') milestone(s, 'committed');
   signContract(
     s,
     {
@@ -581,6 +593,12 @@ export function resolveOffseasonDecision(s: GameState, d: Decision, id: string):
       const offers = (d.data?.offers as Offer[]) ?? [];
       if (id === 'retire') {
         retireNow(s, 'Chose to walk away.');
+        return true;
+      }
+      if (id === 'prep') {
+        s.hsYear = 5;
+        logDecision(s, 'prep', `Turned down ${offers.length} offer${offers.length === 1 ? '' : 's'} for a post-grad prep year.`);
+        pushMoment(s, { kind: 'commit', title: 'Northfield Prep', teamName: 'Northfield Prep', color: '#0B3D2E', text: 'One more year. A national prep schedule, better teammates, and every college coach watching.', lines: ['Post-grad season', 'Recruited again next summer'] });
         return true;
       }
       if (id === 'stay') {

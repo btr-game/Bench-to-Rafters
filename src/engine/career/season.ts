@@ -3,15 +3,18 @@
 import {
   AGENT_CUT,
   DEEP_BENCH,
+  FORM,
   HALF_PLANS,
+  MORALE_PERF,
+  PLAN_OUTCOMES,
+  PLAN_SETBACK_TEXT,
   HS_VARSITY_SIZE,
   IMPACT_MULT,
   LEVELS,
   RECRUIT,
   ROLE_MINUTES,
-  STAT,
 } from '../balance';
-import { chance, clamp, int, normal, range, type Rng } from '../rng';
+import { chance, clamp, int, normal, range, weightedIndex, type Rng } from '../rng';
 import type { GameLog, GameState, HalfPlan, League, LevelKey, RoleKey, SeasonRecord, SeasonState, StatLine, Team } from '../types';
 import { ovrOf } from '../player/ovr';
 import { applyHalfGrowth, perfFactor } from '../player/growth';
@@ -43,11 +46,12 @@ import {
   winProb,
   type UserGameHook,
 } from '../sim/leagueSim';
-import { buildEu, buildGl, buildHs, buildNba, buildNcaa, schoolRoster, USER_SCHOOL_ID } from '../world/leagues';
+import { buildEu, buildGl, buildHs, buildInt, buildNba, buildNcaa, schoolRoster, USER_SCHOOL_ID } from '../world/leagues';
 import { rosterStrength } from '../world/gen';
 import { buildCandidates, nbaAwards, simpleAwards, type AwardOutcome } from '../awards/awards';
 import { adjust, conferenceRank, milestone, pushDecision, pushMoment, rankOnRoster, roleWithTrust, teamById, userOvr } from './common';
 import { queueMidseasonEvents } from '../events/resolver';
+import { allStarWeekend, conferenceTournament, hsNationals, mcdonaldsGame, nbaCup, nbaPreseason } from '../sim/tournaments';
 import { quickNbaSeason, warmUpNba } from './nbaYear';
 import { reactionsForSeason } from '../story/reactions';
 
@@ -88,7 +92,8 @@ export function beginSeason(s: GameState): void {
   } else {
     teamId = s.teamId!;
     level = s.stage as LevelKey;
-    league = s.stage === 'NCAA' ? buildNcaa(s, s.year, teamId) : s.stage === 'GL' ? buildGl(s, s.year, teamId) : buildEu(s, s.year, teamId);
+    league =
+      s.stage === 'NCAA' ? buildNcaa(s, s.year, teamId) : s.stage === 'GL' ? buildGl(s, s.year, teamId) : s.stage === 'INT' ? buildInt(s, s.year, teamId) : buildEu(s, s.year, teamId);
     s.league = league;
   }
   league.userTeamId = teamId;
@@ -123,10 +128,14 @@ export function pushPlanDecision(s: GameState, half: 1 | 2): void {
   const injured = !!s.player.injury && s.player.injury.key !== 'dtd';
   const plans: { id: HalfPlan; label: string; detail: string }[] = [
     { id: 'balanced', label: 'Balanced', detail: 'Normal growth and risk.' },
-    { id: 'grind', label: 'Grind', detail: 'Growth ×1.25, injury risk ×1.6, morale −3.' },
-    { id: 'recovery', label: 'Recovery', detail: 'Growth ×0.8, injury risk ×0.55, heal faster, morale +3.' },
-    { id: 'spotlight', label: 'Spotlight', detail: 'Growth ×0.85. Reputation and endorsements up, coach trust −2.' },
-    { id: 'teamfirst', label: 'Team first', detail: 'Growth ×0.95. Coach trust +6, morale +2.' },
+    { id: 'grind', label: 'Grind', detail: 'Growth ×1.3, injury risk ×1.7, morale −4. Burnout risk.' },
+    { id: 'recovery', label: 'Recovery', detail: 'Growth ×0.75, injury risk halved, heal faster, morale +4.' },
+    { id: 'spotlight', label: 'Spotlight', detail: 'More shots, reputation and money. Coach trust −3, team a bit worse.' },
+    { id: 'teamfirst', label: 'Team first', detail: 'Fewer shots, team plays better. Coach trust +6.' },
+    { id: 'shooting', label: 'Shooting lab', detail: 'Shooting grows ×2.4 and range +2. Everything else slows.' },
+    { id: 'strength', label: 'Weight room', detail: 'Finishing, rebounding, athleticism up fast. Injury risk ×1.2.' },
+    { id: 'playmaking', label: 'Film and reads', detail: 'Playmaking and IQ grow ×2. Coach trust +2.' },
+    { id: 'defense', label: 'Lockdown', detail: 'Perimeter and interior D grow ×2. Coaches love it.' },
   ];
   pushDecision(s, {
     kind: 'plan',
@@ -162,7 +171,7 @@ function rollMinutes(rng: Rng, role: RoleKey, level: LevelKey, post: boolean): n
   return clamp(Math.round(((range(rng, a, b) + bump) * len) / 48), 0, len);
 }
 
-const BASE_SCORE: Record<LevelKey, number> = { HSJV: 48, HSV: 56, NCAA: 72, GL: 115, EU: 82, NBA: 113 };
+const BASE_SCORE: Record<LevelKey, number> = { HSJV: 48, HSV: 56, NCAA: 72, GL: 115, EU: 82, INT: 85, NBA: 113 };
 
 function makeHook(s: GameState, league: League, level: LevelKey, acc: HalfAcc, slot: UserSlot): UserGameHook {
   const L = LEVELS[level];
@@ -179,6 +188,9 @@ function makeHook(s: GameState, league: League, level: LevelKey, acc: HalfAcc, s
     let line: StatLine | null = null;
     let minutes = 0;
     acc.games++;
+    const plan = HALF_PLANS[season.plan];
+    // hot and cold nights, inside a streaky rhythm for the half
+    const form = clamp(normal(rng, 1, FORM.gameSd) * (season.rhythm ?? 1), FORM.min, FORM.max);
     if (p.injury && p.injury.key !== 'dtd') {
       acc.injuredGames++;
       season.injuredGames++;
@@ -186,20 +198,34 @@ function makeHook(s: GameState, league: League, level: LevelKey, acc: HalfAcc, s
       minutes = rollMinutes(rng, season.role, level, !!post);
       if (p.injury && p.injury.key === 'dtd') minutes = chance(rng, 0.5) ? 0 : Math.round(minutes * 0.85);
       if (minutes > 0) {
-        const moraleMult = 1 + ((p.morale - 50) / 50) * STAT.moraleSwing;
-        const e = expected(userProfile(s), level, minutes, (usageWeight(p.attrs) / usageMean) * (season.fuel ? 1.06 : 1), moraleMult);
+        const moraleMult = MORALE_PERF(p.morale) * (1 + (form - 1) * FORM.shootingShare);
+        const usage = (usageWeight(p.attrs) / usageMean) * (season.fuel ? 1.06 : 1) * plan.usage * Math.pow(form, 0.8);
+        const e = expected(userProfile(s), level, minutes, usage, moraleMult);
         line = sampleGame(rng, e, season.role === 'key' || season.role === 'starter');
         acc.expGmsc += expectedGameScore(e);
         acc.gmsc += gameScore(line);
         acc.minutes += minutes;
         acc.played++;
         addLine(acc.line, line);
-        rollInjury(rng, p, season.plan, minutes);
+        const inj = rollInjury(rng, p, season.plan, minutes);
+        if (inj && (inj.key === 'major' || inj.key === 'season')) {
+          pushMoment(s, {
+            kind: 'injury',
+            title: inj.name,
+            color: '#5a1a1a',
+            text:
+              inj.key === 'season'
+                ? `Season over. ${p.name} goes down against ${opp.short} and the scan confirms it: ${inj.name.toLowerCase()}. A long road back, and it may never be quite the same.`
+                : `${p.name} goes down against ${opp.short}. ${inj.name}: out about ${Math.round(inj.daysOut / 7)} weeks.`,
+            lines: inj.key === 'season' ? ['Athleticism −4 to −8', 'More injury-prone from now on', 'Morale −15'] : ['Athleticism −1', 'Morale −6'],
+          });
+        }
       }
     }
     healDays(p, daysPerGame * (season.plan === 'recovery' ? 1.3 : 1));
     const impact = line ? (ovr - replacement) * (minutes / L.gameLen) * IMPACT_MULT : 0;
-    const win = chance(rng, winProb(team.strength + impact, opp.strength, post && level !== 'NBA' ? 0 : home ? 1 : -1));
+    const boost = line ? plan.teamBoost : 0;
+    const win = chance(rng, winProb(team.strength + impact + boost, opp.strength, post && level !== 'NBA' ? 0 : home ? 1 : -1));
     let us = Math.round(BASE_SCORE[level] + normal(rng, 0, 9));
     if (line && line.pts > us - 15) us = line.pts + int(rng, 15, 30);
     const margin = int(rng, 1, 18);
@@ -231,6 +257,13 @@ export function playHalf(s: GameState): void {
   const toRound = half === 1 ? Math.floor(league.rounds / 2) : league.rounds;
   const games = toRound - league.round;
   const acc = newAcc();
+  season.rhythm = clamp(normal(s.rng, 1, FORM.halfSd), 0.8, 1.2);
+  if (half === 1 && s.stage === 'NBA') {
+    nbaPreseason(s);
+    const before = season.role;
+    season.role = roleWithTrust(season.roleRank, s.player.trust);
+    if (before !== season.role) season.preReport = `${season.preReport} Role after camp: ${season.role}.`;
+  }
   if (half === 2 && season.assignedGL && s.stage === 'NBA') {
     // the NBA half goes on without the user; the user plays the half in the G League
     playRounds(s.rng, league, toRound, null);
@@ -270,6 +303,11 @@ function growthAfterHalf(s: GameState, acc: HalfAcc, level: LevelKey, ovr: numbe
   const L = LEVELS[level];
   const share = acc.games > 0 ? acc.minutes / (acc.games * L.gameLen) : 0;
   const perf = perfFactor(acc.gmsc, acc.expGmsc);
+  // roll how the plan went; good morale makes breakthroughs likelier and setbacks rarer
+  const m = clamp(p.morale / 60, 0.5, 1.6);
+  const outcome = PLAN_OUTCOMES[weightedIndex(s.rng, PLAN_OUTCOMES.map((o) => (o.key === 'breakthrough' ? o.weight * m : o.key === 'setback' || o.key === 'plateau' ? o.weight / m : o.weight)))];
+  const before = ovrOf(p.attrs, p.pos);
+  const plan = HALF_PLANS[season.plan];
   applyHalfGrowth(s.rng, p, {
     minutesShare: share,
     played: acc.played > 0,
@@ -278,13 +316,26 @@ function growthAfterHalf(s: GameState, acc: HalfAcc, level: LevelKey, ovr: numbe
     perf,
     plan: season.plan,
     outMost: acc.injuredGames > acc.games / 2,
+    extraMult: outcome.growth * p.growthMultNext,
+    morale: p.morale,
   });
-  const plan = HALF_PLANS[season.plan];
-  p.morale = adjust(p.morale, plan.morale + (season.role === 'deep' ? -3 : season.role === 'key' ? 2 : 0));
-  p.trust = adjust(p.trust, plan.trust + (perf - 1) * 30 + (p.attrs.IQ - L.avg) * 0.04);
+  if (plan.rangeGain) p.range = clamp(p.range + plan.rangeGain * outcome.growth, 0, 99);
+  if (outcome.injury) p.injuryMultNext *= outcome.injury;
+  const gain = ovrOf(p.attrs, p.pos) - before;
+  const text =
+    outcome.key === 'setback'
+      ? PLAN_SETBACK_TEXT[season.plan] ?? 'Nothing clicked. A frustrating stretch.'
+      : outcome.key === 'breakthrough'
+        ? 'Something clicked. You are a different player than two months ago.'
+        : outcome.key === 'plateau'
+          ? 'The work did not show up in games yet.'
+          : 'The plan did what it said.';
+  (season.outcomes ??= []).push({ half: season.half + 1, plan: season.plan, outcome: outcome.label, text, ovrGain: gain });
+  p.morale = adjust(p.morale, plan.morale + outcome.morale + (season.role === 'deep' ? -4 : season.role === 'key' ? 3 : 0) + (perf - 1) * 30);
+  p.trust = adjust(p.trust, plan.trust + outcome.trust + (perf - 1) * 30 + (p.attrs.IQ - L.avg) * 0.04);
   const repGain = plan.rep[1] > 0 ? range(s.rng, plan.rep[0], plan.rep[1]) : 0;
   const v = acc.line.gp > 0 ? valuePerGame(acc.line) : 0;
-  const levelW: Record<LevelKey, number> = { HSJV: 0.2, HSV: 0.5, NCAA: 1, GL: 0.6, EU: 0.8, NBA: 1.4 };
+  const levelW: Record<LevelKey, number> = { HSJV: 0.2, HSV: 0.5, NCAA: 1, GL: 0.6, EU: 0.8, INT: 0.5, NBA: 1.4 };
   p.rep = clamp(p.rep + repGain + Math.max(0, v - 10) * 0.12 * levelW[level], 0, 100);
   if (season.plan === 'spotlight' && s.stage !== 'HS') {
     const money = (s.stage === 'NBA' ? 0.25 : 0.01) * (1 + p.rep / 25);
@@ -310,6 +361,11 @@ function beginMidseason(s: GameState, acc: HalfAcc): void {
   if (oldRole !== season.role) season.midReport.push(`Role change: ${oldRole} → ${season.role}.`);
   if (acc.injuredGames > 0) season.midReport.push(`Missed ${acc.injuredGames} games through injury.`);
   s.step = 'midseason';
+  if (s.stage === 'NBA' && !season.assignedGL) {
+    nbaCup(s);
+    allStarWeekend(s, acc.line);
+    if (season.cupResult) season.midReport.push(`NBA Cup: ${season.cupResult}.`);
+  }
   queueMidseasonEvents(s);
   // the G League assignment valve for end-of-bench NBA players
   if (s.stage === 'NBA' && (season.role === 'deep' || season.role === 'bench')) {
@@ -352,18 +408,21 @@ function postseason(s: GameState, league: League, hook: UserGameHook): { result:
     return { result: `Lost in the ${ex.lastRound}`, champion: false, madePost: true };
   }
   if (level === 'NCAA') {
+    const ct = conferenceTournament(s, team, league.teams.filter((t) => t.conf === team.conf));
+    for (const g of ct.games) s.season!.postGames.push({ ...g, n: s.season!.postGames.length + 1 });
     const bracket = marchMadness(rng, league, hook);
     league.bracket = bracket;
     const ex = bracketExit(bracket, team.id);
-    if (ex.champion) return { result: 'National champion', champion: true, madePost: true };
-    if (!ex.lastRound) return { result: 'Missed March Madness', champion: false, madePost: false };
-    return { result: `Lost in the ${ex.lastRound} of March Madness`, champion: false, madePost: true };
+    const pre = ct.won ? `${ct.text}. ` : '';
+    if (ex.champion) return { result: `${pre}National champion`, champion: true, madePost: true };
+    if (!ex.lastRound) return { result: `${pre}Missed March Madness`, champion: false, madePost: false };
+    return { result: `${pre}Lost in the ${ex.lastRound} of March Madness`, champion: false, madePost: true };
   }
-  if (level === 'HSV' || level === 'GL' || level === 'EU') {
-    const bracket = level === 'HSV' ? hsPlayoffs(rng, league, hook) : level === 'GL' ? glPlayoffs(rng, league, hook) : euPlayoffs(rng, league, hook);
+  if (level === 'HSV' || level === 'GL' || level === 'EU' || level === 'INT') {
+    const bracket = level === 'HSV' ? hsPlayoffs(rng, league, hook) : level === 'GL' || level === 'INT' ? glPlayoffs(rng, league, hook) : euPlayoffs(rng, league, hook);
     league.bracket = bracket;
     const ex = bracketExit(bracket, team.id);
-    const name = level === 'HSV' ? 'State champion' : level === 'GL' ? 'G League champion' : 'EuroLeague champion';
+    const name = level === 'HSV' ? 'State champion' : level === 'GL' ? 'G League champion' : level === 'INT' ? `${team.conf} champion` : 'EuroLeague champion';
     if (ex.champion) return { result: name, champion: true, madePost: true };
     if (!ex.lastRound) return { result: level === 'HSV' ? 'Missed the state playoffs' : 'Missed the playoffs', champion: false, madePost: false };
     return { result: `Lost in the ${ex.lastRound}`, champion: false, madePost: true };
@@ -390,6 +449,10 @@ function finishSeason(s: GameState): void {
   const slot = userSlot(s, team, level);
   const hook = makeHook(s, league, level, acc, slot);
   const post = postseason(s, league, hook);
+  if (level === 'HSV') {
+    const rank = standings(league.teams).indexOf(team) + 1;
+    if (post.champion || (rank <= 2 && team.strength >= 50) || s.flags.powerhouse) hsNationals(s, team);
+  }
 
   const nbaGames = season.games.filter((g) => g.post !== 'G League');
   const regLine = sumLines(nbaGames.map((g) => g.line));
@@ -410,7 +473,12 @@ function finishSeason(s: GameState): void {
   };
   const cands = buildCandidates(league, userCand);
   let aw: AwardOutcome;
-  if (level === 'NBA') aw = nbaAwards(cands);
+  if (level === 'NBA') {
+    aw = nbaAwards(cands);
+    // the All-Star team was picked at midseason; keep the season record consistent with it
+    aw.wins = aw.wins.filter((w) => w.key !== 'ALLSTAR');
+    if (season.allStar) aw.wins.push({ key: 'ALLSTAR', label: 'All-Star' });
+  }
   else aw = simpleAwards(league, cands, level === 'NCAA' ? team.conf : null);
   const labels: string[] = aw.wins.map((w) => w.label);
   const keys: { key: string; label: string }[] = [...aw.wins];
@@ -430,7 +498,7 @@ function finishSeason(s: GameState): void {
         labels.push('Finals MVP');
       }
     } else {
-      const key = level === 'NCAA' ? 'NCAATITLE' : level === 'EU' ? 'EUTITLE' : level === 'GL' ? 'GLTITLE' : 'STATETITLE';
+      const key = level === 'NCAA' ? 'NCAATITLE' : level === 'EU' ? 'EUTITLE' : level === 'GL' ? 'GLTITLE' : level === 'INT' ? 'INTTITLE' : 'STATETITLE';
       keys.push({ key, label: post.result });
       labels.push(post.result);
     }
@@ -442,6 +510,7 @@ function finishSeason(s: GameState): void {
       keys.push({ key: 'MCDAA', label: "McDonald's All-American" });
       labels.push("McDonald's All-American");
     }
+    if (s.recruitRank !== null && s.recruitRank <= 24) mcdonaldsGame(s);
     if (s.recruitRank === 1) {
       keys.push({ key: 'GATORADE', label: 'Gatorade Player of the Year' });
       labels.push('Gatorade Player of the Year');
@@ -482,12 +551,12 @@ function finishSeason(s: GameState): void {
 
   // money
   let salary = 0;
-  if (s.contract && (s.stage === 'NBA' || s.stage === 'GL' || s.stage === 'EU')) {
+  if (s.contract && (s.stage === 'NBA' || s.stage === 'GL' || s.stage === 'EU' || s.stage === 'INT')) {
     salary = s.contract.salary;
     p.bank += salary * (1 - AGENT_CUT);
     p.earnings += salary * (1 - AGENT_CUT);
   }
-  const endorse = s.stage === 'NBA' ? Math.pow(p.rep / 100, 3) * 20 : s.stage === 'NCAA' ? (p.rep / 100) * 0.15 : 0;
+  const endorse = s.stage === 'NBA' ? Math.pow(p.rep / 100, 3) * 20 : s.stage === 'NCAA' ? 0.003 + (p.rep / 100) * 0.15 : s.stage === 'EU' || s.stage === 'GL' ? (p.rep / 100) * 0.05 : 0;
   p.bank += endorse;
   p.earnings += endorse;
 

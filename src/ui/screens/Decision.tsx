@@ -93,6 +93,38 @@ export function DecisionView({ g, d }: { g: GameState; d: Decision }) {
     );
   }
 
+  if (d.kind === 'shop') {
+    const items = d.choices.filter((c) => c.id !== 'leave');
+    return (
+      <div className="stack">
+        <div>
+          <div className="kicker">Offseason</div>
+          <h2 className="title" style={{ fontFamily: 'var(--f-display)', fontSize: 28, textTransform: 'uppercase', lineHeight: 1 }}>
+            {d.title}
+          </h2>
+        </div>
+        <p>{d.text}</p>
+        <div className="shop">
+          {items.map((c) => {
+            const [name, price] = c.label.split(' · ');
+            return (
+              <button key={c.id} className="item" disabled={c.disabled} onClick={() => choose(c.id)}>
+                <span className="kicker">{c.tags?.[0]}</span>
+                <span className="name">{name}</span>
+                <span className="price">{price}</span>
+                <small className="muted">{c.detail}</small>
+              </button>
+            );
+          })}
+        </div>
+        <button className="choice" onClick={() => choose('leave')}>
+          <span className="label">Leave the shop</span>
+          <small>Save the money.</small>
+        </button>
+      </div>
+    );
+  }
+
   const isDraftNight = d.kind === 'info' && !!d.data?.draft;
   return (
     <div className="stack">
@@ -142,6 +174,8 @@ function kickerFor(d: Decision): string {
       return 'Career';
     case 'assign':
       return 'Midseason';
+    case 'national':
+      return 'National team';
     default:
       return 'Update';
   }

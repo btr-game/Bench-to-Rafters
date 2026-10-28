@@ -82,10 +82,10 @@ function accumulateTeam(rng: Rng, level: LevelKey, team: Team, games: number, sl
     const e = expected(prof, level, minutes, genUsageWeight(p) / mean);
     const gp = minutes < 0.6 ? Math.round(games * 0.15) : games - missedGames(rng, games);
     const gs = rank <= 5 ? gp : 0;
-    const line = seasonLineFromExpected(e, gp, gs, Math.max(0.8, normal(rng, 1, 0.06)));
+    const line = seasonLineFromExpected(e, gp, gs, Math.max(0.7, normal(rng, 1, 0.1)));
     addLine(p.s, line);
     p.starter = rank <= 5;
-    p.firstHalfValue = valuePerGame(p.s) * normal(rng, 1, 0.08);
+    if (!p.firstHalfValue) p.firstHalfValue = valuePerGame(p.s) * normal(rng, 1, 0.08);
     rank++;
   }
 }

@@ -1,7 +1,7 @@
 // Offer generation for every path: NCAA recruiting, G League, Europe, NBA.
 
 import { FA_INTEREST, LEVELS, NCAA_TIER_STRENGTH, RECRUIT, ROLE_MINUTES } from '../balance';
-import { COLLEGES, EURO_CLUBS, NBA_TEAMS } from '../../content/teams';
+import { COLLEGES, EURO_CLUBS, INT_LEAGUES, NBA_TEAMS } from '../../content/teams';
 import { chance, clamp, int, pick, poisson, range, shuffle } from '../rng';
 import type { Choice, GameState, NcaaTier, Offer, RoleKey, Team } from '../types';
 import { LEVEL_RANK, outlookOf, lastRecord, projectedRank, rankOnRoster, ROLE_LABEL, roleForRank, userOvr } from './common';
@@ -108,6 +108,7 @@ export function splitOffers(s: GameState): Offer[] {
       note: 'Draft-eligible next summer',
     });
   }
+  if (stars >= 4 && chance(rng, 0.6)) offers.push(...intOffers(s, ovr, 1, { nextStars: true }));
   if (stars >= 3) {
     const pool = EURO_CLUBS.filter((c) => (stars >= 4 ? c.strength >= 64 : c.strength <= 65));
     if (stars >= 4 || chance(rng, 0.5)) {
@@ -161,6 +162,39 @@ export function europeOffers(s: GameState, ovr: number, max: number): Offer[] {
   return shuffle(s.rng, [...ok])
     .slice(0, max)
     .map((c) => euOffer(s, c.name, ovr, int(s.rng, 1, 2)));
+}
+
+// ---------- other overseas leagues ----------
+
+/** Offers from NBL, CBA, B.League and KBL clubs. `cba` adds the late-career China money option. */
+export function intOffers(s: GameState, ovr: number, max: number, opts: { nextStars?: boolean; cba?: boolean } = {}): Offer[] {
+  const fade = FA_INTEREST.minorAgeFade(s.player.age);
+  const leagues = INT_LEAGUES.filter((l) => {
+    if (opts.nextStars) return l.key === 'NBL';
+    if (l.key === 'CBA' && opts.cba) return ovr >= 58;
+    return ovr >= l.strength - 7 && chance(s.rng, Math.max(0.25, fade));
+  });
+  return shuffle(s.rng, leagues)
+    .slice(0, max)
+    .map((l) => {
+      const [name, color] = pick(s.rng, l.teams);
+      const t = clamp((ovr - (l.strength - 7)) / 15, 0, 1);
+      const salary = Math.round((l.salary[0] + (l.salary[1] - l.salary[0]) * t) * (opts.cba && l.key === 'CBA' ? 1.6 : 1) * 100) / 100;
+      return {
+        id: offerId(s),
+        level: 'INT' as const,
+        teamId: `INT-${l.key}-${name}`,
+        teamName: name,
+        teamColor: color,
+        kind: 'int' as const,
+        salary,
+        years: opts.nextStars ? 1 : int(s.rng, 1, 2),
+        role: roleForRank(projectedRank(l.strength, ovr)),
+        outlook: `${l.name} · ${l.country}`,
+        lastRecord: `${int(s.rng, 8, 22)}–${int(s.rng, 6, 20)}`,
+        note: opts.nextStars ? 'NBL Next Stars: paid, pro minutes, draft-eligible next summer' : l.key === 'CBA' && opts.cba ? 'Big money, little NBA attention' : undefined,
+      };
+    });
 }
 
 // ---------- NBA ----------

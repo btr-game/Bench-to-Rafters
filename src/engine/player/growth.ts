@@ -10,6 +10,7 @@ import {
   GROWTH_RANDOM,
   GROWTH_SCALE,
   HALF_PLANS,
+  MORALE_GROWTH,
   HEADROOM_DIV,
   HEADROOM_MAX,
   HEALTH_MULT_OUT,
@@ -93,6 +94,7 @@ export interface HalfGrowthCtx {
   plan: HalfPlan;
   outMost: boolean;
   extraMult?: number;
+  morale?: number;
 }
 
 /** Applies one half-season of growth to the user. Returns the gain per attribute. */
@@ -100,7 +102,8 @@ export function applyHalfGrowth(rng: Rng, p: UserPlayer, ctx: HalfGrowthCtx): Pa
   const mf = minutesFactor(ctx.minutesShare, ctx.played);
   const base = baseRate(p, mf);
   const levelF = ctx.ovr > ctx.levelAvg + LEVEL_FACTOR.overBy ? LEVEL_FACTOR.mult : 1;
-  const planF = HALF_PLANS[ctx.plan].growth;
+  const plan = HALF_PLANS[ctx.plan];
+  const planF = plan.growth * MORALE_GROWTH(ctx.morale ?? 60);
   const healthF = ctx.outMost ? HEALTH_MULT_OUT : 1;
   const gains: Partial<Attrs> = {};
   if (base <= 0) return gains;
@@ -115,6 +118,7 @@ export function applyHalfGrowth(rng: Rng, p: UserPlayer, ctx: HalfGrowthCtx): Pa
       ctx.perf *
       focus *
       planF *
+      (plan.attrs ? (plan.attrs[k] ?? plan.other ?? 1) : 1) *
       healthF *
       (ctx.extraMult ?? 1) *
       range(rng, GROWTH_RANDOM[0], GROWTH_RANDOM[1]);

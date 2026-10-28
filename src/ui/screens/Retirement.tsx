@@ -15,7 +15,7 @@ export function Retirement({ g }: { g: GameState }) {
   const v = verdictFor(g);
   const hof = hallOfFame(g);
   const rafters = raftersTeams(g).map((id) => NBA_TEAMS.find((t) => t.abbr === id)!);
-  const pro = g.history.filter((h) => h.level === 'NBA' || h.level === 'GL' || h.level === 'EU');
+  const pro = g.history.filter((h) => h.level === 'NBA' || h.level === 'GL' || h.level === 'EU' || h.level === 'INT');
   const pool = pro.length ? pro : g.history;
   const best = pool.filter((h) => h.line.gp > 0).sort((a, b) => valuePerGame(b.line) - valuePerGame(a.line))[0];
   const teams = [...new Set(g.history.filter((h) => h.level !== 'HSJV' && h.level !== 'HSV').map((h) => h.teamName))];

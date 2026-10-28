@@ -154,3 +154,36 @@ to meet the balance targets in §15. Every tunable number lives in `src/engine/b
   league's talent pipeline (and with it how hard it is to become an All-Star) does not change.
   The §15 targets for NBA entry, 5+ seasons and undrafted share were raised to match; NBA
   success targets are unchanged.
+
+## Playtest round 2 (Oct 2026)
+
+- **Average peak near OVR 75.** Potential is now Normal(75, 5.5) (was 70, 8). To keep NBA
+  stardom meaningful, the league's draft prospects got stronger (`DRAFT.potMean` 70 → 73.5), so
+  the league's own stars improved too. With smart choices, about 1 in 3 careers makes an All-Star
+  team and about 1 in 8 reaches the Hall of Fame. The §15 targets were replaced (see
+  `scripts/harness.ts`), and mean peak OVR is now a tracked target.
+- **Randomness.** Each game has a form roll (hot and cold nights) inside a streaky rhythm for
+  the half. Each half-season plan rolls an outcome (breakthrough, steady, plateau, setback);
+  morale shifts the odds. Morale changes in-game shooting by up to ±8% and growth by ±10–20%.
+- **Plans** went from 5 to 9: four targeted training plans (shooting, strength, playmaking,
+  defense) speed up some stats and slow the rest. Plans also change shot volume and the team's
+  strength in games.
+- **Riskier injuries:** a higher base rate, more major and season-ending injuries, morale hits,
+  and a 50% chance that a season-ending injury lowers the ceiling of athletic stats. Major
+  injuries get their own page.
+- **Shop:** 37 items (shoes, gear, training, recovery, lifestyle). Each offseason it shows five
+  items picked around the bank balance; up to two purchases a summer.
+- **Events:** about 40 in total (was 14), with bigger effects, some shown odds, trades,
+  extensions, sneaker deals, slumps and hot streaks. They are far more frequent (most halves
+  have one). An event whose situation changed before it was answered (for example the player
+  changed leagues) has no effect.
+- **Tournaments:** NBA preseason (it can change coach trust and role), the NBA Cup knockout,
+  All-Star weekend (selection at midseason, 3-point and dunk contests, the game itself), NCAA
+  conference tournaments, a high school national invitational, the McDonald's game, and national
+  teams: U17 and U19 World Cups, the FIBA World Cup and the Olympics, by invitation. The
+  nation is South Korea for Seoul-born players, otherwise the USA.
+- **Pathways:** a post-grad prep year for 1–3★ recruits; overseas leagues beyond the
+  EuroLeague (NBL, CBA, B.League, KBL) as destinations, including NBL Next Stars for top
+  recruits and big-money CBA offers late in a career.
+- **Scouting report:** tier for the current OVR, a projected peak range and odds for the NBA,
+  All-Star, All-NBA, Hall of Fame and MVP. The odds curves were fitted to harness data.

@@ -87,6 +87,7 @@ export function createPlayer(rng: Rng, input: CreateInput): UserPlayer {
     captain: false,
     injuryMultNext: 1,
     declineMultNext: 1,
+    growthMultNext: 1,
   };
 }
 

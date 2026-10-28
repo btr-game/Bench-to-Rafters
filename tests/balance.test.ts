@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { LEAGUE_TARGETS, runMany, TARGETS, type Policy } from '../scripts/harness';
 
 const KNOWN_GAPS: Record<Policy, string[]> = {
-  random: ['allNba', 'hof'],
+  random: [],
   smart: [],
 };
 

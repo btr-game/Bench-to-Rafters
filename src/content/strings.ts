@@ -38,6 +38,10 @@ export const NAMES = {
     recovery: 'Recovery',
     spotlight: 'Spotlight',
     teamfirst: 'Team first',
+    shooting: 'Shooting lab',
+    strength: 'Weight room',
+    playmaking: 'Film and reads',
+    defense: 'Lockdown',
   } as Record<HalfPlan, string>,
   level: {
     HSJV: 'HS JV',
@@ -45,6 +49,7 @@ export const NAMES = {
     NCAA: 'NCAA',
     GL: 'G League',
     EU: 'EuroLeague',
+    INT: 'Overseas',
     NBA: 'NBA',
   } as Record<LevelKey, string>,
 };

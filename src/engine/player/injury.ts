@@ -19,10 +19,18 @@ export function rollInjury(rng: Rng, p: UserPlayer, plan: HalfPlan, minutes: num
   if (minutes <= 0 || !chance(rng, injuryChance(p, plan, minutes))) return null;
   const sev = INJURY_SEVERITY[weightedIndex(rng, INJURY_SEVERITY.map((s) => s.share))];
   const inj: Injury = { key: sev.key, name: pick(rng, NAMES[sev.key]), daysOut: int(rng, sev.days[0], sev.days[1]) };
-  if (sev.key === 'major') p.attrs.ATH = Math.max(15, p.attrs.ATH - 1);
+  if (sev.key === 'major') {
+    p.attrs.ATH = Math.max(15, p.attrs.ATH - 1);
+    const k = pick(rng, ['FIN', 'PER', 'REB'] as const);
+    p.attrs[k] = Math.max(15, p.attrs[k] - 1);
+    p.morale = Math.max(0, p.morale - 6);
+  }
   if (sev.key === 'season') {
     p.attrs.ATH = Math.max(15, p.attrs.ATH - int(rng, 4, 8));
     p.durability = Math.round((p.durability + 0.1) * 100) / 100; // higher multiplier = more fragile
+    p.morale = Math.max(0, p.morale - 15);
+    // half the time the injury also lowers his ceiling
+    if (chance(rng, 0.5)) for (const k of ['ATH', 'FIN', 'PER'] as const) p.caps[k] = Math.max(30, p.caps[k] - 2);
   }
   p.injury = inj;
   return inj;

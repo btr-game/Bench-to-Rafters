@@ -14,7 +14,7 @@ import {
   NCAA_TIER_STRENGTH,
   TEAM_STRENGTH_NOISE,
 } from '../balance';
-import { COLLEGES, EURO_CLUBS, HS_COLORS, HS_SCHOOL_NAMES, NBA_TEAMS } from '../../content/teams';
+import { COLLEGES, EURO_CLUBS, HS_COLORS, HS_SCHOOL_NAMES, INT_LEAGUES, NBA_TEAMS } from '../../content/teams';
 import { int, normal, pick, shuffle } from '../rng';
 import type { GameState, GenPlayer, League, LevelKey, Team } from '../types';
 import { genPlayer, makeRoster, rosterStrength } from './gen';
@@ -119,6 +119,31 @@ export function buildEu(s: GameState, year: number, userTeamId: string | null): 
   return emptyLeague('EU', year, teams, userTeamId);
 }
 
+// ---------- other overseas leagues ----------
+
+/** Team ids look like `INT-NBL-Sydney Kings`. */
+export const intLeagueOf = (teamId: string) => INT_LEAGUES.find((l) => teamId.startsWith(`INT-${l.key}-`)) ?? INT_LEAGUES[0];
+
+export function buildInt(s: GameState, year: number, userTeamId: string): League {
+  const info = intLeagueOf(userTeamId);
+  const teams: Team[] = info.teams.map(([name, color]) => {
+    const strength = info.strength + normal(s.rng, 0, TEAM_STRENGTH_NOISE.INT);
+    return {
+      id: `INT-${info.key}-${name}`,
+      name,
+      short: name.split(' ').slice(-1)[0],
+      abbr: name.slice(0, 3).toUpperCase(),
+      color,
+      conf: info.name,
+      strength,
+      w: 0,
+      l: 0,
+      roster: makeRoster(s, strength, 12, [21, 33]),
+    };
+  });
+  return emptyLeague('INT', year, teams, userTeamId);
+}
+
 // ---------- High school ----------
 
 export const USER_SCHOOL_ID = 'HS-USER';
@@ -126,9 +151,11 @@ export const USER_SCHOOL_ID = 'HS-USER';
 /** The user's school: 4 grades, varsity = top 12 (including the user). */
 export function schoolRoster(s: GameState): GenPlayer[] {
   const out: GenPlayer[] = [];
+  // a powerhouse or a post-grad prep academy has stronger teammates
+  const boost = (s.flags.powerhouse ? 4 : 0) + (s.hsYear >= 5 ? 6 : 0);
   for (let g = 0; g < 4; g++) {
     for (let i = 0; i < HS_ROSTER_PER_GRADE; i++) {
-      out.push(genPlayer(s, normal(s.rng, HS_GRADE_OVR[g], HS_GRADE_SD), 14 + g));
+      out.push(genPlayer(s, normal(s.rng, HS_GRADE_OVR[g] + boost, HS_GRADE_SD), 14 + g));
     }
   }
   out.sort((a, b) => b.ovr - a.ovr);
@@ -143,8 +170,8 @@ export function buildHs(s: GameState, year: number, varsity: boolean, userSquad:
   const teams: Team[] = [];
   teams.push({
     id: USER_SCHOOL_ID,
-    name: s.player.highSchool,
-    short: s.player.highSchool,
+    name: s.hsYear >= 5 ? 'Northfield Prep (post-grad)' : s.player.highSchool,
+    short: s.hsYear >= 5 ? 'Northfield Prep' : s.player.highSchool,
     abbr: s.player.highSchool.slice(0, 4).toUpperCase(),
     color: s.schoolColor || HS_COLORS[s.player.highSchool.length % HS_COLORS.length],
     conf: 'State',
