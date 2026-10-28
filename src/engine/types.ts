@@ -394,6 +394,7 @@ export interface Moment {
   pick?: number;
   // result tables shown under the story: finals, series scores, MVPs
   recap?: { heading: string; rows: string[] }[];
+  arc?: boolean; // a chapter of a multi-season storyline (events/arcs.ts)
 }
 
 export interface GameState {
@@ -451,6 +452,7 @@ export interface GameState {
   live?: import('./career/live').LiveState;
   // the last breakthrough season (career/breakthrough.ts): it unlocks a focus change that offseason
   breakthrough?: { year: number; ovr: number; key: AttrKey; gain: number } | null;
+  arcs?: import('./events/arcs').ArcState[]; // storylines still unfolding
   highs?: { nba: Partial<Record<HighKey, CareerHigh>>; all: Partial<Record<HighKey, CareerHigh>> };
   flags: Record<string, number>; // small story switches (powerhouse school, power agent...)
   schoolColor: string;

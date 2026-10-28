@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { advance, canChangePosition, canRetire, changePosition, choose, newGame, positionOptions, prompt, retireByChoice } from '../src/engine/flow';
+import { fastForward } from '../src/engine/fast';
+import { startArc } from '../src/engine/events/arcs';
 import { ovrOf } from '../src/engine/player/ovr';
 import { compareCareer, rankModelFit } from '../src/engine/awards/compare';
 import { blendPlans } from '../src/engine/balance';
@@ -211,10 +213,18 @@ describe('playable postseason', () => {
   it('pauses for each game, quarter and close finish, and finishes the season', () => {
     const stages = new Set<string>();
     let seasonsWithLive = 0;
-    const s = newGame(7001, { name: 'X', number: 1, pos: 'PG', archetype: 0, focus: ['PLY', 'SHT'] });
-    for (let steps = 0; steps < 20000 && s.player.age < 24; steps++) {
+    // a few seeds, in case a career ends before it reaches a playable postseason
+    let s = newGame(7001, { name: 'X', number: 1, pos: 'PG', archetype: 0, focus: ['PLY', 'SHT'] });
+    for (let seed = 7001, steps = 0; steps < 60000 && s.player.age < 24; steps++) {
+      if (s.step === 'retired' && !stages.has('game') && seed < 7010) {
+        seed++;
+        s = newGame(seed, { name: 'X', number: 1, pos: 'PG', archetype: 0, focus: ['PLY', 'SHT'] });
+      }
       const pr = prompt(s);
-      if (pr.type === 'retired') break;
+      if (pr.type === 'retired') {
+        if (stages.has('game') || seed >= 7010) break;
+        continue;
+      }
       if (pr.type === 'decision') {
         const d = pr.decision;
         if (d.kind === 'live') {
@@ -224,7 +234,11 @@ describe('playable postseason', () => {
           choose(s, stage === 'game' ? 'play' : d.choices[steps % d.choices.length].id);
           // the replay state never leaks into the saved game
           expect(s.live).toBeUndefined();
-        } else choose(s, d.choices.find((c) => !c.disabled)!.id);
+        } else {
+          // keep playing: skip any choice that ends the career
+          const open = d.choices.filter((c) => !c.disabled);
+          choose(s, (open.find((c) => c.id !== 'retire' && !/retire|hang it up/i.test(c.label)) ?? open[0]).id);
+        }
       } else advance(s);
     }
     expect(stages.has('game')).toBe(true);
@@ -273,5 +287,47 @@ describe('round 6 mechanics', () => {
       sizes.add((s.player.morale - before).toFixed(0) + '/' + s.player.growthRate.toFixed(3));
     }
     expect(sizes.size).toBeGreaterThan(3);
+  });
+});
+
+describe('round 7: fast break and storylines', () => {
+  it('fast break only stops for real choices and still finishes a career', () => {
+    const s = newGame(5150, { name: 'X', number: 1, pos: 'SF', archetype: 0, focus: ['SHT', 'FIN'], mode: 'fast' });
+    expect(s.flags.fast).toBe(1);
+    fastForward(s);
+    for (let i = 0; i < 3000; i++) {
+      const pr = prompt(s);
+      if (pr.type === 'retired') break;
+      if (pr.type === 'decision') {
+        expect(pr.decision.kind).not.toBe('shop');
+        if (pr.decision.kind === 'plan') expect(pr.decision.data?.half).toBe(1);
+        const open = pr.decision.choices.filter((c) => !c.disabled);
+        choose(s, (open.find((c) => c.id !== 'retire' && !/hang it up|^retire/i.test(c.label) && s.player.age < 33) ?? open.find((c) => c.id === 'retire') ?? open[0]).id);
+      } else {
+        // the only "next" screen fast break shows is an offseason with a move worth making
+        expect(s.step).toBe('offseason');
+        advance(s);
+      }
+      fastForward(s);
+    }
+    expect(s.step).toBe('retired');
+  });
+
+  it('a storyline plays its chapters in later offseasons', () => {
+    const s = newGame(5151, { name: 'X', number: 1, pos: 'SG', archetype: 0, focus: ['SHT', 'FIN'] });
+    s.flags.simPostseason = 1;
+    startArc(s, 'jumper');
+    const before = s.player.attrs.SHT;
+    let chapters = 0;
+    for (let i = 0; i < 400 && s.player.age < 17; i++) {
+      chapters += s.moments.filter((m) => m.arc).length;
+      s.moments = [];
+      const pr = prompt(s);
+      if (pr.type === 'decision') choose(s, pr.decision.choices.find((c) => !c.disabled)!.id);
+      else advance(s);
+    }
+    expect(chapters).toBeGreaterThanOrEqual(2);
+    expect(s.arcs?.some((a) => a.id === 'jumper') ?? false).toBe(false);
+    expect(s.player.attrs.SHT).toBeGreaterThan(before);
   });
 });

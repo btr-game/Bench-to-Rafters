@@ -98,12 +98,55 @@ function SeasonHeader({ g }: { g: GameState }) {
           s && <div className="muted small">{(s.level === 'HSV' || s.level === 'HSJV') && g.league?.label ? g.league.label : LEVELS[s.level].name}</div>
         )}
       </div>
-      {t && s && g.step !== 'offseason' && (
-        <div className="record">
-          {t.w}–{t.l}
-          <small>RECORD</small>
+      <div className="turn-side">
+        {t && s && g.step !== 'offseason' && (
+          <div className="record">
+            {t.w}–{t.l}
+            <small>RECORD</small>
+          </div>
+        )}
+        <FastToggle g={g} />
+      </div>
+    </div>
+  );
+}
+
+/** Fast break on or off, any time. */
+function FastToggle({ g }: { g: GameState }) {
+  const toggle = useStore((s) => s.toggleFast);
+  const on = !!g.flags.fast;
+  return (
+    <button className={`fast-toggle${on ? ' on' : ''}`} aria-pressed={on} onClick={toggle} title="Fast break: quick seasons, you still make every real call">
+      <span className="fast-dot" aria-hidden="true" />
+      Fast break {on ? 'on' : 'off'}
+    </button>
+  );
+}
+
+/** Fast break skips the season summary page; this line keeps the story readable. */
+function FastRecap({ g }: { g: GameState }) {
+  const r = g.lastSummary;
+  if (!r) return null;
+  const d = r.ovrEnd - r.ovrStart;
+  return (
+    <div className="fast-recap">
+      <div className="kicker">
+        Last season · {seasonLabel(r.year)} · {r.teamName}
+      </div>
+      <div>
+        <b>
+          {r.w}–{r.l}
+        </b>
+        , {r.result.toLowerCase()} · {r.line.gp > 0 ? `${perGame(r.line, 'pts').toFixed(1)} PTS, ${perGame(r.line, 'reb').toFixed(1)} REB, ${perGame(r.line, 'ast').toFixed(1)} AST` : 'did not play'} · OVR{' '}
+        {Math.round(r.ovrStart)} → {Math.round(r.ovrEnd)} <span className={d >= 0 ? 'up' : 'down'}>({signed(d)})</span>
+      </div>
+      {r.awards.length > 0 && <div className="small">{r.awards.join(' · ')}</div>}
+      {r.breakthrough && (
+        <div className="small">
+          <span className="unlock-tag">Breakthrough</span> {r.breakthrough}
         </div>
       )}
+      {r.newHighs && r.newHighs.length > 0 && <div className="small">New NBA career high: {r.newHighs.join(', ')}</div>}
     </div>
   );
 }
@@ -420,8 +463,9 @@ export function Home({ g }: { g: GameState }) {
           ) : (
             g.toast && <div className="toast">{g.toast}</div>
           )}
+          {g.flags.fast ? <FastRecap g={g} /> : null}
           <div className="stack fade-in" key={pr.type === 'decision' ? pr.decision.id : `${g.year}-${g.step}`}>
-            <Context g={g} />
+            {!g.flags.fast && <Context g={g} />}
             {pr.type === 'decision' && <DecisionView g={g} d={pr.decision} />}
             {pr.type === 'advance' && (
               <button className="btn block" onClick={advance}>

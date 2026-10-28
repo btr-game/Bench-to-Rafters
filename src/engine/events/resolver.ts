@@ -7,10 +7,11 @@ import { MORE_EVENTS } from './more';
 import { RISK_EVENTS } from './risks';
 import { GROWTH_EVENTS } from './growthEvents';
 import { SKILL_EVENTS } from './skillEvents';
+import { ARC_EVENTS } from './arcs';
 import { changes, snap, vary } from './outcome';
 import { rollTier, tierFactors, tierLine, TIERS, twists, type Tier } from './twists';
 
-const EVENTS: EventDef[] = [...BASE_EVENTS, ...MORE_EVENTS, ...RISK_EVENTS, ...GROWTH_EVENTS, ...SKILL_EVENTS];
+const EVENTS: EventDef[] = [...BASE_EVENTS, ...MORE_EVENTS, ...RISK_EVENTS, ...GROWTH_EVENTS, ...SKILL_EVENTS, ...ARC_EVENTS];
 
 function eligible(s: GameState, phase: 'mid' | 'off'): EventDef[] {
   return EVENTS.filter((e) => {
@@ -54,13 +55,14 @@ function pickOne(s: GameState, phase: 'mid' | 'off'): void {
 export function queueMidseasonEvents(s: GameState): void {
   if (!chance(s.rng, EV_RATES.midseasonChance)) return;
   pickOne(s, 'mid');
-  if (EV_RATES.midseasonMax > 1 && chance(s.rng, EV_RATES.secondChance)) pickOne(s, 'mid');
+  // fast break: at most one turning point at a time
+  if (!s.flags.fast && EV_RATES.midseasonMax > 1 && chance(s.rng, EV_RATES.secondChance)) pickOne(s, 'mid');
 }
 
 export function queueOffseasonEvent(s: GameState): void {
   if (EV_RATES.offseasonMax < 1 || !chance(s.rng, EV_RATES.offseasonChance)) return;
   pickOne(s, 'off');
-  if (EV_RATES.offseasonMax > 1 && chance(s.rng, 0.35)) pickOne(s, 'off');
+  if (!s.flags.fast && EV_RATES.offseasonMax > 1 && chance(s.rng, 0.35)) pickOne(s, 'off');
 }
 
 export function resolveEvent(s: GameState, d: Decision, choiceId: string): string {

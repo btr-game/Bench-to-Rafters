@@ -111,6 +111,7 @@ export function Create() {
             ))}
           </div>
           <p className="muted small">The league is the same in every mode. What changes is your potential, how fast you grow and how often you get hurt.</p>
+
         </section>
       )}
 

@@ -85,15 +85,18 @@ export interface SkewDist {
   min: number;
   max: number;
 }
-export const POTENTIAL: SkewDist = { base: 40, mu: 3.25, sigma: 0.66, min: 42, max: 103 };
+export const POTENTIAL: SkewDist = { base: 40, mu: 3.33, sigma: 0.66, min: 42, max: 103 };
 
 // Difficulty modes (playtest round 6). Each sets the potential distribution, a growth
 // multiplier and an injury multiplier; the league around the player is the same.
-export type Mode = 'standard' | 'reality' | 'stars';
+export type Mode = 'standard' | 'reality' | 'stars' | 'fast';
 // floor: in stars mode he is never further behind than a straight line from his start to
 // floor.ovr at floor.age, so every career that lasts that long reaches it
 export const MODES: Record<Mode, { name: string; blurb: string; potential: SkewDist; growth: number; injury: number; scoutMid: number; floor?: { age: number; ovr: number; until: number } }> = {
   standard: { name: 'Standard', blurb: 'Most careers peak in the 60s and 70s; the NBA is common, stardom is earned.', potential: POTENTIAL, growth: 0.94, injury: 1, scoutMid: 70 },
+  // fast break: the standard game at a quick pace (engine/fast.ts). The quick pace means fewer
+  // events and no shop, so the head start is set by simulation: peaks about 3 OVR above standard.
+  fast: { name: 'Fast break', blurb: 'The standard game at a quick pace, with a small head start. One plan a season, playoffs simulated, fewer stops: you still make every real call.', potential: { ...POTENTIAL, base: 48, min: 50 }, growth: 1, injury: 1, scoutMid: 73 },
   reality: { name: 'Reality hits hard', blurb: 'Like real life: most careers end short of the NBA, and those who make it fight for a spot. Every choice counts.', potential: { base: 45, mu: 2.25, sigma: 0.6, min: 46, max: 99 }, growth: 0.9, injury: 1.3, scoutMid: 50 },
   stars: { name: 'Shoot for the stars', blurb: 'Built for greatness: every career reaches stardom, and the very top is within reach.', potential: { base: 83, mu: 1.8, sigma: 0.6, min: 85, max: 99 }, growth: 1.2, injury: 0.6, scoutMid: 93, floor: { age: 22, ovr: 80, until: 29 } },
 };
@@ -391,7 +394,8 @@ export const STAT = {
   ftRate: { base: 0.2, fin: 0.004, ath: 0.002, min: 0.06, max: 0.55 },
   ft: { base: 0.76, sht: 0.0045, min: 0.42, max: 0.94 },
   reb36: { base: 6.4, rating: 0.17, height: 0.33, wing: 0.12, min: 1.2, max: 16 },
-  ast36: { base: 3.5, rating: 0.23, min: 0.4, max: 13 }, // round 7: a little more for playmakers
+  // round 7: elite playmakers can average 10+ (PLY 80 about 6 a game, 92 with high IQ about 10)
+  ast36: { base: 4.2, rating: 0.2, iq: 0.065, eliteFrom: 80, elite: 0.045, min: 0.4, max: 14 },
   stl36: { base: 1.0, per: 0.03, ath: 0.008, min: 0.2, max: 3 },
   blk36: { base: 0.55, int: 0.035, height: 0.12, wing: 0.06, min: 0, max: 4.2 },
   tov36: { base: 1.0, fga: 0.055, ast: 0.16, iq: 0.02, min: 0.4, max: 5 },

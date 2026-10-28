@@ -1,6 +1,7 @@
 // Offseason: aging, programs, summer program, and every path decision
 // (recruiting, draft, contracts, free agency, retirement).
 
+import { processArcs } from '../events/arcs';
 import { reclassify } from '../player/classify';
 import { pushMilitary } from './nationality';
 import { ATTR_MAX, GROWTH_RATE_AGE, MODES, POSITIONS, WEAR, FA_INTEREST, OFFSEASON_DAYS, REP, RETIRE, ATTRS, TEAM_OPTION } from '../balance';
@@ -81,6 +82,8 @@ export function beginOffseason(s: GameState): void {
   }
   // once in a while, a summer changes everything
   rollSwings(s);
+  // the next chapter of any storyline still unfolding
+  processArcs(s);
   // the hidden growth rate fades with age
   if (p.age >= GROWTH_RATE_AGE.decayFrom) p.growthRate = Math.max(0.5, (p.growthRate ?? 1) * GROWTH_RATE_AGE.decay);
   if (aging.sudden) note(s, 'Your body is not bouncing back like it used to. A sudden decline.');

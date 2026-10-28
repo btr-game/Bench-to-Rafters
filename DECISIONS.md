@@ -445,3 +445,22 @@ nationality; event results that really differ; rare mold-breaking players; heigh
   season summary.
 - **Guide:** a header button explains every feature and where it lives (a dot marks it until
   first opened).
+- **Fast break:** a fourth mode on the difficulty page: the standard game at a quick pace.
+  One plan a season (the second half repeats it), the postseason simulated, no shop, at most
+  one turning point at a time, single-button notices closed automatically, and the offseason
+  only stops when there is a move worth making (an unlocked focus change, a size problem or
+  age 30+). Only the big story pages show, and a one-line recap replaces the season summary.
+  About 5.6 clicks a season instead of 15.3. Because the quick pace means fewer events and no
+  shop, its head start was set by simulation (potential base 48): peaks average about 3 OVR
+  above Standard. A switch next to the record turns the quick pace on or off in any mode.
+- **Storylines:** nine turning points now unfold over several seasons, one chapter each
+  offseason, with rolled outcomes: a family illness (morale over two or three years, ending
+  in recovery or loss), a rebuilt jumper (worse for a season, then better), a nagging ankle
+  (surgery or keep managing it), a veteran mentor, a two-year body change, fatherhood, a
+  friend's investment, homesickness abroad and an NBA rivalry.
+- **Standard:** potential mu back to 3.33 (the storylines had pulled the average peak down
+  about 2 points).
+- **Assists:** the efficiency knee (meant for shooting) had been flattening playmaking above
+  85, so even a 99 passer averaged about 7. Assists now use the raw rating, plus basketball IQ
+  and a little extra above 80 playmaking: about 6 a game at 80, 8 at 88, 9-10 at 92 with high
+  IQ and 11.5 at the top (34 minutes).

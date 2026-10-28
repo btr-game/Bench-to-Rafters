@@ -11,6 +11,8 @@ const SECTIONS: { title: string; where: string; items: [string, string][] }[] = 
       ['Plans', 'Pick one plan for each half, or two at a time at reduced strength. Plans shape growth, minutes and injury risk.'],
       ['Turning points', 'Events ask you to choose. The result is rolled each time: from a breakthrough to a backfire, with green and red chips for what changed.'],
       ['Playoffs', 'Big postseason games pause for your calls at key moments.'],
+      ['Storylines', 'Some turning points unfold over several seasons: a family illness, a rebuilt jumper, a nagging ankle, a veteran mentor. Each summer brings the next chapter.'],
+      ['Fast break', 'The switch next to your record. One plan a season, playoffs simulated, no shop and fewer stops; you still make every real call. Turn it on or off any time.'],
     ],
   },
   {

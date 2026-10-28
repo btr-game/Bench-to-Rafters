@@ -90,7 +90,13 @@ export function expected(pr: Profile, level: LevelKey, minutes: number, usageMul
     s.reb36.min,
     s.reb36.max,
   );
-  const ast36 = clamp(s.ast36.base + (a.PLY - lv) * s.ast36.rating, s.ast36.min, s.ast36.max);
+  // assists use the raw ratings (the efficiency knee would cap elite passers near 7 a game),
+  // with basketball IQ helping and a little extra for elite playmakers
+  const ast36 = clamp(
+    s.ast36.base + (r.PLY - lv) * s.ast36.rating + (r.IQ - lv) * s.ast36.iq + Math.max(0, r.PLY - s.ast36.eliteFrom) * s.ast36.elite,
+    s.ast36.min,
+    s.ast36.max,
+  );
   const stl36 = clamp(s.stl36.base + (a.PER - lv) * s.stl36.per + (a.ATH - lv) * s.stl36.ath, s.stl36.min, s.stl36.max);
   const blk36 = clamp(
     s.blk36.base + (a.INT - lv) * s.blk36.int + (pr.height - 79) * s.blk36.height + (pr.wingspan - pr.height - 2) * s.blk36.wing,

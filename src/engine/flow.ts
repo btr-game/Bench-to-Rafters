@@ -1,6 +1,7 @@
 // The state machine. The UI and the balance harness both drive the game only
 // through `newGame`, `prompt`, `choose` and `advance`.
 
+import { resolveArc } from './events/arcs';
 import { resolveMilitary } from './career/nationality';
 import { ANOMALIES } from './player/anomaly';
 import { makeRng } from './rng';
@@ -79,6 +80,7 @@ export function newGame(seed: number, input: CreateInput): GameState {
     flags: {},
     schoolColor: '',
   };
+  if (input.fast || input.mode === 'fast') s.flags.fast = 1;
   // the game assigns his country, where he grows up and where he plays as a teenager
   assignOrigin(s);
   const intro = introText(s);
@@ -151,6 +153,9 @@ export function choose(s: GameState, choiceId: string): void {
       return;
     case 'military':
       s.toast = resolveMilitary(s, choiceId);
+      return;
+    case 'arc':
+      s.toast = resolveArc(s, d, choiceId) || null;
       return;
     case 'live':
       if (s.postSnap) {

@@ -1,6 +1,7 @@
 // The single app store. The engine mutates a GameState in place, so every action works
 // on a structured clone and swaps it in; React sees a new object each time.
 
+import { fastForward } from './engine/fast';
 import { create } from 'zustand';
 import type { AttrKey, GameLog, GameState, Pos } from './engine/types';
 import { advance as engineAdvance, changeFocus, changeNumber, changePosition, choose as engineChoose, dismissMoment, newGame, retireByChoice, type CreateInput } from './engine/flow';
@@ -26,6 +27,7 @@ interface Store {
   retire: () => void;
   changePosition: (pos: Pos) => void;
   togglePlayoffs: () => void;
+  toggleFast: () => void;
   changeNumber: (n: number) => void;
   changeFocus: (keys: AttrKey[]) => void;
   endTransition: () => void;
@@ -59,14 +61,19 @@ export const useStore = create<Store>((set, get) => ({
   transition: null,
   start: (input, seed) => {
     const s = seed ?? Math.floor(Math.random() * 2 ** 31);
-    set({ game: newGame(s, input), tab: 'home', transition: null });
+    const game = newGame(s, input);
+    fastForward(game);
+    set({ game, tab: 'home', transition: null });
   },
   choose: (choiceId) => {
     const g = get().game;
     if (!g) return;
     const next = structuredClone(g);
     engineChoose(next, choiceId);
+    const before = next.step;
+    fastForward(next);
     set({ game: next });
+    if (next.flags.fast && next.step !== before) top();
   },
   advance: () => {
     const g = get().game;
@@ -95,6 +102,11 @@ export const useStore = create<Store>((set, get) => ({
       const t = teamOf(next);
       transition = { kind: 'season', label: seasonLabel(next.year), sub: t ? t.name : '', color: t?.color ?? '#2A2F36' };
     }
+    if (next.flags.fast) {
+      // fast break: no transition screens, straight on to the next real choice
+      fastForward(next);
+      transition = null;
+    }
     set({ game: next, tab: 'home', transition });
     top();
   },
@@ -111,6 +123,15 @@ export const useStore = create<Store>((set, get) => ({
     const next = structuredClone(g);
     changeNumber(next, n);
     set({ game: next });
+  },
+  toggleFast: () => {
+    const g = get().game;
+    if (!g) return;
+    const next = structuredClone(g);
+    next.flags.fast = next.flags.fast ? 0 : 1;
+    if (next.flags.fast) fastForward(next);
+    else next.flags.simPostseason = 0;
+    set({ game: next, transition: null });
   },
   togglePlayoffs: () => {
     const g = get().game;

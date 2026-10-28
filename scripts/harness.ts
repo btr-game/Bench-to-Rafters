@@ -2,6 +2,7 @@
 // It drives the game only through flow.ts, exactly like the UI.
 
 import { advance, choose, newGame, prompt } from '../src/engine/flow';
+import { fastForward } from '../src/engine/fast';
 import { ARCHETYPES } from '../src/engine/player/archetypes';
 import { ATTRS, OVR_WEIGHTS, POSITIONS, type Mode } from '../src/engine/balance';
 import { makeRng, next, pick, int, type Rng } from '../src/engine/rng';
@@ -155,6 +156,8 @@ export function runCareer(seed: number, policy: Policy, mode: Mode = 'standard')
       }
       advance(s);
     }
+    // fast break plays like the app does: it runs on to the next real choice
+    if (s.flags.fast) fastForward(s);
     steps++;
   }
   const nbaRows = s.history.filter((h) => h.level === 'NBA' && h.line.gp > 0);

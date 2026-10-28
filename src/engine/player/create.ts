@@ -42,6 +42,7 @@ export interface CreateInput {
   hometown?: string; // assigned by the game when omitted
   country?: string; // assigned by the game when omitted
   highSchool?: string;
+  fast?: boolean; // fast break: the speed mode (engine/fast.ts)
 }
 
 /** "See other candidates": each stat ±3, then re-normalized to exactly 320. */
