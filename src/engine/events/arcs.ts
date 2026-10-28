@@ -141,7 +141,7 @@ const ARCS: ArcDef[] = [
     color: '#2E5B3A',
     next: (s, a) => {
       if (a.chapter < 2) {
-        bump(s, 'IQ', 1.5);
+        bump(s, 'IQ', 1.2);
         trust(s, 3);
         return { title: a.chapter === 0 ? 'Film at 6 a.m.' : 'Little things', text: a.chapter === 0 ? 'He makes you watch film before practice and tells you what you missed. Most days it is a lot.' : 'He shows you how to rest during a game without anyone noticing, and how to bait a referee into a call.' };
       }

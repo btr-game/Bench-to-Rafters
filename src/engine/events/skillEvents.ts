@@ -90,8 +90,8 @@ export const SKILL_EVENTS: EventDef[] = [
       {
         label: 'Learn to read the pick-and-roll',
         resolve: (s) => {
-          bump(s, 'PLY', 2);
-          bump(s, 'IQ', 1.5);
+          bump(s, 'PLY', 2.5);
+          bump(s, 'IQ', 1);
           return ok('You see the roll man a beat earlier.');
         },
       },
@@ -195,8 +195,8 @@ export const SKILL_EVENTS: EventDef[] = [
       {
         label: 'Show up every day',
         resolve: (s, rng) => {
-          bump(s, 'IQ', 2);
-          bump(s, chance(rng, 0.5) ? 'SHT' : 'FIN', 1.5);
+          bump(s, 'IQ', 1.5);
+          bump(s, chance(rng, 0.5) ? 'PLY' : 'FIN', 1.5);
           morale(s, -2);
           return ok('You lose a lot, then less, then you start winning some.', 'Played summer runs against NBA players.');
         },
@@ -290,7 +290,8 @@ export const SKILL_EVENTS: EventDef[] = [
       {
         label: 'Join them every night',
         resolve: (s) => {
-          bump(s, 'IQ', 2.5);
+          bump(s, 'IQ', 2);
+          bump(s, 'PLY', 0.5);
           s.player.trust = adjust(s.player.trust, 4);
           return ok('You start calling out plays before they happen.', 'Joined late-night film sessions with the coaches.');
         },
@@ -300,6 +301,92 @@ export const SKILL_EVENTS: EventDef[] = [
         resolve: (s) => {
           morale(s, 2);
           return ok('Rested legs matter too.');
+        },
+      },
+    ],
+  },
+  {
+    id: 'pnrlab',
+    stages: ALL,
+    phase: 'both',
+    weight: 0.9,
+    cooldownSeasons: 2,
+    title: 'Pick-and-roll lab',
+    text: 'The coaches want to run more offense through you. Every practice ends with twenty minutes of two-man game.',
+    choices: [
+      {
+        label: 'Learn to read the low man',
+        resolve: (s) => {
+          bump(s, 'PLY', 3);
+          return ok('Skip passes to the corner start finding shooters you did not see last year.', 'Learned to read the pick-and-roll.');
+        },
+      },
+      {
+        label: 'Work on the pocket pass',
+        resolve: (s) => {
+          bump(s, 'PLY', 2);
+          bump(s, 'IQ', 0.5);
+          return ok('Bounce passes through two defenders, right into the big man\'s hands.');
+        },
+      },
+      {
+        label: 'Keep looking for your own shot',
+        resolve: (s) => {
+          bump(s, 'SHT', 1);
+          s.player.trust = adjust(s.player.trust, -3);
+          return ok('You score a little more. The coach wanted more than that.');
+        },
+      },
+    ],
+  },
+  {
+    id: 'touchsummer',
+    stages: ALL,
+    phase: 'off',
+    weight: 0.9,
+    cooldownSeasons: 2,
+    title: 'Touch around the rim',
+    text: 'You missed too many layups last season. A trainer known for finishing drills has a summer open.',
+    choices: [
+      {
+        label: 'Mikan drills until your arms hurt',
+        resolve: (s) => {
+          bump(s, 'FIN', 3);
+          return ok('Left, right, left, right. The ball starts kissing off the glass.', 'Spent a summer on finishing touch.');
+        },
+      },
+      {
+        label: 'Reverse layups and the weak hand',
+        resolve: (s) => {
+          bump(s, 'FIN', 2);
+          s.player.offhand = Math.min(99, s.player.offhand + 4);
+          return ok('You can finish on the other side of the rim now, with either hand.');
+        },
+      },
+    ],
+  },
+  {
+    id: 'passers',
+    stages: ALL,
+    phase: 'off',
+    weight: 0.7,
+    cooldownSeasons: 3,
+    title: 'Study the great passers',
+    text: 'A coach sends you a hard drive: every assist from three of the best passers who ever lived.',
+    choices: [
+      {
+        label: 'Watch all of it, twice',
+        resolve: (s) => {
+          bump(s, 'PLY', 2.5);
+          bump(s, 'IQ', 0.5);
+          return ok('You start throwing passes before the cut happens, the way they did.', 'Studied the great passers all summer.');
+        },
+      },
+      {
+        label: 'Skim the highlights',
+        resolve: (s) => {
+          bump(s, 'PLY', 1);
+          return ok('A few new ideas. A few.');
         },
       },
     ],

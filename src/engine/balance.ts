@@ -216,11 +216,11 @@ export const HALF_PLANS: Record<HalfPlan, PlanDef> = {
   recovery: { growth: 0.75, injury: 0.5, morale: 4, trust: 0, rep: [0, 0], usage: 0.95, teamBoost: 0 },
   spotlight: { growth: 0.85, injury: 1.05, morale: 2, trust: -3, rep: [3, 8], usage: 1.15, teamBoost: -0.3 },
   teamfirst: { growth: 0.95, injury: 1.0, morale: 2, trust: 6, rep: [0, 1], usage: 0.88, teamBoost: 0.6 },
-  shooting: { growth: 1.0, injury: 0.95, morale: 0, trust: 0, rep: [0, 0], usage: 1.03, teamBoost: 0, attrs: { SHT: 2.4 }, other: 0.6, rangeGain: 2 },
-  strength: { growth: 1.0, injury: 1.2, morale: -1, trust: 0, rep: [0, 0], usage: 1, teamBoost: 0, attrs: { FIN: 1.9, REB: 1.9, ATH: 1.9, INT: 1.6 }, other: 0.55 },
-  playmaking: { growth: 1.0, injury: 1.0, morale: 0, trust: 2, rep: [0, 0], usage: 0.97, teamBoost: 0.2, attrs: { PLY: 2.2, IQ: 2.0 }, other: 0.6 },
-  defense: { growth: 1.0, injury: 1.05, morale: 0, trust: 3, rep: [0, 0], usage: 0.95, teamBoost: 0.3, attrs: { PER: 2.2, INT: 2.0 }, other: 0.6 },
-  offhand: { growth: 1.0, injury: 1.0, morale: -1, trust: 0, rep: [0, 0], usage: 0.97, teamBoost: 0, attrs: { FIN: 1.3, PLY: 1.2 }, other: 0.5, offhandGain: 7 },
+  shooting: { growth: 1.0, injury: 0.95, morale: 0, trust: 0, rep: [0, 0], usage: 1.03, teamBoost: 0, attrs: { SHT: 2.05 }, other: 0.6, rangeGain: 2 },
+  strength: { growth: 1.0, injury: 1.2, morale: -1, trust: 0, rep: [0, 0], usage: 1, teamBoost: 0, attrs: { FIN: 2.1, REB: 2.15, ATH: 1.9, INT: 1.6 }, other: 0.55 },
+  playmaking: { growth: 1.0, injury: 1.0, morale: 0, trust: 2, rep: [0, 0], usage: 0.97, teamBoost: 0.2, attrs: { PLY: 2.3, IQ: 1.5 }, other: 0.6 },
+  defense: { growth: 1.0, injury: 1.05, morale: 0, trust: 3, rep: [0, 0], usage: 0.95, teamBoost: 0.3, attrs: { PER: 2.6, INT: 2.0 }, other: 0.6 },
+  offhand: { growth: 1.0, injury: 1.0, morale: -1, trust: 0, rep: [0, 0], usage: 0.97, teamBoost: 0, attrs: { FIN: 1.5, PLY: 1.3 }, other: 0.5, offhandGain: 7 },
 };
 
 // Each half rolls an outcome for the plan. Morale shifts the odds toward breakthroughs.

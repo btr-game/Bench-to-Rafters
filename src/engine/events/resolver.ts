@@ -8,6 +8,7 @@ import { RISK_EVENTS } from './risks';
 import { GROWTH_EVENTS } from './growthEvents';
 import { SKILL_EVENTS } from './skillEvents';
 import { ARC_EVENTS } from './arcs';
+import { fitOf, needs } from './director';
 import { changes, snap, vary } from './outcome';
 import { rollTier, tierFactors, tierLine, TIERS, twists, type Tier } from './twists';
 
@@ -33,7 +34,7 @@ function riskOf(c: EventChoice): 'Low' | 'Medium' | 'High' | undefined {
   return undefined;
 }
 
-function push(s: GameState, e: EventDef): void {
+function push(s: GameState, e: EventDef, reason = ''): void {
   const choices = typeof e.choices === 'function' ? e.choices(s) : e.choices;
   s.events.lastSeen[e.id] = s.year;
   if (e.oncePerCareer) s.events.once.push(e.id);
@@ -42,14 +43,18 @@ function push(s: GameState, e: EventDef): void {
     title: e.title,
     text: typeof e.text === 'function' ? e.text(s) : e.text,
     choices: choices.map((c, i) => ({ id: String(i), label: c.label, detail: c.detail, risk: riskOf(c) })),
-    data: { eventId: e.id },
+    data: { eventId: e.id, ...(reason ? { fit: reason } : {}) },
   });
 }
 
 function pickOne(s: GameState, phase: 'mid' | 'off'): void {
   const list = eligible(s, phase);
   if (list.length === 0) return;
-  push(s, list[weightedIndex(s.rng, list.map((e) => e.weight))]);
+  // the event director weighs each event by how well it fits this player (events/director.ts)
+  const n = needs(s);
+  const fits = list.map((e) => fitOf(s, e, n));
+  const i = weightedIndex(s.rng, list.map((e, j) => e.weight * fits[j].mult));
+  push(s, list[i], fits[i].reason);
 }
 
 export function queueMidseasonEvents(s: GameState): void {

@@ -464,3 +464,23 @@ nationality; event results that really differ; rare mold-breaking players; heigh
   85, so even a 99 passer averaged about 7. Assists now use the raw rating, plus basketball IQ
   and a little extra above 80 playmaking: about 6 a game at 80, 8 at 88, 9-10 at 92 with high
   IQ and 11.5 at the top (34 minutes).
+- **Rating balance:** measured two ways: random play over 150 careers, and dedicated builds
+  (focus on one rating plus the plan that trains it most, 50-60 careers each). Before: IQ
+  and shooting were the easiest to max (44% and 38% of dedicated builds reached 99) and the
+  shop sold 8.5 points of shooting and 7.5 of athleticism but 3.5 playmaking, 2.5 finishing
+  and nothing for interior defense. Changes: plans (shooting 2.4x to 2.05x; playmaking PLY
+  2.2x to 2.3x and IQ 2.0x to 1.5x; strength FIN 1.9x to 2.1x and REB 1.9x to 2.15x; defense
+  PER 2.2x to 2.6x; off hand FIN 1.3x to 1.5x), shop items retargeted from shooting and
+  athleticism toward finishing and defense, two new items (passing machine, contact pads),
+  IQ trimmed in a few events, and three new events (pick-and-roll lab, touch around the rim,
+  study the great passers). After: shooting, finishing, playmaking and IQ reach 99 in about
+  37-43% of dedicated builds, the defensive ratings and rebounding about 28-30%.
+  Athleticism stays the hardest (about 22%): it is mostly natural and it ages fastest.
+- **Event director:** events are now weighted by fit (events/director.ts). It learns each
+  event's effect on ratings by playing every choice on a throwaway copy with a neutral player,
+  scores what the player needs (focus, archetype signature, position weights, weak spots,
+  less for ratings near the cap), and multiplies the event's weight by 0.55x-2.2x, plus 1.35x
+  for events tied to his road (abroad, college). Fitting events say why ("Fits your game ·
+  Builds playmaking: your focus"). A playmaking point guard sees the pick-and-roll lab 6.9%
+  of the time, a center 2.8%.
+- **Peaks:** Standard about 73, Fast break about 76.

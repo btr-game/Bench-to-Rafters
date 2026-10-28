@@ -263,6 +263,7 @@ export function DecisionView({ g, d }: { g: GameState; d: Decision }) {
           {d.title}
         </h2>
       </div>
+      {typeof d.data?.fit === 'string' && <span className="fit-tag">Fits your game · {d.data.fit as string}</span>}
       <p>{d.text}</p>
       {isDraftNight && <DraftBoard g={g} />}
       {offers.length > 0 && (
