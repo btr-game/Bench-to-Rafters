@@ -340,3 +340,9 @@ details.tourney > summary::-webkit-details-marker { display: none; }
 /* playtest round 3: larger text, bold text a step larger still */
 b, strong { font-size: 1.07em; }
 .choice .label, .item .name, .facts dd, .offer dd, .sec-title { font-size: 1.06em; }
+
+/* playable postseason games */
+.live-title { font-family: var(--f-display); font-size: 30px; text-transform: uppercase; line-height: 1; margin: 2px 0 0; }
+.live-board { grid-template-columns: 1fr auto 1fr; }
+.live-board .cell:nth-child(2) .v { font-size: 20px; }
+table.quarters td, table.quarters th { text-align: center; }

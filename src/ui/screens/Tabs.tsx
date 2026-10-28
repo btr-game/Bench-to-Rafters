@@ -13,6 +13,7 @@ import { ScoutCard } from '../components/ScoutCard';
 import { fmtMoney, ht, pct, pg, seasonLabel } from '../format';
 import { ordinal } from '../../engine/career/season';
 import { originOf } from '../../content/origins';
+import { useStore } from '../../store';
 import { league as leagueOf, ovr } from '../selectors';
 
 // ---------- Season ----------
@@ -217,6 +218,22 @@ export function SeasonTab({ g }: { g: GameState }) {
 
 // ---------- Player ----------
 
+function PlayoffToggle({ g }: { g: GameState }) {
+  const toggle = useStore((s) => s.togglePlayoffs);
+  const sim = !!g.flags.simPostseason;
+  return (
+    <div className="row" style={{ gap: 10, marginTop: 10 }}>
+      <span className="small">
+        Postseason games: <b>{sim ? 'simulated' : 'playable'}</b>
+      </span>
+      <div className="spacer" />
+      <button className="btn ghost small" onClick={toggle}>
+        {sim ? 'Make them playable' : 'Always simulate'}
+      </button>
+    </div>
+  );
+}
+
 export function PlayerTab({ g }: { g: GameState }) {
   const p = g.player;
   const c = g.contract;
@@ -246,7 +263,10 @@ export function PlayerTab({ g }: { g: GameState }) {
           <dl className="facts">
             <div>
               <dt>Height</dt>
-              <dd>{ht(p.height)}</dd>
+              <dd>
+                {ht(p.height)}
+                {p.height < p.heightProj ? <span className="muted"> → about {ht(p.heightProj)}</span> : null}
+              </dd>
             </div>
             <div>
               <dt>Wingspan</dt>
@@ -269,6 +289,7 @@ export function PlayerTab({ g }: { g: GameState }) {
               <dd>{p.captain ? 'Yes' : 'No'}</dd>
             </div>
           </dl>
+          <PlayoffToggle g={g} />
         </Card>
         <Card title="Scouting">
           {p.scoutGrade ? (

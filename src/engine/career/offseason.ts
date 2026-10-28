@@ -4,7 +4,7 @@
 import { ATTR_MAX, FA_INTEREST, OFFSEASON_DAYS, REP, RETIRE, ATTRS, TEAM_OPTION } from '../balance';
 import { chance, clamp, int, logistic, range } from '../rng';
 import type { Contract, Decision, GameState, Offer, RoleKey } from '../types';
-import { applyAging, growHeight } from '../player/growth';
+import { applyAging, growHeight, updateHeightProjection } from '../player/growth';
 import { healDays } from '../player/injury';
 import { updateScouting } from '../player/create';
 import { ovrOf } from '../player/ovr';
@@ -43,6 +43,10 @@ export function beginOffseason(s: GameState): void {
   s.notes = [];
   p.age += 1;
   growHeight(p);
+  const projChange = updateHeightProjection(s.rng, p);
+  const ft = (x: number) => `${Math.floor(x / 12)}′${x % 12}″`;
+  if (projChange >= 1) note(s, `Growth spurt: ${ft(p.height)} now, and the doctors think you will reach ${ft(p.heightProj)}.`);
+  else if (projChange <= -1) note(s, `Your growth is slowing down. New projection: ${ft(p.heightProj)}.`);
   const aging = applyAging(s.rng, p);
   if (aging.sudden) note(s, 'Your body is not bouncing back like it used to. A sudden decline.');
   else if (aging.change < -0.5) note(s, `Age is catching up: OVR ${aging.change.toFixed(1)} this summer.`);

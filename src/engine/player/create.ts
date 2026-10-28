@@ -8,6 +8,7 @@ import {
   HEIGHT_ATTR,
   HEIGHT_DRAW,
   HEIGHT_RANGE,
+  HEIGHT_SURPRISE,
   START_SHIFT,
   CAP_MAX,
   POTENTIAL,
@@ -60,7 +61,10 @@ export function createPlayer(rng: Rng, input: CreateInput): UserPlayer {
   const card = { ...(input.attrs ?? arch.attrs) };
   const [hMin, hMax] = HEIGHT_RANGE[input.pos];
   const mid = (hMin + hMax) / 2 + (arch.height ?? 0);
-  const fullHeight = input.height ?? Math.round(clamp(normal(rng, mid, HEIGHT_DRAW.sd), hMin - HEIGHT_DRAW.below, hMax + HEIGHT_DRAW.above));
+  const projected = input.height ?? Math.round(clamp(normal(rng, mid, HEIGHT_DRAW.sd), hMin - HEIGHT_DRAW.below, hMax + HEIGHT_DRAW.above));
+  // what the doctors cannot see yet
+  const surprise = input.height ? 0 : Math.round(clamp(normal(rng, HEIGHT_SURPRISE.mean, HEIGHT_SURPRISE.sd), HEIGHT_SURPRISE.min, HEIGHT_SURPRISE.max));
+  const fullHeight = projected + surprise;
   // some 14-year-olds are nearly done growing, others have half a foot to go
   const height = fullHeight - weightedPick(rng, [[1, 2], [2, 3], [3, 3], [4, 2], [5, 1.2], [6, 0.8], [7, 0.4]]);
   const potential = drawPotential(rng, POTENTIAL);
@@ -82,6 +86,7 @@ export function createPlayer(rng: Rng, input: CreateInput): UserPlayer {
     archetype: arch.name,
     height,
     fullHeight,
+    heightProj: projected,
     wingspan: fullHeight + int(rng, 0, 5),
     hometown: input.hometown ?? '',
     country: input.country ?? '',

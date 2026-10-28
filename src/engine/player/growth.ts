@@ -23,8 +23,10 @@ import {
   OVR_WEIGHTS,
   PERF_FACTOR,
   SUDDEN_DECLINE,
+  HEIGHT_PROJ_SD,
+  HEIGHT_SURPRISE,
 } from '../balance';
-import { chance, clamp, range, type Rng } from '../rng';
+import { chance, clamp, normal, range, type Rng } from '../rng';
 import type { AttrKey, Attrs, HalfPlan, UserPlayer } from '../types';
 import { ovrOf } from './ovr';
 
@@ -164,11 +166,25 @@ export function applyAging(rng: Rng, p: UserPlayer): { change: number; sudden: b
   return { change: ovrOf(p.attrs, p.pos) - before, sudden };
 }
 
-/** HS growth spurts: the player reaches full height by about 17. */
+/** Teenage growth: most of it by 17, a little more until 19 for late growers. */
+/**
+ * The doctors' new guess at his adult height after this year's growth. Returns the change
+ * in the projection (inches), so the story can mention a surprise spurt or an early stop.
+ */
+export function updateHeightProjection(rng: Rng, p: UserPlayer): number {
+  const before = p.heightProj;
+  if (p.height >= p.fullHeight || p.age > HEIGHT_SURPRISE.growUntil) p.heightProj = p.fullHeight;
+  else {
+    const sd = HEIGHT_PROJ_SD[p.age] ?? 0.3;
+    p.heightProj = Math.max(p.height, Math.round(p.fullHeight + normal(rng, 0, sd)));
+  }
+  return p.heightProj - before;
+}
+
 export function growHeight(p: UserPlayer): void {
-  if (p.height < p.fullHeight && p.age <= 17) {
+  if (p.height < p.fullHeight && p.age <= HEIGHT_SURPRISE.growUntil) {
     const left = p.fullHeight - p.height;
-    const yearsLeft = Math.max(1, 18 - p.age);
+    const yearsLeft = Math.max(1, HEIGHT_SURPRISE.growUntil + 1 - p.age);
     p.height += Math.ceil(left / yearsLeft);
     p.wingspan += Math.ceil(left / yearsLeft);
   }

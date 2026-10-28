@@ -72,7 +72,7 @@ function SeasonHeader({ g }: { g: GameState }) {
   const t = team(g);
   const s = g.season;
   const stepName =
-    g.step === 'preseason' ? 'Preseason' : g.step === 'midseason' ? 'Midseason' : g.step === 'summary' ? 'Season over' : g.step === 'offseason' ? 'Offseason' : '';
+    g.step === 'preseason' ? 'Preseason' : g.step === 'midseason' ? 'Midseason' : g.step === 'postseason' ? 'Postseason' : g.step === 'summary' ? 'Season over' : g.step === 'offseason' ? 'Offseason' : '';
   return (
     <div className="turn-head">
       <div style={{ minWidth: 0 }}>
@@ -202,7 +202,8 @@ function PositionCard({ g }: { g: GameState }) {
         <div className="sec-title">Position</div>
         <div className="spacer" />
         <span className="small muted">
-          {NAMES.pos[p.pos]} · {ht(p.fullHeight)}
+          {NAMES.pos[p.pos]} · {ht(p.height)}
+          {p.height < p.heightProj ? ` (projected ${ht(p.heightProj)})` : ''}
         </span>
       </div>
       {open ? (

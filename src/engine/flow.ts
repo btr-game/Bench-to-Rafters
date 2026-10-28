@@ -6,7 +6,7 @@ import type { Decision, GameState, HalfPlan, Step } from './types';
 import { createPlayer, type CreateInput } from './player/create';
 import { ovrOf } from './player/ovr';
 import { BASE_YEAR } from './economy/salary';
-import { activeLeague, assignToGl, beginSeason, playHalf } from './career/season';
+import { activeLeague, assignToGl, beginSeason, playHalf, runPostseason } from './career/season';
 import { beginOffseason, resolveOffseasonDecision, retireNow } from './career/offseason';
 import { runWorldDraft } from './career/nbaYear';
 import { resolveEvent } from './events/resolver';
@@ -83,7 +83,7 @@ export function newGame(seed: number, input: CreateInput): GameState {
   const ft = (x: number) => `${Math.floor(x / 12)}′${x % 12}″`;
   intro.lines.unshift(
     `Starting level: OVR ${Math.round(start)}, ${start >= 50 ? 'well ahead of most kids his age' : start >= 46 ? 'ahead of most kids his age' : start >= 41 ? 'about where most kids his age are' : 'raw, behind most kids his age'}`,
-    `${ft(player.height)} now; the doctors think he will grow to about ${ft(player.fullHeight)}`,
+    `${ft(player.height)} now; the doctors think he will grow to about ${ft(player.heightProj)}, but nobody knows for sure`,
   );
   pushMoment(s, { kind: 'intro', title: player.highSchool, text: intro.text, color: s.schoolColor, lines: intro.lines });
   logDecision(s, 'start', `Enrolled at ${player.highSchool} in ${player.hometown} as a ${input.pos}, ${player.archetype}.`);
@@ -105,6 +105,8 @@ export function prompt(s: GameState): Prompt {
       return { type: 'advance', label: UI.hub.playSecond, step: s.step };
     case 'summary':
       return { type: 'advance', label: UI.hub.toOffseason, step: s.step };
+    case 'postseason':
+      return { type: 'advance', label: 'Continue the postseason', step: s.step };
     case 'offseason':
       return { type: 'advance', label: UI.hub.nextSeason(s.year + 1), step: s.step };
   }
@@ -134,6 +136,12 @@ export function choose(s: GameState, choiceId: string): void {
     case 'youth':
       s.toast = resolveYouth(s, d, choiceId) || null;
       return;
+    case 'live':
+      if (s.postSnap) {
+        s.postSnap.picks.push(choiceId);
+        runPostseason(s);
+      }
+      return;
     case 'shop':
       s.toast = resolveShop(s, d, choiceId);
       return;
@@ -157,6 +165,9 @@ export function advance(s: GameState): void {
     case 'midseason':
     case 'secondHalf':
       playHalf(s);
+      return;
+    case 'postseason':
+      runPostseason(s);
       return;
     case 'summary':
       beginOffseason(s);

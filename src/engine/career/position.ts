@@ -30,7 +30,8 @@ export function positionOptions(s: GameState): PosOption[] {
   const i = POSITIONS.indexOf(p.pos);
   return POSITIONS.filter((x) => x !== p.pos).map((pos) => {
     const d = Math.abs(POSITIONS.indexOf(pos) - i);
-    const fit = fitFor(p.fullHeight, pos);
+    // while he is still growing the fit is judged on the doctors' projection
+    const fit = fitFor(p.height >= p.heightProj ? p.height : p.heightProj, pos);
     const allowed = d === 1 || (d === 2 && Math.abs(fit.inches) <= 1);
     return { pos, ovr: ovrOf(p.attrs, pos), fit: allowed ? fit.label : 'too big a jump for your size', allowed };
   });

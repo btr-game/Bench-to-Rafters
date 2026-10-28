@@ -25,6 +25,7 @@ interface Store {
   dismissMoment: () => void;
   retire: () => void;
   changePosition: (pos: Pos) => void;
+  togglePlayoffs: () => void;
   endTransition: () => void;
   reset: () => void;
   setTab: (t: Tab) => void;
@@ -94,6 +95,13 @@ export const useStore = create<Store>((set, get) => ({
     }
     set({ game: next, tab: 'home', transition });
     top();
+  },
+  togglePlayoffs: () => {
+    const g = get().game;
+    if (!g) return;
+    const next = structuredClone(g);
+    next.flags.simPostseason = next.flags.simPostseason ? 0 : 1;
+    set({ game: next });
   },
   changePosition: (pos) => {
     const g = get().game;

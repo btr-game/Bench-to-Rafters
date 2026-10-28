@@ -46,6 +46,8 @@ function smartChoice(s: GameState, d: Decision, r: Rng): string {
       return 'go';
     case 'youth':
       return byId('promote') ?? byId('move') ?? ch[0].id;
+    case 'live':
+      return byId('all') ?? ch[0].id;
     case 'national':
       return s.player.age < 32 ? 'accept' : 'decline';
     case 'transfer':
@@ -91,6 +93,8 @@ function smartChoice(s: GameState, d: Decision, r: Rng): string {
 }
 
 function randomChoice(d: Decision, r: Rng): string {
+  // playable postseason games are simulated here: replaying each pick would be slow
+  if (d.kind === 'live') return d.choices.some((c) => c.id === 'all') ? 'all' : d.choices[0].id;
   const ch = enabled(d);
   return pick(r, ch).id;
 }
@@ -122,6 +126,8 @@ export interface CareerResult {
 export function runCareer(seed: number, policy: Policy): CareerResult {
   const r = makeRng(seed ^ 0x9e3779b9);
   const s = newGame(seed, randomInput(r, policy));
+  // the harness simulates every postseason (the playable replay would only slow it down)
+  s.flags.simPostseason = 1;
   const snapshots: CareerResult['snapshots'] = [];
   let steps = 0;
   let lastSnapYear = -1;

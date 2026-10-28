@@ -64,6 +64,7 @@ export const MORE_EVENTS: EventDef[] = [
         resolve: (s) => {
           s.player.height += 2;
           s.player.fullHeight += 2;
+          s.player.heightProj += 2;
           s.player.wingspan += 2;
           bump(s, 'REB', 3);
           bump(s, 'INT', 2);
@@ -77,6 +78,7 @@ export const MORE_EVENTS: EventDef[] = [
         resolve: (s) => {
           s.player.height += 2;
           s.player.fullHeight += 2;
+          s.player.heightProj += 2;
           s.player.wingspan += 1;
           bump(s, 'PLY', 1);
           return ok('Taller, and still handling it like a guard.');

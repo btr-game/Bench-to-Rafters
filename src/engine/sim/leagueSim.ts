@@ -6,7 +6,15 @@ import { chance, logistic, normal, shuffle, type Rng } from '../rng';
 import type { Bracket, League, LevelKey, SeriesResult, Team } from '../types';
 
 /** Returns true if the user's team won; `last` holds the score of the game just played. */
-export type UserGameHook = ((opp: Team, home: boolean, post?: string) => boolean) & { last?: { us: number; them: number } };
+export type UserGameHook = ((opp: Team, home: boolean, post?: string, series?: SeriesCtx) => boolean) & { last?: { us: number; them: number } };
+
+/** Where a postseason game sits in its series, from the user's side. */
+export interface SeriesCtx {
+  game: number;
+  bestOf: number;
+  wins: number;
+  losses: number;
+}
 
 export const winProb = (a: number, b: number, homeA: number): number => logistic((a - b + homeA * HOME_COURT) / WIN_SCALE);
 
@@ -59,10 +67,11 @@ export function standings(teams: Team[]): Team[] {
 }
 
 /** A single game between two teams; `homeA` = 1 if a is at home, 0 neutral, -1 away. Returns a's and b's points. */
-function game(rng: Rng, league: League, a: Team, b: Team, homeA: number, round: string, hook: UserGameHook | null): [number, number] {
+function game(rng: Rng, league: League, a: Team, b: Team, homeA: number, round: string, hook: UserGameHook | null, sr?: { g: number; bestOf: number; wa: number; wb: number }): [number, number] {
   if (hook && (a.id === league.userTeamId || b.id === league.userTeamId)) {
     const userA = a.id === league.userTeamId;
-    const won = userA ? hook(b, homeA > 0, round) : hook(a, homeA < 0, round);
+    const ctx: SeriesCtx | undefined = sr && { game: sr.g, bestOf: sr.bestOf, wins: userA ? sr.wa : sr.wb, losses: userA ? sr.wb : sr.wa };
+    const won = userA ? hook(b, homeA > 0, round, ctx) : hook(a, homeA < 0, round, ctx);
     const sc = hook.last ?? { us: 1, them: 0 };
     // the hook decides the winner; keep the score consistent with it
     const [w, l] = [Math.max(sc.us, sc.them), Math.min(sc.us, sc.them)];
@@ -94,7 +103,7 @@ export function playSeries(
   const homePattern = [1, 1, -1, -1, 1, -1, 1];
   while (wa < need && wb < need) {
     const home = neutral ? 0 : bestOf === 1 ? 1 : homePattern[g % 7];
-    const sc = game(rng, league, a, b, home, round, hook);
+    const sc = game(rng, league, a, b, home, round, hook, { g: g + 1, bestOf, wa, wb });
     games.push(sc);
     if (sc[0] > sc[1]) wa++;
     else wb++;

@@ -202,3 +202,31 @@ describe('variety at the start', () => {
     expect(canChangePosition(s)).toBe(false); // once per offseason
   });
 });
+
+describe('playable postseason', () => {
+  it('pauses for each game, quarter and close finish, and finishes the season', () => {
+    const stages = new Set<string>();
+    let seasonsWithLive = 0;
+    const s = newGame(7001, { name: 'X', number: 1, pos: 'PG', archetype: 0, focus: ['PLY', 'SHT'] });
+    for (let steps = 0; steps < 20000 && s.player.age < 24; steps++) {
+      const pr = prompt(s);
+      if (pr.type === 'retired') break;
+      if (pr.type === 'decision') {
+        const d = pr.decision;
+        if (d.kind === 'live') {
+          const stage = (d.data as { req: { stage: string } }).req.stage;
+          if (stage === 'game' && !stages.has('game')) seasonsWithLive++;
+          stages.add(stage);
+          choose(s, stage === 'game' ? 'play' : d.choices[steps % d.choices.length].id);
+          // the replay state never leaks into the saved game
+          expect(s.live).toBeUndefined();
+        } else choose(s, d.choices.find((c) => !c.disabled)!.id);
+      } else advance(s);
+    }
+    expect(stages.has('game')).toBe(true);
+    expect(stages.has('quarter')).toBe(true);
+    expect(seasonsWithLive).toBeGreaterThan(0);
+    expect(s.postSnap === undefined || s.step === 'postseason').toBe(true);
+    expect(() => JSON.parse(JSON.stringify(s))).not.toThrow();
+  });
+});

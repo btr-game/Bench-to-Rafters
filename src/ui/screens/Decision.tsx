@@ -1,6 +1,7 @@
 // Renders whatever decision is at the front of the queue.
 
 import type { Decision, GameState, Offer } from '../../engine/types';
+import type { LiveRequest } from '../../engine/career/live';
 import { LEVELS } from '../../engine/balance';
 import { NAMES } from '../../content/strings';
 import { useStore } from '../../store';
@@ -70,11 +71,105 @@ function DraftBoard({ g }: { g: GameState }) {
   );
 }
 
+function LiveView({ g, d }: { g: GameState; d: Decision }) {
+  const choose = useStore((s) => s.choose);
+  const r = d.data?.req as LiveRequest;
+  const team = g.season ? (g.stage === 'NBA' ? g.nba : g.league)?.teams.find((t) => t.id === g.teamId) : null;
+  const me = team?.short ?? 'You';
+  const started = r.stage !== 'game';
+  const l = r.line;
+  return (
+    <div className="stack live">
+      <div>
+        <div className="kicker">
+          {r.round}
+          {r.bestOf > 1 ? ` · Game ${r.game} · series ${r.wins}–${r.losses}` : ''}
+        </div>
+        <h2 className="title live-title">{d.title}</h2>
+      </div>
+      {started && (
+        <>
+          <div className="board live-board">
+            <div className="cell">
+              <div className="k">{me}</div>
+              <div className="v">{r.us}</div>
+            </div>
+            <div className="cell">
+              <div className="k">{r.stage === 'clutch' ? '0:14 Q4' : r.quarter === 1 ? 'Tip-off' : `End Q${r.quarter - 1}`}</div>
+              <div className="v dim">—</div>
+            </div>
+            <div className="cell">
+              <div className="k">{r.opp.split(' ').slice(-1)[0]}</div>
+              <div className="v">{r.them}</div>
+            </div>
+          </div>
+          {r.qs.length > 0 && (
+            <div className="tbl-wrap">
+              <table className="quarters">
+                <thead>
+                  <tr>
+                    <th className="l">Team</th>
+                    {r.qs.map((_, i) => (
+                      <th key={i}>Q{i + 1}</th>
+                    ))}
+                    <th>T</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="me">
+                    <td className="l">{me}</td>
+                    {r.qs.map((q, i) => (
+                      <td key={i}>{q[0]}</td>
+                    ))}
+                    <td>{r.us}</td>
+                  </tr>
+                  <tr>
+                    <td className="l">{r.opp}</td>
+                    {r.qs.map((q, i) => (
+                      <td key={i}>{q[1]}</td>
+                    ))}
+                    <td>{r.them}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          )}
+          {l && l.min > 0 && (
+            <p className="small">
+              <b>{g.player.name}</b>: {l.pts} pts, {l.reb} reb, {l.ast} ast, {l.fgm}/{l.fga} FG, {l.stl} stl, {l.blk} blk
+            </p>
+          )}
+        </>
+      )}
+      <p>{d.text}</p>
+      {r.recent.length > 0 && (
+        <div className="small muted">
+          {r.recent.map((x, i) => (
+            <div key={i}>{x}</div>
+          ))}
+        </div>
+      )}
+      <div className="choices">
+        {d.choices.map((c, i) => (
+          <button key={c.id} className={`choice${i === 0 && r.stage === 'game' ? ' primary' : ''}`} onClick={() => choose(c.id)}>
+            <span className="label">
+              {c.label} {c.risk && <span className={`risk risk-${c.risk.toLowerCase()}`}>{c.risk} risk</span>}
+            </span>
+            {c.detail && <small>{c.detail}</small>}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function DecisionView({ g, d }: { g: GameState; d: Decision }) {
   const choose = useStore((s) => s.choose);
   const offers = (d.data?.offers as Offer[] | undefined) ?? [];
   const offerIds = new Set(offers.map((o) => o.id));
   const extra = d.choices.filter((c) => !offerIds.has(c.id));
+
+  if (d.kind === 'live') return <LiveView g={g} d={d} />;
 
   if (d.kind === 'plan') {
     return (

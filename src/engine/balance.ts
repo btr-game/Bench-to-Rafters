@@ -27,6 +27,10 @@ export const HEIGHT_RANGE: Record<Pos, [number, number]> = {
 // Full-grown height is normal around the middle of the range, so some players end up well
 // outside it (a 6'1" shooting guard, a 7'3" center). Hard limits keep it plausible.
 export const HEIGHT_DRAW = { sd: 2.3, below: 4, above: 4 };
+// The projection at 14 is only an estimate: the true adult height differs by this much
+// (a little skewed toward late growth spurts), and the doctors' guess sharpens each year.
+export const HEIGHT_SURPRISE = { mean: 0.3, sd: 1.7, min: -3, max: 4, growUntil: 19 };
+export const HEIGHT_PROJ_SD: Record<number, number> = { 15: 1.4, 16: 1.1, 17: 0.8, 18: 0.5 };
 // Height against the position's norm shifts the starting card a little (per inch).
 export const HEIGHT_ATTR: Partial<Record<AttrKey, number>> = { REB: 0.8, INT: 0.6, PLY: -0.4, ATH: -0.3 };
 // How far ahead of or behind his card a 14-year-old really is (in OVR points, roughly).

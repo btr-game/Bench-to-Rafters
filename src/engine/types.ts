@@ -72,7 +72,8 @@ export interface UserPlayer {
   pos: Pos;
   archetype: string;
   height: number;
-  fullHeight: number;
+  fullHeight: number; // true adult height (hidden while he grows)
+  heightProj: number; // the doctors' projection of fullHeight
   wingspan: number;
   hometown: string;
   country: string; // see content/origins
@@ -324,6 +325,7 @@ export type Step =
   | 'firstHalf' // ready to play first half
   | 'midseason'
   | 'secondHalf'
+  | 'postseason' // playing the postseason game by game
   | 'summary'
   | 'offseason'
   | 'retired';
@@ -414,6 +416,10 @@ export interface GameState {
   purchases: string[]; // shop item ids ever bought
   tournaments: TourneyRecord[];
   nbaHistory: NbaYearRecord[];
+  // the playable postseason: a snapshot from the end of the regular season and his picks
+  postSnap?: { snap: GameState; picks: string[] };
+  // only inside a postseason replay
+  live?: import('./career/live').LiveState;
   flags: Record<string, number>; // small story switches (powerhouse school, power agent...)
   schoolColor: string;
 }

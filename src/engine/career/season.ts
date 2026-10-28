@@ -35,6 +35,7 @@ import {
   type Profile,
 } from '../sim/statModel';
 import { accumulateHalf, resetSeasonLines, teamUsageMean, type UserSlot } from '../sim/genStats';
+import type { SeriesCtx } from '../sim/leagueSim';
 import {
   bracketExit,
   euPlayoffs,
@@ -52,6 +53,7 @@ import { rosterStrength } from '../world/gen';
 import { buildCandidates, nbaAwards, simpleAwards, type AwardOutcome } from '../awards/awards';
 import { playoffMvps, postseasonRecap, recordNbaYear } from '../awards/playoffs';
 import { pathOf } from './origin';
+import { NeedLive, gameRequest, nextPick, playLiveGame } from './live';
 import { adjust, conferenceRank, milestone, pushDecision, pushMoment, rankOnRoster, roleWithTrust, teamById, userOvr } from './common';
 import { queueMidseasonEvents } from '../events/resolver';
 import { allStarWeekend, conferenceTournament, hsNationals, mcdonaldsGame, nbaCup, nbaPreseason } from '../sim/tournaments';
@@ -184,13 +186,29 @@ function makeHook(s: GameState, league: League, level: LevelKey, acc: HalfAcc, s
   const replacement = sorted[Math.min(sorted.length - 1, Math.max(0, slot.rank - 1))]?.ovr ?? L.avg;
   const usageMean = teamUsageMean(level, team.roster, slot);
   const daysPerGame = L.seasonDays / L.games;
-  const hook: UserGameHook = (opp: Team, home: boolean, post?: string) => {
+  const hook: UserGameHook = (opp: Team, home: boolean, post?: string, series?: SeriesCtx) => {
     const season = s.season!;
     const p = s.player;
     const rng = s.rng;
     const ovr = ovrOf(p.attrs, p.pos);
     let line: StatLine | null = null;
     let minutes = 0;
+    // a playable postseason game? (only inside a postseason replay, and only if he can play)
+    let live = false;
+    let liveResult: { us: number; them: number; win: boolean } | null = null;
+    if (post && s.live && !(p.injury && p.injury.key !== 'dtd')) {
+      const key = `${post}|${opp.id}`;
+      if (!s.live.simAll && s.live.simSeries !== key) {
+        const pick = nextPick(s, gameRequest(s, post, opp.name, home || level !== 'NBA', series));
+        if (pick === 'play') live = true;
+        else if (pick === 'series') s.live.simSeries = key;
+        else if (pick === 'all') s.live.simAll = true;
+        else if (pick === 'always') {
+          s.live.simAll = true;
+          s.flags.simPostseason = 1;
+        }
+      }
+    }
     acc.games++;
     const plan = HALF_PLANS[season.plan];
     // hot and cold nights, inside a streaky rhythm for the half
@@ -208,7 +226,23 @@ function makeHook(s: GameState, league: League, level: LevelKey, acc: HalfAcc, s
         const moraleMult = MORALE_PERF(p.morale) * (1 + (form - 1) * FORM.shootingShare);
         const usage = (usageWeight(p.attrs) / usageMean) * (season.fuel ? 1.06 : 1) * plan.usage * Math.pow(form, 0.8);
         const e = expected(userProfile(s), level, minutes, usage, moraleMult);
-        line = sampleGame(rng, e, season.role === 'key' || season.role === 'starter');
+        const started = season.role === 'key' || season.role === 'starter';
+        if (live) {
+          const impact = (ovr - replacement) * (minutes / L.gameLen) * IMPACT_MULT;
+          const r = playLiveGame(s, {
+            e,
+            started,
+            level,
+            my: team.strength + impact + plan.teamBoost,
+            opp: opp.strength,
+            oppName: opp.name,
+            homeAdv: level !== 'NBA' ? 0 : home ? 1 : -1,
+            round: post!,
+            series,
+          });
+          line = r.line;
+          liveResult = r;
+        } else line = sampleGame(rng, e, started);
         acc.expGmsc += expectedGameScore(e);
         acc.gmsc += gameScore(line);
         acc.minutes += minutes;
@@ -235,11 +269,21 @@ function makeHook(s: GameState, league: League, level: LevelKey, acc: HalfAcc, s
     healDays(p, daysPerGame * (season.plan === 'recovery' ? 1.3 : 1));
     const impact = line ? (ovr - replacement) * (minutes / L.gameLen) * IMPACT_MULT : 0;
     const boost = line ? plan.teamBoost : 0;
-    const win = chance(rng, winProb(team.strength + impact + boost, opp.strength, post && level !== 'NBA' ? 0 : home ? 1 : -1));
-    let us = Math.round(GAME_POINTS[level] + normal(rng, 0, 9));
-    if (line && line.pts > us - 15) us = line.pts + int(rng, 15, 30);
-    const margin = int(rng, 1, 18);
-    const them = win ? Math.max(20, us - margin) : us + margin;
+    let win: boolean;
+    let us: number;
+    let them: number;
+    if (liveResult) ({ win, us, them } = liveResult);
+    else {
+      win = chance(rng, winProb(team.strength + impact + boost, opp.strength, post && level !== 'NBA' ? 0 : home ? 1 : -1));
+      us = Math.round(GAME_POINTS[level] + normal(rng, 0, 9));
+      if (line && line.pts > us - 15) us = line.pts + int(rng, 15, 30);
+      const margin = int(rng, 1, 18);
+      them = win ? Math.max(20, us - margin) : us + margin;
+    }
+    if (post && s.live) {
+      const tag = series && series.bestOf > 1 ? `${post} G${series.game}` : post;
+      s.live.recent.push(`${tag}: ${win ? 'W' : 'L'} ${us}–${them} vs ${opp.short}${line ? ` (you: ${line.pts} pts)` : ''}`);
+    }
     const log: GameLog = { n: (post ? season.postGames : season.games).length + 1, opp: opp.short, home, res: win ? 'W' : 'L', us, them, line, post };
     (post ? season.postGames : season.games).push(log);
     hook.last = { us, them };
@@ -306,7 +350,50 @@ export function playHalf(s: GameState): void {
   season.half = half;
   season.ineligibleHalf = false;
   if (half === 1) beginMidseason(s, acc);
-  else finishSeason(s);
+  else startPostseason(s);
+}
+
+// ---------- playable postseason (see live.ts) ----------
+
+const LIVE_LEVELS = new Set<LevelKey>(['HSV', 'NCAA', 'GL', 'EU', 'INT', 'NBA']);
+
+function startPostseason(s: GameState): void {
+  if (!LIVE_LEVELS.has(s.season!.level) || s.flags.simPostseason) {
+    finishSeason(s);
+    return;
+  }
+  const snap = structuredClone(s);
+  s.postSnap = { snap, picks: [] };
+  s.step = 'postseason';
+  runPostseason(s);
+}
+
+/** Replays the postseason with the picks so far; pauses at the next pick or commits. */
+export function runPostseason(s: GameState): void {
+  const ps = s.postSnap;
+  if (!ps) return;
+  const trial = structuredClone(ps.snap);
+  trial.live = { picks: ps.picks, i: 0, simAll: false, simSeries: null, recent: [] };
+  try {
+    finishSeason(trial);
+  } catch (e) {
+    if (!(e instanceof NeedLive)) throw e;
+    const r = e.req;
+    s.pending = [
+      {
+        id: `live-${ps.picks.length}`,
+        kind: 'live',
+        title: r.title,
+        text: r.text,
+        choices: r.choices.map((c) => ({ id: c.id, label: c.label, detail: c.detail, risk: c.risk })),
+        data: { req: r },
+      },
+    ];
+    return;
+  }
+  delete trial.live;
+  for (const k of Object.keys(s)) delete (s as unknown as Record<string, unknown>)[k];
+  Object.assign(s, trial);
 }
 
 function growthAfterHalf(s: GameState, acc: HalfAcc, level: LevelKey, ovr: number): void {
