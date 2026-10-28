@@ -87,14 +87,25 @@ export function Meter({ label, value, tone }: { label: string; value: number; to
   );
 }
 
+/** The road from JV to the rafters: a compact ladder that wraps, never scrolls. */
 export function MilestoneStrip({ reached }: { reached: string[] }) {
+  const done = MILESTONES.filter((m) => reached.includes(m.key)).length;
+  const next = MILESTONES.find((m) => !reached.includes(m.key));
   return (
-    <div className="milestones" aria-label="Milestones">
-      {MILESTONES.map((m) => (
-        <div key={m.key} className={`ms${reached.includes(m.key) ? ' on' : ''}`} aria-label={`${m.label}${reached.includes(m.key) ? ' (reached)' : ''}`}>
-          {m.label}
-        </div>
-      ))}
+    <div className="ms-wrap">
+      <div className="ms-head">
+        <span>
+          {done}/{MILESTONES.length}
+        </span>
+        <span className="muted">{next ? `Next: ${next.label}` : 'Every milestone reached'}</span>
+      </div>
+      <div className="milestones" aria-label="Milestones">
+        {MILESTONES.map((m) => (
+          <div key={m.key} className={`ms${reached.includes(m.key) ? ' on' : ''}${m.key === next?.key ? ' next' : ''}`} aria-label={`${m.label}${reached.includes(m.key) ? ' (reached)' : ''}`}>
+            {m.label}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

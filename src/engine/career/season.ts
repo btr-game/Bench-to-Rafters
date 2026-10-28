@@ -148,20 +148,58 @@ export function beginSeason(s: GameState): void {
   pushPlanDecision(s, 1);
 }
 
+type PlanText = { id: HalfPlan; label: string; detail: string };
+const PLAN_TEXT: Record<HalfPlan, PlanText> = {
+  balanced: { id: 'balanced', label: 'Balanced', detail: 'Steady work, normal risk.' },
+  grind: { id: 'grind', label: 'Grind', detail: 'Work harder than anyone. Faster development, much more wear on your body, burnout possible.' },
+  recovery: { id: 'recovery', label: 'Recovery', detail: 'Ease off. Slower development, far fewer injuries, heal faster, feel better.' },
+  spotlight: { id: 'spotlight', label: 'Spotlight', detail: 'Hunt shots and attention. More fame and money; coaches and teammates notice.' },
+  teamfirst: { id: 'teamfirst', label: 'Team first', detail: 'Make the right play. Fewer shots, more wins, the coach loves it.' },
+  shooting: { id: 'shooting', label: 'Shooting lab', detail: 'Live in the gym with a shooting coach. Your jumper and range get the reps; the rest waits.' },
+  strength: { id: 'strength', label: 'Weight room', detail: 'Get stronger and more explosive inside. A bit more injury risk.' },
+  playmaking: { id: 'playmaking', label: 'Film and reads', detail: 'Study the game. Passing and feel improve; coaches trust you more.' },
+  defense: { id: 'defense', label: 'Lockdown', detail: 'Make defense your identity. Coaches notice.' },
+  offhand: { id: 'offhand', label: 'Off-hand work', detail: 'Drill your weak hand every day. Finishing with both hands; little else grows.' },
+};
+const PLAN_IDS = Object.keys(PLAN_TEXT) as HalfPlan[];
+/** Fast break: five training groups, one a season. */
+const FAST_PLANS: PlanText[] = [
+  { id: 'balanced', label: 'General', detail: 'A bit of everything. Every rating grows at a normal pace.' },
+  { id: 'strength', label: 'Weight room', detail: 'Strength and explosiveness: finishing, rebounding, athleticism and rim protection. A bit more injury risk.' },
+  { id: 'shooting', label: 'Shooting', detail: 'Your jumper and your range get the reps; the rest waits.' },
+  { id: 'defense', label: 'Defense', detail: 'Perimeter and interior defense. Coaches notice.' },
+  { id: 'playmaking', label: 'IQ', detail: 'Film, reads and passing: playmaking and basketball IQ. Coaches trust you more.' },
+];
+/** Built in a lab: how hard to work, since the player picks the ratings himself. */
+const LAB_PLANS: PlanText[] = [
+  { id: 'balanced', label: 'Steady', detail: 'Normal credits, normal risk.' },
+  { id: 'grind', label: 'Grind', detail: 'More credits, much more wear on your body, burnout possible.' },
+  { id: 'recovery', label: 'Recovery', detail: 'Fewer credits, far fewer injuries, heal faster, feel better.' },
+  { id: 'spotlight', label: 'Spotlight', detail: 'Hunt shots and attention. More fame and money; fewer credits.' },
+  { id: 'teamfirst', label: 'Team first', detail: 'Make the right play. More wins, the coach loves it.' },
+];
+
 export function pushPlanDecision(s: GameState, half: 1 | 2): void {
   const injured = !!s.player.injury && s.player.injury.key !== 'dtd';
-  const plans: { id: HalfPlan; label: string; detail: string }[] = [
-    { id: 'balanced', label: 'Balanced', detail: 'Steady work, normal risk.' },
-    { id: 'grind', label: 'Grind', detail: 'Work harder than anyone. Faster development, much more wear on your body, burnout possible.' },
-    { id: 'recovery', label: 'Recovery', detail: 'Ease off. Slower development, far fewer injuries, heal faster, feel better.' },
-    { id: 'spotlight', label: 'Spotlight', detail: 'Hunt shots and attention. More fame and money; coaches and teammates notice.' },
-    { id: 'teamfirst', label: 'Team first', detail: 'Make the right play. Fewer shots, more wins, the coach loves it.' },
-    { id: 'shooting', label: 'Shooting lab', detail: 'Live in the gym with a shooting coach. Your jumper and range get the reps; the rest waits.' },
-    { id: 'strength', label: 'Weight room', detail: 'Get stronger and more explosive inside. A bit more injury risk.' },
-    { id: 'playmaking', label: 'Film and reads', detail: 'Study the game. Passing and feel improve; coaches trust you more.' },
-    { id: 'defense', label: 'Lockdown', detail: 'Make defense your identity. Coaches notice.' },
-    { id: 'offhand', label: 'Off-hand work', detail: 'Drill your weak hand every day. Finishing with both hands; little else grows.' },
-  ];
+  // fast break (round 8): one plan a season from five training groups; the lab has no
+  // rating groups (the player buys ratings himself), so it picks how hard to work instead
+  const quick = s.flags.fast ? (s.mode === 'lab' ? LAB_PLANS : FAST_PLANS) : null;
+  if (quick) {
+    const list = injured && !quick.some((p) => p.id === 'recovery') ? [...quick, PLAN_TEXT.recovery] : quick;
+    pushDecision(s, {
+      kind: 'plan',
+      title: 'Season plan',
+      text: injured
+        ? 'You are injured. Recovery is the only plan available.'
+        : s.mode === 'lab'
+          ? 'How hard do you work this season? Training pays out lab credits; spend them on any rating.'
+          : 'Pick one plan for the season.',
+      choices: list.map((p) => ({ id: p.id, label: p.label, detail: p.detail, disabled: injured && p.id !== 'recovery' })),
+      data: { half, single: true },
+    });
+    return;
+  }
+  const plans = PLAN_IDS.map((id) => PLAN_TEXT[id]);
   pushDecision(s, {
     kind: 'plan',
     title: half === 1 ? 'First-half plan' : 'Second-half plan',
@@ -450,6 +488,7 @@ function growthAfterHalf(s: GameState, acc: HalfAcc, level: LevelKey, ovr: numbe
     outMost: acc.injuredGames > acc.games / 2,
     extraMult: outcome.growth * p.growthMultNext * MODES[s.mode ?? 'standard'].growth * youthGrowthMult(s),
     morale: p.morale,
+    lab: s.mode === 'lab',
   });
   // body wear from this half: minutes played and how hard the plan pushed the body
   const tallWear = 1 + Math.max(0, p.fullHeight - HEIGHT_LIMITS.bandHi) * HEIGHT_LIMITS.tallWear;

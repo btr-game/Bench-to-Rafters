@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ARCHETYPES } from '../../engine/player/archetypes';
 import { rerollAttrs } from '../../engine/player/create';
 import { makeRng } from '../../engine/rng';
-import { ATTRS, HEIGHT_RANGE, MODES, POSITIONS, type Mode } from '../../engine/balance';
+import { ATTRS, HEIGHT_LIMITS, HEIGHT_RANGE, MODES, POSITIONS, type Mode } from '../../engine/balance';
 import type { AttrKey, Attrs, Pos } from '../../engine/types';
 import { NAMES, UI } from '../../content/strings';
 import { FIRST_NAMES, LAST_NAMES } from '../../content/names';
@@ -13,6 +13,8 @@ import { ht } from '../format';
 
 const pick = <T,>(a: readonly T[]): T => a[Math.floor(Math.random() * a.length)];
 const uiRng = makeRng(Math.floor(Math.random() * 2 ** 31));
+
+const midHeight = (pos: Pos): number => Math.round((HEIGHT_RANGE[pos][0] + HEIGHT_RANGE[pos][1]) / 2);
 
 function cards(pos: Pos): Attrs[] {
   return ARCHETYPES[pos].map((a) => ({ ...a.attrs }));
@@ -30,9 +32,12 @@ export function Create() {
   const [hand, setHand] = useState<'R' | 'L'>('R');
   const [mode, setMode] = useState<Mode>('standard');
   const [country, setCountry] = useState(''); // '' = the game decides, by real-world odds
+  const [height, setHeight] = useState(midHeight('SG')); // built in a lab: the player picks it
+  const lab = mode === 'lab';
 
   const choosePos = (p: Pos) => {
     setPos(p);
+    setHeight(midHeight(p));
     setCands(cards(p));
     setArch(0);
     setFocus([]);
@@ -55,7 +60,8 @@ export function Create() {
   const attrs = cands[arch];
   const archetype = ARCHETYPES[pos][arch];
   const [hMin, hMax] = HEIGHT_RANGE[pos];
-  const canNext = step === 1 ? name.trim().length > 0 : step === 3 ? focus.length === 2 : true;
+  const canNext = step === 1 ? name.trim().length > 0 : step === 3 ? lab || focus.length === 2 : true;
+  const steps = UI.create.steps.map((x, i) => (i === 3 && lab ? 'Height' : x));
 
   const begin = () =>
     start({
@@ -64,9 +70,10 @@ export function Create() {
       pos,
       archetype: arch,
       attrs,
-      focus,
+      focus: lab ? [] : focus,
       hand,
       mode,
+      height: lab ? height : undefined,
       country: country || undefined,
     });
 
@@ -91,7 +98,7 @@ export function Create() {
         </p>
       </section>
       <div className="stepper" aria-label="Steps">
-        {UI.create.steps.map((s, i) => (
+        {steps.map((s, i) => (
           <span key={s} className={i === step ? 'on' : ''} aria-current={i === step ? 'step' : undefined}>
             {i + 1}. {s}
           </span>
@@ -101,7 +108,7 @@ export function Create() {
 
       {step === 0 && (
         <section className="stack">
-          <div className="kicker">Choose how hard the road is</div>
+          <div className="kicker">Choose how you want to play</div>
           <div className="modes">
             {(Object.keys(MODES) as Mode[]).map((m) => (
               <button key={m} className={`choice mode-card${mode === m ? ' selected' : ''}`} aria-pressed={mode === m} onClick={() => setMode(m)}>
@@ -110,7 +117,7 @@ export function Create() {
               </button>
             ))}
           </div>
-          <p className="muted small">The league is the same in every mode. What changes is your potential, how fast you grow and how often you get hurt.</p>
+          <p className="muted small">The league is the same in every mode. What changes is your potential, how fast you grow, how often you get hurt and how much of the game you play yourself.</p>
 
         </section>
       )}
@@ -206,7 +213,29 @@ export function Create() {
         </section>
       )}
 
-      {step === 3 && (
+      {step === 3 && lab && (
+        <section className="card stack height-pick">
+          <div className="sec-title">Height</div>
+          <p className="muted small">In the lab you choose how tall you grow. Taller helps rebounding and rim protection; shorter helps handling and quickness. Below 6′0″ or above 7′3″ is rare territory and costs more than it gives.</p>
+          <div className="ht-val">{ht(height)}</div>
+          <input type="range" min={HEIGHT_LIMITS.min} max={HEIGHT_LIMITS.max} step={1} value={height} onChange={(e) => setHeight(Number(e.target.value))} aria-label="Full-grown height" />
+          <div className="row small muted">
+            <span>{ht(HEIGHT_LIMITS.min)}</span>
+            <div className="spacer" />
+            <span>
+              Usual for a {NAMES.pos[pos].toLowerCase()}: {ht(hMin)}–{ht(hMax)}
+            </span>
+            <div className="spacer" />
+            <span>{ht(HEIGHT_LIMITS.max)}</span>
+          </div>
+          {(height < HEIGHT_LIMITS.bandLo || height > HEIGHT_LIMITS.bandHi) && (
+            <p className="small warn">{height < HEIGHT_LIMITS.bandLo ? 'Very small: finishing, rim protection and rebounding take a hit.' : 'Very tall: slower on the perimeter, harder on the body.'}</p>
+          )}
+          <p className="muted small">No focus stats in the lab: you spend credits on any rating you want.</p>
+        </section>
+      )}
+
+      {step === 3 && !lab && (
         <section className="card stack">
           <div className="sec-title">Focus stats</div>
           <p className="muted small">{UI.create.focusHelp}</p>
@@ -241,15 +270,21 @@ export function Create() {
               <div className="cell" key={k}>
                 <div className="k">
                   {k}
-                  {focus.includes(k) ? ' ●' : ''}
+                  {!lab && focus.includes(k) ? ' ●' : ''}
                 </div>
                 <div className="v">{attrs[k]}</div>
               </div>
             ))}
           </div>
+          {lab ? (
+            <p className="muted small">
+              Built to grow to {ht(height)}. Training and events pay out credits; spend them on any rating from the home screen. This card is a typical {archetype.name.toLowerCase()}; your real starting level is set at tryouts.
+            </p>
+          ) : (
           <p className="muted small">
             Focus: {focus.map((k) => NAMES.attr[k]).join(' and ')}. Height: still growing, most end up {ht(hMin + (archetype.height ?? 0))}–{ht(hMax + (archetype.height ?? 0))}, some well outside it. This card is a typical {archetype.name.toLowerCase()}; your real starting level is set at tryouts. {UI.create.assignedText}
           </p>
+          )}
         </section>
       )}
 

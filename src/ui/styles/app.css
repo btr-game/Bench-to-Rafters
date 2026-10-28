@@ -145,8 +145,11 @@ td.lo { color: var(--bad); }
 
 
 /* milestone strip */
-.milestones { display: flex; gap: 4px; overflow-x: auto; padding-bottom: 4px; }
-.ms { flex: 1 0 auto; min-width: 74px; text-align: center; font-family: var(--f-mono); font-size: 12.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); padding: 6px 4px; border: 1px dashed var(--line); border-radius: 6px; }
+.ms-wrap { display: grid; gap: 6px; }
+.ms-head { display: flex; justify-content: space-between; gap: 8px; font-family: var(--f-mono); font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase; }
+.milestones { display: flex; flex-wrap: wrap; gap: 4px; }
+.ms { flex: 1 1 auto; text-align: center; font-family: var(--f-mono); font-size: 11.5px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); padding: 4px 6px; border: 1px dashed var(--line); border-radius: 999px; white-space: nowrap; }
+.ms.next { border-style: solid; border-color: var(--ink); color: var(--ink); }
 .ms.on { color: var(--accent-ink); background: var(--accent); border: 1px solid var(--accent); font-weight: 500; }
 
 /* reactions */
@@ -531,3 +534,18 @@ button.banner { border: 0; font: inherit; text-align: left; }
 .plan-tag { display: inline-block; margin-right: 6px; padding: 1px 7px; border-radius: 5px; font-family: var(--f-mono); font-size: 11.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; vertical-align: middle; color: #fff; }
 .plan-tag.main { background: var(--accent); }
 .plan-tag.side { background: var(--muted); }
+
+/* built in a lab */
+.lab-rows { display: grid; gap: 4px; }
+.lab-row { display: grid; grid-template-columns: 1fr auto 52px auto auto; align-items: center; gap: 8px; padding: 4px 0; border-bottom: 1px solid var(--line); }
+.lab-row:last-child { border-bottom: 0; }
+.lab-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lab-v { font-family: var(--f-mono); font-size: 18px; min-width: 2ch; text-align: right; }
+.lab-cost { text-align: right; font-family: var(--f-mono); }
+.lab-row .btn.small { padding: 6px 10px; min-width: 44px; }
+.lab-ovr { font-family: var(--f-mono); font-size: 16px; }
+.lab-badge { cursor: default; }
+.height-pick { display: grid; gap: 6px; }
+.height-pick input[type='range'] { width: 100%; }
+.height-pick .ht-val { font-family: var(--f-display); font-size: 30px; font-weight: 800; }
+.height-pick .warn { color: var(--bad); }

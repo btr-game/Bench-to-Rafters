@@ -27,8 +27,10 @@ import {
   HEIGHT_SURPRISE,
   GROWTH_RATE_AGE,
   WEAR,
+  LAB,
   type PlanDef,
 } from '../balance';
+import { addCredits } from '../career/lab';
 import { chance, clamp, normal, range, type Rng } from '../rng';
 import type { AttrKey, Attrs, HalfPlan, UserPlayer } from '../types';
 import { ovrOf } from './ovr';
@@ -109,6 +111,7 @@ export interface HalfGrowthCtx {
   outMost: boolean;
   extraMult?: number;
   morale?: number;
+  lab?: boolean; // built in a lab: paid out as credits (career/lab.ts)
 }
 
 /** Applies one half-season of growth to the user. Returns the gain per attribute. */
@@ -121,12 +124,15 @@ export function applyHalfGrowth(rng: Rng, p: UserPlayer, ctx: HalfGrowthCtx): Pa
   const healthF = ctx.outMost ? HEALTH_MULT_OUT : 1;
   const gains: Partial<Attrs> = {};
   if (base <= 0) return gains;
+  // in the lab one headroom covers the whole player, so leaving a rating low earns nothing extra
+  const labRoom = ctx.lab ? headroom(p.potential, ovrOf(p.attrs, p.pos)) : 0;
+  let credits = 0;
   for (const k of ATTRS) {
-    const focus = p.focus.includes(k) ? FOCUS_MULT : NON_FOCUS_MULT;
+    const focus = ctx.lab ? 1 : p.focus.includes(k) ? FOCUS_MULT : NON_FOCUS_MULT;
     const g =
       base *
       GROWTH_SCALE *
-      headroom(p.caps[k], p.attrs[k]) *
+      (ctx.lab ? labRoom : headroom(p.caps[k], p.attrs[k])) *
       mf *
       levelF *
       ctx.perf *
@@ -137,11 +143,13 @@ export function applyHalfGrowth(rng: Rng, p: UserPlayer, ctx: HalfGrowthCtx): Pa
       (ctx.extraMult ?? 1) *
       (p.growthRate ?? 1) *
       range(rng, GROWTH_RANDOM[0], GROWTH_RANDOM[1]);
-    if (g > 0) {
+    if (g > 0 && ctx.lab) credits += g * LAB.rate;
+    else if (g > 0) {
       p.attrs[k] = Math.min(ATTR_MAX, p.attrs[k] + g);
       gains[k] = g;
     }
   }
+  addCredits(p, credits);
   return gains;
 }
 

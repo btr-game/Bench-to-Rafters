@@ -9,7 +9,8 @@ import { adjust, logDecision } from './common';
 import { NAMES } from '../../content/strings';
 
 export function canChangeFocus(s: GameState): boolean {
-  return s.step === 'offseason' && s.stage !== 'RETIRED' && s.flags.focusYear !== s.year && s.breakthrough?.year === s.year;
+  // built in a lab has no focus stats: the player picks every rating himself
+  return s.mode !== 'lab' && s.step === 'offseason' && s.stage !== 'RETIRED' && s.flags.focusYear !== s.year && s.breakthrough?.year === s.year;
 }
 
 export function changeFocus(s: GameState, keys: AttrKey[]): void {

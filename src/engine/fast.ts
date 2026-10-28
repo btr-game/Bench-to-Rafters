@@ -1,7 +1,8 @@
 // Fast break (playtest round 7): a speed mode. The player still makes every real choice
 // (season plan, turning points, offers, the draft, contracts, the summer, national team,
 // military service, retirement), but everything in between runs on its own:
-// - one plan a season: the second half repeats the first-half plan;
+// - one plan a season, picked from five training groups (round 8): the second half repeats it;
+// - no national team (round 8);
 // - at most one turning point at a time, and notices with a single button close themselves;
 // - the postseason is simulated and the shop is skipped;
 // - "next" screens advance by themselves, and the offseason only stops when there is a move
@@ -28,6 +29,8 @@ function autoChoice(s: GameState, d: Decision): string | null {
   // a notice with a single button
   const open = d.choices.filter((c) => !c.disabled);
   if (d.kind === 'info' && open.length === 1) return open[0].id;
+  // injured: recovery is the only plan
+  if (d.kind === 'plan' && open.length === 1) return open[0].id;
   if (d.kind === 'plan' && (d.data?.half as number) === 2 && s.season) {
     const open = d.choices.filter((c) => !c.disabled).map((c) => c.id);
     const want = [s.season.plan, s.season.plan2].filter((x): x is NonNullable<typeof x> => !!x && open.includes(x));
@@ -53,10 +56,7 @@ export function fastForward(s: GameState): void {
     if (pr.type === 'retired') break;
     if (pr.type === 'decision') {
       const auto = autoChoice(s, pr.decision);
-      if (auto === null) {
-        if (pr.decision.kind === 'plan') pr.decision.title = 'Season plan';
-        break;
-      }
+      if (auto === null) break;
       choose(s, auto);
       continue;
     }

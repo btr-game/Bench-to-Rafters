@@ -3,6 +3,8 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { advance, canChangePosition, canRetire, changePosition, choose, newGame, positionOptions, prompt, retireByChoice } from '../src/engine/flow';
 import { fastForward } from '../src/engine/fast';
+import { bankGains, labCost, spendCredits } from '../src/engine/career/lab';
+import { pushShop } from '../src/engine/economy/shop';
 import { startArc } from '../src/engine/events/arcs';
 import { winningEdge } from '../src/engine/career/team';
 import { ovrOf } from '../src/engine/player/ovr';
@@ -303,7 +305,13 @@ describe('round 7: fast break and storylines', () => {
       if (pr.type === 'retired') break;
       if (pr.type === 'decision') {
         expect(pr.decision.kind).not.toBe('shop');
-        if (pr.decision.kind === 'plan') expect(pr.decision.data?.half).toBe(1);
+        expect(pr.decision.kind).not.toBe('national');
+        if (pr.decision.kind === 'plan') {
+          expect(pr.decision.data?.half).toBe(1);
+          // round 8: one plan from five training groups
+          expect(pr.decision.data?.single).toBe(true);
+          expect(pr.decision.choices.filter((c) => !c.disabled).map((c) => c.label).sort()).toEqual(['Defense', 'General', 'IQ', 'Shooting', 'Weight room']);
+        }
         const open = pr.decision.choices.filter((c) => !c.disabled);
         choose(s, (open.find((c) => c.id !== 'retire' && !/hang it up|^retire/i.test(c.label) && s.player.age < 33) ?? open.find((c) => c.id === 'retire') ?? open[0]).id);
       } else {
@@ -347,5 +355,63 @@ describe('round 7: team factors', () => {
     expect(edge(general).traits).toContain('Floor general');
     // the postseason weighs it more
     expect(edge(stopper).playoff).toBeGreaterThan(edge(stopper).regular);
+  });
+});
+
+describe('round 8: built in a lab and the shop', () => {
+  const labInput = { name: 'X', number: 1, pos: 'PG' as const, archetype: 0, focus: [], mode: 'lab' as const, height: 74 };
+
+  it('training pays out credits instead of ratings, and credits buy any rating at a rising cost', () => {
+    const s = newGame(8801, labInput);
+    expect(s.player.fullHeight).toBe(74);
+    expect(s.flags.fast).toBe(1);
+    const start = { ...s.player.attrs };
+    fastForward(s);
+    for (let i = 0; i < 200 && s.player.age < 17; i++) {
+      const pr = prompt(s);
+      if (pr.type === 'retired') break;
+      if (pr.type === 'decision') choose(s, pr.decision.choices.find((c) => !c.disabled)!.id);
+      else advance(s);
+      fastForward(s);
+    }
+    // nothing grew on its own (aging and minuses can only take away)
+    for (const k of Object.keys(start) as (keyof typeof start)[]) expect(s.player.attrs[k]).toBeLessThanOrEqual(start[k] + 1e-9);
+    const credits = s.player.lab!.credits;
+    expect(credits).toBeGreaterThan(5);
+    const ply = s.player.attrs.PLY;
+    const bought = spendCredits(s, 'PLY', 3);
+    expect(bought).toBe(3);
+    expect(s.player.attrs.PLY).toBeCloseTo(ply + 3, 6);
+    expect(s.player.lab!.credits).toBeCloseTo(credits - [0, 1, 2].reduce((t, i) => t + labCost(ply + i), 0), 6);
+    expect(labCost(70)).toBe(1);
+    expect(labCost(85)).toBe(1.5);
+    expect(labCost(95)).toBe(2);
+  });
+
+  it('an event that raises a rating in the lab pays credits instead', () => {
+    const s = newGame(8802, labInput);
+    const before = { ...s.player.attrs };
+    const credits = s.player.lab!.credits;
+    s.player.attrs.SHT += 2;
+    s.player.attrs.ATH -= 1;
+    expect(bankGains(s, before)).toBeCloseTo(2, 6);
+    expect(s.player.attrs.SHT).toBe(before.SHT);
+    expect(s.player.attrs.ATH).toBe(before.ATH - 1);
+    expect(s.player.lab!.credits).toBeCloseTo(credits + 2, 6);
+  });
+
+  it('the shop shows about six random things a summer, not the same list every time', () => {
+    const seen = new Set<string>();
+    for (let i = 0; i < 6; i++) {
+      const s = newGame(8810 + i, input);
+      s.player.bank = 0.002; // $2K: a high schooler with a summer job
+      pushShop(s);
+      const d = s.pending[s.pending.length - 1];
+      const items = d.choices.filter((c) => c.id !== 'leave');
+      expect(items.length).toBe(6);
+      expect(items.filter((c) => !c.disabled).length).toBeGreaterThanOrEqual(4);
+      items.forEach((c) => seen.add(c.id));
+    }
+    expect(seen.size).toBeGreaterThan(14);
   });
 });

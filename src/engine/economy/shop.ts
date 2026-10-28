@@ -1,13 +1,14 @@
-// Offseason shop: a random stock of six items, up to three purchases per summer.
+// Offseason shop: a random stock of about six items, up to three purchases per summer.
 
 import { ATTR_MAX, ATTRS, WEAR } from '../balance';
-import { clamp, shuffle } from '../rng';
+import { clamp, shuffle, weightedIndex } from '../rng';
 import type { Decision, GameState } from '../types';
 import { SHOP_ITEMS, type ShopItem } from '../../content/shop';
 import { logDecision, pushDecision } from '../career/common';
 import { fmtMoney } from './salary';
 
 export const MAX_PURCHASES = 3;
+const STOCK = { size: 6, afford: 5 };
 
 const HELPS: Record<string, string> = {
   SHT: 'your shooting',
@@ -37,14 +38,24 @@ export function describeItem(it: ShopItem): string {
   return parts.join(' · ');
 }
 
+/**
+ * About six things, different every summer (round 8): five he can afford, drawn at random
+ * with things worth his money weighted up (a rich player rarely sees the $40 sleeve), and one
+ * to save up for.
+ */
 function stock(s: GameState): string[] {
   const bank = s.player.bank;
-  const items = shuffle(s.rng, [...SHOP_ITEMS]);
-  const affordable = items.filter((i) => i.price <= bank).sort((a, b) => b.price - a.price);
-  // the best things you can afford, plus a couple of things to save up for
-  const picks = [...affordable.slice(0, 3), ...shuffle(s.rng, affordable.slice(3)).slice(0, 1)];
-  const dream = items.filter((i) => i.price > bank && i.price < Math.max(0.002, bank * 40)).slice(0, 6 - picks.length);
-  return [...picks, ...dream].slice(0, 6).map((i) => i.id);
+  const bought = new Set(s.purchases);
+  const affordable = SHOP_ITEMS.filter((i) => i.price <= bank);
+  const weight = (i: ShopItem) => (i.price >= bank * 0.002 ? 1 : 0.2) * (bought.has(i.id) ? 0.5 : 1);
+  const picks: ShopItem[] = [];
+  const pool = [...affordable];
+  while (picks.length < STOCK.afford && pool.length > 0) {
+    const i = weightedIndex(s.rng, pool.map(weight));
+    picks.push(pool.splice(i, 1)[0]);
+  }
+  const dream = shuffle(s.rng, SHOP_ITEMS.filter((i) => i.price > bank && i.price < Math.max(0.002, bank * 40)));
+  return [...picks, ...dream].slice(0, STOCK.size).sort((a, b) => a.price - b.price).map((i) => i.id);
 }
 
 export function pushShop(s: GameState, ids?: string[], bought = 0): void {

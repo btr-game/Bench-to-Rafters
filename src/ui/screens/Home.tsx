@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { ATTRS, LEVELS } from '../../engine/balance';
 import { NAMES, UI } from '../../content/strings';
 import { useStore } from '../../store';
+import { LabCard } from '../components/Lab';
 import { Banners, MilestoneStrip, ReactionCard, Scoreboard } from '../components/bits';
 import { PlayerCard } from '../components/PlayerCard';
 import { ScoutCard } from '../components/ScoutCard';
@@ -107,7 +108,7 @@ function SeasonHeader({ g }: { g: GameState }) {
             <small>RECORD</small>
           </div>
         )}
-        <FastToggle g={g} />
+        {g.mode === 'lab' ? <span className="fast-toggle on lab-badge">Lab</span> : <FastToggle g={g} />}
       </div>
     </div>
   );
@@ -328,7 +329,7 @@ function OffseasonMoves({ g }: { g: GameState }) {
       label: 'Focus stats',
       sub: focusDone ? 'Changed this offseason' : focusOpen ? 'Unlocked by your breakthrough' : `Locked: needs a breakthrough season (OVR +${bar.ovr} or one rating +${bar.attr} at your age)`,
       state: focusOpen ? 'hot' : 'locked',
-      show: true,
+      show: g.mode !== 'lab',
     },
     { id: 'position', label: 'Position', sub: heightMismatch(g) ? 'Size check: another spot fits you' : `${NAMES.pos[p.pos]} · one move a summer`, state: canChangePosition(g) ? (heightMismatch(g) ? 'hot' : 'ready') : 'locked', show: true },
     { id: 'number', label: 'Jersey number', sub: `Now #${p.number}`, state: 'ready', show: g.stage !== 'RETIRED' },
@@ -534,6 +535,7 @@ export function Home({ g }: { g: GameState }) {
             )}
           </div>
         </section>
+        {g.mode === 'lab' && <LabCard g={g} />}
         {g.step === 'offseason' && g.stage !== 'RETIRED' && <OffseasonMoves g={g} />}
         <section className="card stack">
           <div className="sec-title">Milestones</div>

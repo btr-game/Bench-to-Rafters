@@ -19,6 +19,7 @@ import { assignOrigin, introText, resolveYouth } from './career/origin';
 import { logDecision, milestone, pushMoment } from './career/common';
 import { raftersTeams } from './awards/legacy';
 import { UI } from '../content/strings';
+import { bankGains, isLab, labState } from './career/lab';
 
 export type Prompt =
   | { type: 'decision'; decision: Decision }
@@ -80,7 +81,8 @@ export function newGame(seed: number, input: CreateInput): GameState {
     flags: {},
     schoolColor: '',
   };
-  if (input.fast || input.mode === 'fast') s.flags.fast = 1;
+  if (input.fast || input.mode === 'fast' || input.mode === 'lab') s.flags.fast = 1;
+  if (s.mode === 'lab') labState(player);
   // the game assigns his country, where he grows up and where he plays as a teenager
   assignOrigin(s);
   const intro = introText(s);
@@ -88,7 +90,9 @@ export function newGame(seed: number, input: CreateInput): GameState {
   const ft = (x: number) => `${Math.floor(x / 12)}′${x % 12}″`;
   intro.lines.unshift(
     `Tryouts: ${start >= 48 ? 'well ahead of most kids his age' : start >= 44 ? 'ahead of most kids his age' : start >= 36 ? 'about where most kids his age are' : 'raw, behind most kids his age'}`,
-    `${ft(player.height)} now; the doctors think he will grow to about ${ft(player.heightProj)}, but nobody knows for sure`,
+    s.mode === 'lab'
+      ? `${ft(player.height)} now; built to grow to ${ft(player.fullHeight)}`
+      : `${ft(player.height)} now; the doctors think he will grow to about ${ft(player.heightProj)}, but nobody knows for sure`,
   );
   const gift = ANOMALIES.find((a) => a.name === player.anomaly);
   if (gift) intro.lines.push(`A rare one: ${gift.name.toLowerCase()}. ${gift.text}.`);
@@ -124,6 +128,12 @@ export function prompt(s: GameState): Prompt {
 }
 
 export function choose(s: GameState, choiceId: string): void {
+  const before = isLab(s) ? { ...s.player.attrs } : null;
+  chooseInner(s, choiceId);
+  if (before) bankGains(s, before);
+}
+
+function chooseInner(s: GameState, choiceId: string): void {
   const d = s.pending.shift();
   if (!d) return;
   // plans may come as two ids joined by '+'
@@ -178,6 +188,12 @@ export function choose(s: GameState, choiceId: string): void {
 }
 
 export function advance(s: GameState): void {
+  const before = isLab(s) ? { ...s.player.attrs } : null;
+  advanceInner(s);
+  if (before) bankGains(s, before);
+}
+
+function advanceInner(s: GameState): void {
   if (s.pending.length > 0 || s.step === 'retired') return;
   s.toast = null;
   s.result = null;
@@ -242,4 +258,5 @@ export { activeLeague };
 export { canChangePosition, changePosition, heightMismatch, positionOptions } from './career/position';
 export { canChangeFocus, changeFocus } from './career/focus';
 export { canRequestTrade, requestTrade } from './career/team';
+export { labCost, spendCredits } from './career/lab';
 export type { CreateInput };

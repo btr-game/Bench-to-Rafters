@@ -12,7 +12,8 @@ const SECTIONS: { title: string; where: string; items: [string, string][] }[] = 
       ['Turning points', 'Events ask you to choose. The result is rolled each time: from a breakthrough to a backfire, with green and red chips for what changed.'],
       ['Playoffs', 'Big postseason games pause for your calls at key moments.'],
       ['Storylines', 'Some turning points unfold over several seasons: a family illness, a rebuilt jumper, a nagging ankle, a veteran mentor. Each summer brings the next chapter.'],
-      ['Fast break', 'The switch next to your record. One plan a season, playoffs simulated, no shop and fewer stops; you still make every real call. Turn it on or off any time.'],
+      ['Fast break', 'The switch next to your record. One training group a season (General, Weight room, Shooting, Defense or IQ), no shop, no national team, playoffs simulated and fewer stops; you still make every real call. Turn it on or off any time.'],
+      ['Built in a lab', 'A mode of its own, on fast break. Training and events pay out credits instead of ratings; spend them on any rating in the Lab panel on Home. A point costs 1 credit, 1.5 from 80 and 2 from 90. Minuses still land where the event says.'],
     ],
   },
   {
@@ -23,7 +24,7 @@ const SECTIONS: { title: string; where: string; items: [string, string][] }[] = 
       ['Position', 'Move one spot a summer (two if your height fits). A size warning opens it for you.'],
       ['Jersey number', 'Switch numbers between seasons. The number you retire in is the one that hangs.'],
       ['Retire', 'Hang it up between any two seasons once you are past high school.'],
-      ['Shop and summer', 'Purchases and the summer program come up as choices in the offseason.'],
+      ['Shop and summer', 'Purchases and the summer program come up as choices in the offseason. The shop shows six things at random each summer, out of more than 90.'],
     ],
   },
   {

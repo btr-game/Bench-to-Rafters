@@ -3,6 +3,7 @@
 
 import { advance, choose, newGame, prompt } from '../src/engine/flow';
 import { fastForward } from '../src/engine/fast';
+import { labCost, spendCredits } from '../src/engine/career/lab';
 import { ARCHETYPES } from '../src/engine/player/archetypes';
 import { ATTRS, OVR_WEIGHTS, POSITIONS, type Mode } from '../src/engine/balance';
 import { makeRng, next, pick, int, type Rng } from '../src/engine/rng';
@@ -32,10 +33,17 @@ function smartChoice(s: GameState, d: Decision, r: Rng): string {
   const ch = enabled(d);
   const byId = (id: string) => ch.find((c) => c.id === id)?.id;
   switch (d.kind) {
-    case 'plan':
+    case 'plan': {
       if (s.player.injury) return byId('recovery') ?? ch[0].id;
-      if (s.player.morale < 35) return 'recovery';
-      return s.player.age <= 22 ? 'grind' : s.player.age <= 27 ? 'balanced' : 'teamfirst';
+      // fast break: one of five training groups, the one that trains his top focus stat
+      if (d.data?.single && s.mode !== 'lab') {
+        const want = s.player.focus[0];
+        const group: Record<string, string> = { SHT: 'shooting', FIN: 'strength', REB: 'strength', ATH: 'strength', INT: 'defense', PER: 'defense', PLY: 'playmaking', IQ: 'playmaking' };
+        return byId(group[want] ?? 'balanced') ?? ch[0].id;
+      }
+      if (s.player.morale < 35) return byId('recovery') ?? ch[0].id;
+      return byId(s.player.age <= 22 ? 'grind' : s.player.age <= 27 ? 'balanced' : 'teamfirst') ?? ch[0].id;
+    }
     case 'summer':
       return 'skills';
     case 'shop': {
@@ -100,6 +108,22 @@ function randomChoice(d: Decision, r: Rng): string {
   return pick(r, ch).id;
 }
 
+/**
+ * Built in a lab: spend every credit. The smart policy buys the point that adds the most OVR
+ * per credit (position weights over cost, a little spread so no rating is left at zero); the
+ * random policy buys random ratings.
+ */
+function labSpend(s: GameState, policy: Policy, r: Rng): void {
+  for (let i = 0; i < 400; i++) {
+    const credits = s.player.lab?.credits ?? 0;
+    const open = ATTRS.filter((k) => s.player.attrs[k] < 99 && labCost(s.player.attrs[k]) <= credits + 1e-9);
+    if (open.length === 0) return;
+    const w = OVR_WEIGHTS[s.player.pos];
+    const k = policy === 'smart' ? [...open].sort((a, b) => w[b] / labCost(s.player.attrs[b]) / (1 + s.player.attrs[b] / 400) - w[a] / labCost(s.player.attrs[a]) / (1 + s.player.attrs[a] / 400))[0] : pick(r, open);
+    if (spendCredits(s, k, 1) === 0) return;
+  }
+}
+
 export interface CareerResult {
   playedNba: boolean;
   nbaSeasons: number;
@@ -158,6 +182,7 @@ export function runCareer(seed: number, policy: Policy, mode: Mode = 'standard')
     }
     // fast break plays like the app does: it runs on to the next real choice
     if (s.flags.fast) fastForward(s);
+    if (s.mode === 'lab') labSpend(s, policy, r);
     steps++;
   }
   const nbaRows = s.history.filter((h) => h.level === 'NBA' && h.line.gp > 0);

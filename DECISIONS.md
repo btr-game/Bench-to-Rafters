@@ -535,3 +535,32 @@ nationality; event results that really differ; rare mold-breaking players; heigh
   top-8 rosters (110 careers per build): rim protector 33.1% titles a season vs post scorer
   25.3%, floor general 28.4% vs scoring guard 24.9%, 3&D wing 27.0% vs scoring wing 20.7%, at
   the same average peak.
+
+## Round 8 (playtest feedback)
+
+- **Milestones:** the strip no longer scrolls sideways. It wraps into pills, with a count
+  (4/10) and the next milestone outlined.
+- **Fast break, simpler:** one plan a season from five training groups (General = balanced,
+  Weight room = strength, Shooting, Defense, IQ = film and reads); a tap picks it. No
+  national team in fast break: no call-ups, no Olympics, World Cups or Asian Games (a Korean
+  player in fast break can only serve through Sangmu, not be exempted). Losing grind and the
+  second plan made fast break slower than Regular guy (72.7 against 75.1), so its potential
+  was raised (base 48 to 54) and growth to 1.12: mean peak 76.4 against 73.6 for Regular guy
+  (300 smart careers each, same seeds), about +3 as before.
+- **Shop:** 32 new items (92 in all), cheap ones especially, so a teenager's shop varies. Each
+  summer shows six: five he can afford, drawn at random (items under 0.2% of his bank and items
+  he already bought are weighted down), and one to save up for. Before, the stock was mostly
+  the three priciest affordable items, so the same list came back every summer.
+- **Draft night:** the commissioner's-handshake button sits above the draft board.
+- **Built in a lab (new mode):** fast break, but the player builds the ratings. Each half's
+  growth is computed as usual, but with one headroom for the whole player (his OVR against his
+  potential, so leaving a rating low earns nothing extra) and no focus stats, and it is paid out
+  as credits (LAB.rate 0.85). Anything an event, storyline or item would have raised is paid out
+  as credits too; minuses still land where the event says, and aging, injuries and setbacks
+  take ratings away as everywhere else. A point costs 1 credit, 1.5 from 80 and 2 from 90. The
+  player picks his full-grown height (5'9" to 7'6"; outside 6'0"-7'3" the usual penalties
+  apply). Plans are about effort (Steady, Grind, Recovery, Spotlight, Team first) since the
+  ratings are his to choose. Spending well is worth a lot, so its potential is a little below
+  fast break's (base 51): an OVR-minded build peaks at 77.6 on average.
+- **Names:** the first creation page is "Mode", not "Difficulty", and Standard is now
+  "Regular guy" (the internal key stays `standard`, so saved games still load).

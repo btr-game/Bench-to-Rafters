@@ -60,7 +60,7 @@ export const UI = {
   tagline: 'From a freshman nobody knows to a jersey in the rafters.',
   tabs: { home: 'Home', season: 'Season', player: 'Player', league: 'League', records: 'Records' },
   create: {
-    steps: ['Difficulty', 'Identity', 'Archetype', 'Focus', 'Confirm'],
+    steps: ['Mode', 'Identity', 'Archetype', 'Focus', 'Confirm'],
     random: 'Random',
     name: 'Name',
     number: 'Jersey number',

@@ -140,7 +140,8 @@ export function beginOffseason(s: GameState): void {
   if (s.stage !== 'RETIRED') {
     // South Korea: military service (it goes first, before any contract talks)
     pushMilitary(s);
-    pushNationalTeam(s);
+    // fast break (and the lab) skips the national team: no call-ups, no tournaments
+    if (!s.flags.fast) pushNationalTeam(s);
     pushSummer(s);
     pushShop(s);
     queueOffseasonEvent(s);

@@ -77,18 +77,19 @@ function PlanPicker({ d }: { d: Decision }) {
   const choose = useStore((s) => s.choose);
   const [picked, setPicked] = useState<string[]>([]);
   const enabled = d.choices.filter((c) => !c.disabled);
-  // with only one option (injured) there is nothing to combine
-  if (enabled.length === 1) {
-    const c = enabled[0];
+  // one plan only (fast break, or injured): a tap picks it
+  if (enabled.length === 1 || d.data?.single) {
     return (
       <div className="stack">
         <div className="sec-title">{d.title}</div>
         <p className="muted small">{d.text}</p>
-        <div className="plans">
-          <button className="choice" onClick={() => choose(c.id)}>
-            <span className="label">{c.label}</span>
-            <small>{c.detail}</small>
-          </button>
+        <div className={`plans${d.data?.single ? ' plan-groups' : ''}`}>
+          {enabled.map((c) => (
+            <button key={c.id} className="choice" onClick={() => choose(c.id)}>
+              <span className="label">{c.label}</span>
+              <small>{c.detail}</small>
+            </button>
+          ))}
         </div>
       </div>
     );
@@ -266,7 +267,16 @@ export function DecisionView({ g, d }: { g: GameState; d: Decision }) {
       </div>
       {typeof d.data?.fit === 'string' && <span className="fit-tag">Fits your game · {d.data.fit as string}</span>}
       <p>{d.text}</p>
-      {isDraftNight && <DraftBoard g={g} />}
+      {isDraftNight && (
+        <>
+          {extra.map((c) => (
+            <button key={c.id} className="btn block" onClick={() => choose(c.id)}>
+              {c.label}
+            </button>
+          ))}
+          <DraftBoard g={g} />
+        </>
+      )}
       {offers.length > 0 && (
         <div className="offers">
           {offers.map((o) => (
@@ -274,7 +284,7 @@ export function DecisionView({ g, d }: { g: GameState; d: Decision }) {
           ))}
         </div>
       )}
-      {extra.length > 0 && (
+      {extra.length > 0 && !isDraftNight && (
         <div className="choices">
           {extra.map((c, i) => (
             <button key={c.id} className={`choice${extra.length > 1 && i === 0 && d.kind !== 'event' ? ' primary' : ''}`} disabled={c.disabled} onClick={() => choose(c.id)}>

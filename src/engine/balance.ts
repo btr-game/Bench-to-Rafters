@@ -89,14 +89,19 @@ export const POTENTIAL: SkewDist = { base: 40, mu: 3.33, sigma: 0.66, min: 42, m
 
 // Difficulty modes (playtest round 6). Each sets the potential distribution, a growth
 // multiplier and an injury multiplier; the league around the player is the same.
-export type Mode = 'standard' | 'reality' | 'stars' | 'fast';
+export type Mode = 'standard' | 'reality' | 'stars' | 'fast' | 'lab';
 // floor: in stars mode he is never further behind than a straight line from his start to
 // floor.ovr at floor.age, so every career that lasts that long reaches it
 export const MODES: Record<Mode, { name: string; blurb: string; potential: SkewDist; growth: number; injury: number; scoutMid: number; floor?: { age: number; ovr: number; until: number } }> = {
-  standard: { name: 'Standard', blurb: 'Most careers peak in the 60s and 70s; the NBA is common, stardom is earned.', potential: POTENTIAL, growth: 0.94, injury: 1, scoutMid: 70 },
-  // fast break: the standard game at a quick pace (engine/fast.ts). The quick pace means fewer
-  // events and no shop, so the head start is set by simulation: peaks about 3 OVR above standard.
-  fast: { name: 'Fast break', blurb: 'The standard game at a quick pace, with a small head start. One plan a season, playoffs simulated, fewer stops: you still make every real call.', potential: { ...POTENTIAL, base: 48, min: 50 }, growth: 1, injury: 1, scoutMid: 73 },
+  standard: { name: 'Regular guy', blurb: 'The full game. Most careers peak in the 60s and 70s; the NBA is common, stardom is earned.', potential: POTENTIAL, growth: 0.94, injury: 1, scoutMid: 70 },
+  // fast break: the regular game at a quick pace (engine/fast.ts). The quick pace means fewer
+  // events, one training group a season and no shop, so the head start is set by simulation:
+  // mean peak 76.4 against 73.6 for Regular guy (300 smart careers each, round 8).
+  fast: { name: 'Fast break', blurb: 'The regular game at a quick pace, with a small head start. One training plan a season, no shop, no national team, playoffs simulated: you still make every real call.', potential: { ...POTENTIAL, base: 54, min: 56 }, growth: 1.12, injury: 1, scoutMid: 73 },
+  // built in a lab (round 8): fast break, but growth is paid out as credits the player spends
+  // on any rating (career/lab.ts). Spending where it counts is worth a lot, so its potential
+  // sits a little below fast break's: an OVR-minded build peaks at 77.6 on average (round 8).
+  lab: { name: 'Built in a lab', blurb: 'Fast break, but you build the player. Training and events earn credits, and you spend them on any rating you want. Pick your own height.', potential: { ...POTENTIAL, base: 51, min: 53 }, growth: 1.12, injury: 1, scoutMid: 73 },
   reality: { name: 'Reality hits hard', blurb: 'Like real life: most careers end short of the NBA, and those who make it fight for a spot. Every choice counts.', potential: { base: 45, mu: 2.25, sigma: 0.6, min: 46, max: 99 }, growth: 0.9, injury: 1.3, scoutMid: 50 },
   stars: { name: 'Shoot for the stars', blurb: 'Built for greatness: every career reaches stardom, and the very top is within reach.', potential: { base: 83, mu: 1.8, sigma: 0.6, min: 85, max: 99 }, growth: 1.2, injury: 0.6, scoutMid: 93, floor: { age: 22, ovr: 80, until: 29 } },
 };
@@ -181,6 +186,12 @@ export interface PlanDef {
 // full effect, so two plans do more than one but less than both at full strength.
 /** Two plans in a half: the first is the main plan, the second a side plan (round 7). */
 export const TWO_PLAN_SHARE = { main: 0.8, side: 0.45 };
+
+// Built in a lab (round 8): the growth a half would have given, and every rating an event or
+// item would have raised, is paid out as credits instead. One credit buys one rating point;
+// points cost more near the top, so a 99 still takes saving up for. `rate` scales the credits
+// from training.
+export const LAB = { rate: 0.85, cost: [[0, 1], [80, 1.5], [90, 2]] as [number, number][] };
 
 /** The plan that actually applies: one plan as is, or a main plan and a side plan blended. */
 export function blendPlans(a: HalfPlan, b?: HalfPlan | null): PlanDef {

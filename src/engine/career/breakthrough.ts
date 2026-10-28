@@ -19,6 +19,7 @@ export function breakthroughBar(age: number): { ovr: number; attr: number } {
 /** Checks the season just finished; unlocks a focus change for this offseason when it was a breakthrough. */
 export function evaluateBreakthrough(s: GameState, season: SeasonState): string {
   const p = s.player;
+  if (s.mode === 'lab') return '';
   const dOvr = ovrOf(p.attrs, p.pos) - season.ovrStart;
   let key: AttrKey = ATTRS[0];
   for (const k of ATTRS) if (p.attrs[k] - season.attrsStart[k] > p.attrs[key] - season.attrsStart[key]) key = k;

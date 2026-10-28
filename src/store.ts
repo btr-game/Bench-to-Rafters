@@ -5,7 +5,7 @@ import { fastForward } from './engine/fast';
 import { requestTrade } from './engine/career/team';
 import { create } from 'zustand';
 import type { AttrKey, GameLog, GameState, Pos } from './engine/types';
-import { advance as engineAdvance, changeFocus, changeNumber, changePosition, choose as engineChoose, dismissMoment, newGame, retireByChoice, type CreateInput } from './engine/flow';
+import { advance as engineAdvance, changeFocus, changeNumber, changePosition, choose as engineChoose, dismissMoment, newGame, retireByChoice, spendCredits, type CreateInput } from './engine/flow';
 import { seasonLabel } from './ui/format';
 
 export type Tab = 'home' | 'season' | 'player' | 'league' | 'records';
@@ -32,6 +32,7 @@ interface Store {
   requestTrade: () => void;
   changeNumber: (n: number) => void;
   changeFocus: (keys: AttrKey[]) => void;
+  labSpend: (k: AttrKey, points: number) => void;
   endTransition: () => void;
   reset: () => void;
   setTab: (t: Tab) => void;
@@ -117,6 +118,13 @@ export const useStore = create<Store>((set, get) => ({
     if (!g) return;
     const next = structuredClone(g);
     changeFocus(next, keys);
+    set({ game: next });
+  },
+  labSpend: (k, points) => {
+    const g = get().game;
+    if (!g) return;
+    const next = structuredClone(g);
+    spendCredits(next, k, points);
     set({ game: next });
   },
   changeNumber: (n) => {
