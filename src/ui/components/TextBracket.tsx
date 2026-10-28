@@ -37,7 +37,7 @@ export function TextBracket({ b, league, userTeamId }: { b: Bracket; league: Lea
   const champ = short(b.champion);
   return (
     <div className="tb-scroll">
-      <div className="tb" style={{ gridTemplateColumns: `repeat(${cols.length + 1}, minmax(118px, 1fr))` }}>
+      <div className="tb" style={{ gridTemplateColumns: `repeat(${cols.length + 1}, 152px)` }}>
         {cols.map((col, ci) => (
           <div className="tb-col" key={ci}>
             <div className="tb-head">{names[ci]}</div>

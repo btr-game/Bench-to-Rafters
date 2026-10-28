@@ -192,7 +192,7 @@ export function finishStories(s: GameState, lg: League): void {
       underdog: () => (r.depth >= 1 ? `A Cinderella run: ${r.text}.` : r.depth >= 0 ? 'They made the postseason. Nobody saw that coming.' : `${t.w}–${t.l}: better, but not there yet.`),
       rival: () => {
         const v = st.vs ?? { w: 0, l: 0 };
-        return `You went ${v.w}–${v.l} against them. They ${r.text}.`;
+        return `${v.w + v.l > 0 ? `You went ${v.w}–${v.l} against them` : 'You never got a shot at them'}. They ${r.text}.`;
       },
       dynasty: () => (r.depth === 99 ? 'They did it again.' : `The run is over: ${r.text}.`),
       lastdance: () => (r.depth === 99 ? 'One last ring for the old guys.' : `The window closes: ${r.text}.`),

@@ -570,14 +570,15 @@ button.banner { border: 0; font: inherit; text-align: left; }
 .tb-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2); }
 .tb { display: grid; gap: 0 10px; padding: 10px; min-width: min-content; }
 .tb-col { display: grid; grid-template-rows: auto 1fr; gap: 6px; min-width: 0; }
-.tb-head { font-family: var(--f-mono); font-size: 11.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+.tb-head { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); line-height: 1.25; min-height: 2.5em; }
 .tb-games { display: flex; flex-direction: column; justify-content: space-around; gap: 6px; }
-.tb-match { border: 1px solid var(--line); border-radius: 6px; background: var(--surface); font-family: var(--f-mono); font-size: 13.5px; }
+.tb-match { width: 100%; min-width: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); font-family: var(--f-mono); font-size: 13.5px; }
 .tb-match.me { border-color: var(--accent); }
-.tb-team { display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; gap: 4px; padding: 3px 7px; color: var(--muted); }
+.tb-team { display: grid; grid-template-columns: 16px minmax(0, 1fr) 26px; gap: 4px; padding: 3px 7px; color: var(--muted); }
 .tb-team + .tb-team { border-top: 1px solid var(--line); }
 .tb-team.won { color: var(--ink); font-weight: 700; }
 .tb-team.mine { color: var(--accent); }
+.tb-score { text-align: right; }
 .tb-seed { font-size: 11px; color: var(--muted); text-align: right; }
 .tb-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tb-champ { align-self: center; padding: 10px 8px; border: 2px solid var(--gold); border-radius: 8px; font-family: var(--f-display); font-weight: 900; font-size: 20px; text-transform: uppercase; text-align: center; }
