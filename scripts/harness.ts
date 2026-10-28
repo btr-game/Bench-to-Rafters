@@ -117,6 +117,7 @@ export interface CareerResult {
   legacy: number;
   peakOvr: number;
   potential: number;
+  startOvr: number;
   snapshots: { leader: number; over25: number; best: number; worst: number }[];
   nbaLines: { ovr: number; mpg: number; ppg: number; role: string; value: number; rpg: number; apg: number; ts: number }[];
   steps: number;
@@ -165,6 +166,7 @@ export function runCareer(seed: number, policy: Policy): CareerResult {
     legacy: legacyScore(s),
     peakOvr: s.player.peakOvr,
     potential: s.player.potential,
+    startOvr: ovrOf(s.player.startAttrs, s.player.pos),
     snapshots,
     nbaLines: nbaRows.map((h) => ({ ovr: (h.ovrStart + h.ovrEnd) / 2, mpg: h.line.min / h.line.gp, ppg: h.line.pts / h.line.gp, role: h.role, value: valuePerGame(h.line), rpg: h.line.reb / h.line.gp, apg: h.line.ast / h.line.gp, ts: trueShooting(h.line) })),
     steps,

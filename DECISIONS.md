@@ -277,3 +277,36 @@ about 46), fewer but more costly injuries, more varied heights, and easier posit
   also ask for a mid-season move to a spot that suits him.
 - **Balance:** potential mu 2.97 to 3.01 to make up for the heavier injuries and lower cards.
   Every harness target passes (mean peak 65.6 random, 69.3 smart).
+
+## Playtest round 5 (Oct 2026)
+
+Feedback: make playoff games playable; make height less predictable so position choices
+matter; compare finished careers with real players (80+ OVR) using a small model; run a
+100-career simulation and show the OVR distribution.
+
+- **Playable postseason:** before each postseason game the player chooses to play it, simulate
+  it, simulate the rest of the series, simulate the rest of the postseason, or always
+  simulate (a toggle on the Player tab turns playable games back on). A played game asks for
+  a tactic each quarter (play your game, take over, get everyone involved, lock in on
+  defense) and, in a finish within 3 points, the last possession (pull-up, attack the rim,
+  or find the open man). Implementation: the postseason replays deterministically from a
+  snapshot taken at the end of the regular season, with the picks made so far, and pauses
+  at the first pick it does not have. State stays plain JSON; the postseason code is
+  unchanged. Balance over 30 careers per tactic: simulating won 22 titles, neutral play 21,
+  skill-matched tactics 26-27. The harness always simulates (replays would slow it 4x).
+- **Height:** the doctors' projection at 14 can miss the true adult height by -3 to +4
+  inches (normal, mean +0.3, sd 1.7). Players grow until 19, and the projection sharpens
+  each year (sd 1.4 at 15 down to 0.5 at 18). Growth spurts and early stops are reported.
+  Position fit is judged on the projection while he is still growing.
+- **Career analysis:** after retirement, careers that peaked at 80+ are compared with 100
+  all-time greats (career averages and honours through 2024-25, approximate; the order
+  follows Bleacher Report's July 2025 list where it could be confirmed). Comparables come
+  from a weighted nearest-neighbour search; the projected all-time rank comes from a ridge
+  regression (lambda 3) on log(rank). Fit: Spearman 0.868 in-sample, 0.842 leave-one-out,
+  median leave-one-out error 8.5 places.
+- **DPOY:** perimeter and interior defense above 85 count for less in the defense score, and
+  each past DPOY costs the player 1.5 points with voters. Defensive careers had won it up to
+  13 times; now at most 4 (the real record).
+- **Distribution test (report in Word):** over 1,000 careers the mean peak is 65.4 (random)
+  and 69.1 (smart). Peaks under 52.5: 15.0% and 8.0%. Peaks of 97+: 1.5% and 4.9%. No
+  balance change was made yet; options are in the report.
