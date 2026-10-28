@@ -158,3 +158,6 @@ export const useStore = create<Store>((set, get) => ({
     set({ theme });
   },
 }));
+
+// development only: lets browser tests load a finished career (stripped from production builds)
+if (import.meta.env.DEV) (window as unknown as { __btr?: typeof useStore }).__btr = useStore;

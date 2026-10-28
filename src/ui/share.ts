@@ -2,7 +2,8 @@
 // be saved as a PNG or sent through the phone's share sheet.
 
 import type { GameState } from '../engine/types';
-import { hallOfFame, raftersTeams, verdictFor } from '../engine/awards/legacy';
+import { championships, hallOfFame, raftersTeams, verdictFor } from '../engine/awards/legacy';
+import { seasonLabel } from './format';
 import { TIERS, legacyRank, tierCounts } from '../engine/awards/tiers';
 import { MODES } from '../engine/balance';
 import { NAMES } from '../content/strings';
@@ -146,8 +147,26 @@ export async function drawCareerCard(g: GameState): Promise<HTMLCanvasElement> {
     ctx.fillText('No major honours. The love of the game was enough.', 60, y);
   }
 
-  // career line and teams, right under the honours; the card is then cropped to fit
+  // championships and the teams he won them with
   y += chips.length ? 92 : 70;
+  const titles = championships(g).filter((x) => x.nba);
+  if (titles.length) {
+    ctx.fillStyle = '#ffd76a';
+    ctx.font = `800 34px ${DISPLAY}`;
+    ctx.fillText(`${titles.length}× NBA CHAMPION`, 60, y);
+    y += 44;
+    ctx.font = `500 26px ${BODY}`;
+    for (const team of [...new Set(titles.map((x) => x.teamName))]) {
+      const years = titles.filter((x) => x.teamName === team);
+      ctx.fillStyle = years[0].teamColor;
+      ctx.fillRect(60, y - 22, 10, 28);
+      ctx.fillStyle = '#f4f1ea';
+      y = wrap(ctx, `${team}: ${years.map((x) => seasonLabel(x.year) + (x.finalsMvp ? ' (Finals MVP)' : '')).join(', ')}`, 84, y, W - 144, 34);
+      y += 4;
+    }
+    y += 30;
+  }
+  // career line and teams; the card is then cropped to fit
   ctx.fillStyle = '#f4f1ea';
   ctx.font = `600 30px ${BODY}`;
   const line = nbaLine(g);

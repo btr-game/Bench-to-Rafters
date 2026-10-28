@@ -621,7 +621,9 @@ function finishSeason(s: GameState): void {
       milestone(s, 'champion');
     } else {
       const key = level === 'NCAA' ? 'NCAATITLE' : level === 'EU' ? 'EUTITLE' : level === 'GL' ? 'GLTITLE' : level === 'INT' ? 'INTTITLE' : 'STATETITLE';
-      keys.push({ key, label: post.result });
+      // one clean title per level (the season result can read "conference tournament champion. National champion")
+      const label = TITLE_LABEL[key] ?? post.result;
+      keys.push({ key, label });
       labels.push(post.result);
     }
   }
@@ -768,6 +770,14 @@ function finishSeason(s: GameState): void {
   } else snapshotNba(s);
   s.step = 'summary';
 }
+
+const TITLE_LABEL: Record<string, string> = {
+  NCAATITLE: 'National champion',
+  EUTITLE: 'EuroLeague champion',
+  GLTITLE: 'G League champion',
+  INTTITLE: 'League champion',
+  STATETITLE: 'State champion',
+};
 
 const SERIES_MVP_KEY = (level: LevelKey, award: string): string =>
   level === 'NBA' ? (award === 'Finals MVP' ? 'FMVP' : 'CFMVP') : level === 'NCAA' ? 'FFMOP' : 'PLAYOFFMVP';

@@ -1,6 +1,7 @@
 // Season, Player, League and Records tabs.
 
 import { LegacyTierList } from '../components/Legacy';
+import { TrophyCabinet, trophyItems } from '../components/Trophies';
 import { NbaBracket } from '../components/NbaBracket';
 import { useState } from 'react';
 import type { GameState, League, SeasonRecord, SeriesResult, StatLine, Team } from '../../engine/types';
@@ -9,7 +10,7 @@ import { standings } from '../../engine/sim/leagueSim';
 import { addLine, emptyLine, perGame } from '../../engine/sim/statModel';
 import { count, legacyScore, nbaTitles } from '../../engine/awards/legacy';
 import { NAMES } from '../../content/strings';
-import { Banners, Card, Meter, Scoreboard, type BannerItem } from '../components/bits';
+import { Card, Meter, Scoreboard } from '../components/bits';
 import { AttrRows } from '../components/PlayerCard';
 import { ScoutCard } from '../components/ScoutCard';
 import { fmtMoney, ht, pct, pg, seasonLabel } from '../format';
@@ -479,11 +480,7 @@ function totals(rows: SeasonRecord[]): StatLine {
   return t;
 }
 
-export function trophyItems(g: GameState): BannerItem[] {
-  const counts = new Map<string, number>();
-  for (const a of g.awards) counts.set(a.label, (counts.get(a.label) ?? 0) + 1);
-  return [...counts.entries()].map(([label, c]) => ({ label, count: c, gold: /Champion|MVP|Player of the Year|champion/.test(label) }));
-}
+export { trophyItems };
 
 export function HistoryTable({ rows }: { rows: SeasonRecord[] }) {
   return (
@@ -584,7 +581,7 @@ export function RecordsTab({ g }: { g: GameState }) {
           </div>
         </Card>
       )}
-      <Card title="Trophy cabinet">{g.awards.length === 0 ? <p className="muted">Empty, for now.</p> : <Banners items={trophyItems(g)} />}</Card>
+      <TrophyCabinet g={g} />
       <LegacyTierList g={g} />
       <Card title="Career totals" kicker={`Legacy score ${legacyScore(g)}`}>
         {nbaT.gp > 0 && (

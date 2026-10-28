@@ -1,12 +1,13 @@
 import type { GameState } from '../../engine/types';
-import { hallOfFame, nbaCareerPoints, raftersTeams, verdictFor } from '../../engine/awards/legacy';
+import { championships, hallOfFame, nbaCareerPoints, raftersTeams, verdictFor } from '../../engine/awards/legacy';
 import { valuePerGame, perGame } from '../../engine/sim/statModel';
 import { LEVELS, MODES } from '../../engine/balance';
 import { NAMES, UI } from '../../content/strings';
-import { NBA_TEAMS } from '../../content/teams';
 import { useStore } from '../../store';
-import { Banners, Card, ReactionCard } from '../components/bits';
-import { HistoryTable, trophyItems } from './Tabs';
+import { Card, ReactionCard } from '../components/bits';
+import { HistoryTable } from './Tabs';
+import { TrophyCabinet } from '../components/Trophies';
+import { RaftersPage, RaftersSummary } from '../components/Rafters';
 import { fmtMoney, seasonLabel } from '../format';
 import { compareCareer } from '../../engine/awards/compare';
 import { LegacyRankCard, LegacyTierList } from '../components/Legacy';
@@ -78,6 +79,35 @@ function CareerAnalysis({ g }: { g: GameState }) {
   );
 }
 
+function Championships({ g }: { g: GameState }) {
+  const titles = championships(g);
+  if (titles.length === 0) return null;
+  const nba = titles.filter((x) => x.nba);
+  // "3x NBA champion: Charlotte Hornets (2), Los Angeles Lakers"
+  const byTeam = [...new Set(nba.map((x) => x.teamName))].map((t) => {
+    const n = nba.filter((x) => x.teamName === t).length;
+    return n > 1 ? `${t} (${n})` : t;
+  });
+  return (
+    <Card title="Championships" kicker={nba.length ? `${nba.length}× NBA champion · ${byTeam.join(', ')}` : `${titles.length} title${titles.length > 1 ? 's' : ''}`}>
+      <div className="titles">
+        {titles.map((x, i) => (
+          <div key={i} className={`title-row${x.nba ? ' nba' : ''}`} style={{ borderLeftColor: x.teamColor }}>
+            <div className="title-year num">{seasonLabel(x.year)}</div>
+            <div>
+              <div className="title-team">{x.teamName}</div>
+              <div className="small muted">
+                {x.label} · {LEVELS[x.level as keyof typeof LEVELS]?.short ?? x.level}
+                {x.finalsMvp ? (x.nba ? ' · Finals MVP' : ' · MVP of the final') : ''}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </Card>
+  );
+}
+
 function ShareBar({ g }: { g: GameState }) {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
@@ -112,12 +142,25 @@ export function Retirement({ g }: { g: GameState }) {
   const p = g.player;
   const v = verdictFor(g);
   const hof = hallOfFame(g);
-  const rafters = raftersTeams(g).map((id) => NBA_TEAMS.find((t) => t.abbr === id)!);
+  const hasRafters = raftersTeams(g).length > 0;
+  // the rafters get their own page first: the ultimate goal of the game
+  const [view, setView] = useState<'rafters' | 'career'>(hasRafters ? 'rafters' : 'career');
   const pro = g.history.filter((h) => h.level === 'NBA' || h.level === 'GL' || h.level === 'EU' || h.level === 'INT');
   const pool = pro.length ? pro : g.history;
   const best = pool.filter((h) => h.line.gp > 0).sort((a, b) => valuePerGame(b.line) - valuePerGame(a.line))[0];
   const teams = [...new Set(g.history.filter((h) => h.level !== 'HSJV' && h.level !== 'HSV').map((h) => h.teamName))];
   const nbaSeasons = g.history.filter((h) => h.level === 'NBA' && h.line.gp > 0).length;
+  if (view === 'rafters' && hasRafters) {
+    return (
+      <RaftersPage
+        g={g}
+        onContinue={() => {
+          setView('career');
+          window.scrollTo(0, 0);
+        }}
+      />
+    );
+  }
   return (
     <div className="stack">
       <section className="final stack" style={{ gap: 10 }}>
@@ -127,16 +170,15 @@ export function Retirement({ g }: { g: GameState }) {
         <div className="verdict">{v.tier}</div>
         <p className="lede">{v.line}</p>
         {hof && <div className="toast">{hof === 'first' ? 'Inducted into the Hall of Fame on the first ballot.' : 'Inducted into the Hall of Fame.'}</div>}
-        {rafters.map((t) => (
-          <div key={t.abbr} className="callout accent">
-            <div className="kicker">The rafters</div>
-            <div>
-              The {t.city} {t.nick} retire number {p.number}. It hangs above the court forever.
-            </div>
-          </div>
-        ))}
         <ShareBar g={g} />
       </section>
+      <RaftersSummary
+        g={g}
+        onOpen={() => {
+          setView('rafters');
+          window.scrollTo(0, 0);
+        }}
+      />
       <LegacyRankCard g={g} />
       <CareerAnalysis g={g} />
       <Card title="Career card" kicker={`${NAMES.pos[p.pos]} · ${p.archetype}`}>
@@ -177,11 +219,8 @@ export function Retirement({ g }: { g: GameState }) {
           </p>
         )}
       </Card>
-      {g.awards.length > 0 && (
-        <Card title="Trophy cabinet">
-          <Banners items={trophyItems(g)} />
-        </Card>
-      )}
+      <Championships g={g} />
+      {g.awards.length > 0 && <TrophyCabinet g={g} />}
       <LegacyTierList g={g} />
       {g.feed[0] && (
         <Card title="The last word">

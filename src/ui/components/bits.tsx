@@ -37,16 +37,28 @@ export interface BannerItem {
   accent?: boolean;
 }
 
-export function Banners({ items }: { items: BannerItem[] }) {
+export function Banners({ items, onSelect, selected }: { items: BannerItem[]; onSelect?: (label: string) => void; selected?: string | null }) {
   if (items.length === 0) return null;
   return (
     <div className="banners">
-      {items.map((b, i) => (
-        <div key={i} className={`banner${b.gold ? ' gold' : b.accent ? ' accent' : ''}`}>
-          {b.count && b.count > 1 ? <b>×{b.count}</b> : null}
-          <span>{b.label}</span>
-        </div>
-      ))}
+      {items.map((b, i) => {
+        const cls = `banner${b.gold ? ' gold' : b.accent ? ' accent' : ''}${onSelect ? ' tappable' : ''}${selected === b.label ? ' on' : ''}`;
+        const inner = (
+          <>
+            {b.count && b.count > 1 ? <b>×{b.count}</b> : null}
+            <span>{b.label}</span>
+          </>
+        );
+        return onSelect ? (
+          <button key={i} className={cls} aria-pressed={selected === b.label} onClick={() => onSelect(b.label)}>
+            {inner}
+          </button>
+        ) : (
+          <div key={i} className={cls}>
+            {inner}
+          </div>
+        );
+      })}
     </div>
   );
 }

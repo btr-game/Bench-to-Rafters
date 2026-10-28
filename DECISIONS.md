@@ -422,3 +422,14 @@ nationality; event results that really differ; rare mold-breaking players; heigh
   and wear 10% faster per inch over 7'3".
 - **Assists:** per-36 assists base 3.5 (was 3.2), +0.23 per playmaking point over the level
   (was 0.2), cap 13. The best playmakers now post 8-9 a game.
+- **Championships:** the final page lists every title with the team, season and level (and
+  the MVP of the final); the career card names the teams he won NBA titles with. Title awards
+  get one clean label per level (an NCAA title no longer reads "conference tournament
+  champion. National champion").
+- **Trophy details:** the trophy cabinet sorts by legacy weight; tapping a banner shows what
+  it is, the teams and seasons it was won with (back-to-back seasons as a range), its tier
+  and legacy points, and its share of the legacy.
+- **The rafters page:** when a team retires his number, retirement opens on its own page: the
+  arena catwalk with a banner per team (team colour, number, name, years) and the case for
+  each. The career page keeps a small version that reopens it; without one, it shows the team
+  he came closest with and what was missing.

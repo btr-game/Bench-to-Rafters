@@ -126,3 +126,37 @@ export function hallOfFame(s: GameState): 'first' | 'hof' | null {
   const l = legacyScore(s);
   return l >= LEGACY.firstBallot ? 'first' : l >= LEGACY.hof ? 'hof' : null;
 }
+
+export interface TitleWon {
+  year: number;
+  level: string; // "NBA", "NCAA", ...
+  label: string; // "NBA Champion", "National champions", ...
+  teamName: string;
+  teamColor: string;
+  nba: boolean;
+  finalsMvp: boolean; // the series MVP of that final
+}
+
+const TITLE_KEYS = ['TITLE', 'TITLEKEY', 'NCAATITLE', 'EUTITLE', 'GLTITLE', 'INTTITLE', 'STATETITLE'];
+// the MVP of the deciding series at each level (conference finals MVPs do not count)
+const FINAL_MVP_KEYS = ['FMVP', 'FFMOP', 'PLAYOFFMVP'];
+
+/** Every championship he won, with the team he won it with, NBA titles first. */
+export function championships(s: GameState): TitleWon[] {
+  const out: TitleWon[] = [];
+  for (const a of s.awards) {
+    if (!TITLE_KEYS.includes(a.key)) continue;
+    // the season he won it (G League assignment rows aside)
+    const row = s.history.find((h) => h.year === a.year && h.level === a.level && !/assignment/i.test(h.teamName));
+    out.push({
+      year: a.year,
+      level: a.level,
+      label: a.key === 'TITLE' || a.key === 'TITLEKEY' ? 'NBA Champion' : a.key === 'NCAATITLE' ? 'National champion' : a.label.split('. ').pop()!,
+      teamName: row?.teamName ?? '',
+      teamColor: row?.teamColor ?? '#555',
+      nba: a.key === 'TITLE' || a.key === 'TITLEKEY',
+      finalsMvp: s.awards.some((m) => m.year === a.year && m.level === a.level && FINAL_MVP_KEYS.includes(m.key)),
+    });
+  }
+  return out.sort((x, y) => Number(y.nba) - Number(x.nba) || x.year - y.year);
+}
