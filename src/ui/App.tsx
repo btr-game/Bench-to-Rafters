@@ -5,6 +5,7 @@ import { Create } from './screens/Create';
 import { Home } from './screens/Home';
 import { LeagueTab, PlayerTab, RecordsTab, SeasonTab } from './screens/Tabs';
 import { Retirement } from './screens/Retirement';
+import { Overlays } from './components/Overlays';
 
 const HOST_THEME = typeof document !== 'undefined' ? document.documentElement.getAttribute('data-theme') : null;
 
@@ -89,12 +90,15 @@ export function App() {
             <NewButton retired={retired} onReset={reset} />
           </div>
         </header>
-        {tab === 'home' && (retired ? <Retirement g={game} /> : <Home g={game} />)}
-        {tab === 'season' && <SeasonTab g={game} />}
-        {tab === 'player' && <PlayerTab g={game} />}
-        {tab === 'league' && <LeagueTab g={game} />}
-        {tab === 'records' && <RecordsTab g={game} />}
+        <div className="tab-view" key={tab}>
+          {tab === 'home' && (retired ? <Retirement g={game} /> : <Home g={game} />)}
+          {tab === 'season' && <SeasonTab g={game} />}
+          {tab === 'player' && <PlayerTab g={game} />}
+          {tab === 'league' && <LeagueTab g={game} />}
+          {tab === 'records' && <RecordsTab g={game} />}
+        </div>
       </div>
+      <Overlays g={game} />
       <TabBar />
     </>
   );

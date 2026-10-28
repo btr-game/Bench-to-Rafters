@@ -1,7 +1,8 @@
 // The state machine. The UI and the balance harness both drive the game only
 // through `newGame`, `prompt`, `choose` and `advance`.
 
-import { makeRng } from './rng';
+import { int, makeRng, pick } from './rng';
+import { HOMETOWN_SCHOOLS } from '../content/teams';
 import type { Decision, GameState, HalfPlan, Step } from './types';
 import { createPlayer, type CreateInput } from './player/create';
 import { ovrOf } from './player/ovr';
@@ -10,9 +11,9 @@ import { activeLeague, assignToGl, beginSeason, playHalf } from './career/season
 import { beginOffseason, resolveOffseasonDecision } from './career/offseason';
 import { runWorldDraft } from './career/nbaYear';
 import { resolveEvent } from './events/resolver';
-import { logDecision, milestone } from './career/common';
+import { logDecision, milestone, pushMoment } from './career/common';
 import { raftersTeams } from './awards/legacy';
-import { UI } from '../content/strings';
+import { NAMES, UI } from '../content/strings';
 
 export type Prompt =
   | { type: 'decision'; decision: Decision }
@@ -66,8 +67,22 @@ export function newGame(seed: number, input: CreateInput): GameState {
     notes: [],
     nbaSnapshot: null,
     toast: null,
+    moments: [],
+    schoolColor: '',
   };
-  logDecision(s, 'start', `Enrolled at ${input.highSchool} as a ${input.pos}, ${player.archetype}.`);
+  // the game assigns where he grows up and goes to school
+  const home = HOMETOWN_SCHOOLS[int(rng, 0, HOMETOWN_SCHOOLS.length - 1)];
+  if (!player.hometown) player.hometown = home.town;
+  if (!player.highSchool) player.highSchool = pick(rng, home.schools);
+  s.schoolColor = pick(rng, home.colors);
+  pushMoment(s, {
+    kind: 'intro',
+    title: player.highSchool,
+    text: `${player.name} grew up in ${player.hometown}. This fall he walks into ${player.highSchool} as a 14-year-old freshman ${NAMES.pos[player.pos].toLowerCase()}, number ${player.number}.`,
+    color: s.schoolColor,
+    lines: ['Freshman tryouts are next week.', 'JV or varsity: your spot depends on where you rank on the roster.'],
+  });
+  logDecision(s, 'start', `Enrolled at ${player.highSchool} in ${player.hometown} as a ${input.pos}, ${player.archetype}.`);
   beginSeason(s);
   return s;
 }
@@ -143,6 +158,11 @@ export function advance(s: GameState): void {
       beginSeason(s);
       return;
   }
+}
+
+/** The UI calls this after showing the front story page. */
+export function dismissMoment(s: GameState): void {
+  s.moments.shift();
 }
 
 function finishCareer(s: GameState): void {

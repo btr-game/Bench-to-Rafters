@@ -22,8 +22,8 @@ export interface CreateInput {
   attrs?: Attrs; // a re-rolled candidate; defaults to the archetype card
   focus: AttrKey[];
   height?: number; // full-grown height; random if omitted
-  hometown: string;
-  highSchool: string;
+  hometown?: string; // assigned by the game when omitted
+  highSchool?: string;
 }
 
 /** "See other candidates": each stat ±3, then re-normalized to exactly 320. */
@@ -60,8 +60,8 @@ export function createPlayer(rng: Rng, input: CreateInput): UserPlayer {
     height,
     fullHeight,
     wingspan: fullHeight + int(rng, 0, 5),
-    hometown: input.hometown,
-    highSchool: input.highSchool,
+    hometown: input.hometown ?? '',
+    highSchool: input.highSchool ?? '',
     age: 14,
     attrs,
     startAttrs: { ...attrs },

@@ -218,28 +218,30 @@ export function summarize(results: CareerResult[], ms: number): Summary {
   };
 }
 
+// §15 targets, with the road to the NBA made easier after playtesting (Oct 2026):
+// NBA entry and draft targets are higher; NBA success targets are unchanged.
 export const TARGETS: Record<Policy, Record<string, [number, number]>> = {
   random: {
-    playedNba: [0.25, 0.35],
-    nba5: [0.1, 0.18],
+    playedNba: [0.5, 0.65],
+    nba5: [0.18, 0.3],
     allStar: [0.03, 0.06],
     allNba: [0.01, 0.03],
     mvp: [0, 0.01],
     title: [0.06, 0.12],
     hof: [0, 0.015],
-    undraftedOfDeclared: [0.35, 0.5],
+    undraftedOfDeclared: [0.3, 0.45],
     meanNbaSeasons: [4, 7],
     medianRetireAge: [30, 34],
   },
   smart: {
-    playedNba: [0.45, 0.6],
-    nba5: [0.25, 0.35],
+    playedNba: [0.6, 0.75],
+    nba5: [0.35, 0.5],
     allStar: [0.1, 0.15],
     allNba: [0.05, 0.09],
     mvp: [0.01, 0.03],
     title: [0.12, 0.2],
     hof: [0.03, 0.06],
-    undraftedOfDeclared: [0.25, 0.4],
+    undraftedOfDeclared: [0.2, 0.35],
     meanNbaSeasons: [6, 9],
     medianRetireAge: [31, 35],
   },

@@ -254,12 +254,12 @@ export const FA_INTEREST = {
   reSign: { key: 0.97, starter: 0.88, sixth: 0.75, rotation: 0.45, bench: 0.15, deep: 0.04 } as Record<string, number>,
   // G League / EuroLeague players: NBA camp offers
   prospectMaxRank: 11,
-  prospectPerPoint: 0.12,
+  prospectPerPoint: 0.3,
   prospectProdW: 0.02,
   prospectRepW: 0.004,
-  campCutScale: 1.5,
-  campChance: 0.45, // undrafted: chance of an Exhibit 10 camp invite if within campOvrGap of the 13th man
-  campOvrGap: 3,
+  campCutScale: 2.5,
+  campChance: 0.75, // undrafted: chance of an Exhibit 10 camp invite if within campOvrGap of the 13th man
+  campOvrGap: 5,
   // overseas and G League teams lose interest with age
   minorAgeFade: (age: number): number => (age < 30 ? 1 : age < 33 ? 0.6 : age < 35 ? 0.3 : 0.1),
 };
@@ -279,6 +279,9 @@ export const DRAFT = {
   // expected OVR for that potential at that age (same growth curve) plus noise.
   ages: [19, 20, 21, 22],
   poolPerAge: 32,
+  // the player's own board score gets this bonus (scouts know his story); it eases NBA
+  // entry without weakening the league's talent pipeline
+  userBoardBonus: 4,
   potMean: 70,
   potSd: 8,
   ovrNoise: 2.2,
@@ -288,7 +291,7 @@ export const DRAFT = {
 export const RECRUIT = {
   classSize: 300,
   population: 4000,
-  ovrMean: 54,
+  ovrMean: 51.5,
   ovrSd: 4.6,
   potMean: 62.5,
   potSd: 7.5,
@@ -297,7 +300,7 @@ export const RECRUIT = {
   wRep: 0.1,
   stars: [30, 150, 300],
   // chance that a low-star recruit gets any Division I offer
-  d1Chance: { 2: 0.6, 1: 0.25 } as Record<number, number>,
+  d1Chance: { 2: 0.92, 1: 0.6 } as Record<number, number>,
 };
 // Team options on rookie deals: kept if he ranks within `keepRank`, otherwise a coin flip
 // that favours young players.

@@ -6,8 +6,7 @@ import { makeRng } from '../../engine/rng';
 import { ATTRS, HEIGHT_RANGE, POSITIONS } from '../../engine/balance';
 import type { AttrKey, Attrs, Pos } from '../../engine/types';
 import { NAMES, UI } from '../../content/strings';
-import { FIRST_NAMES, HOMETOWNS, LAST_NAMES } from '../../content/names';
-import { HS_SCHOOL_NAMES } from '../../content/teams';
+import { FIRST_NAMES, LAST_NAMES } from '../../content/names';
 import { useStore } from '../../store';
 import { ht } from '../format';
 
@@ -23,8 +22,6 @@ export function Create() {
   const [step, setStep] = useState(0);
   const [name, setName] = useState(`${pick(FIRST_NAMES)} ${pick(LAST_NAMES)}`);
   const [number, setNumber] = useState(String(Math.floor(Math.random() * 35)));
-  const [hometown, setHometown] = useState(pick(HOMETOWNS));
-  const [school, setSchool] = useState(`${pick(HS_SCHOOL_NAMES)} High`);
   const [pos, setPos] = useState<Pos>('SG');
   const [arch, setArch] = useState(0);
   const [cands, setCands] = useState<Attrs[]>(() => cards('SG'));
@@ -41,8 +38,6 @@ export function Create() {
     const p = pick(POSITIONS);
     setName(`${pick(FIRST_NAMES)} ${pick(LAST_NAMES)}`);
     setNumber(String(Math.floor(Math.random() * 35)));
-    setHometown(pick(HOMETOWNS));
-    setSchool(`${pick(HS_SCHOOL_NAMES)} High`);
     setPos(p);
     setCands(cards(p));
     setArch(Math.floor(Math.random() * 3));
@@ -56,7 +51,7 @@ export function Create() {
   const startOvr = useMemo(() => ovrOf(attrs, pos), [attrs, pos]);
   const archetype = ARCHETYPES[pos][arch];
   const [hMin, hMax] = HEIGHT_RANGE[pos];
-  const canNext = step === 0 ? name.trim().length > 0 && school.trim().length > 0 : step === 2 ? focus.length === 2 : true;
+  const canNext = step === 0 ? name.trim().length > 0 : step === 2 ? focus.length === 2 : true;
 
   const begin = () =>
     start({
@@ -66,8 +61,6 @@ export function Create() {
       archetype: arch,
       attrs,
       focus,
-      hometown: hometown.trim() || 'Anytown',
-      highSchool: school.trim() || 'Lincoln High',
     });
 
   return (
@@ -105,19 +98,13 @@ export function Create() {
             <label htmlFor="f-name">{UI.create.name}</label>
             <input id="f-name" type="text" maxLength={28} value={name} onChange={(e) => setName(e.target.value)} />
           </div>
-          <div className="form-2">
-            <div className="field">
-              <label htmlFor="f-num">{UI.create.number}</label>
-              <input id="f-num" type="number" min={0} max={99} value={number} onChange={(e) => setNumber(e.target.value)} />
-            </div>
-            <div className="field">
-              <label htmlFor="f-home">{UI.create.hometown}</label>
-              <input id="f-home" type="text" maxLength={32} value={hometown} onChange={(e) => setHometown(e.target.value)} />
-            </div>
-          </div>
           <div className="field">
-            <label htmlFor="f-school">{UI.create.school}</label>
-            <input id="f-school" type="text" maxLength={32} value={school} onChange={(e) => setSchool(e.target.value)} />
+            <label htmlFor="f-num">{UI.create.number}</label>
+            <input id="f-num" type="number" min={0} max={99} value={number} onChange={(e) => setNumber(e.target.value)} />
+          </div>
+          <div className="assigned">
+            <div className="kicker">{UI.create.assignedTitle}</div>
+            <div className="small">{UI.create.assignedText}</div>
           </div>
           <fieldset>
             <legend>{UI.create.position}</legend>
@@ -189,12 +176,10 @@ export function Create() {
         <section className="card stack">
           <div className="row">
             <div style={{ minWidth: 0 }}>
-              <div className="kicker">
-                Freshman · age 14 · {school}
-              </div>
+              <div className="kicker">Freshman · age 14</div>
               <div className="pc-name">{name || 'Rookie'}</div>
               <div className="muted">
-                #{number} · {NAMES.pos[pos]} · {archetype.name} · {hometown}
+                #{number} · {NAMES.pos[pos]} · {archetype.name}
               </div>
             </div>
             <div className="spacer" />
@@ -215,7 +200,7 @@ export function Create() {
             ))}
           </div>
           <p className="muted small">
-            Focus: {focus.map((k) => NAMES.attr[k]).join(' and ')}. Height: still growing, will end up {ht(hMin)}–{ht(hMax)}. {UI.create.equalNote}
+            Focus: {focus.map((k) => NAMES.attr[k]).join(' and ')}. Height: still growing, will end up {ht(hMin)}–{ht(hMax)}. {UI.create.assignedText}
           </p>
         </section>
       )}

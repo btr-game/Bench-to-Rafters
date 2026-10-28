@@ -146,7 +146,7 @@ export function buildHs(s: GameState, year: number, varsity: boolean, userSquad:
     name: s.player.highSchool,
     short: s.player.highSchool,
     abbr: s.player.highSchool.slice(0, 4).toUpperCase(),
-    color: s.player.highSchool ? HS_COLORS[s.player.highSchool.length % HS_COLORS.length] : '#2A2F36',
+    color: s.schoolColor || HS_COLORS[s.player.highSchool.length % HS_COLORS.length],
     conf: 'State',
     strength: userStrength,
     w: 0,

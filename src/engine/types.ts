@@ -296,6 +296,19 @@ export interface Reaction {
   comments: { user: string; text: string; tone: 'hyped' | 'disappointed' | 'heartwarming' | 'salty'; likes: number; ago: string }[];
 }
 
+/** A full-screen story page the UI shows once (commitment, draft, title, awards...). */
+export interface Moment {
+  id: number;
+  kind: 'intro' | 'commit' | 'draft' | 'title' | 'awards' | 'camp';
+  title: string;
+  text: string;
+  color: string;
+  teamName?: string;
+  lines?: string[];
+  game?: GameLog & { level: LevelKey; teamShort: string };
+  pick?: number;
+}
+
 export interface GameState {
   version: 1;
   seed: number;
@@ -339,4 +352,6 @@ export interface GameState {
   notes: string[]; // short messages for the hub
   nbaSnapshot: { leader: number; over25: number; best: number; worst: number } | null;
   toast: string | null; // outcome of the last event choice, shown once by the UI
+  moments: Moment[]; // story pages waiting to be shown
+  schoolColor: string;
 }

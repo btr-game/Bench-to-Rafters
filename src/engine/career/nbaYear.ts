@@ -7,6 +7,7 @@ import { boardScore, draftOrder, generateClass, mockRange, runDraft, type DraftP
 import { nbaOffseason } from '../world/nbaWorld';
 import { scoutEstimate } from '../player/create';
 import { ovrOf } from '../player/ovr';
+import { DRAFT } from '../balance';
 
 /** Simulates a full NBA season by team strength (the user is not in the league). */
 export function quickNbaSeason(s: GameState): void {
@@ -44,7 +45,7 @@ export function userProspect(s: GameState): UserProspect {
   const last = s.history[s.history.length - 1];
   const prodBoost = last && last.line.gp > 0 ? Math.max(-6, Math.min(6, ((last.line.pts + last.line.reb + last.line.ast) / last.line.gp - 18) * 0.35)) : 0;
   const prod = ovr + prodBoost;
-  const board = boardScore(s.rng, ovr, scoutEstimate(p), prod, p.age);
+  const board = boardScore(s.rng, ovr, scoutEstimate(p), prod, p.age) + DRAFT.userBoardBonus;
   return {
     board,
     prospect: {

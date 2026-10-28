@@ -135,3 +135,22 @@ to meet the balance targets in §15. Every tunable number lives in `src/engine/b
   during the season the tab lists top players by OVR, and scoring leaders once the season is done.
 - **Season summary** lists only award races where the player finished top 10.
 - **Headlines and comments that quote stats** are used only for seasons of 12+ PPG.
+
+## Playtest round 1 (Oct 2026)
+
+- **Hometown and high school are assigned**, not chosen: `newGame` picks a hometown and one of
+  its (fictional) schools from `HOMETOWN_SCHOOLS` with the seeded RNG, and an arrival page
+  reveals them.
+- **Moments.** `state.moments` is a queue of full-screen story pages (arrival, commitment or
+  signing, draft night, training camp result, title game, season honours). They never block the
+  flow; the UI shows and dismisses them, and the harness ignores them.
+- **Title game animation** is built in the UI from the final's box score (scores, the player's
+  makes, opponent baskets) with its own hash, so it never touches the game's random stream.
+- **Transitions** (half-season ticker, new-season card, fade-ins) live in the store, outside the
+  saved state.
+- **Easier road to the NBA, same NBA difficulty.** More D1 offers for 1–2★ recruits, an easier
+  recruiting curve, more NBA camp and call-up interest for G League and EuroLeague players, and a
+  +4 bonus on the player's own draft-board score. The bonus is applied to the player only, so the
+  league's talent pipeline (and with it how hard it is to become an All-Star) does not change.
+  The §15 targets for NBA entry, 5+ seasons and undrafted share were raised to match; NBA
+  success targets are unchanged.

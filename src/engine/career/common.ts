@@ -2,7 +2,7 @@
 
 import { LEVELS, REP, ROLE_BY_RANK, ROLE_ORDER, ROSTER_OFFSETS, TRUST_ROLE } from '../balance';
 import { clamp } from '../rng';
-import type { Decision, GameState, League, LevelKey, RoleKey, Team } from '../types';
+import type { Decision, GameState, League, LevelKey, Moment, RoleKey, Team } from '../types';
 import { ovrOf } from '../player/ovr';
 import { anchorFor } from '../world/gen';
 import { standings } from '../sim/leagueSim';
@@ -88,6 +88,11 @@ export function levelName(level: LevelKey): string {
 export function conferenceRank(team: Team, league: League): number {
   const st = standings(league.teams.filter((t) => t.conf === team.conf));
   return st.indexOf(team) + 1;
+}
+
+export function pushMoment(s: GameState, m: Omit<Moment, 'id'>): void {
+  s.moments.push({ ...m, id: s.nextId++ });
+  if (s.moments.length > 6) s.moments.shift();
 }
 
 export function milestone(s: GameState, key: string): void {

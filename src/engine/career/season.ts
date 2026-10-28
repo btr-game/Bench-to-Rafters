@@ -46,7 +46,7 @@ import {
 import { buildEu, buildGl, buildHs, buildNba, buildNcaa, schoolRoster, USER_SCHOOL_ID } from '../world/leagues';
 import { rosterStrength } from '../world/gen';
 import { buildCandidates, nbaAwards, simpleAwards, type AwardOutcome } from '../awards/awards';
-import { adjust, conferenceRank, milestone, pushDecision, rankOnRoster, roleWithTrust, teamById, userOvr } from './common';
+import { adjust, conferenceRank, milestone, pushDecision, pushMoment, rankOnRoster, roleWithTrust, teamById, userOvr } from './common';
 import { queueMidseasonEvents } from '../events/resolver';
 import { quickNbaSeason, warmUpNba } from './nbaYear';
 import { reactionsForSeason } from '../story/reactions';
@@ -372,6 +372,8 @@ function postseason(s: GameState, league: League, hook: UserGameHook): { result:
   return { result: `JV season · ${ordinal(st.indexOf(team) + 1)} of ${st.length}`, champion: false, madePost: false };
 }
 
+export const seasonLabel = (y: number): string => `${y}–${String(y + 1).slice(2)}`;
+
 export const ordinal = (n: number): string => {
   const sfx = ['th', 'st', 'nd', 'rd'];
   const v = n % 100;
@@ -447,6 +449,24 @@ function finishSeason(s: GameState): void {
   } else if (s.stage === 'HS') computeRecruiting(s);
 
   for (const k of keys) s.awards.push({ year: s.year, level, key: k.key, label: k.label });
+  if (post.champion) {
+    const final = [...season.postGames].reverse().find((g) => g.res === 'W');
+    if (final) {
+      pushMoment(s, {
+        kind: 'title',
+        title: post.result,
+        teamName: team.name,
+        color: team.color,
+        text: `${team.name} win it all. ${seasonLabel(s.year)}.`,
+        game: { ...final, level, teamShort: team.short },
+        lines: [],
+      });
+    }
+  }
+  const honours = aw.wins.map((w) => w.label).concat(keys.filter((k) => ['MCDAA', 'GATORADE', 'FMVP'].includes(k.key)).map((k) => k.label));
+  if (honours.length > 0) {
+    pushMoment(s, { kind: 'awards', title: honours.length > 1 ? 'Season honours' : honours[0], color: team.color, teamName: team.name, text: `${seasonLabel(s.year)} · ${team.name}`, lines: [...new Set(honours)] });
+  }
   if (keys.some((k) => k.key === 'ALLSTAR')) milestone(s, 'allstar');
   if (keys.some((k) => k.key === 'MVP')) milestone(s, 'mvp');
   // rivals: generated winners who beat you

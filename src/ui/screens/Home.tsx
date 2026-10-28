@@ -171,13 +171,15 @@ export function Home({ g }: { g: GameState }) {
         <section className="card stack">
           <SeasonHeader g={g} />
           {g.toast && <div className="toast">{g.toast}</div>}
-          <Context g={g} />
-          {pr.type === 'decision' && <DecisionView g={g} d={pr.decision} />}
-          {pr.type === 'advance' && (
-            <button className="btn block" onClick={advance}>
-              {pr.label}
-            </button>
-          )}
+          <div className="stack fade-in" key={pr.type === 'decision' ? pr.decision.id : `${g.year}-${g.step}`}>
+            <Context g={g} />
+            {pr.type === 'decision' && <DecisionView g={g} d={pr.decision} />}
+            {pr.type === 'advance' && (
+              <button className="btn block" onClick={advance}>
+                {pr.label}
+              </button>
+            )}
+          </div>
         </section>
         <section className="card stack">
           <div className="sec-title">Milestones</div>

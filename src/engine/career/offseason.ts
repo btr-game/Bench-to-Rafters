@@ -16,6 +16,8 @@ import {
   milestone,
   note,
   pushDecision,
+  pushMoment,
+  ROLE_LABEL,
   rankOnRoster,
   teamById,
   userOvr,
@@ -276,6 +278,15 @@ function doDraft(s: GameState, preview: Preview): void {
       signedYear: year,
     }, 'NBA');
     logDecision(s, 'drafted', `Drafted ${ordinal(pick)} overall by the ${team.name}.`, teamId);
+    pushMoment(s, {
+      kind: 'draft',
+      title: team.name,
+      teamName: team.name,
+      color: team.color,
+      pick,
+      text: `With the ${ordinal(pick)} pick in the ${year} NBA Draft, the ${team.name} select ${s.player.name}.`,
+      lines: [first ? `First round · rookie scale ${fmtMoney(rookieScale(year, pick))} a year for up to 4 years` : 'Second round · two-year minimum deal'],
+    });
     pushDecision(s, {
       kind: 'info',
       title: 'Draft night',
@@ -470,11 +481,13 @@ export function signOffer(s: GameState, o: Offer, context: string, others: Offer
     if (made) {
       note(s, `You made the ${team.name} roster out of training camp.`);
       logDecision(s, 'camp', `Made the ${team.name} roster on a camp deal.`, team.id);
+      pushMoment(s, { kind: 'camp', title: 'You made the team', teamName: team.name, color: team.color, text: `Undrafted, overlooked, and now on an NBA roster. The ${team.name} keep you after training camp.`, lines: ['One-year minimum contract'] });
       signContract(s, { teamId: o.teamId, kind: 'min', salary: o.salary, years: 1, teamOptionYears: [], signedYear: year }, 'NBA');
     } else {
       const abbr = NBA_TEAMS.find((t) => `${t.city} ${t.nick}` === team.name)?.abbr ?? 'LAL';
       note(s, `Waived by the ${team.name} after camp. You report to their G League team.`);
       logDecision(s, 'camp', `Cut by the ${team.name} in camp and sent to the G League.`, team.id);
+      pushMoment(s, { kind: 'camp', title: 'Waived', teamName: team.name, color: '#2A2F36', text: `The ${team.name} cut you on the last day of camp. You report to their G League affiliate and keep grinding.`, lines: [] });
       const gl = glOffer(s, userOvr(s), abbr);
       signContract(s, { teamId: gl.teamId, kind: 'gl', salary: gl.salary, years: 1, teamOptionYears: [], signedYear: year }, 'GL');
     }
@@ -506,6 +519,15 @@ export function signOffer(s: GameState, o: Offer, context: string, others: Offer
     o.teamId,
   );
   if (stage === 'NBA') milestone(s, 'nbaContract');
+  const deal = o.level === 'NCAA' ? (o.kind === 'walkon' ? 'Walk-on' : 'Full scholarship') : `${fmtMoney(o.salary)} a year for ${o.years} year${o.years === 1 ? '' : 's'}`;
+  pushMoment(s, {
+    kind: 'commit',
+    title: o.teamName,
+    teamName: o.teamName,
+    color: o.teamColor,
+    text: o.level === 'NCAA' ? `${s.player.name} commits to ${o.teamName}.` : `${s.player.name} signs with ${o.teamName}.`,
+    lines: [LEVELS[o.level].name, `Projected role: ${ROLE_LABEL[o.role]}`, deal, ...(declined.length ? [`Turned down ${declined.slice(0, 3).join(', ')}`] : [])],
+  });
 }
 
 export function retireNow(s: GameState, why: string): void {

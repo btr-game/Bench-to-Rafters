@@ -210,3 +210,26 @@ export const HS_SCHOOL_NAMES = [
 ];
 
 export const HS_COLORS = ['#7A1F2B', '#1F3A7A', '#1E5B3A', '#5B2A86', '#B3541E', '#2A2F36', '#0F5C6E', '#8A6D1F'];
+
+// Hometowns and the (fictional) high schools a player can be assigned to. The game picks
+// one for each new career; the player does not choose.
+export const HOMETOWN_SCHOOLS: { town: string; schools: string[]; colors: string[] }[] = [
+  { town: 'Chicago, IL', schools: ['Lakeshore Prep', 'South Side Academy', 'Westbrook High'], colors: ['#7A1F2B', '#1F3A7A'] },
+  { town: 'Atlanta, GA', schools: ['Peachtree Christian', 'Eastlake High', 'Grant Park Academy'], colors: ['#B3541E', '#1E5B3A'] },
+  { town: 'Houston, TX', schools: ['Bayou City High', 'Westheimer Prep', 'Third Ward Academy'], colors: ['#5B2A86', '#8A6D1F'] },
+  { town: 'Los Angeles, CA', schools: ['Crenshaw Heights', 'Valley Prep', 'Harbor Gateway High'], colors: ['#1F3A7A', '#B3541E'] },
+  { town: 'Philadelphia, PA', schools: ['Germantown Catholic', 'Schuylkill Prep', 'North Broad High'], colors: ['#2A2F36', '#7A1F2B'] },
+  { town: 'Indianapolis, IN', schools: ['Crossroads High', 'Fall Creek Academy', 'Broad Ripple Prep'], colors: ['#0F5C6E', '#8A6D1F'] },
+  { town: 'Baltimore, MD', schools: ['Harbor East High', 'Patapsco Prep', 'Mount Royal Catholic'], colors: ['#5B2A86', '#2A2F36'] },
+  { town: 'Seattle, WA', schools: ['Rainier Valley High', 'Puget Sound Prep', 'Garfield Heights'], colors: ['#1E5B3A', '#0F5C6E'] },
+  { town: 'Detroit, MI', schools: ['Motor City Prep', 'Eastside Catholic', 'Belle Isle High'], colors: ['#1F3A7A', '#7A1F2B'] },
+  { town: 'Oakland, CA', schools: ['Lake Merritt High', 'East Bay Prep', 'Fruitvale Academy'], colors: ['#8A6D1F', '#1E5B3A'] },
+  { town: 'Queens, NY', schools: ['Flushing Catholic', 'Jamaica Bay High', 'Astoria Prep'], colors: ['#2A2F36', '#B3541E'] },
+  { town: 'Memphis, TN', schools: ['Bluff City High', 'Beale Prep', 'Overton Academy'], colors: ['#0F5C6E', '#5B2A86'] },
+  { town: 'Akron, OH', schools: ['Cuyahoga Falls Catholic', 'Summit Prep', 'Rubber City High'], colors: ['#7A1F2B', '#8A6D1F'] },
+  { town: 'Phoenix, AZ', schools: ['Camelback High', 'Desert Vista Prep', 'Saguaro Academy'], colors: ['#B3541E', '#5B2A86'] },
+  { town: 'Milwaukee, WI', schools: ['Lakefront Lutheran', 'Menomonee Valley High', 'Brew City Prep'], colors: ['#1E5B3A', '#1F3A7A'] },
+  { town: 'Dallas, TX', schools: ['Trinity River High', 'Oak Cliff Prep', 'Lone Star Academy'], colors: ['#1F3A7A', '#2A2F36'] },
+  { town: 'Las Vegas, NV', schools: ['Silver State Prep', 'Spring Mountain High', 'Desert Rose Catholic'], colors: ['#8A6D1F', '#7A1F2B'] },
+  { town: 'Seoul, South Korea', schools: ['Hanbit International School', 'Gangnam Prep Academy'], colors: ['#1F3A7A', '#7A1F2B'] },
+];
