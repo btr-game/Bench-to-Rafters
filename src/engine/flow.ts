@@ -28,6 +28,7 @@ export function newGame(seed: number, input: CreateInput): GameState {
   player.peakOvr = ovrOf(player.attrs, player.pos);
   const s: GameState = {
     version: 1,
+    mode: input.mode ?? 'standard',
     seed,
     rng,
     nextId: 1,
@@ -82,7 +83,7 @@ export function newGame(seed: number, input: CreateInput): GameState {
   const start = ovrOf(player.attrs, player.pos);
   const ft = (x: number) => `${Math.floor(x / 12)}′${x % 12}″`;
   intro.lines.unshift(
-    `Starting level: OVR ${Math.round(start)}, ${start >= 50 ? 'well ahead of most kids his age' : start >= 46 ? 'ahead of most kids his age' : start >= 41 ? 'about where most kids his age are' : 'raw, behind most kids his age'}`,
+    `Tryouts: ${start >= 48 ? 'well ahead of most kids his age' : start >= 44 ? 'ahead of most kids his age' : start >= 36 ? 'about where most kids his age are' : 'raw, behind most kids his age'}`,
     `${ft(player.height)} now; the doctors think he will grow to about ${ft(player.heightProj)}, but nobody knows for sure`,
   );
   pushMoment(s, { kind: 'intro', title: player.highSchool, text: intro.text, color: s.schoolColor, lines: intro.lines });
@@ -116,16 +117,21 @@ export function prompt(s: GameState): Prompt {
 export function choose(s: GameState, choiceId: string): void {
   const d = s.pending.shift();
   if (!d) return;
-  const c = d.choices.find((x) => x.id === choiceId);
+  // plans may come as two ids joined by '+'
+  const ids = d.kind === 'plan' ? choiceId.split('+').slice(0, 2) : [choiceId];
+  const c = ids.every((id) => d.choices.some((x) => x.id === id && !x.disabled)) ? d.choices.find((x) => x.id === ids[0]) : undefined;
   if (!c || c.disabled) {
     s.pending.unshift(d);
     return;
   }
   s.toast = null;
+  s.result = null;
   switch (d.kind) {
     case 'plan':
-      s.season!.plan = choiceId as HalfPlan;
+      s.season!.plan = ids[0] as HalfPlan;
+      s.season!.plan2 = ids[1] && ids[1] !== ids[0] ? (ids[1] as HalfPlan) : null;
       s.season!.plans.push(s.season!.plan);
+      if (s.season!.plan2) s.season!.plans.push(s.season!.plan2);
       return;
     case 'event':
       s.toast = resolveEvent(s, d, choiceId) || null;
@@ -159,6 +165,7 @@ export function choose(s: GameState, choiceId: string): void {
 export function advance(s: GameState): void {
   if (s.pending.length > 0 || s.step === 'retired') return;
   s.toast = null;
+  s.result = null;
   switch (s.step) {
     case 'preseason':
     case 'firstHalf':
@@ -207,5 +214,5 @@ function finishCareer(s: GameState): void {
 }
 
 export { activeLeague };
-export { canChangePosition, changePosition, positionOptions } from './career/position';
+export { canChangePosition, changePosition, heightMismatch, positionOptions } from './career/position';
 export type { CreateInput };

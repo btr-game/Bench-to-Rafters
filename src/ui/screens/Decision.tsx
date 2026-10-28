@@ -1,5 +1,6 @@
 // Renders whatever decision is at the front of the queue.
 
+import { useState } from 'react';
 import type { Decision, GameState, Offer } from '../../engine/types';
 import type { LiveRequest } from '../../engine/career/live';
 import { LEVELS } from '../../engine/balance';
@@ -67,6 +68,54 @@ function DraftBoard({ g }: { g: GameState }) {
           ))}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+/** One or two plans for the half: tap to select, then start. */
+function PlanPicker({ d }: { d: Decision }) {
+  const choose = useStore((s) => s.choose);
+  const [picked, setPicked] = useState<string[]>([]);
+  const enabled = d.choices.filter((c) => !c.disabled);
+  // with only one option (injured) there is nothing to combine
+  if (enabled.length === 1) {
+    const c = enabled[0];
+    return (
+      <div className="stack">
+        <div className="sec-title">{d.title}</div>
+        <p className="muted small">{d.text}</p>
+        <div className="plans">
+          <button className="choice" onClick={() => choose(c.id)}>
+            <span className="label">{c.label}</span>
+            <small>{c.detail}</small>
+          </button>
+        </div>
+      </div>
+    );
+  }
+  const toggle = (id: string) => setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : p.length >= 2 ? [p[1], id] : [...p, id]));
+  const name = (id: string) => d.choices.find((c) => c.id === id)?.label ?? id;
+  return (
+    <div className="stack">
+      <div className="sec-title">{d.title}</div>
+      <p className="muted small">{d.text}</p>
+      <div className="plans">
+        {d.choices.map((c) => {
+          const on = picked.includes(c.id);
+          return (
+            <button key={c.id} className={`choice${on ? ' selected' : ''}`} aria-pressed={on} disabled={c.disabled} onClick={() => toggle(c.id)}>
+              <span className="label">
+                {on ? `${picked.indexOf(c.id) + 1}. ` : ''}
+                {c.label}
+              </span>
+              <small>{c.detail}</small>
+            </button>
+          );
+        })}
+      </div>
+      <button className="btn block" disabled={picked.length === 0} onClick={() => choose(picked.join('+'))}>
+        {picked.length === 0 ? 'Pick one or two plans' : picked.length === 1 ? `Go with ${name(picked[0])}` : `Go with ${name(picked[0])} + ${name(picked[1])}`}
+      </button>
     </div>
   );
 }
@@ -171,22 +220,7 @@ export function DecisionView({ g, d }: { g: GameState; d: Decision }) {
 
   if (d.kind === 'live') return <LiveView g={g} d={d} />;
 
-  if (d.kind === 'plan') {
-    return (
-      <div className="stack">
-        <div className="sec-title">{d.title}</div>
-        <p className="muted small">{d.text}</p>
-        <div className="plans">
-          {d.choices.map((c) => (
-            <button key={c.id} className="choice" disabled={c.disabled} onClick={() => choose(c.id)}>
-              <span className="label">{c.label}</span>
-              <small>{c.detail}</small>
-            </button>
-          ))}
-        </div>
-      </div>
-    );
-  }
+  if (d.kind === 'plan') return <PlanPicker d={d} />;
 
   if (d.kind === 'shop') {
     const items = d.choices.filter((c) => c.id !== 'leave');

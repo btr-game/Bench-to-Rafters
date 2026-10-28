@@ -108,6 +108,7 @@ export interface UserPlayer {
   injuryMultNext: number;
   declineMultNext: number;
   growthMultNext: number;
+  growthRate: number; // hidden: how fast he improves (see GROWTH_RATE)
 }
 
 export interface GenPlayer {
@@ -296,6 +297,7 @@ export interface SeasonState {
   level: LevelKey;
   half: 0 | 1 | 2; // halves completed
   plan: HalfPlan;
+  plan2?: HalfPlan | null; // a second plan this half (each at reduced strength)
   plans: HalfPlan[];
   role: RoleKey;
   roleRank: number;
@@ -317,7 +319,7 @@ export interface SeasonState {
   cupResult?: string;
   allStar?: boolean;
   allStarRank?: number;
-  outcomes?: { half: number; plan: HalfPlan; outcome: string; text: string; ovrGain: number }[];
+  outcomes?: { half: number; plan: HalfPlan; plan2?: HalfPlan | null; outcome: string; text: string; ovrGain: number }[];
 }
 
 export type Step =
@@ -355,6 +357,13 @@ export interface Reaction {
 }
 
 /** A full-screen story page the UI shows once (commitment, draft, title, awards...). */
+export interface EventResult {
+  title: string;
+  choice: string;
+  text: string;
+  changes: { label: string; value: string; good: boolean }[];
+}
+
 export interface Moment {
   id: number;
   kind: 'intro' | 'commit' | 'draft' | 'title' | 'awards' | 'camp' | 'injury' | 'event' | 'tournament';
@@ -371,6 +380,7 @@ export interface Moment {
 
 export interface GameState {
   version: 1;
+  mode: import('./balance').Mode;
   seed: number;
   rng: Rng;
   nextId: number;
@@ -412,6 +422,7 @@ export interface GameState {
   notes: string[]; // short messages for the hub
   nbaSnapshot: { leader: number; over25: number; best: number; worst: number } | null;
   toast: string | null; // outcome of the last event choice, shown once by the UI
+  result?: EventResult | null; // the last event's outcome with what changed
   moments: Moment[]; // story pages waiting to be shown
   purchases: string[]; // shop item ids ever bought
   tournaments: TourneyRecord[];

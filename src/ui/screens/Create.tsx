@@ -1,9 +1,8 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { ARCHETYPES } from '../../engine/player/archetypes';
-import { ovrOf } from '../../engine/player/ovr';
 import { rerollAttrs } from '../../engine/player/create';
 import { makeRng } from '../../engine/rng';
-import { ATTRS, HEIGHT_RANGE, POSITIONS } from '../../engine/balance';
+import { ATTRS, HEIGHT_RANGE, MODES, POSITIONS, type Mode } from '../../engine/balance';
 import type { AttrKey, Attrs, Pos } from '../../engine/types';
 import { NAMES, UI } from '../../content/strings';
 import { FIRST_NAMES, LAST_NAMES } from '../../content/names';
@@ -27,6 +26,7 @@ export function Create() {
   const [cands, setCands] = useState<Attrs[]>(() => cards('SG'));
   const [focus, setFocus] = useState<AttrKey[]>([]);
   const [hand, setHand] = useState<'R' | 'L'>('R');
+  const [mode, setMode] = useState<Mode>('standard');
 
   const choosePos = (p: Pos) => {
     setPos(p);
@@ -41,7 +41,7 @@ export function Create() {
     setNumber(String(Math.floor(Math.random() * 35)));
     setPos(p);
     setCands(cards(p));
-    setArch(Math.floor(Math.random() * 3));
+    setArch(Math.floor(Math.random() * ARCHETYPES[p].length));
     setHand(Math.random() < 0.12 ? 'L' : 'R');
     const shuffled = [...ATTRS].sort(() => Math.random() - 0.5);
     setFocus(shuffled.slice(0, 2));
@@ -50,7 +50,6 @@ export function Create() {
     setFocus((f) => (f.includes(k) ? f.filter((x) => x !== k) : f.length >= 2 ? [f[1], k] : [...f, k]));
 
   const attrs = cands[arch];
-  const startOvr = useMemo(() => ovrOf(attrs, pos), [attrs, pos]);
   const archetype = ARCHETYPES[pos][arch];
   const [hMin, hMax] = HEIGHT_RANGE[pos];
   const canNext = step === 0 ? name.trim().length > 0 : step === 2 ? focus.length === 2 : true;
@@ -64,6 +63,7 @@ export function Create() {
       attrs,
       focus,
       hand,
+      mode,
     });
 
   return (
@@ -97,6 +97,17 @@ export function Create() {
 
       {step === 0 && (
         <section className="card form">
+          <fieldset>
+            <legend>Difficulty</legend>
+            <div className="modes">
+              {(Object.keys(MODES) as Mode[]).map((m) => (
+                <button key={m} className={`choice${mode === m ? ' selected' : ''}`} aria-pressed={mode === m} onClick={() => setMode(m)}>
+                  <span className="label">{MODES[m].name}</span>
+                  <small>{MODES[m].blurb}</small>
+                </button>
+              ))}
+            </div>
+          </fieldset>
           <div className="field">
             <label htmlFor="f-name">{UI.create.name}</label>
             <input id="f-name" type="text" maxLength={28} value={name} onChange={(e) => setName(e.target.value)} />
@@ -149,11 +160,7 @@ export function Create() {
           <div className="arch-cards">
             {ARCHETYPES[pos].map((a, i) => (
               <button key={a.name} className="arch" aria-pressed={i === arch} onClick={() => setArch(i)}>
-                <div className="row">
-                  <h3>{a.name}</h3>
-                  <div className="spacer" />
-                  <span className="kicker">OVR {ovrOf(cands[i], pos).toFixed(1)}</span>
-                </div>
+                <h3>{a.name}</h3>
                 <div className="muted small">{a.blurb}</div>
                 <div className="mini-attrs">
                   {ATTRS.map((k) => (
@@ -197,11 +204,7 @@ export function Create() {
                 #{number} · {NAMES.pos[pos]} · {archetype.name}
               </div>
             </div>
-            <div className="spacer" />
-            <div className="ovr">
-              <b>{Math.round(startOvr)}</b>
-              <small>CARD</small>
-            </div>
+
           </div>
           <div className="board">
             {ATTRS.map((k) => (
@@ -215,7 +218,7 @@ export function Create() {
             ))}
           </div>
           <p className="muted small">
-            Focus: {focus.map((k) => NAMES.attr[k]).join(' and ')}. Height: still growing, most end up {ht(hMin + (archetype.height ?? 0))}–{ht(hMax + (archetype.height ?? 0))}, some well outside it. This card is a typical {archetype.name.toLowerCase()}; your real starting level is set at tryouts and can be several points higher or lower. {UI.create.assignedText}
+            Focus: {focus.map((k) => NAMES.attr[k]).join(' and ')}. Height: still growing, most end up {ht(hMin + (archetype.height ?? 0))}–{ht(hMax + (archetype.height ?? 0))}, some well outside it. This card is a typical {archetype.name.toLowerCase()}; your real starting level is set at tryouts. {UI.create.assignedText}
           </p>
         </section>
       )}

@@ -1,3 +1,4 @@
+import { heightMismatch } from '../../engine/flow';
 import type { GameState } from '../../engine/types';
 import { ATTRS } from '../../engine/balance';
 import { NAMES } from '../../content/strings';
@@ -43,7 +44,14 @@ export function PlayerCard({ g, compact = false }: { g: GameState; compact?: boo
       <div className="pc-top">
         <div style={{ minWidth: 0 }}>
           <div className="kicker">
-            #{p.number} · {p.pos} · {ht(p.height)} · {p.archetype}
+            #{p.number} · {p.pos} · {ht(p.height)}
+            {heightMismatch(g) ? (
+              <span className="height-warn" title={heightMismatch(g)!.text}>
+                {' '}
+                ⚠ size
+              </span>
+            ) : null}{' '}
+            · {p.archetype}
           </div>
           <h2 className="pc-name">{p.name}</h2>
           {t && <TeamChip name={t.name} color={t.color} />}

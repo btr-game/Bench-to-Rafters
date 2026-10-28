@@ -1,4 +1,4 @@
-import { BASE_INJURY, HALF_PLANS, INJURY_AGE_MULT, INJURY_SEVERITY, INJURY_TOLL } from '../balance';
+import { BASE_INJURY, HALF_PLANS, type PlanDef, INJURY_AGE_MULT, INJURY_SEVERITY, INJURY_TOLL } from '../balance';
 import { ovrOf } from './ovr';
 import { chance, int, pick, shuffle, weightedIndex, type Rng } from '../rng';
 import type { HalfPlan, Injury, UserPlayer } from '../types';
@@ -10,13 +10,13 @@ const NAMES: Record<Injury['key'], string[]> = {
   season: ['Torn ACL', 'Ruptured Achilles'],
 };
 
-export function injuryChance(p: UserPlayer, plan: HalfPlan, minutes: number): number {
+export function injuryChance(p: UserPlayer, plan: HalfPlan | PlanDef, minutes: number): number {
   const fatigue = 0.5 + minutes / 60;
-  return BASE_INJURY * p.durability * HALF_PLANS[plan].injury * fatigue * INJURY_AGE_MULT(p.age) * p.injuryMultNext;
+  return BASE_INJURY * p.durability * (typeof plan === 'string' ? HALF_PLANS[plan] : plan).injury * fatigue * INJURY_AGE_MULT(p.age) * p.injuryMultNext;
 }
 
 /** Rolls for an injury after a game. Mutates the player and returns the injury if one happened. */
-export function rollInjury(rng: Rng, p: UserPlayer, plan: HalfPlan, minutes: number): Injury | null {
+export function rollInjury(rng: Rng, p: UserPlayer, plan: HalfPlan | PlanDef, minutes: number): Injury | null {
   if (minutes <= 0 || !chance(rng, injuryChance(p, plan, minutes))) return null;
   const sev = INJURY_SEVERITY[weightedIndex(rng, INJURY_SEVERITY.map((s) => s.share))];
   const inj: Injury = { key: sev.key, name: pick(rng, NAMES[sev.key]), daysOut: int(rng, sev.days[0], sev.days[1]) };

@@ -2,10 +2,12 @@
 
 import {
   GAME_POINTS,
+  GROWTH_RATE,
+  MODES,
   AGENT_CUT,
   DEEP_BENCH,
   FORM,
-  HALF_PLANS,
+  blendPlans,
   MORALE_PERF,
   PLAN_OUTCOMES,
   PLAN_SETBACK_TEXT,
@@ -147,7 +149,7 @@ export function pushPlanDecision(s: GameState, half: 1 | 2): void {
   pushDecision(s, {
     kind: 'plan',
     title: half === 1 ? 'First-half plan' : 'Second-half plan',
-    text: injured ? 'You are injured. Recovery is the only plan available.' : 'Pick how you approach the next half of the season.',
+    text: injured ? 'You are injured. Recovery is the only plan available.' : 'Pick one or two plans for the next half. Two plans both work, each a little less than on its own.',
     choices: plans.map((p) => ({ id: p.id, label: p.label, detail: p.detail, disabled: injured && p.id !== 'recovery' })),
     data: { half },
   });
@@ -210,7 +212,7 @@ function makeHook(s: GameState, league: League, level: LevelKey, acc: HalfAcc, s
       }
     }
     acc.games++;
-    const plan = HALF_PLANS[season.plan];
+    const plan = blendPlans(season.plan, season.plan2);
     // hot and cold nights, inside a streaky rhythm for the half
     const form = clamp(normal(rng, 1, FORM.gameSd) * (season.rhythm ?? 1), FORM.min, FORM.max);
     if (p.injury && p.injury.key !== 'dtd') {
@@ -248,7 +250,7 @@ function makeHook(s: GameState, league: League, level: LevelKey, acc: HalfAcc, s
         acc.minutes += minutes;
         acc.played++;
         addLine(acc.line, line);
-        const inj = rollInjury(rng, p, season.plan, minutes);
+        const inj = rollInjury(rng, p, plan, minutes);
         if (inj && (inj.key === 'major' || inj.key === 'season')) {
           pushMoment(s, {
             kind: 'injury',
@@ -266,7 +268,7 @@ function makeHook(s: GameState, league: League, level: LevelKey, acc: HalfAcc, s
         }
       }
     }
-    healDays(p, daysPerGame * (season.plan === 'recovery' ? 1.3 : 1));
+    healDays(p, daysPerGame * (season.plan === 'recovery' || season.plan2 === 'recovery' ? 1.3 : 1));
     const impact = line ? (ovr - replacement) * (minutes / L.gameLen) * IMPACT_MULT : 0;
     const boost = line ? plan.teamBoost : 0;
     let win: boolean;
@@ -404,9 +406,22 @@ function growthAfterHalf(s: GameState, acc: HalfAcc, level: LevelKey, ovr: numbe
   const perf = perfFactor(acc.gmsc, acc.expGmsc);
   // roll how the plan went; good morale makes breakthroughs likelier and setbacks rarer
   const m = clamp(p.morale / 60, 0.5, 1.6);
-  const outcome = PLAN_OUTCOMES[weightedIndex(s.rng, PLAN_OUTCOMES.map((o) => (o.key === 'breakthrough' ? o.weight * m : o.key === 'setback' || o.key === 'plateau' ? o.weight / m : o.weight)))];
+  // fast learners break through more often, and young ones can surge
+  const rate = p.growthRate ?? 1;
+  const surgeW = p.age <= GROWTH_RATE.surgeAgeMax ? Math.max(0, rate - GROWTH_RATE.surgeFrom) * GROWTH_RATE.surgeW : 0;
+  const outcome =
+    PLAN_OUTCOMES[
+      weightedIndex(
+        s.rng,
+        PLAN_OUTCOMES.map((o) =>
+          o.key === 'surge' ? surgeW : o.key === 'breakthrough' ? o.weight * m * Math.pow(rate, GROWTH_RATE.breakthroughPow) : o.key === 'setback' || o.key === 'plateau' ? o.weight / m : o.weight,
+        ),
+      )
+    ];
+  // a breakthrough on the grind plan teaches him how to work
+  if (outcome.key === 'breakthrough' && (season.plan === 'grind' || season.plan2 === 'grind')) p.growthRate = Math.min(GROWTH_RATE.max, rate * 1.02);
   const before = ovrOf(p.attrs, p.pos);
-  const plan = HALF_PLANS[season.plan];
+  const plan = blendPlans(season.plan, season.plan2);
   applyHalfGrowth(s.rng, p, {
     minutesShare: share,
     played: acc.played > 0,
@@ -414,8 +429,9 @@ function growthAfterHalf(s: GameState, acc: HalfAcc, level: LevelKey, ovr: numbe
     levelAvg: L.avg,
     perf,
     plan: season.plan,
+    planDef: plan,
     outMost: acc.injuredGames > acc.games / 2,
-    extraMult: outcome.growth * p.growthMultNext,
+    extraMult: outcome.growth * p.growthMultNext * MODES[s.mode ?? 'standard'].growth,
     morale: p.morale,
   });
   if (plan.rangeGain) p.range = clamp(p.range + plan.rangeGain * outcome.growth, 0, 99);
@@ -425,19 +441,21 @@ function growthAfterHalf(s: GameState, acc: HalfAcc, level: LevelKey, ovr: numbe
   const text =
     outcome.key === 'setback'
       ? PLAN_SETBACK_TEXT[season.plan] ?? 'Nothing clicked. A frustrating stretch.'
-      : outcome.key === 'breakthrough'
+      : outcome.key === 'surge'
+        ? 'A surge. Everything is clicking at once and the coaches cannot believe the jump.'
+        : outcome.key === 'breakthrough'
         ? 'Something clicked. You are a different player than two months ago.'
         : outcome.key === 'plateau'
           ? 'The work did not show up in games yet.'
           : 'The plan did what it said.';
-  (season.outcomes ??= []).push({ half: season.half + 1, plan: season.plan, outcome: outcome.label, text, ovrGain: gain });
+  (season.outcomes ??= []).push({ half: season.half + 1, plan: season.plan, plan2: season.plan2 ?? null, outcome: outcome.label, text, ovrGain: gain });
   p.morale = adjust(p.morale, plan.morale + outcome.morale + (season.role === 'deep' ? -4 : season.role === 'key' ? 3 : 0) + (perf - 1) * 30);
   p.trust = adjust(p.trust, plan.trust + outcome.trust + (perf - 1) * 30 + (p.attrs.IQ - L.avg) * 0.04);
   const repGain = plan.rep[1] > 0 ? range(s.rng, plan.rep[0], plan.rep[1]) : 0;
   const v = acc.line.gp > 0 ? valuePerGame(acc.line) : 0;
   const levelW: Record<LevelKey, number> = { HSJV: 0.2, HSV: 0.5, NCAA: 1, GL: 0.6, EU: 0.8, INT: 0.5, NBA: 1.4 };
   p.rep = clamp(p.rep + repGain + Math.max(0, v - 10) * 0.12 * levelW[level], 0, 100);
-  if (season.plan === 'spotlight' && s.stage !== 'HS') {
+  if ((season.plan === 'spotlight' || season.plan2 === 'spotlight') && s.stage !== 'HS') {
     const money = (s.stage === 'NBA' ? 0.25 : 0.01) * (1 + p.rep / 25);
     p.bank += money;
     p.earnings += money;

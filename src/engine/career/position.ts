@@ -25,6 +25,22 @@ function fitFor(height: number, pos: Pos): { label: string; inches: number } {
   return { label: 'natural size', inches: 0 };
 }
 
+/** Height against his position: null when it fits, otherwise a short warning and the spots that fit. */
+export function heightMismatch(s: GameState): { text: string; better: PosOption[] } | null {
+  const p = s.player;
+  const h = p.height >= p.heightProj ? p.height : p.heightProj;
+  const [lo, hi] = HEIGHT_RANGE[p.pos];
+  if (h >= lo - 1 && h <= hi + 1) return null;
+  const growing = p.height < p.heightProj;
+  const better = positionOptions(s).filter((o) => o.allowed && o.fit === 'natural size');
+  const size = `${growing ? 'Projected to reach ' : 'At '}${ht(h)}`;
+  const text =
+    h > hi + 1
+      ? `${size}, you are tall for a ${NAMES.pos[p.pos].toLowerCase()} (most are ${ht(lo)}–${ht(hi)}).`
+      : `${size}, you are small for a ${NAMES.pos[p.pos].toLowerCase()} (most are ${ht(lo)}–${ht(hi)}).`;
+  return { text, better };
+}
+
 export function positionOptions(s: GameState): PosOption[] {
   const p = s.player;
   const i = POSITIONS.indexOf(p.pos);

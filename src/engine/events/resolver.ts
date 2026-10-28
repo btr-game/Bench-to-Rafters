@@ -5,8 +5,10 @@ import { logDecision, pushDecision } from '../career/common';
 import { EVENTS as BASE_EVENTS, type EventChoice, type EventDef } from './defs';
 import { MORE_EVENTS } from './more';
 import { RISK_EVENTS } from './risks';
+import { GROWTH_EVENTS } from './growthEvents';
+import { changes, sizeNote, snap, vary } from './outcome';
 
-const EVENTS: EventDef[] = [...BASE_EVENTS, ...MORE_EVENTS, ...RISK_EVENTS];
+const EVENTS: EventDef[] = [...BASE_EVENTS, ...MORE_EVENTS, ...RISK_EVENTS, ...GROWTH_EVENTS];
 
 function eligible(s: GameState, phase: 'mid' | 'off'): EventDef[] {
   return EVENTS.filter((e) => {
@@ -69,7 +71,12 @@ export function resolveEvent(s: GameState, d: Decision, choiceId: string): strin
   const label = d.choices.find((x) => x.id === choiceId)?.label;
   const c = choices.find((x) => x.label === label) ?? choices[choices.length - 1];
   if (!c) return '';
+  const before = snap(s);
   const res = c.resolve(s, s.rng);
+  // how big it turns out is rolled every time
+  const f = vary(s, before);
   logDecision(s, 'event', res.log ?? `${e.title}: ${c.label}.`);
-  return res.outcome;
+  const text = [res.outcome, sizeNote(f)].filter(Boolean).join(' ');
+  s.result = { title: e.title, choice: c.label, text, changes: changes(s, before) };
+  return text;
 }

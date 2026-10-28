@@ -25,6 +25,8 @@ import {
   SUDDEN_DECLINE,
   HEIGHT_PROJ_SD,
   HEIGHT_SURPRISE,
+  GROWTH_RATE_AGE,
+  type PlanDef,
 } from '../balance';
 import { chance, clamp, normal, range, type Rng } from '../rng';
 import type { AttrKey, Attrs, HalfPlan, UserPlayer } from '../types';
@@ -36,8 +38,13 @@ export function standardRate(age: number): number {
   return rate;
 }
 
+/** Years the hidden growth rate moves his body clock: fast learners stay young longer. */
+export function primeShift(p: UserPlayer): number {
+  return clamp(((p.growthRate ?? 1) - 1) * GROWTH_RATE_AGE.primeYears, GROWTH_RATE_AGE.minShift, GROWTH_RATE_AGE.maxShift);
+}
+
 export function baseRate(p: UserPlayer, minutesFactor: number): number {
-  const age = p.age;
+  const age = p.age - primeShift(p);
   if (p.growthType === 'early') {
     if (age < EARLY_BLOOMER.youngBefore) return standardRate(age) * EARLY_BLOOMER.youngBoost;
     return standardRate(age + EARLY_BLOOMER.plateauEarlier);
@@ -95,6 +102,7 @@ export interface HalfGrowthCtx {
   levelAvg: number;
   perf: number;
   plan: HalfPlan;
+  planDef?: PlanDef; // the blended plan when he runs two
   outMost: boolean;
   extraMult?: number;
   morale?: number;
@@ -105,7 +113,7 @@ export function applyHalfGrowth(rng: Rng, p: UserPlayer, ctx: HalfGrowthCtx): Pa
   const mf = minutesFactor(ctx.minutesShare, ctx.played);
   const base = baseRate(p, mf);
   const levelF = ctx.ovr > ctx.levelAvg + LEVEL_FACTOR.overBy ? LEVEL_FACTOR.mult : 1;
-  const plan = HALF_PLANS[ctx.plan];
+  const plan = ctx.planDef ?? HALF_PLANS[ctx.plan];
   const planF = plan.growth * MORALE_GROWTH(ctx.morale ?? 60);
   const healthF = ctx.outMost ? HEALTH_MULT_OUT : 1;
   const gains: Partial<Attrs> = {};
@@ -124,6 +132,7 @@ export function applyHalfGrowth(rng: Rng, p: UserPlayer, ctx: HalfGrowthCtx): Pa
       (plan.attrs ? (plan.attrs[k] ?? plan.other ?? 1) : 1) *
       healthF *
       (ctx.extraMult ?? 1) *
+      (p.growthRate ?? 1) *
       range(rng, GROWTH_RANDOM[0], GROWTH_RANDOM[1]);
     if (g > 0) {
       p.attrs[k] = Math.min(ATTR_MAX, p.attrs[k] + g);
@@ -136,12 +145,13 @@ export function applyHalfGrowth(rng: Rng, p: UserPlayer, ctx: HalfGrowthCtx): Pa
 /** Season-level decline after the decline start age. Returns the OVR change. */
 export function applyAging(rng: Rng, p: UserPlayer): { change: number; sudden: boolean } {
   const before = ovrOf(p.attrs, p.pos);
-  const start = DECLINE_START[p.aging];
+  // a longer prime for fast learners, a shorter one for slow ones
+  const start = DECLINE_START[p.aging] + Math.round(primeShift(p));
   let sudden = false;
   if (p.age < IQ_LATE_GAIN.untilAge && p.age >= 27) p.attrs.IQ = Math.min(ATTR_MAX, p.attrs.IQ + IQ_LATE_GAIN.perSeason);
   if (p.age >= start) {
     const yrs = Math.min(DECLINE_TABLE.length - 1, p.age - start);
-    const target = DECLINE_TABLE[yrs] * (1 + range(rng, -DECLINE_NOISE, DECLINE_NOISE)) * p.declineMultNext;
+    const target = DECLINE_TABLE[yrs] * (1 + range(rng, -DECLINE_NOISE, DECLINE_NOISE)) * p.declineMultNext * clamp(1.2 - 0.2 * (p.growthRate ?? 1), 0.8, 1.15);
     const w = OVR_WEIGHTS[p.pos];
     const mult = (k: AttrKey) => {
       if (k === 'IQ') return p.age < IQ_LATE_GAIN.untilAge ? 0 : (DECLINE_ATTR_MULT.IQ ?? 1);

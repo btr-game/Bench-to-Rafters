@@ -1,3 +1,4 @@
+import { AWARD_CATS, awardLook, type AwardCat } from '../../content/awards';
 // Small presentational components shared by the screens.
 
 import type { ReactNode } from 'react';
@@ -32,21 +33,46 @@ export function Scoreboard({ line, showGp = true }: { line: StatLine; showGp?: b
 
 export interface BannerItem {
   label: string;
+  key?: string;
   count?: number;
+  years?: number[];
   gold?: boolean;
   accent?: boolean;
 }
 
-export function Banners({ items }: { items: BannerItem[] }) {
+/** Awards as coloured tiles: category colour and icon, the name, how often, and what it means. */
+export function Banners({ items, grouped = false }: { items: BannerItem[]; grouped?: boolean }) {
   if (items.length === 0) return null;
-  return (
-    <div className="banners">
-      {items.map((b, i) => (
-        <div key={i} className={`banner${b.gold ? ' gold' : b.accent ? ' accent' : ''}`}>
-          {b.count && b.count > 1 ? <b>×{b.count}</b> : null}
-          <span>{b.label}</span>
+  const looks = items.map((b) => ({ b, look: awardLook(b.key ?? null, b.label) }));
+  const tile = ({ b, look }: (typeof looks)[number], i: number) => (
+    <div key={i} className="award" style={{ ['--award' as string]: look.color }}>
+      <span className="award-icon" aria-hidden="true">
+        {look.icon}
+      </span>
+      <div className="award-body">
+        <div className="award-name">
+          {b.label}
+          {b.count && b.count > 1 ? <span className="award-count">×{b.count}</span> : null}
         </div>
-      ))}
+        {look.desc && <div className="award-desc">{look.desc}</div>}
+        {b.years && b.years.length > 0 && <div className="award-years">{b.years.map((y) => `${y}–${String(y + 1).slice(2)}`).join(' · ')}</div>}
+      </div>
+    </div>
+  );
+  if (!grouped) return <div className="awards">{looks.map(tile)}</div>;
+  const order = Object.keys(AWARD_CATS) as AwardCat[];
+  return (
+    <div className="stack" style={{ gap: 14 }}>
+      {order
+        .filter((c) => looks.some((x) => x.look.cat === c))
+        .map((c) => (
+          <div key={c} className="stack" style={{ gap: 6 }}>
+            <div className="award-cat" style={{ color: AWARD_CATS[c].color }}>
+              {AWARD_CATS[c].icon} {AWARD_CATS[c].name}
+            </div>
+            <div className="awards">{looks.filter((x) => x.look.cat === c).map(tile)}</div>
+          </div>
+        ))}
     </div>
   );
 }

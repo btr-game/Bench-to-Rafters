@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { advance, canChangePosition, canRetire, changePosition, choose, newGame, positionOptions, prompt, retireByChoice } from '../src/engine/flow';
 import { ovrOf } from '../src/engine/player/ovr';
 import { compareCareer, rankModelFit } from '../src/engine/awards/compare';
+import { blendPlans } from '../src/engine/balance';
 import { makeRng, next, normal } from '../src/engine/rng';
 import type { GameState } from '../src/engine/types';
 import { runCareer } from '../scripts/harness';
@@ -241,5 +242,34 @@ describe('career comparison model', () => {
     const s = newGame(3, { name: 'X', number: 1, pos: 'SG', archetype: 0, focus: ['SHT', 'IQ'] });
     s.player.peakOvr = 72;
     expect(compareCareer(s).eligible).toBe(false);
+  });
+});
+
+describe('round 6 mechanics', () => {
+  it('two plans each count at reduced strength', () => {
+    const one = blendPlans('grind');
+    const two = blendPlans('grind', 'recovery');
+    expect(two.growth).toBeLessThan(one.growth);
+    expect(two.injury).toBeLessThan(one.injury);
+    const s = newGame(12, { name: 'X', number: 1, pos: 'SG', archetype: 0, focus: ['SHT', 'IQ'] });
+    const d = prompt(s);
+    if (d.type === 'decision' && d.decision.kind === 'plan') {
+      choose(s, 'grind+shooting');
+      expect(s.season!.plan).toBe('grind');
+      expect(s.season!.plan2).toBe('shooting');
+    }
+  });
+
+  it('the same event choice lands differently each time', () => {
+    const sizes = new Set<string>();
+    for (let i = 0; i < 12; i++) {
+      const s = newGame(300 + i, { name: 'X', number: 1, pos: 'SG', archetype: 0, focus: ['SHT', 'IQ'] });
+      const before = s.player.morale;
+      s.pending.unshift({ id: 'e', kind: 'event', title: 'Captaincy offer', text: '', choices: [{ id: '0', label: 'x' }], data: { eventId: 'mentor' } });
+      s.pending[0].choices = [{ id: '0', label: 'Spend the summer learning from him' }];
+      choose(s, '0');
+      sizes.add((s.player.morale - before).toFixed(0) + '/' + s.player.growthRate.toFixed(3));
+    }
+    expect(sizes.size).toBeGreaterThan(3);
   });
 });

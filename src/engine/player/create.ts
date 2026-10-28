@@ -10,15 +10,18 @@ import {
   HEIGHT_RANGE,
   HEIGHT_SURPRISE,
   START_SHIFT,
+  GROWTH_RATE,
   CAP_MAX,
-  POTENTIAL,
+  MODES,
+  type Mode,
   type SkewDist,
   REROLL_SPREAD,
   SCOUT_NOISE,
 } from '../balance';
-import { clamp, int, normal, range, weightedIndex, type Rng } from '../rng';
+import { clamp, int, next, normal, range, weightedIndex, type Rng } from '../rng';
 import type { AttrKey, Attrs, Pos, UserPlayer } from '../types';
 import { ARCHETYPES } from './archetypes';
+import { ovrOf } from './ovr';
 
 export function drawPotential(rng: Rng, d: SkewDist): number {
   return Math.round(clamp(d.base + Math.exp(normal(rng, d.mu, d.sigma)), d.min, d.max));
@@ -32,6 +35,7 @@ export interface CreateInput {
   attrs?: Attrs; // a re-rolled candidate; defaults to the archetype card
   focus: AttrKey[];
   hand?: 'R' | 'L';
+  mode?: Mode;
   height?: number; // full-grown height; random if omitted
   hometown?: string; // assigned by the game when omitted
   country?: string; // assigned by the game when omitted
@@ -67,17 +71,23 @@ export function createPlayer(rng: Rng, input: CreateInput): UserPlayer {
   const fullHeight = projected + surprise;
   // some 14-year-olds are nearly done growing, others have half a foot to go
   const height = fullHeight - weightedPick(rng, [[1, 2], [2, 3], [3, 3], [4, 2], [5, 1.2], [6, 0.8], [7, 0.4]]);
-  const potential = drawPotential(rng, POTENTIAL);
+  const mode = MODES[input.mode ?? 'standard'];
+  const potential = drawPotential(rng, mode.potential);
   const caps = {} as Attrs;
   // the ceiling comes from the card, so a head start does not raise it
   for (const k of ATTRS) caps[k] = clamp(potential + (card[k] - 40) * CAP_FROM_START, 30, CAP_MAX);
-  const potZ = (Math.log(Math.max(1, potential - POTENTIAL.base)) - POTENTIAL.mu) / POTENTIAL.sigma;
-  const shift = clamp(START_SHIFT.potW * potZ + normal(rng, START_SHIFT.mean, START_SHIFT.sd), START_SHIFT.min, START_SHIFT.max);
+  const pd = mode.potential;
+  const potZ = (Math.log(Math.max(1, potential - pd.base)) - pd.mu) / pd.sigma;
+  // Laplace draw around the target (inverse CDF), nudged a little by potential
+  const u = next(rng) - 0.5;
+  const lap = -START_SHIFT.scale * Math.sign(u) * Math.log(1 - 2 * Math.abs(u));
+  const startOvr = clamp(START_SHIFT.target + lap + START_SHIFT.potW * potZ, START_SHIFT.lo, START_SHIFT.hi);
+  const shift = startOvr - ovrOf(card, input.pos);
   const dh = fullHeight - (hMin + hMax) / 2;
   const attrs = {} as Attrs;
   for (const k of ATTRS) {
     const tall = (HEIGHT_ATTR[k] ?? 0) * dh;
-    attrs[k] = Math.round(clamp(card[k] + shift + tall + int(rng, -START_SHIFT.jitter, START_SHIFT.jitter), 15, 99));
+    attrs[k] = Math.round(clamp(card[k] + shift + tall + int(rng, -START_SHIFT.jitter, START_SHIFT.jitter), 5, 99));
   }
   return {
     name: input.name,
@@ -103,7 +113,7 @@ export function createPlayer(rng: Rng, input: CreateInput): UserPlayer {
     potential,
     growthType: weighted(rng, GROWTH_TYPE_ODDS),
     aging: weighted(rng, AGING_ODDS),
-    durability: Math.round(range(rng, DURABILITY_RANGE[0], DURABILITY_RANGE[1]) * 100) / 100,
+    durability: Math.round(range(rng, DURABILITY_RANGE[0], DURABILITY_RANGE[1]) * mode.injury * 100) / 100,
     morale: 60,
     trust: 50,
     rep: 3,
@@ -118,6 +128,7 @@ export function createPlayer(rng: Rng, input: CreateInput): UserPlayer {
     injuryMultNext: 1,
     declineMultNext: 1,
     growthMultNext: 1,
+    growthRate: Math.round(clamp(Math.exp(normal(rng, 0, GROWTH_RATE.sd) + GROWTH_RATE.startW * (ovrOf(attrs, input.pos) - START_SHIFT.target)), GROWTH_RATE.min, GROWTH_RATE.max) * 1000) / 1000,
   };
 }
 

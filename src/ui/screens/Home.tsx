@@ -1,5 +1,5 @@
 import type { GameState, SeasonRecord } from '../../engine/types';
-import { canChangePosition, canRetire, positionOptions, prompt } from '../../engine/flow';
+import { canChangePosition, canRetire, heightMismatch, positionOptions, prompt } from '../../engine/flow';
 import { useState } from 'react';
 import { LEVELS } from '../../engine/balance';
 import { NAMES, UI } from '../../content/strings';
@@ -44,7 +44,7 @@ export function SeasonSummary({ rec }: { rec: SeasonRecord }) {
           Postseason · {rec.post.gp} games · {pg(rec.post, 'pts')} PTS · {pg(rec.post, 'reb')} REB · {pg(rec.post, 'ast')} AST
         </p>
       )}
-      {rec.awards.length > 0 && <Banners items={rec.awards.map((a) => ({ label: a, gold: /Champion|MVP|Player of the Year|champion/.test(a) }))} />}
+      {rec.awards.length > 0 && <Banners items={rec.awards.map((a) => ({ label: a }))} />}
       {rec.races.some((r) => r.userRank !== null && r.userRank <= 10) && (
         <ul className="small" style={{ paddingLeft: 18 }}>
           {rec.races
@@ -104,7 +104,8 @@ function PlanOutcomes({ g, half }: { g: GameState; half?: number }) {
       {list.map((o, i) => (
         <div key={i} className={`outcome ${o.outcome.split(' ')[0].toLowerCase()}`}>
           <div className="kicker">
-            {o.half === 1 ? 'First half' : 'Second half'} · {NAMES.plan[o.plan]} · {o.outcome}
+            {o.half === 1 ? 'First half' : 'Second half'} · {NAMES.plan[o.plan]}
+            {o.plan2 ? ` + ${NAMES.plan[o.plan2]}` : ''} · {o.outcome}
           </div>
           <div>
             {o.text}
@@ -196,8 +197,9 @@ function PositionCard({ g }: { g: GameState }) {
   const [open, setOpen] = useState(false);
   const p = g.player;
   const opts = positionOptions(g);
+  const mm = heightMismatch(g);
   return (
-    <section className="card stack">
+    <section className={`card stack${mm ? ' warn-card' : ''}`}>
       <div className="row">
         <div className="sec-title">Position</div>
         <div className="spacer" />
@@ -206,7 +208,13 @@ function PositionCard({ g }: { g: GameState }) {
           {p.height < p.heightProj ? ` (projected ${ht(p.heightProj)})` : ''}
         </span>
       </div>
-      {open ? (
+      {mm && (
+        <p className="height-warn-text">
+          ⚠ {mm.text}
+          {mm.better.length > 0 ? ` ${mm.better.map((o) => NAMES.pos[o.pos]).join(' or ')} would fit.` : ''}
+        </p>
+      )}
+      {open || mm ? (
         <div className="stack" style={{ gap: 6 }}>
           {opts.map((o) => (
             <button key={o.pos} className="choice" disabled={!o.allowed} onClick={() => change(o.pos)}>
@@ -268,7 +276,25 @@ export function Home({ g }: { g: GameState }) {
       <div className="stack">
         <section className="card stack">
           <SeasonHeader g={g} />
-          {g.toast && <div className="toast">{g.toast}</div>}
+          {g.result ? (
+            <div className="result-card">
+              <div className="kicker">
+                {g.result.title} · {g.result.choice}
+              </div>
+              <p className="result-text">{g.result.text}</p>
+              {g.result.changes.length > 0 && (
+                <div className="result-chips">
+                  {g.result.changes.map((c, i) => (
+                    <span key={i} className={`result-chip ${c.good ? 'up' : 'down'}`}>
+                      {c.good ? '▲' : '▼'} {c.label} <b>{c.value}</b>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            g.toast && <div className="toast">{g.toast}</div>
+          )}
           <div className="stack fade-in" key={pr.type === 'decision' ? pr.decision.id : `${g.year}-${g.step}`}>
             <Context g={g} />
             {pr.type === 'decision' && <DecisionView g={g} d={pr.decision} />}

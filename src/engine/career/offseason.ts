@@ -1,7 +1,7 @@
 // Offseason: aging, programs, summer program, and every path decision
 // (recruiting, draft, contracts, free agency, retirement).
 
-import { ATTR_MAX, FA_INTEREST, OFFSEASON_DAYS, REP, RETIRE, ATTRS, TEAM_OPTION } from '../balance';
+import { ATTR_MAX, GROWTH_RATE_AGE, MODES, POSITIONS, FA_INTEREST, OFFSEASON_DAYS, REP, RETIRE, ATTRS, TEAM_OPTION } from '../balance';
 import { chance, clamp, int, logistic, range } from '../rng';
 import type { Contract, Decision, GameState, Offer, RoleKey } from '../types';
 import { applyAging, growHeight, updateHeightProjection } from '../player/growth';
@@ -32,6 +32,8 @@ import { verdictFor } from '../awards/legacy';
 import type { Prospect } from '../world/draft';
 import { NBA_TEAMS } from '../../content/teams';
 import { originOffers, pathOf, pushYouthCrossroads } from './origin';
+import { heightMismatch } from './position';
+import { NAMES } from '../../content/strings';
 
 // ---------- entering the offseason ----------
 
@@ -47,7 +49,32 @@ export function beginOffseason(s: GameState): void {
   const ft = (x: number) => `${Math.floor(x / 12)}′${x % 12}″`;
   if (projChange >= 1) note(s, `Growth spurt: ${ft(p.height)} now, and the doctors think you will reach ${ft(p.heightProj)}.`);
   else if (projChange <= -1) note(s, `Your growth is slowing down. New projection: ${ft(p.heightProj)}.`);
+  // a story page when his size stops matching his position (again only if it changes)
+  const mm = heightMismatch(s);
+  const key = mm ? Math.max(p.height, p.heightProj) * 10 + POSITIONS.indexOf(p.pos) : 0;
+  if (mm && s.flags.heightWarned !== key) {
+    s.flags.heightWarned = key;
+    pushMoment(s, {
+      kind: 'event',
+      title: 'Height check',
+      color: '#0F5C6E',
+      text: `${mm.text} Your OVR is weighted for the position you play, so the wrong spot can hold you back.`,
+      lines: mm.better.length
+        ? [...mm.better.map((o) => `${NAMES.pos[o.pos]} fits your size · OVR ${Math.round(o.ovr)} there`), 'Change position from the Home screen this offseason']
+        : ['No position fits perfectly yet; keep an eye on it'],
+    });
+  }
   const aging = applyAging(s.rng, p);
+  // shoot-for-the-stars mode: never too far behind the path to the floor
+  const floor = MODES[s.mode ?? 'standard'].floor;
+  if (floor) {
+    const start = ovrOf(p.startAttrs, p.pos);
+    const want = start + (floor.ovr - start) * clamp((p.age - 14) / (floor.age - 14), 0, 1);
+    const now = userOvr(s);
+    if (now < want) for (const k of ATTRS) p.attrs[k] = Math.min(ATTR_MAX, p.attrs[k] + (want - now));
+  }
+  // the hidden growth rate fades with age
+  if (p.age >= GROWTH_RATE_AGE.decayFrom) p.growthRate = Math.max(0.5, (p.growthRate ?? 1) * GROWTH_RATE_AGE.decay);
   if (aging.sudden) note(s, 'Your body is not bouncing back like it used to. A sudden decline.');
   else if (aging.change < -0.5) note(s, `Age is catching up: OVR ${aging.change.toFixed(1)} this summer.`);
   applyPrograms(s);

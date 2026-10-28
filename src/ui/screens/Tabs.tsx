@@ -469,9 +469,14 @@ function totals(rows: SeasonRecord[]): StatLine {
 }
 
 export function trophyItems(g: GameState): BannerItem[] {
-  const counts = new Map<string, number>();
-  for (const a of g.awards) counts.set(a.label, (counts.get(a.label) ?? 0) + 1);
-  return [...counts.entries()].map(([label, c]) => ({ label, count: c, gold: /Champion|MVP|Player of the Year|champion/.test(label) }));
+  const byLabel = new Map<string, BannerItem>();
+  for (const a of g.awards) {
+    const it = byLabel.get(a.label) ?? { label: a.label, key: a.key, count: 0, years: [] };
+    it.count! += 1;
+    it.years!.push(a.year);
+    byLabel.set(a.label, it);
+  }
+  return [...byLabel.values()];
 }
 
 export function HistoryTable({ rows }: { rows: SeasonRecord[] }) {
@@ -574,7 +579,7 @@ export function RecordsTab({ g }: { g: GameState }) {
           </div>
         </Card>
       )}
-      <Card title="Trophy cabinet">{g.awards.length === 0 ? <p className="muted">Empty, for now.</p> : <Banners items={trophyItems(g)} />}</Card>
+      <Card title="Trophy cabinet">{g.awards.length === 0 ? <p className="muted">Empty, for now.</p> : <Banners items={trophyItems(g)} grouped />}</Card>
       <Card title="Career totals" kicker={`Legacy score ${legacyScore(g)}`}>
         {nbaT.gp > 0 && (
           <>

@@ -3,6 +3,7 @@
 // (peak OVR → share of careers reaching each milestone).
 
 import { clamp, logistic } from '../rng';
+import { MODES } from '../balance';
 import type { AttrKey, GameState } from '../types';
 import { NAMES } from '../../content/strings';
 import { ovrOf } from '../player/ovr';
@@ -65,8 +66,9 @@ export function scoutReport(s: GameState): ScoutReport {
     sd = scoutSd(p.age) + 1;
   } else {
     // freshman year: project from how far ahead of the curve he is
-    const typical = expectedOvrAt(68, p.age);
-    mid = 68 + (ovr - typical) * 1.2;
+    const m = MODES[s.mode ?? 'standard'].scoutMid;
+    const typical = expectedOvrAt(m, p.age);
+    mid = m + (ovr - typical) * 1.2;
     sd = 7;
   }
   // he can't peak below where he is now; older players are close to their ceiling
@@ -97,6 +99,9 @@ export function scoutReport(s: GameState): ScoutReport {
   if (p.morale < 35) notes.push('Body language has been poor. Confidence is a concern.');
   if (p.morale > 80) notes.push('Plays with real swagger right now.');
   if (p.durability > 1.15) notes.push('Medical file is thick. Durability is a question mark.');
+  // the growth rate stays hidden, but coaches notice it
+  if ((p.growthRate ?? 1) >= 1.25) notes.push('Coaches say he picks things up unusually fast.');
+  else if ((p.growthRate ?? 1) <= 0.8) notes.push('He needs a lot of reps before a new skill sticks.');
   return {
     ovr,
     tier: tierFor(ovr),

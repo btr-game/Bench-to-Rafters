@@ -35,7 +35,11 @@ export const HEIGHT_PROJ_SD: Record<number, number> = { 15: 1.4, 16: 1.1, 17: 0.
 export const HEIGHT_ATTR: Partial<Record<AttrKey, number>> = { REB: 0.8, INT: 0.6, PLY: -0.4, ATH: -0.3 };
 // How far ahead of or behind his card a 14-year-old really is (in OVR points, roughly).
 // Partly linked to potential, mostly not: there are early bloomers and late bloomers.
-export const START_SHIFT = { mean: 1.5, sd: 4.2, potW: 1.6, min: -9, max: 12, jitter: 2 };
+// Every card starts near the same level (the archetype sets the shape, not the head start).
+// Starting OVR is Laplace (double exponential) around 40: dense in the middle, half of all
+// players within about ±5, and about 1 in 30 at each extreme (20 or below, 60 or above).
+// scale = 20 / ln(15) puts 1/30 of the mass beyond ±20 on each side.
+export const START_SHIFT = { target: 40, scale: 20 / Math.log(15), potW: 1.0, lo: 16, hi: 64, jitter: 2 };
 
 export const ARCHETYPE_TOTAL = 320;
 export const REROLL_SPREAD = 3;
@@ -55,7 +59,18 @@ export interface SkewDist {
   min: number;
   max: number;
 }
-export const POTENTIAL: SkewDist = { base: 45, mu: 3.01, sigma: 0.6, min: 47, max: 103 };
+export const POTENTIAL: SkewDist = { base: 45, mu: 3.36, sigma: 0.66, min: 47, max: 103 };
+
+// Difficulty modes (playtest round 6). Each sets the potential distribution, a growth
+// multiplier and an injury multiplier; the league around the player is the same.
+export type Mode = 'standard' | 'reality' | 'stars';
+// floor: in stars mode he is never further behind than a straight line from his start to
+// floor.ovr at floor.age, so every career that lasts that long reaches it
+export const MODES: Record<Mode, { name: string; blurb: string; potential: SkewDist; growth: number; injury: number; scoutMid: number; floor?: { age: number; ovr: number } }> = {
+  standard: { name: 'Standard', blurb: 'Most careers peak in the 60s and 70s; the NBA is common, stardom is earned.', potential: POTENTIAL, growth: 1, injury: 1, scoutMid: 70 },
+  reality: { name: 'Reality hits hard', blurb: 'Like real life: almost nobody makes the NBA. Every choice counts.', potential: { base: 40, mu: 2.25, sigma: 0.6, min: 42, max: 99 }, growth: 0.92, injury: 1.3, scoutMid: 50 },
+  stars: { name: 'Shoot for the stars', blurb: 'Every career reaches All-Star level (80+); 99 is within reach.', potential: { base: 86, mu: 1.9, sigma: 0.6, min: 88, max: 103 }, growth: 1.35, injury: 0.6, scoutMid: 93, floor: { age: 22, ovr: 80 } },
+};
 // stat caps may sit above 99 so elite players can actually reach the top of the scale
 export const CAP_MAX = 110;
 // attributes may pass 99 (up to their caps) so a 97-99 OVR is reachable; OVR itself tops out at 99
@@ -77,15 +92,20 @@ export const SCOUT_NOISE = { sdAt15: 6, sdAt22: 2, firstVisibleAge: 16 };
 // Base rate per half-season, Standard growth type. [minAge, rate]
 // Tuned flatter than the spec's starting table so high-potential players can reach
 // their ceiling (see DECISIONS.md).
+// Fast as a teenager, slowing through the twenties and fading out between 30 and 34 (the
+// hidden growth rate moves this whole curve; see GROWTH_RATE_AGE).
 export const BASE_RATE: [number, number][] = [
-  [14, 2.4],
-  [17, 2.4],
-  [19, 2.4],
-  [21, 2.0],
-  [23, 1.5],
-  [25, 0.9],
-  [27, 0.3],
-  [29, 0],
+  [14, 2.6],
+  [16, 2.5],
+  [18, 2.3],
+  [20, 2.0],
+  [22, 1.6],
+  [24, 1.15],
+  [26, 0.75],
+  [28, 0.45],
+  [30, 0.25],
+  [32, 0.1],
+  [34, 0],
 ];
 export const EARLY_BLOOMER = { ageShift: 2, until: 20, youngBoost: 1.15, youngBefore: 18, plateauEarlier: 2 };
 export const LATE_BLOOMER = { youngMult: 0.8, youngBefore: 21, minutesGate: 0.85 };
@@ -97,10 +117,12 @@ export const GROWTH_SCALE = 1.0;
 
 // minutes share (mpg / game length) → factor
 export const MINUTES_FACTOR: [number, number][] = [
-  [0, 0.25], // did not play
-  [0.0001, 0.4],
-  [0.1, 0.65],
-  [0.25, 0.85],
+  // practice still develops a player who barely plays (raised in round 6: bench teenagers
+  // were not growing at all)
+  [0, 0.5], // did not play
+  [0.0001, 0.6],
+  [0.1, 0.75],
+  [0.25, 0.9],
   [0.45, 1.0],
   [0.65, 1.05],
 ];
@@ -124,6 +146,39 @@ export interface PlanDef {
   rangeGain?: number;
   offhandGain?: number;
 }
+// Two plans can run in the same half (playtest round 6); each counts at this share of its
+// full effect, so two plans do more than one but less than both at full strength.
+export const TWO_PLAN_SHARE = 0.65;
+
+/** The plan that actually applies: one plan as is, or two blended at TWO_PLAN_SHARE each. */
+export function blendPlans(a: HalfPlan, b?: HalfPlan | null): PlanDef {
+  const A = HALF_PLANS[a];
+  if (!b || b === a) return A;
+  const B = HALF_PLANS[b];
+  const k = TWO_PLAN_SHARE;
+  const mult = (x: number, y: number) => 1 + (x - 1) * k + (y - 1) * k;
+  const add = (x: number, y: number) => (x + y) * k;
+  const attrs: Partial<Record<AttrKey, number>> = {};
+  const keys = new Set([...Object.keys(A.attrs ?? {}), ...Object.keys(B.attrs ?? {})]) as Set<AttrKey>;
+  const am = (p: PlanDef, key: AttrKey) => (p.attrs ? (p.attrs[key] ?? p.other ?? 1) : 1);
+  for (const key of keys) attrs[key] = mult(am(A, key), am(B, key));
+  const otherA = A.attrs ? (A.other ?? 1) : 1;
+  const otherB = B.attrs ? (B.other ?? 1) : 1;
+  return {
+    growth: mult(A.growth, B.growth),
+    injury: mult(A.injury, B.injury),
+    morale: add(A.morale, B.morale),
+    trust: add(A.trust, B.trust),
+    rep: [add(A.rep[0], B.rep[0]), add(A.rep[1], B.rep[1])],
+    usage: mult(A.usage, B.usage),
+    teamBoost: add(A.teamBoost, B.teamBoost),
+    attrs: keys.size ? attrs : undefined,
+    other: keys.size ? mult(otherA, otherB) : undefined,
+    rangeGain: add(A.rangeGain ?? 0, B.rangeGain ?? 0) || undefined,
+    offhandGain: add(A.offhandGain ?? 0, B.offhandGain ?? 0) || undefined,
+  };
+}
+
 export const HALF_PLANS: Record<HalfPlan, PlanDef> = {
   balanced: { growth: 1.0, injury: 1.0, morale: 0, trust: 0, rep: [0, 0], usage: 1, teamBoost: 0 },
   grind: { growth: 1.3, injury: 1.7, morale: -4, trust: 1, rep: [0, 0], usage: 1, teamBoost: 0 },
@@ -147,7 +202,17 @@ export interface PlanOutcome {
   trust: number;
   injury?: number; // multiplies injury risk for the next half
 }
+// Hidden growth rate (playtest round 6): how fast he turns work into improvement. Lognormal
+// around 1, a little slower for players who start ahead (there are late surgers and early
+// plateaus). It multiplies growth, makes breakthroughs likelier and can trigger a surge
+// (a half with about 2.6x growth) for fast learners. Some choices raise it.
+// primeYears: years the growth curve and the decline both move per +1.0 of rate (a 1.5 rate
+// grows like someone 2 years younger and starts declining 2 years later). After decayFrom the
+// rate itself fades a little every year.
+export const GROWTH_RATE_AGE = { primeYears: 4, minShift: -2.5, maxShift: 4, decayFrom: 27, decay: 0.975 };
+export const GROWTH_RATE = { sd: 0.3, startW: -0.012, min: 0.5, max: 2.2, breakthroughPow: 1.5, surgeFrom: 1.1, surgeW: 0.25, surgeAgeMax: 25 };
 export const PLAN_OUTCOMES: PlanOutcome[] = [
+  { key: 'surge', label: 'Surge', weight: 0, growth: 2.6, morale: 9, trust: 4 },
   { key: 'breakthrough', label: 'Breakthrough', weight: 0.16, growth: 1.6, morale: 6, trust: 2 },
   { key: 'steady', label: 'Steady progress', weight: 0.56, growth: 1.0, morale: 0, trust: 0 },
   { key: 'plateau', label: 'Plateau', weight: 0.2, growth: 0.55, morale: -4, trust: 0 },

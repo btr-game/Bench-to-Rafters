@@ -1,6 +1,7 @@
 // Full-screen interstitials: the half-season ticker, the new-season card, and story
 // pages (moments) such as commitments, draft night, awards and the title game.
 
+import { awardLook } from '../../content/awards';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { GameState, Moment } from '../../engine/types';
 import { LEVELS } from '../../engine/balance';
@@ -165,12 +166,12 @@ function buildPlays(m: Moment, name: string): Play[] {
 function Recap({ m }: { m: Moment }) {
   if (!m.recap || m.recap.length === 0) return null;
   return (
-    <div className="recap">
+    <div className="post-recap">
       {m.recap.map((sec, i) => (
-        <div key={i} className="recap-sec" style={{ animationDelay: `${0.3 + i * 0.15}s` }}>
+        <div key={i} className="post-recap-sec" style={{ animationDelay: `${0.3 + i * 0.15}s` }}>
           <div className="kicker on-dark">{sec.heading}</div>
           {sec.rows.map((r, k) => (
-            <div key={k} className="recap-row">
+            <div key={k} className="post-recap-row">
               {r}
             </div>
           ))}
@@ -304,11 +305,20 @@ function MomentPage({ m, g }: { m: Moment; g: GameState }) {
             <p className="on-dark lede-dark">{m.text}</p>
             {m.kind === 'awards' ? (
               <div className="banners">
-                {m.lines?.map((x, i) => (
-                  <div key={i} className="banner gold drop" style={{ animationDelay: `${0.15 + i * 0.18}s` }}>
-                    <span>{x}</span>
-                  </div>
-                ))}
+                {m.lines?.map((x, i) => {
+                  const look = awardLook(null, x);
+                  return (
+                    <div key={i} className="award drop" style={{ animationDelay: `${0.15 + i * 0.18}s`, ['--award' as string]: look.color }}>
+                      <span className="award-icon" aria-hidden="true">
+                        {look.icon}
+                      </span>
+                      <div className="award-body">
+                        <div className="award-name">{x}</div>
+                        {look.desc && <div className="award-desc">{look.desc}</div>}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             ) : (
               m.lines?.map((x, i) => (

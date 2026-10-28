@@ -1,7 +1,7 @@
 import type { GameState } from '../../engine/types';
 import { hallOfFame, legacyScore, nbaCareerPoints, raftersTeams, verdictFor } from '../../engine/awards/legacy';
 import { valuePerGame, perGame } from '../../engine/sim/statModel';
-import { LEVELS } from '../../engine/balance';
+import { LEVELS, MODES } from '../../engine/balance';
 import { NAMES, UI } from '../../content/strings';
 import { NBA_TEAMS } from '../../content/teams';
 import { useStore } from '../../store';
@@ -97,7 +97,7 @@ export function Retirement({ g }: { g: GameState }) {
     <div className="stack">
       <section className="final stack" style={{ gap: 10 }}>
         <div className="kicker">
-          Retired at {g.retiredAt ?? p.age} · legacy score {legacyScore(g)}
+          Retired at {g.retiredAt ?? p.age} · legacy score {legacyScore(g)} · {MODES[g.mode ?? 'standard'].name}
         </div>
         <div className="verdict">{v.tier}</div>
         <p className="lede">{v.line}</p>
@@ -152,7 +152,7 @@ export function Retirement({ g }: { g: GameState }) {
       </Card>
       {g.awards.length > 0 && (
         <Card title="Trophy cabinet">
-          <Banners items={trophyItems(g)} />
+          <Banners items={trophyItems(g)} grouped />
         </Card>
       )}
       {g.feed[0] && (
