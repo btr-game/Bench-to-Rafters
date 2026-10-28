@@ -1,8 +1,8 @@
 // Draft classes (§8): ~100 generated prospects per year, a lottery and 60 picks.
 
-import { DRAFT, POTENTIAL } from '../balance';
+import { DRAFT } from '../balance';
 import { expectedOvrAt } from '../player/growth';
-import { scoutSd } from '../player/create';
+import { drawPotential, scoutSd } from '../player/create';
 import { clamp, int, normal, weightedIndex, type Rng } from '../rng';
 import type { GameState, GenPlayer, League, Team } from '../types';
 import { genPlayer } from './gen';
@@ -34,7 +34,7 @@ export function generateClass(s: GameState): Prospect[] {
   const cands: { ovr: number; pot: number; age: number; scoutPot: number; prod: number; board: number }[] = [];
   for (const age of DRAFT.ages) {
     for (let i = 0; i < DRAFT.poolPerAge; i++) {
-      const pot = Math.round(clamp(normal(rng, DRAFT.potMean, DRAFT.potSd), POTENTIAL.min, POTENTIAL.max));
+      const pot = drawPotential(rng, DRAFT.pot);
       const ovr = expectedOvrAt(pot, age) + normal(rng, 0, DRAFT.ovrNoise);
       const scoutPot = pot + normal(rng, 0, scoutSd(age));
       const prod = ovr + normal(rng, 0, 3);

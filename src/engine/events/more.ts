@@ -1,6 +1,6 @@
 // More turning points (§11): bigger swings, real risks and some shown odds.
 
-import { ROLE_ORDER } from '../balance';
+import { ATTR_MAX, ROLE_ORDER } from '../balance';
 import { chance, clamp, int, pick, range, type Rng } from '../rng';
 import type { AttrKey, GameState, Stage } from '../types';
 import { adjust, logDecision, pushMoment, rankOnRoster, userOvr } from '../career/common';
@@ -11,7 +11,7 @@ const ALL: Stage[] = ['HS', 'NCAA', 'GL', 'EU', 'INT', 'NBA'];
 const PRO: Stage[] = ['GL', 'EU', 'INT', 'NBA'];
 const PAID: Stage[] = ['NCAA', 'GL', 'EU', 'INT', 'NBA'];
 
-const bump = (s: GameState, k: AttrKey, v: number) => (s.player.attrs[k] = clamp(s.player.attrs[k] + v, 15, 99));
+const bump = (s: GameState, k: AttrKey, v: number) => (s.player.attrs[k] = clamp(s.player.attrs[k] + v, 15, ATTR_MAX));
 const money = (s: GameState, m: number) => {
   s.player.bank = Math.max(0, s.player.bank + m);
   if (m > 0) s.player.earnings += m;
@@ -137,7 +137,7 @@ export const MORE_EVENTS: EventDef[] = [
       {
         label: 'Stand your ground',
         shownOdds: 0.5,
-        detail: 'Coin flip: he respects it, or you are in the doghouse',
+        detail: 'He respects it, or you are in the doghouse',
         resolve: (s, rng) => {
           if (chance(rng, 0.5)) {
             trust(s, 10);

@@ -188,11 +188,11 @@ export function PlayerTab({ g }: { g: GameState }) {
       <ScoutCard g={g} />
       <Card title="Ratings" kicker={`${NAMES.pos[p.pos]} · OVR ${Math.round(ovr(g))} · peak ${Math.round(p.peakOvr)}`}>
         <AttrRows g={g} compare={g.season?.attrsStart} />
-        <p className="muted small">● focus stat (grows ×1.8). Changes are since the start of this season.</p>
+        <p className="muted small">● focus stat. Changes are since the start of this season.</p>
         <div className="sec-title">Meters</div>
         <div className="meters">
           <Meter label="Range" value={p.range} tone="ink" />
-          <Meter label="Off-hand" value={p.offhand} tone="ink" />
+          <Meter label={`${p.hand === 'L' ? 'Right' : 'Left'} hand (weak hand)`} value={p.offhand} tone="ink" />
         </div>
       </Card>
       </div>
@@ -215,6 +215,10 @@ export function PlayerTab({ g }: { g: GameState }) {
             <div>
               <dt>Hometown</dt>
               <dd>{p.hometown}</dd>
+            </div>
+            <div>
+              <dt>Shoots</dt>
+              <dd>{p.hand === 'L' ? 'Left-handed' : 'Right-handed'}</dd>
             </div>
             <div>
               <dt>Captain</dt>

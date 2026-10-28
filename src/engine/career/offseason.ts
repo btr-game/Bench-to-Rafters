@@ -1,7 +1,7 @@
 // Offseason: aging, programs, summer program, and every path decision
 // (recruiting, draft, contracts, free agency, retirement).
 
-import { FA_INTEREST, OFFSEASON_DAYS, REP, RETIRE, ATTRS, TEAM_OPTION } from '../balance';
+import { ATTR_MAX, FA_INTEREST, OFFSEASON_DAYS, REP, RETIRE, ATTRS, TEAM_OPTION } from '../balance';
 import { chance, clamp, int, logistic, range } from '../rng';
 import type { Contract, Decision, GameState, Offer, RoleKey } from '../types';
 import { applyAging, growHeight } from '../player/growth';
@@ -95,7 +95,7 @@ function applyPrograms(s: GameState): void {
   for (const prog of p.programs) {
     const step = prog.steps.shift();
     if (step) {
-      if (step.attrs) for (const k of ATTRS) if (step.attrs[k]) p.attrs[k] = clamp(p.attrs[k] + step.attrs[k]!, 15, 99);
+      if (step.attrs) for (const k of ATTRS) if (step.attrs[k]) p.attrs[k] = clamp(p.attrs[k] + step.attrs[k]!, 15, ATTR_MAX);
       if (step.range) p.range = clamp(p.range + step.range, 0, 99);
       if (step.offhand) p.offhand = clamp(p.offhand + step.offhand, 0, 99);
       note(s, `${prog.name}: season ${prog.seasonsLeft - prog.steps.length} done.`);
@@ -127,7 +127,7 @@ function resolveSummer(s: GameState, id: string): void {
   const k = p.age >= 30 ? 0.5 : 1;
   // summer work cannot push a stat past its potential cap
   const bump = (key: (typeof ATTRS)[number], v: number) =>
-    (p.attrs[key] = clamp(p.attrs[key] + v * k * clamp((p.caps[key] - p.attrs[key]) / 10, 0, 1), 15, 99));
+    (p.attrs[key] = clamp(p.attrs[key] + v * k * clamp((p.caps[key] - p.attrs[key]) / 10, 0, 1), 15, ATTR_MAX));
   if (id === 'skills') for (const f of p.focus) bump(f, 1.0);
   if (id === 'strength') {
     bump('ATH', 0.8);

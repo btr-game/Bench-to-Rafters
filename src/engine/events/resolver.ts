@@ -19,6 +19,14 @@ function eligible(s: GameState, phase: 'mid' | 'off'): EventDef[] {
   });
 }
 
+/** Risk level shown on a choice: from its odds when it has them, or its wording. */
+function riskOf(c: EventChoice): 'Low' | 'Medium' | 'High' | undefined {
+  if (c.shownOdds !== undefined) return c.shownOdds >= 0.6 ? 'Low' : c.shownOdds >= 0.4 ? 'Medium' : 'High';
+  if (c.detail && /high risk/i.test(c.detail)) return 'High';
+  if (c.detail && /risky/i.test(c.detail)) return 'Medium';
+  return undefined;
+}
+
 function push(s: GameState, e: EventDef): void {
   const choices = typeof e.choices === 'function' ? e.choices(s) : e.choices;
   s.events.lastSeen[e.id] = s.year;
@@ -27,7 +35,7 @@ function push(s: GameState, e: EventDef): void {
     kind: 'event',
     title: e.title,
     text: typeof e.text === 'function' ? e.text(s) : e.text,
-    choices: choices.map((c, i) => ({ id: String(i), label: c.label, detail: c.detail, shownOdds: c.shownOdds })),
+    choices: choices.map((c, i) => ({ id: String(i), label: c.label, detail: c.detail, risk: riskOf(c) })),
     data: { eventId: e.id },
   });
 }

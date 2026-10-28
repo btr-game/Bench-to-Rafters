@@ -308,3 +308,7 @@ input[type='text'], input[type='number'] { width: 100%; font: inherit; padding: 
 .outcome.breakthrough { border-color: var(--good); }
 .outcome.setback { border-color: var(--bad); }
 .outcome.plateau { border-color: var(--warn); }
+.risk { font-family: var(--f-mono); font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; padding: 1px 6px; border-radius: 4px; border: 1px solid currentColor; margin-left: 6px; }
+.risk-low { color: var(--good); }
+.risk-medium { color: var(--warn); }
+.risk-high { color: var(--bad); }

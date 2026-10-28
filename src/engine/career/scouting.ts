@@ -9,27 +9,34 @@ import { ovrOf } from '../player/ovr';
 import { expectedOvrAt } from '../player/growth';
 import { scoutSd } from '../player/create';
 
+// The OVR scale (playtest round 3): 80 is an All-Star, 85 All-NBA 2nd team, 90 All-NBA 1st
+// team, 95 an MVP, 97 the all-time greats. Anything above that is new territory.
 export const TIERS: [number, string][] = [
-  [87, 'MVP level'],
-  [83, 'All-NBA level'],
-  [79, 'All-Star level'],
-  [75, 'NBA starter'],
-  [71, 'NBA rotation player'],
-  [68, 'NBA end of bench'],
-  [62, 'Pro overseas / G League level'],
-  [55, 'College player'],
+  [98, 'Beyond anyone who has played'],
+  [97, 'All-time great'],
+  [95, 'MVP level'],
+  [90, 'All-NBA 1st team level'],
+  [85, 'All-NBA level'],
+  [80, 'All-Star level'],
+  [74, 'NBA starter'],
+  [69, 'NBA rotation player'],
+  [65, 'NBA end of bench'],
+  [59, 'Pro overseas / G League level'],
+  [52, 'College player'],
   [0, 'High school level'],
 ];
 
 export const tierFor = (ovr: number): string => TIERS.find(([min]) => ovr >= min)![1];
 
-// [center, scale] of the logistic curve in peak OVR
+// [center, scale] of the logistic curve in peak OVR, fitted to the balance harness
+// (share of careers with that peak that reach each milestone at least once)
 export const ODDS_CURVES: Record<string, [number, number]> = {
-  nba: [71, 1.4],
-  allStar: [79.5, 1.4],
-  allNba: [82, 1.6],
-  hof: [84.7, 1.4],
-  mvp: [88.5, 1.6],
+  nba: [62, 1.6],
+  allStar: [76.8, 1.4],
+  allNba: [80, 1.7],
+  allNba1: [85, 1.9],
+  hof: [82.5, 1.5],
+  mvp: [91.8, 2.2],
 };
 
 export interface ScoutReport {
@@ -58,8 +65,8 @@ export function scoutReport(s: GameState): ScoutReport {
     sd = scoutSd(p.age) + 1;
   } else {
     // freshman year: project from how far ahead of the curve he is
-    const typical = expectedOvrAt(75, p.age);
-    mid = 75 + (ovr - typical) * 1.2;
+    const typical = expectedOvrAt(68, p.age);
+    mid = 68 + (ovr - typical) * 1.2;
     sd = 7;
   }
   // he can't peak below where he is now; older players are close to their ceiling
@@ -80,6 +87,7 @@ export function scoutReport(s: GameState): ScoutReport {
   if (s.nbaGames > 0) odds.nba = 1;
   if (s.awards.some((a) => a.key === 'ALLSTAR')) odds.allStar = 1;
   if (s.awards.some((a) => a.key.startsWith('ALLNBA'))) odds.allNba = 1;
+  if (s.awards.some((a) => a.key === 'ALLNBA1')) odds.allNba1 = 1;
   if (s.awards.some((a) => a.key === 'MVP')) odds.mvp = 1;
   const notes: string[] = [];
   const strengths = Object.entries(p.attrs).sort((a, b) => b[1] - a[1]).slice(0, 2).map(([k]) => NAMES.attr[k as AttrKey].toLowerCase());

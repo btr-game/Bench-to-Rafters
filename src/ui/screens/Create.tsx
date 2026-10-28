@@ -26,6 +26,7 @@ export function Create() {
   const [arch, setArch] = useState(0);
   const [cands, setCands] = useState<Attrs[]>(() => cards('SG'));
   const [focus, setFocus] = useState<AttrKey[]>([]);
+  const [hand, setHand] = useState<'R' | 'L'>('R');
 
   const choosePos = (p: Pos) => {
     setPos(p);
@@ -41,6 +42,7 @@ export function Create() {
     setPos(p);
     setCands(cards(p));
     setArch(Math.floor(Math.random() * 3));
+    setHand(Math.random() < 0.12 ? 'L' : 'R');
     const shuffled = [...ATTRS].sort(() => Math.random() - 0.5);
     setFocus(shuffled.slice(0, 2));
   };
@@ -61,6 +63,7 @@ export function Create() {
       archetype: arch,
       attrs,
       focus,
+      hand,
     });
 
   return (
@@ -102,6 +105,18 @@ export function Create() {
             <label htmlFor="f-num">{UI.create.number}</label>
             <input id="f-num" type="number" min={0} max={99} value={number} onChange={(e) => setNumber(e.target.value)} />
           </div>
+          <fieldset>
+            <legend>Dominant hand</legend>
+            <div className="seg">
+              <button aria-pressed={hand === 'R'} onClick={() => setHand('R')}>
+                Right
+              </button>
+              <button aria-pressed={hand === 'L'} onClick={() => setHand('L')}>
+                Left
+              </button>
+            </div>
+            <p className="muted small">Lefties are rarer, so defenders see them less. Either way, your weak hand starts raw; you can train it later.</p>
+          </fieldset>
           <div className="assigned">
             <div className="kicker">{UI.create.assignedTitle}</div>
             <div className="small">{UI.create.assignedText}</div>

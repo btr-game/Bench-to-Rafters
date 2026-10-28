@@ -6,7 +6,7 @@ export function ovrOf(attrs: Attrs, pos: Pos): number {
   const w = OVR_WEIGHTS[pos];
   let s = 0;
   for (const k of ATTRS) s += attrs[k] * w[k];
-  return s;
+  return Math.min(99, s);
 }
 
 /** Shape OVR of each archetype at its own position. */

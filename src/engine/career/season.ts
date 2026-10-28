@@ -61,7 +61,8 @@ export function activeLeague(s: GameState): League {
 
 export function userProfile(s: GameState): Profile {
   const p = s.player;
-  return { attrs: p.attrs, height: p.height, wingspan: p.wingspan, range: p.range, offhand: p.offhand };
+  // lefties get a small edge: defenders rarely see the left hand
+  return { attrs: p.attrs, height: p.height, wingspan: p.wingspan, range: p.range, offhand: p.offhand + (p.hand === 'L' ? 6 : 0) };
 }
 
 // ---------- preseason ----------
@@ -127,15 +128,16 @@ export function beginSeason(s: GameState): void {
 export function pushPlanDecision(s: GameState, half: 1 | 2): void {
   const injured = !!s.player.injury && s.player.injury.key !== 'dtd';
   const plans: { id: HalfPlan; label: string; detail: string }[] = [
-    { id: 'balanced', label: 'Balanced', detail: 'Normal growth and risk.' },
-    { id: 'grind', label: 'Grind', detail: 'Growth ×1.3, injury risk ×1.7, morale −4. Burnout risk.' },
-    { id: 'recovery', label: 'Recovery', detail: 'Growth ×0.75, injury risk halved, heal faster, morale +4.' },
-    { id: 'spotlight', label: 'Spotlight', detail: 'More shots, reputation and money. Coach trust −3, team a bit worse.' },
-    { id: 'teamfirst', label: 'Team first', detail: 'Fewer shots, team plays better. Coach trust +6.' },
-    { id: 'shooting', label: 'Shooting lab', detail: 'Shooting grows ×2.4 and range +2. Everything else slows.' },
-    { id: 'strength', label: 'Weight room', detail: 'Finishing, rebounding, athleticism up fast. Injury risk ×1.2.' },
-    { id: 'playmaking', label: 'Film and reads', detail: 'Playmaking and IQ grow ×2. Coach trust +2.' },
-    { id: 'defense', label: 'Lockdown', detail: 'Perimeter and interior D grow ×2. Coaches love it.' },
+    { id: 'balanced', label: 'Balanced', detail: 'Steady work, normal risk.' },
+    { id: 'grind', label: 'Grind', detail: 'Work harder than anyone. Faster development, much more wear on your body, burnout possible.' },
+    { id: 'recovery', label: 'Recovery', detail: 'Ease off. Slower development, far fewer injuries, heal faster, feel better.' },
+    { id: 'spotlight', label: 'Spotlight', detail: 'Hunt shots and attention. More fame and money; coaches and teammates notice.' },
+    { id: 'teamfirst', label: 'Team first', detail: 'Make the right play. Fewer shots, more wins, the coach loves it.' },
+    { id: 'shooting', label: 'Shooting lab', detail: 'Live in the gym with a shooting coach. Your jumper and range get the reps; the rest waits.' },
+    { id: 'strength', label: 'Weight room', detail: 'Get stronger and more explosive inside. A bit more injury risk.' },
+    { id: 'playmaking', label: 'Film and reads', detail: 'Study the game. Passing and feel improve; coaches trust you more.' },
+    { id: 'defense', label: 'Lockdown', detail: 'Make defense your identity. Coaches notice.' },
+    { id: 'offhand', label: 'Off-hand work', detail: 'Drill your weak hand every day. Finishing with both hands; little else grows.' },
   ];
   pushDecision(s, {
     kind: 'plan',
@@ -320,6 +322,7 @@ function growthAfterHalf(s: GameState, acc: HalfAcc, level: LevelKey, ovr: numbe
     morale: p.morale,
   });
   if (plan.rangeGain) p.range = clamp(p.range + plan.rangeGain * outcome.growth, 0, 99);
+  if (plan.offhandGain) p.offhand = clamp(p.offhand + plan.offhandGain * outcome.growth, 0, 99);
   if (outcome.injury) p.injuryMultNext *= outcome.injury;
   const gain = ovrOf(p.attrs, p.pos) - before;
   const text =
@@ -623,7 +626,7 @@ function finishSeason(s: GameState): void {
     if (s.nba) quickNbaSeason(s);
     else if (s.stage === 'HS' && s.hsYear === 4) {
       s.nba = buildNba(s, s.year);
-      warmUpNba(s, 2);
+      warmUpNba(s, 12);
       quickNbaSeason(s);
     }
   } else snapshotNba(s);

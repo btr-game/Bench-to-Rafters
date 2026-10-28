@@ -1,7 +1,7 @@
 // Per-game stat model (§9). The same expected-rate function feeds full box scores
 // for the user and season-level lines for every generated player.
 
-import { LEVELS, STAT, USAGE_SCORING_W, USAGE_TEMP, VALUE } from '../balance';
+import { EFF_KNEE, LEVELS, STAT, USAGE_KNEE, USAGE_SCORING_W, USAGE_TEMP, VALUE } from '../balance';
 import { binomial, clamp, poisson, type Rng } from '../rng';
 import type { Attrs, GenPlayer, LevelKey, Pos, StatLine } from '../types';
 import { genAttrs, genRange, shapeOvr } from '../player/ovr';
@@ -37,7 +37,8 @@ export function genProfile(g: GenPlayer): Profile {
     height: g.height,
     wingspan: g.height + 2,
     range: genRange(g.pos, g.shape, g.ovr),
-    offhand: 50,
+    // better players have a better weak hand
+    offhand: Math.max(30, Math.min(88, g.ovr - 12)),
   };
 }
 
@@ -47,20 +48,24 @@ const SHAPE_SCORE: Record<Pos, number[]> = Object.fromEntries(
   (Object.keys(ARCHETYPES) as Pos[]).map((pos) => [pos, ARCHETYPES[pos].map((a) => scoringRating(a.attrs) - shapeOvr(pos, ARCHETYPES[pos].indexOf(a)))]),
 ) as Record<Pos, number[]>;
 
-export const genUsageWeight = (g: GenPlayer): number => Math.exp((SHAPE_SCORE[g.pos][g.shape] + g.ovr) / USAGE_TEMP);
+// Above the knee extra scoring rating buys less usage: there are only so many shots in a game.
+const kneed = (r: number): number => (r > USAGE_KNEE.at ? USAGE_KNEE.at + (r - USAGE_KNEE.at) * USAGE_KNEE.slope : r);
+
+export const genUsageWeight = (g: GenPlayer): number => Math.exp(kneed(SHAPE_SCORE[g.pos][g.shape] + g.ovr) / USAGE_TEMP);
 
 export function scoringRating(a: Attrs): number {
   const w = USAGE_SCORING_W;
   return a.SHT * w.SHT + a.FIN * w.FIN + a.PLY * w.PLY + a.ATH * w.ATH + a.IQ * w.IQ;
 }
 
-export const usageWeight = (a: Attrs): number => Math.exp(scoringRating(a) / USAGE_TEMP);
+export const usageWeight = (a: Attrs): number => Math.exp(kneed(scoringRating(a)) / USAGE_TEMP);
 
 /** Expected per-game numbers for a player given minutes and usage multiplier. */
 export function expected(pr: Profile, level: LevelKey, minutes: number, usageMult: number, moraleMult = 1): Expected {
   const L = LEVELS[level];
   const lv = L.avg;
-  const a = pr.attrs;
+  // shooting efficiency flattens out at the very top of the scale
+  const a = Object.fromEntries(Object.entries(pr.attrs).map(([k, v]) => [k, v > EFF_KNEE.at ? EFF_KNEE.at + (v - EFF_KNEE.at) * EFF_KNEE.slope : v])) as Attrs;
   const f36 = minutes / 36;
   const fgaPerMin = (L.teamFga / (5 * L.gameLen)) * usageMult;
   const fga = fgaPerMin * minutes;

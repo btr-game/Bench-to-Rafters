@@ -25,6 +25,7 @@ const LABELS: Record<string, string> = {
   nba5: '5+ NBA seasons',
   allStar: 'At least 1 All-Star',
   allNba: 'At least 1 All-NBA',
+  allNba1: 'At least 1 All-NBA 1st team',
   mvp: 'At least 1 MVP',
   title: 'At least 1 NBA title',
   hof: 'Hall of Fame',

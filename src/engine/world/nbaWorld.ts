@@ -111,7 +111,7 @@ export function nbaOffseason(s: GameState, nba: League, picks: DraftPickResult[]
   // fill remaining spots with journeymen; the coaching factor drifts
   for (const t of nba.teams) {
     while (t.roster.length < NBA_WORLD.rosterSize) {
-      const p = genPlayer(s, normal(rng, 67.5, 1.5), int(rng, 23, 30));
+      const p = genPlayer(s, normal(rng, 65, 1.5), int(rng, 23, 30));
       signGen(year, p, t, 1);
     }
     t.coach = (t.coach ?? 0) * COACHING.keep + normal(rng, 0, COACHING.sd);

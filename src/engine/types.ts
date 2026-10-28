@@ -7,7 +7,7 @@ export type AttrKey = 'SHT' | 'FIN' | 'PLY' | 'PER' | 'INT' | 'REB' | 'ATH' | 'I
 export type Attrs = Record<AttrKey, number>;
 export type LevelKey = 'HSJV' | 'HSV' | 'NCAA' | 'GL' | 'EU' | 'INT' | 'NBA';
 export type Stage = 'HS' | 'NCAA' | 'GL' | 'EU' | 'INT' | 'NBA' | 'FA' | 'RETIRED';
-export type HalfPlan = 'balanced' | 'grind' | 'recovery' | 'spotlight' | 'teamfirst' | 'shooting' | 'strength' | 'playmaking' | 'defense';
+export type HalfPlan = 'balanced' | 'grind' | 'recovery' | 'spotlight' | 'teamfirst' | 'shooting' | 'strength' | 'playmaking' | 'defense' | 'offhand';
 export type RoleKey = 'key' | 'starter' | 'sixth' | 'rotation' | 'bench' | 'deep';
 export type GrowthType = 'early' | 'standard' | 'late';
 export type AgingProfile = 'durable' | 'normal' | 'fragile';
@@ -80,7 +80,8 @@ export interface UserPlayer {
   startAttrs: Attrs;
   caps: Attrs;
   range: number;
-  offhand: number;
+  offhand: number; // skill with the weaker hand
+  hand: 'R' | 'L'; // dominant hand
   focus: AttrKey[];
   focusChanges: number;
   // hidden
@@ -222,6 +223,7 @@ export interface Choice {
   detail?: string;
   disabled?: boolean;
   shownOdds?: number;
+  risk?: 'Low' | 'Medium' | 'High';
   tags?: string[];
   meta?: Record<string, number | string | boolean | null>;
 }

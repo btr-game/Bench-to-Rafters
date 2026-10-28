@@ -5,6 +5,7 @@ const ODDS_LABEL: [string, string][] = [
   ['nba', 'Play in the NBA'],
   ['allStar', 'Make an All-Star team'],
   ['allNba', 'Make All-NBA'],
+  ['allNba1', 'Make All-NBA 1st team'],
   ['hof', 'Hall of Fame'],
   ['mvp', 'Win an MVP'],
 ];

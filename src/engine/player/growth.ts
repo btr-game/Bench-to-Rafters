@@ -1,4 +1,5 @@
 import {
+  ATTR_MAX,
   ATTRS,
   BASE_RATE,
   DECLINE_ATTR_MULT,
@@ -123,7 +124,7 @@ export function applyHalfGrowth(rng: Rng, p: UserPlayer, ctx: HalfGrowthCtx): Pa
       (ctx.extraMult ?? 1) *
       range(rng, GROWTH_RANDOM[0], GROWTH_RANDOM[1]);
     if (g > 0) {
-      p.attrs[k] = Math.min(99, p.attrs[k] + g);
+      p.attrs[k] = Math.min(ATTR_MAX, p.attrs[k] + g);
       gains[k] = g;
     }
   }
@@ -135,7 +136,7 @@ export function applyAging(rng: Rng, p: UserPlayer): { change: number; sudden: b
   const before = ovrOf(p.attrs, p.pos);
   const start = DECLINE_START[p.aging];
   let sudden = false;
-  if (p.age < IQ_LATE_GAIN.untilAge && p.age >= 27) p.attrs.IQ = Math.min(99, p.attrs.IQ + IQ_LATE_GAIN.perSeason);
+  if (p.age < IQ_LATE_GAIN.untilAge && p.age >= 27) p.attrs.IQ = Math.min(ATTR_MAX, p.attrs.IQ + IQ_LATE_GAIN.perSeason);
   if (p.age >= start) {
     const yrs = Math.min(DECLINE_TABLE.length - 1, p.age - start);
     const target = DECLINE_TABLE[yrs] * (1 + range(rng, -DECLINE_NOISE, DECLINE_NOISE)) * p.declineMultNext;

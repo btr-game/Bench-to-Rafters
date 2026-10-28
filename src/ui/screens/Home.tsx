@@ -106,7 +106,7 @@ function PlanOutcomes({ g, half }: { g: GameState; half?: number }) {
             {o.half === 1 ? 'First half' : 'Second half'} · {NAMES.plan[o.plan]} · {o.outcome}
           </div>
           <div>
-            {o.text} <b className="num">{o.ovrGain >= 0 ? '+' : ''}{o.ovrGain.toFixed(1)} OVR</b>
+            {o.text}
           </div>
         </div>
       ))}

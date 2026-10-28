@@ -1,27 +1,39 @@
 // Offseason shop: a random stock of five items, up to two purchases per summer.
 
-import { ATTRS } from '../balance';
+import { ATTR_MAX, ATTRS } from '../balance';
 import { clamp, shuffle } from '../rng';
 import type { Decision, GameState } from '../types';
 import { SHOP_ITEMS, type ShopItem } from '../../content/shop';
 import { logDecision, pushDecision } from '../career/common';
 import { fmtMoney } from './salary';
-import { NAMES } from '../../content/strings';
 
 export const MAX_PURCHASES = 2;
 
+const HELPS: Record<string, string> = {
+  SHT: 'your shooting',
+  FIN: 'finishing at the rim',
+  PLY: 'your handle and passing',
+  PER: 'perimeter defense',
+  INT: 'rim protection',
+  REB: 'rebounding',
+  ATH: 'your athleticism',
+  IQ: 'your feel for the game',
+};
+
+/** Plain-language effect of an item; no numbers, the player judges the value. */
 export function describeItem(it: ShopItem): string {
   const parts: string[] = [];
-  if (it.attrs) for (const k of ATTRS) if (it.attrs[k]) parts.push(`${NAMES.attr[k]} +${it.attrs[k]}`);
-  if (it.focus) parts.push(`Focus stats +${it.focus}`);
-  if (it.range) parts.push(`Range +${it.range}`);
-  if (it.offhand) parts.push(`Off-hand +${it.offhand}`);
-  if (it.growthMult) parts.push(`Growth ×${it.growthMult} next season`);
-  if (it.injuryMult) parts.push(`Injury risk ×${it.injuryMult} next season`);
-  if (it.declineMult) parts.push(`Aging ×${it.declineMult} next season`);
-  if (it.morale) parts.push(`Morale +${it.morale}`);
-  if (it.rep) parts.push(`Reputation +${it.rep}`);
-  if (it.trust) parts.push(`Coach trust +${it.trust}`);
+  const attrs = it.attrs ? ATTRS.filter((k) => it.attrs![k]) : [];
+  if (attrs.length) parts.push(`Helps ${attrs.map((k) => HELPS[k]).join(' and ')}`);
+  if (it.focus) parts.push('Sharpens your focus skills');
+  if (it.range) parts.push('Extends your range');
+  if (it.offhand) parts.push('Builds your weak hand');
+  if (it.growthMult) parts.push('Speeds up your development');
+  if (it.injuryMult) parts.push('Keeps your body healthier');
+  if (it.declineMult) parts.push('Slows down aging');
+  if (it.morale) parts.push('Lifts your mood');
+  if (it.rep) parts.push('Raises your profile');
+  if (it.trust) parts.push('Earns goodwill');
   return parts.join(' · ');
 }
 
@@ -60,8 +72,8 @@ export function pushShop(s: GameState, ids?: string[], bought = 0): void {
 export function applyItem(s: GameState, it: ShopItem): void {
   const p = s.player;
   p.bank -= it.price;
-  if (it.attrs) for (const k of ATTRS) if (it.attrs[k]) p.attrs[k] = clamp(p.attrs[k] + it.attrs[k]!, 15, 99);
-  if (it.focus) for (const k of p.focus) p.attrs[k] = clamp(p.attrs[k] + it.focus, 15, 99);
+  if (it.attrs) for (const k of ATTRS) if (it.attrs[k]) p.attrs[k] = clamp(p.attrs[k] + it.attrs[k]!, 15, ATTR_MAX);
+  if (it.focus) for (const k of p.focus) p.attrs[k] = clamp(p.attrs[k] + it.focus, 15, ATTR_MAX);
   if (it.range) p.range = clamp(p.range + it.range, 0, 99);
   if (it.offhand) p.offhand = clamp(p.offhand + it.offhand, 0, 99);
   if (it.growthMult) p.growthMultNext *= it.growthMult;

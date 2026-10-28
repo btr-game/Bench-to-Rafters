@@ -6,13 +6,19 @@ import {
   DURABILITY_RANGE,
   GROWTH_TYPE_ODDS,
   HEIGHT_RANGE,
+  CAP_MAX,
   POTENTIAL,
+  type SkewDist,
   REROLL_SPREAD,
   SCOUT_NOISE,
 } from '../balance';
 import { clamp, int, normal, range, weightedIndex, type Rng } from '../rng';
 import type { AttrKey, Attrs, Pos, UserPlayer } from '../types';
 import { ARCHETYPES } from './archetypes';
+
+export function drawPotential(rng: Rng, d: SkewDist): number {
+  return Math.round(clamp(d.base + Math.exp(normal(rng, d.mu, d.sigma)), d.min, d.max));
+}
 
 export interface CreateInput {
   name: string;
@@ -21,6 +27,7 @@ export interface CreateInput {
   archetype: number;
   attrs?: Attrs; // a re-rolled candidate; defaults to the archetype card
   focus: AttrKey[];
+  hand?: 'R' | 'L';
   height?: number; // full-grown height; random if omitted
   hometown?: string; // assigned by the game when omitted
   highSchool?: string;
@@ -49,9 +56,9 @@ export function createPlayer(rng: Rng, input: CreateInput): UserPlayer {
   const [hMin, hMax] = HEIGHT_RANGE[input.pos];
   const fullHeight = input.height ?? int(rng, hMin, hMax);
   const height = fullHeight - int(rng, 1, 3);
-  const potential = Math.round(clamp(normal(rng, POTENTIAL.mean, POTENTIAL.sd), POTENTIAL.min, POTENTIAL.max));
+  const potential = drawPotential(rng, POTENTIAL);
   const caps = {} as Attrs;
-  for (const k of ATTRS) caps[k] = clamp(potential + (attrs[k] - 40) * CAP_FROM_START, 30, 99);
+  for (const k of ATTRS) caps[k] = clamp(potential + (attrs[k] - 40) * CAP_FROM_START, 30, CAP_MAX);
   return {
     name: input.name,
     number: input.number,
@@ -68,6 +75,7 @@ export function createPlayer(rng: Rng, input: CreateInput): UserPlayer {
     caps,
     range: arch.range,
     offhand: int(rng, 25, 40),
+    hand: input.hand ?? 'R',
     focus: input.focus.slice(0, 2),
     focusChanges: 0,
     potential,

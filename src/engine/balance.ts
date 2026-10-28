@@ -34,7 +34,20 @@ export const NON_FOCUS_MULT = 0.85;
 export const MAX_FOCUS_CHANGES = 3;
 
 // §6 hidden traits
-export const POTENTIAL = { mean: 75, sd: 5.5, min: 58, max: 95 };
+// Potential is right-skewed: base + exp(Normal(mu, sigma)). For the player this gives a
+// median ceiling in the mid 60s, about 1 in 20 near 50 and about 1 in 20 at 95+.
+export interface SkewDist {
+  base: number;
+  mu: number;
+  sigma: number;
+  min: number;
+  max: number;
+}
+export const POTENTIAL: SkewDist = { base: 45, mu: 2.97, sigma: 0.6, min: 47, max: 103 };
+// stat caps may sit above 99 so elite players can actually reach the top of the scale
+export const CAP_MAX = 110;
+// attributes may pass 99 (up to their caps) so a 97-99 OVR is reachable; OVR itself tops out at 99
+export const ATTR_MAX = CAP_MAX;
 export const GROWTH_TYPE_ODDS: [GrowthType, number][] = [
   ['early', 0.2],
   ['standard', 0.6],
@@ -97,6 +110,7 @@ export interface PlanDef {
   attrs?: Partial<Record<AttrKey, number>>;
   other?: number;
   rangeGain?: number;
+  offhandGain?: number;
 }
 export const HALF_PLANS: Record<HalfPlan, PlanDef> = {
   balanced: { growth: 1.0, injury: 1.0, morale: 0, trust: 0, rep: [0, 0], usage: 1, teamBoost: 0 },
@@ -108,6 +122,7 @@ export const HALF_PLANS: Record<HalfPlan, PlanDef> = {
   strength: { growth: 1.0, injury: 1.2, morale: -1, trust: 0, rep: [0, 0], usage: 1, teamBoost: 0, attrs: { FIN: 1.9, REB: 1.9, ATH: 1.9, INT: 1.6 }, other: 0.55 },
   playmaking: { growth: 1.0, injury: 1.0, morale: 0, trust: 2, rep: [0, 0], usage: 0.97, teamBoost: 0.2, attrs: { PLY: 2.2, IQ: 2.0 }, other: 0.6 },
   defense: { growth: 1.0, injury: 1.05, morale: 0, trust: 3, rep: [0, 0], usage: 0.95, teamBoost: 0.3, attrs: { PER: 2.2, INT: 2.0 }, other: 0.6 },
+  offhand: { growth: 1.0, injury: 1.0, morale: -1, trust: 0, rep: [0, 0], usage: 0.97, teamBoost: 0, attrs: { FIN: 1.3, PLY: 1.2 }, other: 0.5, offhandGain: 7 },
 };
 
 // Each half rolls an outcome for the plan. Morale shifts the odds toward breakthroughs.
@@ -135,7 +150,7 @@ export const PLAN_SETBACK_TEXT: Partial<Record<HalfPlan, string>> = {
 };
 export const MORALE_GROWTH = (morale: number): number => (morale >= 75 ? 1.1 : morale <= 30 ? 0.8 : 1);
 // in-game effect of morale, centred on 60: ±8% shooting at the extremes
-export const MORALE_PERF = (morale: number): number => 1 + Math.max(-1, Math.min(1, (morale - 60) / 40)) * 0.08;
+export const MORALE_PERF = (morale: number): number => 1 + Math.max(-1, Math.min(1, (morale - 75) / 40)) * 0.06;
 // All-Star fan vote: share of the score and the scale of reputation
 export const FAN_VOTE = { share: 0.15, scale: 25 };
 // per-game form (hot and cold nights) and a streaky rhythm across a half
@@ -225,6 +240,8 @@ export const WIN_SCALE = 4.5;
 export const HOME_COURT = 1.2;
 export const IMPACT_MULT = 0.25;
 export const USAGE_TEMP = 24; // lower = stars take more shots
+export const USAGE_KNEE = { at: 78, slope: 0.35 };
+export const EFF_KNEE = { at: 85, slope: 0.4 };
 export const USAGE_SCORING_W = { SHT: 0.36, FIN: 0.36, PLY: 0.12, ATH: 0.08, IQ: 0.08 };
 
 export const STAT = {
@@ -328,8 +345,7 @@ export const DRAFT = {
   // the player's own board score gets this bonus (scouts know his story); it eases NBA
   // entry without weakening the league's talent pipeline
   userBoardBonus: 2,
-  potMean: 73.5,
-  potSd: 8,
+  pot: { base: 45, mu: 2.84, sigma: 0.46, min: 50, max: 99 } as SkewDist,
   ovrNoise: 2.2,
 };
 
@@ -366,7 +382,7 @@ export const NBA_WORLD = {
   retireAge: 35,
   hardRetireAge: 39,
   minOvrToStay: 65,
-  faStrengthPull: 0.5,
+  faStrengthPull: 0.12,
   reSignChance: 0.55,
 };
 
@@ -382,7 +398,7 @@ export const GEN_GROWTH = {
 };
 // A persistent, slowly drifting team factor (coaching, system, front office) added to roster
 // strength so good and bad franchises persist. AR(1): c' = keep·c + N(0, sd).
-export const COACHING = { initSd: 1.7, keep: 0.85, sd: 0.9 };
+export const COACHING = { initSd: 1.2, keep: 0.85, sd: 0.6 };
 
 // Reputation
 export const REP = {

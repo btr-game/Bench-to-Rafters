@@ -1,7 +1,7 @@
 // Turning-point events (§11). Events are data; state stores only the id.
 // Phase 1–2 ships a starter set; the full list of 30 lands in Phase 3.
 
-import { ATTRS } from '../balance';
+import { ATTR_MAX, ATTRS } from '../balance';
 import { chance, clamp, int, range, type Rng } from '../rng';
 import type { AttrKey, GameState, Stage } from '../types';
 import { adjust } from '../career/common';
@@ -30,7 +30,7 @@ export interface EventDef {
 const ALL: Stage[] = ['HS', 'NCAA', 'GL', 'EU', 'INT', 'NBA'];
 const PRO: Stage[] = ['NCAA', 'GL', 'EU', 'INT', 'NBA'];
 
-const bump = (s: GameState, k: AttrKey, v: number) => (s.player.attrs[k] = clamp(s.player.attrs[k] + v, 15, 99));
+const bump = (s: GameState, k: AttrKey, v: number) => (s.player.attrs[k] = clamp(s.player.attrs[k] + v, 15, ATTR_MAX));
 
 export const EVENTS: EventDef[] = [
   {
@@ -61,13 +61,13 @@ export const EVENTS: EventDef[] = [
     weight: 1,
     cooldownSeasons: 5,
     title: 'Develop your off hand',
-    text: 'Everyone in the gym knows you go right. A trainer offers a three-season off-hand program.',
+    text: (s) => `Everyone in the gym knows you go ${s.player.hand === 'L' ? 'left' : 'right'}. A trainer offers a three-season program for your ${s.player.hand === 'L' ? 'right' : 'left'} hand.`,
     choices: [
       {
         label: 'Start the 3-season program',
         resolve: (s) => {
           s.player.programs.push({ id: 'offhand', name: 'Off-hand program', seasonsLeft: 3, steps: [{ offhand: 9 }, { offhand: 9 }, { offhand: 9, attrs: { FIN: 1 } }] });
-          return { outcome: 'Left-hand layups until your arm is numb.', log: 'Committed to a three-season off-hand program.' };
+          return { outcome: `${s.player.hand === 'L' ? 'Right' : 'Left'}-hand layups until your arm is numb.`, log: 'Committed to a three-season off-hand program.' };
         },
       },
       { label: 'Decline', resolve: () => ({ outcome: 'Maybe next year.' }) },

@@ -148,7 +148,7 @@ export function DecisionView({ g, d }: { g: GameState; d: Decision }) {
           {extra.map((c, i) => (
             <button key={c.id} className={`choice${extra.length > 1 && i === 0 && d.kind !== 'event' ? ' primary' : ''}`} disabled={c.disabled} onClick={() => choose(c.id)}>
               <span className="label">
-                {c.label} {c.shownOdds !== undefined && <span className="odds">{Math.round(c.shownOdds * 100)}% chance</span>}
+                {c.label} {c.risk && <span className={`risk risk-${c.risk.toLowerCase()}`}>{c.risk} risk</span>}
               </span>
               {c.detail && <small>{c.detail}</small>}
             </button>

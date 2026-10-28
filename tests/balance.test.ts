@@ -17,7 +17,7 @@ function within30(v: number, [lo, hi]: [number, number], isRate: boolean): boole
   const se = isRate ? 2 * Math.sqrt((Math.max(lo, 0.005) * (1 - lo)) / N) : 0;
   return v >= Math.min(lo * 0.7, lo - se) - 1e-9 && v <= Math.max(hi * 1.3, hi + se) + 1e-9;
 }
-const RATES = new Set(['playedNba', 'nba5', 'allStar', 'allNba', 'mvp', 'title', 'hof', 'undraftedOfDeclared']);
+const RATES = new Set(['playedNba', 'nba5', 'allStar', 'allNba', 'allNba1', 'mvp', 'title', 'hof', 'undraftedOfDeclared']);
 
 for (const policy of ['random', 'smart'] as Policy[]) {
   describe(`balance: ${policy} policy`, () => {

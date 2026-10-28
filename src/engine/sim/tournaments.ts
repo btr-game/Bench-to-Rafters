@@ -24,7 +24,7 @@ const BASE: Record<LevelKey, number> = { HSJV: 48, HSV: 60, NCAA: 72, GL: 112, E
 
 function profile(s: GameState) {
   const p = s.player;
-  return { attrs: p.attrs, height: p.height, wingspan: p.wingspan, range: p.range, offhand: p.offhand };
+  return { attrs: p.attrs, height: p.height, wingspan: p.wingspan, range: p.range, offhand: p.offhand + (p.hand === 'L' ? 6 : 0) };
 }
 
 /** One game outside the regular season with a full box score for the player. */

@@ -8,6 +8,7 @@ import { makeRng, next, pick, int, type Rng } from '../src/engine/rng';
 import type { Choice, Decision, GameState, Pos } from '../src/engine/types';
 import { count, legacyScore } from '../src/engine/awards/legacy';
 import { ovrOf } from '../src/engine/player/ovr';
+import { trueShooting, valuePerGame } from '../src/engine/sim/statModel';
 
 export type Policy = 'random' | 'smart';
 
@@ -97,6 +98,7 @@ export interface CareerResult {
   nbaSeasons: number;
   allStar: boolean;
   allNba: boolean;
+  allNba1: boolean;
   mvp: boolean;
   title: boolean;
   hof: boolean;
@@ -110,7 +112,7 @@ export interface CareerResult {
   peakOvr: number;
   potential: number;
   snapshots: { leader: number; over25: number; best: number; worst: number }[];
-  nbaLines: { ovr: number; mpg: number; ppg: number; role: string }[];
+  nbaLines: { ovr: number; mpg: number; ppg: number; role: string; value: number; rpg: number; apg: number; ts: number }[];
   steps: number;
   paths: string[];
 }
@@ -142,6 +144,7 @@ export function runCareer(seed: number, policy: Policy): CareerResult {
     nbaSeasons: nbaRows.length,
     allStar: count(s, 'ALLSTAR') > 0,
     allNba: count(s, 'ALLNBA1') + count(s, 'ALLNBA2') + count(s, 'ALLNBA3') > 0,
+    allNba1: count(s, 'ALLNBA1') > 0,
     mvp: count(s, 'MVP') > 0,
     title: count(s, 'TITLE') + count(s, 'TITLEKEY') > 0,
     hof: legacyScore(s) >= 45,
@@ -155,7 +158,7 @@ export function runCareer(seed: number, policy: Policy): CareerResult {
     peakOvr: s.player.peakOvr,
     potential: s.player.potential,
     snapshots,
-    nbaLines: nbaRows.map((h) => ({ ovr: (h.ovrStart + h.ovrEnd) / 2, mpg: h.line.min / h.line.gp, ppg: h.line.pts / h.line.gp, role: h.role })),
+    nbaLines: nbaRows.map((h) => ({ ovr: (h.ovrStart + h.ovrEnd) / 2, mpg: h.line.min / h.line.gp, ppg: h.line.pts / h.line.gp, role: h.role, value: valuePerGame(h.line), rpg: h.line.reb / h.line.gp, apg: h.line.ast / h.line.gp, ts: trueShooting(h.line) })),
     steps,
     paths: [...new Set(s.history.map((h) => h.level))],
   };
@@ -168,6 +171,7 @@ export interface Summary {
   nba5: number;
   allStar: number;
   allNba: number;
+  allNba1: number;
   mvp: number;
   title: number;
   hof: number;
@@ -207,6 +211,7 @@ export function summarize(results: CareerResult[], ms: number): Summary {
     nba5: frac((c) => c.nbaSeasons >= 5),
     allStar: frac((c) => c.allStar),
     allNba: frac((c) => c.allNba),
+    allNba1: frac((c) => c.allNba1),
     mvp: frac((c) => c.mvp),
     title: frac((c) => c.title),
     hof: frac((c) => c.hof),
@@ -228,33 +233,36 @@ export function summarize(results: CareerResult[], ms: number): Summary {
   };
 }
 
-// §15 targets, revised after playtesting (Oct 2026): the average career peaks near OVR 75,
-// reaching the NBA is common, and stardom stays the reward for good choices and luck.
+// §15 targets, revised after playtest round 3 (Oct 2026): the average career peaks at
+// 65-70 with a wide spread (about 1 in 20 peaks near 50, about 1 in 20 at 97-99). On the
+// OVR scale 80 is an All-Star, 85 All-NBA, 90 All-NBA 1st team and 95 an MVP.
 export const TARGETS: Record<Policy, Record<string, [number, number]>> = {
   random: {
-    meanPeak: [71, 76],
-    playedNba: [0.65, 0.82],
-    nba5: [0.38, 0.55],
-    allStar: [0.1, 0.2],
-    allNba: [0.05, 0.12],
-    mvp: [0, 0.02],
-    title: [0.08, 0.18],
-    hof: [0.02, 0.07],
-    undraftedOfDeclared: [0.28, 0.45],
-    meanNbaSeasons: [6, 9],
+    meanPeak: [64, 69],
+    playedNba: [0.5, 0.65],
+    nba5: [0.32, 0.47],
+    allStar: [0.15, 0.26],
+    allNba: [0.11, 0.21],
+    allNba1: [0.05, 0.14],
+    mvp: [0.03, 0.08],
+    title: [0.08, 0.16],
+    hof: [0.09, 0.17],
+    undraftedOfDeclared: [0.27, 0.42],
+    meanNbaSeasons: [7.5, 10.5],
     medianRetireAge: [30, 35],
   },
   smart: {
-    meanPeak: [75, 80],
-    playedNba: [0.8, 0.92],
-    nba5: [0.68, 0.85],
-    allStar: [0.25, 0.38],
-    allNba: [0.15, 0.28],
-    mvp: [0.02, 0.06],
-    title: [0.18, 0.32],
-    hof: [0.08, 0.18],
-    undraftedOfDeclared: [0.15, 0.32],
-    meanNbaSeasons: [9, 12.5],
+    meanPeak: [68, 73],
+    playedNba: [0.58, 0.72],
+    nba5: [0.45, 0.6],
+    allStar: [0.2, 0.31],
+    allNba: [0.15, 0.25],
+    allNba1: [0.08, 0.17],
+    mvp: [0.05, 0.12],
+    title: [0.18, 0.3],
+    hof: [0.13, 0.22],
+    undraftedOfDeclared: [0.24, 0.37],
+    meanNbaSeasons: [9.5, 12.5],
     medianRetireAge: [31, 36],
   },
 };

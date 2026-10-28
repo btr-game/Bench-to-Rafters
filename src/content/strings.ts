@@ -42,6 +42,7 @@ export const NAMES = {
     strength: 'Weight room',
     playmaking: 'Film and reads',
     defense: 'Lockdown',
+    offhand: 'Off-hand work',
   } as Record<HalfPlan, string>,
   level: {
     HSJV: 'HS JV',
@@ -67,7 +68,7 @@ export const UI = {
     assignedText: 'You do not pick these. You find out where you grew up and which school you play for when the career starts.',
     position: 'Position',
     otherCandidates: 'See other candidates',
-    focusHelp: 'Pick two focus stats. They grow ×1.8; the rest grow ×0.85.',
+    focusHelp: 'Pick two focus stats. They develop much faster than the rest.',
     start: 'Start freshman season',
     next: 'Next',
     back: 'Back',
