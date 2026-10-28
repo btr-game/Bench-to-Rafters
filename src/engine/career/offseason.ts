@@ -1,7 +1,8 @@
 // Offseason: aging, programs, summer program, and every path decision
 // (recruiting, draft, contracts, free agency, retirement).
 
-import { ATTR_MAX, GROWTH_RATE_AGE, MODES, POSITIONS, FA_INTEREST, OFFSEASON_DAYS, REP, RETIRE, ATTRS, TEAM_OPTION } from '../balance';
+import { pushMilitary } from './nationality';
+import { ATTR_MAX, GROWTH_RATE_AGE, MODES, POSITIONS, WEAR, FA_INTEREST, OFFSEASON_DAYS, REP, RETIRE, ATTRS, TEAM_OPTION } from '../balance';
 import { chance, clamp, int, logistic, range } from '../rng';
 import type { Contract, Decision, GameState, Offer, RoleKey } from '../types';
 import { applyAging, growHeight, updateHeightProjection } from '../player/growth';
@@ -33,6 +34,7 @@ import type { Prospect } from '../world/draft';
 import { NBA_TEAMS } from '../../content/teams';
 import { originOffers, pathOf, pushYouthCrossroads } from './origin';
 import { heightMismatch } from './position';
+import { rollSwings } from './swings';
 import { NAMES } from '../../content/strings';
 
 // ---------- entering the offseason ----------
@@ -65,6 +67,8 @@ export function beginOffseason(s: GameState): void {
     });
   }
   const aging = applyAging(s.rng, p);
+  // the body recovers a little every summer, and less as he gets older
+  p.wear = clamp((p.wear ?? 0) - WEAR.summerRest + Math.max(0, p.age - 25) * WEAR.agePerYear, 0, 100);
   // shoot-for-the-stars mode: never too far behind the path to the floor
   const floor = MODES[s.mode ?? 'standard'].floor;
   if (floor) {
@@ -73,6 +77,8 @@ export function beginOffseason(s: GameState): void {
     const now = userOvr(s);
     if (now < want) for (const k of ATTRS) p.attrs[k] = Math.min(ATTR_MAX, p.attrs[k] + (want - now));
   }
+  // once in a while, a summer changes everything
+  rollSwings(s);
   // the hidden growth rate fades with age
   if (p.age >= GROWTH_RATE_AGE.decayFrom) p.growthRate = Math.max(0.5, (p.growthRate ?? 1) * GROWTH_RATE_AGE.decay);
   if (aging.sudden) note(s, 'Your body is not bouncing back like it used to. A sudden decline.');
@@ -117,6 +123,8 @@ export function beginOffseason(s: GameState): void {
   }
   p.growthMultNext = 1;
   if (s.stage !== 'RETIRED') {
+    // South Korea: military service (it goes first, before any contract talks)
+    pushMilitary(s);
     pushNationalTeam(s);
     pushSummer(s);
     pushShop(s);
@@ -151,7 +159,7 @@ function pushSummer(s: GameState): void {
       { id: 'strength', label: 'Strength and conditioning', detail: 'Athleticism, rebounding and finishing.' },
       { id: 'shooting', label: 'Shooting coach', detail: 'Shooting and range.' },
       { id: 'film', label: 'Film room', detail: 'Basketball IQ and playmaking. Coaches notice.' },
-      { id: 'rest', label: 'Rest and travel', detail: 'Morale up, fresher body next season.' },
+      { id: 'rest', label: 'Rest and travel', detail: 'Morale up, fresher body next season, less wear on your body.' },
     ],
   });
 }
@@ -180,6 +188,7 @@ function resolveSummer(s: GameState, id: string): void {
   if (id === 'rest') {
     p.morale = adjust(p.morale, 8);
     p.injuryMultNext = 0.9;
+    p.wear = Math.max(0, (p.wear ?? 0) - WEAR.restProgram);
     healDays(p, 30);
   }
 }

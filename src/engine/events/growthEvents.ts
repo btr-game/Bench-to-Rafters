@@ -2,7 +2,7 @@
 // with the habits and help that real players credit for late jumps, and down with comfort.
 // The size of every change is rolled each time (see outcome.ts).
 
-import { GROWTH_RATE } from '../balance';
+import { ATTR_MAX, GROWTH_RATE } from '../balance';
 import { chance, clamp } from '../rng';
 import type { GameState, Stage } from '../types';
 import { adjust } from '../career/common';
@@ -179,7 +179,7 @@ export const GROWTH_EVENTS: EventDef[] = [
         detail: 'Slow, but you will learn faster after',
         resolve: (s) => {
           rate(s, 1.04);
-          s.player.attrs.IQ = Math.min(110, s.player.attrs.IQ + 1.5);
+          s.player.attrs.IQ = Math.min(ATTR_MAX, s.player.attrs.IQ + 1.5);
           return ok('Three hundred games later, you see the floor differently.', 'Studied the greats at his position.');
         },
       },

@@ -333,8 +333,14 @@ export interface NationalEvent {
 }
 
 /** Which national-team event happens in the summer after season `year`, for a player this age. */
-export function nationalEventFor(year: number, age: number): NationalEvent | null {
+const ASIAN_GAMES: [string, number][] = [
+  ['China', 71], ['Japan', 72], ['South Korea', 68], ['Philippines', 70], ['Iran', 66], ['Jordan', 65], ['Lebanon', 67], ['Chinese Taipei', 63],
+];
+
+export function nationalEventFor(year: number, age: number, nation = ''): NationalEvent | null {
   const summer = year + 1;
+  // the Asian Games: every four years, two summers after the Olympics
+  if (age >= 19 && summer % 4 === 2 && ASIAN_GAMES.some(([n]) => n === nation)) return { name: `${summer} Asian Games`, youth: false, legacy: 0.5 };
   if (age <= 16 && summer % 2 === 0) return { name: 'FIBA U17 World Cup', youth: true, legacy: 0 };
   if (age >= 17 && age <= 19 && summer % 2 === 1) return { name: 'FIBA U19 World Cup', youth: true, legacy: 0 };
   if (age >= 19 && summer % 4 === 0) return { name: `${summer} Olympics`, youth: false, legacy: 3 };
@@ -357,7 +363,7 @@ export function callUpChance(s: GameState, ev: NationalEvent): number {
 }
 
 export function pushNationalTeam(s: GameState): void {
-  const ev = nationalEventFor(s.year, s.player.age);
+  const ev = nationalEventFor(s.year, s.player.age, nationOf(s));
   if (!ev || s.player.injury?.key === 'season') return;
   if (!chance(s.rng, callUpChance(s, ev))) return;
   const nation = nationOf(s);
@@ -383,7 +389,8 @@ export function resolveNationalTeam(s: GameState, data: Record<string, unknown>,
   }
   const nation = nationOf(s);
   const shift = youth ? -24 : 0;
-  const pool = SENIOR.filter(([n]) => n !== nation).map(([n, st]) => ({ name: n, short: n, strength: st + shift + normal(s.rng, 0, 1.5) }));
+  const asian = name.includes('Asian Games');
+  const pool = (asian ? ASIAN_GAMES : SENIOR).filter(([n]) => n !== nation).map(([n, st]) => ({ name: n, short: n, strength: st + shift + normal(s.rng, 0, 1.5) }));
   const myBase = (SENIOR.find(([n]) => n === nation)?.[1] ?? 70) + shift;
   const ovr = ovrOf(s.player.attrs, s.player.pos);
   const role: RoleKey = ovr >= myBase + 5 ? 'key' : ovr >= myBase ? 'starter' : ovr >= myBase - 4 ? 'rotation' : 'bench';
@@ -414,7 +421,7 @@ export function resolveNationalTeam(s: GameState, data: Record<string, unknown>,
   if (groupWins < 2) result = 'Out in the group stage';
   else {
     const strong = [...pool].sort((a, b) => b.strength - a.strength);
-    const run = knockout(s, level, role, my, [strong[int(s.rng, 4, 8)], strong[int(s.rng, 1, 3)], strong[0].name === nation ? strong[1] : strong[0]], ['Quarterfinal', 'Semifinal', 'Final']);
+    const run = knockout(s, level, role, my, [strong[int(s.rng, 4, Math.min(8, strong.length - 1))], strong[int(s.rng, 1, 3)], strong[0].name === nation ? strong[1] : strong[0]], ['Quarterfinal', 'Semifinal', 'Final']);
     games.push(...run.games);
     notes.push(...run.notes);
     if (run.won) {
@@ -443,7 +450,7 @@ export function resolveNationalTeam(s: GameState, data: Record<string, unknown>,
   s.player.morale = adjust(s.player.morale, medal ? 6 : -2);
   s.player.injuryMultNext *= 1.1;
   if (medal) {
-    const key = youth ? 'YOUTHMEDAL' : name.includes('Olympics') ? (medal === 'gold' ? 'OLYGOLD' : 'OLYMEDAL') : medal === 'gold' ? 'WCGOLD' : 'WCMEDAL';
+    const key = youth ? 'YOUTHMEDAL' : asian ? (medal === 'gold' ? 'ASIANGOLD' : 'ASIANMEDAL') : name.includes('Olympics') ? (medal === 'gold' ? 'OLYGOLD' : 'OLYMEDAL') : medal === 'gold' ? 'WCGOLD' : 'WCMEDAL';
     s.awards.push({ year: s.year + 1, level: youth ? 'NCAA' : 'NBA', key, label: `${name}: ${result}` });
   }
   logDecision(s, 'national', `Played for ${nation} at the ${name}: ${result.toLowerCase()}.`);

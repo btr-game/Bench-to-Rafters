@@ -1,6 +1,8 @@
 // The in-season loop: preseason → first half → midseason → second half + postseason.
 
+import { edgeOf, youthGrowthMult } from './nationality';
 import {
+  WEAR,
   GAME_POINTS,
   GROWTH_RATE,
   MODES,
@@ -431,9 +433,11 @@ function growthAfterHalf(s: GameState, acc: HalfAcc, level: LevelKey, ovr: numbe
     plan: season.plan,
     planDef: plan,
     outMost: acc.injuredGames > acc.games / 2,
-    extraMult: outcome.growth * p.growthMultNext * MODES[s.mode ?? 'standard'].growth,
+    extraMult: outcome.growth * p.growthMultNext * MODES[s.mode ?? 'standard'].growth * youthGrowthMult(s),
     morale: p.morale,
   });
+  // body wear from this half: minutes played and how hard the plan pushed the body
+  p.wear = clamp((p.wear ?? 0) + share * WEAR.minutes + (plan.injury - 1) * WEAR.plan, 0, 100);
   if (plan.rangeGain) p.range = clamp(p.range + plan.rangeGain * outcome.growth, 0, 99);
   if (plan.offhandGain) p.offhand = clamp(p.offhand + plan.offhandGain * outcome.growth, 0, 99);
   if (outcome.injury) p.injuryMultNext *= outcome.injury;
@@ -820,22 +824,19 @@ export function snapshotNba(s: GameState): void {
 /** Recruiting rank against a national class (§8), computed analytically from the class distribution. */
 export function computeRecruiting(s: GameState): void {
   const p = s.player;
-  const gradeGap = (4 - s.hsYear) * 3.5;
+  // underclassmen are judged on where they are heading by senior year
+  const gradeGap = (4 - Math.min(4, s.hsYear)) * 3.5;
   const R = RECRUIT;
   const ovr = ovrOf(p.attrs, p.pos);
   const pot = p.scoutRange ? scoutEstimate(p) : 68;
-  const score = R.wOvr * ovr + R.wPot * pot + R.wRep * p.rep;
-  const mu = R.wOvr * (R.ovrMean - gradeGap) + R.wPot * R.potMean + R.wRep * 6;
-  const rho = 0.4;
-  const sd = Math.sqrt(
-    (R.wOvr * R.ovrSd) ** 2 + (R.wPot * R.potSd) ** 2 + (R.wRep * 5) ** 2 + 2 * R.wOvr * R.wPot * rho * R.ovrSd * R.potSd,
-  );
-  const z = (score - mu) / sd;
-  const above = R.population * (1 - normCdf(z));
-  const rank = Math.max(1, Math.round(above + 1));
+  // a senior-equivalent rating: OVR first, a nudge for potential and buzz
+  // American high schoolers have the easiest road (career/nationality.ts)
+  const eff = ovr + gradeGap + R.potW * (pot - 68) + R.repW * p.rep + edgeOf(p.country).recruit;
+  const z = (eff - R.effMean) / R.effSd;
+  const rank = Math.max(1, Math.round(R.population * (1 - normCdf(z)) + 1));
   s.recruitRank = rank;
   const [five, four, three] = R.stars;
-  s.stars = rank <= five ? 5 : rank <= four ? 4 : rank <= three ? 3 : ovr >= R.ovrMean - gradeGap ? 2 : 1;
+  s.stars = rank <= five ? 5 : rank <= four ? 4 : rank <= three ? 3 : eff >= R.twoStar ? 2 : 1;
 }
 
 function normCdf(z: number): number {

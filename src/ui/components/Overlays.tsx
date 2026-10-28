@@ -1,7 +1,6 @@
 // Full-screen interstitials: the half-season ticker, the new-season card, and story
 // pages (moments) such as commitments, draft night, awards and the title game.
 
-import { awardLook } from '../../content/awards';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { GameState, Moment } from '../../engine/types';
 import { LEVELS } from '../../engine/balance';
@@ -304,21 +303,12 @@ function MomentPage({ m, g }: { m: Moment; g: GameState }) {
             <div className="moment-title">{m.title}</div>
             <p className="on-dark lede-dark">{m.text}</p>
             {m.kind === 'awards' ? (
-              <div className="awards">
-                {m.lines?.map((x, i) => {
-                  const look = awardLook(null, x);
-                  return (
-                    <div key={i} className="award drop" style={{ animationDelay: `${0.15 + i * 0.18}s`, ['--award' as string]: look.color }}>
-                      <span className="award-icon" aria-hidden="true">
-                        {look.icon}
-                      </span>
-                      <div className="award-body">
-                        <div className="award-name">{x}</div>
-                        {look.desc && <div className="award-desc">{look.desc}</div>}
-                      </div>
-                    </div>
-                  );
-                })}
+              <div className="banners">
+                {m.lines?.map((x, i) => (
+                  <div key={i} className="banner gold drop" style={{ animationDelay: `${0.15 + i * 0.18}s` }}>
+                    <span>{x}</span>
+                  </div>
+                ))}
               </div>
             ) : (
               m.lines?.map((x, i) => (

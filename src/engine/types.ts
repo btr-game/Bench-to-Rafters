@@ -71,6 +71,7 @@ export interface UserPlayer {
   number: number;
   pos: Pos;
   archetype: string;
+  anomaly?: string; // a rare gift, e.g. "Point center"
   height: number;
   fullHeight: number; // true adult height (hidden while he grows)
   heightProj: number; // the doctors' projection of fullHeight
@@ -109,6 +110,7 @@ export interface UserPlayer {
   declineMultNext: number;
   growthMultNext: number;
   growthRate: number; // hidden: how fast he improves (see GROWTH_RATE)
+  wear: number; // body wear 0-100 (see WEAR)
 }
 
 export interface GenPlayer {
@@ -362,6 +364,8 @@ export interface EventResult {
   choice: string;
   text: string;
   changes: { label: string; value: string; good: boolean }[];
+  tier?: string; // how it turned out, e.g. "Backfired"
+  tierKey?: 'breakthrough' | 'better' | 'expected' | 'mixed' | 'backfired';
 }
 
 export interface Moment {

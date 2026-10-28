@@ -1,7 +1,7 @@
-import type { GameState, SeasonRecord } from '../../engine/types';
-import { canChangePosition, canRetire, heightMismatch, positionOptions, prompt } from '../../engine/flow';
+import type { AttrKey, GameState, SeasonRecord } from '../../engine/types';
+import { canChangeFocus, canChangePosition, canRetire, heightMismatch, positionOptions, prompt } from '../../engine/flow';
 import { useState } from 'react';
-import { LEVELS } from '../../engine/balance';
+import { ATTRS, LEVELS } from '../../engine/balance';
 import { NAMES, UI } from '../../content/strings';
 import { useStore } from '../../store';
 import { Banners, MilestoneStrip, ReactionCard, Scoreboard } from '../components/bits';
@@ -44,7 +44,7 @@ export function SeasonSummary({ rec }: { rec: SeasonRecord }) {
           Postseason · {rec.post.gp} games · {pg(rec.post, 'pts')} PTS · {pg(rec.post, 'reb')} REB · {pg(rec.post, 'ast')} AST
         </p>
       )}
-      {rec.awards.length > 0 && <Banners items={rec.awards.map((a) => ({ label: a }))} />}
+      {rec.awards.length > 0 && <Banners items={rec.awards.map((a) => ({ label: a, gold: /Champion|MVP|Player of the Year|champion/.test(a) }))} />}
       {rec.races.some((r) => r.userRank !== null && r.userRank <= 10) && (
         <ul className="small" style={{ paddingLeft: 18 }}>
           {rec.races
@@ -145,7 +145,7 @@ function Context({ g }: { g: GameState }) {
           ))}
           {s.preReport && <div className="muted small">Preseason: {s.preReport}</div>}
           {s.allStarRank !== undefined && (
-            <div className="small">{s.allStar ? '★ All-Star selection' : `All-Star voting: ${s.allStarRank}th in the conference`}</div>
+            <div className="small">{s.allStar ? 'All-Star selection' : `All-Star voting: ${s.allStarRank}th in the conference`}</div>
           )}
         </div>
         <PlanOutcomes g={g} half={1} />
@@ -192,6 +192,58 @@ function Todo({ g }: { g: GameState }) {
   );
 }
 
+function FocusCard({ g }: { g: GameState }) {
+  const change = useStore((s) => s.changeFocus);
+  const p = g.player;
+  const [pick, setPick] = useState<AttrKey[]>(p.focus);
+  const toggle = (k: AttrKey) => setPick((f) => (f.includes(k) ? f.filter((x) => x !== k) : f.length >= 2 ? [f[1], k] : [...f, k]));
+  const same = pick.length === 2 && pick.every((k) => p.focus.includes(k));
+  return (
+    <section className="card stack">
+      <div className="row">
+        <div className="sec-title">Focus stats</div>
+        <div className="spacer" />
+        <span className="small muted">{p.focus.map((k) => NAMES.attr[k]).join(' + ')}</span>
+      </div>
+      <p className="small muted">Focus stats grow about twice as fast. Move your focus around to fill out every rating.</p>
+      <div className="focus-grid">
+        {ATTRS.map((k) => (
+          <button key={k} className={`choice${pick.includes(k) ? ' selected' : ''}`} aria-pressed={pick.includes(k)} onClick={() => toggle(k)}>
+            <span className="label">
+              {NAMES.attr[k]} <span className="muted">{Math.round(p.attrs[k])}</span>
+            </span>
+          </button>
+        ))}
+      </div>
+      <button className="btn ghost" disabled={pick.length !== 2 || same} onClick={() => change(pick)}>
+        {same ? 'Pick two new focus stats' : `Focus on ${pick.map((k) => NAMES.attr[k]).join(' and ')}`}
+      </button>
+    </section>
+  );
+}
+
+function NumberCard({ g }: { g: GameState }) {
+  const change = useStore((s) => s.changeNumber);
+  const [n, setN] = useState(String(g.player.number));
+  const v = Number(n);
+  const ok = n.trim() !== '' && Number.isInteger(v) && v >= 0 && v <= 99 && v !== g.player.number;
+  return (
+    <section className="card stack">
+      <div className="row">
+        <div className="sec-title">Jersey number</div>
+        <div className="spacer" />
+        <span className="small muted">Now #{g.player.number}</span>
+      </div>
+      <div className="row" style={{ gap: 8 }}>
+        <input aria-label="New jersey number" type="number" min={0} max={99} value={n} onChange={(e) => setN(e.target.value)} style={{ maxWidth: 110 }} />
+        <button className="btn ghost" disabled={!ok} onClick={() => change(v)}>
+          Switch number
+        </button>
+      </div>
+    </section>
+  );
+}
+
 function PositionCard({ g }: { g: GameState }) {
   const change = useStore((s) => s.changePosition);
   const [open, setOpen] = useState(false);
@@ -210,7 +262,7 @@ function PositionCard({ g }: { g: GameState }) {
       </div>
       {mm && (
         <p className="height-warn-text">
-          ⚠ {mm.text}
+          <b>Size check:</b> {mm.text}
           {mm.better.length > 0 ? ` ${mm.better.map((o) => NAMES.pos[o.pos]).join(' or ')} would fit.` : ''}
         </p>
       )}
@@ -277,10 +329,11 @@ export function Home({ g }: { g: GameState }) {
         <section className="card stack">
           <SeasonHeader g={g} />
           {g.result ? (
-            <div className="result-card">
+            <div className={`result-card${g.result.tierKey ? ` tier-${g.result.tierKey}` : ''}`}>
               <div className="kicker">
                 {g.result.title} · {g.result.choice}
               </div>
+              {g.result.tier && <span className="result-tier">{g.result.tier}</span>}
               <p className="result-text">{g.result.text}</p>
               {g.result.changes.length > 0 && (
                 <div className="result-chips">
@@ -311,6 +364,8 @@ export function Home({ g }: { g: GameState }) {
         </section>
         <Todo g={g} />
         {canChangePosition(g) && <PositionCard g={g} />}
+        {canChangeFocus(g) && <FocusCard g={g} />}
+        {g.step === 'offseason' && g.stage !== 'RETIRED' && <NumberCard g={g} />}
         {canRetire(g) && <RetireCard g={g} />}
         {g.feed[0] && (
           <section className="card">

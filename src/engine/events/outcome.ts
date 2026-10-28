@@ -1,8 +1,9 @@
-// Event outcomes that differ every time (playtest round 6). An event's choice sets the kind
-// of effect; how big it turns out is rolled each time it happens: every change it made is
-// scaled by one factor (about 0.45x to 1.8x). The result card then lists what changed.
+// Event outcomes that differ every time (playtest rounds 6 and 7). An event's choice sets the
+// kind of effect; how it turns out is rolled each time (see twists.ts): the good parts of what
+// it changed are scaled by one factor and the bad parts by another, so the same choice can be
+// a breakthrough one time and backfire the next. The result card then lists what changed.
 
-import { ATTRS } from '../balance';
+import { ATTR_MAX, ATTRS } from '../balance';
 import { clamp, normal } from '../rng';
 import type { AttrKey, EventResult, GameState } from '../types';
 import { NAMES } from '../../content/strings';
@@ -23,6 +24,7 @@ interface Snap {
   decline: number;
   injuryDays: number;
   suspend: number;
+  wear: number;
 }
 
 export function snap(s: GameState): Snap {
@@ -42,30 +44,47 @@ export function snap(s: GameState): Snap {
     decline: p.declineMultNext,
     injuryDays: p.injury?.daysOut ?? 0,
     suspend: s.flags.suspendGames ?? 0,
+    wear: p.wear ?? 0,
   };
 }
 
-/** Scales everything the choice changed by one random factor; returns the factor. */
-export function vary(s: GameState, before: Snap): number {
+/**
+ * Scales what the choice changed: the good parts by `good` and the bad parts by `bad`.
+ * Left out, both are one random factor (about 0.45x to 1.8x), as in round 6.
+ */
+export function vary(s: GameState, before: Snap, good?: number, bad?: number): number {
   const p = s.player;
   const f = clamp(normal(s.rng, 1, 0.32), 0.45, 1.8);
-  const scale = (b: number, a: number, lo: number, hi: number) => clamp(b + (a - b) * f, lo, hi);
-  for (const k of ATTRS) if (p.attrs[k] !== before.attrs[k]) p.attrs[k] = scale(before.attrs[k], p.attrs[k], 15, 110);
+  const fg = good ?? f;
+  const fb = bad ?? f;
+  // up is good unless `upGood` is false
+  const k = (b: number, a: number, upGood = true) => ((a > b) === upGood ? fg : fb);
+  const scale = (b: number, a: number, lo: number, hi: number, upGood = true) => clamp(b + (a - b) * k(b, a, upGood), lo, hi);
+  for (const key of ATTRS) if (p.attrs[key] !== before.attrs[key]) p.attrs[key] = scale(before.attrs[key], p.attrs[key], 15, ATTR_MAX);
   p.morale = Math.round(scale(before.morale, p.morale, 0, 100));
   p.trust = Math.round(scale(before.trust, p.trust, 0, 100));
   p.rep = scale(before.rep, p.rep, 0, 100);
-  p.bank = Math.max(0, before.bank + (p.bank - before.bank) * f);
+  p.bank = Math.max(0, before.bank + (p.bank - before.bank) * k(before.bank, p.bank));
   p.range = scale(before.range, p.range, 0, 99);
   p.offhand = scale(before.offhand, p.offhand, 0, 99);
-  const ratio = (b: number, a: number) => (b > 0 ? b * Math.pow(a / b, f) : a);
+  p.wear = scale(before.wear, p.wear ?? 0, 0, 100, false);
+  const ratio = (b: number, a: number, upGood = true) => (b > 0 ? b * Math.pow(a / b, k(b, a, upGood)) : a);
   p.growthMultNext = ratio(before.growth, p.growthMultNext);
   p.growthRate = clamp(ratio(before.rate, p.growthRate ?? 1), 0.5, 2.2);
-  p.injuryMultNext = ratio(before.injuryMult, p.injuryMultNext);
-  p.declineMultNext = ratio(before.decline, p.declineMultNext);
-  if (p.injury && p.injury.daysOut !== before.injuryDays) p.injury.daysOut = Math.max(3, Math.round(before.injuryDays + (p.injury.daysOut - before.injuryDays) * f));
+  p.injuryMultNext = ratio(before.injuryMult, p.injuryMultNext, false);
+  p.declineMultNext = ratio(before.decline, p.declineMultNext, false);
+  if (p.injury && p.injury.daysOut !== before.injuryDays) {
+    const d = p.injury.daysOut - before.injuryDays;
+    p.injury.daysOut = Math.max(3, Math.round(before.injuryDays + d * (d > 0 ? fb : fg)));
+  }
   const sus = s.flags.suspendGames ?? 0;
-  if (sus > before.suspend) s.flags.suspendGames = before.suspend + Math.max(1, Math.round((sus - before.suspend) * f));
+  if (sus > before.suspend) s.flags.suspendGames = before.suspend + Math.max(1, Math.round((sus - before.suspend) * fb));
   return f;
+}
+
+/** True when the choice changed anything at all. */
+export function changedAny(s: GameState, before: Snap): boolean {
+  return changes(s, before).length > 0;
 }
 
 /** What changed, for the result card: green for good news, red for bad. */
@@ -86,6 +105,7 @@ export function changes(s: GameState, before: Snap): EventResult['changes'] {
   num('Reputation', p.rep - before.rep);
   num('Range', p.range - before.range);
   num('Weak hand', p.offhand - before.offhand);
+  num('Body wear', (p.wear ?? 0) - before.wear, false);
   if (p.height !== before.height) out.push({ label: 'Height', value: `${p.height - before.height > 0 ? '+' : ''}${p.height - before.height} in`, good: true });
   const bank = p.bank - before.bank;
   if (Math.abs(bank) >= 0.0005) out.push({ label: 'Bank', value: `${bank > 0 ? '+' : '−'}${fmtMoney(Math.abs(bank))}`, good: bank > 0 });

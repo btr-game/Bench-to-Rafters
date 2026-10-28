@@ -3,16 +3,16 @@
 
 export type AwardCat = 'title' | 'mvp' | 'series' | 'team' | 'defense' | 'rookie' | 'skills' | 'country' | 'school';
 
-export const AWARD_CATS: Record<AwardCat, { name: string; color: string; icon: string }> = {
-  title: { name: 'Championship', color: '#B8860B', icon: '🏆' },
-  mvp: { name: 'MVP', color: '#7B2CBF', icon: '👑' },
-  series: { name: 'Big-game MVP', color: '#D2601A', icon: '🎖️' },
-  team: { name: 'All-league team', color: '#2A78D6', icon: '⭐' },
-  defense: { name: 'Defense', color: '#1D7F47', icon: '🛡️' },
-  rookie: { name: 'Breakout', color: '#0F8A8A', icon: '🌱' },
-  skills: { name: 'Skills', color: '#C8102E', icon: '🎯' },
-  country: { name: 'National team', color: '#8A6D1F', icon: '🥇' },
-  school: { name: 'School and youth', color: '#6B4E2E', icon: '🎓' },
+export const AWARD_CATS: Record<AwardCat, { name: string; color: string }> = {
+  title: { name: 'Championship', color: '#B8860B' },
+  mvp: { name: 'MVP', color: '#7B2CBF' },
+  series: { name: 'Big-game MVP', color: '#D2601A' },
+  team: { name: 'All-league team', color: '#2A78D6' },
+  defense: { name: 'Defense', color: '#1D7F47' },
+  rookie: { name: 'Breakout', color: '#0F8A8A' },
+  skills: { name: 'Skills', color: '#C8102E' },
+  country: { name: 'National team', color: '#8A6D1F' },
+  school: { name: 'School and youth', color: '#6B4E2E' },
 };
 
 const A: Record<string, [AwardCat, string]> = {
@@ -69,7 +69,6 @@ const A: Record<string, [AwardCat, string]> = {
 export interface AwardLook {
   cat: AwardCat;
   color: string;
-  icon: string;
   desc: string;
 }
 
@@ -99,7 +98,7 @@ export function awardLook(key: string | null, label: string): AwardLook {
     hit = known ? known[1] : [cat, ''];
   }
   const c = AWARD_CATS[hit[0]];
-  return { cat: hit[0], color: c.color, icon: c.icon, desc: hit[1] };
+  return { cat: hit[0], color: c.color, desc: hit[1] };
 }
 
 // labels as the game writes them, for story pages that only carry the label

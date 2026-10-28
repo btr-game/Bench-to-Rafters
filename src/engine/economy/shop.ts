@@ -1,6 +1,6 @@
 // Offseason shop: a random stock of six items, up to three purchases per summer.
 
-import { ATTR_MAX, ATTRS } from '../balance';
+import { ATTR_MAX, ATTRS, WEAR } from '../balance';
 import { clamp, shuffle } from '../rng';
 import type { Decision, GameState } from '../types';
 import { SHOP_ITEMS, type ShopItem } from '../../content/shop';
@@ -79,6 +79,8 @@ export function applyItem(s: GameState, it: ShopItem): void {
   if (it.growthMult) p.growthMultNext *= it.growthMult;
   if (it.injuryMult) p.injuryMultNext *= it.injuryMult;
   if (it.declineMult) p.declineMultNext *= it.declineMult;
+  // health spending takes some wear off the body
+  if (it.injuryMult || it.declineMult) p.wear = Math.max(0, (p.wear ?? 0) - WEAR.shopItem);
   if (it.morale) p.morale = clamp(p.morale + it.morale, 0, 100);
   if (it.rep) p.rep = clamp(p.rep + it.rep, 0, 100);
   if (it.trust) p.trust = clamp(p.trust + it.trust, 0, 100);

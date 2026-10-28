@@ -2,8 +2,8 @@
 // on a structured clone and swaps it in; React sees a new object each time.
 
 import { create } from 'zustand';
-import type { GameLog, GameState, Pos } from './engine/types';
-import { advance as engineAdvance, changePosition, choose as engineChoose, dismissMoment, newGame, retireByChoice, type CreateInput } from './engine/flow';
+import type { AttrKey, GameLog, GameState, Pos } from './engine/types';
+import { advance as engineAdvance, changeFocus, changeNumber, changePosition, choose as engineChoose, dismissMoment, newGame, retireByChoice, type CreateInput } from './engine/flow';
 import { seasonLabel } from './ui/format';
 
 export type Tab = 'home' | 'season' | 'player' | 'league' | 'records';
@@ -26,6 +26,8 @@ interface Store {
   retire: () => void;
   changePosition: (pos: Pos) => void;
   togglePlayoffs: () => void;
+  changeNumber: (n: number) => void;
+  changeFocus: (keys: AttrKey[]) => void;
   endTransition: () => void;
   reset: () => void;
   setTab: (t: Tab) => void;
@@ -95,6 +97,20 @@ export const useStore = create<Store>((set, get) => ({
     }
     set({ game: next, tab: 'home', transition });
     top();
+  },
+  changeFocus: (keys) => {
+    const g = get().game;
+    if (!g) return;
+    const next = structuredClone(g);
+    changeFocus(next, keys);
+    set({ game: next });
+  },
+  changeNumber: (n) => {
+    const g = get().game;
+    if (!g) return;
+    const next = structuredClone(g);
+    changeNumber(next, n);
+    set({ game: next });
   },
   togglePlayoffs: () => {
     const g = get().game;

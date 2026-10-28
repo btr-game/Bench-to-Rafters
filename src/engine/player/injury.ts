@@ -1,4 +1,4 @@
-import { BASE_INJURY, HALF_PLANS, type PlanDef, INJURY_AGE_MULT, INJURY_SEVERITY, INJURY_TOLL } from '../balance';
+import { BASE_INJURY, WEAR, HALF_PLANS, type PlanDef, INJURY_AGE_MULT, INJURY_SEVERITY, INJURY_TOLL } from '../balance';
 import { ovrOf } from './ovr';
 import { chance, int, pick, shuffle, weightedIndex, type Rng } from '../rng';
 import type { HalfPlan, Injury, UserPlayer } from '../types';
@@ -43,6 +43,7 @@ export function rollInjury(rng: Rng, p: UserPlayer, plan: HalfPlan | PlanDef, mi
     if (chance(rng, t.capChance)) for (const k of ['ATH', 'FIN', 'PER'] as const) p.caps[k] = Math.max(30, p.caps[k] - int(rng, t.cap[0], t.cap[1]));
   }
   inj.ovrLoss = Math.max(0, before - ovrOf(p.attrs, p.pos));
+  p.wear = Math.min(100, (p.wear ?? 0) + (WEAR.injury[sev.key] ?? 0));
   p.injury = inj;
   return inj;
 }

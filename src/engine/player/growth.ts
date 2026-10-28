@@ -26,6 +26,7 @@ import {
   HEIGHT_PROJ_SD,
   HEIGHT_SURPRISE,
   GROWTH_RATE_AGE,
+  WEAR,
   type PlanDef,
 } from '../balance';
 import { chance, clamp, normal, range, type Rng } from '../rng';
@@ -143,15 +144,25 @@ export function applyHalfGrowth(rng: Rng, p: UserPlayer, ctx: HalfGrowthCtx): Pa
 }
 
 /** Season-level decline after the decline start age. Returns the OVR change. */
+/** How hard aging hits, from body wear: 0.6x for a fresh body, about 1.3x at 35 wear, 2.6x at 100. */
+export function wearMult(p: UserPlayer): number {
+  return WEAR.declineBase + (p.wear ?? 0) / WEAR.declineDiv;
+}
+
 export function applyAging(rng: Rng, p: UserPlayer): { change: number; sudden: boolean } {
   const before = ovrOf(p.attrs, p.pos);
   // a longer prime for fast learners, a shorter one for slow ones
-  const start = DECLINE_START[p.aging] + Math.round(primeShift(p));
+  const start = DECLINE_START[p.aging] + Math.round(Math.min(WEAR.maxPrimeShift, primeShift(p)));
   let sudden = false;
   if (p.age < IQ_LATE_GAIN.untilAge && p.age >= 27) p.attrs.IQ = Math.min(ATTR_MAX, p.attrs.IQ + IQ_LATE_GAIN.perSeason);
   if (p.age >= start) {
     const yrs = Math.min(DECLINE_TABLE.length - 1, p.age - start);
-    const target = DECLINE_TABLE[yrs] * (1 + range(rng, -DECLINE_NOISE, DECLINE_NOISE)) * p.declineMultNext * clamp(1.2 - 0.2 * (p.growthRate ?? 1), 0.8, 1.15);
+    const target =
+      DECLINE_TABLE[yrs] *
+      (1 + range(rng, -DECLINE_NOISE, DECLINE_NOISE)) *
+      p.declineMultNext *
+      clamp(1.2 - 0.2 * (p.growthRate ?? 1), 0.8, 1.15) *
+      wearMult(p);
     const w = OVR_WEIGHTS[p.pos];
     const mult = (k: AttrKey) => {
       if (k === 'IQ') return p.age < IQ_LATE_GAIN.untilAge ? 0 : (DECLINE_ATTR_MULT.IQ ?? 1);

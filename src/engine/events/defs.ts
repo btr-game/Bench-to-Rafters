@@ -100,8 +100,8 @@ export const EVENTS: EventDef[] = [
     stages: ALL,
     phase: 'both',
     when: (s) => s.player.focusChanges < MAX_FOCUS_CHANGES,
-    weight: 0.6,
-    cooldownSeasons: 3,
+    weight: 0.8,
+    cooldownSeasons: 2,
     title: 'Change your focus',
     text: (s) => `Your coach wants to rethink your development. Current focus: ${s.player.focus.map((k) => NAMES.attr[k]).join(' and ')}.`,
     choices: (s) => {

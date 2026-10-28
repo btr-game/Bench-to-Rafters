@@ -7,6 +7,8 @@ import type { AttrKey, Attrs, Pos } from '../../engine/types';
 import { NAMES, UI } from '../../content/strings';
 import { FIRST_NAMES, LAST_NAMES } from '../../content/names';
 import { useStore } from '../../store';
+import { ORIGINS } from '../../content/origins';
+import { edgeOf } from '../../engine/career/nationality';
 import { ht } from '../format';
 
 const pick = <T,>(a: readonly T[]): T => a[Math.floor(Math.random() * a.length)];
@@ -27,6 +29,7 @@ export function Create() {
   const [focus, setFocus] = useState<AttrKey[]>([]);
   const [hand, setHand] = useState<'R' | 'L'>('R');
   const [mode, setMode] = useState<Mode>('standard');
+  const [country, setCountry] = useState(''); // '' = the game decides, by real-world odds
 
   const choosePos = (p: Pos) => {
     setPos(p);
@@ -52,7 +55,7 @@ export function Create() {
   const attrs = cands[arch];
   const archetype = ARCHETYPES[pos][arch];
   const [hMin, hMax] = HEIGHT_RANGE[pos];
-  const canNext = step === 0 ? name.trim().length > 0 : step === 2 ? focus.length === 2 : true;
+  const canNext = step === 1 ? name.trim().length > 0 : step === 3 ? focus.length === 2 : true;
 
   const begin = () =>
     start({
@@ -64,6 +67,7 @@ export function Create() {
       focus,
       hand,
       mode,
+      country: country || undefined,
     });
 
   return (
@@ -96,18 +100,22 @@ export function Create() {
       <div style={{ height: 12 }} />
 
       {step === 0 && (
+        <section className="stack">
+          <div className="kicker">Choose how hard the road is</div>
+          <div className="modes">
+            {(Object.keys(MODES) as Mode[]).map((m) => (
+              <button key={m} className={`choice mode-card${mode === m ? ' selected' : ''}`} aria-pressed={mode === m} onClick={() => setMode(m)}>
+                <span className="label">{MODES[m].name}</span>
+                <small>{MODES[m].blurb}</small>
+              </button>
+            ))}
+          </div>
+          <p className="muted small">The league is the same in every mode. What changes is your potential, how fast you grow and how often you get hurt.</p>
+        </section>
+      )}
+
+      {step === 1 && (
         <section className="card form">
-          <fieldset>
-            <legend>Difficulty</legend>
-            <div className="modes">
-              {(Object.keys(MODES) as Mode[]).map((m) => (
-                <button key={m} className={`choice${mode === m ? ' selected' : ''}`} aria-pressed={mode === m} onClick={() => setMode(m)}>
-                  <span className="label">{MODES[m].name}</span>
-                  <small>{MODES[m].blurb}</small>
-                </button>
-              ))}
-            </div>
-          </fieldset>
           <div className="field">
             <label htmlFor="f-name">{UI.create.name}</label>
             <input id="f-name" type="text" maxLength={28} value={name} onChange={(e) => setName(e.target.value)} />
@@ -128,6 +136,26 @@ export function Create() {
             </div>
             <p className="muted small">Lefties are rarer, so defenders see them less. Either way, your weak hand starts raw; you can train it later.</p>
           </fieldset>
+          <div className="field">
+            <label htmlFor="f-country">Nationality</label>
+            <select id="f-country" value={country} onChange={(e) => setCountry(e.target.value)}>
+              <option value="">Let the game decide</option>
+              {[...ORIGINS].sort((a, b) => a.country.localeCompare(b.country)).map((o) => (
+                <option key={o.country} value={o.country}>
+                  {o.country}
+                </option>
+              ))}
+            </select>
+            {country ? (
+              <ul className="country-notes small">
+                {edgeOf(country).notes.map((n) => (
+                  <li key={n}>{n}</li>
+                ))}
+              </ul>
+            ) : (
+              <p className="muted small">Half of all careers start in the United States; the rest begin in academies and clubs around the world.</p>
+            )}
+          </div>
           <div className="assigned">
             <div className="kicker">{UI.create.assignedTitle}</div>
             <div className="small">{UI.create.assignedText}</div>
@@ -148,7 +176,7 @@ export function Create() {
         </section>
       )}
 
-      {step === 1 && (
+      {step === 2 && (
         <section className="stack">
           <div className="row">
             <div className="kicker">{NAMES.pos[pos]} · pick an archetype</div>
@@ -177,7 +205,7 @@ export function Create() {
         </section>
       )}
 
-      {step === 2 && (
+      {step === 3 && (
         <section className="card stack">
           <div className="sec-title">Focus stats</div>
           <p className="muted small">{UI.create.focusHelp}</p>
@@ -194,7 +222,7 @@ export function Create() {
         </section>
       )}
 
-      {step === 3 && (
+      {step === 4 && (
         <section className="card stack">
           <div className="row">
             <div style={{ minWidth: 0 }}>
@@ -202,6 +230,7 @@ export function Create() {
               <div className="pc-name">{name || 'Rookie'}</div>
               <div className="muted">
                 #{number} · {NAMES.pos[pos]} · {archetype.name}
+                {country ? ` · ${country}` : ''}
               </div>
             </div>
 
@@ -230,7 +259,7 @@ export function Create() {
             {UI.create.back}
           </button>
         )}
-        {step < 3 ? (
+        {step < 4 ? (
           <button className="btn" disabled={!canNext} onClick={() => setStep(step + 1)}>
             {UI.create.next}
           </button>

@@ -22,6 +22,7 @@ import { clamp, int, next, normal, range, weightedIndex, type Rng } from '../rng
 import type { AttrKey, Attrs, Pos, UserPlayer } from '../types';
 import { ARCHETYPES } from './archetypes';
 import { ovrOf } from './ovr';
+import { rollAnomaly } from './anomaly';
 
 export function drawPotential(rng: Rng, d: SkewDist): number {
   return Math.round(clamp(d.base + Math.exp(normal(rng, d.mu, d.sigma)), d.min, d.max));
@@ -61,6 +62,12 @@ const weighted = <T>(rng: Rng, odds: [T, number][]): T => odds[weightedIndex(rng
 const weightedPick = (rng: Rng, odds: [number, number][]): number => weighted(rng, odds);
 
 export function createPlayer(rng: Rng, input: CreateInput): UserPlayer {
+  const p = buildPlayer(rng, input);
+  rollAnomaly(rng, p);
+  return p;
+}
+
+function buildPlayer(rng: Rng, input: CreateInput): UserPlayer {
   const arch = ARCHETYPES[input.pos][input.archetype];
   const card = { ...(input.attrs ?? arch.attrs) };
   const [hMin, hMax] = HEIGHT_RANGE[input.pos];
@@ -128,6 +135,7 @@ export function createPlayer(rng: Rng, input: CreateInput): UserPlayer {
     injuryMultNext: 1,
     declineMultNext: 1,
     growthMultNext: 1,
+    wear: 0,
     growthRate: Math.round(clamp(Math.exp(normal(rng, 0, GROWTH_RATE.sd) + GROWTH_RATE.startW * (ovrOf(attrs, input.pos) - START_SHIFT.target)), GROWTH_RATE.min, GROWTH_RATE.max) * 1000) / 1000,
   };
 }

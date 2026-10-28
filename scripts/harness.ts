@@ -53,7 +53,7 @@ function smartChoice(s: GameState, d: Decision, r: Rng): string {
     case 'transfer':
       return 'enter';
     case 'retirePrompt':
-      return s.player.age >= 32 ? 'retire' : 'go';
+      return s.player.age >= (Number(process.env.RETIRE_AGE) || 32) ? 'retire' : 'go';
     case 'declare':
     case 'withdraw': {
       const c = ch.find((x) => x.id === 'declare' || x.id === 'stay')!;
@@ -122,6 +122,12 @@ export interface CareerResult {
   nbaLines: { ovr: number; mpg: number; ppg: number; role: string; value: number; rpg: number; apg: number; ts: number }[];
   steps: number;
   paths: string[];
+  ages: { age: number; ovr: number; wear: number }[]; // at the end of each season
+  leap: boolean;
+  tragedy: boolean;
+  anomaly: string;
+  country: string;
+  stars: number;
 }
 
 export function runCareer(seed: number, policy: Policy, mode: Mode = 'standard'): CareerResult {
@@ -132,6 +138,8 @@ export function runCareer(seed: number, policy: Policy, mode: Mode = 'standard')
   const snapshots: CareerResult['snapshots'] = [];
   let steps = 0;
   let lastSnapYear = -1;
+  const ages: CareerResult['ages'] = [];
+  let starsAt = 0;
   while (steps < 5000) {
     const pr = prompt(s);
     if (pr.type === 'retired') break;
@@ -139,6 +147,8 @@ export function runCareer(seed: number, policy: Policy, mode: Mode = 'standard')
       const id = policy === 'smart' ? smartChoice(s, pr.decision, r) : randomChoice(pr.decision, r);
       choose(s, id);
     } else {
+      if (s.step === 'summary' && ages[ages.length - 1]?.age !== s.player.age) ages.push({ age: s.player.age, ovr: ovrOf(s.player.attrs, s.player.pos), wear: s.player.wear });
+      if (s.step === 'summary' && s.stage === 'HS' && s.hsYear === 4) starsAt = s.stars;
       if (s.step === 'summary' && s.nbaSnapshot && s.year !== lastSnapYear && s.nba) {
         snapshots.push({ ...s.nbaSnapshot });
         lastSnapYear = s.year;
@@ -171,6 +181,12 @@ export function runCareer(seed: number, policy: Policy, mode: Mode = 'standard')
     nbaLines: nbaRows.map((h) => ({ ovr: (h.ovrStart + h.ovrEnd) / 2, mpg: h.line.min / h.line.gp, ppg: h.line.pts / h.line.gp, role: h.role, value: valuePerGame(h.line), rpg: h.line.reb / h.line.gp, apg: h.line.ast / h.line.gp, ts: trueShooting(h.line) })),
     steps,
     paths: [...new Set(s.history.map((h) => h.level))],
+    ages,
+    leap: s.log.some((l) => l.kind === 'leap'),
+    tragedy: s.log.some((l) => l.kind === 'tragedy'),
+    anomaly: s.player.anomaly ?? '',
+    country: s.player.country,
+    stars: starsAt,
   };
 }
 

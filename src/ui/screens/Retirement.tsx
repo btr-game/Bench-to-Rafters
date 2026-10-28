@@ -152,7 +152,7 @@ export function Retirement({ g }: { g: GameState }) {
       </Card>
       {g.awards.length > 0 && (
         <Card title="Trophy cabinet">
-          <Banners items={trophyItems(g)} grouped />
+          <Banners items={trophyItems(g)} />
         </Card>
       )}
       {g.feed[0] && (

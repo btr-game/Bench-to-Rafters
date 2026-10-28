@@ -47,7 +47,7 @@ export const REROLL_SPREAD = 3;
 // §6 focus stats
 export const FOCUS_MULT = 1.8;
 export const NON_FOCUS_MULT = 0.85;
-export const MAX_FOCUS_CHANGES = 3;
+export const MAX_FOCUS_CHANGES = 99;
 
 // §6 hidden traits
 // Potential is right-skewed: base + exp(Normal(mu, sigma)). For the player this gives a
@@ -67,12 +67,12 @@ export type Mode = 'standard' | 'reality' | 'stars';
 // floor: in stars mode he is never further behind than a straight line from his start to
 // floor.ovr at floor.age, so every career that lasts that long reaches it
 export const MODES: Record<Mode, { name: string; blurb: string; potential: SkewDist; growth: number; injury: number; scoutMid: number; floor?: { age: number; ovr: number } }> = {
-  standard: { name: 'Standard', blurb: 'Most careers peak in the 60s and 70s; the NBA is common, stardom is earned.', potential: POTENTIAL, growth: 1, injury: 1, scoutMid: 70 },
-  reality: { name: 'Reality hits hard', blurb: 'Like real life: almost nobody makes the NBA. Every choice counts.', potential: { base: 40, mu: 2.25, sigma: 0.6, min: 42, max: 99 }, growth: 0.92, injury: 1.3, scoutMid: 50 },
-  stars: { name: 'Shoot for the stars', blurb: 'Every career reaches All-Star level (80+); 99 is within reach.', potential: { base: 86, mu: 1.9, sigma: 0.6, min: 88, max: 103 }, growth: 1.35, injury: 0.6, scoutMid: 93, floor: { age: 22, ovr: 80 } },
+  standard: { name: 'Standard', blurb: 'Most careers peak in the 60s and 70s; the NBA is common, stardom is earned.', potential: POTENTIAL, growth: 0.94, injury: 1, scoutMid: 70 },
+  reality: { name: 'Reality hits hard', blurb: 'Like real life: most careers end short of the NBA, and those who make it fight for a spot. Every choice counts.', potential: { base: 49, mu: 2.25, sigma: 0.6, min: 50, max: 99 }, growth: 0.95, injury: 1.3, scoutMid: 50 },
+  stars: { name: 'Shoot for the stars', blurb: 'Built for greatness: every career reaches stardom, and the very top is within reach.', potential: { base: 83, mu: 1.8, sigma: 0.6, min: 85, max: 99 }, growth: 1.2, injury: 0.6, scoutMid: 93, floor: { age: 22, ovr: 80 } },
 };
 // stat caps may sit above 99 so elite players can actually reach the top of the scale
-export const CAP_MAX = 110;
+export const CAP_MAX = 99;
 // attributes may pass 99 (up to their caps) so a 97-99 OVR is reachable; OVR itself tops out at 99
 export const ATTR_MAX = CAP_MAX;
 export const GROWTH_TYPE_ODDS: [GrowthType, number][] = [
@@ -111,7 +111,9 @@ export const EARLY_BLOOMER = { ageShift: 2, until: 20, youngBoost: 1.15, youngBe
 export const LATE_BLOOMER = { youngMult: 0.8, youngBefore: 21, minutesGate: 0.85 };
 export const HEADROOM_DIV = 25;
 export const HEADROOM_MAX = 1.5;
-export const CAP_FROM_START = 0.45;
+// how much the starting card shapes each rating's ceiling (lower = every rating can get
+// close to his potential, so a lucky player can nearly max them all)
+export const CAP_FROM_START = 0.2;
 // Overall multiplier on all growth (tuning knob for the whole curve).
 export const GROWTH_SCALE = 1.0;
 
@@ -234,8 +236,35 @@ export const FAN_VOTE = { share: 0.15, scale: 25 };
 export const FORM = { gameSd: 0.17, halfSd: 0.08, min: 0.5, max: 1.7, shootingShare: 0.3 };
 
 // §7 aging
-export const DECLINE_START = { durable: 32, normal: 30, fragile: 28 } as const;
-export const DECLINE_TABLE = [-0.8, -1.2, -1.6, -2.2, -2.8, -3.5];
+// Aging hits hard in every mode (playtest round 7): most players are clearly worse by 35.
+export const DECLINE_START = { durable: 31, normal: 29, fragile: 27 } as const;
+export const DECLINE_TABLE = [-1.2, -2.0, -2.8, -3.6, -4.5, -5.5];
+// Body wear (0-100): heavy minutes, hard plans and injuries add to it; recovery, rest and
+// health spending take it off. It scales how hard aging hits (decline x (base + wear/div),
+// 0.6x for a well-kept body up to about 2.6x for a worn-out one) and the odds of a
+// career-altering injury.
+// Career-changing swings, rolled once per offseason (see career/swings.ts). The leap's chance
+// scales with the hidden growth rate squared; the tragedy's with durability and body wear.
+/** Rare players who break the mold (player/anomaly.ts). */
+export const ANOMALY = { chance: 0.05, capShare: 0.6 };
+
+export const SWINGS = {
+  leap: { chance: 0.005, minAge: 19, maxAge: 28, ceiling: [8, 16] as [number, number], now: [5, 9] as [number, number], rateMult: 1.3 },
+  tragedy: { chance: 0.0035, minAge: 21, wearDiv: 40, ath: [10, 15] as [number, number], other: [3, 6] as [number, number], caps: [6, 10] as [number, number], durability: 0.25, rateMult: 0.8, wear: 15, daysOut: 330 },
+};
+export const WEAR = {
+  minutes: 3, // per half at a full share of minutes
+  plan: 3, // per half, times (plan injury multiplier - 1): grind adds, recovery removes
+  injury: { dtd: 0, minor: 1, major: 4, season: 9 } as Record<string, number>,
+  summerRest: 2.5, // removed every offseason
+  restProgram: 3, // extra for a rest summer program
+  agePerYear: 0.5, // added each year past 25
+  shopItem: 2, // removed by health and longevity purchases
+  declineBase: 0.6,
+  declineDiv: 50,
+  // the most a prime can be pushed back by the hidden growth rate when it comes to aging
+  maxPrimeShift: 2,
+};
 export const DECLINE_ATTR_MULT: Partial<Record<AttrKey, number>> = { ATH: 1.8, SHT: 0.5, IQ: 0.3 };
 export const IQ_LATE_GAIN = { perSeason: 0.3, untilAge: 33 };
 export const SUDDEN_DECLINE = { fromAge: 31, chance: 0.08, min: 4, max: 8 };
@@ -438,13 +467,15 @@ export const DRAFT = {
 export const RECRUIT = {
   classSize: 300,
   population: 4000,
-  ovrMean: 51.5,
-  ovrSd: 4.6,
-  potMean: 62.5,
-  potSd: 7.5,
-  wOvr: 0.55,
-  wPot: 0.35,
-  wRep: 0.1,
+  ovrMean: 51.5, // typical OVR of a senior with a college future (first offers)
+  // Stars follow a senior-equivalent rating (OVR + small potential and reputation nudges).
+  // effMean/effSd are set so that 60 is the top-30 line (5 stars), 55 the top 150 (4 stars)
+  // and about 52.4 the top 300 (3 stars).
+  effMean: 41.3,
+  effSd: 7.7,
+  potW: 0.12,
+  repW: 0.03,
+  twoStar: 46,
   stars: [30, 150, 300],
   // chance that a low-star recruit gets any Division I offer
   d1Chance: { 2: 0.92, 1: 0.6 } as Record<number, number>,

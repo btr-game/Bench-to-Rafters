@@ -1,5 +1,6 @@
 // Offer generation for every path: NCAA recruiting, G League, Europe, NBA.
 
+import { edgeOf } from './nationality';
 import { FA_INTEREST, LEVELS, NCAA_TIER_STRENGTH, RECRUIT, ROLE_MINUTES } from '../balance';
 import { COLLEGES, EURO_CLUBS, INT_LEAGUES, NBA_TEAMS } from '../../content/teams';
 import { chance, clamp, int, pick, poisson, range, shuffle } from '../rng';
@@ -123,7 +124,9 @@ export function splitOffers(s: GameState): Offer[] {
 
 export function euOffer(s: GameState, club: string, ovr: number, years: number): Offer {
   const c = EURO_CLUBS.find((x) => x.name === club)!;
-  const rank = projectedRank(c.strength, ovr);
+  // European clubs pay and play their own a little more
+  const edge = edgeOf(s.player.country);
+  const rank = projectedRank(c.strength, ovr + edge.euRole);
   return {
     id: offerId(s),
     level: 'EU',
@@ -131,7 +134,7 @@ export function euOffer(s: GameState, club: string, ovr: number, years: number):
     teamName: c.name,
     teamColor: c.color,
     kind: 'eu',
-    salary: Math.round(clamp(0.25 + (ovr - 58) * 0.18, 0.2, 4) * 100) / 100,
+    salary: Math.round(clamp(0.25 + (ovr - 58) * 0.18, 0.2, 4) * edge.euPay * 100) / 100,
     years,
     role: roleForRank(rank),
     outlook: c.strength >= 68 ? 'Contender' : c.strength >= 66 ? 'Playoff team' : 'Fringe',
@@ -180,7 +183,8 @@ export function intOffers(s: GameState, ovr: number, max: number, opts: { nextSt
   return shuffle(s.rng, leagues)
     .slice(0, max)
     .map((l) => {
-      const [name, color] = pick(s.rng, l.teams);
+      // the army team only takes players doing military service
+      const [name, color] = pick(s.rng, l.teams.filter(([n]) => n !== 'Sangmu Phoenix'));
       const t = clamp((ovr - (l.strength - 7)) / 15, 0, 1);
       const salary = Math.round((l.salary[0] + (l.salary[1] - l.salary[0]) * t) * (opts.cba && l.key === 'CBA' ? 1.6 : 1) * 100) / 100;
       return {

@@ -289,7 +289,7 @@ export const INT_LEAGUES: IntLeagueInfo[] = [
     teams: [
       ['Seoul SK Knights', '#C8102E'], ['Changwon LG Sakers', '#7A1F2B'], ['Suwon KT Sonicboom', '#2A2F36'], ['Anyang Jung Kwan Jang', '#B3541E'],
       ['Ulsan Hyundai Mobis Phoebus', '#1F3A7A'], ['Busan KCC Egis', '#002B5C'], ['Wonju DB Promy', '#1E5B3A'], ['Seoul Samsung Thunders', '#0F5C6E'],
-      ['Goyang Sono Skygunners', '#5B2A86'], ['Daegu KOGAS Pegasus', '#8A6D1F'],
+      ['Goyang Sono Skygunners', '#5B2A86'], ['Daegu KOGAS Pegasus', '#8A6D1F'], ['Sangmu Phoenix', '#4B5320'],
     ],
   },
 ];

@@ -12,7 +12,6 @@ import { AttrRows } from '../components/PlayerCard';
 import { ScoutCard } from '../components/ScoutCard';
 import { fmtMoney, ht, pct, pg, seasonLabel } from '../format';
 import { ordinal } from '../../engine/career/season';
-import { originOf } from '../../content/origins';
 import { useStore } from '../../store';
 import { league as leagueOf, ovr } from '../selectors';
 
@@ -259,6 +258,8 @@ export function PlayerTab({ g }: { g: GameState }) {
             <Meter label="Morale" value={p.morale} />
             <Meter label="Coach trust" value={p.trust} />
             <Meter label="Reputation" value={p.rep} tone="ink" />
+            <Meter label="Body wear" value={p.wear ?? 0} tone={(p.wear ?? 0) >= 50 ? "bad" : (p.wear ?? 0) >= 25 ? "warn" : "good"} />
+            <p className="small muted" style={{ margin: 0 }}>Body wear builds with heavy minutes, hard plans and injuries, and makes aging hit harder after 30. Recovery plans, rest summers and health purchases bring it down.</p>
           </div>
           <dl className="facts">
             <div>
@@ -276,9 +277,7 @@ export function PlayerTab({ g }: { g: GameState }) {
               <dt>Hometown</dt>
               <dd>{p.hometown}</dd>
               <dt>Nationality</dt>
-              <dd>
-                {originOf(p.country).flag} {p.country}
-              </dd>
+              <dd>{p.country}</dd>
             </div>
             <div>
               <dt>Shoots</dt>
@@ -356,7 +355,7 @@ function NbaHistoryCard({ g }: { g: GameState }) {
                 <b>{seasonLabel(h.year)}</b>
                 <div className="spacer" />
                 <span className="small">
-                  🏆 <b>{h.champion}</b> def. {h.runnerUp} {h.finals}
+                  Champion: <b>{h.champion}</b> def. {h.runnerUp} {h.finals}
                 </span>
               </div>
               {h.finalsMvp && (
@@ -469,14 +468,9 @@ function totals(rows: SeasonRecord[]): StatLine {
 }
 
 export function trophyItems(g: GameState): BannerItem[] {
-  const byLabel = new Map<string, BannerItem>();
-  for (const a of g.awards) {
-    const it = byLabel.get(a.label) ?? { label: a.label, key: a.key, count: 0, years: [] };
-    it.count! += 1;
-    it.years!.push(a.year);
-    byLabel.set(a.label, it);
-  }
-  return [...byLabel.values()];
+  const counts = new Map<string, number>();
+  for (const a of g.awards) counts.set(a.label, (counts.get(a.label) ?? 0) + 1);
+  return [...counts.entries()].map(([label, c]) => ({ label, count: c, gold: /Champion|MVP|Player of the Year|champion/.test(label) }));
 }
 
 export function HistoryTable({ rows }: { rows: SeasonRecord[] }) {
@@ -551,7 +545,6 @@ export function RecordsTab({ g }: { g: GameState }) {
                 <summary>
                   <span className="tourney-head">
                     <b>
-                      {t.medal ? (t.medal === 'gold' ? '🥇 ' : t.medal === 'silver' ? '🥈 ' : '🥉 ') : ''}
                       {t.name}
                     </b>
                     <span className="muted small">
@@ -579,7 +572,7 @@ export function RecordsTab({ g }: { g: GameState }) {
           </div>
         </Card>
       )}
-      <Card title="Trophy cabinet">{g.awards.length === 0 ? <p className="muted">Empty, for now.</p> : <Banners items={trophyItems(g)} grouped />}</Card>
+      <Card title="Trophy cabinet">{g.awards.length === 0 ? <p className="muted">Empty, for now.</p> : <Banners items={trophyItems(g)} />}</Card>
       <Card title="Career totals" kicker={`Legacy score ${legacyScore(g)}`}>
         {nbaT.gp > 0 && (
           <>

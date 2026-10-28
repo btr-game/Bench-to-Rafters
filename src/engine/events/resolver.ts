@@ -6,9 +6,11 @@ import { EVENTS as BASE_EVENTS, type EventChoice, type EventDef } from './defs';
 import { MORE_EVENTS } from './more';
 import { RISK_EVENTS } from './risks';
 import { GROWTH_EVENTS } from './growthEvents';
-import { changes, sizeNote, snap, vary } from './outcome';
+import { SKILL_EVENTS } from './skillEvents';
+import { changes, snap, vary } from './outcome';
+import { rollTier, tierFactors, tierLine, TIERS, twists, type Tier } from './twists';
 
-const EVENTS: EventDef[] = [...BASE_EVENTS, ...MORE_EVENTS, ...RISK_EVENTS, ...GROWTH_EVENTS];
+const EVENTS: EventDef[] = [...BASE_EVENTS, ...MORE_EVENTS, ...RISK_EVENTS, ...GROWTH_EVENTS, ...SKILL_EVENTS];
 
 function eligible(s: GameState, phase: 'mid' | 'off'): EventDef[] {
   return EVENTS.filter((e) => {
@@ -73,10 +75,19 @@ export function resolveEvent(s: GameState, d: Decision, choiceId: string): strin
   if (!c) return '';
   const before = snap(s);
   const res = c.resolve(s, s.rng);
-  // how big it turns out is rolled every time
-  const f = vary(s, before);
+  // how it turns out is rolled every time: from a breakthrough to a backfire, often with a twist
+  const first = changes(s, before);
+  const did = first.length > 0;
+  const failed = first.filter((c) => !c.good).length > first.filter((c) => c.good).length;
+  const tier: Tier = did ? rollTier(s.rng, failed) : 'expected';
+  const fx = tierFactors(s.rng, tier);
+  vary(s, before, fx.good, fx.bad);
+  const extra = did ? twists(s, tier) : [];
   logDecision(s, 'event', res.log ?? `${e.title}: ${c.label}.`);
-  const text = [res.outcome, sizeNote(f)].filter(Boolean).join(' ');
-  s.result = { title: e.title, choice: c.label, text, changes: changes(s, before) };
+  // a backfire replaces the hoped-for outcome with what actually happened
+  const lead = did ? tierLine(s.rng, tier) : '';
+  const parts = tier === 'backfired' ? [lead, ...extra] : [res.outcome, lead, ...extra];
+  const text = parts.filter(Boolean).join(' ');
+  s.result = { title: e.title, choice: c.label, text, changes: changes(s, before), tier: did ? TIERS[tier].label : undefined, tierKey: did ? tier : undefined };
   return text;
 }

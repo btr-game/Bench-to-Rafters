@@ -48,10 +48,11 @@ export function PlayerCard({ g, compact = false }: { g: GameState; compact?: boo
             {heightMismatch(g) ? (
               <span className="height-warn" title={heightMismatch(g)!.text}>
                 {' '}
-                ⚠ size
+                SIZE
               </span>
             ) : null}{' '}
             · {p.archetype}
+            {p.anomaly && <span className="anomaly-tag" title="A rare player who breaks the mold"> · {p.anomaly}</span>}
           </div>
           <h2 className="pc-name">{p.name}</h2>
           {t && <TeamChip name={t.name} color={t.color} />}
@@ -96,6 +97,7 @@ export function PlayerCard({ g, compact = false }: { g: GameState; compact?: boo
         <Meter label="Morale" value={p.morale} tone={p.morale < 35 ? 'bad' : p.morale > 70 ? 'good' : undefined} />
         <Meter label="Coach trust" value={p.trust} tone={p.trust <= 30 ? 'bad' : p.trust >= 70 ? 'good' : undefined} />
         <Meter label="Reputation" value={p.rep} tone="ink" />
+        <Meter label="Body wear" value={p.wear ?? 0} tone={(p.wear ?? 0) >= 50 ? "bad" : (p.wear ?? 0) >= 25 ? "warn" : "good"} />
       </div>
       {!compact && (
         <div className="stack" style={{ gap: 8 }}>

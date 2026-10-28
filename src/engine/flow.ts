@@ -1,6 +1,8 @@
 // The state machine. The UI and the balance harness both drive the game only
 // through `newGame`, `prompt`, `choose` and `advance`.
 
+import { resolveMilitary } from './career/nationality';
+import { ANOMALIES } from './player/anomaly';
 import { makeRng } from './rng';
 import type { Decision, GameState, HalfPlan, Step } from './types';
 import { createPlayer, type CreateInput } from './player/create';
@@ -86,6 +88,8 @@ export function newGame(seed: number, input: CreateInput): GameState {
     `Tryouts: ${start >= 48 ? 'well ahead of most kids his age' : start >= 44 ? 'ahead of most kids his age' : start >= 36 ? 'about where most kids his age are' : 'raw, behind most kids his age'}`,
     `${ft(player.height)} now; the doctors think he will grow to about ${ft(player.heightProj)}, but nobody knows for sure`,
   );
+  const gift = ANOMALIES.find((a) => a.name === player.anomaly);
+  if (gift) intro.lines.push(`A rare one: ${gift.name.toLowerCase()}. ${gift.text}.`);
   pushMoment(s, { kind: 'intro', title: player.highSchool, text: intro.text, color: s.schoolColor, lines: intro.lines });
   logDecision(s, 'start', `Enrolled at ${player.highSchool} in ${player.hometown} as a ${input.pos}, ${player.archetype}.`);
   beginSeason(s);
@@ -142,6 +146,9 @@ export function choose(s: GameState, choiceId: string): void {
     case 'youth':
       s.toast = resolveYouth(s, d, choiceId) || null;
       return;
+    case 'military':
+      s.toast = resolveMilitary(s, choiceId);
+      return;
     case 'live':
       if (s.postSnap) {
         s.postSnap.picks.push(choiceId);
@@ -196,6 +203,16 @@ export function dismissMoment(s: GameState): void {
   s.moments.shift();
 }
 
+/** A new jersey number, between seasons. */
+export function changeNumber(s: GameState, n: number): void {
+  if (s.step !== 'offseason' && s.step !== 'summary') return;
+  const num = Math.round(n);
+  if (!Number.isFinite(num) || num < 0 || num > 99 || num === s.player.number) return;
+  logDecision(s, 'number', `Switched from number ${s.player.number} to ${num}.`);
+  s.player.number = num;
+  s.toast = `You will wear number ${num} next season.`;
+}
+
 /** Retiring by choice: possible between any two seasons (season summary or offseason). */
 export function canRetire(s: GameState): boolean {
   // once his playing days are a job (after high school or a youth academy)
@@ -215,4 +232,5 @@ function finishCareer(s: GameState): void {
 
 export { activeLeague };
 export { canChangePosition, changePosition, heightMismatch, positionOptions } from './career/position';
+export { canChangeFocus, changeFocus } from './career/focus';
 export type { CreateInput };
