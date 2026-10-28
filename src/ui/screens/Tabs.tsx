@@ -4,6 +4,7 @@ import { LegacyTierList } from '../components/Legacy';
 import { TrophyCabinet, trophyItems } from '../components/Trophies';
 import { CareerHighs } from '../components/Highs';
 import { NbaBracket } from '../components/NbaBracket';
+import { TextBracket } from '../components/TextBracket';
 import { useState } from 'react';
 import type { GameState, League, SeasonRecord, SeriesResult, StatLine, Team } from '../../engine/types';
 import { LEVELS } from '../../engine/balance';
@@ -169,8 +170,8 @@ function BracketView({ g }: { g: GameState }) {
   const graphic = lg.level === 'NBA' && b.rounds.length === 4;
   return (
     <div className="bracket">
-      {graphic && <NbaBracket bracket={b} league={lg} userTeamId={g.teamId} />}
-      {graphic && <div className="sec-title">Every series</div>}
+      {graphic ? <NbaBracket bracket={b} league={lg} userTeamId={g.teamId} /> : <TextBracket b={b} league={lg} userTeamId={g.teamId} />}
+      <div className="sec-title">Every {lg.level === 'NBA' ? 'series' : 'game'}</div>
       {b.playIn && b.playIn.length > 0 && (
         <div className="round">
           <div className="kicker">Play-In Tournament</div>

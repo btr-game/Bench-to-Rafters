@@ -5,6 +5,8 @@ import { advance, canChangePosition, canRetire, changePosition, choose, newGame,
 import { fastForward } from '../src/engine/fast';
 import { bankGains, labCost, spendCredits } from '../src/engine/career/lab';
 import { pushShop } from '../src/engine/economy/shop';
+import { buildDrama } from '../src/engine/story/drama';
+import { canRecruit, recruitInfo, recruitPlayer, scoutingBoard, takePayCut } from '../src/engine/career/recruit';
 import { startArc } from '../src/engine/events/arcs';
 import { winningEdge } from '../src/engine/career/team';
 import { ovrOf } from '../src/engine/player/ovr';
@@ -413,5 +415,54 @@ describe('round 8: built in a lab and the shop', () => {
       items.forEach((c) => seen.add(c.id));
     }
     expect(seen.size).toBeGreaterThan(14);
+  });
+});
+
+describe('round 9: starting five, league stories, finals drama', () => {
+  it('the last minutes of a final always land on the real score, and close ones end at the buzzer', () => {
+    const cast = { me: 'Sam Star', mates: ['A B', 'C D', 'E F'], opps: ['G H', 'I J'], us: 'US', them: 'THEM' };
+    for (let i = 0; i < 300; i++) {
+      const us = 80 + (i % 37);
+      let them = us + ((i * 7) % 31) - 15;
+      if (them === us) them++;
+      const d = buildDrama({ us, them }, cast, 1000 + i);
+      const endUs = d.start.us + d.plays.filter((p) => p.side === 'us').reduce((a, p) => a + p.pts, 0);
+      const endThem = d.start.them + d.plays.filter((p) => p.side === 'them').reduce((a, p) => a + p.pts, 0);
+      expect([endUs, endThem]).toEqual([us, them]);
+      if (Math.abs(us - them) <= 3) expect(d.plays.some((p) => p.tag === 'BUZZER')).toBe(true);
+    }
+  });
+
+  it('a star gets league storylines, and as first option can recruit starters within the cap', () => {
+    const s = newGame(4243, { name: 'Sam Star', number: 1, pos: 'SF', archetype: 0, focus: ['SHT', 'FIN'], mode: 'stars' });
+    s.flags.simPostseason = 1;
+    let sawStories = false;
+    let tried = false;
+    for (let i = 0; i < 6000 && !tried; i++) {
+      if (s.stage === 'NBA' && s.stories && s.stories.length >= 2) sawStories = true;
+      if (canRecruit(s)) {
+        const board = scoutingBoard(s);
+        expect(board.length).toBeGreaterThan(0);
+        const salary = s.contract!.salary;
+        takePayCut(s);
+        expect(s.contract!.salary).toBeCloseTo(Math.round(salary * 0.9 * 10) / 10, 6);
+        const mine = s.nba!.teams.find((t) => t.id === s.teamId)!;
+        for (const t of scoutingBoard(s).filter((x) => x.fits)) {
+          if (recruitPlayer(s, t.p.id)) {
+            expect(mine.roster.some((p) => p.id === t.p.id)).toBe(true);
+            expect(t.team.roster.some((p) => p.id === t.out[0].id)).toBe(true);
+          }
+        }
+        expect(recruitInfo(s).asks).toBeGreaterThan(0);
+        tried = true;
+        break;
+      }
+      const pr = prompt(s);
+      if (pr.type === 'retired') break;
+      if (pr.type === 'decision') choose(s, (pr.decision.choices.find((c) => !c.disabled && c.id !== 'retire') ?? pr.decision.choices.find((c) => !c.disabled))!.id);
+      else advance(s);
+    }
+    expect(sawStories).toBe(true);
+    expect(tried).toBe(true);
   });
 });

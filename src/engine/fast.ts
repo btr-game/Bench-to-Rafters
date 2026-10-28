@@ -6,16 +6,18 @@
 // - at most one turning point at a time, and notices with a single button close themselves;
 // - the postseason is simulated and the shop is skipped;
 // - "next" screens advance by themselves, and the offseason only stops when there is a move
-//   worth making (an unlocked focus change, a size problem, or retirement age);
+//   worth making (an unlocked focus change, the starting five to build, a size problem, or
+//   retirement age);
 // - only the big story pages are shown.
 
 import type { Decision, GameState, Moment } from './types';
 import { advance, canChangeFocus, choose, heightMismatch, prompt } from './flow';
+import { canRecruit } from './career/recruit';
 
 /** Story pages worth stopping for in fast break. */
 const BIG_EVENT = /Breakthrough season|The leap|Everything changes|Exempted|rafters/i;
 function isBig(m: Moment): boolean {
-  if (m.arc) return true;
+  if (m.arc || m.drama) return true;
   if (m.kind === 'draft' || m.kind === 'title' || m.kind === 'intro') return true;
   if (m.kind === 'awards') return /MVP|All-NBA|Champion|Player of the Year/i.test((m.lines ?? []).join(' ') + m.title);
   if (m.kind === 'injury') return /season|ACL|Everything/i.test(m.title + m.text);
@@ -41,7 +43,7 @@ function autoChoice(s: GameState, d: Decision): string | null {
 
 /** An offseason with something to do: stop there once so the player can act. */
 function worthStopping(s: GameState): boolean {
-  return canChangeFocus(s) || heightMismatch(s) !== null || s.player.age >= 30;
+  return canChangeFocus(s) || canRecruit(s) || heightMismatch(s) !== null || s.player.age >= 30;
 }
 
 /** Runs the game forward until the next real choice. */

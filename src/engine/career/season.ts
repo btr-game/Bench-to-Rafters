@@ -67,6 +67,7 @@ import { queueMidseasonEvents } from '../events/resolver';
 import { allStarWeekend, conferenceTournament, hsNationals, mcdonaldsGame, nbaCup, nbaPreseason } from '../sim/tournaments';
 import { quickNbaSeason, warmUpNba } from './nbaYear';
 import { reactionsForSeason } from '../story/reactions';
+import { finishStories, startStories, updateStories } from '../world/stories';
 
 /** What he adds to winning beyond his OVR, scaled by his share of the game (career/team.ts). */
 const edgeFor = (a: Attrs, ovr: number, share: number, post: boolean): number => {
@@ -145,6 +146,7 @@ export function beginSeason(s: GameState): void {
   };
   s.season = season;
   s.step = 'preseason';
+  startStories(s, league);
   pushPlanDecision(s, 1);
 }
 
@@ -334,7 +336,8 @@ function makeHook(s: GameState, league: League, level: LevelKey, acc: HalfAcc, s
       win = chance(rng, winProb(team.strength + (season.teamBonus ?? 0) + impact + boost, opp.strength, post && level !== 'NBA' ? 0 : home ? 1 : -1));
       us = Math.round(GAME_POINTS[level] + normal(rng, 0, 9));
       if (line && line.pts > us - 15) us = line.pts + int(rng, 15, 30);
-      const margin = int(rng, 1, 18);
+      // postseason games run closer: more of them come down to the last minutes
+      const margin = post && chance(rng, 0.4) ? int(rng, 1, 4) : int(rng, 1, post ? 14 : 18);
       them = win ? Math.max(20, us - margin) : us + margin;
     }
     if (post && s.live) {
@@ -524,6 +527,7 @@ function growthAfterHalf(s: GameState, acc: HalfAcc, level: LevelKey, ovr: numbe
 function beginMidseason(s: GameState, acc: HalfAcc): void {
   const season = s.season!;
   const league = activeLeague(s);
+  updateStories(s, league);
   const team = teamById(league, league.userTeamId)!;
   const ovr = userOvr(s);
   const oldRole = season.role;
@@ -630,6 +634,7 @@ function finishSeason(s: GameState): void {
   const post = postseason(s, league, hook);
   const mvps = league.bracket ? playoffMvps(s.rng, league, league.bracket, { teamId: team.id, name: p.name, games: season.postGames }) : [];
   const recap = league.bracket ? postseasonRecap(league, league.bracket) : [];
+  finishStories(s, league);
   if (level === 'HSV') {
     const rank = standings(league.teams).indexOf(team) + 1;
     if (pathOf(s) === 'us' && (post.champion || (rank <= 2 && team.strength >= 50) || s.flags.powerhouse)) hsNationals(s, team);
@@ -717,6 +722,10 @@ function finishSeason(s: GameState): void {
       });
     }
   } else if (league.bracket && recap.length > 0) {
+    // a final he lost still gets its last minutes, without the banner
+    const finalRound = league.bracket.rounds[league.bracket.rounds.length - 1];
+    const inFinal = finalRound?.series.some((x) => x.a === team.id || x.b === team.id);
+    const lastGame = season.postGames[season.postGames.length - 1];
     pushMoment(s, {
       kind: 'tournament',
       title: league.label ? `The ${league.label} playoffs` : (POSTSEASON_TITLE[level] ?? 'The postseason'),
@@ -725,6 +734,7 @@ function finishSeason(s: GameState): void {
       text: `${teamById(league, league.bracket.champion)?.name ?? 'Someone else'} won it all. ${post.result}.`,
       lines: [],
       recap,
+      ...(inFinal && lastGame && lastGame.res === 'L' ? { game: { ...lastGame, level, teamShort: team.short }, lostFinal: true } : {}),
     });
   }
   const honours = aw.wins.map((w) => w.label).concat(keys.filter((k) => ['MCDAA', 'GATORADE', 'FMVP', 'CFMVP', 'FFMOP', 'PLAYOFFMVP'].includes(k.key)).map((k) => k.label));

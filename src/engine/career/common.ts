@@ -6,6 +6,7 @@ import type { Decision, GameState, League, LevelKey, Moment, RoleKey, Team } fro
 import { ovrOf } from '../player/ovr';
 import { anchorFor } from '../world/gen';
 import { standings } from '../sim/leagueSim';
+import { buildDrama, type DramaCast } from '../story/drama';
 
 export const userOvr = (s: GameState): number => ovrOf(s.player.attrs, s.player.pos);
 
@@ -86,7 +87,20 @@ export function conferenceRank(team: Team, league: League): number {
   return st.indexOf(team) + 1;
 }
 
+/** Who is on the floor for a final: him, his teammates and the other side, by name. */
+export function castFor(s: GameState, oppShort: string, played: boolean): DramaCast {
+  const lg = s.stage === 'NBA' ? s.nba : s.league;
+  const mine = lg?.teams.find((t) => t.id === lg.userTeamId);
+  const opp = lg?.teams.find((t) => t.short === oppShort);
+  return { me: played ? s.player.name : null, mates: mine?.roster.map((p) => p.name) ?? [], opps: opp?.roster.map((p) => p.name) ?? [], us: mine?.short ?? 'You', them: oppShort };
+}
+
 export function pushMoment(s: GameState, m: Omit<Moment, 'id'>): void {
+  // every title game, and every final he lost, ends with its last minutes play by play
+  if ((m.kind === 'title' || m.lostFinal) && m.game && !m.drama) {
+    const g = m.game;
+    m = { ...m, drama: buildDrama(g, { ...castFor(s, g.opp, !!g.line && g.line.min > 0), us: g.teamShort }, (s.seed ^ (g.us * 131 + g.them * 7 + s.year * 17)) >>> 0) };
+  }
   s.moments.push({ ...m, id: s.nextId++ });
   if (s.moments.length > 6) s.moments.shift();
 }

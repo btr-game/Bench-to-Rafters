@@ -237,6 +237,125 @@ const ARCS: ArcDef[] = [
       return { title: won ? 'Round to you' : 'Round to him', text: won ? 'You dropped a big game on him on national TV and let him hear about it.' : 'He went off against you and the clip went everywhere. You saved it on your phone.' };
     },
   },
+  // round 9
+  {
+    id: 'brand',
+    title: 'The shoe deal',
+    color: '#1F6E5C',
+    next: (s, a, rng) => {
+      const startup = a.v.startup === 1;
+      if (a.chapter === 0) {
+        a.v.hit = chance(rng, startup ? 0.45 : 0.85) ? 1 : 0;
+        if (a.v.hit) {
+          const pay = startup ? 0.4 + s.player.rep / 60 : 0.2 + s.player.rep / 120;
+          s.player.bank += pay;
+          s.player.earnings += pay;
+          rep(s, startup ? 5 : 3);
+          return { title: startup ? 'Your shoe is a hit' : 'A steady check', text: startup ? 'The little brand put everything into your first shoe, and it sold out in every color. Kids at the park are wearing your logo.' : 'The big brand put you in an ad with three other players. The checks clear on time.' };
+        }
+        morale(s, -3);
+        return { title: startup ? 'Nobody bought it' : 'Lost in the crowd', text: startup ? 'The shoe looked great and sold badly. The brand is behind on payments.' : 'You are one of fifty players on their roster. Nobody at the brand returns your calls.' };
+      }
+      if (a.v.hit && startup) {
+        const pay = 1 + s.player.rep / 25;
+        s.player.bank += pay;
+        s.player.earnings += pay;
+        rep(s, 4);
+        return { title: 'Signature line', text: 'Shoe number two, a clothing line, a store in your hometown. The brand gives you a share of the company.', done: true };
+      }
+      return { title: 'Contract up', text: a.v.hit ? 'The deal ran its course. Good money, no headaches.' : 'You let the deal expire and sign somewhere smaller. Lesson learned.', done: true };
+    },
+  },
+  {
+    id: 'foundation',
+    title: 'The foundation',
+    color: '#2E6B3A',
+    next: (s, a) => {
+      if (a.chapter === 0) {
+        morale(s, 5);
+        rep(s, 3);
+        return { title: 'The first court', text: 'The court back home opens with your name on the backboard. Two hundred kids show up on day one.' };
+      }
+      if (a.chapter === 1) {
+        morale(s, 4);
+        trust(s, 3);
+        rep(s, 3);
+        return { title: 'Summer camps', text: 'The foundation runs free camps in three cities now. You coach a session every summer, and teaching the basics makes you rethink your own.' };
+      }
+      rep(s, 6);
+      morale(s, 6);
+      s.awards.push({ year: s.year, level: s.stage === 'NBA' ? 'NBA' : 'NCAA', key: 'COMMUNITY', label: 'Community Assist Award' });
+      return { title: 'Community Assist', text: 'The league honours your foundation with its community award. Your mother cries at the ceremony.', done: true };
+    },
+  },
+  {
+    id: 'sibling',
+    title: 'Little brother',
+    color: '#6E4A1F',
+    next: (s, a, rng) => {
+      if (a.chapter === 0) {
+        a.v.good = chance(rng, 0.55) ? 1 : 0;
+        morale(s, 3);
+        return { title: a.v.good ? 'He can really play' : 'He is trying', text: a.v.good ? 'Your little brother made varsity as a freshman. He has your jumper and a better handle than you had.' : 'Your little brother is working hard, but he is two years behind where you were. He calls you after every game.' };
+      }
+      if (a.chapter === 1) {
+        if (a.v.good) {
+          morale(s, 6);
+          rep(s, 2);
+          return { title: 'Recruited', text: 'Coaches are calling him now. You sit in on every visit and ask the hard questions nobody asked for you.' };
+        }
+        morale(s, 2);
+        return { title: 'A different road', text: 'He decides basketball is not his path and enrolls in engineering. He still beats you at video games.', done: true };
+      }
+      morale(s, 8);
+      return { title: 'Same court', text: a.v.good ? 'He signs to play college ball. On signing day he wears your old jersey number.' : 'He graduates near the top of his class.', done: true };
+    },
+  },
+  {
+    id: 'mind',
+    title: 'Mind game',
+    color: '#3A4E7A',
+    next: (s, a, rng) => {
+      const talked = a.v.talked === 1;
+      if (a.chapter === 0) {
+        if (talked) {
+          morale(s, 6);
+          rep(s, 4);
+          return { title: 'Thousands of messages', text: 'After you spoke about anxiety, the messages poured in. Players, fans, kids. You are sleeping better than you have in years.' };
+        }
+        morale(s, chance(rng, 0.5) ? -6 : -2);
+        return { title: 'Bad nights', text: 'You never told anyone. Some nights the walls close in before games. You play through it, mostly.' };
+      }
+      if (talked || chance(rng, 0.5)) {
+        morale(s, 8);
+        s.player.growthMultNext *= 1.05;
+        return { title: 'Steady', text: 'The work with your therapist shows on the court: calmer in close games, quicker to let a miss go.', done: true };
+      }
+      morale(s, -4);
+      return { title: 'Still carrying it', text: 'You finally tell your coach. It is late, but it is a start.', done: true };
+    },
+  },
+  {
+    id: 'coach',
+    title: 'The coach who believed',
+    color: '#5C1F6E',
+    next: (s, a, rng) => {
+      if (a.chapter === 0) {
+        bump(s, 'IQ', range(rng, 1, 2));
+        trust(s, 5);
+        s.player.growthMultNext *= 1.04;
+        return { title: 'Extra sessions', text: 'Six a.m., every day, just the two of you. He breaks down your game and builds it back better.' };
+      }
+      a.v.left = chance(rng, 0.5) ? 1 : 0;
+      if (a.v.left) {
+        morale(s, -4);
+        return { title: 'He takes another job', text: 'Your coach gets the head job somewhere else. He calls to say goodbye and gives you a list of things to work on. You keep it in your bag for years.', done: true };
+      }
+      bump(s, 'IQ', range(rng, 0.8, 1.5));
+      morale(s, 5);
+      return { title: 'Still in your corner', text: 'He stays, and you keep the six a.m. sessions going. Your feel for the game is the best it has ever been.', done: true };
+    },
+  },
 ];
 
 const defOf = (id: string) => ARCS.find((d) => d.id === id);
@@ -550,6 +669,127 @@ export const ARC_EVENTS: EventDef[] = [
           return ok('No comment. The coach likes that.');
         },
       },
+    ],
+  },
+  // round 9
+  {
+    id: 'arc-brand',
+    stages: ['NCAA', 'GL', 'EU', 'INT', 'NBA'],
+    phase: 'off',
+    when: (s) => s.player.rep >= 25,
+    weight: 0.5,
+    cooldownSeasons: 99,
+    oncePerCareer: true,
+    title: 'Two shoe companies',
+    text: 'A giant brand offers you a small deal. A young brand offers to build its whole line around you.',
+    choices: [
+      {
+        label: 'Bet on the young brand',
+        detail: 'Risky: a big payday if it works',
+        resolve: (s) => {
+          startArc(s, 'brand', { startup: 1, fresh: 1 });
+          return ok('You sign with the startup. Your face is on their website by the weekend.', 'Signed a shoe deal with a young brand.');
+        },
+      },
+      {
+        label: 'Take the safe deal',
+        resolve: (s) => {
+          startArc(s, 'brand', { startup: 0, fresh: 1 });
+          return ok('You sign with the giant. Free shoes for life.', 'Signed a shoe deal with a big brand.');
+        },
+      },
+    ],
+  },
+  {
+    id: 'arc-foundation',
+    stages: ['GL', 'EU', 'INT', 'NBA'],
+    phase: 'off',
+    when: (s) => s.player.bank >= 0.5,
+    weight: 0.45,
+    cooldownSeasons: 99,
+    oncePerCareer: true,
+    title: 'Give something back',
+    text: 'The park where you learned to play is falling apart. Your old coach asks if you could help.',
+    choices: [
+      {
+        label: 'Start a foundation',
+        resolve: (s) => {
+          s.player.bank = Math.max(0, s.player.bank - Math.min(2, s.player.bank * 0.1));
+          startArc(s, 'foundation', { fresh: 1 });
+          return ok('You put up the money for a new court, and then some.', 'Started a foundation back home.');
+        },
+      },
+      { label: 'Send a check', resolve: (s) => ((s.player.bank = Math.max(0, s.player.bank - 0.05)), rep(s, 1), ok('Your old coach thanks you.')) },
+    ],
+  },
+  {
+    id: 'arc-sibling',
+    stages: ['HS', 'NCAA', 'GL', 'EU', 'INT', 'NBA'],
+    phase: 'both',
+    when: (s) => s.player.age >= 17 && s.player.age <= 27,
+    weight: 0.45,
+    cooldownSeasons: 99,
+    oncePerCareer: true,
+    title: 'Little brother wants in',
+    text: 'Your little brother, 13 now, asks if you will train him this summer.',
+    choices: [
+      {
+        label: 'Train him every day',
+        resolve: (s) => {
+          startArc(s, 'sibling', { fresh: 1 });
+          bump(s, 'PLY', 0.5);
+          return ok('Teaching him the basics sharpens yours.', 'Started training his little brother.');
+        },
+      },
+      { label: 'Find him a coach', resolve: (s) => (startArc(s, 'sibling', { fresh: 1 }), ok('You pay for a good youth coach.')) },
+    ],
+  },
+  {
+    id: 'arc-mind',
+    stages: ['NCAA', 'GL', 'EU', 'INT', 'NBA'],
+    phase: 'mid',
+    weight: 0.4,
+    cooldownSeasons: 99,
+    oncePerCareer: true,
+    title: 'Before the game',
+    text: 'For weeks your heart races in the tunnel before tip-off. Last night you could not breathe in the locker room.',
+    choices: [
+      {
+        label: 'Talk about it publicly',
+        resolve: (s) => {
+          startArc(s, 'mind', { talked: 1, fresh: 1 });
+          return ok('You post a long message about anxiety. Your phone does not stop buzzing.', 'Spoke publicly about his mental health.');
+        },
+      },
+      {
+        label: 'Keep it to yourself',
+        resolve: (s) => {
+          startArc(s, 'mind', { talked: 0, fresh: 1 });
+          morale(s, -3);
+          return ok('You tape your ankles, put your headphones on, and say nothing.');
+        },
+      },
+    ],
+  },
+  {
+    id: 'arc-coach',
+    stages: ['HS', 'NCAA', 'GL', 'EU', 'INT'],
+    phase: 'off',
+    when: (s) => s.player.age <= 24,
+    weight: 0.5,
+    cooldownSeasons: 99,
+    oncePerCareer: true,
+    title: 'An assistant coach notices',
+    text: 'An assistant coach stops you after practice: he sees something in you and wants to work with you before sunrise, every day.',
+    choices: [
+      {
+        label: 'Set the alarm',
+        resolve: (s) => {
+          startArc(s, 'coach', { fresh: 1 });
+          return ok('Five-thirty alarms. You show up every day.', 'Started early-morning sessions with an assistant coach.');
+        },
+      },
+      { label: 'You need your sleep', resolve: () => ok('He shrugs. The offer stands.') },
     ],
   },
 ];

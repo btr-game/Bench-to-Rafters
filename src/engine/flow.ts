@@ -20,6 +20,7 @@ import { logDecision, milestone, pushMoment } from './career/common';
 import { raftersTeams } from './awards/legacy';
 import { UI } from '../content/strings';
 import { bankGains, isLab, labState } from './career/lab';
+import { prepareRecruit } from './career/recruit';
 
 export type Prompt =
   | { type: 'decision'; decision: Decision }
@@ -131,6 +132,7 @@ export function choose(s: GameState, choiceId: string): void {
   const before = isLab(s) ? { ...s.player.attrs } : null;
   chooseInner(s, choiceId);
   if (before) bankGains(s, before);
+  prepareRecruit(s);
 }
 
 function chooseInner(s: GameState, choiceId: string): void {
@@ -191,6 +193,7 @@ export function advance(s: GameState): void {
   const before = isLab(s) ? { ...s.player.attrs } : null;
   advanceInner(s);
   if (before) bankGains(s, before);
+  prepareRecruit(s);
 }
 
 function advanceInner(s: GameState): void {

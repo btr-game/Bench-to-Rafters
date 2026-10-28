@@ -595,3 +595,10 @@ export const REP = {
 };
 
 export const EVENTS = { midseasonMax: 2, offseasonMax: 2, midseasonChance: 0.9, secondChance: 0.5, offseasonChance: 0.85 };
+
+// Building the starting five (round 9): the first option on an NBA team can recruit up to two
+// starters a summer from other teams. Salaries must fit: under the cap a team can absorb a
+// salary outright; over it, what comes in may be at most `match` times what goes out (as in a
+// real NBA trade). A pay cut (10% at a time, up to 30%) frees room and shows players he is
+// serious about winning.
+export const STARTERS_RECRUIT = { capShare: 1, match: 1.25, moves: 2, asks: 3, cutStep: 0.1, maxCut: 0.3, board: 6, cutInterest: 0.07 };

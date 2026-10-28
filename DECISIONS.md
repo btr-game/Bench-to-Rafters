@@ -564,3 +564,34 @@ nationality; event results that really differ; rare mold-breaking players; heigh
   fast break's (base 51): an OVR-minded build peaks at 77.6 on average.
 - **Names:** the first creation page is "Mode", not "Difficulty", and Standard is now
   "Regular guy" (the internal key stays `standard`, so saved games still load).
+
+## Round 9 (playtest feedback)
+
+- **Starting five (NBA, first option only):** once nobody on his roster is better than him (or
+  he was the key player last season), he can recruit up to two starters a summer (three asks)
+  from a six-player scouting board of players on other teams. His weakest starter goes the
+  other way, plus bench salary when needed. Salaries follow the cap (`STARTERS_RECRUIT`):
+  under it a team absorbs salary outright; over it, incoming salary must be within 125% of
+  outgoing, as in a real NBA trade. Generated payrolls run 40-97% of the cap, so contenders are
+  usually capped out. A 10% pay cut (up to 30%, lasting the contract) frees room and adds 7
+  points of interest per step. Interest: 0.45 + 0.35 x (how much better his roster is) + 0.03
+  per OVR over 80, +0.10 for players 30+, -0.15 for anyone better than him. A first option on a
+  bad team can still sell the vision; replacing a 74 starter with an 86 adds about 1.9 team
+  strength (top-five weights are 1 each, sum 6.2).
+- **League storylines (every level):** a superteam (NBA, 55% of seasons: two stars from
+  bottom-half teams really move to a contender), an underdog (+2 strength for the season), his
+  rival (whoever ended his last season, else the best team in his conference; head-to-head kept),
+  a dynasty (the defending champion), a last dance (an old contender) and a tank job (-1.5).
+  Midseason records, and a verdict after the postseason. A "superteam calls" event can bring
+  a sixth-man offer from it in free agency.
+- **Finals drama:** every title game and every lost final ends with its last minutes play by
+  play, built to land exactly on the real score: a close game (3 or fewer) trades the lead and
+  ends at the buzzer, a middle margin has a comeback that falls short and a dagger, a blowout
+  gets its run. Blocks and steals in crunch time. Skip any time. Postseason games now come down
+  to 1-4 points 40% of the time (cosmetic: the winner does not change).
+- **Text bracket:** every non-NBA postseason (college, Europe, G League, high school, leagues
+  abroad) gets a bracket laid out as a tree in plain text, from the last 16 on.
+- **Content:** 14 new events (rival games, the superteam's call, summer league, pro-am,
+  mentoring a rookie, betting on yourself, grades, the no-call, a new diet and more), 5 new
+  storylines (shoe deal, foundation, little brother, anxiety, the coach who believed) and 24
+  more shop items (116 in all).

@@ -486,6 +486,11 @@ function pushFreeAgency(s: GameState, lastShare: number, lastRole: RoleKey): voi
     const c = contenders.find((t) => t.id !== s.teamId && !offers.some((o) => o.teamId === t.id) && fa >= (t.roster[11]?.ovr ?? 70) - 2);
     if (c) offers.push(nbaOffer(s, c, fa >= (c.roster[8]?.ovr ?? 75) ? 'rotation' : 'bench', minSalary(s.year + 1, s.serviceYears), 1, 'min', 'Ring chase: a title contender with a spot for you'));
   }
+  // the superteam he told he was listening to (events/round9.ts)
+  const sup = s.flags.superteamPitch === s.year ? s.stories?.find((x) => x.kind === 'superteam') : undefined;
+  const supTeam = sup && s.nba?.teams.find((t) => t.id === sup.teamId);
+  if (supTeam && supTeam.id !== s.teamId && !offers.some((o) => o.teamId === supTeam.id))
+    offers.push(nbaOffer(s, supTeam, 'sixth', minSalary(s.year + 1, s.serviceYears) * 1.5, 2, 'standard', 'The superteam: sixth man behind three stars'));
   // Europe and Asia call too, unless he is clearly an NBA player: a bigger role, often more money
   const ovr = userOvr(s);
   if (offers.length > 0 && ovr < OVERSEAS_FA.belowOvr) {

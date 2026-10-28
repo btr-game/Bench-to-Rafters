@@ -12,6 +12,8 @@ const SECTIONS: { title: string; where: string; items: [string, string][] }[] = 
       ['Turning points', 'Events ask you to choose. The result is rolled each time: from a breakthrough to a backfire, with green and red chips for what changed.'],
       ['Playoffs', 'Big postseason games pause for your calls at key moments.'],
       ['Storylines', 'Some turning points unfold over several seasons: a family illness, a rebuilt jumper, a nagging ankle, a veteran mentor. Each summer brings the next chapter.'],
+      ['Around the league', 'Every season has storylines: a superteam, an underdog, your rival (often whoever knocked you out last year), a dynasty, a tank job. They show on Home with records and, after the postseason, how each one ended.'],
+      ['Finals', 'Every final you win or lose ends with its last minutes, play by play: lead changes, blocks, buzzer beaters. Skip any time.'],
       ['Fast break', 'The switch next to your record. One training group a season (General, Weight room, Shooting, Defense or IQ), no shop, no national team, playoffs simulated and fewer stops; you still make every real call. Turn it on or off any time.'],
       ['Built in a lab', 'A mode of its own, on fast break. Training and events pay out credits instead of ratings; spend them on any rating in the Lab panel on Home. A point costs 1 credit, 1.5 from 80 and 2 from 90. Minuses still land where the event says.'],
     ],
@@ -22,6 +24,7 @@ const SECTIONS: { title: string; where: string; items: [string, string][] }[] = 
     items: [
       ['Focus stats', 'Two ratings that grow about twice as fast. Changing them is earned: a breakthrough season (a big OVR or single-rating jump for your age) unlocks it for that offseason, and the tile glows.'],
       ['Position', 'Move one spot a summer (two if your height fits). A size warning opens it for you.'],
+      ['Starting five', 'NBA only, once you are your team’s first option. A scouting board shows six players who would start next to you, their salary and how interested they are. Recruit up to two a summer: your weakest starter (plus bench salary if needed) goes the other way. Salaries must fit under the cap, or within 125% of what goes out. A 10% pay cut (up to 30%) frees room and makes players likelier to come.'],
       ['Jersey number', 'Switch numbers between seasons. The number you retire in is the one that hangs.'],
       ['Retire', 'Hang it up between any two seasons once you are past high school.'],
       ['Shop and summer', 'Purchases and the summer program come up as choices in the offseason. The shop shows six things at random each summer, out of more than 90.'],

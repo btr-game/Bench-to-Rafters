@@ -398,6 +398,8 @@ export interface Moment {
   // result tables shown under the story: finals, series scores, MVPs
   recap?: { heading: string; rows: string[] }[];
   arc?: boolean; // a chapter of a multi-season storyline (events/arcs.ts)
+  drama?: import('./story/drama').Drama; // the last minutes of a final, play by play
+  lostFinal?: boolean; // a final he lost (the reel ends without the banner)
 }
 
 export interface GameState {
@@ -456,6 +458,9 @@ export interface GameState {
   // the last breakthrough season (career/breakthrough.ts): it unlocks a focus change that offseason
   breakthrough?: { year: number; ovr: number; key: AttrKey; gain: number } | null;
   arcs?: import('./events/arcs').ArcState[]; // storylines still unfolding
+  recruit?: import('./career/recruit').RecruitState; // NBA: building the starting five this summer
+  stories?: import('./world/stories').LeagueStory[]; // this season's league storylines
+  nemesis?: string; // team id that ended his last season (flags.nemesisYear says when)
   highs?: { nba: Partial<Record<HighKey, CareerHigh>>; all: Partial<Record<HighKey, CareerHigh>> };
   flags: Record<string, number>; // small story switches (powerhouse school, power agent...)
   schoolColor: string;

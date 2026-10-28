@@ -5,6 +5,9 @@ import { ATTRS, LEVELS } from '../../engine/balance';
 import { NAMES, UI } from '../../content/strings';
 import { useStore } from '../../store';
 import { LabCard } from '../components/Lab';
+import { RecruitCard, StoriesCard } from '../components/Roster';
+import { canRecruit, recruitInfo } from '../../engine/career/recruit';
+import { STARTERS_RECRUIT } from '../../engine/balance';
 import { Banners, MilestoneStrip, ReactionCard, Scoreboard } from '../components/bits';
 import { PlayerCard } from '../components/PlayerCard';
 import { ScoutCard } from '../components/ScoutCard';
@@ -319,11 +322,12 @@ function FocusCard({ g }: { g: GameState }) {
 function OffseasonMoves({ g }: { g: GameState }) {
   const focusOpen = canChangeFocus(g);
   // a size problem opens the position card straight away
-  const [open, setOpen] = useState<'position' | 'number' | 'retire' | 'trade' | null>(heightMismatch(g) && canChangePosition(g) ? 'position' : null);
+  const [open, setOpen] = useState<'position' | 'number' | 'retire' | 'trade' | 'roster' | null>(heightMismatch(g) && canChangePosition(g) ? 'position' : canRecruit(g) && !g.recruit?.moves ? 'roster' : null);
   const p = g.player;
   const bar = breakthroughBar(p.age);
   const focusDone = g.flags.focusYear === g.year;
-  const tiles: { id: 'focus' | 'position' | 'number' | 'retire' | 'trade'; label: string; sub: string; state: 'hot' | 'ready' | 'locked'; show: boolean }[] = [
+  const rec = recruitInfo(g);
+  const tiles: { id: 'focus' | 'position' | 'number' | 'retire' | 'trade' | 'roster'; label: string; sub: string; state: 'hot' | 'ready' | 'locked'; show: boolean }[] = [
     {
       id: 'focus',
       label: 'Focus stats',
@@ -333,6 +337,13 @@ function OffseasonMoves({ g }: { g: GameState }) {
     },
     { id: 'position', label: 'Position', sub: heightMismatch(g) ? 'Size check: another spot fits you' : `${NAMES.pos[p.pos]} · one move a summer`, state: canChangePosition(g) ? (heightMismatch(g) ? 'hot' : 'ready') : 'locked', show: true },
     { id: 'number', label: 'Jersey number', sub: `Now #${p.number}`, state: 'ready', show: g.stage !== 'RETIRED' },
+    {
+      id: 'roster',
+      label: 'Starting five',
+      sub: canRecruit(g) ? `Scout and recruit: ${Math.max(0, STARTERS_RECRUIT.moves - rec.moves)} signing${STARTERS_RECRUIT.moves - rec.moves === 1 ? '' : 's'} left` : 'Locked: become your team’s first option',
+      state: canRecruit(g) ? (rec.moves === 0 && rec.asks === 0 ? 'hot' : 'ready') : 'locked',
+      show: g.stage === 'NBA' && !!g.contract && g.contract.years > 0,
+    },
     { id: 'trade', label: 'Request a trade', sub: g.flags.tradeAsk === g.year ? 'Asked this summer' : 'Ask out for a better team', state: canRequestTrade(g) ? 'ready' : 'locked', show: g.stage === 'NBA' && !!g.contract && g.contract.years > 0 },
     { id: 'retire', label: 'Retire', sub: 'Hang it up on your terms', state: 'ready', show: canRetire(g) },
   ];
@@ -352,7 +363,7 @@ function OffseasonMoves({ g }: { g: GameState }) {
               className={`move-tile ${x.state}${open === x.id ? ' on' : ''}`}
               disabled={x.state === 'locked'}
               aria-expanded={x.id === 'focus' ? focusOpen : open === x.id}
-              onClick={() => x.id !== 'focus' && setOpen(open === x.id ? null : (x.id as 'position' | 'number' | 'retire' | 'trade'))}
+              onClick={() => x.id !== 'focus' && setOpen(open === x.id ? null : (x.id as 'position' | 'number' | 'retire' | 'trade' | 'roster'))}
             >
               {x.state === 'hot' && <span className="unlock-tag">New</span>}
               <b>{x.label}</b>
@@ -365,6 +376,7 @@ function OffseasonMoves({ g }: { g: GameState }) {
       {open === 'number' && <NumberCard g={g} />}
       {open === 'retire' && canRetire(g) && <RetireCard g={g} />}
       {open === 'trade' && canRequestTrade(g) && <TradeCard g={g} />}
+      {open === 'roster' && <RecruitCard g={g} />}
     </section>
   );
 }
@@ -536,6 +548,7 @@ export function Home({ g }: { g: GameState }) {
           </div>
         </section>
         {g.mode === 'lab' && <LabCard g={g} />}
+        <StoriesCard g={g} />
         {g.step === 'offseason' && g.stage !== 'RETIRED' && <OffseasonMoves g={g} />}
         <section className="card stack">
           <div className="sec-title">Milestones</div>

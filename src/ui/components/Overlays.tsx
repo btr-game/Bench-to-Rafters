@@ -241,6 +241,95 @@ function TitleGame({ m, g }: { m: Moment; g: GameState }) {
   );
 }
 
+// ---------- the last minutes of a final (round 9) ----------
+
+const TAG_LABEL: Record<string, string> = {
+  LEAD: 'Takes the lead',
+  TIE: 'All tied up',
+  BLOCK: 'Block!',
+  STEAL: 'Steal!',
+  BUZZER: 'Buzzer beater!',
+  DAGGER: 'Dagger',
+  RUN: 'Here comes the run',
+  MISS: 'No good',
+  STOP: 'Game over',
+};
+
+/** Three quarters in a blink, then crunch time one play at a time. Skip shows the end. */
+function FinalReel({ m }: { m: Moment }) {
+  const d = m.drama!;
+  const game = m.game!;
+  const warm = 10;
+  const n = warm + d.plays.length;
+  const [i, setI] = useState(reducedMotion() ? n : 0);
+  useEffect(() => {
+    if (i >= n) return;
+    const t = setTimeout(() => setI((x) => x + 1), i < warm ? 110 : 1700);
+    return () => clearTimeout(t);
+  }, [i, n]);
+  const done = i >= n;
+  const shown = d.plays.slice(0, Math.max(0, i - warm));
+  const frac = Math.min(1, i / warm);
+  const us = Math.round(d.start.us * frac) + shown.filter((p) => p.side === 'us').reduce((a, p) => a + p.pts, 0);
+  const them = Math.round(d.start.them * frac) + shown.filter((p) => p.side === 'them').reduce((a, p) => a + p.pts, 0);
+  const cur = shown[shown.length - 1];
+  const clock = i < warm ? `Q${Math.min(4, 1 + Math.floor(frac * 3.99))}` : cur ? `Q4 ${cur.clock}` : 'Q4';
+  return (
+    <div className="stack" style={{ gap: 14 }}>
+      <div className="kicker on-dark">{game.post ?? 'Final'}</div>
+      <div className="board title-board">
+        <div className="cell">
+          <div className="k">{game.teamShort}</div>
+          <div className={`v big${us < them && done ? ' dim' : ''}`}>{done ? game.us : us}</div>
+        </div>
+        <div className="cell clock">
+          <div className="k">{done ? 'Final' : clock}</div>
+          <div className="v">—</div>
+        </div>
+        <div className="cell right">
+          <div className="k">{game.opp}</div>
+          <div className={`v big${us > them || !done ? ' dim' : ''}`}>{done ? game.them : them}</div>
+        </div>
+      </div>
+      {i < warm && !done && <div className="on-dark small">Three quarters of a final…</div>}
+      <div className="drama-feed" aria-live="polite">
+        {(done ? d.plays : shown)
+          .slice()
+          .reverse()
+          .slice(0, done ? 3 : 4)
+          .map((p, k) => (
+            <div key={`${p.clock}-${p.text}`} className={`drama-play${p.mine ? ' mine' : ''}${k === 0 && !done ? ' fresh' : ''}${p.side === 'them' ? ' them' : ''}`}>
+              {p.tag && <span className={`drama-tag tag-${p.tag.toLowerCase()}`}>{TAG_LABEL[p.tag]}</span>}
+              <span className="drama-clock">{p.clock}</span>
+              <span className="drama-text">{p.text}</span>
+              {p.pts > 0 && <b>+{p.pts}</b>}
+            </div>
+          ))}
+      </div>
+      {done ? (
+        <>
+          {m.lostFinal ? (
+            <div className="stack" style={{ gap: 8 }}>
+              <div className="moment-title">So close</div>
+              <p className="on-dark lede-dark">{m.text}</p>
+            </div>
+          ) : (
+            <div className="champ-banner">
+              <span>Champions</span>
+              <b>{m.title}</b>
+            </div>
+          )}
+          <Recap m={m} />
+        </>
+      ) : (
+        <button className="btn ghost-dark" onClick={() => setI(n)}>
+          Skip to the final buzzer
+        </button>
+      )}
+    </div>
+  );
+}
+
 // ---------- moment pages ----------
 
 function DraftReveal({ m }: { m: Moment }) {
@@ -293,7 +382,9 @@ function MomentPage({ m, g }: { m: Moment; g: GameState }) {
   return (
     <div className={`overlay moment ${m.kind}`} style={{ ['--team' as string]: m.color }} role="dialog" aria-modal="true" aria-label={m.title}>
       <div className="overlay-inner" key={m.id}>
-        {m.kind === 'title' && m.game ? (
+        {m.drama && m.game ? (
+          <FinalReel m={m} />
+        ) : m.kind === 'title' && m.game ? (
           <TitleGame m={m} g={g} />
         ) : m.kind === 'draft' ? (
           <DraftReveal m={m} />
