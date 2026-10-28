@@ -93,7 +93,8 @@ function PlanPicker({ d }: { d: Decision }) {
       </div>
     );
   }
-  const toggle = (id: string) => setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : p.length >= 2 ? [p[1], id] : [...p, id]));
+  // the first pick is the main plan; a third tap replaces the side plan
+  const toggle = (id: string) => setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : p.length >= 2 ? [p[0], id] : [...p, id]));
   const name = (id: string) => d.choices.find((c) => c.id === id)?.label ?? id;
   return (
     <div className="stack">
@@ -105,7 +106,7 @@ function PlanPicker({ d }: { d: Decision }) {
           return (
             <button key={c.id} className={`choice${on ? ' selected' : ''}`} aria-pressed={on} disabled={c.disabled} onClick={() => toggle(c.id)}>
               <span className="label">
-                {on ? `${picked.indexOf(c.id) + 1}. ` : ''}
+                {on && <span className={`plan-tag ${picked.indexOf(c.id) === 0 ? 'main' : 'side'}`}>{picked.indexOf(c.id) === 0 ? 'Main' : 'Side'}</span>}
                 {c.label}
               </span>
               <small>{c.detail}</small>
@@ -114,7 +115,7 @@ function PlanPicker({ d }: { d: Decision }) {
         })}
       </div>
       <button className="btn block" disabled={picked.length === 0} onClick={() => choose(picked.join('+'))}>
-        {picked.length === 0 ? 'Pick one or two plans' : picked.length === 1 ? `Go with ${name(picked[0])}` : `Go with ${name(picked[0])} + ${name(picked[1])}`}
+        {picked.length === 0 ? 'Pick one or two plans' : picked.length === 1 ? `Go with ${name(picked[0])}` : `Go with ${name(picked[0])} (main) + ${name(picked[1])} (side)`}
       </button>
     </div>
   );

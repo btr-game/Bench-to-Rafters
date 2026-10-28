@@ -241,6 +241,10 @@ export interface IntLeagueInfo {
   strength: number;
   salary: [number, number];
   teams: [string, string][];
+  /** University leagues: no salary, offered only on that country's road (career/culture.ts). */
+  amateur?: boolean;
+  /** Offered only to players from these countries (or on their road), not on the open market. */
+  homeOnly?: string[];
 }
 
 export const INT_LEAGUES: IntLeagueInfo[] = [
@@ -290,6 +294,129 @@ export const INT_LEAGUES: IntLeagueInfo[] = [
       ['Seoul SK Knights', '#C8102E'], ['Changwon LG Sakers', '#7A1F2B'], ['Suwon KT Sonicboom', '#2A2F36'], ['Anyang Jung Kwan Jang', '#B3541E'],
       ['Ulsan Hyundai Mobis Phoebus', '#1F3A7A'], ['Busan KCC Egis', '#002B5C'], ['Wonju DB Promy', '#1E5B3A'], ['Seoul Samsung Thunders', '#0F5C6E'],
       ['Goyang Sono Skygunners', '#5B2A86'], ['Daegu KOGAS Pegasus', '#8A6D1F'], ['Sangmu Phoenix', '#4B5320'],
+    ],
+  },
+  {
+    key: 'EC',
+    name: 'EuroCup',
+    country: 'Europe',
+    strength: 59,
+    salary: [0.12, 1.3],
+    teams: [
+      ['Valencia Basket', '#E35205'], ['Unicaja Málaga', '#1E5B3A'], ['Joventut Badalona', '#1E5B3A'], ['Gran Canaria', '#F4C300'],
+      ['JL Bourg', '#7A1F2B'], ['ratiopharm Ulm', '#F28C28'], ['Dolomiti Trento', '#2A2F36'], ['Cedevita Olimpija', '#00843D'],
+      ['Mega Basket', '#7A1F2B'], ['Rytas Vilnius', '#002B5C'], ['Hapoel Tel Aviv', '#C8102E'], ['Türk Telekom', '#1C3F94'],
+      ['Aris Thessaloniki', '#F4C300'], ['Budućnost', '#1F3A7A'], ['Cholet Basket', '#C8102E'], ['Bahçeşehir', '#F28C28'],
+    ],
+  },
+  {
+    key: 'EU2',
+    name: 'Second divisions',
+    country: 'Europe',
+    strength: 52,
+    salary: [0.03, 0.2],
+    teams: [
+      ['Real Madrid B (LEB Oro)', '#C9A227'], ['Barça B (LEB Plata)', '#A50044'], ['Estudiantes (LEB Oro)', '#1F3A7A'], ['Fuenlabrada (LEB Oro)', '#1E5B3A'],
+      ['OKK Beograd (ABA 2)', '#2A2F36'], ['Vrijednosnice Osijek (ABA 2)', '#7A1F2B'], ['Orléans (Pro B)', '#B3541E'], ['Rouen (Pro B)', '#1F3A7A'],
+      ['Ludwigsburg Juniors (ProA)', '#F4C300'], ['Rytas-2 (NKL)', '#002B5C'], ['Varese Academy (A2)', '#C8102E'], ['Fenerbahçe B (TBL)', '#0E1E5B'],
+    ],
+  },
+  {
+    key: 'BAL',
+    name: 'Basketball Africa League',
+    country: 'Africa',
+    strength: 53,
+    salary: [0.04, 0.3],
+    teams: [
+      ['Petro de Luanda', '#0F5C6E'], ['Al Ahly', '#C8102E'], ['US Monastir', '#2A2F36'], ['AS Douanes', '#1E5B3A'],
+      ['Rivers Hoopers', '#1F3A7A'], ['APR', '#002B5C'], ['FUS Rabat', '#7A1F2B'], ['Stade Malien', '#F4C300'],
+    ],
+    homeOnly: ['Nigeria', 'Senegal', 'Cameroon', 'South Sudan'],
+  },
+  {
+    key: 'LAT',
+    name: 'Latin American leagues',
+    country: 'Americas',
+    strength: 55,
+    salary: [0.05, 0.5],
+    teams: [
+      ['Boca Juniors (Liga Nacional)', '#002B5C'], ['Quimsa (Liga Nacional)', '#C8102E'], ['Instituto (Liga Nacional)', '#C8102E'], ['Flamengo (NBB)', '#C8102E'],
+      ['Franca (NBB)', '#1F3A7A'], ['Minas (NBB)', '#2A2F36'], ['Fuerza Regia (LNBP)', '#F28C28'], ['Diablos Rojos (LNBP)', '#B71C1C'],
+      ['Metros de Santiago (LNB)', '#5B2A86'], ['Leones de Santo Domingo (LNB)', '#F4C300'],
+    ],
+    homeOnly: ['Argentina', 'Brazil', 'Mexico', 'Dominican Republic'],
+  },
+  {
+    key: 'PBA',
+    name: 'PBA',
+    country: 'Philippines',
+    strength: 52,
+    salary: [0.04, 0.35],
+    teams: [
+      ['San Miguel Beermen', '#1F3A7A'], ['Barangay Ginebra', '#C8102E'], ['TNT Tropang Giga', '#F28C28'], ['Magnolia Hotshots', '#2A2F36'],
+      ['Meralco Bolts', '#F4C300'], ['Rain or Shine', '#1E5B3A'], ['NLEX Road Warriors', '#7A1F2B'], ['Converge FiberXers', '#5B2A86'],
+    ],
+    homeOnly: ['Philippines'],
+  },
+  // university leagues: the road for most players in Asia and many in Canada
+  {
+    key: 'UKR',
+    name: 'Korean university league',
+    country: 'South Korea',
+    strength: 47,
+    salary: [0, 0],
+    amateur: true,
+    teams: [
+      ['Korea University Tigers', '#8B0029'], ['Yonsei Eagles', '#003876'], ['Chung-Ang Blue Dragons', '#1F3A7A'], ['Kyung Hee', '#7A1F2B'],
+      ['Sungkyunkwan', '#1E5B3A'], ['Dankook', '#002B5C'], ['Hanyang', '#0F5C6E'], ['Myongji', '#2A2F36'],
+    ],
+  },
+  {
+    key: 'UJP',
+    name: 'Kanto university league',
+    country: 'Japan',
+    strength: 47,
+    salary: [0, 0],
+    amateur: true,
+    teams: [
+      ['Hakuoh University', '#C8102E'], ['Tokai University', '#002B5C'], ['Senshu University', '#1E5B3A'], ['Nihon University', '#B3541E'],
+      ['Aoyama Gakuin', '#1F3A7A'], ['Toyo University', '#2A2F36'], ['Waseda University', '#7A1F2B'], ['Keio University', '#0F5C6E'],
+    ],
+  },
+  {
+    key: 'UAAP',
+    name: 'UAAP',
+    country: 'Philippines',
+    strength: 46,
+    salary: [0, 0],
+    amateur: true,
+    teams: [
+      ['Ateneo Blue Eagles', '#002B5C'], ['De La Salle Green Archers', '#1E5B3A'], ['UP Fighting Maroons', '#7A1F2B'], ['UST Growling Tigers', '#F4C300'],
+      ['FEU Tamaraws', '#1E5B3A'], ['NU Bulldogs', '#1F3A7A'], ['Adamson Soaring Falcons', '#0F5C6E'], ['UE Red Warriors', '#C8102E'],
+    ],
+  },
+  {
+    key: 'CUBA',
+    name: 'CUBA university league',
+    country: 'China',
+    strength: 45,
+    salary: [0, 0],
+    amateur: true,
+    teams: [
+      ['Tsinghua University', '#5B2A86'], ['Peking University', '#8B0029'], ['Sun Yat-sen University', '#1E5B3A'], ['Huaqiao University', '#C8102E'],
+      ['Shanghai Jiao Tong', '#B71C1C'], ['Beijing Normal', '#002B5C'], ['Zhejiang University', '#0F5C6E'], ['Wuhan University', '#7A1F2B'],
+    ],
+  },
+  {
+    key: 'USP',
+    name: 'U SPORTS',
+    country: 'Canada',
+    strength: 47,
+    salary: [0, 0],
+    amateur: true,
+    teams: [
+      ['Carleton Ravens', '#C8102E'], ['Ottawa Gee-Gees', '#7A1F2B'], ['Victoria Vikes', '#002B5C'], ['Alberta Golden Bears', '#1E5B3A'],
+      ['McMaster Marauders', '#7A1F2B'], ['Queen\'s Gaels', '#1F3A7A'], ['UBC Thunderbirds', '#002B5C'], ['Laval Rouge et Or', '#C8102E'],
     ],
   },
 ];

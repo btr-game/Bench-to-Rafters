@@ -1,10 +1,12 @@
 // Offseason: aging, programs, summer program, and every path decision
 // (recruiting, draft, contracts, free agency, retirement).
 
+import { homeLeagueOffers, splitLine } from './culture';
+import { playShowcase } from './culture';
 import { processArcs } from '../events/arcs';
 import { reclassify } from '../player/classify';
 import { pushMilitary } from './nationality';
-import { ATTR_MAX, GROWTH_RATE_AGE, MODES, POSITIONS, WEAR, FA_INTEREST, OFFSEASON_DAYS, REP, RETIRE, ATTRS, TEAM_OPTION } from '../balance';
+import { ATTR_MAX, GROWTH_RATE_AGE, MODES, POSITIONS, WEAR, FA_INTEREST, OVERSEAS_FA, OFFSEASON_DAYS, REP, RETIRE, ATTRS, TEAM_OPTION } from '../balance';
 import { chance, clamp, int, logistic, range } from '../rng';
 import type { Contract, Decision, GameState, Offer, RoleKey } from '../types';
 import { applyAging, growHeight, updateHeightProjection } from '../player/growth';
@@ -112,9 +114,11 @@ export function beginOffseason(s: GameState): void {
 
   switch (s.stage) {
     case 'HS':
+      // the national showcase of his basketball culture (career/culture.ts)
+      playShowcase(s);
       if (s.hsYear < 4) {
         s.hsYear += 1;
-        if (s.hsYear >= 3) pushYouthCrossroads(s); // at 16-17: first team or a US prep school
+        pushYouthCrossroads(s); // 15-17: his culture's fork, a first-team call-up or a US prep school
       } else pushSplit(s); // after senior year, or after a post-grad prep year
       break;
     case 'NCAA':
@@ -230,7 +234,7 @@ function pushSplit(s: GameState): void {
   pushDecision(s, {
     kind: 'offers',
     title: 'Where next?',
-    text: `${s.stars}★ recruit${s.recruitRank ? `, ranked ${ordinal(s.recruitRank)} in the national class` : ''}. Pick where you play next season.`,
+    text: splitLine(s) ?? `${s.stars}★ recruit${s.recruitRank ? `, ranked ${ordinal(s.recruitRank)} in the national class` : ''}. Pick where you play next season.`,
     choices,
     data: { offers, context: 'split' },
   });
@@ -383,8 +387,9 @@ function pushUndrafted(s: GameState): void {
     });
   }
   if (ovr >= 54) offers.push(glOffer(s, ovr));
-  offers.push(...europeOffers(s, ovr, ovr >= 58 ? 2 : 0));
+  offers.push(...europeOffers(s, ovr, ovr >= 55 ? 2 : 1));
   offers.push(...intOffers(s, ovr, 2));
+  offers.push(...homeLeagueOffers(s).filter((x) => !offers.some((y) => y.teamName === x.teamName)));
   if (offers.length === 0) {
     retireNow(s, 'No team called after the draft.');
     return;
@@ -419,9 +424,10 @@ function proContractStep(s: GameState): void {
   if (expired) {
     const fade = FA_INTEREST.minorAgeFade(s.player.age);
     if (s.stage === 'GL' && ovr >= 54 && chance(s.rng, fade)) offers.push(glOffer(s, ovr, (s.teamId ?? 'GL-LAL').replace('GL-', '')));
-    offers.push(...europeOffers(s, ovr, ovr >= 60 ? 2 : ovr >= 57 ? 1 : 0));
+    offers.push(...europeOffers(s, ovr, ovr >= 52 ? 2 : 1));
     if ((s.stage === 'EU' || s.stage === 'INT') && ovr >= 54 && chance(s.rng, fade)) offers.push(glOffer(s, ovr));
     offers.push(...intOffers(s, ovr, 2, { cba: s.player.age >= 29 }));
+    offers.push(...homeLeagueOffers(s).filter((x) => !offers.some((y) => y.teamName === x.teamName)));
   }
   if (offers.length === 0) {
     if (expired) retireNow(s, 'No contract offers came.');
@@ -471,6 +477,12 @@ function nbaContractStep(s: GameState, lastShare: number, lastRole: RoleKey): vo
 
 function pushFreeAgency(s: GameState, lastShare: number, lastRole: RoleKey): void {
   const offers = nbaFreeAgentOffers(s, s.teamId, lastShare, lastRole);
+  // Europe and Asia call too, unless he is clearly an NBA player: a bigger role, often more money
+  const ovr = userOvr(s);
+  if (offers.length > 0 && ovr < OVERSEAS_FA.belowOvr) {
+    offers.push(...europeOffers(s, ovr, ovr < OVERSEAS_FA.twoBelow ? 2 : 1));
+    if (chance(s.rng, OVERSEAS_FA.asiaChance)) offers.push(...intOffers(s, ovr, 1, { cba: s.player.age >= 27 }));
+  }
   if (offers.length === 0) {
     pushLastChance(s, 'No NBA team made an offer.');
     return;
@@ -490,7 +502,8 @@ function pushLastChance(s: GameState, why: string): void {
     retireNow(s, 'Time catches everyone.');
     return;
   }
-  const offers: Offer[] = [...europeOffers(s, ovr, ovr >= 60 ? 2 : ovr >= 57 ? 1 : 0), ...intOffers(s, ovr, 2, { cba: s.player.age >= 29 })];
+  const offers: Offer[] = [...europeOffers(s, ovr, ovr >= 52 ? 2 : 1), ...intOffers(s, ovr, 2, { cba: s.player.age >= 29 })];
+  offers.push(...homeLeagueOffers(s).filter((x) => !offers.some((y) => y.teamName === x.teamName)));
   if (ovr >= 56 && chance(s.rng, FA_INTEREST.minorAgeFade(s.player.age))) offers.push(glOffer(s, ovr));
   const choices = offers.map(offerChoice);
   choices.push({ id: 'retire', label: 'Retire', detail: 'Hang them up.' });

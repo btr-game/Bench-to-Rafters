@@ -12,7 +12,7 @@ import { ROLE_ORDER } from '../balance';
 
 const TIER_LABEL: Record<NcaaTier, string> = { blue: 'Blue blood', power: 'Power program', major: 'Major conference', mid: 'Mid-major' };
 
-function offerId(s: GameState): string {
+export function offerId(s: GameState): string {
   return `o${s.nextId++}`;
 }
 
@@ -163,7 +163,8 @@ export function glOffer(s: GameState, ovr: number, teamAbbr?: string): Offer {
 /** European offers for a player of this OVR (better clubs need higher OVR). */
 export function europeOffers(s: GameState, ovr: number, max: number): Offer[] {
   const fade = FA_INTEREST.minorAgeFade(s.player.age);
-  const ok = EURO_CLUBS.filter((c) => ovr >= c.strength - 7 && chance(s.rng, fade));
+  // round 7: European clubs call more often (they would rather sign a young American than wait)
+  const ok = EURO_CLUBS.filter((c) => ovr >= c.strength - 9 && chance(s.rng, Math.max(0.35, fade)));
   return shuffle(s.rng, [...ok])
     .slice(0, max)
     .map((c) => euOffer(s, c.name, ovr, int(s.rng, 1, 2)));
@@ -177,8 +178,10 @@ export function intOffers(s: GameState, ovr: number, max: number, opts: { nextSt
   const leagues = INT_LEAGUES.filter((l) => {
     if (opts.nextStars) return l.key === 'NBL';
     if (opts.league) return l.key === opts.league;
+    // university leagues and home-only leagues come up only on that country's road (culture.ts)
+    if (l.amateur || (l.homeOnly && !l.homeOnly.includes(s.player.country))) return false;
     if (l.key === 'CBA' && opts.cba) return ovr >= 58;
-    return ovr >= l.strength - 7 && chance(s.rng, Math.max(0.25, fade));
+    return ovr >= l.strength - 9 && chance(s.rng, Math.max(0.45, fade));
   });
   return shuffle(s.rng, leagues)
     .slice(0, max)

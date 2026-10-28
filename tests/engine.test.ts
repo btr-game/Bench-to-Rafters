@@ -267,6 +267,8 @@ describe('round 6 mechanics', () => {
     const two = blendPlans('grind', 'recovery');
     expect(two.growth).toBeLessThan(one.growth);
     expect(two.injury).toBeLessThan(one.injury);
+    // the first plan is the main one: it counts for more than the side plan
+    expect(blendPlans('grind', 'recovery').growth).toBeGreaterThan(blendPlans('recovery', 'grind').growth);
     const s = newGame(12, { name: 'X', number: 1, pos: 'SG', archetype: 0, focus: ['SHT', 'IQ'] });
     const d = prompt(s);
     if (d.type === 'decision' && d.decision.kind === 'plan') {

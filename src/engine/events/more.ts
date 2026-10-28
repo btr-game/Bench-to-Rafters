@@ -641,7 +641,7 @@ export const MORE_EVENTS: EventDef[] = [
     id: 'elitecamp',
     stages: ['HS'],
     phase: 'off',
-    when: (s) => s.hsYear >= 2,
+    when: (s) => s.hsYear >= 2 && pathOf(s) === 'us',
     weight: 1.1,
     cooldownSeasons: 1,
     title: 'Elite camp invite',

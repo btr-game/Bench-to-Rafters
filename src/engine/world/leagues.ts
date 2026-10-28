@@ -142,7 +142,9 @@ export function buildInt(s: GameState, year: number, userTeamId: string): League
       roster: makeRoster(s, strength, 12, [21, 33]),
     };
   });
-  return emptyLeague('INT', year, teams, userTeamId);
+  const lg = emptyLeague('INT', year, teams, userTeamId);
+  lg.label = info.amateur ? info.name : `${info.name} · ${info.country}`;
+  return lg;
 }
 
 // ---------- High school ----------

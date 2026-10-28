@@ -6,6 +6,7 @@ import { chance, clamp, int, range, type Rng } from '../rng';
 import type { AttrKey, GameState, Stage } from '../types';
 import { adjust } from '../career/common';
 import { NAMES } from '../../content/strings';
+import { pathOf } from '../career/origin';
 
 export interface EventChoice {
   label: string;
@@ -206,7 +207,8 @@ export const EVENTS: EventDef[] = [
     id: 'aau',
     stages: ['HS'],
     phase: 'off',
-    when: (s) => s.hsYear <= 3,
+    // AAU is an American circuit; other countries have their own showcases (career/culture.ts)
+    when: (s) => s.hsYear <= 3 && pathOf(s) === 'us',
     weight: 1.6,
     cooldownSeasons: 1,
     title: 'AAU invite',

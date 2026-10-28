@@ -95,7 +95,7 @@ function SeasonHeader({ g }: { g: GameState }) {
         {g.step === 'offseason' ? (
           <div className="muted small">{g.stage === 'NBA' || g.stage === 'GL' || g.stage === 'EU' || g.stage === 'INT' || g.stage === 'NCAA' ? LEVELS[g.stage].name : g.league?.label ? 'Youth basketball' : 'High school'}</div>
         ) : (
-          s && <div className="muted small">{(s.level === 'HSV' || s.level === 'HSJV') && g.league?.label ? g.league.label : LEVELS[s.level].name}</div>
+          s && <div className="muted small">{g.league?.label ?? LEVELS[s.level].name}</div>
         )}
       </div>
       <div className="turn-side">

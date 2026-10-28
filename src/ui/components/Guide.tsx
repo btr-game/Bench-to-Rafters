@@ -8,7 +8,7 @@ const SECTIONS: { title: string; where: string; items: [string, string][] }[] = 
     title: 'Every season',
     where: 'Home',
     items: [
-      ['Plans', 'Pick one plan for each half, or two at a time at reduced strength. Plans shape growth, minutes and injury risk.'],
+      ['Plans', 'Pick one plan for each half, or two: the first is your main plan and keeps most of its effect, the second is a side plan with a smaller boost. Plans shape growth, minutes and injury risk.'],
       ['Turning points', 'Events ask you to choose. The result is rolled each time: from a breakthrough to a backfire, with green and red chips for what changed.'],
       ['Playoffs', 'Big postseason games pause for your calls at key moments.'],
       ['Storylines', 'Some turning points unfold over several seasons: a family illness, a rebuilt jumper, a nagging ankle, a veteran mentor. Each summer brings the next chapter.'],

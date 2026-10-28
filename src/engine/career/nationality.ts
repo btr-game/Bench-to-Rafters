@@ -24,17 +24,21 @@ export interface CountryEdge {
 
 const BASE: CountryEdge = { recruit: 0, youthGrowth: 1, euPay: 1, euRole: 0, military: false, notes: [] };
 const AFRICA = ['Nigeria', 'Senegal', 'Cameroon', 'South Sudan'];
-const LATAM = ['Dominican Republic', 'Brazil', 'Mexico'];
+const LATAM = ['Argentina', 'Dominican Republic', 'Brazil', 'Mexico'];
 
 export function edgeOf(country: string): CountryEdge {
   const o = originOf(country);
   if (o.country === 'USA') return { ...BASE, recruit: 2.5, notes: ['Easiest road: college recruiting is built around American high schoolers'] };
-  if (o.country === 'Canada') return { ...BASE, recruit: 1, notes: ['Close to US scouts, with a path to US prep schools'] };
-  if (o.path === 'euro') return { ...BASE, euPay: 1.3, euRole: 3, notes: ['Better EuroLeague contracts and bigger roles at European clubs', 'A pro debut at home is possible as a teenager'] };
-  if (AFRICA.includes(o.country)) return { ...BASE, youthGrowth: 0.9, notes: ['Fewer coaches, gyms and resources: slower development at home', 'A US prep school can change that'] };
-  if (LATAM.includes(o.country)) return { ...BASE, youthGrowth: 0.95, notes: ['NBA Academy support, but thinner resources at home'] };
-  if (o.country === 'South Korea') return { ...BASE, military: true, notes: ['School comes first: the domestic high school league', 'About 18 months of military service by 28, unless an Asian Games gold or Olympic medal exempts you'] };
-  if (o.path === 'aus') return { ...BASE, notes: ['The NBA Global Academy and NBL Next Stars'] };
+  if (o.country === 'Canada') return { ...BASE, recruit: 1, notes: ['Prep programs close to US scouts; many move to a US prep school', 'The NCAA or a Canadian university (U SPORTS)'] };
+  if (o.country === 'France') return { ...BASE, euPay: 1.3, euRole: 3, notes: ['A club youth system; the best are picked for INSEP in Paris', 'The Espoirs (U21) league and a pro debut as a teenager', 'Better EuroLeague contracts and bigger roles at European clubs'] };
+  if (o.path === 'euro') return { ...BASE, euPay: 1.3, euRole: 3, notes: ['A club academy from 14 and the NextGen EuroLeague', 'A pro debut at home or a loan to a second division as a teenager', 'Better EuroLeague contracts and bigger roles at European clubs'] };
+  if (AFRICA.includes(o.country)) return { ...BASE, youthGrowth: 0.9, notes: ['Basketball Without Borders and NBA Academy Africa in Senegal', 'Fewer coaches, gyms and resources: slower development at home', 'A US prep school, or the Basketball Africa League'] };
+  if (LATAM.includes(o.country)) return { ...BASE, youthGrowth: 0.95, notes: ['Club youth teams or NBA Academy Latin America; thinner resources at home', 'Spanish academies recruit the best teenagers', 'The Liga Nacional, NBB or LNBP at home'] };
+  if (o.country === 'South Korea') return { ...BASE, military: true, notes: ['School comes first: basketball high schools, then Korea University or Yonsei', 'The KBL draft, even straight out of high school', 'About 18 months of military service by 28, unless an Asian Games gold or Olympic medal exempts you'] };
+  if (o.country === 'Japan') return { ...BASE, notes: ['High school basketball on national TV: the Inter-High and the Winter Cup', 'Then a Kanto university or the B.League; US colleges only for the very best'] };
+  if (o.country === 'China') return { ...BASE, notes: ['Provincial sports schools, then a CBA club youth team', 'The CBA, or the university league (CUBA) for students'] };
+  if (o.country === 'Philippines') return { ...BASE, notes: ['UAAP juniors, then UAAP college in front of huge crowds', 'The PBA draft, or the Asian player quota in Japan and Korea'] };
+  if (o.path === 'aus') return { ...BASE, notes: ['State teams, then the Centre of Excellence and NBA Global Academy in Canberra', 'NBL Next Stars or a US college'] };
   return { ...BASE, notes: [`The ${o.homeLeague ?? 'domestic'} league at home, or a US college`] };
 }
 

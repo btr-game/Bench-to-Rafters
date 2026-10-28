@@ -153,7 +153,7 @@ export function pushPlanDecision(s: GameState, half: 1 | 2): void {
   pushDecision(s, {
     kind: 'plan',
     title: half === 1 ? 'First-half plan' : 'Second-half plan',
-    text: injured ? 'You are injured. Recovery is the only plan available.' : 'Pick one or two plans for the next half. Two plans both work, each a little less than on its own.',
+    text: injured ? 'You are injured. Recovery is the only plan available.' : 'Pick one or two plans for the next half. The first is your main plan and keeps most of its effect; a second is a side plan with a smaller boost.',
     choices: plans.map((p) => ({ id: p.id, label: p.label, detail: p.detail, disabled: injured && p.id !== 'recovery' })),
     data: { half },
   });

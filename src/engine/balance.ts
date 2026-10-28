@@ -179,16 +179,17 @@ export interface PlanDef {
 }
 // Two plans can run in the same half (playtest round 6); each counts at this share of its
 // full effect, so two plans do more than one but less than both at full strength.
-export const TWO_PLAN_SHARE = 0.65;
+/** Two plans in a half: the first is the main plan, the second a side plan (round 7). */
+export const TWO_PLAN_SHARE = { main: 0.8, side: 0.45 };
 
-/** The plan that actually applies: one plan as is, or two blended at TWO_PLAN_SHARE each. */
+/** The plan that actually applies: one plan as is, or a main plan and a side plan blended. */
 export function blendPlans(a: HalfPlan, b?: HalfPlan | null): PlanDef {
   const A = HALF_PLANS[a];
   if (!b || b === a) return A;
   const B = HALF_PLANS[b];
-  const k = TWO_PLAN_SHARE;
-  const mult = (x: number, y: number) => 1 + (x - 1) * k + (y - 1) * k;
-  const add = (x: number, y: number) => (x + y) * k;
+  const { main, side } = TWO_PLAN_SHARE;
+  const mult = (x: number, y: number) => 1 + (x - 1) * main + (y - 1) * side;
+  const add = (x: number, y: number) => x * main + y * side;
   const attrs: Partial<Record<AttrKey, number>> = {};
   const keys = new Set([...Object.keys(A.attrs ?? {}), ...Object.keys(B.attrs ?? {})]) as Set<AttrKey>;
   const am = (p: PlanDef, key: AttrKey) => (p.attrs ? (p.attrs[key] ?? p.other ?? 1) : 1);
@@ -447,6 +448,9 @@ export const MARKET_AGE_DROP = (age: number): number => (age <= 29 ? 1 : Math.ma
 export const RETIRE = { ovrBelowPeak: 11, forcedAge: 42, vetAge: 32, vetBelowPeak: 5 };
 // NBA interest in a free agent. Teams only call when he would rank within `maxRank` on
 // their roster; veterans and little-used players get fewer calls.
+/** NBA free agents below star level hear from Europe and Asia too (round 7). */
+export const OVERSEAS_FA = { belowOvr: 82, twoBelow: 76, asiaChance: 0.5 };
+
 export const FA_INTEREST = {
   maxRank: 11,
   perPoint: 0.3, // expected offers per OVR point above the league's average 11th man

@@ -6,7 +6,8 @@ import type { Decision, GameState, Offer } from '../types';
 import { ORIGINS, US_PREPS, originOf, type Origin, type PathKind } from '../../content/origins';
 import { EURO_CLUBS, HOMETOWN_SCHOOLS } from '../../content/teams';
 import { NAMES } from '../../content/strings';
-import { euOffer, intOffers, offerChoice } from './offers';
+import { euOffer, offerChoice } from './offers';
+import { collegeStarPenalty, cultureIntro, cultureOf, cultureOffers, pushCultureCrossroads, resolveCultureFork, youthLabel } from './culture';
 import { logDecision, pushDecision, pushMoment, userOvr } from './common';
 import { signOffer } from './offseason';
 
@@ -31,13 +32,18 @@ export function assignOrigin(s: GameState): Origin {
 
 /** The route he is on now: a move to a US prep school puts him on the American path. */
 export function pathOf(s: GameState): PathKind {
-  return s.flags.usPrep ? 'us' : originOf(s.player.country).path;
+  if (s.flags.usPrep) return 'us';
+  // a Latin American teenager who moved to a Spanish academy is on the European road
+  if (s.flags.spain) return 'euro';
+  return originOf(s.player.country).path;
 }
 
 export function introText(s: GameState): { text: string; lines: string[] } {
   const p = s.player;
   const o = originOf(p.country);
   const pos = NAMES.pos[p.pos].toLowerCase();
+  const own = cultureIntro(s);
+  if (own) return own;
   switch (o.path) {
     case 'euro':
       return {
@@ -81,17 +87,18 @@ export function youthLeagueLook(s: GameState): { names: string[]; label: string 
   const o = originOf(s.player.country);
   const path = pathOf(s);
   if (path === 'us') return null;
+  const label = youthLabel(s) ?? o.youthLeague;
   switch (path) {
     case 'euro':
-      return { names: EURO_CLUBS.map((c) => `${c.name} juniors`).filter((n) => !n.startsWith(o.homeClub ?? '-')), label: o.youthLeague };
+      return { names: EURO_CLUBS.map((c) => `${c.name} juniors`).filter((n) => !n.startsWith(o.homeClub ?? '-') && !s.player.highSchool.startsWith(n.replace(' juniors', ''))), label };
     case 'aus':
-      return { names: AUS_TEAMS, label: o.youthLeague };
+      return { names: AUS_TEAMS, label };
     case 'canada':
-      return { names: CAN_TEAMS, label: o.youthLeague };
+      return { names: CAN_TEAMS, label };
     case 'asia':
-      return { names: o.towns.flatMap((t) => ASIA_SUFFIX.map((x) => `${t} ${x}`)), label: o.youthLeague };
+      return { names: o.towns.flatMap((t) => ASIA_SUFFIX.map((x) => `${t} ${x}`)), label };
     default:
-      return { names: ['NBA Academy India', 'NBA Academy China', 'NBA Global Academy', 'Basketball Without Borders select', 'Overtime Elite select', 'Georgia prep select', 'Florida prep select', 'Texas prep select'], label: o.youthLeague };
+      return { names: ['NBA Academy India', 'NBA Academy China', 'NBA Global Academy', 'Basketball Without Borders select', 'Overtime Elite select', 'Georgia prep select', 'Florida prep select', 'Texas prep select'], label };
   }
 }
 
@@ -100,7 +107,9 @@ export function youthLeagueLook(s: GameState): { names: string[]; label: string 
  * to the senior team; everyone else outside the US may get a US prep school invitation.
  */
 export function pushYouthCrossroads(s: GameState): void {
-  if (s.stage !== 'HS' || s.flags.crossroads) return;
+  // each culture's own fork comes first (career/culture.ts)
+  if (pushCultureCrossroads(s)) return;
+  if (s.stage !== 'HS' || s.flags.crossroads || s.hsYear < 3) return;
   const o = originOf(s.player.country);
   const path = pathOf(s);
   const ovr = userOvr(s);
@@ -125,7 +134,8 @@ export function pushYouthCrossroads(s: GameState): void {
   }
   if (path === 'academy' || path === 'canada' || path === 'aus' || path === 'asia') {
     // US prep coaches recruit the best international teenagers; academies place most of theirs
-    const base = path === 'academy' ? 0.85 : path === 'canada' ? 0.7 : 0.4;
+    // US prep schools recruit hard in Africa and Canada, much less in Asia
+    const base = path === 'academy' ? (cultureOf(s) === 'latam' ? 0.45 : 0.85) : path === 'canada' ? 0.7 : 0.2;
     if (ovr < 47 || !chance(s.rng, base)) return;
     s.flags.crossroads = 1;
     const prep = pick(s.rng, US_PREPS);
@@ -144,6 +154,7 @@ export function pushYouthCrossroads(s: GameState): void {
 
 export function resolveYouth(s: GameState, d: Decision, id: string): string {
   const data = d.data ?? {};
+  if (data.kind === 'culture') return resolveCultureFork(s, data.fork as string, id);
   if (data.kind === 'promote') {
     if (id === 'promote') {
       const offer = data.offer as Offer;
@@ -176,8 +187,7 @@ export function resolveYouth(s: GameState, d: Decision, id: string): string {
 
 /** Recruiting reach: US colleges see less of players who stay home abroad. */
 export function starsForColleges(s: GameState): number {
-  const path = pathOf(s);
-  return path === 'euro' || path === 'asia' || path === 'academy' ? Math.max(1, s.stars - 1) : s.stars;
+  return Math.max(1, s.stars - collegeStarPenalty(s));
 }
 
 /** Path-specific offers after the last youth season (added to the college and pro offers). */
@@ -185,17 +195,14 @@ export function originOffers(s: GameState, offers: Offer[]): Offer[] {
   const o = originOf(s.player.country);
   const path = pathOf(s);
   const ovr = userOvr(s);
-  const out = [...offers];
-  if (path === 'euro' && o.homeClub && ovr >= 50 && !out.some((x) => x.teamName === o.homeClub)) {
+  // the roads at home come first; US colleges and the rest follow
+  const first: Offer[] = [];
+  if (path === 'euro' && o.homeClub && !s.flags.spain && ovr >= 50 && !offers.some((x) => x.teamName === o.homeClub)) {
     const offer = euOffer(s, o.homeClub, ovr, 3);
     offer.note = 'Your club · draft-eligible from 19';
-    out.push(offer);
+    first.push(offer);
   }
-  if ((path === 'aus' || (path === 'asia' && o.homeLeague === 'NBL')) && s.stars >= 3 && !out.some((x) => x.note?.startsWith('NBL Next Stars'))) {
-    out.push(...intOffers(s, ovr, 1, { nextStars: true }));
-  }
-  if (path === 'asia' && o.homeLeague && o.homeLeague !== 'NBL' && ovr >= 48) {
-    out.push(...intOffers(s, ovr, 1, { league: o.homeLeague }));
-  }
-  return out;
+  // each culture's own doors: universities, home leagues, loans (career/culture.ts)
+  for (const x of cultureOffers(s)) if (![...first, ...offers].some((y) => y.teamName === x.teamName)) first.push(x);
+  return [...first, ...offers];
 }

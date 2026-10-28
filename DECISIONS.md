@@ -484,3 +484,35 @@ nationality; event results that really differ; rare mold-breaking players; heigh
   Builds playmaking: your focus"). A playmaking point guard sees the pick-and-roll lab 6.9%
   of the time, a center 2.8%.
 - **Peaks:** Standard about 73, Fast break about 76.
+- **Basketball cultures** (career/culture.ts): every country belongs to one of eleven cultures
+  that shape the years up to university or the pros, each with its own youth label, yearly
+  national showcase, crossroads at 15-17 and doors at 18:
+  - Europe: club academy, NextGen EuroLeague, first-team call-up, a EuroCup club or a loan
+    to a second division (LEB Oro, Pro B, ABA League 2), or the NCAA.
+  - France: INSEP in Paris at 15-16 (faster development), the Espoirs, then pro clubs.
+  - Japan: high school with the Inter-High and Winter Cup, an optional B.League U18 team,
+    then a Kanto university or a B.League contract (special designated player).
+  - Korea: basketball high schools and the national championships, then Korea University /
+    Yonsei or the KBL draft straight out of high school; military service by 28.
+  - China: provincial sports school, the CBA club youth team at 15+, then the CBA or the
+    CUBA university league.
+  - Philippines: UAAP juniors, UAAP college, then the PBA or the Asian quota abroad.
+  - Australia: state teams, the Centre of Excellence in Canberra, NBL Next Stars or college.
+  - Canada: OSBA prep league, US prep schools, the NCAA or U SPORTS.
+  - Africa: Basketball Without Borders, NBA Academy Africa, a US prep school or the BAL.
+  - Latin America: club youth teams or NBA Academy Latin America; Spanish academies recruit
+    the best Argentines and Brazilians at 15-16; the Liga Nacional, NBB or LNBP at home.
+  US colleges see players who stay home in Asia much less (two stars off), and AAU, elite
+  camps and prep-powerhouse transfers are only on the American road. Home-road offers are
+  listed first. Sources: FIBA, EuroLeague, NBA, Basketball Australia, the CEBL and national
+  press reports (see the conversation of round 7).
+- **New leagues:** EuroCup, European second divisions, the Basketball Africa League, Latin
+  American leagues and the PBA (pro), and five university leagues (Korea, Kanto, UAAP, CUBA,
+  U SPORTS: no salary, still NBA-draft eligible). Youth and university leagues show their own
+  names on the player card.
+- **More overseas offers:** European clubs call from 9 OVR below their level (was 7) and more
+  often; out-of-contract pros, undrafted players and "last chance" players always see at least
+  one European offer plus their home league; NBA free agents below OVR 82 also hear from Europe
+  (two offers below 76) and often Asia. Nearly every simulated career now sees a European offer.
+- **Main and side plans:** with two plans in a half, the first counts 80% and the second 45%
+  (both were 65%).
