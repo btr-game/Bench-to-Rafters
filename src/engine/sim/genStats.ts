@@ -2,7 +2,7 @@
 
 import { LEVELS, RANK_MINUTES } from '../balance';
 import { int, next, normal, type Rng } from '../rng';
-import type { GenPlayer, League, LevelKey, StatLine, Team } from '../types';
+import type { GenPlayer, League, LevelKey, Team } from '../types';
 import { addLine, emptyLine, expected, genProfile, genUsageWeight, seasonLineFromExpected, valuePerGame } from './statModel';
 
 export interface UserSlot {
@@ -103,8 +103,4 @@ export function resetSeasonLines(league: League): void {
   }
   league.round = 0;
   league.bracket = null;
-}
-
-export function lineOf(p: GenPlayer): StatLine {
-  return p.s ?? emptyLine();
 }

@@ -34,5 +34,3 @@ export function genAttrs(pos: Pos, shape: number, ovr: number): Attrs {
 export function genRange(pos: Pos, shape: number, ovr: number): number {
   return Math.min(95, ARCHETYPES[pos][shape].range + Math.max(0, ovr - 45) * 0.6);
 }
-
-export const fmtOvr = (x: number): number => Math.round(x);

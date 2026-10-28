@@ -845,9 +845,3 @@ function normCdf(z: number): number {
   const prob = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
   return z > 0 ? 1 - prob : prob;
 }
-
-export function roleLine(rec: SeasonRecord): string {
-  const l = rec.line;
-  if (l.gp === 0) return 'Did not play';
-  return `${l.gs} starts · ${(l.min / l.gp).toFixed(1)} MPG`;
-}

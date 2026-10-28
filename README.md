@@ -7,6 +7,15 @@ The goal: your jersey in the rafters.
 The full design is in [`SPEC.md`](SPEC.md). Choices made where the spec was ambiguous are in
 [`DECISIONS.md`](DECISIONS.md).
 
+## Modes
+
+- **Standard**: most careers peak in the 60s and 70s (average in the low 70s); the NBA is
+  common, stardom is earned.
+- **Reality hits hard**: like real life, almost nobody makes the NBA.
+- **Shoot for the stars**: every career reaches All-Star level (80+); 99 is within reach.
+
+Balance reports (Word) are in [`docs/reports/`](docs/reports/).
+
 ## Run it
 
 ```bash

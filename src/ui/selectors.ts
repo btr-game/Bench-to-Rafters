@@ -36,8 +36,3 @@ export function stageLine(g: GameState): string {
 export const roleName = (g: GameState): string => (g.season ? NAMES.role[g.season.role] : '—');
 export const repName = (g: GameState): string => repLabel(g.player.rep);
 export const health = (g: GameState): string => healthLabel(g.player);
-
-/** Teams the user could be on right now, for colour chips. */
-export function teamColor(g: GameState): string {
-  return team(g)?.color ?? '#2A2F36';
-}

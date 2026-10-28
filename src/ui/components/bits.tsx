@@ -36,8 +36,6 @@ export interface BannerItem {
   key?: string;
   count?: number;
   years?: number[];
-  gold?: boolean;
-  accent?: boolean;
 }
 
 /** Awards as coloured tiles: category colour and icon, the name, how often, and what it means. */

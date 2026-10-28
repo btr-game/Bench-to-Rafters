@@ -103,5 +103,4 @@ export function mockRange(rng: Rng, cls: Prospect[], userBoard: number): [number
   return [lo, hi];
 }
 
-export const recordOf = (t: Team): string => `${t.w}–${t.l}`;
 export { winPct };

@@ -304,7 +304,7 @@ function MomentPage({ m, g }: { m: Moment; g: GameState }) {
             <div className="moment-title">{m.title}</div>
             <p className="on-dark lede-dark">{m.text}</p>
             {m.kind === 'awards' ? (
-              <div className="banners">
+              <div className="awards">
                 {m.lines?.map((x, i) => {
                   const look = awardLook(null, x);
                   return (

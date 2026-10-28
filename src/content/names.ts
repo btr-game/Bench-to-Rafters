@@ -23,8 +23,3 @@ export const LAST_NAMES = [
   'Kessler', 'Livingston', 'McBride', 'Norman', 'Payne', 'Robinson', 'Stewart', 'Thompson', 'Wright', 'Ward',
 ];
 
-export const HOMETOWNS = [
-  'Chicago, IL', 'Atlanta, GA', 'Houston, TX', 'Los Angeles, CA', 'Philadelphia, PA', 'Indianapolis, IN',
-  'Baltimore, MD', 'Seattle, WA', 'Detroit, MI', 'Oakland, CA', 'Queens, NY', 'Memphis, TN', 'Charlotte, NC',
-  'Akron, OH', 'Phoenix, AZ', 'Milwaukee, WI', 'Minneapolis, MN', 'Dallas, TX', 'Las Vegas, NV', 'Portland, OR',
-];

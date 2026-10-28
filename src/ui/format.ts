@@ -7,4 +7,3 @@ export const seasonLabel = (y: number): string => `${y}–${String(y + 1).slice(
 export const pg = (l: StatLine, k: keyof StatLine): string => (l.gp > 0 ? (l[k] / l.gp).toFixed(1) : '—');
 export const pct = (made: number, att: number): string => (att > 0 ? ((made / att) * 100).toFixed(1) : '—');
 export const signed = (x: number, digits = 1): string => `${x >= 0 ? '+' : '−'}${Math.abs(x).toFixed(digits)}`;
-export const r0 = (x: number): string => Math.round(x).toString();

@@ -310,3 +310,46 @@ matter; compare finished careers with real players (80+ OVR) using a small model
 - **Distribution test (report in Word):** over 1,000 careers the mean peak is 65.4 (random)
   and 69.1 (smart). Peaks under 52.5: 15.0% and 8.0%. Peaks of 97+: 1.5% and 4.9%. No
   balance change was made yet; options are in the report.
+
+## Playtest round 6 (Oct 2026)
+
+Feedback: event results should differ each time and be easier to read; no OVR on the start
+screens; larger text; distinguishable awards; an unreadable recap page; a wider distribution
+with the average in the early 70s; two new modes; a hidden growth factor that can make a
+low start surge (shaped by age and raised by choices); starting OVR around 40 with rare
+extremes at 20 and 60; two plans at a time; a height warning.
+
+- **Modes:** Standard; Reality hits hard (potential base 40, mu 2.25, sigma 0.6; growth x0.92;
+  injuries x1.3; about 5-8% of careers reach the NBA); Shoot for the stars (potential base 86,
+  mu 1.9, min 88; growth x1.35; injuries x0.6; a floor keeps him on a straight line from his
+  start to OVR 80 at 22, so every career that lasts that long reaches 80+). The league is the
+  same in every mode. Picked on the first creation screen; shown on the retirement page.
+- **Standard balance:** potential mu 3.36, sigma 0.66. Over 2,000 careers: mean peak 68.5
+  (random) and 74.1 (smart). Harness targets were reset to this design.
+- **Starting OVR:** Laplace around 40 with scale 20/ln(15), so about 1 in 30 players starts at 20
+  or below and 1 in 30 at 60 or above, and half start within ±5 of 40. Every archetype starts
+  near the same level (the card is the shape, not a head start). Starting attributes may go
+  down to 5.
+- **Hidden growth rate:** lognormal around 1 (sd 0.3), a little lower for players who start
+  ahead. It multiplies growth, makes breakthroughs likelier, can trigger a "surge" half (2.6x
+  growth) for young fast learners, shifts the whole growth curve and the start of decline by
+  4 years per +1.0, and fades 2.5% a year from 27. Scouts hint at it. It goes up with choices:
+  seven new events (a mentor, 5 a.m. workouts, film sessions, an elite trainer, staying
+  hungry, studying the greats, habits that extend a prime) and grind-plan breakthroughs.
+- **Growth curve:** fast in the teens, slowing through the twenties, fading out between 30 and
+  34. Players who barely play still develop in practice (minutes factor floor 0.5, was 0.25):
+  benched teenagers had stopped growing entirely.
+- **Two plans:** pick one or two plans per half; with two, each counts at 65% of its effect.
+- **Events:** every effect of an event choice is scaled by one random factor (about 0.45x to
+  1.8x) each time it happens. The outcome shows as a card with green and red change chips.
+- **Awards:** nine categories, each with a colour and icon (championship, MVP, big-game MVP,
+  all-league team, defense, breakout, skills, national team, school and youth), and a
+  one-line description. The trophy cabinet groups them by category with the seasons won.
+- **Height warning:** a story page when his size (or projection) stops fitting his position,
+  with the positions that fit and his OVR there; a warning mark on the player card and the
+  position card until he moves.
+- **Fixes:** the postseason recap's class names collided with an older style (white text on a
+  light box); OVR removed from the creation screens and the first story page; text one pixel
+  larger again (body 17.5px).
+- **Cleanup:** removed code left over from earlier rounds (an old hometown list, unused
+  helpers, pennant-banner styles and unused layout utilities).

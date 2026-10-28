@@ -1,6 +1,6 @@
 // Shared helpers for the career code.
 
-import { LEVELS, REP, ROLE_BY_RANK, ROLE_ORDER, ROSTER_OFFSETS, TRUST_ROLE } from '../balance';
+import { REP, ROLE_BY_RANK, ROLE_ORDER, ROSTER_OFFSETS, TRUST_ROLE } from '../balance';
 import { clamp } from '../rng';
 import type { Decision, GameState, League, LevelKey, Moment, RoleKey, Team } from '../types';
 import { ovrOf } from '../player/ovr';
@@ -79,10 +79,6 @@ export const adjust = (x: number, d: number): number => clamp(x + d, 0, 100);
 export function teamById(league: League | null, id: string | null): Team | null {
   if (!league || !id) return null;
   return league.teams.find((t) => t.id === id) ?? null;
-}
-
-export function levelName(level: LevelKey): string {
-  return LEVELS[level].name;
 }
 
 export function conferenceRank(team: Team, league: League): number {

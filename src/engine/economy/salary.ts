@@ -31,8 +31,6 @@ export function marketValue(year: number, ovr: number, age: number, rep: number,
 export const minSalary = (year: number, service: number): number =>
   Math.round(MIN_SALARY(service) * (capFor(year) / CAP.start) * 100) / 100;
 
-export const maxSalary = (year: number, service: number): number => capFor(year) * MAX_SHARE(service);
-
 /** First-round rookie scale, $13M at #1 down to $2.8M at #30 (§12). */
 export function rookieScale(year: number, pick: number): number {
   const t = Math.min(1, Math.max(0, (pick - 1) / 29));

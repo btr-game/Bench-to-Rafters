@@ -1,7 +1,7 @@
 // Turning-point events (§11). Events are data; state stores only the id.
 // Phase 1–2 ships a starter set; the full list of 30 lands in Phase 3.
 
-import { ATTR_MAX, ATTRS } from '../balance';
+import { ATTR_MAX, ATTRS, MAX_FOCUS_CHANGES } from '../balance';
 import { chance, clamp, int, range, type Rng } from '../rng';
 import type { AttrKey, GameState, Stage } from '../types';
 import { adjust } from '../career/common';
@@ -99,7 +99,7 @@ export const EVENTS: EventDef[] = [
     id: 'focus',
     stages: ALL,
     phase: 'both',
-    when: (s) => s.player.focusChanges < 3,
+    when: (s) => s.player.focusChanges < MAX_FOCUS_CHANGES,
     weight: 0.6,
     cooldownSeasons: 3,
     title: 'Change your focus',

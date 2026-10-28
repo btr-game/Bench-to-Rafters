@@ -5,7 +5,7 @@ import { COLLEGES, EURO_CLUBS, INT_LEAGUES, NBA_TEAMS } from '../../content/team
 import { chance, clamp, int, pick, poisson, range, shuffle } from '../rng';
 import type { Choice, GameState, NcaaTier, Offer, RoleKey, Team } from '../types';
 import { LEVEL_RANK, outlookOf, lastRecord, projectedRank, rankOnRoster, ROLE_LABEL, roleForRank, userOvr } from './common';
-import { capFor, fmtMoney, marketValue, minSalary } from '../economy/salary';
+import { fmtMoney, marketValue, minSalary } from '../economy/salary';
 import { starsForColleges } from './origin';
 import { ROLE_ORDER } from '../balance';
 
@@ -303,7 +303,3 @@ export function nbaOffersForProspect(s: GameState): Offer[] {
 }
 
 const round1 = (x: number): number => Math.round(x * 10) / 10;
-
-export function capNow(s: GameState): number {
-  return capFor(s.year);
-}
