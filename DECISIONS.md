@@ -595,3 +595,10 @@ nationality; event results that really differ; rare mold-breaking players; heigh
   mentoring a rookie, betting on yourself, grades, the no-call, a new diet and more), 5 new
   storylines (shoe deal, foundation, little brother, anxiety, the coach who believed) and 24
   more shop items (116 in all).
+- **Scouts' call on each move:** High, Moderate or Low with one vague line (round 9 follow-up),
+  so the player knows a good move from a bad one without seeing numbers. It scores the real
+  change in team strength after the swap (depth included), minus 0.45 for a player 32+, plus 0.2
+  for 25 or younger, minus 0.35 if the five would have no big, minus 0.25 for three at one
+  position, minus 0.3 for a player paid over 28% of the cap who adds little. High from 1.9,
+  Moderate from 0.85: over 216 board entries in 12 star careers, 35% High, 29% Moderate,
+  37% Low (each board has two stars, who are usually High but Unlikely to come).

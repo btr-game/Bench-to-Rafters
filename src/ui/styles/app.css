@@ -609,3 +609,9 @@ button.banner { border: 0; font: inherit; text-align: left; }
 .story-rival .story-tag { background: var(--bad); color: #fff; }
 .story-superteam .story-tag, .story-dynasty .story-tag { background: var(--gold); color: #1a1205; }
 .story-underdog .story-tag { background: var(--good); color: #fff; }
+
+.rec { font-family: var(--f-mono); font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; padding: 1px 7px; border-radius: 5px; color: #fff; }
+.rec-high { background: var(--good); }
+.rec-moderate { background: var(--warn); }
+.rec-low { background: var(--muted); }
+.rec-why { font-style: italic; color: var(--muted); }

@@ -14,6 +14,7 @@ import type { GameState, GenPlayer, Team } from '../types';
 import { capFor, fmtMoney } from '../economy/salary';
 import { adjust, logDecision, pushMoment, teamById, userOvr } from './common';
 import { nbaStrength } from '../world/nbaWorld';
+import { strengthOf } from '../world/gen';
 import { rosterRank } from './team';
 
 export interface RecruitState {
@@ -33,6 +34,31 @@ export interface Target {
   out: GenPlayer[]; // who would go the other way
   fits: boolean;
   short: number; // $M of room missing when it does not fit
+  rec: 'High' | 'Moderate' | 'Low'; // the scouts' call on the move
+  why: string; // one vague line, never a number
+}
+
+/**
+ * The scouts' recommendation (round 9): a deliberately vague read of a move. It weighs what the
+ * team strength would really gain (the roster after the swap, depth included), his age, the
+ * money, and whether the five still has a big and is not three of the same position.
+ */
+function scoutCall(s: GameState, p: GenPlayer, out: GenPlayer[]): { rec: Target['rec']; why: string } {
+  const t = myTeam(s)!;
+  const after = [...t.roster.filter((x) => !out.includes(x)), p];
+  const gain = strengthOf(after.map((x) => x.ovr)) - strengthOf(t.roster.map((x) => x.ovr));
+  const five = [s.player.pos, ...[...after].sort((a, b) => b.ovr - a.ovr).slice(0, 4).map((x) => x.pos)];
+  const noBig = !five.some((x) => x === 'C' || x === 'PF');
+  const crowded = five.filter((x) => x === p.pos).length >= 3;
+  const pricey = p.salary > capFor(s.year + 1) * 0.28 && gain < 1.2;
+  const old = p.age >= 32;
+  const score = gain - (old ? 0.45 : 0) + (p.age <= 25 ? 0.2 : 0) - (noBig ? 0.35 : 0) - (crowded ? 0.25 : 0) - (pricey ? 0.3 : 0);
+  if (score >= 1.9) return { rec: 'High', why: p.age <= 25 ? 'A difference-maker, and still getting better.' : 'Scouts see a real difference-maker next to you.' };
+  if (score >= 0.85) return { rec: 'Moderate', why: old ? 'Helps now; how long is another question.' : noBig || crowded ? 'Talented, but the fit is not perfect.' : 'A solid piece, not a game changer.' };
+  return {
+    rec: 'Low',
+    why: old ? 'His best years may be behind him.' : noBig || crowded ? 'The fit next to you is awkward.' : pricey ? 'A lot of money for what he adds.' : 'Not much better than what you give up.',
+  };
 }
 
 const myTeam = (s: GameState): Team | null => teamById(s.nba, s.teamId);
@@ -130,7 +156,7 @@ export function scoutingBoard(s: GameState): Target[] {
     if (!team || !p || team.id === s.teamId) continue;
     const interest = interestOf(s, p, team);
     const pk = package_(s, p);
-    out.push({ p, team, interest, label: interest >= 0.6 ? 'Interested' : interest >= 0.35 ? 'Open to it' : 'Unlikely', ...pk });
+    out.push({ p, team, interest, label: interest >= 0.6 ? 'Interested' : interest >= 0.35 ? 'Open to it' : 'Unlikely', ...pk, ...scoutCall(s, p, pk.out) });
   }
   return out;
 }

@@ -61,7 +61,11 @@ export function RecruitCard({ g }: { g: GameState }) {
               <span className="small muted">
                 {t.team.name} · OVR {Math.round(t.p.ovr)} · {fmtMoney(t.p.salary)} · for {t.out.map((o) => o.name.split(' ').slice(-1)[0]).join(' + ')}
               </span>
-              <span className={`interest i-${t.label === 'Interested' ? 'hi' : t.label === 'Open to it' ? 'mid' : 'lo'}`}>{t.label}</span>
+              <div className="row" style={{ gap: 6 }}>
+                <span className={`interest i-${t.label === 'Interested' ? 'hi' : t.label === 'Open to it' ? 'mid' : 'lo'}`}>{t.label}</span>
+                <span className={`rec rec-${t.rec.toLowerCase()}`}>Scouts: {t.rec}</span>
+              </div>
+              <span className="small rec-why">{t.why}</span>
             </div>
             <button className="btn small" disabled={!t.fits || left <= 0} onClick={() => recruit(t.p.id)}>
               {t.fits ? 'Recruit' : `Need ${fmtMoney(t.short)}`}
@@ -74,7 +78,7 @@ export function RecruitCard({ g }: { g: GameState }) {
           Take a 10% pay cut
         </button>
         <span className="small muted">
-          {info.cut > 0 ? `${Math.round(info.cut * 100)}% cut so far. ` : ''}Frees cap room and makes players likelier to come. Your weakest starter goes the other way.
+          {info.cut > 0 ? `${Math.round(info.cut * 100)}% cut so far. ` : ''}Frees cap room and makes players likelier to come. Your weakest starter goes the other way. The scouts' call is a read, not a promise.
         </span>
       </div>
     </section>

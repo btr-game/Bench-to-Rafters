@@ -24,7 +24,7 @@ const SECTIONS: { title: string; where: string; items: [string, string][] }[] = 
     items: [
       ['Focus stats', 'Two ratings that grow about twice as fast. Changing them is earned: a breakthrough season (a big OVR or single-rating jump for your age) unlocks it for that offseason, and the tile glows.'],
       ['Position', 'Move one spot a summer (two if your height fits). A size warning opens it for you.'],
-      ['Starting five', 'NBA only, once you are your team’s first option. A scouting board shows six players who would start next to you, their salary and how interested they are. Recruit up to two a summer: your weakest starter (plus bench salary if needed) goes the other way. Salaries must fit under the cap, or within 125% of what goes out. A 10% pay cut (up to 30%) frees room and makes players likelier to come.'],
+      ['Starting five', 'NBA only, once you are your team’s first option. A scouting board shows six players who would start next to you, their salary and how interested they are. Recruit up to two a summer: your weakest starter (plus bench salary if needed) goes the other way. Salaries must fit under the cap, or within 125% of what goes out. A 10% pay cut (up to 30%) frees room and makes players likelier to come. The scouts rate each move High, Moderate or Low with a short reason: a read on the fit, not a promise.'],
       ['Jersey number', 'Switch numbers between seasons. The number you retire in is the one that hangs.'],
       ['Retire', 'Hang it up between any two seasons once you are past high school.'],
       ['Shop and summer', 'Purchases and the summer program come up as choices in the offseason. The shop shows six things at random each summer, out of more than 90.'],
