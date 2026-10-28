@@ -231,7 +231,6 @@ export const HOMETOWN_SCHOOLS: { town: string; schools: string[]; colors: string
   { town: 'Milwaukee, WI', schools: ['Lakefront Lutheran', 'Menomonee Valley High', 'Brew City Prep'], colors: ['#1E5B3A', '#1F3A7A'] },
   { town: 'Dallas, TX', schools: ['Trinity River High', 'Oak Cliff Prep', 'Lone Star Academy'], colors: ['#1F3A7A', '#2A2F36'] },
   { town: 'Las Vegas, NV', schools: ['Silver State Prep', 'Spring Mountain High', 'Desert Rose Catholic'], colors: ['#8A6D1F', '#7A1F2B'] },
-  { town: 'Seoul, South Korea', schools: ['Hanbit International School', 'Gangnam Prep Academy'], colors: ['#1F3A7A', '#7A1F2B'] },
 ];
 
 // Other overseas leagues (level INT). Strength is mean team strength; salary in $M a year.

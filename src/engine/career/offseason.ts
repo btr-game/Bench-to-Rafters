@@ -31,6 +31,7 @@ import { beginSeason, ordinal } from './season';
 import { verdictFor } from '../awards/legacy';
 import type { Prospect } from '../world/draft';
 import { NBA_TEAMS } from '../../content/teams';
+import { originOffers, pathOf, pushYouthCrossroads } from './origin';
 
 // ---------- entering the offseason ----------
 
@@ -63,8 +64,10 @@ export function beginOffseason(s: GameState): void {
 
   switch (s.stage) {
     case 'HS':
-      if (s.hsYear < 4) s.hsYear += 1;
-      else pushSplit(s); // after senior year, or after a post-grad prep year
+      if (s.hsYear < 4) {
+        s.hsYear += 1;
+        if (s.hsYear >= 3) pushYouthCrossroads(s); // at 16-17: first team or a US prep school
+      } else pushSplit(s); // after senior year, or after a post-grad prep year
       break;
     case 'NCAA':
       s.ncaaYear += 1;
@@ -153,7 +156,7 @@ function resolveSummer(s: GameState, id: string): void {
 // ---------- high school → the split ----------
 
 function pushSplit(s: GameState): void {
-  const offers = splitOffers(s);
+  const offers = originOffers(s, splitOffers(s));
   if (offers.length === 0) {
     pushDecision(s, {
       kind: 'offers',
@@ -165,8 +168,13 @@ function pushSplit(s: GameState): void {
     return;
   }
   const choices = offers.map(offerChoice);
-  if (s.hsYear === 4 && s.stars <= 3) {
-    choices.push({ id: 'prep', label: 'Take a post-grad prep year', detail: 'One more season at a national prep academy against better players, then get recruited again.' });
+  if (s.hsYear === 4 && (s.stars <= 3 || pathOf(s) !== 'us')) {
+    const abroad = pathOf(s) !== 'us';
+    choices.push({
+      id: 'prep',
+      label: abroad ? 'Spend a post-grad year at a US prep school' : 'Take a post-grad prep year',
+      detail: abroad ? 'Move to America for one season so college coaches can see you, then get recruited again.' : 'One more season at a national prep academy against better players, then get recruited again.',
+    });
   }
   pushDecision(s, {
     kind: 'offers',
@@ -597,6 +605,7 @@ export function resolveOffseasonDecision(s: GameState, d: Decision, id: string):
       }
       if (id === 'prep') {
         s.hsYear = 5;
+        s.flags.usPrep = 1;
         logDecision(s, 'prep', `Turned down ${offers.length} offer${offers.length === 1 ? '' : 's'} for a post-grad prep year.`);
         pushMoment(s, { kind: 'commit', title: 'Northfield Prep', teamName: 'Northfield Prep', color: '#0B3D2E', text: 'One more year. A national prep schedule, better teammates, and every college coach watching.', lines: ['Post-grad season', 'Recruited again next summer'] });
         return true;

@@ -218,7 +218,8 @@ export function marchMadness(rng: Rng, league: League, hook: UserGameHook | null
 
 export function hsPlayoffs(rng: Rng, league: League, hook: UserGameHook | null): Bracket {
   const seeds = standings(league.teams).slice(0, HS_PLAYOFF_TEAMS);
-  return runBracket(rng, league, seeds, ['State first round', 'State quarterfinals', 'State semifinals', 'State final'], [1, 1, 1, 1], hook, [false, false, true, true]);
+  const names = league.label ? ['Playoff first round', 'Playoff quarterfinals', 'Playoff semifinals', 'Youth final'] : ['State first round', 'State quarterfinals', 'State semifinals', 'State final'];
+  return runBracket(rng, league, seeds, names, [1, 1, 1, 1], hook, [false, false, true, true]);
 }
 
 export function glPlayoffs(rng: Rng, league: League, hook: UserGameHook | null): Bracket {

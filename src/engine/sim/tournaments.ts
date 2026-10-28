@@ -10,6 +10,7 @@ import { scoreFor, winProb, standings } from './leagueSim';
 import { rollInjury } from '../player/injury';
 import { ovrOf } from '../player/ovr';
 import { adjust, logDecision, pushDecision, pushMoment, rankOnRoster } from '../career/common';
+import { originOf } from '../../content/origins';
 import { teamUsageMean, rankMinutes } from './genStats';
 
 export interface Opp {
@@ -321,7 +322,8 @@ export function mcdonaldsGame(s: GameState): void {
 const SENIOR: [string, number][] = [
   ['USA', 87], ['France', 82], ['Canada', 82], ['Serbia', 81], ['Germany', 81], ['Spain', 80], ['Australia', 79], ['Greece', 79],
   ['Slovenia', 78], ['Lithuania', 78], ['Italy', 77], ['Argentina', 76], ['Puerto Rico', 74], ['Nigeria', 74], ['Brazil', 75],
-  ['Japan', 72], ['New Zealand', 72], ['Philippines', 70], ['China', 71], ['South Korea', 68],
+  ['Japan', 72], ['New Zealand', 72], ['Philippines', 70], ['China', 71], ['South Korea', 68], ['Turkey', 77], ['Senegal', 71],
+  ['Cameroon', 71], ['South Sudan', 73], ['Dominican Republic', 73], ['Mexico', 70],
 ];
 
 export interface NationalEvent {
@@ -340,13 +342,17 @@ export function nationalEventFor(year: number, age: number): NationalEvent | nul
   return null;
 }
 
-export const nationOf = (s: GameState): string => (s.player.hometown.includes('Korea') ? 'South Korea' : 'USA');
+export const nationOf = (s: GameState): string => originOf(s.player.country).nation;
+const nationColor = (s: GameState): string => originOf(s.player.country).nationColor;
 
 /** Chance of a call-up: the nation's talent pool sets the bar. */
 export function callUpChance(s: GameState, ev: NationalEvent): number {
   const ovr = ovrOf(s.player.attrs, s.player.pos);
-  const usa = nationOf(s) === 'USA';
-  const bar = ev.youth ? (usa ? 59 + (s.player.age - 15) * 3 : 50 + (s.player.age - 15) * 2.5) : usa ? 84 : 64;
+  const nation = nationOf(s);
+  const usa = nation === 'USA';
+  // deeper basketball countries have a higher bar
+  const str = SENIOR.find(([n]) => n === nation)?.[1] ?? 70;
+  const bar = ev.youth ? (usa ? 59 + (s.player.age - 15) * 3 : 50 + (str - 74) * 0.4 + (s.player.age - 15) * 2.5) : usa ? 84 : str - 12;
   return logistic((ovr - bar) / 2 + s.player.rep / 40 - 0.5);
 }
 
@@ -443,9 +449,9 @@ export function resolveNationalTeam(s: GameState, data: Record<string, unknown>,
   logDecision(s, 'national', `Played for ${nation} at the ${name}: ${result.toLowerCase()}.`);
   const final = games[games.length - 1];
   if (medal === 'gold') {
-    pushMoment(s, { kind: 'title', title: `${name} gold`, teamName: nation, color: nation === 'USA' ? '#002868' : '#CD2E3A', text: `${nation} win gold at the ${name}.`, game: { ...final, level, teamShort: nation }, lines: [], recap });
+    pushMoment(s, { kind: 'title', title: `${name} gold`, teamName: nation, color: nationColor(s), text: `${nation} win gold at the ${name}.`, game: { ...final, level, teamShort: nation }, lines: [], recap });
   } else {
-    pushMoment(s, { kind: 'tournament', title: name, teamName: nation, color: nation === 'USA' ? '#002868' : '#CD2E3A', text: `${nation} at the ${name}: ${result}.`, lines: [lineText(line)], recap });
+    pushMoment(s, { kind: 'tournament', title: name, teamName: nation, color: nationColor(s), text: `${nation} at the ${name}: ${result}.`, lines: [lineText(line)], recap });
   }
   return `${name}: ${result}.`;
 }

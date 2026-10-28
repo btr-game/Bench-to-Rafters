@@ -125,3 +125,30 @@ describe('growth calibration (§7)', () => {
     expect(smart).toBeLessThan(76);
   });
 });
+
+describe('international origins', () => {
+  it('assigns a country, hometown and youth program', () => {
+    const s = newGame(7, { name: 'X', number: 1, pos: 'SG', archetype: 0, focus: ['SHT', 'IQ'], country: 'Lithuania' });
+    expect(s.player.country).toBe('Lithuania');
+    expect(s.player.hometown).toMatch(/Lithuania$/);
+    expect(['Žalgiris academy', 'Rytas youth']).toContain(s.player.highSchool);
+    expect(s.league?.label).toBe('Lithuanian junior league');
+  });
+
+  it('a European who turns pro at 16 can still be drafted from his club', () => {
+    let draftedFromEurope = 0;
+    for (let i = 0; i < 40; i++) {
+      const s = newGame(900 + i, { name: 'X', number: 1, pos: 'SF', archetype: 0, focus: ['SHT', 'ATH'], country: 'Spain' });
+      for (let steps = 0; steps < 3000 && s.player.age < 23; steps++) {
+        const pr = prompt(s);
+        if (pr.type === 'retired') break;
+        if (pr.type === 'decision') {
+          const ch = pr.decision.choices.filter((c) => !c.disabled);
+          choose(s, ch.find((c) => c.id === 'promote' || c.id === 'declare')?.id ?? ch[0].id);
+        } else advance(s);
+      }
+      if (s.flags.earlyPro && s.draftedBy) draftedFromEurope++;
+    }
+    expect(draftedFromEurope).toBeGreaterThan(0);
+  });
+});

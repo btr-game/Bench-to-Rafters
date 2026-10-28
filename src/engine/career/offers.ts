@@ -6,6 +6,7 @@ import { chance, clamp, int, pick, poisson, range, shuffle } from '../rng';
 import type { Choice, GameState, NcaaTier, Offer, RoleKey, Team } from '../types';
 import { LEVEL_RANK, outlookOf, lastRecord, projectedRank, rankOnRoster, ROLE_LABEL, roleForRank, userOvr } from './common';
 import { capFor, fmtMoney, marketValue, minSalary } from '../economy/salary';
+import { starsForColleges } from './origin';
 import { ROLE_ORDER } from '../balance';
 
 const TIER_LABEL: Record<NcaaTier, string> = { blue: 'Blue blood', power: 'Power program', major: 'Major conference', mid: 'Mid-major' };
@@ -41,7 +42,8 @@ export function offerChoice(o: Offer): Choice {
 export function splitOffers(s: GameState): Offer[] {
   const rng = s.rng;
   const ovr = userOvr(s);
-  const stars = s.stars;
+  // US colleges see less of players who stayed home abroad
+  const stars = starsForColleges(s);
   const tiers: NcaaTier[] = [];
   const add = (t: NcaaTier, n: number) => {
     for (let i = 0; i < n; i++) tiers.push(t);
@@ -167,10 +169,11 @@ export function europeOffers(s: GameState, ovr: number, max: number): Offer[] {
 // ---------- other overseas leagues ----------
 
 /** Offers from NBL, CBA, B.League and KBL clubs. `cba` adds the late-career China money option. */
-export function intOffers(s: GameState, ovr: number, max: number, opts: { nextStars?: boolean; cba?: boolean } = {}): Offer[] {
+export function intOffers(s: GameState, ovr: number, max: number, opts: { nextStars?: boolean; cba?: boolean; league?: string } = {}): Offer[] {
   const fade = FA_INTEREST.minorAgeFade(s.player.age);
   const leagues = INT_LEAGUES.filter((l) => {
     if (opts.nextStars) return l.key === 'NBL';
+    if (opts.league) return l.key === opts.league;
     if (l.key === 'CBA' && opts.cba) return ovr >= 58;
     return ovr >= l.strength - 7 && chance(s.rng, Math.max(0.25, fade));
   });
@@ -192,7 +195,7 @@ export function intOffers(s: GameState, ovr: number, max: number, opts: { nextSt
         role: roleForRank(projectedRank(l.strength, ovr)),
         outlook: `${l.name} · ${l.country}`,
         lastRecord: `${int(s.rng, 8, 22)}–${int(s.rng, 6, 20)}`,
-        note: opts.nextStars ? 'NBL Next Stars: paid, pro minutes, draft-eligible next summer' : l.key === 'CBA' && opts.cba ? 'Big money, little NBA attention' : undefined,
+        note: opts.nextStars ? 'NBL Next Stars: paid, pro minutes, draft-eligible next summer' : opts.league ? 'Your home league · draft-eligible from 19' : l.key === 'CBA' && opts.cba ? 'Big money, little NBA attention' : undefined,
       };
     });
 }

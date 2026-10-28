@@ -74,6 +74,7 @@ export interface UserPlayer {
   fullHeight: number;
   wingspan: number;
   hometown: string;
+  country: string; // see content/origins
   highSchool: string;
   age: number;
   attrs: Attrs;
@@ -192,6 +193,7 @@ export interface League {
   rounds: number;
   bracket: Bracket | null;
   postNote?: string;
+  label?: string; // display name when it differs from the level's (international youth leagues)
 }
 
 export interface AwardRace {

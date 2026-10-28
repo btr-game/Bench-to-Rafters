@@ -30,6 +30,7 @@ export interface CreateInput {
   hand?: 'R' | 'L';
   height?: number; // full-grown height; random if omitted
   hometown?: string; // assigned by the game when omitted
+  country?: string; // assigned by the game when omitted
   highSchool?: string;
 }
 
@@ -68,6 +69,7 @@ export function createPlayer(rng: Rng, input: CreateInput): UserPlayer {
     fullHeight,
     wingspan: fullHeight + int(rng, 0, 5),
     hometown: input.hometown ?? '',
+    country: input.country ?? '',
     highSchool: input.highSchool ?? '',
     age: 14,
     attrs,

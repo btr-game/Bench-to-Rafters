@@ -22,7 +22,10 @@ const SPEC: Partial<Record<LevelKey, { rounds: string[]; award: string }[]>> = {
   EU: [{ rounds: ['Final Four semifinal', 'EuroLeague final'], award: 'Final Four MVP' }],
   GL: [{ rounds: ['G League Finals'], award: 'G League Finals MVP' }],
   INT: [{ rounds: ['Finals'], award: 'Finals MVP' }],
-  HSV: [{ rounds: ['State final'], award: 'State final MVP' }],
+  HSV: [
+    { rounds: ['State final'], award: 'State final MVP' },
+    { rounds: ['Youth final'], award: 'Final MVP' },
+  ],
 };
 
 function scaled(l: StatLine, f: number): StatLine {

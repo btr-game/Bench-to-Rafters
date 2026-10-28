@@ -51,6 +51,7 @@ import { buildEu, buildGl, buildHs, buildInt, buildNba, buildNcaa, schoolRoster,
 import { rosterStrength } from '../world/gen';
 import { buildCandidates, nbaAwards, simpleAwards, type AwardOutcome } from '../awards/awards';
 import { playoffMvps, postseasonRecap, recordNbaYear } from '../awards/playoffs';
+import { pathOf } from './origin';
 import { adjust, conferenceRank, milestone, pushDecision, pushMoment, rankOnRoster, roleWithTrust, teamById, userOvr } from './common';
 import { queueMidseasonEvents } from '../events/resolver';
 import { allStarWeekend, conferenceTournament, hsNationals, mcdonaldsGame, nbaCup, nbaPreseason } from '../sim/tournaments';
@@ -459,7 +460,7 @@ function finishSeason(s: GameState): void {
   const recap = league.bracket ? postseasonRecap(league, league.bracket) : [];
   if (level === 'HSV') {
     const rank = standings(league.teams).indexOf(team) + 1;
-    if (post.champion || (rank <= 2 && team.strength >= 50) || s.flags.powerhouse) hsNationals(s, team);
+    if (pathOf(s) === 'us' && (post.champion || (rank <= 2 && team.strength >= 50) || s.flags.powerhouse)) hsNationals(s, team);
   }
 
   const nbaGames = season.games.filter((g) => g.post !== 'G League');
@@ -518,7 +519,7 @@ function finishSeason(s: GameState): void {
       keys.push({ key: 'MCDAA', label: "McDonald's All-American" });
       labels.push("McDonald's All-American");
     }
-    if (s.recruitRank !== null && s.recruitRank <= 24) mcdonaldsGame(s);
+    if (s.recruitRank !== null && s.recruitRank <= 24 && pathOf(s) === 'us') mcdonaldsGame(s);
     if (s.recruitRank === 1) {
       keys.push({ key: 'GATORADE', label: 'Gatorade Player of the Year' });
       labels.push('Gatorade Player of the Year');
@@ -543,7 +544,7 @@ function finishSeason(s: GameState): void {
   } else if (league.bracket && recap.length > 0) {
     pushMoment(s, {
       kind: 'tournament',
-      title: POSTSEASON_TITLE[level] ?? 'The postseason',
+      title: league.label ? `The ${league.label} playoffs` : (POSTSEASON_TITLE[level] ?? 'The postseason'),
       teamName: team.name,
       color: team.color,
       text: `${teamById(league, league.bracket.champion)?.name ?? 'Someone else'} won it all. ${post.result}.`,
@@ -640,7 +641,8 @@ function finishSeason(s: GameState): void {
   // the NBA world keeps turning when the user is elsewhere
   if (s.stage !== 'NBA') {
     if (s.nba) quickNbaSeason(s);
-    else if (s.stage === 'HS' && s.hsYear === 4) {
+    else if ((s.stage === 'HS' && s.hsYear === 4) || s.player.age >= 17) {
+      // built by senior year, or by 17 for players who turned pro early abroad
       s.nba = buildNba(s, s.year);
       warmUpNba(s, 12);
       quickNbaSeason(s);

@@ -12,6 +12,7 @@ import { AttrRows } from '../components/PlayerCard';
 import { ScoutCard } from '../components/ScoutCard';
 import { fmtMoney, ht, pct, pg, seasonLabel } from '../format';
 import { ordinal } from '../../engine/career/season';
+import { originOf } from '../../content/origins';
 import { league as leagueOf, ovr } from '../selectors';
 
 // ---------- Season ----------
@@ -254,6 +255,10 @@ export function PlayerTab({ g }: { g: GameState }) {
             <div>
               <dt>Hometown</dt>
               <dd>{p.hometown}</dd>
+              <dt>Nationality</dt>
+              <dd>
+                {originOf(p.country).flag} {p.country}
+              </dd>
             </div>
             <div>
               <dt>Shoots</dt>
@@ -373,7 +378,7 @@ export function LeagueTab({ g }: { g: GameState }) {
   const races = g.lastSummary?.races ?? [];
   return (
     <div className="stack">
-      <Card title={LEVELS[lg.level].name} kicker={seasonLabel(lg.year)}>
+      <Card title={lg.label ?? LEVELS[lg.level].name} kicker={seasonLabel(lg.year)}>
         <Standings g={{ ...g, league: lg, stage: lg.level === 'NBA' ? 'NBA' : g.stage }} />
       </Card>
       <Card title={withLines.length ? 'Scoring leaders' : 'Top players'} kicker="Fictional players">

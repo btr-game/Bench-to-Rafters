@@ -44,6 +44,8 @@ function smartChoice(s: GameState, d: Decision, r: Rng): string {
     }
     case 'assign':
       return 'go';
+    case 'youth':
+      return byId('promote') ?? byId('move') ?? ch[0].id;
     case 'national':
       return s.player.age < 32 ? 'accept' : 'decline';
     case 'transfer':

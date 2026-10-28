@@ -19,6 +19,7 @@ import { int, normal, pick, shuffle } from '../rng';
 import type { GameState, GenPlayer, League, LevelKey, Team } from '../types';
 import { genPlayer, makeRoster, rosterStrength } from './gen';
 import { marketValue } from '../economy/salary';
+import { youthLeagueLook } from '../career/origin';
 
 function emptyLeague(level: LevelKey, year: number, teams: Team[], userTeamId: string | null): League {
   return { level, year, teams, userTeamId, round: 0, rounds: LEVELS[level].games, bracket: null };
@@ -165,7 +166,8 @@ export function schoolRoster(s: GameState): GenPlayer[] {
 export function buildHs(s: GameState, year: number, varsity: boolean, userSquad: GenPlayer[], userStrength: number): League {
   const level: LevelKey = varsity ? 'HSV' : 'HSJV';
   const n = varsity ? HS_STATE_TEAMS : HS_JV_TEAMS;
-  const names = shuffle(s.rng, [...HS_SCHOOL_NAMES]);
+  const look = youthLeagueLook(s);
+  const names = shuffle(s.rng, [...(look?.names ?? HS_SCHOOL_NAMES)]);
   const mean = varsity ? LEAGUE_STRENGTH.HSV : LEAGUE_STRENGTH.HSJV;
   const teams: Team[] = [];
   teams.push({
@@ -196,7 +198,9 @@ export function buildHs(s: GameState, year: number, varsity: boolean, userSquad:
       roster: makeRoster(s, strength, 12, varsity ? [15, 18] : [14, 16], 2.4),
     });
   }
-  return emptyLeague(level, year, teams, USER_SCHOOL_ID);
+  const lg = emptyLeague(level, year, teams, USER_SCHOOL_ID);
+  if (look) lg.label = varsity ? look.label : `${look.label} (second team)`;
+  return lg;
 }
 
 export { HS_VARSITY_SIZE };
