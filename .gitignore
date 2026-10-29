@@ -1,4 +1,15 @@
 node_modules
 dist
+build
+.next
 *.tsbuildinfo
 .DS_Store
+.env
+.env.*
+!.env.example
+*.log
+.cache
+.vite
+coverage
+*.pem
+*.key

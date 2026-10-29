@@ -9,7 +9,7 @@ The full design is in [`SPEC.md`](SPEC.md). Choices made where the spec was ambi
 
 ## Modes
 
-- **Standard**: most careers peak in the 60s and 70s (average in the low 70s); the NBA is
+- **Regular guy**: most careers peak in the 60s and 70s (average in the low 70s); the NBA is
   common, stardom is earned.
 - **Reality hits hard**: most careers end short of the NBA (peaks average about 60), and those
   who make it fight for a spot.
@@ -23,6 +23,11 @@ Balance reports (Word) are in [`docs/reports/`](docs/reports/).
 ```bash
 npm install
 npm run dev        # play in the browser (Vite prints the URL)
+```
+
+Step-by-step setup: [`SETUP.md`](SETUP.md).
+
+```bash
 npm test           # unit tests + balance guard
 npm run sim -- --careers 2000 --policy both --seed 1   # balance harness
 npm run build      # static build in dist/
