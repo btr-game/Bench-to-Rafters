@@ -6,7 +6,7 @@ import { shuffle } from '../../engine/rng';
 import { useStore } from '../../store';
 import { MiniBonus } from './MiniBonus';
 import { DunkStage } from './DunkStage';
-import { LegendArt } from '../art/Legend';
+import { LegendBust } from '../art/Legend';
 import { DUNKER_TEAMS } from '../../content/legendNumbers';
 import { kitFor, styleLeague } from '../art/Player';
 import { team as teamOf } from '../selectors';
@@ -172,7 +172,7 @@ function Board({ list, title }: { list: Entry[]; title: string }) {
       <div className="sec-title">{title}</div>
       {list.map((e, k) => (
         <div key={e.d.name} className={`dunk-row${e.d.me ? ' mine' : ''}`}>
-          {e.d.me ? <span /> : <LegendArt name={e.d.name} pos="C" team={DUNKER_TEAMS[e.d.name] ?? ''} kit="road" size={34} />}
+          {e.d.me ? <span /> : <LegendBust name={e.d.name} team={DUNKER_TEAMS[e.d.name] ?? ''} kit="road" size={40} />}
           <b>
             {k + 1}. {e.d.name}
           </b>
@@ -311,7 +311,7 @@ export function DunkGame() {
             <span className="small muted">Up against</span>
             {field.map((f) => (
               <span key={f.name} className="field-who">
-                <LegendArt name={f.name} pos="C" team={DUNKER_TEAMS[f.name] ?? ''} kit="road" size={52} />
+                <LegendBust name={f.name} team={DUNKER_TEAMS[f.name] ?? ''} kit="road" size={60} />
                 <small>{f.name}</small>
               </span>
             ))}

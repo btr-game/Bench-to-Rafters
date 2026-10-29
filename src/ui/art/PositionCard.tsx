@@ -61,7 +61,7 @@ export function PositionCard({ pos, name, full, height, number, playerName, on, 
             <path key={p.fill} d={p.d} fill={p.fill} />
           ))}
         </svg>
-        <PlayerArt name={playerName} number={number} pos={pos} kitData={{ base: st.color, ink: '#FFFFFF', trim: mix(st.color, '#000000', 0.45), word: name }} size={Math.round(92 * scale)} />
+        <PlayerArt name={playerName} number={number} pos={pos} kitData={{ base: st.color, ink: '#FFFFFF', trim: mix(st.color, '#000000', 0.45), word: name }} size={Math.round(118 * scale)} />
       </span>
       <span className="pos-role">{st.role}</span>
       <span className="pos-height">{height}</span>

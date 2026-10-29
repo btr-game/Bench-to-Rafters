@@ -9,7 +9,7 @@ import type { GameState } from '../../engine/types';
 import { shuffle } from '../../engine/rng';
 import { MiniBonus } from './MiniBonus';
 import { ThreesCourt, type ShotResult } from './ThreesCourt';
-import { LegendArt } from '../art/Legend';
+import { LegendBust } from '../art/Legend';
 import { PlayerArt } from '../art/Player';
 import { TEAM_STYLE, genericKits } from '../../content/teamStyle';
 import { team as teamOf } from '../selectors';
@@ -216,7 +216,7 @@ export function ThreesGame() {
           <div className="plans">
             {pool.map((s) => (
               <button key={s.name} className="choice shooter-choice" onClick={() => start(s)}>
-                {s.me && game ? <PlayerArt name={s.name} number={game.player.number} pos="SF" kitData={kitOf(s, game)} size={56} /> : <LegendArt name={s.name} pos="SF" team={s.team} kit="road" size={56} />}
+                {s.me && game ? <PlayerArt name={s.name} number={game.player.number} pos="SF" kitData={kitOf(s, game)} size={84} /> : <LegendBust name={s.name} team={s.team} kit="road" size={84} />}
                 <span className="label">{s.me ? `${s.name} (your player)` : s.name}</span>
                 <small>{s.skill >= 95 ? 'Elite stroke: a wide green zone' : s.skill >= 90 ? 'Pure shooter' : s.skill >= 80 ? 'Good shooter' : 'Streaky: a narrow green zone'}</small>
               </button>
