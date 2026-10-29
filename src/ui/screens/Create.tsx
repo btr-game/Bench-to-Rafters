@@ -63,6 +63,24 @@ export function Create() {
   const [mode, setMode] = useState<Mode>('standard');
   const [country, setCountry] = useState(''); // '' = the game decides, by real-world odds
 
+  // round 16: random picks, shown as picked (the same one never comes up twice in a row)
+  const [rolled, setRolled] = useState<{ pos?: boolean; hand?: boolean; arch?: boolean }>({});
+  const other = <T,>(list: readonly T[], now: T): T => {
+    const rest = list.filter((x) => x !== now);
+    return rest[Math.floor(Math.random() * rest.length)];
+  };
+  const randomPos = () => {
+    choosePos(other(POSITIONS, pos));
+    setRolled((r) => ({ ...r, pos: true, arch: false }));
+  };
+  const randomHand = () => {
+    setHand(Math.random() < 0.12 ? 'L' : 'R'); // about one player in eight is left-handed
+    setRolled((r) => ({ ...r, hand: true }));
+  };
+  const randomArch = () => {
+    setArch(other(ARCHETYPES[pos].map((_, i) => i), arch));
+    setRolled((r) => ({ ...r, arch: true }));
+  };
   const choosePos = (p: Pos) => {
     setPos(p);
     setCands(cards(p));
@@ -78,6 +96,7 @@ export function Create() {
     setCands(cards(p));
     setArch(Math.floor(Math.random() * ARCHETYPES[p].length));
     setHand(Math.random() < 0.12 ? 'L' : 'R');
+    setRolled({ pos: true, hand: true, arch: true });
     const shuffled = [...ATTRS].sort(() => Math.random() - 0.5);
     setFocus(shuffled.slice(0, 2));
   };
@@ -215,26 +234,56 @@ export function Create() {
               <legend>{UI.create.position}</legend>
               <div className="seg">
                 {POSITIONS.map((p) => (
-                  <button key={p} aria-pressed={p === pos} onClick={() => choosePos(p)} title={NAMES.pos[p]}>
+                  <button
+                    key={p}
+                    aria-pressed={p === pos}
+                    onClick={() => {
+                      choosePos(p);
+                      setRolled((r) => ({ ...r, pos: false, arch: false }));
+                    }}
+                    title={NAMES.pos[p]}
+                  >
                     {p}
                   </button>
                 ))}
+                <button className="seg-random" onClick={randomPos} title="Pick a position at random">
+                  Random
+                </button>
               </div>
               <p className="muted small">
                 {NAMES.pos[pos]} · grows to {ht(hMin)}–{ht(hMax)}
+                {rolled.pos && <span className="rolled"> · picked at random</span>}
               </p>
             </fieldset>
             <fieldset>
               <legend>Dominant hand</legend>
               <div className="seg">
-                <button aria-pressed={hand === 'R'} onClick={() => setHand('R')}>
+                <button
+                  aria-pressed={hand === 'R'}
+                  onClick={() => {
+                    setHand('R');
+                    setRolled((r) => ({ ...r, hand: false }));
+                  }}
+                >
                   Right
                 </button>
-                <button aria-pressed={hand === 'L'} onClick={() => setHand('L')}>
+                <button
+                  aria-pressed={hand === 'L'}
+                  onClick={() => {
+                    setHand('L');
+                    setRolled((r) => ({ ...r, hand: false }));
+                  }}
+                >
                   Left
                 </button>
+                <button className="seg-random" onClick={randomHand} title="Real-world odds: about one in eight is left-handed">
+                  Random
+                </button>
               </div>
-              <p className="muted small">Lefties are rarer, so defenders see them less. Either way, your weak hand starts raw.</p>
+              <p className="muted small">
+                {rolled.hand && <span className="rolled">Rolled: {hand === 'L' ? 'left' : 'right'}-handed (about one player in eight is a lefty). </span>}
+                Lefties are rarer, so defenders see them less. Either way, your weak hand starts raw.
+              </p>
             </fieldset>
             <div className="assigned">
               <div className="kicker">{UI.create.assignedTitle}</div>
@@ -247,15 +296,28 @@ export function Create() {
       {step === 2 && (
         <section className="stack">
           <div className="row">
-            <div className="kicker">{NAMES.pos[pos]} · pick an archetype</div>
+            <div className="kicker">
+              {NAMES.pos[pos]} · pick an archetype{rolled.arch && <span className="rolled"> · {ARCHETYPES[pos][arch].name} picked at random</span>}
+            </div>
             <div className="spacer" />
+            <button className="btn ghost small" onClick={randomArch}>
+              Random
+            </button>
             <button className="btn ghost small" onClick={reroll}>
               {UI.create.otherCandidates}
             </button>
           </div>
           <div className="arch-cards">
             {ARCHETYPES[pos].map((a, i) => (
-              <button key={a.name} className="arch" aria-pressed={i === arch} onClick={() => setArch(i)}>
+              <button
+                key={a.name}
+                className="arch"
+                aria-pressed={i === arch}
+                onClick={() => {
+                  setArch(i);
+                  setRolled((r) => ({ ...r, arch: false }));
+                }}
+              >
                 <h3>{a.name}</h3>
                 <div className="muted small">{a.blurb}</div>
                 <div className="mini-attrs">

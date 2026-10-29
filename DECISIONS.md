@@ -979,3 +979,15 @@ Reached from the start page and from the bottom of Home (a career in progress is
   - Scouting odds refit to 450 careers: NBA 64.6/1.8, All-Star 77.7/1.65, All-NBA 83.1/1.35,
     All-NBA 1st 87.0/2.05, Hall of Fame 90.1/1.15, MVP 90.5/1.15 (logistic centre/scale on the
     peak).
+
+## Round 16
+
+- **Random picks on the start page:** a Random button next to position and dominant hand, and
+  one on the archetype step. Each picks at once and says so ("picked at random", or "Rolled:
+  left-handed"). Position and archetype never repeat the last pick, so a tap always changes
+  something; the hand rolls real-world odds (12% left, the same as the Random button at the top,
+  which now marks all three as random). Choosing by hand clears the mark.
+- **Shop:** Enter always leaves the shop, even when an item's button still has focus after a
+  purchase (the browser would otherwise press that button again). The leave button shows the key
+  and takes no number tag.
+- **Manual:** a Starting a career section.

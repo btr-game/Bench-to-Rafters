@@ -1158,3 +1158,7 @@ button.todo-now { width: 100%; text-align: left; border: 0; font: inherit; color
 .mode-badge .short { display: none; }
 @media (max-width: 1279px) { .mode-badge .long { display: none; } .mode-badge .short { display: inline; } }
 .guide-quick li { align-content: start; }
+/* round 16: random picks on the creation pages */
+.seg .seg-random { border-style: dashed; color: var(--accent); font-weight: 700; }
+.seg .seg-random:hover { border-color: var(--accent); }
+.rolled { color: var(--accent); font-weight: 600; }

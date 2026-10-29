@@ -27,6 +27,17 @@ const SECTIONS: { title: string; where: string; items: [string, string][] }[] = 
     ],
   },
   {
+    title: 'Starting a career',
+    where: 'The start page',
+    items: [
+      ['Difficulty', 'Regular guy, Reality hits hard or Shoot for the stars. It cannot change once the career starts, and it is always shown next to the name of the game.'],
+      ['Where you start', 'Pick a country for its road to the pros (academies, school leagues, college), or Surprise me for real-world odds. Your hometown and first school are revealed when the career begins.'],
+      ['Position, hand and archetype', 'Pick each yourself, or tap Random next to it: Random never repeats the last pick, and the dominant hand rolls real-world odds (about one player in eight is a lefty). Random at the top rolls everything at once.'],
+      ['Focus stats', 'Two ratings that grow about twice as fast. You can change them later only after a breakthrough season.'],
+      ['Continue', 'A career in progress is saved on this device: the start page offers to continue it.'],
+    ],
+  },
+  {
     title: 'Every season',
     where: 'Home, the main card in the middle',
     items: [
