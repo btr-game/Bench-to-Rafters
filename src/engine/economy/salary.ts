@@ -23,7 +23,7 @@ const ROLE_BUMP: Record<RoleKey, number> = { key: 1.1, starter: 1.05, sixth: 1, 
 /** Market value in $M per season (§12). */
 export function marketValue(year: number, ovr: number, age: number, rep: number, role: RoleKey, service: number): number {
   const cap = capFor(year);
-  const share = curve(ovr) * MARKET_AGE_DROP(age) * ROLE_BUMP[role] * (1 + rep / 400);
+  const share = curve(ovr) * MARKET_AGE_DROP(age) * ROLE_BUMP[role] * (1 + rep / 250); // round 15: reputation pays more (up to +40%, was +25%)
   const raw = cap * share;
   return Math.round(Math.min(cap * MAX_SHARE(service), Math.max(minSalary(year, service), raw)) * 10) / 10;
 }

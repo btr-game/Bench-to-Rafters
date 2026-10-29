@@ -6,7 +6,7 @@ import { NBA_TEAMS } from '../src/content/teams';
 import { growRookie, newLegends, playNext, playSeason } from '../src/engine/mini/legends';
 import * as F from '../src/engine/mini/frontOffice';
 import { contestRng, simRound, shotResult, zoneWidth } from '../src/engine/mini/threes';
-import { canClaimMini, claimMini, claimsUsed, MINI_CLAIMS, miniReward, taperAt } from '../src/engine/career/miniBonus';
+import { canClaimMini, claimMini, claimsUsed, MINI_CLAIMS, MINI_REWARD_MULT, miniReward, taperAt } from '../src/engine/career/miniBonus';
 import { labBestSpend, labBuy, labPlaySeason, labSpreadSpend, LAB_GAME, newLabGame } from '../src/engine/mini/labGame';
 import { bailOut, contestRng as dunkRng, dunkDifficulty, dunkTaps, judge, tapQuality, type DunkDesign } from '../src/engine/mini/dunk';
 import { newGame } from '../src/engine/flow';
@@ -68,14 +68,17 @@ describe('mini-games', () => {
 describe('mini-game career bonuses', () => {
   it('pays two claims a season, the second at half value, tapered near the top, and as credits in the lab', () => {
     const s = newGame(31, { name: 'Bo Nus', number: 1, pos: 'SG', archetype: 0, focus: ['SHT', 'IQ'] });
+    // round 15: the three-point contest opens at shooting 85
+    expect(canClaimMini(s, 'threes')).toBe(false);
+    s.player.attrs.SHT = 86;
     const sht = s.player.attrs.SHT;
     const top = miniReward({ game: 'threes', score: 27, won: true, own: true }).attrs.SHT!;
     expect(top).toBe(4);
     expect(canClaimMini(s, 'threes')).toBe(true);
     claimMini(s, { game: 'threes', score: 27, won: true, own: true });
     // Regular guy turns the rating part down (round 14)
-    const dial = modeDial(s.mode, 'mini');
-    expect(dial).toBeLessThan(1);
+    const dial = modeDial(s.mode, 'mini') * MINI_REWARD_MULT;
+    expect(modeDial(s.mode, 'mini')).toBeLessThan(1);
     expect(s.player.attrs.SHT).toBeCloseTo(sht + Math.round(top * dial * taperAt(sht) * 10) / 10, 6);
     const mid = s.player.attrs.SHT;
     claimMini(s, { game: 'threes', score: 27, won: true, own: true });
@@ -83,15 +86,17 @@ describe('mini-game career bonuses', () => {
     expect(claimsUsed(s)).toBe(MINI_CLAIMS.perSeason);
     expect(canClaimMini(s, 'legends')).toBe(false);
     expect(claimMini(s, { game: 'threes', score: 30, won: true, own: true })).toBe('');
-    expect(taperAt(93)).toBeLessThan(taperAt(86));
-    expect(taperAt(86)).toBeLessThan(taperAt(70));
+    expect(taperAt(96)).toBeLessThan(taperAt(91));
+    expect(taperAt(91)).toBeLessThan(taperAt(70));
     s.year += 1;
     expect(canClaimMini(s, 'threes')).toBe(true);
     const lab = newGame(32, { name: 'La B', number: 1, pos: 'SG', archetype: 0, focus: [], mode: 'lab' });
     const iq = lab.player.attrs.IQ;
+    expect(claimMini(lab, { game: 'legends', reached: 'champion' })).toBe(''); // locked until OVR 90
+    lab.miniOpen = ['legends'];
     claimMini(lab, { game: 'legends', reached: 'champion' });
     expect(lab.player.attrs.IQ).toBe(iq);
-    expect(lab.player.lab!.credits).toBeCloseTo(4.5, 6);
+    expect(lab.player.lab!.credits).toBeCloseTo(4.5 * MINI_REWARD_MULT, 6);
   });
 });
 

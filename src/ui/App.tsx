@@ -1,6 +1,7 @@
 import { GuideButton } from './components/Guide';
 import { useEffect, type ReactNode } from 'react';
 import type { GameState } from '../engine/types';
+import { MODES } from '../engine/balance';
 import { NextStep, SettingsMenu, useKeys } from './components/Settings';
 import { tabKey } from './selectors';
 import { useStore, type Tab } from '../store';
@@ -42,6 +43,32 @@ function TabBar({ g, top = false }: { g: GameState; top?: boolean }) {
         );
       })}
     </nav>
+  );
+}
+
+/** Simple text, one tap from anywhere (round 15: next to Fast break). */
+function SimpleChip() {
+  const on = useStore((s) => s.simple);
+  const toggle = useStore((s) => s.toggleSimple);
+  return (
+    <button className={`fast-toggle${on ? ' on' : ''}`} aria-pressed={on} onClick={toggle} title="Simple text: hide descriptions and flavour, keep the choices">
+      <span className="fast-dot" aria-hidden="true" />
+      Simple<span className="hide-narrow"> text</span>
+    </button>
+  );
+}
+
+const SHORT_MODE: Record<string, string> = { standard: 'Regular', reality: 'Reality', stars: 'Stars', fast: 'Fast', lab: 'Lab' };
+
+/** The difficulty, always in view (round 15), and Master mode when it is on. */
+function ModeBadge({ g }: { g: GameState }) {
+  const master = useStore((s) => s.master);
+  return (
+    <span className={`mode-badge mode-${g.mode}`} title="Difficulty">
+      <span className="long">{MODES[g.mode]?.name ?? g.mode}</span>
+      <span className="short">{SHORT_MODE[g.mode] ?? g.mode}</span>
+      {master && <b> · Master</b>}
+    </span>
   );
 }
 
@@ -87,13 +114,17 @@ export function App() {
     <>
       <div className="wrap">
         <header className="top">
-          <div className="brand">
-            Bench to <span>Rafters</span>
+          <div className="brand-wrap">
+            <div className="brand">
+              Bench to <span>Rafters</span>
+            </div>
+            <ModeBadge g={game} />
           </div>
           <TabBar g={game} top />
           <div className="top-right">
             <NextStep g={game} />
             <FastChip g={game} />
+            <SimpleChip />
             <GuideButton />
             <SettingsMenu g={game} />
           </div>

@@ -3,7 +3,12 @@
 // in tabs) and a soft transition between every step.
 
 import { useMemo, useState } from 'react';
-import { FOCUS_LABEL, growRookie, legendTeams, LEGENDS, newLegends, PLAN_LABEL, playNext, playSeason, rookieTag, scoutNext, seedOf, standings, STYLE_HINT, type Focus, type LegendsState, type LTeam, type Plan } from '../../engine/mini/legends';
+import { careerTag, chemistryOf, FOCUS_LABEL, growRookie, legendTeams, LEGENDS, newLegends, newLegendsCareer, PLAN_LABEL, playNext, playSeason, rookieTag, scoutNext, seedOf, standings, STYLE_HINT, type Chemistry, type Focus, type LegendsState, type LTeam, type Plan } from '../../engine/mini/legends';
+import { FRANCHISE_IDENTITY } from '../../content/franchiseIdentity';
+import { useStore } from '../../store';
+import { miniProgress } from '../../engine/career/miniBonus';
+import { ovrOf } from '../../engine/player/ovr';
+import type { Pos } from '../../engine/types';
 import { FIRST_NAMES, LAST_NAMES } from '../../content/names';
 import type { Bracket, League, Moment } from '../../engine/types';
 import { TextBracket } from '../components/TextBracket';
@@ -30,6 +35,38 @@ function Five({ t }: { t: LTeam }) {
   );
 }
 
+/** Your career player among the legends (round 15), when the career has unlocked it. */
+interface CareerMe {
+  name: string;
+  pos: Pos;
+  ovr: number;
+  tag: Focus;
+}
+
+function ChemBox({ c }: { c: Chemistry }) {
+  return (
+    <div className={`chem chem-${c.label.toLowerCase()}`}>
+      <div className="row" style={{ gap: 8 }}>
+        <span className="kicker">Chemistry</span>
+        <b>{c.label}</b>
+        <span className="small muted">
+          ({c.value >= 0 ? '+' : ''}
+          {c.value} team rating)
+        </span>
+      </div>
+      <ul>
+        {c.notes.map((n) => (
+          <li key={n}>{n}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/** The best chemistry he could have on a team, over every legend he could replace. */
+const bestChem = (t: LTeam, me: CareerMe): Chemistry =>
+  t.five.map((p) => chemistryOf(t.id, t.five, me, p.name)).sort((a, b) => b.value - a.value)[0];
+
 function asLeague(st: LegendsState): { b: Bracket; lg: League } {
   const seeds: Record<string, number> = {};
   for (const t of st.teams) seeds[t.id] = seedOf(st, t.id);
@@ -43,12 +80,16 @@ function asLeague(st: LegendsState): { b: Bracket; lg: League } {
 }
 
 /** Step 1: every franchise in one line, grouped by tier. */
-function Picker({ teams, onPick }: { teams: LTeam[]; onPick: (id: string) => void }) {
+function Picker({ teams, onPick, me }: { teams: LTeam[]; onPick: (id: string) => void; me: CareerMe | null }) {
   return (
     <section className="stack stage-in">
       <div className="kicker">Legends showdown</div>
       <h2 className="title">Pick your franchise</h2>
-      <p className="small muted">Every team plays with its all-time starting five. You add one super-rookie.</p>
+      <p className="small muted">
+        {me
+          ? `Every team plays with its all-time starting five, and ${me.name} (${me.pos}, OVR ${me.ovr}, ${FOCUS_LABEL[me.tag].name.toLowerCase()} type) takes one legend's place. Each franchise has an identity: the right fit is worth real chemistry.`
+          : 'Every team plays with its all-time starting five. You add one super-rookie. Each franchise has an identity: build a rookie who fits it.'}
+      </p>
       {TIERS.map((tier) => {
         const list = teams.filter((_, i) => tierOf(i + 1) === tier);
         return (
@@ -58,8 +99,11 @@ function Picker({ teams, onPick }: { teams: LTeam[]; onPick: (id: string) => voi
             </div>
             {list.map((t) => (
               <button key={t.id} className="lg-row" style={{ ['--team' as string]: t.color }} onClick={() => onPick(t.id)}>
-                <b>{t.name}</b>
+                <b>
+                  {t.name} <span className="lg-ident">{FRANCHISE_IDENTITY[t.id]?.name}</span>
+                </b>
                 <span className="muted small">{t.five.map((p) => last(p.name)).join(' · ')}</span>
+                {me && <span className={`lg-chem chem-${bestChem(t, me).label.toLowerCase()}`}>{bestChem(t, me).label}</span>}
                 <span className="lg-rating">{t.rating.toFixed(1)}</span>
               </button>
             ))}
@@ -71,9 +115,11 @@ function Picker({ teams, onPick }: { teams: LTeam[]; onPick: (id: string) => voi
 }
 
 /** Step 2: name the rookie and tap the legend he replaces. */
-function Setup({ t, onBack, onStart }: { t: LTeam; onBack: () => void; onStart: (name: string, bench: string) => void }) {
-  const [name, setName] = useState(() => `${FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)]} ${LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)]}`);
+function Setup({ t, onBack, onStart, me }: { t: LTeam; onBack: () => void; onStart: (name: string, bench: string) => void; me: CareerMe | null }) {
+  const [name, setName] = useState(() => me?.name ?? `${FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)]} ${LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)]}`);
   const [bench, setBench] = useState<string | null>(null);
+  const id = FRANCHISE_IDENTITY[t.id];
+  const chem = me && bench ? chemistryOf(t.id, t.five, me, bench) : null;
   return (
     <section className="stack stage-in">
       <button className="link-btn" onClick={onBack}>
@@ -82,11 +128,22 @@ function Setup({ t, onBack, onStart }: { t: LTeam; onBack: () => void; onStart: 
       <section className="card stack lg-setup" style={{ ['--team' as string]: t.color }}>
         <div className="kicker">Your franchise</div>
         <h2 className="title">{t.name}</h2>
-        <div className="field">
-          <label htmlFor="rk-name">Your super-rookie</label>
-          <input id="rk-name" type="text" maxLength={28} value={name} onChange={(e) => setName(e.target.value)} />
-        </div>
-        <div className="small">Tap the legend he replaces:</div>
+        {id && (
+          <p className="lg-identity">
+            <b>{id.name}.</b> {id.text} <span className="muted">Fits: {id.wants.map((w) => FOCUS_LABEL[w].name.toLowerCase()).join(', ')} types.</span>
+          </p>
+        )}
+        {me ? (
+          <p className="small">
+            <b>{me.name}</b> · {me.pos} · OVR {me.ovr} · {FOCUS_LABEL[me.tag].name} type
+          </p>
+        ) : (
+          <div className="field">
+            <label htmlFor="rk-name">Your super-rookie</label>
+            <input id="rk-name" type="text" maxLength={28} value={name} onChange={(e) => setName(e.target.value)} />
+          </div>
+        )}
+        <div className="small">Tap the legend {me ? 'you replace' : 'he replaces'}:</div>
         <div className="stack lg-bench">
           {t.five.map((p) => {
             const on = bench === p.name;
@@ -97,14 +154,18 @@ function Setup({ t, onBack, onStart }: { t: LTeam; onBack: () => void; onStart: 
                   <s>{p.name}</s>
                   <b>{name.trim() || 'The Rookie'}</b>
                 </span>
-                <span className="lg-ovr">{on ? 'rookie' : p.ovr}</span>
+                <span className="lg-ovr">{on ? (me ? `you · ${me.ovr}` : 'rookie') : p.ovr}</span>
               </button>
             );
           })}
         </div>
-        <p className="small muted">The rookie counts {LEGENDS.rookieWeight === 3 ? 'three times' : 'twice'} as much as a legend, and his form can swing a series.</p>
+        {chem && <ChemBox c={chem} />}
+        <p className="small muted">
+          {me ? 'You count' : 'The rookie counts'} {LEGENDS.rookieWeight === 3 ? 'three times' : 'twice'} as much as a legend, and {me ? 'your' : 'his'} form can swing a series.
+          {me ? '' : ' Chemistry is set when he joins, from the type he becomes.'}
+        </p>
         <button className="btn" disabled={!bench} onClick={() => onStart(name, bench!)}>
-          Draft him
+          {me ? 'Join them' : 'Draft him'}
         </button>
       </section>
     </section>
@@ -113,6 +174,13 @@ function Setup({ t, onBack, onStart }: { t: LTeam; onBack: () => void; onStart: 
 
 export function LegendsGame() {
   const teams = useMemo(() => legendTeams().sort((a, b) => b.rating - a.rating), []);
+  const game = useStore((s) => s.game);
+  // round 15: with a career at OVR 90+, his own player joins the legends
+  const careerMe: CareerMe | null = useMemo(() => {
+    if (!game || game.step === 'retired' || !miniProgress(game, 'legends').open) return null;
+    const p = game.player;
+    return { name: p.name, pos: p.pos, ovr: Math.round(ovrOf(p.attrs, p.pos)), tag: careerTag(p.attrs) };
+  }, [game]);
   const [st, setSt] = useState<LegendsState | null>(null);
   const [pick, setPick] = useState<string | null>(null);
   const [reel, setReel] = useState(false);
@@ -132,9 +200,15 @@ export function LegendsGame() {
   if (!st) {
     const t = teams.find((x) => x.id === pick);
     return t ? (
-      <Setup key={t.id} t={t} onBack={() => setPick(null)} onStart={(name, bench) => setSt(newLegends(Math.floor(Math.random() * 2 ** 31), t.id, name, bench))} />
+      <Setup
+        key={t.id}
+        t={t}
+        me={careerMe}
+        onBack={() => setPick(null)}
+        onStart={(name, bench) => setSt(careerMe ? newLegendsCareer(Math.floor(Math.random() * 2 ** 31), t.id, careerMe, bench) : newLegends(Math.floor(Math.random() * 2 ** 31), t.id, name, bench))}
+      />
     ) : (
-      <Picker teams={teams} onPick={setPick} />
+      <Picker teams={teams} onPick={setPick} me={careerMe} />
     );
   }
 
@@ -239,6 +313,7 @@ export function LegendsGame() {
               </div>
               <div className="lg-big">{Math.round(r.ovr)}</div>
             </div>
+            {st.chem && <ChemBox c={st.chem} />}
             {note && <p className="small lg-note">{note}</p>}
             <Five t={me} />
             <p className="small muted">29 games, one against every other all-time five. The top eight in each conference make the playoffs.</p>

@@ -1,7 +1,7 @@
 // Full-screen interstitials: the half-season ticker, the new-season card, and story
 // pages (moments) such as commitments, draft night, awards and the title game.
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { GameState, Moment } from '../../engine/types';
 import { LEVELS } from '../../engine/balance';
 import { useStore, type Transition } from '../../store';
@@ -180,11 +180,14 @@ function Recap({ m }: { m: Moment }) {
   );
 }
 
-function TitleGame({ m, g }: { m: Moment; g: GameState }) {
+function TitleGame({ m, g, onDone }: { m: Moment; g: GameState; onDone?: () => void }) {
   const plays = useMemo(() => buildPlays(m, g.player.name), [m, g.player.name]);
   const n = plays.length;
   const [i, skip] = useTicker(n, Math.max(40, Math.min(160, 6500 / Math.max(1, n))));
   const done = i >= n;
+  useEffect(() => {
+    if (done) onDone?.();
+  }, [done, onDone]);
   const shown = plays.slice(0, i);
   const us = shown.filter((p) => p.us).reduce((s, p) => s + p.pts, 0);
   const them = shown.filter((p) => !p.us).reduce((s, p) => s + p.pts, 0);
@@ -256,7 +259,7 @@ const TAG_LABEL: Record<string, string> = {
 };
 
 /** Three quarters in a blink, then crunch time one play at a time. Skip shows the end. */
-export function FinalReel({ m }: { m: Moment }) {
+export function FinalReel({ m, onDone }: { m: Moment; onDone?: () => void }) {
   const d = m.drama!;
   const game = m.game!;
   const warm = 10;
@@ -268,6 +271,9 @@ export function FinalReel({ m }: { m: Moment }) {
     return () => clearTimeout(t);
   }, [i, n]);
   const done = i >= n;
+  useEffect(() => {
+    if (done) onDone?.();
+  }, [done, onDone]);
   const shown = d.plays.slice(0, Math.max(0, i - warm));
   const frac = Math.min(1, i / warm);
   const us = Math.round(d.start.us * frac) + shown.filter((p) => p.side === 'us').reduce((a, p) => a + p.pts, 0);
@@ -373,19 +379,70 @@ const KICKER: Record<Moment['kind'], string> = {
   tournament: 'Tournament',
 };
 
+const CONFETTI = ['#F5C542', '#FFFFFF', '#E8590C', '#2F9E44', '#1C7ED6', '#C2255C'];
+
+/**
+ * Round 15: titles and medals celebrate, early exits and lost finals hurt. Confetti for a title
+ * or gold, a medal swinging in for silver and bronze, a grey-out and a stamp when it ends badly.
+ * Purely visual (CSS animations; nothing moves with reduced motion).
+ */
+function MoodFx({ mood, color }: { mood: NonNullable<Moment['mood']>; color: string }) {
+  if (mood === 'champion' || mood === 'gold')
+    return (
+      <div className="fx-layer" aria-hidden="true">
+        <div className="fx-confetti">
+          {Array.from({ length: 70 }, (_, i) => (
+            <i
+              key={i}
+              style={{
+                left: `${(i * 37 + 11) % 100}%`,
+                background: i % 4 === 0 ? color : CONFETTI[i % CONFETTI.length],
+                animationDelay: `${(i % 14) * 0.09}s`,
+                animationDuration: `${2.6 + (i % 6) * 0.35}s`,
+                width: `${6 + (i % 3) * 3}px`,
+                height: `${10 + (i % 4) * 3}px`,
+              }}
+            />
+          ))}
+        </div>
+        <div className={`fx-stamp win`}>{mood === 'gold' ? 'Gold' : 'Champions'}</div>
+      </div>
+    );
+  if (mood === 'silver' || mood === 'bronze')
+    return (
+      <div className="fx-layer" aria-hidden="true">
+        <div className={`fx-medal ${mood}`}>
+          <span className="fx-ribbon" />
+          <span className="fx-disc">{mood === 'silver' ? '2' : '3'}</span>
+        </div>
+      </div>
+    );
+  return (
+    <div className="fx-layer" aria-hidden="true">
+      <div className={`fx-stamp lose`}>{mood === 'heartbreak' ? 'So close' : 'Eliminated'}</div>
+    </div>
+  );
+}
+
 function MomentPage({ m, g }: { m: Moment; g: GameState }) {
   const dismiss = useStore((s) => s.dismissMoment);
   const ref = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     ref.current?.focus({ preventScroll: true });
   }, [m.id]);
+  // a reel plays first; the celebration (or the heartbreak) lands when it ends
+  const reel = !!m.game && (!!m.drama || m.kind === 'title');
+  const [ended, setEnded] = useState(!reel);
+  useEffect(() => setEnded(!reel), [m.id, reel]);
+  const end = useCallback(() => setEnded(true), []);
   return (
-    <div className={`overlay moment ${m.kind}`} style={{ ['--team' as string]: m.color }} role="dialog" aria-modal="true" aria-label={m.title}>
+    <div className={`overlay moment ${m.kind}${m.mood && ended ? ` mood-${m.mood}` : ''}`} style={{ ['--team' as string]: m.color }} role="dialog" aria-modal="true" aria-label={m.title}>
+      {m.mood && ended && <MoodFx key={m.id} mood={m.mood} color={m.color} />}
       <div className="overlay-inner" key={m.id}>
         {m.drama && m.game ? (
-          <FinalReel m={m} />
+          <FinalReel m={m} onDone={end} />
         ) : m.kind === 'title' && m.game ? (
-          <TitleGame m={m} g={g} />
+          <TitleGame m={m} g={g} onDone={end} />
         ) : m.kind === 'draft' ? (
           <DraftReveal m={m} />
         ) : (

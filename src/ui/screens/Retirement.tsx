@@ -212,7 +212,12 @@ export function Retirement({ g }: { g: GameState }) {
         <div className="verdict">{v.tier}</div>
         <p className="lede">{v.line}</p>
         {hof && <div className="toast">{hof === 'first' ? 'Inducted into the Hall of Fame on the first ballot.' : 'Inducted into the Hall of Fame.'}</div>}
-        <ShareBar g={g} />
+        <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+          <ShareBar g={g} />
+          <button className="btn ghost" onClick={reset}>
+            {UI.newCareer}
+          </button>
+        </div>
       </section>
       <NbaTeams g={g} />
       <RaftersSummary

@@ -15,7 +15,9 @@ import { ovrOf } from '../player/ovr';
 import { labCost } from '../career/lab';
 import { NAMES } from '../../content/strings';
 
-export const LAB_GAME = { seasons: 10, startAge: 19, startOvr: 58, step: 3, credits: [12, 11, 10, 9, 8, 7, 6, 5, 4, 3], twistChance: 0.45 };
+// round 15 ("too difficult; somewhere between Stars and Regular"): a higher start, about 25% more
+// credits, lower award bars and a gentler grade scale
+export const LAB_GAME = { seasons: 10, startAge: 19, startOvr: 60, step: 3, credits: [14, 13, 12, 10, 9, 8, 7, 6, 5, 4], twistChance: 0.45 };
 
 export interface LabSeason {
   age: number;
@@ -131,9 +133,9 @@ export function labPlaySeason(st: LabGameState): LabSeason | null {
   const ast = clamp(1 + (w('PLY') - 40) * 0.12 + (st.pos === 'PG' ? 1.5 : 0), 0.5, 13);
   const wins = Math.round(clamp(41 + (lvl - 78) * 2.2 + normal(r, 0, 6), 15, 68));
   const awards: string[] = [];
-  if (lvl >= 79 && chance(r, 0.75)) awards.push('All-Star');
-  if (lvl >= 86 && chance(r, 0.7)) awards.push(lvl >= 91 ? 'All-NBA 1st Team' : 'All-NBA');
-  if (lvl >= 90 && wins >= 50 && chance(r, 0.4)) awards.push('MVP');
+  if (lvl >= 77 && chance(r, 0.8)) awards.push('All-Star');
+  if (lvl >= 84 && chance(r, 0.75)) awards.push(lvl >= 89 ? 'All-NBA 1st Team' : 'All-NBA');
+  if (lvl >= 89 && wins >= 48 && chance(r, 0.45)) awards.push('MVP');
   if (wins >= 52 && chance(r, 0.12 + Math.max(0, lvl - 85) * 0.03)) awards.push('NBA Champion');
   if (w('PER') + w('INT') >= 175 && chance(r, 0.4)) awards.push('Defensive Player of the Year');
   const season: LabSeason = {
@@ -157,9 +159,9 @@ export function labGrade(st: LabGameState): { letter: string; text: string } {
   const all = st.history.flatMap((h) => h.awards);
   const n = (a: string) => all.filter((x) => x === a).length;
   const score = n('MVP') * 6 + n('NBA Champion') * 4 + n('All-NBA 1st Team') * 3 + n('All-NBA') * 2 + n('All-Star') + n('Defensive Player of the Year') * 2;
-  if (score >= 30) return { letter: 'A+', text: 'A perfect build. The lab will study him for years.' };
-  if (score >= 18) return { letter: 'A', text: 'A superstar, by design.' };
-  if (score >= 9) return { letter: 'B', text: 'An All-Star build.' };
-  if (score >= 3) return { letter: 'C', text: 'A solid pro.' };
+  if (score >= 26) return { letter: 'A+', text: 'A perfect build. The lab will study him for years.' };
+  if (score >= 15) return { letter: 'A', text: 'A superstar, by design.' };
+  if (score >= 7) return { letter: 'B', text: 'An All-Star build.' };
+  if (score >= 2) return { letter: 'C', text: 'A solid pro.' };
   return { letter: 'D', text: 'The experiment needs work.' };
 }

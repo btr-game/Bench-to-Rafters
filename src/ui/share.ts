@@ -2,7 +2,7 @@
 // be saved as a PNG or sent through the phone's share sheet.
 
 import type { GameState } from '../engine/types';
-import { championships, hallOfFame, raftersTeams, verdictFor } from '../engine/awards/legacy';
+import { championships, count, hallOfFame, nbaCareerPoints, nbaTitles, raftersTeams, verdictFor } from '../engine/awards/legacy';
 import { seasonLabel } from './format';
 import { TIERS, legacyRank, tierCounts } from '../engine/awards/tiers';
 import { MODES } from '../engine/balance';
@@ -20,6 +20,45 @@ function nbaLine(g: GameState): string {
   if (rows.length === 0) return '';
   const t = rows.reduce((a, h) => ({ gp: a.gp + h.line.gp, pts: a.pts + h.line.pts, reb: a.reb + h.line.reb, ast: a.ast + h.line.ast }), { gp: 0, pts: 0, reb: 0, ast: 0 });
   return `${(t.pts / t.gp).toFixed(1)} PTS · ${(t.reb / t.gp).toFixed(1)} REB · ${(t.ast / t.gp).toFixed(1)} AST · ${rows.length} NBA seasons`;
+}
+
+/** The team he gave the most seasons to (NBA first): the card wears its colour (round 15). */
+function mainTeam(g: GameState): { name: string; color: string } | null {
+  const pool = g.history.filter((h) => h.level === 'NBA' && h.line.gp > 0);
+  const rows = pool.length ? pool : g.history;
+  const n = new Map<string, { name: string; color: string; k: number }>();
+  for (const h of rows) {
+    const x = n.get(h.teamName) ?? { name: h.teamName, color: h.teamColor, k: 0 };
+    x.k++;
+    n.set(h.teamName, x);
+  }
+  return [...n.values()].sort((a, b) => b.k - a.k)[0] ?? null;
+}
+
+/** A jersey in his team's colour with his number (the portrait slot's stand-in, as on the pages). */
+function jersey(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, color: string, num: number): void {
+  const k = size / 100;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(k, k);
+  ctx.fillStyle = color;
+  ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  for (const [i, [px, py]] of [[30, 8], [42, 8], [50, 18], [58, 8], [70, 8], [90, 22], [82, 40], [74, 36], [74, 94], [26, 94], [26, 36], [18, 40], [10, 22]].entries()) {
+    if (i === 0) ctx.moveTo(px, py);
+    else ctx.lineTo(px, py);
+  }
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  const n = parseInt(color.replace('#', ''), 16);
+  const lum = 0.299 * ((n >> 16) & 255) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255);
+  ctx.fillStyle = lum > 165 ? '#111' : '#fff';
+  ctx.font = `900 34px ${DISPLAY}`;
+  ctx.textAlign = 'center';
+  ctx.fillText(String(num), 50, 72);
+  ctx.restore();
 }
 
 function wrap(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, max: number, lh: number): number {
@@ -52,14 +91,19 @@ export async function drawCareerCard(g: GameState): Promise<HTMLCanvasElement> {
   const hof = hallOfFame(g);
   const rafters = raftersTeams(g).map((id) => NBA_TEAMS.find((t) => t.abbr === id)!).filter(Boolean);
   const accent = '#ff6b2c';
+  const team = mainTeam(g);
+  const tc = team?.color ?? accent;
 
-  // background
+  // background, with his main team's colour along the top and down the side of the name box
   ctx.fillStyle = '#121418';
   ctx.fillRect(0, 0, W, H);
-  ctx.fillStyle = accent;
+  ctx.fillStyle = tc;
   ctx.fillRect(0, 0, W, 14);
   ctx.fillStyle = '#1b1e24';
   ctx.fillRect(60, 120, W - 120, 330);
+  ctx.fillStyle = tc;
+  ctx.fillRect(60, 120, 10, 330);
+  jersey(ctx, 92, 150, 150, tc, p.number);
 
   ctx.textBaseline = 'alphabetic';
   ctx.fillStyle = '#f4f1ea';
@@ -77,13 +121,18 @@ export async function drawCareerCard(g: GameState): Promise<HTMLCanvasElement> {
   // identity and peak OVR
   ctx.fillStyle = '#9aa0a6';
   ctx.font = `500 24px ${MONO}`;
-  ctx.fillText(`#${p.number} · ${NAMES.pos[p.pos].toUpperCase()} · ${p.archetype.toUpperCase()}${p.anomaly ? ` · ${p.anomaly.toUpperCase()}` : ''}`, 96, 180);
+  ctx.fillText(`${NAMES.pos[p.pos].toUpperCase()} · ${(p.ringChaser ?? p.archetype).toUpperCase()}${p.anomaly ? ` · ${p.anomaly.toUpperCase()}` : ''}`, 262, 180);
   ctx.fillStyle = '#f4f1ea';
-  ctx.font = `800 92px ${DISPLAY}`;
-  const nameBottom = wrap(ctx, p.name.toUpperCase(), 96, 270, 640, 88);
+  ctx.font = `800 84px ${DISPLAY}`;
+  const nameBottom = wrap(ctx, p.name.toUpperCase(), 262, 262, 500, 80);
   ctx.fillStyle = '#c9c4ba';
   ctx.font = `400 26px ${BODY}`;
-  ctx.fillText(`${p.country} · retired at ${g.retiredAt ?? p.age}`, 96, Math.min(410, nameBottom + 6));
+  ctx.fillText(`${p.country} · retired at ${g.retiredAt ?? p.age}${team ? ` · ${team.name}` : ''}`, 262, Math.min(420, nameBottom + 6));
+  if (p.ringChaser) {
+    ctx.fillStyle = '#ffd76a';
+    ctx.font = `600 22px ${MONO}`;
+    ctx.fillText(`RING CHASER: ${p.ringChaser.toUpperCase()}`, 96, 428);
+  }
   ctx.textAlign = 'center';
   ctx.fillStyle = accent;
   ctx.font = `900 150px ${DISPLAY}`;
@@ -110,7 +159,30 @@ export async function drawCareerCard(g: GameState): Promise<HTMLCanvasElement> {
   ctx.fillStyle = '#9aa0a6';
   ctx.font = `500 24px ${MONO}`;
   ctx.fillText(`${r.pts} LEGACY POINTS${r.rank <= 100 && r.above ? ` · BEHIND ${r.above.name.toUpperCase()}` : ''}`, 60, y);
-  y += 56;
+  y += 40;
+
+  // the numbers, in tiles (round 15)
+  const nbaSeasons = g.history.filter((h) => h.level === 'NBA' && h.line.gp > 0).length;
+  const tiles: [string, string][] = [
+    ['NBA SEASONS', String(nbaSeasons)],
+    ['NBA POINTS', Math.round(nbaCareerPoints(g)).toLocaleString()],
+    ['TITLES', String(nbaTitles(g))],
+    ['MVPS', String(count(g, 'MVP'))],
+    ['ALL-STAR', String(count(g, 'ALLSTAR'))],
+  ];
+  const tw = (W - 120 - 4 * 12) / 5;
+  tiles.forEach(([k, val], i) => {
+    const tx = 60 + i * (tw + 12);
+    ctx.fillStyle = '#1b1e24';
+    ctx.fillRect(tx, y, tw, 104);
+    ctx.fillStyle = i === 2 && val !== '0' ? '#ffd76a' : '#f4f1ea';
+    ctx.font = `900 54px ${DISPLAY}`;
+    ctx.fillText(val, tx + 16, y + 60);
+    ctx.fillStyle = '#9aa0a6';
+    ctx.font = `500 18px ${MONO}`;
+    ctx.fillText(k, tx + 16, y + 90);
+  });
+  y += 104 + 64;
 
   // honours: S and A tier first
   const have = tierCounts(g);
@@ -184,7 +256,7 @@ export async function drawCareerCard(g: GameState): Promise<HTMLCanvasElement> {
   out.height = height;
   const o = out.getContext('2d')!;
   o.drawImage(c, 0, 0, W, height, 0, 0, W, height);
-  o.fillStyle = accent;
+  o.fillStyle = tc;
   o.fillRect(0, height - 14, W, 14);
   return out;
 }

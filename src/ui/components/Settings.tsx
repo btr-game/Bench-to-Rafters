@@ -35,6 +35,8 @@ export function SettingsMenu({ g }: { g: GameState | null }) {
   const togglePlayoffs = useStore((s) => s.togglePlayoffs);
   const reset = useStore((s) => s.reset);
   const saving = useStore((s) => s.saving);
+  const master = useStore((s) => s.master);
+  const toggleMaster = useStore((s) => s.toggleMaster);
 
   useEffect(() => {
     if (!open) return;
@@ -82,11 +84,12 @@ export function SettingsMenu({ g }: { g: GameState | null }) {
             </>
           )}
           <Toggle label="Simple text" note="Hide descriptions, keep the choices." on={simple} onClick={toggleSimple} />
-          <Toggle label="Guide mode" note="Highlights the next thing to do." on={guide} onClick={toggleGuide} />
+          <Toggle label="Guide mode" note={master ? 'Off while Master mode is on.' : 'Highlights the next thing to do.'} on={guide && !master} onClick={toggleGuide} />
+          <Toggle label="Master mode" note="No recommendations: no scouts' calls, fit tags, suggested deals or guide hints. You read the game yourself." on={master} onClick={toggleMaster} />
           <div className="set-keys hide-touch">
             <b>Keyboard</b>
             <span>
-              <kbd>Enter</kbd> continue · <kbd>1</kbd>–<kbd>9</kbd> pick a choice · <kbd>H</kbd> <kbd>S</kbd> <kbd>P</kbd> <kbd>L</kbd> <kbd>R</kbd> tabs
+              <kbd>Enter</kbd> continue (or leave the shop) · <kbd>1</kbd>–<kbd>9</kbd> <kbd>0</kbd> <kbd>-</kbd> <kbd>=</kbd> pick a choice · <kbd>H</kbd> <kbd>S</kbd> <kbd>P</kbd> <kbd>L</kbd> <kbd>R</kbd> tabs · <kbd>F</kbd> fast break · <kbd>G</kbd> guide mode
             </span>
           </div>
           <div className="set-foot">
@@ -125,6 +128,8 @@ export function NextStep({ g }: { g: GameState }) {
 }
 
 const TAB_KEYS: Record<string, Tab> = { h: 'home', s: 'season', p: 'player', l: 'league', r: 'records' };
+// choices 1-9, then 0, - and = for the 10th to 12th (twelve plans fit on the number row)
+const CHOICE_KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '='];
 
 /**
  * Keyboard play on a computer: Enter presses the main button, number keys pick choices (the
@@ -134,12 +139,14 @@ export function useKeys(active: boolean) {
   const tab = useStore((s) => s.tab);
   const setTab = useStore((s) => s.setTab);
   const game = useStore((s) => s.game);
+  const toggleFast = useStore((s) => s.toggleFast);
+  const toggleGuide = useStore((s) => s.toggleGuide);
 
   // number the choices in the main card
   useEffect(() => {
     document.querySelectorAll('[data-n]').forEach((el) => el.removeAttribute('data-n'));
     if (!active || tab !== 'home') return;
-    choices().forEach((el, i) => el.setAttribute('data-n', String(i + 1)));
+    choices().forEach((el, i) => el.setAttribute('data-n', CHOICE_KEYS[i]));
   });
 
   useEffect(() => {
@@ -151,7 +158,8 @@ export function useKeys(active: boolean) {
       const dialog = document.querySelector<HTMLElement>('[role="dialog"]');
       if (e.key === 'Enter') {
         if (t.tagName === 'BUTTON') return; // the browser presses a focused button itself
-        const target = dialog ? (dialog.querySelector<HTMLElement>('.btn:not(:disabled)') ?? dialog) : tab === 'home' ? document.querySelector<HTMLElement>('.o-main .btn.block:not(:disabled)') : null;
+        // the main button, or the one marked as the way on (leaving the shop)
+        const target = dialog ? (dialog.querySelector<HTMLElement>('.btn:not(:disabled)') ?? dialog) : tab === 'home' ? document.querySelector<HTMLElement>('.o-main .btn.block:not(:disabled), .o-main [data-enter]') : null;
         if (target) {
           e.preventDefault();
           target.click();
@@ -159,22 +167,25 @@ export function useKeys(active: boolean) {
         return;
       }
       if (dialog || document.querySelector('.set-menu')) return;
-      if (/^[1-9]$/.test(e.key) && tab === 'home') {
-        const el = choices()[Number(e.key) - 1];
+      if (CHOICE_KEYS.includes(e.key) && tab === 'home') {
+        const el = choices()[CHOICE_KEYS.indexOf(e.key)];
         if (el) {
           e.preventDefault();
           el.click();
         }
         return;
       }
-      const to = TAB_KEYS[e.key.toLowerCase()];
+      const k = e.key.toLowerCase();
+      if (k === 'f' && game && game.mode !== 'lab' && game.step !== 'retired') return toggleFast();
+      if (k === 'g') return toggleGuide();
+      const to = TAB_KEYS[k];
       if (to && game) setTab(to);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [active, tab, setTab, game]);
+  }, [active, tab, setTab, game, toggleFast, toggleGuide]);
 }
 
 function choices(): HTMLElement[] {
-  return [...document.querySelectorAll<HTMLElement>('.o-main button.choice:not(:disabled), .o-main button.offer, .o-main button.item:not(:disabled)')].slice(0, 9);
+  return [...document.querySelectorAll<HTMLElement>('.o-main button.choice:not(:disabled), .o-main button.offer, .o-main button.item:not(:disabled)')].slice(0, CHOICE_KEYS.length);
 }

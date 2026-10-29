@@ -52,6 +52,8 @@ interface Store {
   toggleSimple: () => void;
   guide: boolean; // guide mode: highlights what to do next (round 13)
   toggleGuide: () => void;
+  master: boolean; // master mode: no recommendations anywhere (round 15)
+  toggleMaster: () => void;
   /** The tab keys last seen (round 14): a tab whose key moved on shows a "new" dot. */
   seen: Partial<Record<Tab, string>>;
   /** Picks up the career saved on this device; false if there is none or it cannot be read. */
@@ -139,6 +141,12 @@ export const useStore = create<Store>((set, get) => ({
     const simple = !get().simple;
     saveFlag('btr-simple', simple);
     set({ simple });
+  },
+  master: loadFlag('btr-master'),
+  toggleMaster: () => {
+    const master = !get().master;
+    saveFlag('btr-master', master);
+    set({ master });
   },
   guide: loadFlag('btr-guide-mode'),
   toggleGuide: () => {

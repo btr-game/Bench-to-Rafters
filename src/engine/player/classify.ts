@@ -58,9 +58,11 @@ export function classify(attrs: Attrs, pos: Pos): Fit[] {
  * one, and names a rare mold when his ratings have grown into one. Returns a line for the
  * offseason notes, or '' when nothing changed.
  */
-export function reclassify(p: { attrs: Attrs; pos: Pos; archetype: string; anomaly?: string; fit?: { name: string; conf: number }[] }): string {
+export function reclassify(p: { attrs: Attrs; pos: Pos; archetype: string; anomaly?: string; ringChaser?: string; fit?: { name: string; conf: number }[] }): string {
   const fits = classify(p.attrs, p.pos);
   p.fit = fits.slice(0, 3).map((f) => ({ name: f.name, conf: Math.round(f.conf * 100) / 100 }));
+  // a ring chaser keeps the role he chose
+  if (p.ringChaser) return '';
   const lines: string[] = [];
   const plain = fits.filter((f) => !f.rare);
   const now = plain.find((f) => f.name === p.archetype)?.conf ?? 0;

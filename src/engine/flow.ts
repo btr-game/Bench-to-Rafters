@@ -1,6 +1,7 @@
 // The state machine. The UI and the balance harness both drive the game only
 // through `newGame`, `prompt`, `choose` and `advance`.
 
+import { syncMiniUnlocks } from './career/miniBonus';
 import { resolveArc } from './events/arcs';
 import { resolveMilitary } from './career/nationality';
 import { ANOMALIES } from './player/anomaly';
@@ -134,6 +135,7 @@ export function choose(s: GameState, choiceId: string): void {
   chooseInner(s, choiceId);
   if (before) bankGains(s, before);
   prepareRecruit(s);
+  syncMiniUnlocks(s);
 }
 
 function chooseInner(s: GameState, choiceId: string): void {
@@ -195,6 +197,7 @@ export function advance(s: GameState): void {
   advanceInner(s);
   if (before) bankGains(s, before);
   prepareRecruit(s);
+  syncMiniUnlocks(s);
 }
 
 function advanceInner(s: GameState): void {

@@ -10,11 +10,12 @@ import { SKILL_EVENTS } from './skillEvents';
 import { ARC_EVENTS } from './arcs';
 import { ROUND9_EVENTS } from './round9';
 import { ROUND13_EVENTS } from './round13';
+import { ROUND15_EVENTS } from './round15';
 import { fitOf, needs } from './director';
 import { changes, snap, vary } from './outcome';
 import { rollTier, tierFactors, tierLine, TIERS, twists, type Tier } from './twists';
 
-const EVENTS: EventDef[] = [...BASE_EVENTS, ...MORE_EVENTS, ...RISK_EVENTS, ...GROWTH_EVENTS, ...SKILL_EVENTS, ...ARC_EVENTS, ...ROUND9_EVENTS, ...ROUND13_EVENTS];
+const EVENTS: EventDef[] = [...BASE_EVENTS, ...MORE_EVENTS, ...RISK_EVENTS, ...GROWTH_EVENTS, ...SKILL_EVENTS, ...ARC_EVENTS, ...ROUND9_EVENTS, ...ROUND13_EVENTS, ...ROUND15_EVENTS];
 
 function eligible(s: GameState, phase: 'mid' | 'off'): EventDef[] {
   return EVENTS.filter((e) => {

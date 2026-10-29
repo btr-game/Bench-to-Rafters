@@ -218,6 +218,7 @@ function LiveView({ g, d }: { g: GameState; d: Decision }) {
 export function DecisionView({ g, d }: { g: GameState; d: Decision }) {
   const choose = useStore((s) => s.choose);
   const simple = useStore((s) => s.simple);
+  const master = useStore((s) => s.master);
   const offers = (d.data?.offers as Offer[] | undefined) ?? [];
   const offerIds = new Set(offers.map((o) => o.id));
   const extra = d.choices.filter((c) => !offerIds.has(c.id));
@@ -250,7 +251,7 @@ export function DecisionView({ g, d }: { g: GameState; d: Decision }) {
             );
           })}
         </div>
-        <button className="choice" onClick={() => choose('leave')}>
+        <button className="choice" data-enter onClick={() => choose('leave')}>
           <span className="label">Leave the shop</span>
           <small>Save the money.</small>
         </button>
@@ -267,7 +268,7 @@ export function DecisionView({ g, d }: { g: GameState; d: Decision }) {
           {d.title}
         </h2>
       </div>
-      {typeof d.data?.fit === 'string' && <span className="fit-tag">Fits your game · {d.data.fit as string}</span>}
+      {!master && typeof d.data?.fit === 'string' && <span className="fit-tag">Fits your game · {d.data.fit as string}</span>}
       <p>{brief(d.text, simple)}</p>
       {isDraftNight && (
         <>

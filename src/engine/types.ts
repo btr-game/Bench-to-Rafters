@@ -82,6 +82,7 @@ export interface UserPlayer {
   pos: Pos;
   archetype: string;
   anomaly?: string; // a rare gift, e.g. "Point center"
+  ringChaser?: string; // round 15: the specialist role he took to chase a ring (keeps his archetype fixed)
   fit?: { name: string; conf: number }[]; // the scouts' last read on his game (player/classify.ts)
   height: number;
   fullHeight: number; // true adult height (hidden while he grows)
@@ -402,6 +403,8 @@ export interface Moment {
   arc?: boolean; // a chapter of a multi-season storyline (events/arcs.ts)
   drama?: import('./story/drama').Drama; // the last minutes of a final, play by play
   lostFinal?: boolean; // a final he lost (the reel ends without the banner)
+  // round 15: how the page celebrates (or doesn't) once any game reel has finished
+  mood?: 'champion' | 'gold' | 'silver' | 'bronze' | 'heartbreak' | 'out';
 }
 
 export interface GameState {
@@ -463,6 +466,9 @@ export interface GameState {
   recruit?: import('./career/recruit').RecruitState; // NBA: building the starting five this summer
   stories?: import('./world/stories').LeagueStory[]; // this season's league storylines
   nemesis?: string; // team id that ended his last season (flags.nemesisYear says when)
+  miniOpen?: import('./career/miniBonus').MiniId[]; // round 15: mini-games his ratings have unlocked
+  /** The answer to this summer's trade request (round 15: shown in the trade card). */
+  tradeResult?: { year: number; ok: boolean; team?: string; color?: string; rank?: number; text: string };
   teamStyle?: { key: import('./career/identity').TeamStyle; teamId: string }; // the style he set for his team
   highs?: { nba: Partial<Record<HighKey, CareerHigh>>; all: Partial<Record<HighKey, CareerHigh>> };
   flags: Record<string, number>; // small story switches (powerhouse school, power agent...)

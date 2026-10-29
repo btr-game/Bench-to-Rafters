@@ -1,4 +1,5 @@
 import {
+  ATTR_GROWTH,
   MODES,
   ATTR_MAX,
   ATTRS,
@@ -150,6 +151,7 @@ export function applyHalfGrowth(rng: Rng, p: UserPlayer, ctx: HalfGrowthCtx): Pa
       healthF *
       (ctx.extraMult ?? 1) *
       (p.growthRate ?? 1) *
+      (ctx.lab ? 1 : ATTR_GROWTH[k]) *
       range(rng, GROWTH_RANDOM[0], GROWTH_RANDOM[1]);
     if (g > 0 && ctx.lab) credits += g * LAB.rate;
     else if (g > 0) {

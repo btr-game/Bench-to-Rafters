@@ -593,10 +593,17 @@ function OffseasonMoves({ g }: { g: GameState }) {
       id: "trade",
       label: "Request a trade",
       sub:
-        g.flags.tradeAsk === g.year
-          ? "Asked this summer"
-          : "Ask out for a better team",
-      state: canRequestTrade(g) ? "ready" : "locked",
+        g.tradeResult?.year === g.year
+          ? g.tradeResult.ok
+            ? `Traded to the ${g.tradeResult.team}`
+            : "Asked this summer: no deal"
+          : g.flags.tradeAsk === g.year
+            ? "Asked this summer"
+            : "Ask out for a better team",
+      state:
+        canRequestTrade(g) || g.tradeResult?.year === g.year
+          ? "ready"
+          : "locked",
       show: g.stage === "NBA" && !!g.contract && g.contract.years > 0,
     },
     {
@@ -636,7 +643,10 @@ function OffseasonMoves({ g }: { g: GameState }) {
       {open === "position" && canChangePosition(g) && <PositionCard g={g} />}
       {open === "number" && <NumberCard g={g} />}
       {open === "retire" && canRetire(g) && <RetireCard g={g} />}
-      {open === "trade" && canRequestTrade(g) && <TradeCard g={g} />}
+      {open === "trade" &&
+        (canRequestTrade(g) || g.tradeResult?.year === g.year) && (
+          <TradeCard g={g} />
+        )}
       {open === "roster" && <RecruitCard g={g} />}
       {open === "style" && canSetStyle(g) && <StyleCard g={g} />}
     </section>
@@ -734,16 +744,32 @@ function PositionCard({ g }: { g: GameState }) {
 
 function TradeCard({ g }: { g: GameState }) {
   const ask = useStore((s) => s.requestTrade);
+  const master = useStore((s) => s.master);
   const [aim, setAim] = useState<TradeAim | null>(null);
   const rank = g.nba && g.teamId ? rosterRank(g.nba, g.teamId) : 0;
   const opts = tradeOptions(g);
   const pick = opts.find((o) => o.aim === aim);
+  const res = g.tradeResult?.year === g.year ? g.tradeResult : null;
+  if (res)
+    return (
+      <section
+        className={`card stack trade-result ${res.ok ? "ok" : "no"}`}
+        style={res.color ? { ["--team" as string]: res.color } : undefined}
+      >
+        <div className="kicker">Trade request</div>
+        <div className="trade-result-head">
+          {res.ok ? `You are a member of the ${res.team}` : "No deal"}
+        </div>
+        <p>{res.text}</p>
+      </section>
+    );
   return (
     <section className="card stack">
       <div className="sec-title">Request a trade</div>
       <p className="small muted">
         Your team ranks {ordinal(rank)}. Where do you want to go? If nobody
-        bites, your coach will not forget it.
+        bites, your coach will not forget it. Your reputation makes teams
+        listen: the higher it is, the better your odds.
       </p>
       <div className="stack trade-aims">
         {opts.map((o) => (
@@ -755,11 +781,13 @@ function TradeCard({ g }: { g: GameState }) {
           >
             <span className="label">
               {TRADE_AIM[o.aim].label}
-              <span
-                className={`scout-rec rec-${oddsWord(o.chance) === "High" ? "high" : oddsWord(o.chance) === "Moderate" ? "moderate" : "low"}`}
-              >
-                {oddsWord(o.chance)} odds
-              </span>
+              {!master && (
+                <span
+                  className={`scout-rec rec-${oddsWord(o.chance) === "High" ? "high" : oddsWord(o.chance) === "Moderate" ? "moderate" : "low"}`}
+                >
+                  {oddsWord(o.chance)} odds
+                </span>
+              )}
               <span
                 className={`risk risk-${TRADE_AIM[o.aim].risk.toLowerCase()}`}
               >
@@ -790,6 +818,7 @@ function TradeCard({ g }: { g: GameState }) {
 
 function StyleCard({ g }: { g: GameState }) {
   const mutate = useStore((s) => s.mutate);
+  const master = useStore((s) => s.master);
   const now = currentStyle(g);
   return (
     <section className="card stack">
@@ -807,8 +836,8 @@ function StyleCard({ g }: { g: GameState }) {
       <div className="stack style-list">
         {(Object.keys(TEAM_STYLES) as TeamStyle[])
           .map((k) => ({ k, f: styleFit(g, k), e: styleEffect(g, k) }))
-          .sort(
-            (a, b) => b.e.regular + b.e.playoff - (a.e.regular + a.e.playoff),
+          .sort((a, b) =>
+            master ? 0 : b.e.regular + b.e.playoff - (a.e.regular + a.e.playoff),
           )
           .map(({ k, f, e }) => (
             <button
@@ -818,16 +847,20 @@ function StyleCard({ g }: { g: GameState }) {
             >
               <span className="label">
                 {TEAM_STYLES[k].name}
-                <span
-                  className={`scout-rec rec-${fitLabel(f) === "Poor fit" ? "low" : fitLabel(f) === "Okay" ? "moderate" : "high"}`}
-                >
-                  {fitLabel(f)}
-                </span>
-                <span className="style-fx">
-                  {e.regular >= 0 ? "+" : ""}
-                  {e.regular} / playoffs {e.playoff >= 0 ? "+" : ""}
-                  {e.playoff}
-                </span>
+                {!master && (
+                  <>
+                    <span
+                      className={`scout-rec rec-${fitLabel(f) === "Poor fit" ? "low" : fitLabel(f) === "Okay" ? "moderate" : "high"}`}
+                    >
+                      {fitLabel(f)}
+                    </span>
+                    <span className="style-fx">
+                      {e.regular >= 0 ? "+" : ""}
+                      {e.regular} / playoffs {e.playoff >= 0 ? "+" : ""}
+                      {e.playoff}
+                    </span>
+                  </>
+                )}
               </span>
               <small>
                 {TEAM_STYLES[k].text} Fits {TEAM_STYLES[k].fits}.

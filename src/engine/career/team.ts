@@ -44,6 +44,13 @@ export function startTeamFactors(s: GameState, team: Team): { bonus: number; not
     bonus += c;
     if (streak >= 2) notes.push(`Chemistry: your ${streak + 1}th season together (+${c.toFixed(1)})`);
   }
+  // round 15: coach trust is part of chemistry. A trusted player steadies the locker room; a
+  // player the coach does not trust splits it.
+  const tr = Math.round(Math.max(T.trustMin, Math.min(T.trustMax, (s.player.trust - T.trustFrom) * T.trustPer)) * Math.max(0.5, d) * 10) / 10;
+  if (tr !== 0) {
+    bonus += tr;
+    notes.push(tr > 0 ? `Coach trust: the locker room follows your lead (+${tr.toFixed(1)})` : `Coach trust: the coach and you are not on the same page (${tr.toFixed(1)})`);
+  }
   const ovr = userOvr(s);
   if (s.stage === 'NBA' && ovr >= T.starFrom) {
     const g = Math.min(T.starMax, (ovr - T.starFrom) * T.starPer) * d;
@@ -153,7 +160,7 @@ export function tradeOptions(s: GameState): { aim: TradeAim; teams: Team[]; chan
   const ovr = userOvr(s);
   const mine = rosterRank(nba, s.teamId);
   const fits = (t: Team) => t.id !== s.teamId && ovr >= (t.roster[8]?.ovr ?? 70) - 2;
-  const base = clamp(T.tradeBase + (ovr - 75) * T.tradePerOvr + s.player.rep / 200, T.tradeMin, T.tradeMax);
+  const base = clamp(T.tradeBase + (ovr - 75) * T.tradePerOvr + s.player.rep / 140, T.tradeMin, T.tradeMax);
   const champName = s.nbaHistory[s.nbaHistory.length - 1]?.champion;
   const rivalId = (s.stories ?? []).find((x) => x.kind === 'rival')?.teamId ?? s.nemesis;
   const byRank = [...nba.teams].sort((a, b) => b.strength - a.strength);
@@ -181,6 +188,7 @@ export function requestTrade(s: GameState, aim: TradeAim = 'better'): void {
     s.player.morale = adjust(s.player.morale, harsh ? -7 : -4);
     logDecision(s, 'trade', `Asked for a trade (${TRADE_AIM[aim].label.toLowerCase()}). Nobody bit.`, s.teamId!);
     s.toast = harsh ? 'Word got out that you wanted to join your rival. No deal, and your teammates have not forgotten.' : 'The front office shopped you around. No deal. Things are awkward at practice now.';
+    s.tradeResult = { year: s.year, ok: false, text: `No deal. ${harsh ? 'Your rival passed, and your teammates heard about it (coach trust -16, morale -7).' : 'Nobody met the price (coach trust -10, morale -4).'} You stay with the ${teamById(nba, s.teamId!)?.name ?? 'team'}.` };
     return;
   }
   const to = opt.teams[int(s.rng, 0, Math.min(aim === 'better' ? 2 : 1, opt.teams.length - 1))];
@@ -194,6 +202,7 @@ export function requestTrade(s: GameState, aim: TradeAim = 'better'): void {
   const extra = aim === 'rival' ? ['The rivalry is personal now (reputation +4)'] : aim === 'needed' ? ['They will build around you'] : aim === 'champion' ? ['Joining the champions'] : [];
   pushMoment(s, { kind: 'commit', title: 'Traded', teamName: to.name, color: to.color, text: `You asked out, and the ${from.name} found a deal. You are a member of the ${to.name}.`, lines: [`Roster rank: ${rosterRank(nba, to.id)} of ${nba.teams.length}`, 'Same contract, new team', ...extra] });
   s.toast = `Traded to the ${to.name}.`;
+  s.tradeResult = { year: s.year, ok: true, team: to.name, color: to.color, rank: rosterRank(nba, to.id), text: `Traded to the ${to.name} (roster ${rosterRank(nba, to.id)} of ${nba.teams.length}). Same contract, new team.${extra.length ? ` ${extra.join('. ')}.` : ''}` };
 }
 
 // ---------- winning players ----------

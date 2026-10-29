@@ -156,7 +156,7 @@ const PLAN_TEXT: Record<HalfPlan, PlanText> = {
   grind: { id: 'grind', label: 'Grind', detail: 'Work harder than anyone. Faster development, much more wear on your body, burnout possible.' },
   recovery: { id: 'recovery', label: 'Recovery', detail: 'Ease off. Slower development, far fewer injuries, heal faster, feel better.' },
   spotlight: { id: 'spotlight', label: 'Spotlight', detail: 'Hunt shots and attention. More fame and money; coaches and teammates notice.' },
-  teamfirst: { id: 'teamfirst', label: 'Team first', detail: 'Make the right play. Fewer shots, more wins, the coach loves it.' },
+  teamfirst: { id: 'teamfirst', label: 'Team first', detail: 'Make the right play. Fewer shots for you, but the whole team plays better in your games (team strength up), and the coach loves it.' },
   shooting: { id: 'shooting', label: 'Shooting lab', detail: 'Live in the gym with a shooting coach. Your jumper and range get the reps; the rest waits.' },
   strength: { id: 'strength', label: 'Weight room', detail: 'Get stronger and more explosive inside. A bit more injury risk.' },
   playmaking: { id: 'playmaking', label: 'Film and reads', detail: 'Study the game. Passing and feel improve; coaches trust you more.' },
@@ -180,7 +180,7 @@ const LAB_PLANS: PlanText[] = [
   { id: 'grind', label: 'Grind', detail: 'More credits, much more wear on your body, burnout possible.' },
   { id: 'recovery', label: 'Recovery', detail: 'Fewer credits, far fewer injuries, heal faster, feel better.' },
   { id: 'spotlight', label: 'Spotlight', detail: 'Hunt shots and attention. More fame and money; fewer credits.' },
-  { id: 'teamfirst', label: 'Team first', detail: 'Make the right play. More wins, the coach loves it.' },
+  { id: 'teamfirst', label: 'Team first', detail: 'Make the right play. Fewer shots, the team plays better in your games, the coach loves it.' },
 ];
 
 export function pushPlanDecision(s: GameState, half: 1 | 2): void {
@@ -721,6 +721,7 @@ function finishSeason(s: GameState): void {
         game: { ...final, level, teamShort: team.short },
         lines: [],
         recap,
+        mood: 'champion',
       });
     }
   } else if (league.bracket && recap.length > 0) {
@@ -736,7 +737,7 @@ function finishSeason(s: GameState): void {
       text: `${teamById(league, league.bracket.champion)?.name ?? 'Someone else'} won it all. ${post.result}.`,
       lines: [],
       recap,
-      ...(inFinal && lastGame && lastGame.res === 'L' ? { game: { ...lastGame, level, teamShort: team.short }, lostFinal: true } : {}),
+      ...(inFinal && lastGame && lastGame.res === 'L' ? { game: { ...lastGame, level, teamShort: team.short }, lostFinal: true, mood: 'heartbreak' as const, title: 'So close' } : {}),
     });
   }
   const honours = aw.wins.map((w) => w.label).concat(keys.filter((k) => ['MCDAA', 'GATORADE', 'FMVP', 'CFMVP', 'FFMOP', 'PLAYOFFMVP'].includes(k.key)).map((k) => k.label));

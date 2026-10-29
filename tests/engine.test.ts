@@ -7,7 +7,7 @@ import { bankGains, labCost, spendCredits } from '../src/engine/career/lab';
 import { pushShop } from '../src/engine/economy/shop';
 import { liveMvpRace } from '../src/engine/career/mvpRace';
 import { buildDrama } from '../src/engine/story/drama';
-import { canRecruit, recruitInfo, recruitPlayer, scoutingBoard, takePayCut } from '../src/engine/career/recruit';
+import { canRecruit, startingFive, recruitInfo, recruitPlayer, scoutingBoard, takePayCut } from '../src/engine/career/recruit';
 import { startArc } from '../src/engine/events/arcs';
 import { winningEdge } from '../src/engine/career/team';
 import { ovrOf } from '../src/engine/player/ovr';
@@ -458,14 +458,13 @@ describe('round 9: starting five, league stories, finals drama', () => {
           if (recruitPlayer(s, t.p.id)) {
             expect(mine.roster.some((p) => p.id === t.p.id)).toBe(true);
             expect(t.team.roster.some((p) => p.id === t.out[0].id)).toBe(true);
-            // round 12: the five keeps some shape (at most three guards, three forwards, two centers)
-            const five = [s.player.pos, ...[...mine.roster].sort((a, b) => b.ovr - a.ovr).slice(0, 4).map((p) => p.pos)];
-            const n = (g: string[]) => five.filter((p) => g.includes(p)).length;
-            expect(n(['PG', 'SG'])).toBeLessThanOrEqual(3);
-            expect(n(['SF', 'PF'])).toBeLessThanOrEqual(3);
-            expect(n(['C'])).toBeLessThanOrEqual(2);
+            // round 15: one player per position; the recruit starts at his own spot
+            const five = startingFive(s);
+            expect(new Set(five.map((x) => x.slot)).size).toBe(4);
+            expect(five.some((x) => x.p.id === t.p.id && x.slot === t.p.pos)).toBe(true);
             const info = recruitInfo(s);
             expect(info.joined).toContain(t.p.name);
+            expect(info.log.some((x) => x.ok && x.text.includes(t.p.name))).toBe(true);
             expect(info.before).toBeDefined();
           }
         }

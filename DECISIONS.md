@@ -894,3 +894,88 @@ Reached from the start page and from the bottom of Home (a career in progress is
   - Titles barely moved with the potential alone (38-41%) or with the player's own impact on
     winning scaled down (no change); about half came as a non-key player and the most from 30+, so
     the team-factor and ring-chase dials do the work. Harness targets moved with it.
+
+## Round 15
+
+- **Controls and layout:** keys 0, - and = pick choices 10-12 (twelve plans fit the number row);
+  F toggles Fast break, G toggles Guide mode; Enter leaves the shop (the leave button carries
+  `data-enter`). Simple text sits next to Fast break in the top bar. The difficulty is always in
+  view beside the game's name (a short form below 1280 px). Wide screens keep more margin (max
+  1380-1440 px, 40 px gutters). Ratings sit above the status meters on the player card. Around
+  the league folds to one line a story (remembered on the device). New career sits next to the
+  card download at the top of the end page.
+- **Master mode** (Settings, stored on the device): no recommendations anywhere: scouts' calls on
+  recruits, the "Fits your game" tag on events, team-style fit labels and the best-first order,
+  trade odds, Front Office draft advice and the recommendations panel, and Guide mode. Risk tags
+  stay: they describe a choice, they do not recommend one.
+- **OVR weights:** weight moved from shooting, finishing and athleticism to rebounding,
+  playmaking and defense at every position (scoring now 0.36-0.47 of OVR, was 0.40-0.53). Per-rating
+  growth: defense and rebounding x1.08, athleticism x1.1, shooting and IQ x0.95 (round 7 had
+  measured these as the hardest and easiest to max). Award voting: rebounds 0.9 to 1.05, assists
+  1.4 to 1.55, steals and blocks 2 to 2.3 next to points.
+- **Coach trust and reputation:** trust adds to team chemistry ((trust - 55) x 0.015, within
+  ±0.4, scaled by the mode's team dial, at least half), shown in the season preview. Reputation:
+  salaries x(1 + rep/250) (was /400), trade odds +rep/140 (was /200), free-agent suitors +0.03
+  per point (was 0.02). Team first lifts the team 0.7 in his games (was 0.6), and its text says so.
+- **Starting five:** one player per position (the best teammate at each of the other four, then
+  the best of the same group, then anyone). A recruit replaces the starter at his position;
+  players at his own position are not on the board. Every ask is logged on the card (yes or no,
+  who replaced whom, who left, team strength before and after). Fixed a hook-order bug in the card.
+- **Trade requests:** the answer stays on the card (`tradeResult`): the new team and its roster
+  rank, or no deal and its cost. The tile says "Traded to ..." or "no deal".
+- **Ring chaser** (career/ringChase.ts): at the retirement prompt or the last-chance offers, a
+  former NBA player (OVR 66+, 38 or younger) can take a specialist role on a contender: floor
+  spacer (shooting +6, IQ +1, range +8; finishing, playmaking, rebounding down), defensive
+  specialist (perimeter D +5, interior D +4, athleticism +1; shooting, finishing, playmaking
+  down), veteran playmaker (playmaking +5, IQ +5; finishing, rebounding, athleticism down) or
+  rebounding big. The best matching rating picks the role. The archetype becomes the role and
+  stays (the summer re-read skips him); two contenders from the top six offer a minimum deal.
+- **Drama:** title, gold, silver, bronze, lost-final and early-exit moments carry a `mood`. Once
+  any game reel ends: confetti and a "Champions"/"Gold" stamp, a silver or bronze medal swinging
+  in, or the screen draining of colour under a red "So close"/"Eliminated" stamp. Olympic and
+  World Cup results get their own titles and lines. Nothing moves with reduced motion.
+- **Mini-games in a career unlock by rating** and stay open (`miniOpen`): three-point contest at
+  shooting 85, dunk contest at athleticism 85, Front Office at basketball IQ 85, Built in a lab at
+  OVR 82, Legends showdown at OVR 90. A toast announces each. Rewards x1.6; the taper starts at
+  90 (0.7) and 95 (0.45) instead of 85/92. From the start page every game is free. New lobby
+  (cards with progress bars) and a common end panel with a big Back to career button.
+- **Legends showdown:** harder (right plan +1.4, was +2.2; wrong plan -1.0, was -0.8; your player
+  counts twice, was three times; form sd 2.5). Every franchise has an identity
+  (content/franchiseIdentity.ts) and the roles it wants. Chemistry (within ±1.5 team rating): +0.8 for a wanted
+  role, +0.5 for a role nobody else fills, -0.7 when two others already play it, -0.5 out of
+  position, -0.4 next to a 97+ scorer or creator when he is one too. With a career at OVR 90
+  his own player joins (his role read from his ratings); without one, the rookie as before.
+- **Dunk contest:** rule tiles (2 dunks a round, 3 attempts a dunk, top 2 to the final) and a
+  status strip with dunk and attempt pips.
+- **Built in a lab (mini-game), easier:** start 60 (was 58), credits 14 down to 4 (was 12 to 3),
+  lower award bars (All-Star 77, All-NBA 84, MVP 89 on 48 wins) and grades (A+ 26, A 15, B 7, C 2).
+  Peaks over 300 runs: best value 90.7 (was 86-89), random taps 88.2 (83-84), spread 87.7 (80-85).
+- **Front Office:** the first draft recommendation had the class `top`, which is also the page
+  header's: it took the header's sticky position, background and negative margins and covered
+  the "Scouts' board" label. Renamed. A "Your front office recommends" panel lists the best
+  trades and up to two signings (cap-legal, from the middle of the scouted range, with reasons).
+- **Content:** ten events (players-only meeting, the agent's raise, a court with your name, the
+  new teammate, twelve minutes a night for a ring chaser, body choice, boxing, the glass, the
+  passing clinic, everyone's best shot). The career card wears his main team's colour, draws his
+  jersey and number, and adds tiles for NBA seasons, points, titles, MVPs and All-Star picks.
+- **Manual:** cards under large headers (tap to expand), a quick start, and Guide mode hints for
+  each kind of decision. `CLAUDE.md` records the owner's standing rules (guide, dead code,
+  project summary at the end of every request).
+- **Balance** ("the balance is good, base on this"; Hall of Fame harder). Re-tuned after the
+  changes above, casual mini-game play, smart choices:
+  - Regular guy: potential base 37 (was 33), mini-game dial 0.4, ring-chase dial 0.1. 400
+    careers: mean peak 74.72 (approved 75.11), NBA 80.0% (78.8%), All-Star 37.3% (36.3%), MVP 13.3%
+    (10.0%), titles 33.0% (26.5%), Hall of Fame 14.0% (18.3%). Titles and MVPs stay above the
+    approved numbers: with no mini-games at all they are 31.0% and 9.8%, and the team dials,
+    the trust bonus, the winning-player edge and ring chasing each moved titles by 1-3 points at
+    most. The cause is structural (rebounding, playmaking and defense now count for more, and
+    those are the ratings behind the winning-player edge); left for the owner to decide.
+  - Reality hits hard: potential base 51 (was 45), since the unlocks took away most of its
+    mini-game bonus. 250 careers: mean 67.9 (approved 68.8), NBA 60.0% (54.4%).
+  - Shoot for the stars: unchanged. 200 careers: mean 93.1 (93.5), MVP 78.5% (84.4%), Hall of
+    Fame 79.0% (98.0%).
+  - Hall of Fame: legacy 100 (was 45), first ballot 160 (was 80). The legacy score is very
+    spread (Regular: median 7, 80th percentile about 45-50, 88th about 105).
+  - Scouting odds refit to 450 careers: NBA 64.6/1.8, All-Star 77.7/1.65, All-NBA 83.1/1.35,
+    All-NBA 1st 87.0/2.05, Hall of Fame 90.1/1.15, MVP 90.5/1.15 (logistic centre/scale on the
+    peak).

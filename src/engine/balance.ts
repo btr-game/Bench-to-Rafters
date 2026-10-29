@@ -8,13 +8,21 @@ export const ATTRS: AttrKey[] = ['SHT', 'FIN', 'PLY', 'PER', 'INT', 'REB', 'ATH'
 export const POSITIONS: Pos[] = ['PG', 'SG', 'SF', 'PF', 'C'];
 
 // §6 OVR weights by position
+// round 15: weight moved from the scoring ratings (shooting, finishing, athleticism) toward
+// rebounding, playmaking and defense, so a scorer is not automatically the higher OVR.
 export const OVR_WEIGHTS: Record<Pos, Record<AttrKey, number>> = {
-  PG: { SHT: 0.18, FIN: 0.1, PLY: 0.26, PER: 0.12, INT: 0.02, REB: 0.04, ATH: 0.12, IQ: 0.16 },
-  SG: { SHT: 0.26, FIN: 0.14, PLY: 0.14, PER: 0.14, INT: 0.02, REB: 0.04, ATH: 0.13, IQ: 0.13 },
-  SF: { SHT: 0.17, FIN: 0.15, PLY: 0.12, PER: 0.16, INT: 0.07, REB: 0.08, ATH: 0.14, IQ: 0.11 },
-  PF: { SHT: 0.1, FIN: 0.17, PLY: 0.07, PER: 0.09, INT: 0.16, REB: 0.17, ATH: 0.14, IQ: 0.1 },
-  C: { SHT: 0.05, FIN: 0.18, PLY: 0.05, PER: 0.05, INT: 0.24, REB: 0.22, ATH: 0.12, IQ: 0.09 },
+  PG: { SHT: 0.16, FIN: 0.09, PLY: 0.24, PER: 0.15, INT: 0.03, REB: 0.06, ATH: 0.11, IQ: 0.16 },
+  SG: { SHT: 0.22, FIN: 0.12, PLY: 0.15, PER: 0.17, INT: 0.03, REB: 0.06, ATH: 0.12, IQ: 0.13 },
+  SF: { SHT: 0.15, FIN: 0.13, PLY: 0.12, PER: 0.17, INT: 0.08, REB: 0.1, ATH: 0.13, IQ: 0.12 },
+  PF: { SHT: 0.09, FIN: 0.15, PLY: 0.08, PER: 0.1, INT: 0.17, REB: 0.18, ATH: 0.13, IQ: 0.1 },
+  C: { SHT: 0.05, FIN: 0.16, PLY: 0.06, PER: 0.06, INT: 0.24, REB: 0.23, ATH: 0.11, IQ: 0.09 },
 };
+
+// round 15: the ratings that were hardest to raise (defense, rebounding, athleticism) grow a
+// little faster and the easiest (shooting, IQ) a little slower. Round 7 measured how often a
+// dedicated build reaches 99: shooting and IQ about 40%, defense and rebounding 28-30%,
+// athleticism 22%.
+export const ATTR_GROWTH: Record<AttrKey, number> = { SHT: 0.95, FIN: 1, PLY: 1, PER: 1.08, INT: 1.08, REB: 1.08, ATH: 1.1, IQ: 0.95 };
 
 // §6 height ranges at full growth (inches)
 export const HEIGHT_RANGE: Record<Pos, [number, number]> = {
@@ -85,7 +93,7 @@ export interface SkewDist {
   min: number;
   max: number;
 }
-export const POTENTIAL: SkewDist = { base: 33, mu: 3.44, sigma: 0.4, min: 36, max: 103 };
+export const POTENTIAL: SkewDist = { base: 37, mu: 3.44, sigma: 0.4, min: 40, max: 103 };
 export const ELITE_CLIMB = { from: 85, per: 0.07, min: 0.4 };
 
 // Difficulty modes (playtest round 6). Each sets the potential distribution, a growth
@@ -109,7 +117,7 @@ export const FAST_GROWTH = 1.3;
 // team style, his team's storyline); ringChase scales the odds that a contender has a
 // minimum-deal spot for him. Missing = 1.
 export const MODES: Record<Mode, { name: string; blurb: string; potential: SkewDist; growth: number; injury: number; scoutMid: number; floor?: { age: number; ovr: number; until: number }; elite?: { from: number; per: number; min: number }; mini?: number; teamFx?: number; ringChase?: number }> = {
-  standard: { name: 'Regular guy', blurb: 'The full game. Most careers peak in the 60s and 70s; the NBA is common, stardom is earned.', potential: POTENTIAL, growth: 0.94, injury: 1, scoutMid: 70, elite: ELITE_CLIMB, mini: 0.7, teamFx: 0.3, ringChase: 0.25 },
+  standard: { name: 'Regular guy', blurb: 'The full game. Most careers peak in the 60s and 70s; the NBA is common, stardom is earned.', potential: POTENTIAL, growth: 0.94, injury: 1, scoutMid: 70, elite: ELITE_CLIMB, mini: 0.4, teamFx: 0.3, ringChase: 0.1 },
   // fast break: the regular game at a quick pace (engine/fast.ts). The quick pace means fewer
   // events, one training group a season and no shop, so the head start is set by simulation:
   // mean peak 76.4 against 73.6 for Regular guy (300 smart careers each, round 8).
@@ -118,7 +126,7 @@ export const MODES: Record<Mode, { name: string; blurb: string; potential: SkewD
   // on any rating (career/lab.ts). Spending where it counts is worth a lot, so its potential
   // sits a little below fast break's: an OVR-minded build peaks at 77.6 on average (round 8).
   lab: { name: 'Built in a lab', blurb: 'Fast break, but you build the player. Training and events earn credits, and you spend them on any rating you want. Pick your own height.', potential: { ...POTENTIAL, base: 51, min: 53 }, growth: 1.12, injury: 1, scoutMid: 73 },
-  reality: { name: 'Reality hits hard', blurb: 'Like real life: most careers end short of the NBA, and those who make it fight for a spot. Every choice counts.', potential: { base: 45, mu: 2.25, sigma: 0.6, min: 46, max: 99 }, growth: 0.9, injury: 1.3, scoutMid: 50 },
+  reality: { name: 'Reality hits hard', blurb: 'Like real life: most careers end short of the NBA, and those who make it fight for a spot. Every choice counts.', potential: { base: 51, mu: 2.25, sigma: 0.6, min: 52, max: 99 }, growth: 0.9, injury: 1.3, scoutMid: 50 },
   stars: { name: 'Shoot for the stars', blurb: 'Built for greatness: every career reaches stardom, and the very top is within reach.', potential: { base: 83, mu: 1.8, sigma: 0.6, min: 85, max: 99 }, growth: 1.2, injury: 0.6, scoutMid: 93, floor: { age: 22, ovr: 80, until: 29 } },
 };
 // stat caps may sit above 99 so elite players can actually reach the top of the scale
@@ -267,7 +275,7 @@ export const HALF_PLANS: Record<HalfPlan, PlanDef> = {
   grind: { growth: 1.3, injury: 1.7, morale: -4, trust: 1, rep: [0, 0], usage: 1, teamBoost: 0 },
   recovery: { growth: 0.75, injury: 0.5, morale: 4, trust: 0, rep: [0, 0], usage: 0.95, teamBoost: 0 },
   spotlight: { growth: 0.85, injury: 1.05, morale: 2, trust: -3, rep: [3, 8], usage: 1.15, teamBoost: -0.3 },
-  teamfirst: { growth: 0.95, injury: 1.0, morale: 2, trust: 6, rep: [0, 1], usage: 0.88, teamBoost: 0.6 },
+  teamfirst: { growth: 0.95, injury: 1.0, morale: 2, trust: 6, rep: [0, 1], usage: 0.88, teamBoost: 0.7 }, // round 15: a bigger lift to the team (was 0.6)
   shooting: { growth: 1.0, injury: 0.95, morale: 0, trust: 0, rep: [0, 0], usage: 1.03, teamBoost: 0, attrs: { SHT: 2.05 }, other: 0.6, rangeGain: 2 },
   strength: { growth: 1.0, injury: 1.2, morale: -1, trust: 0, rep: [0, 0], usage: 1, teamBoost: 0, attrs: { FIN: 2.1, REB: 2.15, ATH: 1.9, INT: 1.6 }, other: 0.55 },
   playmaking: { growth: 1.0, injury: 1.0, morale: 0, trust: 2, rep: [0, 0], usage: 0.97, teamBoost: 0.2, attrs: { PLY: 2.3, IQ: 1.5 }, other: 0.6 },
@@ -458,7 +466,8 @@ export const STAT = {
 };
 
 // §10 value score
-export const VALUE = { reb: 0.9, ast: 1.4, stl: 2, blk: 2, tov: 1, effAvgTs: 0.565, effMult: 0.9 };
+// round 15: rebounds, assists and defensive plays count more next to points in award voting
+export const VALUE = { reb: 1.05, ast: 1.55, stl: 2.3, blk: 2.3, tov: 1, effAvgTs: 0.565, effMult: 0.9 };
 export const MIN_GAMES_AWARD_FRAC = 65 / 82;
 
 export const LEGACY = {
@@ -476,9 +485,12 @@ export const LEGACY = {
   pointsPer: 1500,
   ncaaTitle: 2,
   euro: 2,
-  hof: 45,
-  firstBallot: 80,
+  hof: 100, // round 15: much harder (was 45): about the top 11-13% of Regular guy careers
+  firstBallot: 160, // was 80
 };
+
+// round 15: a veteran can become a ring chaser (career/ringChase.ts) instead of retiring
+export const RING_CHASE = { minOvr: 66, maxAge: 38, contenders: 6, offers: 2 };
 
 // §12 contracts
 export const CAP = { start: 165, inflation: 0.03 };
@@ -507,6 +519,10 @@ export const RETIRE = { ovrBelowPeak: 11, forcedAge: 42, vetAge: 32, vetBelowPea
 export const TEAM_FACTORS = {
   chemistryPer: 0.25, // per season in a row with the team
   chemistryMax: 0.8,
+  trustFrom: 55, // round 15: coach trust adds to chemistry above this, takes away below it
+  trustPer: 0.015,
+  trustMin: -0.4,
+  trustMax: 0.4,
   starFrom: 84, // NBA star gravity from this OVR
   starPer: 0.12,
   starMax: 1.0,
@@ -529,7 +545,7 @@ export const FA_INTEREST = {
   maxRank: 11,
   perPoint: 0.3, // expected offers per OVR point above the league's average 11th man
   shareW: 1.0,
-  repW: 0.02,
+  repW: 0.03, // round 15: reputation brings more suitors (was 0.02)
   maxOffers: 6,
   vetAge: 31,
   vetMult: 0.6,

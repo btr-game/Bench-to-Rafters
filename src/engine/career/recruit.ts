@@ -10,7 +10,7 @@
 
 import { STARTERS_RECRUIT as R } from '../balance';
 import { chance, clamp, shuffle } from '../rng';
-import type { GameState, GenPlayer, Team } from '../types';
+import type { GameState, GenPlayer, Pos, Team } from '../types';
 import { capFor, fmtMoney } from '../economy/salary';
 import { adjust, logDecision, pushMoment, teamById, userOvr } from './common';
 import { nbaStrength } from '../world/nbaWorld';
@@ -27,12 +27,13 @@ export interface RecruitState {
   // round 12: what this summer's moves did, for the card
   before?: { strength: number; rank: number };
   joined?: string[];
+  // round 15: every ask this summer, yes or no, in words
+  log?: { ok: boolean; text: string }[];
 }
 
 /** Position groups for the starting five (round 12: "I can't have four forwards"). */
 const GROUP: Record<string, 'G' | 'F' | 'C'> = { PG: 'G', SG: 'G', SF: 'F', PF: 'F', C: 'C' };
-const GROUP_MAX = { G: 3, F: 3, C: 2 };
-const GROUP_NAME = { G: 'guards', F: 'forwards', C: 'centers' };
+const POS_ORDER: Pos[] = ['PG', 'SG', 'SF', 'PF', 'C'];
 
 /** Where a roster rank leaves a team, in words. */
 export function outlookOf(rank: number): string {
@@ -40,6 +41,7 @@ export function outlookOf(rank: number): string {
 }
 
 export interface Target {
+  slot: Pos | null; // the spot in the five he would take
   p: GenPlayer;
   team: Team;
   interest: number;
@@ -61,7 +63,7 @@ function scoutCall(s: GameState, p: GenPlayer, out: GenPlayer[]): { rec: Target[
   const t = myTeam(s)!;
   const after = [...t.roster.filter((x) => !out.includes(x)), p];
   const gain = strengthOf(after.map((x) => x.ovr)) - strengthOf(t.roster.map((x) => x.ovr));
-  const five = [s.player.pos, ...[...after].sort((a, b) => b.ovr - a.ovr).slice(0, 4).map((x) => x.pos)];
+  const five = [s.player.pos, ...starters(s).map((x) => (out.includes(x) ? p : x).pos)];
   const noBig = !five.some((x) => x === 'C' || x === 'PF');
   const crowded = five.filter((x) => x === p.pos).length >= 3;
   const pricey = p.salary > capFor(s.year + 1) * 0.28 && gain < 1.2;
@@ -77,10 +79,37 @@ function scoutCall(s: GameState, p: GenPlayer, out: GenPlayer[]): { rec: Target[
 
 const myTeam = (s: GameState): Team | null => teamById(s.nba, s.teamId);
 
+/**
+ * The five (round 15: "I should see one player per position"): him at his position and the
+ * best teammate at each of the other four. With nobody at a position, the best player of the
+ * same group (guards, forwards, bigs) starts there, then anyone.
+ */
+export function startingFive(s: GameState): { slot: Pos; p: GenPlayer }[] {
+  const t = myTeam(s);
+  if (!t) return [];
+  const left = [...t.roster].sort((a, b) => b.ovr - a.ovr);
+  const take = (ok: (x: GenPlayer) => boolean): GenPlayer | null => {
+    const i = left.findIndex(ok);
+    return i < 0 ? null : left.splice(i, 1)[0];
+  };
+  const out: { slot: Pos; p: GenPlayer }[] = [];
+  // fill exact positions first, so a guard is not used up as someone else's stand-in
+  for (const slot of POS_ORDER) {
+    if (slot === s.player.pos) continue;
+    const p = take((x) => x.pos === slot);
+    if (p) out.push({ slot, p });
+  }
+  for (const slot of POS_ORDER) {
+    if (slot === s.player.pos || out.some((x) => x.slot === slot)) continue;
+    const p = take((x) => GROUP[x.pos] === GROUP[slot]) ?? take(() => true);
+    if (p) out.push({ slot, p });
+  }
+  return out.sort((a, b) => POS_ORDER.indexOf(a.slot) - POS_ORDER.indexOf(b.slot));
+}
+
 /** The four teammates who start next to him. */
 export function starters(s: GameState): GenPlayer[] {
-  const t = myTeam(s);
-  return t ? [...t.roster].sort((a, b) => b.ovr - a.ovr).slice(0, 4) : [];
+  return startingFive(s).map((x) => x.p);
 }
 
 export function payroll(s: GameState): number {
@@ -114,10 +143,11 @@ const state = (s: GameState): RecruitState | null => (s.recruit?.year === s.year
 
 function buildBoard(s: GameState): number[] {
   const nba = s.nba!;
-  const weakest = starters(s)[3]?.ovr ?? 70;
+  // players who would beat the starter at their own position (his position is taken: by him)
+  const at = new Map(startingFive(s).map((x) => [x.slot, x.p.ovr]));
   const pool = nba.teams
     .filter((t) => t.id !== s.teamId)
-    .flatMap((t) => t.roster.filter((p) => p.ovr >= weakest + 2 && p.age <= 34))
+    .flatMap((t) => t.roster.filter((p) => p.pos !== s.player.pos && p.ovr >= (at.get(p.pos) ?? 70) + 2 && p.age <= 34))
     .sort((a, b) => b.ovr - a.ovr);
   // a couple of stars, the rest from the useful middle
   const stars = pool.slice(0, 8);
@@ -138,14 +168,14 @@ function interestOf(s: GameState, p: GenPlayer, from: Team): number {
 }
 
 /** What goes the other way, and whether the money works. */
-function package_(s: GameState, p: GenPlayer): { out: GenPlayer[]; fits: boolean; short: number; lineup: string | null } {
+function package_(s: GameState, p: GenPlayer): { out: GenPlayer[]; fits: boolean; short: number; lineup: string | null; slot: Pos | null } {
   const t = myTeam(s)!;
-  const st = starters(s);
-  // the starter who makes way: the weakest at his position group, else the weakest overall
-  const same = st.filter((x) => GROUP[x.pos] === GROUP[p.pos]);
-  const goes = (same.length ? same : st).reduce<GenPlayer | null>((a, x) => (!a || x.ovr < a.ovr ? x : a), null);
+  // the starter who makes way: the one at his position (round 15: one player per position)
+  const five = startingFive(s);
+  const goes = five.find((x) => x.slot === p.pos)?.p ?? null;
   const out: GenPlayer[] = goes ? [goes] : [];
-  const bench = [...t.roster].sort((a, b) => b.ovr - a.ovr).slice(4).sort((a, b) => b.salary - a.salary);
+  const st = starters(s);
+  const bench = [...t.roster].filter((x) => !st.includes(x)).sort((a, b) => b.salary - a.salary);
   const pay = payroll(s);
   const cap = capLine(s);
   const works = () => {
@@ -159,12 +189,7 @@ function package_(s: GameState, p: GenPlayer): { out: GenPlayer[]; fits: boolean
   const outPay = out.reduce((a, x) => a + x.salary, 0);
   const fits = works();
   const short = fits ? 0 : Math.min(pay - outPay + p.salary - cap, p.salary - outPay * R.match);
-  // the five after the move: him and the four best teammates
-  const after = [...t.roster.filter((x) => !out.includes(x)), p].sort((a, b) => b.ovr - a.ovr).slice(0, 4);
-  const counts = { G: 0, F: 0, C: 0 };
-  for (const pos of [s.player.pos, ...after.map((x) => x.pos)]) counts[GROUP[pos]]++;
-  const over = (Object.keys(counts) as ('G' | 'F' | 'C')[]).find((g) => counts[g] > GROUP_MAX[g]);
-  return { out, fits, short: Math.max(0, short), lineup: over ? `Too many ${GROUP_NAME[over]} in the five` : null };
+  return { out, fits, short: Math.max(0, short), lineup: goes ? null : 'Plays your position', slot: goes ? p.pos : null };
 }
 
 export function scoutingBoard(s: GameState): Target[] {
@@ -193,6 +218,7 @@ export function recruitInfo(s: GameState): {
   rank: number;
   before?: { strength: number; rank: number };
   joined: string[];
+  log: { ok: boolean; text: string }[];
 } {
   const st = state(s);
   const mine = myTeam(s);
@@ -206,6 +232,7 @@ export function recruitInfo(s: GameState): {
     rank: s.nba && mine ? rosterRank(s.nba, mine.id) : 0,
     before: st?.before,
     joined: st?.joined ?? [],
+    log: st?.log ?? [],
   };
 }
 
@@ -236,7 +263,8 @@ export function recruitPlayer(s: GameState, id: number): boolean {
   if (!chance(s.rng, tg.interest)) {
     s.player.morale = adjust(s.player.morale, -1);
     logDecision(s, 'recruit', `Tried to recruit ${tg.p.name} from the ${tg.team.name}. He stayed.`);
-    s.toast = `${tg.p.name} thanks you for the call, but he is staying with the ${tg.team.name}.`;
+    s.toast = `${tg.p.name} said no: he is staying with the ${tg.team.name}.`;
+    st.log = [...(st.log ?? []), { ok: false, text: `${tg.p.name} (${tg.p.pos}, ${tg.team.short}) said no: he is staying with the ${tg.team.name}. Nothing changes.` }];
     return false;
   }
   const mine = myTeam(s)!;
@@ -259,15 +287,23 @@ export function recruitPlayer(s: GameState, id: number): boolean {
   st.joined = [...(st.joined ?? []), tg.p.name];
   s.player.morale = adjust(s.player.morale, 4);
   const outNames = tg.out.map((o) => o.name).join(' and ');
+  const starter = tg.out[0];
+  st.log = [
+    ...(st.log ?? []),
+    {
+      ok: true,
+      text: `${tg.p.name} said yes. He starts at ${tg.p.pos} in place of ${starter?.name ?? 'nobody'}; ${outNames} ${tg.out.length > 1 ? 'go' : 'goes'} to the ${tg.team.name}. Team strength ${before.toFixed(1)} → ${mine.strength.toFixed(1)}.`,
+    },
+  ];
   logDecision(s, 'recruit', `Recruited ${tg.p.name} (${tg.p.pos}) from the ${tg.team.name}; ${outNames} went the other way.`, tg.team.id);
   pushMoment(s, {
     kind: 'commit',
     title: `${tg.p.name} is coming`,
     teamName: mine.name,
     color: mine.color,
-    text: `You made the call, and ${tg.p.name} said yes. The ${tg.team.name} get ${outNames} in return.`,
+    text: `You made the call, and ${tg.p.name} said yes. He takes over at ${tg.p.pos} from ${starter?.name ?? 'nobody'}. The ${tg.team.name} get ${outNames} in return.`,
     lines: [`New starter: ${tg.p.pos}, OVR ${Math.round(tg.p.ovr)}, ${fmtMoney(tg.p.salary)} a year`, `Team strength ${before.toFixed(1)} to ${mine.strength.toFixed(1)}`, `Roster rank: ${rosterRank(s.nba!, mine.id)} of ${s.nba!.teams.length}`],
   });
-  s.toast = `${tg.p.name} joins the ${mine.name}.`;
+  s.toast = `${tg.p.name} said yes and starts at ${tg.p.pos}; ${outNames} ${tg.out.length > 1 ? 'go' : 'goes'} to the ${tg.team.name}.`;
   return true;
 }

@@ -10,6 +10,7 @@ import { ordinal } from '../format';
 import { ATTRS } from '../../engine/balance';
 import { NAMES } from '../../content/strings';
 import type { GenPlayer } from '../../engine/types';
+import { useStore } from '../../store';
 
 const PHASES: FoState['phase'][] = ['draft', 'market', 'tactic', 'results'];
 const last = (name: string) => name.split(' ').slice(-1)[0];
@@ -85,7 +86,8 @@ function Draft({ fo, act }: { fo: FoState; act: (fn: (f: FoState) => void) => vo
   const onClock = d.order[d.at] === fo.mine;
   const avail = d.cls.map((c, i) => ({ c, i })).filter((x) => !x.c.takenBy).slice(0, 20);
   const recent = d.cls.filter((c) => c.takenBy && c.pick).sort((a, b) => b.pick! - a.pick!).slice(0, 4);
-  const recs = useMemo(() => F.draftRecs(fo), [fo]);
+  const master = useStore((s) => s.master);
+  const recs = useMemo(() => (master ? [] : F.draftRecs(fo)), [fo, master]);
   const [open, setOpen] = useState<number | null>(null);
   return (
     <section className="card stack">
@@ -104,7 +106,7 @@ function Draft({ fo, act }: { fo: FoState; act: (fn: (f: FoState) => void) => vo
           {recs.map((r, k) => {
             const c = d.cls[r.i];
             return (
-              <div key={c.pr.p.id} className={`fo-rec${k === 0 ? ' top' : ''}`}>
+              <div key={c.pr.p.id} className={`fo-rec${k === 0 ? ' first' : ''}`}>
                 <span className="fo-rec-n">{k + 1}</span>
                 <div>
                   <b>
@@ -185,6 +187,8 @@ function Market({ fo, act }: { fo: FoState; act: (fn: (f: FoState) => void) => v
   const ideas = useMemo(() => (target !== null ? F.tradeIdeas(fo, target) : []), [fo, target]);
   const board = useMemo(() => F.tradeBoard(fo), [fo]);
   const best = m.trades < F.FO.trades ? board.best : [];
+  const signs = useMemo(() => F.signingRecs(fo), [fo]);
+  const master = useStore((s) => s.master);
   const nowRank = F.rankAt(fo, F.strengthAfter(fo, -1, []));
   const room = F.capOf(fo) - F.payroll(fo);
   const mine = [...F.myTeam(fo).roster].sort((a, b) => b.ovr - a.ovr);
@@ -216,10 +220,12 @@ function Market({ fo, act }: { fo: FoState; act: (fn: (f: FoState) => void) => v
         </section>
       )}
 
-      {tab === 'trades' && best.length > 0 && (
+      {!master && (
         <section className="card stack fo-best">
-          <div className="sec-title">Best deals for you</div>
-          <p className="small muted">Deals they will say yes to that make your team better. Your team now: {ordinal(nowRank)} of 30.</p>
+          <div className="sec-title">Your front office recommends</div>
+          <p className="small muted">Deals and signings that make your team better, from what your scouts have seen. Your team now: {ordinal(nowRank)} of 30.</p>
+          <div className="kicker">Trades</div>
+          {best.length === 0 && <div className="small muted">{m.trades >= F.FO.trades ? 'No trades left this summer.' : 'No trade they would accept moves you up right now. Try the targets below, or sign someone.'}</div>}
           {best.map((d) => {
             const tg = targets.find((x) => x.p.id === d.targetId)!;
             return (
@@ -237,6 +243,27 @@ function Market({ fo, act }: { fo: FoState; act: (fn: (f: FoState) => void) => v
                 </div>
                 <button className="btn small" onClick={() => act((f) => F.proposeTrade(f, d.targetId, d.ids))}>
                   Trade
+                </button>
+              </div>
+            );
+          })}
+          <div className="kicker">Signings</div>
+          {signs.length === 0 && <div className="small muted">{m.signings >= F.FO.signings ? 'No signings left this summer.' : 'Nobody you can afford would help right now.'}</div>}
+          {signs.map(({ i, why }) => {
+            const f = m.free[i];
+            const rp = F.freeReport(f);
+            return (
+              <div key={f.p.id} className="fo-deal">
+                <div className="fo-deal-text">
+                  <b>
+                    {f.p.pos} {f.p.name} <span className="muted">{rp.now[0]}–{rp.now[1]}</span>
+                  </b>
+                  <div className="small muted">
+                    {f.from.replace(/ \(.*\)$/, '')} · asks {fmtMoney(f.ask)} · {why.join(' · ')}
+                  </div>
+                </div>
+                <button className="btn small" onClick={() => act((x) => F.signFree(x, i))}>
+                  Sign
                 </button>
               </div>
             );

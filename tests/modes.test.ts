@@ -1,5 +1,6 @@
-// The two extra difficulty modes. Round 7 retuned both: "Reality hits hard" now averages a
-// peak near 60, with the NBA reachable but only barely; "Shoot for the stars" takes every
+// The two extra difficulty modes. Round 7 retuned both: "Reality hits hard" averaged a peak near
+// 60; round 15 moved it to the approved balance of round 13-14 (about 68 with casual mini-games),
+// since the rating unlocks took most of its mini-game bonus away; "Shoot for the stars" takes every
 // career that lasts to 80+ and centres on the early 90s, so a 99 is still hard to reach.
 
 import { describe, expect, it } from 'vitest';
@@ -8,7 +9,7 @@ import { runCareer } from '../scripts/harness';
 const N = 120;
 
 describe('difficulty modes', () => {
-  it('reality hits hard: peaks average about 60 and the NBA is a long shot', () => {
+  it('reality hits hard: peaks average the high 60s and the NBA is far from certain', () => {
     let nba = 0;
     let sum = 0;
     for (let i = 0; i < N; i++) {
@@ -16,10 +17,10 @@ describe('difficulty modes', () => {
       if (c.playedNba) nba++;
       sum += c.peakOvr;
     }
-    expect(sum / N).toBeGreaterThan(56);
-    expect(sum / N).toBeLessThan(64);
-    expect(nba / N).toBeGreaterThan(0.12);
-    expect(nba / N).toBeLessThan(0.45);
+    expect(sum / N).toBeGreaterThan(63);
+    expect(sum / N).toBeLessThan(72);
+    expect(nba / N).toBeGreaterThan(0.35);
+    expect(nba / N).toBeLessThan(0.75);
   });
 
   it('shoot for the stars: every career that reaches 22 peaks at 80+, centred in the early 90s', () => {

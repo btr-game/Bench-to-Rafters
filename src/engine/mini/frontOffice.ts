@@ -620,3 +620,34 @@ export function grade(fo: FoState): { letter: string; text: string } {
 }
 
 export { makeRng };
+
+/**
+ * Signing advice (round 15: "need trades and signings recommendation"). From what the scouts
+ * have seen (the middle of each player's range), the signings that fit the books and would make
+ * the rotation better, with a reason. A player not scouted yet comes with a warning.
+ */
+export function signingRecs(fo: FoState, max = 2): { i: number; why: string[]; gain: number }[] {
+  const m = fo.market;
+  if (!m) return [];
+  const mine = myTeam(fo);
+  const before = nbaStrength(mine);
+  const top8 = [...mine.roster].sort((a, b) => b.ovr - a.ovr).slice(0, 8);
+  return m.free
+    .map((f, i) => ({ f, i }))
+    .filter(({ i }) => !!signHow(fo, i))
+    .map(({ f, i }) => {
+      const rp = freeReport(f);
+      const guess = (rp.now[0] + rp.now[1]) / 2;
+      const after = nbaStrength({ ...mine, roster: [...mine.roster, { ...f.p, ovr: guess }] });
+      const why: string[] = [];
+      const needs = !top8.some((p) => p.pos === f.p.pos && p.ovr >= guess - 1);
+      if (needs) why.push(`a ${f.p.pos} upgrade`);
+      if (after - before >= 0.3) why.push('makes the rotation better');
+      if (f.ask <= minSalary(fo.world.year, 2) * 1.05) why.push('costs the minimum');
+      if (f.level === 0) why.push('scout him first');
+      return { i, why, gain: Math.round((after - before + (needs ? 0.3 : 0) - (f.level === 0 ? 0.2 : 0)) * 100) / 100 };
+    })
+    .filter((x) => x.gain > 0.05)
+    .sort((a, b) => b.gain - a.gain)
+    .slice(0, max);
+}

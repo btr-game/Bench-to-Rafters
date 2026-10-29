@@ -1,13 +1,13 @@
 // Headless career runner used by `npm run sim` and the balance test.
 // It drives the game only through flow.ts, exactly like the UI.
 
-import { claimMini, type MiniResult } from '../src/engine/career/miniBonus';
+import { claimMini, miniProgress, type MiniId, type MiniResult } from '../src/engine/career/miniBonus';
 import { canSetStyle, setStyle, styleEffect, TEAM_STYLES, type TeamStyle } from '../src/engine/career/identity';
 import { advance, choose, newGame, prompt } from '../src/engine/flow';
 import { fastForward } from '../src/engine/fast';
 import { labCost, spendCredits } from '../src/engine/career/lab';
 import { ARCHETYPES } from '../src/engine/player/archetypes';
-import { ATTRS, OVR_WEIGHTS, POSITIONS, type Mode } from '../src/engine/balance';
+import { ATTRS, LEGACY, OVR_WEIGHTS, POSITIONS, type Mode } from '../src/engine/balance';
 import { makeRng, next, pick, int, type Rng } from '../src/engine/rng';
 import type { Choice, Decision, GameState, Pos } from '../src/engine/types';
 import { count, legacyScore } from '../src/engine/awards/legacy';
@@ -167,13 +167,25 @@ export type MiniPlay = 'none' | 'casual' | 'grinder';
 function playMinis(s: GameState, how: MiniPlay): void {
   if (how === 'none' || s.stage === 'HS' || s.flags.harnessMini === s.year) return;
   s.flags.harnessMini = s.year;
-  const shooter = s.player.pos === 'PG' || s.player.pos === 'SG' || s.player.pos === 'SF';
-  const top: MiniResult = shooter ? { game: 'threes', score: 27, won: true, own: true } : { game: 'dunk', best: 48, won: true };
-  if (how === 'casual') claimMini(s, shooter ? { game: 'threes', score: 23, won: false, own: true } : { game: 'dunk', best: 44, won: false });
-  else {
-    claimMini(s, top);
-    claimMini(s, { game: 'legends', reached: 'champion' });
-  }
+  // round 15: only the games his ratings have unlocked (casual: a decent result, grinder: the best)
+  const top: Record<MiniId, MiniResult> = {
+    threes: { game: 'threes', score: 27, won: true, own: true },
+    dunk: { game: 'dunk', best: 48, won: true },
+    legends: { game: 'legends', reached: 'champion' },
+    office: { game: 'office', titles: 1, playoffs: 3, seasons: 3, fired: false },
+    lab: { game: 'lab', peak: 95 },
+  };
+  const ok: Record<MiniId, MiniResult> = {
+    threes: { game: 'threes', score: 23, won: false, own: true },
+    dunk: { game: 'dunk', best: 44, won: false },
+    legends: { game: 'legends', reached: 'semis' },
+    office: { game: 'office', titles: 0, playoffs: 2, seasons: 3, fired: false },
+    lab: { game: 'lab', peak: 90 },
+  };
+  const open = (Object.keys(top) as MiniId[]).filter((id) => miniProgress(s, id).open);
+  if (open.length === 0) return;
+  if (how === 'casual') claimMini(s, ok[open[0]]);
+  else for (const id of open.slice(0, 2)) claimMini(s, top[id]);
 }
 
 export function runCareer(seed: number, policy: Policy, mode: Mode = 'standard', minis: MiniPlay = 'none'): CareerResult {
@@ -223,7 +235,7 @@ export function runCareer(seed: number, policy: Policy, mode: Mode = 'standard',
     allNba1: count(s, 'ALLNBA1') > 0,
     mvp: count(s, 'MVP') > 0,
     title: count(s, 'TITLE') + count(s, 'TITLEKEY') > 0,
-    hof: legacyScore(s) >= 45,
+    hof: legacyScore(s) >= LEGACY.hof,
     declared: s.log.some((l) => l.kind === 'draft' && /Declared|Entered|Stayed/.test(l.text)) || s.draftedBy !== null || s.undrafted,
     undrafted: s.undrafted,
     drafted: s.draftedBy !== null,
@@ -326,32 +338,35 @@ export function summarize(results: CareerResult[], ms: number): Summary {
 // round 14: Regular guy is tuned with casual mini-game play as the standard (one claim a season),
 // so these no-mini-game targets sit lower: measured 71.6 smart / 67.2 random mean peak, titles
 // 23.6% / 9.6%, All-Star 24.4% / 19.6% (250 careers each).
+// round 15: new OVR weights, unlock-gated mini-games and a much harder Hall of Fame. No mini-games,
+// smart / random: mean peak 74.5 / 70.6, NBA 80.0% / 71.3%, All-Star 36.5% / 31.0%, MVP 9.8% / 5.7%,
+// titles 31.0% / 17.3%, Hall of Fame 11.3% / 6.3% (400 / 300 careers).
 export const TARGETS: Record<Policy, Record<string, [number, number]>> = {
   random: {
-    meanPeak: [64.5, 69.5],
-    playedNba: [0.56, 0.7],
+    meanPeak: [68, 73],
+    playedNba: [0.62, 0.78],
     nba5: [0.42, 0.57],
-    allStar: [0.19, 0.33],
-    allNba: [0.12, 0.26],
+    allStar: [0.24, 0.38],
+    allNba: [0.15, 0.29],
     allNba1: [0.07, 0.2],
-    mvp: [0.02, 0.08],
-    title: [0.06, 0.14],
-    hof: [0.08, 0.19],
+    mvp: [0.03, 0.09],
+    title: [0.12, 0.22],
+    hof: [0.03, 0.1],
     // round 7: the wider spread sends more weak college seniors into the draft pool
     undraftedOfDeclared: [0.28, 0.45],
     meanNbaSeasons: [9, 12],
     medianRetireAge: [31, 36],
   },
   smart: {
-    meanPeak: [69.5, 74.5],
-    playedNba: [0.65, 0.78],
+    meanPeak: [72, 77],
+    playedNba: [0.72, 0.86],
     nba5: [0.55, 0.7],
-    allStar: [0.19, 0.32],
-    allNba: [0.18, 0.32],
+    allStar: [0.3, 0.43],
+    allNba: [0.18, 0.31],
     allNba1: [0.11, 0.25],
-    mvp: [0.04, 0.11],
-    title: [0.17, 0.3],
-    hof: [0.09, 0.2],
+    mvp: [0.06, 0.14],
+    title: [0.25, 0.38],
+    hof: [0.07, 0.16],
     undraftedOfDeclared: [0.28, 0.45],
     meanNbaSeasons: [11, 14],
     medianRetireAge: [32, 36],

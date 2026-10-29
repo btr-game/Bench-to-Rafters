@@ -456,9 +456,12 @@ export function resolveNationalTeam(s: GameState, data: Record<string, unknown>,
   logDecision(s, 'national', `Played for ${nation} at the ${name}: ${result.toLowerCase()}.`);
   const final = games[games.length - 1];
   if (medal === 'gold') {
-    pushMoment(s, { kind: 'title', title: `${name} gold`, teamName: nation, color: nationColor(s), text: `${nation} win gold at the ${name}.`, game: { ...final, level, teamShort: nation }, lines: [], recap });
+    pushMoment(s, { kind: 'title', title: `${name} gold`, teamName: nation, color: nationColor(s), text: `${nation} win gold at the ${name}.`, game: { ...final, level, teamShort: nation }, lines: [], recap, mood: 'gold' });
   } else {
-    pushMoment(s, { kind: 'tournament', title: name, teamName: nation, color: nationColor(s), text: `${nation} at the ${name}: ${result}.`, lines: [lineText(line)], recap });
+    // round 15: a medal is celebrated, going home empty-handed hurts
+    const title = medal === 'silver' ? `${name}: silver` : medal === 'bronze' ? `${name}: bronze` : `Out of the ${name}`;
+    const text = medal === 'silver' ? `${nation} reach the final and take silver at the ${name}. One game from gold.` : medal === 'bronze' ? `${nation} win the bronze medal game at the ${name}. You go home with a medal.` : `${nation} are out of the ${name}: ${result.toLowerCase()}. A long flight home.`;
+    pushMoment(s, { kind: 'tournament', title, teamName: nation, color: nationColor(s), text, lines: [lineText(line)], recap, mood: medal === 'silver' ? 'silver' : medal === 'bronze' ? 'bronze' : 'out' });
   }
   return `${name}: ${result}.`;
 }

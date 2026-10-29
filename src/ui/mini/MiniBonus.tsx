@@ -1,6 +1,7 @@
 // Career bonus panel shown when a mini-game ends (engine/career/miniBonus.ts).
 
 import { useState } from 'react';
+import { MiniEnd } from './MiniGames';
 import { useStore } from '../../store';
 import { canClaimMini, claimsUsed, MINI_CLAIMS, scaledReward, type MiniResult } from '../../engine/career/miniBonus';
 import { NAMES } from '../../content/strings';
@@ -11,7 +12,7 @@ export function MiniBonus({ result }: { result: MiniResult }) {
   const game = useStore((s) => s.game);
   const claim = useStore((s) => s.claimMini);
   const [text, setText] = useState('');
-  if (!game || game.step === 'retired') return null;
+  if (!game || game.step === 'retired') return <MiniEnd />;
   const reward = scaledReward(game, result);
   const left = MINI_CLAIMS.perSeason - claimsUsed(game);
   const preview = Object.entries(reward.attrs)
@@ -19,10 +20,12 @@ export function MiniBonus({ result }: { result: MiniResult }) {
     .map(([k, v]) => `${NAMES.attr[k as AttrKey]} +${(v as number).toFixed(1)}`)
     .concat(reward.range ? [`Range +${reward.range.toFixed(1)}`] : [], reward.rep ? [`Reputation +${reward.rep}`] : []);
   return (
-    <section className="card stack mini-bonus">
+    <MiniEnd>
       <div className="sec-title">Career bonus</div>
       {text ? (
         <p className="small">{text}</p>
+      ) : !canClaimMini(game, result.game) && claimsUsed(game) < MINI_CLAIMS.perSeason ? (
+        <p className="small muted">This game is not unlocked for {game.player.name} yet, so this run is for fun. The lobby shows what it takes.</p>
       ) : !canClaimMini(game, result.game) ? (
         <p className="small muted">All {MINI_CLAIMS.perSeason} claims used for {game.player.name} this season. Come back next season.</p>
       ) : preview.length === 0 ? (
@@ -41,6 +44,6 @@ export function MiniBonus({ result }: { result: MiniResult }) {
           </button>
         </>
       )}
-    </section>
+    </MiniEnd>
   );
 }

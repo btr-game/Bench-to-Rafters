@@ -13,11 +13,48 @@ import { clamp } from '../rng';
 import type { AttrKey, GameState } from '../types';
 import { NAMES } from '../../content/strings';
 import { addCredits, isLab } from './lab';
-import { logDecision } from './common';
+import { logDecision, userOvr } from './common';
 
 export type MiniId = 'threes' | 'legends' | 'office' | 'dunk' | 'lab';
 
 export const MINI_CLAIMS = { perSeason: 2, share: [1, 0.5] };
+
+/**
+ * Round 15: in a career, each mini-game opens once his ratings earn it, and stays open after
+ * that (aging does not lock it again). From the start page every game is free to play.
+ * Rewards are larger (x1.6) to match.
+ */
+export const MINI_UNLOCK: Record<MiniId, { key: AttrKey | 'OVR'; at: number; label: string }> = {
+  threes: { key: 'SHT', at: 85, label: 'Shooting' },
+  dunk: { key: 'ATH', at: 85, label: 'Athleticism' },
+  office: { key: 'IQ', at: 85, label: 'Basketball IQ' },
+  lab: { key: 'OVR', at: 82, label: 'OVR' },
+  legends: { key: 'OVR', at: 90, label: 'OVR' },
+};
+export const MINI_REWARD_MULT = 1.6;
+
+/** His value toward a game's unlock, and whether it is open. */
+export function miniProgress(s: GameState, id: MiniId): { value: number; at: number; label: string; open: boolean } {
+  const u = MINI_UNLOCK[id];
+  const value = u.key === 'OVR' ? userOvr(s) : s.player.attrs[u.key];
+  return { value, at: u.at, label: u.label, open: (s.miniOpen ?? []).includes(id) || value >= u.at };
+}
+
+/** Records games that just opened; returns their names (flow.ts calls it after every action). */
+export function syncMiniUnlocks(s: GameState): string[] {
+  const fresh: string[] = [];
+  for (const id of Object.keys(MINI_UNLOCK) as MiniId[]) {
+    if ((s.miniOpen ?? []).includes(id)) continue;
+    if (miniProgress(s, id).open) {
+      s.miniOpen = [...(s.miniOpen ?? []), id];
+      fresh.push(MINI_NAMES[id]);
+    }
+  }
+  if (fresh.length && s.history.length > 0) s.toast = `Mini-game unlocked: ${fresh.join(', ')}. Play it from Home for a career bonus.`;
+  return fresh;
+}
+
+export const MINI_NAMES: Record<MiniId, string> = { threes: 'Three-point contest', dunk: 'Dunk contest', office: 'Front Office', lab: 'Built in a lab', legends: 'Legends showdown' };
 
 export type MiniResult =
   | { game: 'threes'; score: number; won: boolean; own: boolean }
@@ -31,8 +68,8 @@ export function claimsUsed(s: GameState): number {
   return s.flags.miniYear === s.year ? (s.flags.miniClaims ?? 0) : 0;
 }
 
-export function canClaimMini(s: GameState | null, _id?: MiniId): boolean {
-  return !!s && s.step !== 'retired' && claimsUsed(s) < MINI_CLAIMS.perSeason;
+export function canClaimMini(s: GameState | null, id?: MiniId): boolean {
+  return !!s && s.step !== 'retired' && claimsUsed(s) < MINI_CLAIMS.perSeason && (!id || miniProgress(s, id).open);
 }
 
 /** What the next claim is worth, as a share of the full reward. */
@@ -71,16 +108,17 @@ export function miniReward(r: MiniResult): { attrs: Partial<Record<AttrKey, numb
 }
 
 /** Bonuses taper on ratings that are already elite, so mini-games are no shortcut to 99. */
+// round 15: the unlocks already ask for 85+, so the taper starts higher
 export const MINI_TAPER: [number, number][] = [
-  [92, 0.35],
-  [85, 0.6],
+  [95, 0.45],
+  [90, 0.7],
 ];
 export const taperAt = (rating: number): number => MINI_TAPER.find(([from]) => rating >= from)?.[1] ?? 1;
 
 /** The reward scaled by how many claims were already made this season, and tapered near the top. */
 export function scaledReward(s: GameState, r: MiniResult): ReturnType<typeof miniReward> {
   const w = miniReward(r);
-  const k = nextShare(s) * modeDial(s.mode, 'mini');
+  const k = nextShare(s) * modeDial(s.mode, 'mini') * MINI_REWARD_MULT;
   const attrs: Partial<Record<AttrKey, number>> = {};
   // bigs turn the playmaking and perimeter part into what counts for them
   const big = s.player.pos === 'PF' || s.player.pos === 'C';

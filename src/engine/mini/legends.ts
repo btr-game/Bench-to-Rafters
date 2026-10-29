@@ -8,6 +8,7 @@
 // right style is worth a few points of rating.
 
 import { FRANCHISE_FIVES, type LegendSpot } from '../../content/franchiseFives';
+import { FRANCHISE_IDENTITY } from '../../content/franchiseIdentity';
 import { NBA_TEAMS } from '../../content/teams';
 import { chance, int, makeRng, next, normal, type Rng } from '../rng';
 import { HOME_COURT, MODES } from '../balance';
@@ -35,7 +36,11 @@ export const STYLE_HINT: Record<Style, string> = {
 /** Which plan beats which style. */
 const COUNTER: Record<Plan, Style> = { pace: 'paint', lock: 'shooting', paint: 'defense', star: 'star' };
 // legends are closer to each other than ratings suggest: a wider scale than the NBA sim's
-export const LEGENDS = { counter: 2.2, wrong: -0.8, starGap: 0.3, scale: 6, squeeze: 0.65, rookieWeight: 3, formSd: 2, startOvr: 72, growShare: [0.35, 0.4, 0.5, 0.7], breakthrough: 0.12, setback: 0.08 };
+// round 15 ("might be too easy"): the right plan is worth less (2.2 to 1.4), the wrong one costs
+// more (-0.8 to -1.0), your player counts twice instead of three times, and his form swings more
+export const LEGENDS = { counter: 1.4, wrong: -1.0, starGap: 0.3, scale: 6, squeeze: 0.65, rookieWeight: 2, formSd: 2.5, startOvr: 72, growShare: [0.35, 0.4, 0.5, 0.7], breakthrough: 0.12, setback: 0.08 };
+// chemistry (round 15): how your player fits the franchise’s identity and the four next to him
+export const CHEM = { fits: 0.8, hole: 0.5, crowd: -0.7, position: -0.5, alpha: -0.4, max: 1.5 };
 // a super-rookie's ceiling: the Shoot for the stars model, a notch higher (median about 92)
 export const ROOKIE_POT = { ...MODES.stars.potential, base: 86, sigma: 0.5, min: 88, max: 99 };
 
@@ -95,6 +100,49 @@ export interface LegendsState {
   out: string | null; // the round he went out in
   finals?: { us: number; them: number; opp: string; drama: Drama; won: boolean; round: string };
   log: string[];
+  chem?: Chemistry; // round 15
+  career?: boolean; // round 15: his career player, not a rookie built here
+}
+
+export interface Chemistry {
+  value: number;
+  label: 'Great' | 'Good' | 'Okay' | 'Poor';
+  notes: string[];
+}
+
+const TAG_NAME: Record<Focus, string> = { shooter: 'shooter', scorer: 'scorer', creator: 'playmaker', inside: 'big', defense: 'defender' };
+
+/** How a player with this role fits a franchise's five in place of one legend. */
+export function chemistryOf(teamId: string, five: LegendSpot[], who: { pos: Pos; tag: Focus }, replaces: string): Chemistry {
+  const id = FRANCHISE_IDENTITY[teamId];
+  const gone = five.find((p) => p.name === replaces) ?? five[0];
+  const rest = five.filter((p) => p !== gone);
+  const notes: string[] = [];
+  let v = 0;
+  if (id?.wants.includes(who.tag)) {
+    v += CHEM.fits;
+    notes.push(`A ${TAG_NAME[who.tag]} fits the ${id.name} identity`);
+  }
+  const same = rest.filter((p) => p.tag === who.tag).length;
+  if (same === 0) {
+    v += CHEM.hole;
+    notes.push(`Nobody else is a ${TAG_NAME[who.tag]}: you fill a hole`);
+  } else if (same >= 2) {
+    v += CHEM.crowd;
+    notes.push(`Already ${same} ${TAG_NAME[who.tag]}s next to you: roles overlap`);
+  }
+  if (gone.pos !== who.pos) {
+    v += CHEM.position;
+    notes.push(`Out of position: you play ${who.pos} in ${gone.name}’s ${gone.pos} spot`);
+  }
+  const alpha = rest.find((p) => p.ovr >= 97 && (p.tag === 'scorer' || p.tag === 'creator'));
+  if (alpha && (who.tag === 'scorer' || who.tag === 'creator')) {
+    v += CHEM.alpha;
+    notes.push(`You and ${alpha.name} both want the ball`);
+  }
+  const value = Math.round(Math.max(-CHEM.max, Math.min(CHEM.max, v)) * 10) / 10;
+  if (notes.length === 0) notes.push('No problems, no special spark');
+  return { value, label: value >= 1 ? 'Great' : value >= 0.3 ? 'Good' : value > -0.4 ? 'Okay' : 'Poor', notes };
 }
 
 const ROUNDS = ['First round', 'Conference semifinals', 'Conference finals', 'Finals'];
@@ -145,6 +193,27 @@ export function newLegends(seed: number, mine: string, rookieName: string, repla
   return { rng, mine, rookie, teams, phase: 'grow', rounds: [], next: null, champion: null, out: null, log: [] };
 }
 
+/** His career player's role among the legends, read from his ratings. */
+export function careerTag(a: Record<'SHT' | 'FIN' | 'PLY' | 'PER' | 'INT' | 'REB' | 'ATH' | 'IQ', number>): Focus {
+  const c: [Focus, number][] = [
+    ['shooter', a.SHT],
+    ['creator', (a.PLY + a.IQ) / 2],
+    ['inside', (a.FIN + a.REB + a.INT) / 3],
+    ['defense', (a.PER + a.INT) / 2],
+    ['scorer', (a.FIN + a.SHT + a.ATH) / 3 - 1],
+  ];
+  return c.sort((x, y) => y[1] - x[1])[0][0];
+}
+
+/** Round 15: with a career at OVR 90+, his own player joins the legends, no development years. */
+export function newLegendsCareer(seed: number, mine: string, me: { name: string; pos: Pos; ovr: number; tag: Focus }, replaces: string): LegendsState {
+  const st = newLegends(seed, mine, me.name, replaces);
+  st.career = true;
+  Object.assign(st.rookie, { pos: me.pos, ovr: me.ovr, pot: me.ovr, season: LEGENDS.growShare.length, focus: [me.tag] });
+  joinTeam(st);
+  return st;
+}
+
 /** One development season for the rookie (four in all), then he joins the team. */
 export function growRookie(st: LegendsState, focus: Focus): string {
   if (st.phase !== 'grow') return '';
@@ -178,8 +247,10 @@ export function rookieTag(r: Rookie): Focus {
 function joinTeam(st: LegendsState): void {
   const me = st.teams.find((t) => t.id === st.mine)!;
   const r = st.rookie;
-  me.five = me.five.map((p) => (p.name === r.replaces ? { name: r.name, pos: r.pos, ovr: Math.round(r.ovr), peak: 'rookie', tag: rookieTag(r), rookie: true } : p));
-  me.rating = ratingOf(me.five);
+  st.chem = chemistryOf(me.id, me.five, { pos: r.pos, tag: rookieTag(r) }, r.replaces);
+  me.five = me.five.map((p) => (p.name === r.replaces ? { name: r.name, pos: r.pos, ovr: Math.round(r.ovr), peak: st.career ? 'you' : 'rookie', tag: rookieTag(r), rookie: true } : p));
+  me.rating = Math.round((ratingOf(me.five) + st.chem.value) * 10) / 10;
+  st.log.push(`Chemistry: ${st.chem.label.toLowerCase()} (${st.chem.value >= 0 ? '+' : ''}${st.chem.value} team rating). ${st.chem.notes.join('. ')}.`);
   me.style = styleOf(me.five);
   st.log.push(`${r.name} joins the starting five in place of ${r.replaces}.`);
   st.phase = 'season';

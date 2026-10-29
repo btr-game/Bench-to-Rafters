@@ -3,7 +3,7 @@ import { useState } from 'react';
 
 import type { GameState } from '../../engine/types';
 import { STARTERS_RECRUIT } from '../../engine/balance';
-import { canRecruit, outlookOf, recruitInfo, scoutingBoard, starters } from '../../engine/career/recruit';
+import { canRecruit, outlookOf, recruitInfo, scoutingBoard, startingFive } from '../../engine/career/recruit';
 import { ordinal } from '../format';
 import { callQuestion, callsLeft, makeCall, STORY_LABEL } from '../../engine/world/stories';
 import { ovrOf } from '../../engine/player/ovr';
@@ -13,14 +13,16 @@ import { useStore } from '../../store';
 export function RecruitCard({ g }: { g: GameState }) {
   const recruit = useStore((s) => s.recruit);
   const cut = useStore((s) => s.payCut);
+  const master = useStore((s) => s.master);
+  const [all, setAll] = useState(false);
   if (!canRecruit(g)) return null;
   const info = recruitInfo(g);
   const board = scoutingBoard(g);
-  const [all, setAll] = useState(false);
   const room = info.cap - info.payroll;
   const left = Math.min(STARTERS_RECRUIT.moves - info.moves, STARTERS_RECRUIT.asks - info.asks);
   const me = g.player;
-  const five = starters(g);
+  const five = startingFive(g);
+  const slots = (['PG', 'SG', 'SF', 'PF', 'C'] as const).map((slot) => (slot === me.pos ? { slot, mine: true as const } : { slot, mine: false as const, x: five.find((f) => f.slot === slot)?.p }));
   return (
     <section className="card stack recruit">
       <div className="row">
@@ -34,20 +36,26 @@ export function RecruitCard({ g }: { g: GameState }) {
         </span>
       </div>
       <div className="five">
-        <div className="five-row mine">
-          <span>{me.pos}</span>
-          <b>{me.name}</b>
-          <span>{Math.round(ovrOf(me.attrs, me.pos))}</span>
-          <span>{fmtMoney(g.contract?.salary ?? 0)}</span>
-        </div>
-        {five.map((p, i) => (
-          <div key={p.id} className={`five-row${i === five.length - 1 ? ' weakest' : ''}`}>
-            <span>{p.pos}</span>
-            <b>{p.name}</b>
-            <span>{Math.round(p.ovr)}</span>
-            <span>{fmtMoney(p.salary)}</span>
-          </div>
-        ))}
+        {slots.map((r) =>
+          r.mine ? (
+            <div key={r.slot} className="five-row mine">
+              <span>{r.slot}</span>
+              <b>{me.name}</b>
+              <span>{Math.round(ovrOf(me.attrs, me.pos))}</span>
+              <span>{fmtMoney(g.contract?.salary ?? 0)}</span>
+            </div>
+          ) : r.x ? (
+            <div key={r.slot} className="five-row">
+              <span>{r.slot}</span>
+              <b>
+                {r.x.name}
+                {r.x.pos !== r.slot && <span className="muted small"> ({r.x.pos})</span>}
+              </b>
+              <span>{Math.round(r.x.ovr)}</span>
+              <span>{fmtMoney(r.x.salary)}</span>
+            </div>
+          ) : null,
+        )}
       </div>
       <div className="five-outlook">
         <div>
@@ -74,6 +82,16 @@ export function RecruitCard({ g }: { g: GameState }) {
           </div>
         )}
       </div>
+      {info.log.length > 0 && (
+        <div className="recruit-log">
+          <div className="kicker">This summer's calls</div>
+          {info.log.map((x, i) => (
+            <div key={i} className={`recruit-call ${x.ok ? 'yes' : 'no'}`}>
+              <b>{x.ok ? 'Yes' : 'No'}</b> {x.text}
+            </div>
+          ))}
+        </div>
+      )}
       <div className={`cap-line${room < 0 ? ' over' : ''}`}>
         Payroll {fmtMoney(info.payroll)} of a {fmtMoney(info.cap)} cap · {room >= 0 ? `${fmtMoney(room)} room` : `${fmtMoney(-room)} over: incoming salary must be within 125% of outgoing`}
       </div>
@@ -87,13 +105,19 @@ export function RecruitCard({ g }: { g: GameState }) {
                 {t.p.name} <span className="muted">· {t.p.pos}, {t.p.age}</span>
               </b>
               <span className="small muted">
-                {t.team.name} · OVR {Math.round(t.p.ovr)} · {fmtMoney(t.p.salary)} · for {t.out.map((o) => o.name.split(' ').slice(-1)[0]).join(' + ')}
+                {t.team.name} · OVR {Math.round(t.p.ovr)} · {fmtMoney(t.p.salary)}
               </span>
+              {t.out[0] && (
+                <span className="small">
+                  Replaces <b>{t.out[0].name}</b> at {t.slot} (OVR {Math.round(t.out[0].ovr)})
+                  {t.out.length > 1 ? `; ${t.out.slice(1).map((o) => o.name).join(' and ')} also go${t.out.length > 2 ? '' : 'es'} for the money` : ''}
+                </span>
+              )}
               <div className="row" style={{ gap: 6 }}>
                 <span className={`interest i-${t.label === 'Interested' ? 'hi' : t.label === 'Open to it' ? 'mid' : 'lo'}`}>{t.label}</span>
-                <span className={`scout-rec rec-${t.rec.toLowerCase()}`}>Scouts: {t.rec}</span>
+                {!master && <span className={`scout-rec rec-${t.rec.toLowerCase()}`}>Scouts: {t.rec}</span>}
               </div>
-              <span className="small rec-why prose">{t.why}</span>
+              {!master && <span className="small rec-why prose">{t.why}</span>}
               {t.lineup && <span className="small warn-text">{t.lineup}</span>}
             </div>
             <button className="btn small" disabled={!t.fits || !!t.lineup || left <= 0} onClick={() => recruit(t.p.id)} title={t.lineup ?? ''}>
@@ -112,7 +136,7 @@ export function RecruitCard({ g }: { g: GameState }) {
           Take a 10% pay cut
         </button>
         <span className="small muted">
-          {info.cut > 0 ? `${Math.round(info.cut * 100)}% cut so far. ` : ''}Frees cap room and makes players likelier to come. Your weakest starter goes the other way. The scouts' call is a read, not a promise.
+          {info.cut > 0 ? `${Math.round(info.cut * 100)}% cut so far. ` : ''}Frees cap room and makes players likelier to come. A new player takes over his position; the starter there goes the other way.{master ? '' : " The scouts' call is a read, not a promise."}
         </span>
       </div>
     </section>
@@ -122,6 +146,22 @@ export function RecruitCard({ g }: { g: GameState }) {
 export function StoriesCard({ g }: { g: GameState }) {
   const mutate = useStore((s) => s.mutate);
   const [more, setMore] = useState(false);
+  // round 15: folds to one line a story; the choice is remembered on this device
+  const [open, setOpenState] = useState(() => {
+    try {
+      return localStorage.getItem('btr-stories-open') === '1';
+    } catch {
+      return false;
+    }
+  });
+  const setOpen = (v: boolean) => {
+    setOpenState(v);
+    try {
+      localStorage.setItem('btr-stories-open', v ? '1' : '0');
+    } catch {
+      /* the fold still works for this visit */
+    }
+  };
   const st = g.stories ?? [];
   if (st.length === 0) return null;
   const lg = g.stage === 'NBA' ? g.nba : g.league;
@@ -130,11 +170,22 @@ export function StoriesCard({ g }: { g: GameState }) {
   const shown = more ? order : order.slice(0, 4);
   return (
     <section className="card stack">
-      <div className="row">
-        <div className="sec-title">Around the league</div>
-        <div className="spacer" />
+      <button className="row fold-head" aria-expanded={open} onClick={() => setOpen(!open)}>
+        <span className="sec-title">Around the league</span>
+        <span className="spacer" />
         {left > 0 && <span className="small muted">Call it: {left} left</span>}
-      </div>
+        <span className="fold-arrow" aria-hidden="true">{open ? '▴' : '▾'}</span>
+      </button>
+      {!open && (
+        <ul className="story-lines">
+          {order.map(({ x }) => (
+            <li key={x.kind + x.teamId} className={x.mine ? 'mine' : ''}>
+              <span className="story-tag">{STORY_LABEL[x.kind]}</span> {x.title}
+            </li>
+          ))}
+        </ul>
+      )}
+      {open && (
       <div className="stories">
         {shown.map(({ x, i }) => {
           const t = lg?.teams.find((y) => y.id === x.teamId);
@@ -180,7 +231,8 @@ export function StoriesCard({ g }: { g: GameState }) {
           );
         })}
       </div>
-      {order.length > 4 && (
+      )}
+      {open && order.length > 4 && (
         <button className="link-btn" onClick={() => setMore(!more)}>
           {more ? 'Show fewer' : `Show all ${order.length} stories`}
         </button>

@@ -229,6 +229,20 @@ export function DunkGame() {
       <section className="stack">
         <div className="kicker">Dunk contest</div>
         <h2 className="title">All-Star Saturday night</h2>
+        <div className="rule-tiles">
+          <div className="rule-tile">
+            <b>2</b>
+            <span>dunks a round</span>
+          </div>
+          <div className="rule-tile">
+            <b>3</b>
+            <span>attempts a dunk</span>
+          </div>
+          <div className="rule-tile">
+            <b>Top 2</b>
+            <span>go to the final</span>
+          </div>
+        </div>
         <section className="card stack">
           <p className="small">
             Four dunkers, two dunks each. The top two go to the final for two more. Design every dunk: a takeoff, one or two moves and maybe a prop. Each part is one timing tap; miss one and the attempt fails. Three attempts a dunk.
@@ -252,9 +266,24 @@ export function DunkGame() {
     );
 
   const dunkNo = mine[round - 1].length + 1;
+  // round 15: the rules stay in view while you play
   const header = (
-    <div className="kicker">
-      Dunk contest · {round === 1 ? 'first round' : 'final'} · dunk {Math.min(2, dunkNo)} of 2{stage === 'build' || stage === 'tap' ? ` · attempt ${attempt} of ${DUNK.attempts}` : ''}
+    <div className="dunk-status">
+      <span className="kicker">Dunk contest · {round === 1 ? 'first round' : 'final'}</span>
+      <span className="dunk-pips" aria-label={`Dunk ${Math.min(2, dunkNo)} of 2`}>
+        Dunk
+        {[1, 2].map((k) => (
+          <i key={k} className={k < dunkNo ? 'done' : k === dunkNo ? 'now' : ''} />
+        ))}
+      </span>
+      {(stage === 'build' || stage === 'tap') && (
+        <span className="dunk-pips attempts" aria-label={`Attempt ${attempt} of ${DUNK.attempts}`}>
+          Attempt
+          {Array.from({ length: DUNK.attempts }, (_, k) => (
+            <i key={k} className={k + 1 < attempt ? 'miss' : k + 1 === attempt ? 'now' : ''} />
+          ))}
+        </span>
+      )}
     </div>
   );
 

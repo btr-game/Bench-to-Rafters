@@ -31,13 +31,14 @@ export const tierFor = (ovr: number): string => TIERS.find(([min]) => ovr >= min
 
 // [center, scale] of the logistic curve in peak OVR, fitted to the balance harness
 // (share of careers with that peak that reach each milestone at least once)
+// round 15: refit to 450 Regular guy careers after the new OVR weights and the harder Hall of Fame
 export const ODDS_CURVES: Record<string, [number, number]> = {
-  nba: [62, 1.6],
-  allStar: [76.8, 1.4],
-  allNba: [80, 1.7],
-  allNba1: [85, 1.9],
-  hof: [82.5, 1.5],
-  mvp: [91.8, 2.2],
+  nba: [64.6, 1.8],
+  allStar: [77.7, 1.65],
+  allNba: [83.1, 1.35],
+  allNba1: [87.0, 2.05],
+  hof: [90.1, 1.15],
+  mvp: [90.5, 1.15],
 };
 
 export interface ScoutReport {
