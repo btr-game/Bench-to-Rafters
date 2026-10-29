@@ -847,3 +847,9 @@ Reached from the start page and from the bottom of Home (a career in progress is
   card, offseason moves, then the player card and the rest. On an offseason screen the main
   card moved from about 1,700 px down to 467 px, and the page from 8,024 px to 4,843 px. The
   recruit board and the storylines show the first three or four with a "show all".
+- **Future plan (parked): a feedback page.** A published page cannot send email itself, and the
+  owner's address must not be in the page or the repository. The workable design: the page
+  stores each note in the artifact's private database (each player writes only their own
+  document, only the owner reads them all, with an inbox for the owner), and a scheduled task
+  on the owner's side reads new notes and forwards them by email. Note: viewers with view-only
+  access cannot write to the database, so they would need Contributor access to send feedback.

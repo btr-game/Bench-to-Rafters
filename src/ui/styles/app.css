@@ -907,3 +907,4 @@ button.scout-row { text-align: left; background: var(--surface); color: inherit;
   .home-grid { grid-template-columns: 330px minmax(0, 1fr) 380px; grid-template-areas: 'left center side'; }
   .home-grid > .stack:first-child { grid-row: auto; }
 }
+.fo-team { display: inline-block; border-bottom: 5px solid var(--team); padding-bottom: 2px; }

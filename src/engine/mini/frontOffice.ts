@@ -249,7 +249,7 @@ export function prospectReport(c: FoProspect): {
  * The scouts' recommendations for the pick (round 13). Built only from what the reports show, so
  * scouting a prospect sharpens the advice: his level now, his ceiling (weighted more), what the
  * roster needs (no rotation-level player at his position), and once known his work ethic and
- * medicals. Unscouted prospects carry a small penalty for the guesswork. Best three, with why.
+ * medicals. The wider the scouts' ranges (unscouted prospects), the bigger the discount. Best three, with why.
  */
 export function draftRecs(fo: FoState, max = 3): { i: number; score: number; why: string[] }[] {
   const d = fo.draft;
@@ -272,10 +272,9 @@ export function draftRecs(fo: FoState, max = 3): { i: number; score: number; why
       if (rp.ethic === 'Coasts on talent') (score -= 2), why.push('coasts');
       if (rp.medical === 'Red flag') (score -= 4), why.push('medical red flag');
       else if (rp.medical === 'Some wear on the knees') score -= 1.5;
-      if (c.level === 0) {
-        score -= 1;
-        why.push('not scouted yet');
-      }
+      // guesswork costs: the wider the scouts' ranges, the less the midpoint can be trusted
+      score -= (rp.ceiling[1] - rp.ceiling[0] + rp.now[1] - rp.now[0]) * 0.1;
+      if (c.level === 0) why.push('scout him first');
       if (mid(rp.now) >= 76) why.push('ready to play');
       return { i, score: Math.round(score * 10) / 10, why };
     })

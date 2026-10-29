@@ -534,7 +534,7 @@ export function FrontOffice() {
           <div className="kicker">
             Front Office · season {fo.season} of {F.FO.seasons}
           </div>
-          <h2 className="title" style={{ color: team.color }}>
+          <h2 className="title fo-team" style={{ ['--team' as string]: team.color }}>
             {team.name}
           </h2>
         </div>
