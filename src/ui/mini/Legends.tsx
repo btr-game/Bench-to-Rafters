@@ -2,6 +2,7 @@
 // in one-line rows, setup as its own step, the matchup side by side, run / bracket / standings
 // in tabs) and a soft transition between every step.
 
+import { LegendArt } from '../art/Legend';
 import { useMemo, useState } from 'react';
 import { careerTag, chemistryOf, FOCUS_LABEL, growRookie, legendTeams, LEGENDS, newLegends, newLegendsCareer, PLAN_LABEL, playNext, playSeason, rookieTag, scoutNext, seedOf, standings, STYLE_HINT, type Chemistry, type Focus, type LegendsState, type LTeam, type Plan } from '../../engine/mini/legends';
 import { FRANCHISE_IDENTITY } from '../../content/franchiseIdentity';
@@ -25,6 +26,7 @@ function Five({ t }: { t: LTeam }) {
     <div className="five">
       {t.five.map((p) => (
         <div key={p.name} className={`five-row${p.rookie ? ' mine' : ''}`}>
+          <LegendArt name={p.name} pos={p.pos} team={t.id} size={40} />
           <span>{p.pos}</span>
           <b>{p.name}</b>
           <span>{p.ovr}</span>
@@ -102,6 +104,11 @@ function Picker({ teams, onPick, me }: { teams: LTeam[]; onPick: (id: string) =>
                 <b>
                   {t.name} <span className="lg-ident">{FRANCHISE_IDENTITY[t.id]?.name}</span>
                 </b>
+                <span className="lg-faces" aria-hidden="true">
+                  {t.five.map((p) => (
+                    <LegendArt key={p.name} name={p.name} pos={p.pos} team={t.id} size={34} />
+                  ))}
+                </span>
                 <span className="muted small">{t.five.map((p) => last(p.name)).join(' · ')}</span>
                 {me && <span className={`lg-chem chem-${bestChem(t, me).label.toLowerCase()}`}>{bestChem(t, me).label}</span>}
                 <span className="lg-rating">{t.rating.toFixed(1)}</span>
@@ -149,6 +156,7 @@ function Setup({ t, onBack, onStart, me }: { t: LTeam; onBack: () => void; onSta
             const on = bench === p.name;
             return (
               <button key={p.name} className={`lg-bench-row${on ? ' on' : ''}`} aria-pressed={on} onClick={() => setBench(p.name)}>
+                <LegendArt name={p.name} pos={p.pos} team={t.id} size={52} />
                 <span className="lg-pos">{p.pos}</span>
                 <span className="lg-who">
                   <s>{p.name}</s>

@@ -212,9 +212,9 @@ export function paint(pose: Pose, kit: Kit, look: Look, number: number): string[
     put(wx + i, cy0 - 3 + arch, inkT[1], P.torso);
     if (i % 3 !== 1) put(wx + i, cy0 - 4 + arch, inkT[1], P.torso);
   }
-  // the number, outlined in the trim
-  const num = String(Math.max(0, Math.min(99, number)));
-  const digits = num.length === 1 ? [num] : [num[0], num[1]];
+  // the number, outlined in the trim (a negative number: a plain jersey)
+  const num = number < 0 ? '' : String(Math.min(99, number));
+  const digits = num.length === 1 ? [num] : num.length === 2 ? [num[0], num[1]] : [];
   const nX = cx0 + (digits.length === 1 ? 2 : 0);
   const cells: Pt[] = [];
   digits.forEach((d, i) => {

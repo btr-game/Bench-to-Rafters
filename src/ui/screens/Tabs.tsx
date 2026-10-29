@@ -10,6 +10,7 @@ import { VenueArt, venueOf, type VenueKind } from '../art/Venue';
 import { TeamArt } from '../art/Crest';
 import { PlayerArt, kitFor, styleLeague, type KitName } from '../art/Player';
 import { JerseyArt } from '../art/Jersey';
+import { FlagArt } from '../art/Flag';
 import type { GameLog, GameState, League, SeasonRecord, SeriesResult, StatLine, Team } from '../../engine/types';
 import { ATTRS, LEVELS } from '../../engine/balance';
 import { ovrOf } from '../../engine/player/ovr';
@@ -511,7 +512,10 @@ export function PlayerTab({ g }: { g: GameState }) {
               </div>
               <div>
                 <dt>Nationality</dt>
-                <dd>{p.country}</dd>
+                <dd className="with-flag">
+                  <FlagArt country={p.country} size={24} />
+                  {p.country}
+                </dd>
               </div>
               <div>
                 <dt>Shoots</dt>

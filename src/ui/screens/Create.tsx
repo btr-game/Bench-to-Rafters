@@ -11,6 +11,8 @@ import { ORIGINS } from '../../content/origins';
 import { edgeOf } from '../../engine/career/nationality';
 import { ht, seasonLabel } from '../format';
 import { MiniGamesCard } from '../mini/MiniGames';
+import { FlagArt } from '../art/Flag';
+import { PositionCard } from '../art/PositionCard';
 
 const pick = <T,>(a: readonly T[]): T => a[Math.floor(Math.random() * a.length)];
 const uiRng = makeRng(Math.floor(Math.random() * 2 ** 31));
@@ -195,6 +197,7 @@ export function Create() {
               </button>
               {FEATURED.map((c) => (
                 <button key={c} className={`nation${country === c ? ' on' : ''}`} aria-pressed={country === c} onClick={() => setCountry(c)}>
+                  <FlagArt country={c} size={36} />
                   <b>{c === 'USA' ? 'United States' : c}</b>
                   <small>{ROAD[ORIGINS.find((o) => o.country === c)?.path ?? 'us']}</small>
                 </button>
@@ -215,7 +218,10 @@ export function Create() {
               </select>
             </div>
             <div className="nation-notes">
-              <div className="kicker">{country ? `Your road from ${country === 'USA' ? 'the United States' : country}` : 'Your road'}</div>
+              <div className="kicker with-flag">
+                {country && <FlagArt country={country} size={30} />}
+                {country ? `Your road from ${country === 'USA' ? 'the United States' : country}` : 'Your road'}
+              </div>
               {country ? (
                 <ul>
                   {edgeOf(country).notes.map((n) => (
@@ -232,22 +238,28 @@ export function Create() {
             <div className="sec-title">On the court</div>
             <fieldset>
               <legend>{UI.create.position}</legend>
-              <div className="seg">
-                {POSITIONS.map((p) => (
-                  <button
+              <div className="pos-cards">
+                {POSITIONS.map((p, i) => (
+                  <PositionCard
                     key={p}
-                    aria-pressed={p === pos}
-                    onClick={() => {
+                    pos={p}
+                    name={p}
+                    full={NAMES.pos[p]}
+                    height={`${ht(HEIGHT_RANGE[p][0])}–${ht(HEIGHT_RANGE[p][1])}`}
+                    number={Number(number) || 0}
+                    playerName={name || 'Rookie'}
+                    on={p === pos}
+                    scale={1 + i * 0.07}
+                    onPick={() => {
                       choosePos(p);
                       setRolled((r) => ({ ...r, pos: false, arch: false }));
                     }}
-                    title={NAMES.pos[p]}
-                  >
-                    {p}
-                  </button>
+                  />
                 ))}
+              </div>
+              <div className="seg">
                 <button className="seg-random" onClick={randomPos} title="Pick a position at random">
-                  Random
+                  Random position
                 </button>
               </div>
               <p className="muted small">

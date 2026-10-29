@@ -44,13 +44,13 @@ export function kitFor(teamName: string, abbr: string, color: string, which: Kit
   return leagueKits(league, color, teamName, parent && TEAM_STYLE[parent.abbr])[which];
 }
 
-export function PlayerArt({ name, number, pos, color = '#2A2F36', team = '', abbr = '', kit = 'home', league, size = 96 }: { name: string; number: number; pos?: Pos; color?: string; team?: string; abbr?: string; kit?: KitName; league?: KitLeague; size?: number }) {
+export function PlayerArt({ name, number, pos, color = '#2A2F36', team = '', abbr = '', kit = 'home', league, kitData, size = 96 }: { name: string; number: number; pos?: Pos; color?: string; team?: string; abbr?: string; kit?: KitName; league?: KitLeague; kitData?: Kit; size?: number }) {
   const pose = poseFor(pos);
   const paths = useMemo(() => {
-    const k = kitFor(team, abbr, color, kit, league);
+    const k = kitData ?? kitFor(team, abbr, color, kit, league);
     const shoe = kit === 'home' ? '#F2F2F2' === k.base ? k.ink : k.trim : k.base === '#FFFFFF' ? k.ink : k.base;
     return toPaths(paint(pose, k, lookOf(name, shoe), number));
-  }, [pose, name, number, color, team, abbr, kit, league]);
+  }, [pose, name, number, color, team, abbr, kit, league, kitData]);
   return (
     <svg xmlns="http://www.w3.org/2000/svg" className="art art-player" data-art="player-sprite" width={(size * pose.w) / pose.h} height={size} viewBox={`0 0 ${pose.w} ${pose.h}`} shapeRendering="crispEdges" role="img" aria-label={`${name}, number ${number}`}>
       {paths.map((p) => (
