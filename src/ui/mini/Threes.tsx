@@ -2,12 +2,26 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { SHOOTERS } from '../../content/franchiseFives';
+import { NBA_TEAMS } from '../../content/teams';
 import { ballSetup, ballValue, contestRng, LIVELY, simRound, shotResult, THREES, zoneWidth, type RoundScore, type Shooter } from '../../engine/mini/threes';
 import { useStore } from '../../store';
+import type { GameState } from '../../engine/types';
 import { shuffle } from '../../engine/rng';
 import { MiniBonus } from './MiniBonus';
+import { ThreesCourt, type ShotResult } from './ThreesCourt';
+import { TEAM_STYLE, genericKits } from '../../content/teamStyle';
+import { team as teamOf } from '../selectors';
 
 type Ball = 'todo' | 'make' | 'miss';
+
+const NBA_ABBR = (teamName: string) => NBA_TEAMS.find((t) => teamName.includes(t.nick))?.abbr ?? '';
+
+/** A shooter's kit: his team's road jersey (yours: the team you play for now). */
+function kitOf(shooter: Shooter, game: GameState | null) {
+  const mineT = shooter.me && game ? teamOf(game) : null;
+  const abbr = mineT ? NBA_ABBR(mineT.name) : shooter.team;
+  return (abbr && TEAM_STYLE[abbr]?.road) || genericKits(mineT?.color ?? '#1D428A', 'ALL-STAR').road;
+}
 
 function Round({ shooter, moneyRack, onDone, label }: { shooter: Shooter; moneyRack: number; onDone: (score: number) => void; label: string }) {
   const rng = useMemo(() => contestRng(Math.floor(Math.random() * 2 ** 31)), []);
@@ -20,6 +34,9 @@ function Round({ shooter, moneyRack, onDone, label }: { shooter: Shooter; moneyR
   const [surging, setSurging] = useState(false);
   const [left, setLeft] = useState(THREES.seconds);
   const [started, setStarted] = useState(false);
+  const [shot, setShot] = useState<{ n: number; result: ShotResult } | null>(null);
+  const game = useStore((s) => s.game);
+  const kit = useMemo(() => kitOf(shooter, game), [shooter, game]);
   const clock0 = useRef(0);
   const ball0 = useRef(0); // when the current ball came up
   const last = useRef(0);
@@ -89,6 +106,7 @@ function Round({ shooter, moneyRack, onDone, label }: { shooter: Shooter; moneyR
     const v = ballValue(rack, i % THREES.balls, moneyRack);
     setBalls((b) => b.map((x, k) => (k === i ? (made ? 'make' : 'miss') : x)));
     if (made) setScore((s) => s + v);
+    setShot({ n: i, result: r });
     const st = made ? streak + 1 : 0;
     setStreak(st);
     setFlash(
@@ -131,16 +149,7 @@ function Round({ shooter, moneyRack, onDone, label }: { shooter: Shooter; moneyR
           <small>{Math.ceil(left)}s</small>
         </div>
       </div>
-      <div className="racks">
-        {Array.from({ length: THREES.racks }, (_, r) => (
-          <div key={r} className={`rack${r === moneyRack ? ' money-rack' : ''}${Math.floor(i / THREES.balls) === r && !done ? ' now' : ''}`}>
-            {Array.from({ length: THREES.balls }, (_, b) => {
-              const kk = r * THREES.balls + b;
-              return <span key={b} className={`ball ${balls[kk]}${ballValue(r, b, moneyRack) === 2 ? ' money' : ''}`} />;
-            })}
-          </div>
-        ))}
-      </div>
+      <ThreesCourt kit={kit} name={shooter.name} accent="#C8102E" rack={Math.min(THREES.racks - 1, Math.floor(i / THREES.balls))} balls={balls} moneyRack={moneyRack} onFire={onFire} shot={shot} score={score} left={started ? left : THREES.seconds} />
       <div className={`meter${surging ? ' surging' : ''}`} aria-hidden="true">
         <div className="meter-zone" style={{ left: `${(centre - zone / 2) * 100}%`, width: `${zone * 100}%` }} />
         <div className="meter-sweet" style={{ left: `${(centre - zone * 0.09) * 100}%`, width: `${zone * 18}%` }} />
@@ -152,7 +161,7 @@ function Round({ shooter, moneyRack, onDone, label }: { shooter: Shooter; moneyR
       <button className="btn block shoot-btn" onClick={shoot} disabled={done}>
         {started ? 'Shoot' : 'Start'}
       </button>
-      <p className="small muted">Stop the marker in the green; the bright middle is a swish. Every ball moves at its own pace and the green moves too. Watch for surges. Three in a row and you are on fire: a wider green until you miss. Money balls (gold) are worth 2 and a little harder.</p>
+      <p className="small muted">Stop the marker in the green; the bright middle is a swish. Every ball moves at its own pace and the green moves too. Watch for surges. Three in a row and you are on fire: a wider green until you miss. Money balls (red, white and blue) are worth 2 and a little harder.</p>
     </div>
   );
 }
@@ -212,6 +221,7 @@ export function ThreesGame() {
           </div>
         ) : (
           <>
+            <ThreesCourt kit={kitOf(me, game)} name={me.name} accent="#C8102E" rack={money} balls={Array(THREES.racks * THREES.balls).fill('todo')} moneyRack={money} onFire={false} shot={null} score={0} left={THREES.seconds} />
             <p className="small muted">One rack is all money balls (2 points each). Most shooters put it last, where the corner is; tired arms say otherwise.</p>
             <div className="seg">
               {[0, 1, 2, 3, 4].map((r) => (

@@ -5,6 +5,9 @@ import { bailOut, contestRng, DUNK, DUNKERS, dunkDifficulty, difficultyLabel, du
 import { shuffle } from '../../engine/rng';
 import { useStore } from '../../store';
 import { MiniBonus } from './MiniBonus';
+import { DunkStage } from './DunkStage';
+import { kitFor } from '../art/Player';
+import { team as teamOf } from '../selectors';
 
 /** One part of a dunk to pick: its name and difficulty dots; a check mark when chosen. */
 function PartChip({ part, on, used, onClick }: { part: DunkPart; on: boolean; used: boolean; onClick: () => void }) {
@@ -41,7 +44,7 @@ function Recipe({ d }: { d: DunkDesign }) {
 }
 
 /** The timing taps for one attempt. Reports every tap's quality, or the tap that missed. */
-function Taps({ taps, sweep, onDone }: { taps: DunkTap[]; sweep: number; onDone: (q: number[], missedAt: number | null) => void }) {
+function Taps({ taps, sweep, onDone, onTap }: { taps: DunkTap[]; sweep: number; onDone: (q: number[], missedAt: number | null) => void; onTap?: (n: number) => void }) {
   const [i, setI] = useState(0);
   const [q, setQ] = useState<number[]>([]);
   const [flash, setFlash] = useState('');
@@ -85,6 +88,7 @@ function Taps({ taps, sweep, onDone }: { taps: DunkTap[]; sweep: number; onDone:
     }
     const nq = [...q, v];
     setQ(nq);
+    onTap?.(nq.length);
     setFlash(v > 0.8 ? 'Perfect' : v > 0.4 ? 'Good' : 'Just in');
     if (i + 1 >= taps.length) {
       finished.current = true;
@@ -98,7 +102,7 @@ function Taps({ taps, sweep, onDone }: { taps: DunkTap[]; sweep: number; onDone:
       dir.current = 1;
       setI(i + 1);
     }, 300);
-  }, [i, q, taps, onDone]);
+  }, [i, q, taps, onDone, onTap]);
 
   useEffect(() => {
     const k = (e: KeyboardEvent) => {
@@ -179,6 +183,10 @@ function Board({ list, title }: { list: Entry[]; title: string }) {
 
 export function DunkGame() {
   const game = useStore((s) => s.game);
+  // the stage: the dunker in his team's road kit, and how far through the taps he is
+  const myTeam = game ? teamOf(game) : null;
+  const kit = kitFor(myTeam?.name ?? '', myTeam?.abbr ?? '', myTeam?.color ?? '#1D428A', 'road');
+  const [tapsDone, setTapsDone] = useState(0);
   const me: Dunker = { name: game ? game.player.name : 'You', skill: 0, me: true };
   const ath = game ? Math.round(Math.max(40, Math.min(99, game.player.attrs.ATH))) : 85;
   const rng = useMemo(() => contestRng(Math.floor(Math.random() * 2 ** 31)), []);
@@ -199,6 +207,7 @@ export function DunkGame() {
     setTaps(dunkTaps(rng, design, ath));
     setMissed(null);
     setTryKey((k) => k + 1);
+    setTapsDone(0);
     setStage('tap');
   };
   const land = (s: DunkScore) => {
@@ -295,6 +304,7 @@ export function DunkGame() {
       <section className="stack">
         {header}
         {round === 1 && dunkNo === 1 && attempt === 1 && <p className="small muted">Up against {field.map((f) => f.name).join(', ')}.</p>}
+        <DunkStage kit={kit} name={me.name} design={design} phase="idle" />
         {missed && <p className="small warn">Missed the {missed.toLowerCase()}. Go again, or change the dunk.</p>}
         <section className="card stack">
           <div className="sec-title">Takeoff</div>
@@ -337,7 +347,8 @@ export function DunkGame() {
         {header}
         <div className="sec-title">{dunkName(design)}</div>
         <Recipe d={design} />
-        <Taps key={tryKey} taps={taps} sweep={sweepFor(design)} onDone={onDone} />
+        <DunkStage kit={kit} name={me.name} design={design} phase="taps" progress={tapsDone / Math.max(1, taps.length)} />
+        <Taps key={tryKey} taps={taps} sweep={sweepFor(design)} onDone={onDone} onTap={setTapsDone} />
       </section>
     );
 
@@ -348,6 +359,7 @@ export function DunkGame() {
       <section className="stack">
         {header}
         <section className="card stack">
+          <DunkStage kit={kit} name={me.name} design={design} phase="replay" made={last.made} judges={last.made ? last.judges : undefined} />
           <div className="sec-title">{last.made ? (last.total >= 50 ? 'Fifty! The building erupts' : last.total >= 45 ? 'The crowd is up' : 'The judges have it') : 'Three misses'}</div>
           <Cards s={last} />
         </section>
