@@ -5,6 +5,7 @@ import * as F from '../../engine/mini/frontOffice';
 import type { FoState, Tactic } from '../../engine/mini/frontOffice';
 import { fmtMoney } from '../../engine/economy/salary';
 import { NbaBracket } from '../components/NbaBracket';
+import { MiniBonus } from './MiniBonus';
 import { ordinal } from '../format';
 import { ATTRS } from '../../engine/balance';
 import { NAMES } from '../../content/strings';
@@ -396,6 +397,11 @@ export function FrontOffice() {
             </button>
           )}
         </section>
+      )}
+      {fo.phase === 'over' && (
+        <MiniBonus
+          result={{ game: 'office', titles: fo.history.filter((h) => h.title).length, playoffs: fo.history.filter((h) => h.exit !== 'Missed the playoffs').length, seasons: fo.history.length, fired: fo.fired }}
+        />
       )}
       {fo.phase === 'over' && (
         <section className="card stack">

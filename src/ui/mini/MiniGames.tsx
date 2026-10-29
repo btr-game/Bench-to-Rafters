@@ -40,7 +40,7 @@ export function MiniGames() {
               </button>
             ))}
           </div>
-          <p className="muted small">Your career is safe: close the mini-games to go back to it.</p>
+          <p className="muted small">Your career is safe: close the mini-games to go back to it. With a career in progress, a good showing earns your player a small rating bonus, once per mini-game per season.</p>
         </section>
       )}
       {mini === 'office' && <FrontOffice />}
@@ -63,3 +63,4 @@ export function MiniGamesCard() {
     </section>
   );
 }
+

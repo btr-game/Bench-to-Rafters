@@ -5,6 +5,7 @@ import { SHOOTERS } from '../../content/franchiseFives';
 import { ballSetup, ballValue, contestRng, LIVELY, simRound, shotResult, THREES, zoneWidth, type RoundScore, type Shooter } from '../../engine/mini/threes';
 import { useStore } from '../../store';
 import { shuffle } from '../../engine/rng';
+import { MiniBonus } from './MiniBonus';
 
 type Ball = 'todo' | 'make' | 'miss';
 
@@ -249,6 +250,9 @@ export function ThreesGame() {
           </div>
         ))}
       </div>
+      {(stage === 'done' || place > 3) && (
+        <MiniBonus result={{ game: 'threes', score: Math.max(r1.find((x) => x.me)?.score ?? 0, fin.find((x) => x.me)?.score ?? 0), won: stage === 'done' && place === 1, own: !!me?.me }} />
+      )}
       {stage === 'board' && place <= 3 ? (
         <button className="btn" onClick={() => setStage('final')}>
           Shoot the final

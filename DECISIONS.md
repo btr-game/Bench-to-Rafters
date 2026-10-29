@@ -661,3 +661,11 @@ Reached from the start page and from the bottom of Home (a career in progress is
   rating and brings his own form (sd 2) to every series; his series line is shown and he can be
   series MVP. Title odds with the right plans and a scorer rookie in place of the weakest legend
   (300 runs): Lakers 40%, Celtics 25%, Bulls 15%, Heat 8%, Grizzlies and Clippers about 1%.
+- **Mini-game bonuses for the career:** with a career in progress, a finished mini-game can be
+  turned into a small boost for the career player, once per mini-game per career season (so at
+  most about 3.5 rating points a season across all three). Three-point contest: shooting +0.3 /
+  0.6 / 1 / 1.5 for 13 / 18 / 23 / 27+ points, range +1 from 23, reputation +3 for the winner;
+  half when shooting as a legend instead of your own player. Legends showdown: basketball IQ +1
+  for the title, +0.7 for the Finals, +0.4 for the conference finals, +0.15 otherwise. Front
+  Office: IQ up to +1 from titles and playoff runs, playmaking +0.4 with a title; nothing if fired.
+  A lab career gets the same amount as credits.

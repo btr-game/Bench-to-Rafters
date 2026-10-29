@@ -4,6 +4,7 @@
 import { fastForward, setFast } from './engine/fast';
 import { requestTrade } from './engine/career/team';
 import { recruitPlayer, takePayCut } from './engine/career/recruit';
+import { canClaimMini, claimMini, type MiniResult } from './engine/career/miniBonus';
 import { create } from 'zustand';
 import type { AttrKey, GameLog, GameState, Pos } from './engine/types';
 import { advance as engineAdvance, changeFocus, changeNumber, changePosition, choose as engineChoose, dismissMoment, newGame, retireByChoice, spendCredits, type CreateInput } from './engine/flow';
@@ -40,6 +41,7 @@ interface Store {
   endTransition: () => void;
   reset: () => void;
   mini: Mini | null;
+  claimMini: (r: MiniResult) => string;
   setMini: (m: Mini | null) => void;
   setTab: (t: Tab) => void;
   setTheme: (t: Theme) => void;
@@ -201,6 +203,14 @@ export const useStore = create<Store>((set, get) => ({
   endTransition: () => set({ transition: null }),
   reset: () => set({ game: null, tab: 'home', transition: null }),
   mini: null,
+  claimMini: (r) => {
+    const g = get().game;
+    if (!g || !canClaimMini(g, r.game)) return '';
+    const next = structuredClone(g);
+    const text = claimMini(next, r);
+    set({ game: next });
+    return text;
+  },
   setMini: (mini) => {
     set({ mini });
     top();

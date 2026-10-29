@@ -6,6 +6,7 @@ import { FIRST_NAMES, LAST_NAMES } from '../../content/names';
 import type { Bracket, League, Moment } from '../../engine/types';
 import { TextBracket } from '../components/TextBracket';
 import { FinalReel } from '../components/Overlays';
+import { MiniBonus } from './MiniBonus';
 
 const tierOf = (rank: number) => (rank <= 3 ? 'Favorite' : rank <= 10 ? 'Contender' : rank <= 20 ? 'Dark horse' : 'Long shot');
 
@@ -198,6 +199,9 @@ export function LegendsGame() {
             ))}
           </div>
         </section>
+      )}
+      {st.phase === 'over' && (
+        <MiniBonus result={{ game: 'legends', reached: st.champion === st.mine ? 'champion' : st.out === 'Finals' ? 'finals' : st.out === 'Conference finals' ? 'semis' : 'out' }} />
       )}
       {st.phase === 'over' && (
         <section className="card stack">

@@ -6,6 +6,8 @@ import { NBA_TEAMS } from '../src/content/teams';
 import { growRookie, newLegends, playNext, playSeason } from '../src/engine/mini/legends';
 import * as F from '../src/engine/mini/frontOffice';
 import { contestRng, simRound, shotResult, zoneWidth } from '../src/engine/mini/threes';
+import { canClaimMini, claimMini } from '../src/engine/career/miniBonus';
+import { newGame } from '../src/engine/flow';
 
 describe('mini-games', () => {
   it('every franchise has an all-time five, one per position, and nobody plays for two teams', () => {
@@ -57,5 +59,25 @@ describe('mini-games', () => {
     expect(sum / 400).toBeLessThan(26);
     expect(shotResult(r, 0.5, zoneWidth(90, 0))).toBe('swish');
     expect(shotResult(r, 0.02, zoneWidth(90, 0))).toBe('miss');
+  });
+});
+
+describe('mini-game career bonuses', () => {
+  it('pays once per mini-game per season, by result, and as credits in the lab', () => {
+    const s = newGame(31, { name: 'Bo Nus', number: 1, pos: 'SG', archetype: 0, focus: ['SHT', 'IQ'] });
+    const sht = s.player.attrs.SHT;
+    expect(canClaimMini(s, 'threes')).toBe(true);
+    claimMini(s, { game: 'threes', score: 27, won: true, own: true });
+    expect(s.player.attrs.SHT).toBeCloseTo(sht + 1.5, 6);
+    expect(canClaimMini(s, 'threes')).toBe(false);
+    expect(claimMini(s, { game: 'threes', score: 30, won: true, own: true })).toBe('');
+    expect(canClaimMini(s, 'legends')).toBe(true);
+    s.year += 1;
+    expect(canClaimMini(s, 'threes')).toBe(true);
+    const lab = newGame(32, { name: 'La B', number: 1, pos: 'SG', archetype: 0, focus: [], mode: 'lab' });
+    const iq = lab.player.attrs.IQ;
+    claimMini(lab, { game: 'legends', reached: 'champion' });
+    expect(lab.player.attrs.IQ).toBe(iq);
+    expect(lab.player.lab!.credits).toBeCloseTo(1, 6);
   });
 });
