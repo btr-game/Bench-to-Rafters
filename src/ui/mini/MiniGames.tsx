@@ -48,7 +48,7 @@ export function MiniGames() {
               </button>
             ))}
           </div>
-          <p className="muted small">Your career is safe: tap Back to career any time. With a career in progress, a good showing earns your player a small rating bonus: two claims a season (the second at half value).</p>
+          <p className="muted small">Your career is safe: tap Back to career any time. With a career in progress, a good showing earns your player a rating bonus (a top result is worth about 1 OVR): two claims a season, the second at half value.</p>
         </section>
       )}
       {mini === 'office' && <FrontOffice />}

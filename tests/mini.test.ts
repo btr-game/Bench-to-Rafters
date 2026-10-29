@@ -6,7 +6,7 @@ import { NBA_TEAMS } from '../src/content/teams';
 import { growRookie, newLegends, playNext, playSeason } from '../src/engine/mini/legends';
 import * as F from '../src/engine/mini/frontOffice';
 import { contestRng, simRound, shotResult, zoneWidth } from '../src/engine/mini/threes';
-import { canClaimMini, claimMini, claimsUsed, MINI_CLAIMS } from '../src/engine/career/miniBonus';
+import { canClaimMini, claimMini, claimsUsed, MINI_CLAIMS, miniReward, taperAt } from '../src/engine/career/miniBonus';
 import { labBestSpend, labBuy, labPlaySeason, labSpreadSpend, LAB_GAME, newLabGame } from '../src/engine/mini/labGame';
 import { bailOut, contestRng as dunkRng, dunkDifficulty, dunkTaps, judge, tapQuality, type DunkDesign } from '../src/engine/mini/dunk';
 import { newGame } from '../src/engine/flow';
@@ -65,24 +65,29 @@ describe('mini-games', () => {
 });
 
 describe('mini-game career bonuses', () => {
-  it('pays two claims a season, the second at half value, and as credits in the lab', () => {
+  it('pays two claims a season, the second at half value, tapered near the top, and as credits in the lab', () => {
     const s = newGame(31, { name: 'Bo Nus', number: 1, pos: 'SG', archetype: 0, focus: ['SHT', 'IQ'] });
     const sht = s.player.attrs.SHT;
+    const top = miniReward({ game: 'threes', score: 27, won: true, own: true }).attrs.SHT!;
+    expect(top).toBe(4);
     expect(canClaimMini(s, 'threes')).toBe(true);
     claimMini(s, { game: 'threes', score: 27, won: true, own: true });
-    expect(s.player.attrs.SHT).toBeCloseTo(sht + 1.5, 6);
+    expect(s.player.attrs.SHT).toBeCloseTo(sht + top * taperAt(sht), 6);
+    const mid = s.player.attrs.SHT;
     claimMini(s, { game: 'threes', score: 27, won: true, own: true });
-    expect(s.player.attrs.SHT).toBeCloseTo(sht + 1.5 + Math.round(1.5 * MINI_CLAIMS.share[1] * 10) / 10, 6);
+    expect(s.player.attrs.SHT).toBeCloseTo(mid + Math.round(top * MINI_CLAIMS.share[1] * taperAt(mid) * 10) / 10, 6);
     expect(claimsUsed(s)).toBe(MINI_CLAIMS.perSeason);
     expect(canClaimMini(s, 'legends')).toBe(false);
     expect(claimMini(s, { game: 'threes', score: 30, won: true, own: true })).toBe('');
+    expect(taperAt(93)).toBeLessThan(taperAt(86));
+    expect(taperAt(86)).toBeLessThan(taperAt(70));
     s.year += 1;
     expect(canClaimMini(s, 'threes')).toBe(true);
     const lab = newGame(32, { name: 'La B', number: 1, pos: 'SG', archetype: 0, focus: [], mode: 'lab' });
     const iq = lab.player.attrs.IQ;
     claimMini(lab, { game: 'legends', reached: 'champion' });
     expect(lab.player.attrs.IQ).toBe(iq);
-    expect(lab.player.lab!.credits).toBeCloseTo(1, 6);
+    expect(lab.player.lab!.credits).toBeCloseTo(4.5, 6);
   });
 });
 

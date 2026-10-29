@@ -790,3 +790,14 @@ Reached from the start page and from the bottom of Home (a career in progress is
     when nothing works. Over 48 test franchises: 34 had at least one, jumps of 1-5 places, mostly
     two-player packages, and all 34 top deals were accepted. The game plan screen puts the plans
     first (best fit first) and folds the roster into a rotation strip.
+- **Round 12c, stronger mini-game rewards** ("they take time, so players won't do them often"):
+  about three times the round 10 amounts, spread over two ratings. Top results: three-point
+  contest (27+) shooting +4, IQ +1, range +3, reputation +5 for the winner; dunk contest (48+)
+  athleticism +4, finishing +2, reputation +5; legends title IQ +3, playmaking +1.5; Front
+  Office (title) IQ up to +3, playmaking +1.5; Built in a lab (peak 95) IQ +3, perimeter D +1.5.
+  For a PF or C the playmaking part goes to interior D and the perimeter part to rebounding.
+  In OVR, a top result is worth: threes SG 1.17 / PG 0.88 / C 0.29; dunk 0.68-0.90 at every
+  position; a legends title PG 0.87 / C 0.63 with the big-man swap. Still two claims a season
+  (100%, 50%), so at most about 1.5-1.8 OVR a season from mini-games. To keep them from being a
+  road to 99, a rating of 85+ gets 60% of the bonus and 92+ gets 35%. Lab careers get the full
+  amount as credits.

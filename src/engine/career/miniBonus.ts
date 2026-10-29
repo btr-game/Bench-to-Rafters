@@ -38,40 +38,57 @@ export function canClaimMini(s: GameState | null, _id?: MiniId): boolean {
 /** What the next claim is worth, as a share of the full reward. */
 export const nextShare = (s: GameState): number => MINI_CLAIMS.share[Math.min(claimsUsed(s), MINI_CLAIMS.share.length - 1)];
 
-/** What a result is worth, before it is applied. */
+/**
+ * What a result is worth, before it is applied. Round 12c ("the rewards are too weak; they take
+ * time, so players won't do them often"): about three times the round 10 amounts and spread over
+ * two ratings, so a top result is worth about 1 OVR for a player who fits it.
+ */
 export function miniReward(r: MiniResult): { attrs: Partial<Record<AttrKey, number>>; range?: number; rep?: number } {
   switch (r.game) {
     case 'threes': {
-      const base = r.score >= 27 ? 1.5 : r.score >= 23 ? 1 : r.score >= 18 ? 0.6 : r.score >= 13 ? 0.3 : 0;
+      const base = r.score >= 27 ? 4 : r.score >= 23 ? 3 : r.score >= 18 ? 2 : r.score >= 13 ? 1 : 0;
       const k = r.own ? 1 : 0.5;
-      return { attrs: base > 0 ? { SHT: base * k } : {}, range: base >= 1 ? 1 * k : 0, rep: r.won ? 3 : 0 };
+      return { attrs: base > 0 ? { SHT: base * k, IQ: (base / 4) * k } : {}, range: base >= 2 ? (base - 1) * k : 0, rep: r.won ? 5 : 0 };
     }
     case 'legends': {
-      const v = r.reached === 'champion' ? 1 : r.reached === 'finals' ? 0.7 : r.reached === 'semis' ? 0.4 : 0.15;
-      return { attrs: { IQ: v } };
+      const v = r.reached === 'champion' ? 3 : r.reached === 'finals' ? 2 : r.reached === 'semis' ? 1.2 : 0.5;
+      return { attrs: { IQ: v, PLY: v / 2 } };
     }
     case 'office': {
       if (r.fired) return { attrs: {} };
       const v = Math.min(1, r.titles * 0.6 + (r.playoffs / Math.max(1, r.seasons)) * 0.4);
-      return { attrs: { IQ: Math.round(v * 10) / 10, PLY: r.titles > 0 ? 0.4 : 0 } };
+      return { attrs: { IQ: Math.round(v * 3 * 10) / 10, PLY: r.titles > 0 ? 1.5 : Math.round(v * 10) / 10 } };
     }
     case 'dunk': {
-      const v = r.best >= 48 ? 1.5 : r.best >= 44 ? 1 : r.best >= 40 ? 0.6 : r.best >= 35 ? 0.3 : 0;
-      return { attrs: v ? { ATH: v, FIN: v / 2 } : {}, rep: r.won ? 3 : 0 };
+      const v = r.best >= 48 ? 4 : r.best >= 44 ? 3 : r.best >= 40 ? 2 : r.best >= 35 ? 1 : 0;
+      return { attrs: v ? { ATH: v, FIN: v / 2 } : {}, rep: r.won ? 5 : 0 };
     }
     case 'lab': {
-      const v = r.peak >= 95 ? 1 : r.peak >= 90 ? 0.7 : r.peak >= 85 ? 0.4 : 0.15;
-      return { attrs: { IQ: v } };
+      const v = r.peak >= 95 ? 3 : r.peak >= 90 ? 2 : r.peak >= 85 ? 1.2 : 0.5;
+      return { attrs: { IQ: v, PER: v / 2 } };
     }
   }
 }
 
-/** The reward scaled by how many claims were already made this season. */
+/** Bonuses taper on ratings that are already elite, so mini-games are no shortcut to 99. */
+export const MINI_TAPER: [number, number][] = [
+  [92, 0.35],
+  [85, 0.6],
+];
+export const taperAt = (rating: number): number => MINI_TAPER.find(([from]) => rating >= from)?.[1] ?? 1;
+
+/** The reward scaled by how many claims were already made this season, and tapered near the top. */
 export function scaledReward(s: GameState, r: MiniResult): ReturnType<typeof miniReward> {
   const w = miniReward(r);
   const k = nextShare(s);
   const attrs: Partial<Record<AttrKey, number>> = {};
-  for (const [a, v] of Object.entries(w.attrs) as [AttrKey, number][]) if (v) attrs[a] = Math.round(v * k * 10) / 10;
+  // bigs turn the playmaking and perimeter part into what counts for them
+  const big = s.player.pos === 'PF' || s.player.pos === 'C';
+  const to = (a: AttrKey): AttrKey => (big && a === 'PLY' ? 'INT' : big && a === 'PER' ? 'REB' : a);
+  for (const [a0, v] of Object.entries(w.attrs) as [AttrKey, number][]) {
+    const a = to(a0);
+    if (v) attrs[a] = Math.round(((attrs[a] ?? 0) + v * k * (isLab(s) ? 1 : taperAt(s.player.attrs[a]))) * 10) / 10;
+  }
   return { attrs, range: w.range ? Math.round(w.range * k * 10) / 10 : 0, rep: w.rep ? Math.round(w.rep * k) : 0 };
 }
 
