@@ -567,9 +567,10 @@ export function Home({ g }: { g: GameState }) {
             )}
           </div>
         </section>
+        {/* between seasons, the moves come first: right under the main card */}
+        {g.step === 'offseason' && g.stage !== 'RETIRED' && <OffseasonMoves g={g} />}
         {g.mode === 'lab' && <LabCard g={g} />}
         <StoriesCard g={g} />
-        {g.step === 'offseason' && g.stage !== 'RETIRED' && <OffseasonMoves g={g} />}
         <section className="card stack">
           <div className="sec-title">Milestones</div>
           <MilestoneStrip reached={g.milestones} />
