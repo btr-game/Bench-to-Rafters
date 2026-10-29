@@ -6,7 +6,7 @@
 // hair, a headband or wristband, the ball's seams. A dark outline goes round the figure.
 
 import type { Kit } from '../../content/teamStyle';
-import { DIGITS, dark, inPoly, light, type Pt } from './pixel';
+import { DIGITS, dark, glyph, inPoly, light, type Pt } from './pixel';
 
 interface Limb {
   a: Pt;
@@ -67,6 +67,11 @@ function tones(c: string): [string, string, string, string] {
   return [light(c, 0.2), c, dark(c, 0.2), dark(c, 0.4)];
 }
 const band = (v: number) => (v > 0.78 ? 0 : v > 0.4 ? 1 : v > 0.08 ? 2 : 3);
+/** On a big sprite the tones meet in a checker of both, the old pixel-art way. */
+const dither = (v: number, x: number, y: number) => {
+  for (const t of [0.78, 0.4, 0.08]) if (Math.abs(v - t) < 0.045) return (x + y) % 2 ? band(t + 0.01) : band(t - 0.01);
+  return band(v);
+};
 
 type Hit = { hit: boolean; v: number };
 
@@ -93,6 +98,9 @@ function sphereAt(x: number, y: number, c: Pt, r: number): Hit {
 
 export function paint(pose: Pose, kit: Kit, look: Look, number: number): string[][] {
   const { w, h } = pose;
+  // poses are drawn on a 44-wide grid; a scaled-up pose (hi) gets its details scaled too
+  const k = w / 44;
+  const R = (v: number) => Math.round(v * k);
   const part: number[][] = Array.from({ length: h }, () => Array(w).fill(0));
   const val: number[][] = Array.from({ length: h }, () => Array(w).fill(0.5));
   const set = (id: number, f: (x: number, y: number) => Hit) => {
@@ -165,7 +173,7 @@ export function paint(pose: Pose, kit: Kit, look: Look, number: number): string[
     for (let x = 0; x < w; x++) {
       const id = part[y][x];
       if (!id) continue;
-      let b = band(val[y][x]);
+      let b = k > 1.2 ? dither(val[y][x], x, y) : band(val[y][x]);
       if (id === P.legBack || id === P.armBack || id === P.handBack || id === P.shoeBack) b = Math.min(3, b + 1); // the far side sits in shadow
       out[y][x] = mat(id)[b];
     }
@@ -180,46 +188,42 @@ export function paint(pose: Pose, kit: Kit, look: Look, number: number): string[
   // ---- jersey ----
   const [nx, ny] = pose.neck;
   let armpit = 0;
-  for (let y = Math.ceil(ny) + 7; y < h && !armpit; y++) if (part[y].includes(P.torso)) armpit = y;
+  for (let y = Math.ceil(ny) + R(7); y < h && !armpit; y++) if (part[y].includes(P.torso)) armpit = y;
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++) {
       if (part[y][x] !== P.torso) continue;
       const b = band(val[y][x]);
       // the collar: a scoop below the neck, skin inside, trim around it
-      const reach = 3.6 - Math.abs(x + 0.5 - nx) * 0.75;
+      const reach = 3.6 * k - Math.abs(x + 0.5 - nx) * 0.75;
       if (y - ny < reach) out[y][x] = skin[Math.min(3, b + 1)];
-      else if (y - ny < reach + 1.2) out[y][x] = trim[1];
+      else if (y - ny < reach + 1.2 * k) out[y][x] = trim[1];
       else if (y < armpit + 1) {
         const nb = [at(x - 1, y), at(x + 1, y), at(x, y - 1)];
         if (nb.some((n) => n === 0 || n === P.armBack || n === P.armFront || n === P.head)) out[y][x] = trim[Math.min(3, b + 1)];
       } else if (at(x - 1, y) !== P.torso || at(x + 1, y) !== P.torso) out[y][x] = trim[2];
       else if (kit.pattern === 'pinstripe' && x % 3 === 0) out[y][x] = dark(out[y][x], 0.12);
-      else if (kit.pattern === 'sash' && Math.abs(x - nx - (y - ny) * 0.55 + 4) < 1.2) out[y][x] = trim[b];
+      else if (kit.pattern === 'sash' && Math.abs(x - nx - (y - ny) * 0.55 + 4 * k) < 1.2 * k) out[y][x] = trim[b];
       else if (kit.pattern === 'panel' && x > nx + 2) out[y][x] = dark(out[y][x], 0.1);
-      else if (kit.pattern === 'sponsor' && y >= pose.chest[1] + 6 && y <= pose.chest[1] + 7) out[y][x] = trim[b];
-      else if (kit.pattern === 'varsity' && (y === armpit + 2 || y === armpit + 4)) out[y][x] = trim[b];
+      else if (kit.pattern === 'sponsor' && y >= pose.chest[1] + R(6.5) && y <= pose.chest[1] + R(7.8)) out[y][x] = trim[b];
+      else if (kit.pattern === 'varsity' && (y === armpit + R(2) || y === armpit + R(4))) out[y][x] = trim[b];
       // the hem tucked into the shorts
       if (at(x, y + 1) === P.shorts && at(x, y + 2) === P.shorts && y > armpit) out[y][x] = jersey[3];
     }
-  // wordmark: a row of letter-shaped ticks arching over the number
+  // the number, outlined in the trim (a negative number: a plain jersey); double size when
+  // the sprite is drawn big, with the wordmark in real letters arching over it
   const [cx0, cy0] = pose.chest;
-  const letters = Math.min(6, kit.word.replace(/\s/g, '').length);
-  const span = Math.min(11, Math.max(5, letters * 2 - 1));
-  const wx = Math.round(cx0 + 3.5 - span / 2);
-  for (let i = 0; i < span; i++) {
-    if (i % 2 === 1 && i % 4 === 3) continue;
-    const arch = Math.round(Math.abs(i - (span - 1) / 2) * 0.25);
-    put(wx + i, cy0 - 3 + arch, inkT[1], P.torso);
-    if (i % 3 !== 1) put(wx + i, cy0 - 4 + arch, inkT[1], P.torso);
-  }
-  // the number, outlined in the trim (a negative number: a plain jersey)
+  const big = k > 1.2;
+  const sz = big ? 2 : 1;
+  const centre = cx0 + 3.5 * k;
   const num = number < 0 ? '' : String(Math.min(99, number));
   const digits = num.length === 1 ? [num] : num.length === 2 ? [num[0], num[1]] : [];
-  const nX = cx0 + (digits.length === 1 ? 2 : 0);
+  const nW = digits.length * 4 * sz - sz;
+  const nX = Math.round(centre - nW / 2);
+  const nY = cy0 + (big ? R(0.6) : 0);
   const cells: Pt[] = [];
   digits.forEach((d, i) => {
     const bits = DIGITS[+d];
-    for (let k = 0; k < 15; k++) if (bits[k] === '1') cells.push([nX + i * 4 + (k % 3), cy0 + Math.floor(k / 3)]);
+    for (let q = 0; q < 15; q++) if (bits[q] === '1') for (let a = 0; a < sz; a++) for (let b = 0; b < sz; b++) cells.push([nX + i * 4 * sz + (q % 3) * sz + a, nY + Math.floor(q / 3) * sz + b]);
   });
   for (const [x, y] of cells)
     for (const [dx, dy] of [
@@ -231,6 +235,27 @@ export function paint(pose: Pose, kit: Kit, look: Look, number: number): string[
     ] as Pt[])
       put(x + dx, y + dy, trim[1], P.torso);
   for (const [x, y] of cells) put(x, y, inkT[1], P.torso);
+  const word = kit.word.replace(/\s/g, '');
+  if (big && word.length > 0 && word.length <= 6) {
+    const ww = word.length * 4 - 1;
+    const wx = Math.round(centre - ww / 2);
+    [...word].forEach((ch, i) => {
+      const bits = glyph(ch);
+      const arch = Math.round(Math.abs(i * 4 + 1 - ww / 2) * 0.16);
+      for (let q = 0; q < 15; q++) if (bits[q] === '1') put(wx + i * 4 + (q % 3), nY - 7 + arch + Math.floor(q / 3), inkT[1], P.torso);
+    });
+  } else {
+    // too small (or too long) for letters: a row of letter-shaped ticks
+    const letters = Math.min(6, word.length);
+    const span = Math.min(11, Math.max(5, letters * 2 - 1));
+    const wx = Math.round(centre - span / 2);
+    for (let i = 0; i < span; i++) {
+      if (i % 2 === 1 && i % 4 === 3) continue;
+      const arch = Math.round(Math.abs(i - (span - 1) / 2) * 0.25);
+      put(wx + i, cy0 - 3 + arch, inkT[1], P.torso);
+      if (i % 3 !== 1) put(wx + i, cy0 - 4 + arch, inkT[1], P.torso);
+    }
+  }
 
   // ---- shorts: waistband, side stripe, hem ----
   const notShorts = (n: number) => n !== P.shorts && n !== P.torso;
@@ -253,9 +278,9 @@ export function paint(pose: Pose, kit: Kit, look: Look, number: number): string[
     for (let y = 0; y < h; y++)
       for (let x = 0; x < w; x++) {
         if (part[y][x] !== leg) continue;
-        const toShoe = [1, 2, 3, 4, 5].findIndex((k) => at(x, y + k) === sh);
+        const toShoe = Array.from({ length: R(5) }, (_, i) => i + 1).findIndex((d) => at(x, y + d) === sh);
         if (toShoe < 0) continue;
-        out[y][x] = toShoe === 4 ? trim[1] : leg === P.legBack ? '#C9CFDA' : toShoe < 2 ? '#DCE0E8' : '#F4F6FA';
+        out[y][x] = toShoe >= R(5) - (k > 1.2 ? 2 : 1) ? trim[1] : leg === P.legBack ? '#C9CFDA' : toShoe < R(2) ? '#DCE0E8' : '#F4F6FA';
       }
     for (let y = 0; y < h; y++)
       for (let x = 0; x < w; x++) {
@@ -300,7 +325,7 @@ export function paint(pose: Pose, kit: Kit, look: Look, number: number): string[
       }
     }
   if (style === 2)
-    for (let y = Math.floor(c[1] - r - 2); y < c[1] - r + 1; y++)
+    for (let y = Math.floor(c[1] - r - R(2)); y < c[1] - r + 1; y++)
       for (let x = Math.floor(c[0] - r * 0.75); x <= c[0] + r * 0.55; x++)
         if (y >= 0 && !part[y][x]) {
           part[y][x] = P.head;
@@ -315,10 +340,17 @@ export function paint(pose: Pose, kit: Kit, look: Look, number: number): string[
     put(ex, ey - 1, hair[2], P.head);
   }
   put(eyeNear - facing, ey - 1, hair[2], P.head);
-  put(Math.floor(c[0] + facing * r * 0.4), ey + 1, skin[3], P.head); // nose
-  put(Math.floor(c[0] + facing * r * 0.4), ey + 2, skin[2], P.head);
-  put(Math.floor(c[0] + facing * r * 0.25), ey + 3, skin[3], P.head); // mouth
-  put(Math.floor(c[0] + facing * r * 0.55), ey + 3, skin[3], P.head);
+  put(Math.floor(c[0] + facing * r * 0.4), ey + R(1), skin[3], P.head); // nose
+  put(Math.floor(c[0] + facing * r * 0.4), ey + R(2), skin[2], P.head);
+  put(Math.floor(c[0] + facing * r * 0.25), ey + R(3), skin[3], P.head); // mouth
+  put(Math.floor(c[0] + facing * r * 0.55), ey + R(3), skin[3], P.head);
+  if (k > 1.2) {
+    // room for the whites of the eyes and a nostril
+    put(eyeNear + facing, ey, '#EDE7DD', P.head);
+    put(eyeFar - facing, ey, '#EDE7DD', P.head);
+    put(Math.floor(c[0] + facing * r * 0.55), ey + R(2), skin[3], P.head);
+    put(Math.floor(c[0] + facing * r * 0.4), ey + R(3), dark(skin[3], 0.2), P.head);
+  }
   put(Math.floor(c[0] - facing * r * 0.62), ey, skin[3], P.head); // ear
   put(Math.floor(c[0] - facing * r * 0.62), ey + 1, skin[2], P.head);
   if (look.beard)
@@ -328,14 +360,16 @@ export function paint(pose: Pose, kit: Kit, look: Look, number: number): string[
     }
   if (look.headband)
     for (let x = 0; x < w; x++) {
-      const y = Math.floor(c[1] - r * 0.45 + (x + 0.5 - c[0]) * facing * -0.12);
-      if (y >= 0 && part[y][x] === P.head) out[y][x] = x % 3 === 0 ? trim[2] : trim[1];
+      for (let t = 0; t < (k > 1.2 ? 2 : 1); t++) {
+        const y = Math.floor(c[1] - r * 0.45 + (x + 0.5 - c[0]) * facing * -0.12) + t;
+        if (y >= 0 && part[y][x] === P.head) out[y][x] = t ? trim[2] : x % 3 === 0 ? trim[2] : trim[1];
+      }
     }
   // a wristband on the near arm, an arm sleeve on the far one
   const [wx0, wy0] = pose.armFront[pose.armFront.length - 1].b;
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++) {
-      if (part[y][x] === P.armFront && Math.hypot(x + 0.5 - wx0, y + 0.5 - wy0) < 2.2) out[y][x] = trim[band(val[y][x])];
+      if (part[y][x] === P.armFront && Math.hypot(x + 0.5 - wx0, y + 0.5 - wy0) < 2.2 * k) out[y][x] = trim[band(val[y][x])];
       if (look.sleeve && part[y][x] === P.armBack) out[y][x] = ['#3A3D46', '#2A2C33', '#1E2026', '#15161A'][band(val[y][x])];
     }
 
@@ -657,3 +691,27 @@ export const TRIPLE: Pose = {
   ball: { c: [12.8, 24.2], r: 4.2, front: true },
   chest: [20.2, 18.4],
 };
+
+/** A pose drawn bigger: every point and thickness scaled, for the detailed sprite (round 17). */
+export function hi(p: Pose, k = 1.5): Pose {
+  const pt = ([x, y]: Pt): Pt => [x * k, y * k];
+  const limb = (l: Limb): Limb => ({ a: pt(l.a), b: pt(l.b), ra: l.ra * k, rb: l.rb * k, bulge: (l.bulge ?? 0) * k });
+  return {
+    w: Math.round(p.w * k),
+    h: Math.round(p.h * k),
+    head: { c: pt(p.head.c), r: p.head.r * k, facing: p.head.facing },
+    neck: pt(p.neck),
+    torso: p.torso.map(pt),
+    shorts: p.shorts.map(pt),
+    armBack: p.armBack.map(limb),
+    armFront: p.armFront.map(limb),
+    handBack: { c: pt(p.handBack.c), r: p.handBack.r * k },
+    handFront: { c: pt(p.handFront.c), r: p.handFront.r * k },
+    legBack: p.legBack.map(limb),
+    legFront: p.legFront.map(limb),
+    shoeBack: p.shoeBack.map(pt),
+    shoeFront: p.shoeFront.map(pt),
+    ball: p.ball && { c: pt(p.ball.c), r: p.ball.r * k, front: p.ball.front },
+    chest: pt(p.chest),
+  };
+}

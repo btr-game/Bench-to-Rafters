@@ -4,7 +4,7 @@ import { TEAM_STYLE, leagueKits, type Kit, type KitLeague } from '../../content/
 import { hash } from './color';
 import { toPaths } from './pixel';
 import type { Pos } from '../../engine/types';
-import { DRIBBLE, DUNK, JUMPER, LOWDRIBBLE, TRIPLE, paint, type Look, type Pose } from './sprite';
+import { DRIBBLE, DUNK, JUMPER, LOWDRIBBLE, TRIPLE, hi, paint, type Look, type Pose } from './sprite';
 
 // The player, as a pixel-art sprite in his team's kit (round 17). His look (skin, hair, a
 // headband or an arm sleeve) comes from his name, so he looks the same all career; the kit
@@ -21,7 +21,8 @@ export const styleLeague = (level?: string): KitLeague | undefined =>
 
 /** One pose per position: the point guard low on the dribble, the two guard driving, the wing
  * rising for a jumper, the four in triple threat, the five flying in for a dunk. */
-export const poseFor = (pos?: Pos): Pose => (pos === 'PG' ? LOWDRIBBLE : pos === 'SF' ? JUMPER : pos === 'PF' ? TRIPLE : pos === 'C' ? DUNK : DRIBBLE);
+const HI = { PG: hi(LOWDRIBBLE), SG: hi(DRIBBLE), SF: hi(JUMPER), PF: hi(TRIPLE), C: hi(DUNK) };
+export const poseFor = (pos?: Pos): Pose => HI[pos ?? 'SG'];
 
 export function lookOf(name: string, shoe: string): Look {
   const h = hash(name);
