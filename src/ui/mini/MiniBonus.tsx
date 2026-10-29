@@ -34,7 +34,7 @@ export function MiniBonus({ result }: { result: MiniResult }) {
             {game.mode === 'lab' ? ' (paid as lab credits)' : ''}.
           </p>
           <p className="small muted">
-            {left} of {MINI_CLAIMS.perSeason} claims left this season{left < MINI_CLAIMS.perSeason ? ' (each claim is worth a little less than the last)' : ''}.
+            {left} of {MINI_CLAIMS.perSeason} claims left this season{left < MINI_CLAIMS.perSeason ? ' (this one pays half)' : ''}.
           </p>
           <button className="btn" onClick={() => setText(claim(result) || 'Claimed.')}>
             Claim it

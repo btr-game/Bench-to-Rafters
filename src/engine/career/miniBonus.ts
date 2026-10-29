@@ -17,7 +17,7 @@ import { logDecision } from './common';
 
 export type MiniId = 'threes' | 'legends' | 'office' | 'dunk' | 'lab';
 
-export const MINI_CLAIMS = { perSeason: 4, share: [1, 0.75, 0.55, 0.4] };
+export const MINI_CLAIMS = { perSeason: 2, share: [1, 0.5] };
 
 export type MiniResult =
   | { game: 'threes'; score: number; won: boolean; own: boolean }
@@ -56,7 +56,7 @@ export function miniReward(r: MiniResult): { attrs: Partial<Record<AttrKey, numb
       return { attrs: { IQ: Math.round(v * 10) / 10, PLY: r.titles > 0 ? 0.4 : 0 } };
     }
     case 'dunk': {
-      const v = r.best >= 49 ? 1.5 : r.best >= 45 ? 1 : r.best >= 40 ? 0.6 : r.best >= 35 ? 0.3 : 0;
+      const v = r.best >= 48 ? 1.5 : r.best >= 44 ? 1 : r.best >= 40 ? 0.6 : r.best >= 35 ? 0.3 : 0;
       return { attrs: v ? { ATH: v, FIN: v / 2 } : {}, rep: r.won ? 3 : 0 };
     }
     case 'lab': {

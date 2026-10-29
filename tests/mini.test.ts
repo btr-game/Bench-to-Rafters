@@ -65,7 +65,7 @@ describe('mini-games', () => {
 });
 
 describe('mini-game career bonuses', () => {
-  it('pays up to four claims a season, each worth a little less, and as credits in the lab', () => {
+  it('pays two claims a season, the second at half value, and as credits in the lab', () => {
     const s = newGame(31, { name: 'Bo Nus', number: 1, pos: 'SG', archetype: 0, focus: ['SHT', 'IQ'] });
     const sht = s.player.attrs.SHT;
     expect(canClaimMini(s, 'threes')).toBe(true);
@@ -73,8 +73,6 @@ describe('mini-game career bonuses', () => {
     expect(s.player.attrs.SHT).toBeCloseTo(sht + 1.5, 6);
     claimMini(s, { game: 'threes', score: 27, won: true, own: true });
     expect(s.player.attrs.SHT).toBeCloseTo(sht + 1.5 + Math.round(1.5 * MINI_CLAIMS.share[1] * 10) / 10, 6);
-    claimMini(s, { game: 'dunk', best: 46, won: true });
-    claimMini(s, { game: 'lab', peak: 91 });
     expect(claimsUsed(s)).toBe(MINI_CLAIMS.perSeason);
     expect(canClaimMini(s, 'legends')).toBe(false);
     expect(claimMini(s, { game: 'threes', score: 30, won: true, own: true })).toBe('');

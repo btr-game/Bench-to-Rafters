@@ -726,7 +726,7 @@ Reached from the start page and from the bottom of Home (a career in progress is
 - **Mini-game claims:** up to four claims a season across all mini-games (was one per game), each
   worth less than the last: 100%, 75%, 55%, 40%. At most about 4 rating points a season, the same
   ballpark as before with five games instead of three. Dunk contest: athleticism +0.3 / 0.6 / 1 /
-  1.5 for a best dunk of 35 / 40 / 45 / 49+, finishing half that, reputation +3 for the winner.
+  1.5 for a best dunk of 35 / 40 / 44 / 48+ (as of round 12b), finishing half that, reputation +3 for the winner.
   Built in a lab: basketball IQ +0.15 / 0.4 / 0.7 / 1 for a peak under 85 / 85 / 90 / 95.
 - **Legacy:** the Hall of Fame (28 points on the first ballot, 20 otherwise) and the rafters
   (12 a team, up to three) are worth twice as much: they happen once. New league titles (tier C,
@@ -754,3 +754,39 @@ Reached from the start page and from the bottom of Home (a career in progress is
   Trials on the way: sigma 0.52 alone gave 90+ 14.5%; sigma 0.44 13.8%; plus a 5% elite climb
   12.8%; sigma 0.40 with a 7% climb 11.5% but 84.5% reached the NBA (too few busts), fixed by the
   lower base. Harness targets moved with it (smart MVP 4-11%, HOF 13-25%, All-Star 26-40%).
+- **Dunk contest, round 12b ("a little too hard; instead make the boundaries high for a 9 and
+  10"):** landing is easier: the green is 0.38 wide (was 0.30), -0.03 per difficulty point (was
+  -0.035), at least 0.16 (was 0.08), and the marker sweeps 1300 ms (-30 per difficulty point).
+  The judges are stricter at the top: each card comes from the dunk's raw score plus the judge's
+  own taste (sd 1.6), with 7 from 34, 8 from 40, 9 from 46 and 10 from 52. Raw score: 30 + 1.2
+  per difficulty point (was 1.6) + up to 10 for clean timing (was 7) + freshness, so a 10 needs a
+  hard dunk landed cleanly. Average totals at athleticism 85 (timing quality 0.5 / 0.7 / 0.9):
+  a standing two-hand slam 34.9 / 36.1 / 38.4; a running windmill 37.2 / 39.4 / 40.3; a running
+  360 windmill off a lob 41.7 / 44.1 / 45.1; the same from the free-throw line 44.4 / 45.4 /
+  47.4; free-throw line, 360 between the legs over a teammate 46.7 / 49.0 / 49.9. The others'
+  skill moved to the same raw scale (46-50.5): Vince Carter averages 45.2 a dunk. The career
+  bonus thresholds moved with it (athleticism +1.5 for a best dunk of 48+, +1 for 44+). The pick
+  buttons now show what is chosen (a filled tile with a check mark), and a "Your dunk" card spells
+  out the takeoff, moves and prop, on the build screen and while dunking.
+- **Round 12b, playtest follow-ups:**
+  - Mini-game claims: two a season (was four), the first in full and the second at half value.
+  - Dunk contest: the pick buttons showed no selection (they set a class the segmented control
+    does not style); every part is now a tile that fills in with a check mark, and a "Your dunk"
+    card spells out takeoff, moves and prop. The other dunkers are 1 point lower (45-49.5 raw).
+  - Built in a lab: the rating rows overlapped on wide screens (a 200 px card was too narrow for
+    "Rebounding" plus the number and the button); cards are at least 290 px, names truncate
+    instead of overlapping, and a maxed rating says Max.
+  - Legends showdown, neater: teams in one-line rows under their tier, setup as its own step
+    (tap the legend your rookie replaces), development with a growth meter and year dots, the
+    playoff matchup side by side with the opponent's five folded away, and run / bracket /
+    standings in tabs. Every step fades in (0.32 s); folds and meters animate; all of it is off
+    with reduced motion.
+  - Front Office: four seasons (was six); fired after two missed postseasons in a row from the
+    third season. Grades rescaled (B from 5 points, C from 2.5). Trade suggestions are now ranked
+    by what they do to your team (team strength, shown as league rank), never include a player
+    better than the one you get, and only offer deals the other side is sure to take (worth at
+    least accept / 0.9 = 0.978 of him, so the day-to-day mood cannot sink it). A "Best deals for
+    you" list shows up to three that move you up the league; each target row says "out of reach"
+    when nothing works. Over 48 test franchises: 34 had at least one, jumps of 1-5 places, mostly
+    two-player packages, and all 34 top deals were accepted. The game plan screen puts the plans
+    first (best fit first) and folds the roster into a rotation strip.

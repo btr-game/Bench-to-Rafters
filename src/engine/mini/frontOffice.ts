@@ -1,5 +1,5 @@
-// Front Office (round 10): the game from the other chair. You run an NBA franchise for six
-// seasons in the same simulated league the career mode uses (world/nbaWorld.ts):
+// Front Office (round 10): the game from the other chair. You run an NBA franchise for four
+// seasons (six until round 12b) in the same simulated league the career mode uses (world/nbaWorld.ts):
 // - Draft: a class of prospects with scouting reports. Every report starts vague; scouting
 //   points buy a closer look (current level, ceiling, strengths and weaknesses, work ethic,
 //   medicals). The other 29 teams draft off the consensus board.
@@ -7,8 +7,8 @@
 //   cap or the 125% rule) and sign players from Europe and the leagues abroad (cap room, the
 //   mid-level exception once a season, or the minimum). Their reports are fuzzy until scouted.
 // - Identity: a game plan for the season that fits your roster or does not.
-// - Season: the league plays it out. After two seasons of grace, two missed postseasons in a
-//   row and you are fired.
+// - Season: the league plays it out. After the first season, two missed postseasons in a row
+//   and you are fired.
 // Real numbers stay hidden behind ranges and words, as in the career mode.
 
 import { DRAFT, ATTRS } from '../balance';
@@ -28,7 +28,7 @@ import { EURO_CLUBS, INT_LEAGUES } from '../../content/teams';
 import { NAMES } from '../../content/strings';
 
 export const FO = {
-  seasons: 6,
+  seasons: 4,
   draftScout: 8,
   marketScout: 5,
   trades: 3,
@@ -309,29 +309,90 @@ export function tradeRead(fo: FoState, targetId: number, offer: number[]): { moo
   return { mood: ratio >= FO.accept + 0.1 ? 'They like it' : ratio >= FO.accept - 0.12 ? 'Close' : ratio >= 0.45 ? 'Not enough' : 'No chance', salaryOk, ratio };
 }
 
+export interface TradeIdea {
+  targetId: number;
+  ids: number[]; // your players going the other way
+  before: number; // your team strength now
+  after: number; // and after the deal
+  gain: number;
+}
+
+/** Your team strength if this deal went through (the same number the season sim uses). */
+export function strengthAfter(fo: FoState, targetId: number, offer: number[]): number {
+  const mine = myTeam(fo);
+  const tg = tradeTargets(fo).find((x) => x.p.id === targetId);
+  if (!tg) return nbaStrength(mine);
+  return nbaStrength({ ...mine, roster: [...mine.roster.filter((p) => !offer.includes(p.id)), tg.p] });
+}
+
+/** The trade value a deal must carry so the other side says yes whatever its mood that day. */
+export const SURE_THING = FO.accept / 0.9;
+
 /**
- * The cheapest package the other team would take for a player (round 11: suggested offers):
- * every combination of one to three of his players, the salaries working, the value at least
- * what they want; the one that gives up the least. Null when nothing on the roster gets it done.
+ * Suggested offers for one player (round 12b: "the suggestions are still a little bad"). Every
+ * package of one to three of your players that the other side is sure to accept (worth at least
+ * SURE_THING of him), the salaries working, and nobody in it better than the player you get;
+ * ranked by what the deal does to your team, then by what it costs. Up to three.
  */
-export function suggestOffer(fo: FoState, targetId: number): number[] | null {
-  const mine = [...myTeam(fo).roster].sort((a, b) => tradeValue(a) - tradeValue(b));
-  let best: { ids: number[]; cost: number } | null = null;
+export function tradeIdeas(fo: FoState, targetId: number, max = 3): TradeIdea[] {
+  const tg = tradeTargets(fo).find((x) => x.p.id === targetId);
+  if (!tg) return [];
+  const before = nbaStrength(myTeam(fo));
+  const pool = [...myTeam(fo).roster].filter((p) => p.ovr <= tg.p.ovr).sort((a, b) => tradeValue(a) - tradeValue(b));
+  const out: (TradeIdea & { cost: number })[] = [];
   const consider = (ids: number[]) => {
     const r = tradeRead(fo, targetId, ids);
-    if (!r.salaryOk || r.ratio < FO.accept + 0.05) return;
-    const cost = mine.filter((p) => ids.includes(p.id)).reduce((a, p) => a + tradeValue(p), 0);
-    if (!best || cost < best.cost) best = { ids, cost };
+    if (!r.salaryOk || r.ratio < SURE_THING) return;
+    const after = strengthAfter(fo, targetId, ids);
+    const cost = pool.filter((p) => ids.includes(p.id)).reduce((a, p) => a + tradeValue(p), 0);
+    out.push({ targetId, ids, before, after, gain: Math.round((after - before) * 10) / 10, cost });
   };
-  const n = mine.length;
+  const n = pool.length;
   for (let a = 0; a < n; a++) {
-    consider([mine[a].id]);
+    consider([pool[a].id]);
     for (let b = a + 1; b < n; b++) {
-      consider([mine[a].id, mine[b].id]);
-      for (let c = b + 1; c < n; c++) consider([mine[a].id, mine[b].id, mine[c].id]);
+      consider([pool[a].id, pool[b].id]);
+      for (let c = b + 1; c < n; c++) consider([pool[a].id, pool[b].id, pool[c].id]);
     }
   }
-  return best ? (best as { ids: number[] }).ids : null;
+  // best for the team; a point of strength is worth more than keeping one more player
+  out.sort((x, y) => y.after - x.after + (x.ids.length - y.ids.length) * 0.15 || x.cost - y.cost);
+  // different packages, not the same two players with a different third
+  const picked: TradeIdea[] = [];
+  for (const o of out) {
+    if (picked.length >= max) break;
+    if (picked.some((p) => o.ids.filter((id) => p.ids.includes(id)).length >= Math.min(2, o.ids.length))) continue;
+    picked.push({ targetId: o.targetId, ids: o.ids, before: o.before, after: o.after, gain: o.gain });
+  }
+  return picked;
+}
+
+/** Where a team of this strength would rank in the league (1 = best). */
+export function rankAt(fo: FoState, strength: number): number {
+  return 1 + fo.world.nba!.teams.filter((t) => t.id !== fo.mine && nbaStrength(t) > strength).length;
+}
+
+/**
+ * The trade board: each target's top offer (null: out of reach), and the best deals for you,
+ * the ones that move you up the league, biggest jump first.
+ */
+export function tradeBoard(fo: FoState, max = 3): { tops: Record<number, TradeIdea | null>; best: TradeIdea[] } {
+  const tops: Record<number, TradeIdea | null> = {};
+  for (const { p } of tradeTargets(fo)) tops[p.id] = tradeIdeas(fo, p.id, 1)[0] ?? null;
+  const jump = (d: TradeIdea) => rankAt(fo, d.before) - rankAt(fo, d.after);
+  const best = Object.values(tops)
+    .filter((d): d is TradeIdea => !!d && jump(d) > 0)
+    .sort((a, b) => jump(b) - jump(a) || b.gain - a.gain || a.ids.length - b.ids.length)
+    .slice(0, max);
+  return { tops, best };
+}
+
+/** The best deals for you (see tradeBoard). */
+export const bestTrades = (fo: FoState, max = 3): TradeIdea[] => tradeBoard(fo, max).best;
+
+/** The top suggested offer for a player, or null when nothing on the roster gets it done. */
+export function suggestOffer(fo: FoState, targetId: number): number[] | null {
+  return tradeIdeas(fo, targetId, 1)[0]?.ids ?? null;
 }
 
 export function proposeTrade(fo: FoState, targetId: number, offer: number[]): boolean {
@@ -525,8 +586,8 @@ export function grade(fo: FoState): { letter: string; text: string } {
   if (fo.fired) return { letter: 'F', text: 'Fired. The owner wanted wins.' };
   if (titles >= 2) return { letter: 'A+', text: 'A dynasty. Your name goes on the building.' };
   if (titles === 1) return { letter: 'A', text: 'You brought home a title.' };
-  if (score >= 7) return { letter: 'B', text: 'A winner every year, just not the last one.' };
-  if (score >= 3.5) return { letter: 'C', text: 'Respectable. The fans wanted more.' };
+  if (score >= 5) return { letter: 'B', text: 'A winner every year, just not the last one.' };
+  if (score >= 2.5) return { letter: 'C', text: 'Respectable. The fans wanted more.' };
   return { letter: 'D', text: 'You kept your job. Barely.' };
 }
 

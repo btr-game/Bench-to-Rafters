@@ -12,6 +12,7 @@ import { NAMES } from '../../content/strings';
 import type { GenPlayer } from '../../engine/types';
 
 const PHASES: FoState['phase'][] = ['draft', 'market', 'tactic', 'results'];
+const last = (name: string) => name.split(' ').slice(-1)[0];
 const PHASE_NAME: Record<string, string> = { draft: 'Draft', market: 'Trades and signings', tactic: 'Game plan', results: 'Season', over: 'The verdict' };
 
 /** A player's ratings and outlook, shown when his row is tapped. */
@@ -156,7 +157,10 @@ function Market({ fo, act }: { fo: FoState; act: (fn: (f: FoState) => void) => v
   const [openFree, setOpenFree] = useState<number | null>(null);
   const targets = F.tradeTargets(fo);
   const read = target !== null && offer.length ? F.tradeRead(fo, target, offer) : null;
-  const suggestion = useMemo(() => (target !== null ? F.suggestOffer(fo, target) : null), [fo, target]);
+  const ideas = useMemo(() => (target !== null ? F.tradeIdeas(fo, target) : []), [fo, target]);
+  const board = useMemo(() => F.tradeBoard(fo), [fo]);
+  const best = m.trades < F.FO.trades ? board.best : [];
+  const nowRank = F.rankAt(fo, F.strengthAfter(fo, -1, []));
   const room = F.capOf(fo) - F.payroll(fo);
   const mine = [...F.myTeam(fo).roster].sort((a, b) => b.ovr - a.ovr);
   const name = (id: number) => mine.find((p) => p.id === id)?.name ?? '';
@@ -187,9 +191,37 @@ function Market({ fo, act }: { fo: FoState; act: (fn: (f: FoState) => void) => v
         </section>
       )}
 
+      {tab === 'trades' && best.length > 0 && (
+        <section className="card stack fo-best">
+          <div className="sec-title">Best deals for you</div>
+          <p className="small muted">Deals they will say yes to that make your team better. Your team now: {ordinal(nowRank)} of 30.</p>
+          {best.map((d) => {
+            const tg = targets.find((x) => x.p.id === d.targetId)!;
+            return (
+              <div key={d.targetId} className="fo-deal">
+                <div className="fo-deal-text">
+                  <b>
+                    {tg.p.pos} {tg.p.name} <span className="muted">{Math.round(tg.p.ovr)}</span>
+                  </b>
+                  <div className="small muted">
+                    from {tg.team.abbr} for {d.ids.map((id) => `${last(name(id))} ${Math.round(mine.find((q) => q.id === id)?.ovr ?? 0)}`).join(' + ')}
+                  </div>
+                  <div className="fo-gain up">
+                    Your team: {ordinal(F.rankAt(fo, d.before))} → {ordinal(F.rankAt(fo, d.after))}
+                  </div>
+                </div>
+                <button className="btn small" onClick={() => act((f) => F.proposeTrade(f, d.targetId, d.ids))}>
+                  Trade
+                </button>
+              </div>
+            );
+          })}
+        </section>
+      )}
+
       {tab === 'trades' && (
         <section className="card stack">
-          <p className="small muted">Tap a target to see his ratings and what it might take. The suggested offer is the least you would have to give up.</p>
+          <p className="small muted">{best.length ? 'Or tap' : 'Tap'} any target for his ratings and the offers they will accept. "Out of reach" means nothing on your roster gets it done.</p>
           <div className="fo-list">
             {targets.map(({ p, team }) => (
               <div key={p.id}>
@@ -200,25 +232,33 @@ function Market({ fo, act }: { fo: FoState; act: (fn: (f: FoState) => void) => v
                     setTarget(target === p.id ? null : p.id);
                     setOffer([]);
                   }}
-                  sub={`${team.abbr} · ${fmtMoney(p.salary)}`}
+                  sub={`${team.abbr} · ${fmtMoney(p.salary)}${board.tops[p.id] ? '' : ' · out of reach'}`}
                 />
                 {target === p.id && (
                   <PlayerCard
                     p={p}
                     extra={
                       <div className="stack" style={{ gap: 8 }}>
-                        {suggestion ? (
-                          <button className="btn ghost small" onClick={() => setOffer(suggestion)}>
-                            Use suggested offer: {suggestion.map((id) => name(id).split(' ').slice(-1)[0]).join(' + ')}
-                          </button>
+                        {ideas.length ? (
+                          <div className="stack fo-ideas">
+                            <div className="small">Offers they will accept:</div>
+                            {ideas.map((d) => (
+                              <button key={d.ids.join('-')} className={`fo-idea${offer.join() === d.ids.join() ? ' on' : ''}`} onClick={() => setOffer(d.ids)}>
+                                <span>{d.ids.map((id) => `${last(name(id))} ${Math.round(mine.find((q) => q.id === id)?.ovr ?? 0)}`).join(' + ')}</span>
+                                <span className={`fo-gain ${d.gain > 0 ? 'up' : d.gain < 0 ? 'down' : ''}`}>
+                                  {d.gain > 0 ? 'better' : d.gain < 0 ? 'weaker' : 'same'} · {ordinal(F.rankAt(fo, d.after))}
+                                </span>
+                              </button>
+                            ))}
+                          </div>
                         ) : (
-                          <div className="small muted">Nothing on your roster gets this one done.</div>
+                          <div className="small muted">Nothing on your roster gets this one done without giving up someone better.</div>
                         )}
                         <div className="small">Or build your own (up to three):</div>
                         <div className="offer-picks">
                           {mine.map((q) => (
                             <button key={q.id} className={`pick-chip${offer.includes(q.id) ? ' on' : ''}`} onClick={() => setOffer((o) => (o.includes(q.id) ? o.filter((x) => x !== q.id) : o.length >= 3 ? o : [...o, q.id]))}>
-                              {q.name.split(' ').slice(-1)[0]} {Math.round(q.ovr)}
+                              {last(q.name)} {Math.round(q.ovr)}
                             </button>
                           ))}
                         </div>
@@ -226,6 +266,7 @@ function Market({ fo, act }: { fo: FoState; act: (fn: (f: FoState) => void) => v
                           <div className="small">
                             Their front office: <b className={`mood m-${read.mood.split(' ')[0].toLowerCase()}`}>{read.mood}</b>
                             {!read.salaryOk && <span className="warn-text"> · the salaries do not work</span>}
+                            {read.salaryOk && <span className="muted"> · your team would rank {ordinal(F.rankAt(fo, F.strengthAfter(fo, p.id, offer)))}</span>}
                           </div>
                         )}
                         <button
@@ -296,6 +337,57 @@ function Market({ fo, act }: { fo: FoState; act: (fn: (f: FoState) => void) => v
       <button className="btn block" onClick={() => act(F.toTactics)}>
         Done: set the game plan
       </button>
+    </>
+  );
+}
+
+/** The game plan (round 12b: the plans come first; the roster folds away underneath). */
+function Tactics({ fo, act }: { fo: FoState; act: (fn: (f: FoState) => void) => void }) {
+  const [show, setShow] = useState(false);
+  const r = [...F.myTeam(fo).roster].sort((a, b) => b.ovr - a.ovr);
+  const tactics = (Object.keys(F.TACTIC_LABEL) as Tactic[]).map((t) => ({ t, fit: F.tacticFit(fo, t) })).sort((a, b) => b.fit - a.fit);
+  const recOf = (w: string) => (w === 'Poor fit' ? 'low' : w === 'Okay' ? 'moderate' : 'high');
+  return (
+    <>
+      <section className="card stack">
+        <div className="sec-title">Pick a game plan</div>
+        <p className="small muted">The plan that fits your roster adds to every game. Best fit first.</p>
+        <div className="plans compact fo-plans">
+          {tactics.map(({ t, fit }) => {
+            const w = F.fitWord(fit);
+            return (
+              <button key={t} className="choice" onClick={() => act((f) => F.playSeason(f, t))}>
+                <span className="label">
+                  {F.TACTIC_LABEL[t].name}
+                  <span className={`scout-rec rec-${recOf(w)}`}>{w}</span>
+                </span>
+                <small>{F.TACTIC_LABEL[t].text}</small>
+              </button>
+            );
+          })}
+        </div>
+      </section>
+      <section className="card stack">
+        <div className="row">
+          <div className="sec-title">Your rotation</div>
+          <div className="spacer" />
+          <button className="link-btn" aria-expanded={show} onClick={() => setShow(!show)}>
+            {show ? 'Hide' : 'Full roster'}
+          </button>
+        </div>
+        <div className="small fo-rotation">
+          {r.slice(0, 8).map((p, i) => (
+            <span key={p.id} className={i < 5 ? 'starter' : ''}>
+              {p.pos} {last(p.name)} <b>{Math.round(p.ovr)}</b>
+            </span>
+          ))}
+        </div>
+        <div className={`lg-fold${show ? ' open' : ''}`}>
+          <div>
+            <Roster fo={fo} act={act} canRelease={false} />
+          </div>
+        </div>
+      </section>
     </>
   );
 }
@@ -394,7 +486,7 @@ export function FrontOffice() {
       <section className="stack">
         <div className="kicker">Front Office</div>
         <h2 className="title">Pick your franchise</h2>
-        <p className="small muted">Six seasons. After two seasons of grace, two missed postseasons in a row and the owner fires you.</p>
+        <p className="small muted">Four seasons. After the first one, miss the playoffs two years in a row and the owner fires you.</p>
         <div className="scout-list">
           {list.map((t) => (
             <button key={t.id} className="scout-row target" style={{ borderLeft: `6px solid ${t.color}` }} onClick={() => setFo(F.newFrontOffice(seed, t.id))}>
@@ -437,23 +529,12 @@ export function FrontOffice() {
         </div>
       )}
 
-      {fo.phase === 'draft' && <Draft fo={fo} act={act} />}
-      {fo.phase === 'market' && <Market fo={fo} act={act} />}
-      {fo.phase === 'tactic' && (
-        <section className="card stack">
-          <div className="sec-title">Your identity this season</div>
-          <Roster fo={fo} act={act} canRelease={false} />
-          <div className="plans">
-            {(Object.keys(F.TACTIC_LABEL) as Tactic[]).map((t) => (
-              <button key={t} className="choice" onClick={() => act((f) => F.playSeason(f, t))}>
-                <span className="label">
-                  {F.TACTIC_LABEL[t].name} <span className={`scout-rec rec-${F.fitWord(F.tacticFit(fo, t)) === 'Poor fit' ? 'low' : F.fitWord(F.tacticFit(fo, t)) === 'Okay' ? 'moderate' : 'high'}`}>{F.fitWord(F.tacticFit(fo, t))}</span>
-                </span>
-                <small>{F.TACTIC_LABEL[t].text}</small>
-              </button>
-            ))}
-          </div>
-        </section>
+      {(fo.phase === 'draft' || fo.phase === 'market' || fo.phase === 'tactic') && (
+        <div key={`${fo.phase}-${fo.season}`} className="stack stage-in">
+          {fo.phase === 'draft' && <Draft fo={fo} act={act} />}
+          {fo.phase === 'market' && <Market fo={fo} act={act} />}
+          {fo.phase === 'tactic' && <Tactics fo={fo} act={act} />}
+        </div>
       )}
       {fo.phase === 'results' && last && reel && <SeasonReel fo={fo} onDone={() => setReel(false)} />}
       {(fo.phase === 'results' || fo.phase === 'over') && last && !reel && (

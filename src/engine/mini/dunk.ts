@@ -42,19 +42,23 @@ export const PROPS: DunkPart[] = [
 export const DUNK = {
   attempts: 3,
   maxMoves: 2,
-  zoneBase: 0.3,
+  zoneBase: 0.38,
   zoneAth: 0.006, // per point of athleticism above 80
-  zoneDiff: 0.035, // per point of the part's difficulty
-  zoneMin: 0.08,
-  sweepMs: 1150,
-  sweepDiff: 35, // faster per point of the dunk's difficulty
+  zoneDiff: 0.03, // per point of the part's difficulty
+  zoneMin: 0.16,
+  sweepMs: 1300,
+  sweepDiff: 30, // faster per point of the dunk's difficulty
   base: 30,
-  perDiff: 1.6,
-  clean: 7, // for perfect timing on every tap
+  perDiff: 1.2,
+  clean: 10, // for perfect timing on every tap
   fresh: 0.6, // for each part not used yet in the contest
   freshMax: 2,
   retry: 2.5, // off for each failed attempt before it
   bail: 28, // three misses: a safe dunk, booed
+  // round 12b ("easier to land, but make the boundaries high for a 9 and 10"): each judge's card
+  // comes from the dunk's raw score plus his own taste; 7 from 34, 8 from 40, 9 from 46, 10 from 52
+  cards: [34, 40, 46, 52],
+  taste: 1.6,
 };
 
 export interface DunkDesign {
@@ -88,7 +92,7 @@ export interface DunkTap {
 }
 
 export function dunkTaps(r: Rng, d: DunkDesign, ath: number): DunkTap[] {
-  const zone = (diff: number) => clamp(DUNK.zoneBase + (ath - 80) * DUNK.zoneAth - diff * DUNK.zoneDiff, DUNK.zoneMin, 0.45);
+  const zone = (diff: number) => clamp(DUNK.zoneBase + (ath - 80) * DUNK.zoneAth - diff * DUNK.zoneDiff, DUNK.zoneMin, 0.5);
   const taps: DunkTap[] = [];
   const t = part(TAKEOFFS, d.takeoff);
   const p = part(PROPS, d.prop);
@@ -133,29 +137,32 @@ export function bailOut(r: Rng): DunkScore {
 }
 
 function panel(r: Rng, raw: number, name: string, made: boolean): DunkScore {
-  const judges = Array.from({ length: 5 }, () => Math.round(clamp(raw / 5 + normal(r, 0, 0.45), 6, 10)));
+  const judges = Array.from({ length: 5 }, () => {
+    const x = raw + normal(r, 0, DUNK.taste);
+    return 6 + DUNK.cards.filter((c) => x >= c).length;
+  });
   return { judges, total: judges.reduce((a, b) => a + b, 0), name, made };
 }
 
 export interface Dunker {
   name: string;
-  skill: number; // a typical dunk's score
+  skill: number; // a typical dunk's raw score (the judges' cards come from it)
   me?: boolean;
 }
 
 export const DUNKERS: Dunker[] = [
-  { name: 'Vince Carter', skill: 48 },
-  { name: 'Zach LaVine', skill: 47.5 },
-  { name: 'Aaron Gordon', skill: 47 },
-  { name: 'Michael Jordan', skill: 47 },
-  { name: 'Dominique Wilkins', skill: 46.5 },
-  { name: 'Mac McClung', skill: 46 },
-  { name: 'Jason Richardson', skill: 45.5 },
-  { name: 'Julius Erving', skill: 45 },
-  { name: 'Spud Webb', skill: 44.5 },
-  { name: 'Nate Robinson', skill: 44.5 },
-  { name: 'Blake Griffin', skill: 44 },
-  { name: 'Dwight Howard', skill: 43.5 },
+  { name: 'Vince Carter', skill: 49.5 },
+  { name: 'Zach LaVine', skill: 49 },
+  { name: 'Aaron Gordon', skill: 48.5 },
+  { name: 'Michael Jordan', skill: 48.5 },
+  { name: 'Dominique Wilkins', skill: 48 },
+  { name: 'Mac McClung', skill: 47.5 },
+  { name: 'Jason Richardson', skill: 47 },
+  { name: 'Julius Erving', skill: 46.5 },
+  { name: 'Spud Webb', skill: 46 },
+  { name: 'Nate Robinson', skill: 46 },
+  { name: 'Blake Griffin', skill: 45.5 },
+  { name: 'Dwight Howard', skill: 45 },
 ];
 
 /** A simulated dunk for one of the others: a design that fits his skill, and the judges' cards. */

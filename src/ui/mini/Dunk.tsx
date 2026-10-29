@@ -1,10 +1,44 @@
 // The dunk contest (engine/mini/dunk.ts): design a dunk, then land it one timing tap at a time.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { bailOut, contestRng, DUNK, DUNKERS, dunkDifficulty, difficultyLabel, dunkName, dunkParts, dunkTaps, freshParts, judge, MOVES, PROPS, simDunk, sweepFor, TAKEOFFS, tapQuality, type DunkDesign, type Dunker, type DunkScore, type DunkTap } from '../../engine/mini/dunk';
+import { bailOut, contestRng, DUNK, DUNKERS, dunkDifficulty, difficultyLabel, dunkName, dunkParts, dunkTaps, freshParts, judge, MOVES, PROPS, simDunk, sweepFor, TAKEOFFS, tapQuality, type DunkDesign, type Dunker, type DunkPart, type DunkScore, type DunkTap } from '../../engine/mini/dunk';
 import { shuffle } from '../../engine/rng';
 import { useStore } from '../../store';
 import { MiniBonus } from './MiniBonus';
+
+/** One part of a dunk to pick: its name and difficulty dots; a check mark when chosen. */
+function PartChip({ part, on, used, onClick }: { part: DunkPart; on: boolean; used: boolean; onClick: () => void }) {
+  return (
+    <button className={`dunk-chip${on ? ' on' : ''}${used && part.diff > 0 ? ' used' : ''}`} aria-pressed={on} onClick={onClick}>
+      <span>
+        {on ? '✓ ' : ''}
+        {part.name}
+      </span>
+      <small>{part.diff ? '●'.repeat(part.diff) : '–'}</small>
+    </button>
+  );
+}
+
+/** The chosen takeoff, moves and prop, spelled out. */
+function Recipe({ d }: { d: DunkDesign }) {
+  const name = (list: DunkPart[], id: string) => list.find((p) => p.id === id)?.name ?? '';
+  return (
+    <div className="dunk-recipe">
+      <span>
+        <i>Takeoff</i>
+        {name(TAKEOFFS, d.takeoff)}
+      </span>
+      <span>
+        <i>Moves</i>
+        {d.moves.length ? d.moves.map((m) => name(MOVES, m)).join(' + ') : 'Pick one'}
+      </span>
+      <span>
+        <i>Prop</i>
+        {name(PROPS, d.prop)}
+      </span>
+    </div>
+  );
+}
 
 /** The timing taps for one attempt. Reports every tap's quality, or the tap that missed. */
 function Taps({ taps, sweep, onDone }: { taps: DunkTap[]; sweep: number; onDone: (q: number[], missedAt: number | null) => void }) {
@@ -199,7 +233,7 @@ export function DunkGame() {
           <p className="small">
             Four dunkers, two dunks each. The top two go to the final for two more. Design every dunk: a takeoff, one or two moves and maybe a prop. Each part is one timing tap; miss one and the attempt fails. Three attempts a dunk.
           </p>
-          <p className="small">Five judges score 6 to 10 each: harder dunks, cleaner timing and moves you haven't shown yet score higher. A dunk landed on a later try loses a little.</p>
+          <p className="small">Five judges score 6 to 10 each. Landing a dunk is the easy part; 9s and 10s take a hard dunk with clean timing (hit the bright middle of each green). Moves you haven't shown yet score a little extra, and a dunk landed on a later try loses a little.</p>
           <p className="small muted">
             {me.name}'s bounce: Athleticism {ath}
             {game ? '' : ' (start a career to dunk as your own player)'}. More athleticism means a wider green.
@@ -235,33 +269,27 @@ export function DunkGame() {
         {missed && <p className="small warn">Missed the {missed.toLowerCase()}. Go again, or change the dunk.</p>}
         <section className="card stack">
           <div className="sec-title">Takeoff</div>
-          <div className="seg">
+          <div className="dunk-chips">
             {TAKEOFFS.map((t) => (
-              <button key={t.id} className={design.takeoff === t.id ? 'on' : ''} onClick={() => setDesign({ ...design, takeoff: t.id })}>
-                {t.name}
-              </button>
+              <PartChip key={t.id} part={t} on={design.takeoff === t.id} used={used.includes(t.id)} onClick={() => setDesign({ ...design, takeoff: t.id })} />
             ))}
           </div>
           <div className="sec-title">Moves (one or two)</div>
           <div className="dunk-chips">
             {MOVES.map((m) => (
-              <button key={m.id} className={`dunk-chip${design.moves.includes(m.id) ? ' on' : ''}${used.includes(m.id) ? ' used' : ''}`} onClick={() => toggle(m.id)}>
-                {m.name}
-                <small>{'●'.repeat(m.diff)}</small>
-              </button>
+              <PartChip key={m.id} part={m} on={design.moves.includes(m.id)} used={used.includes(m.id)} onClick={() => toggle(m.id)} />
             ))}
           </div>
           <div className="sec-title">Prop</div>
-          <div className="seg">
+          <div className="dunk-chips">
             {PROPS.map((p) => (
-              <button key={p.id} className={design.prop === p.id ? 'on' : ''} onClick={() => setDesign({ ...design, prop: p.id })}>
-                {p.name}
-              </button>
+              <PartChip key={p.id} part={p} on={design.prop === p.id} used={used.includes(p.id)} onClick={() => setDesign({ ...design, prop: p.id })} />
             ))}
           </div>
         </section>
         <section className="card stack dunk-preview">
-          <b>{design.moves.length ? dunkName(design) : 'Pick a move'}</b>
+          <div className="sec-title">Your dunk</div>
+          <Recipe d={design} />
           <span className="small">
             Difficulty {diff} · {difficultyLabel(diff)} · {dunkTaps(contestRng(1), design, ath).length} taps
             {fresh ? ` · ${fresh} new for the judges` : ' · the judges have seen all of it'}
@@ -279,6 +307,7 @@ export function DunkGame() {
       <section className="stack">
         {header}
         <div className="sec-title">{dunkName(design)}</div>
+        <Recipe d={design} />
         <Taps key={tryKey} taps={taps} sweep={sweepFor(design)} onDone={onDone} />
       </section>
     );

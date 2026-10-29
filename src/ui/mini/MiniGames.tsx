@@ -9,7 +9,7 @@ import { LabGame } from './LabGame';
 import { DunkGame } from './Dunk';
 
 const GAMES = [
-  { id: 'office' as const, name: 'Front Office', text: 'Run an NBA franchise for six seasons. Scout the draft, trade, sign players from Europe and beyond, set the game plan, and win a title before the owner loses patience.' },
+  { id: 'office' as const, name: 'Front Office', text: 'Run an NBA franchise for four seasons. Scout the draft, trade, sign players from Europe and beyond, set the game plan, and win a title before the owner loses patience.' },
   { id: 'threes' as const, name: 'Three-point contest', text: 'Five racks, sixty seconds, a money-ball rack of your choice. Stop the meter in the green. Beat seven of the best shooters ever.' },
   { id: 'dunk' as const, name: 'Dunk contest', text: 'Design your dunks (takeoff, moves, props) and land them one timing tap at a time. Five judges, two rounds, three of the best dunkers ever.' },
   { id: 'lab' as const, name: 'Built in a lab', text: 'Design a player and build him over ten seasons: spend each summer\'s credits on ratings, then watch the season play out. Two minutes a run.' },
@@ -48,7 +48,7 @@ export function MiniGames() {
               </button>
             ))}
           </div>
-          <p className="muted small">Your career is safe: tap Back to career any time. With a career in progress, a good showing earns your player a small rating bonus: up to four claims a season.</p>
+          <p className="muted small">Your career is safe: tap Back to career any time. With a career in progress, a good showing earns your player a small rating bonus: two claims a season (the second at half value).</p>
         </section>
       )}
       {mini === 'office' && <FrontOffice />}

@@ -40,7 +40,7 @@ export function LabGame() {
             {POSITIONS.map((p) => (
               <button
                 key={p}
-                className={p === pos ? 'on' : ''}
+                aria-pressed={p === pos}
                 onClick={() => {
                   setPos(p);
                   setHeight(Math.round((HEIGHT_RANGE[p][0] + HEIGHT_RANGE[p][1]) / 2));
@@ -143,7 +143,13 @@ export function LabGame() {
                 <span>{NAMES.attr[k]}</span>
                 <b>{st.attrs[k]}</b>
                 <button className="icon-btn" disabled={st.credits + 1e-9 < c || st.attrs[k] >= 99} onClick={() => act((s) => void labBuy(s, k))} aria-label={`Add ${LAB_GAME.step} ${NAMES.attr[k]}`}>
-                  +{LAB_GAME.step} <span className="muted">({c})</span>
+                  {st.attrs[k] >= 99 ? (
+                    'Max'
+                  ) : (
+                    <>
+                      +{LAB_GAME.step} <span className="muted">({c})</span>
+                    </>
+                  )}
                 </button>
               </div>
             );
