@@ -138,6 +138,47 @@ function ShareBar({ g }: { g: GameState }) {
   );
 }
 
+/** The NBA teams he played for, in order (round 12). */
+function NbaTeams({ g }: { g: GameState }) {
+  const rows = g.history.filter((h) => h.level === 'NBA' && h.line.gp > 0 && !/assignment/i.test(h.teamName));
+  if (rows.length === 0) return null;
+  const teams: { id: string; name: string; color: string; from: number; to: number; seasons: number; gp: number; pts: number; reb: number; ast: number; titles: number }[] = [];
+  for (const h of rows) {
+    let t = teams.find((x) => x.id === h.teamId);
+    if (!t) {
+      t = { id: h.teamId, name: h.teamName, color: h.teamColor, from: h.year, to: h.year, seasons: 0, gp: 0, pts: 0, reb: 0, ast: 0, titles: 0 };
+      teams.push(t);
+    }
+    t.to = Math.max(t.to, h.year);
+    t.seasons++;
+    t.gp += h.line.gp;
+    t.pts += h.line.pts;
+    t.reb += h.line.reb;
+    t.ast += h.line.ast;
+    if (/champion/i.test(h.result)) t.titles++;
+  }
+  return (
+    <Card title="NBA teams" kicker={`${teams.length} team${teams.length > 1 ? 's' : ''} · ${rows.length} season${rows.length > 1 ? 's' : ''}`}>
+      <div className="titles">
+        {teams.map((t) => (
+          <div key={t.id} className="title-row" style={{ borderLeftColor: t.color }}>
+            <div className="title-year">
+              {t.from === t.to ? seasonLabel(t.from) : `${t.from}–${String(t.to + 1).slice(2)}`}
+            </div>
+            <div>
+              <div className="title-team">{t.name}</div>
+              <div className="small muted">
+                {t.seasons} season{t.seasons > 1 ? 's' : ''} · {(t.pts / t.gp).toFixed(1)} PTS, {(t.reb / t.gp).toFixed(1)} REB, {(t.ast / t.gp).toFixed(1)} AST
+                {t.titles ? ` · ${t.titles}× champion` : ''}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </Card>
+  );
+}
+
 export function Retirement({ g }: { g: GameState }) {
   const reset = useStore((s) => s.reset);
   const p = g.player;
@@ -173,6 +214,7 @@ export function Retirement({ g }: { g: GameState }) {
         {hof && <div className="toast">{hof === 'first' ? 'Inducted into the Hall of Fame on the first ballot.' : 'Inducted into the Hall of Fame.'}</div>}
         <ShareBar g={g} />
       </section>
+      <NbaTeams g={g} />
       <RaftersSummary
         g={g}
         onOpen={() => {

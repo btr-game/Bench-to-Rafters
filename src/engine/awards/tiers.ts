@@ -19,8 +19,11 @@ export interface TierItem {
   note?: string;
 }
 
-/** Points for a Hall of Fame induction and for each jersey hung in the rafters. */
-export const HONOR_PTS = { firstBallot: 14, hof: 10, rafters: 6, raftersMax: 3 };
+/**
+ * Points for a Hall of Fame induction and for each jersey hung in the rafters. Round 12 doubled
+ * them: they are once-in-a-career honours, worth more than any single season's award.
+ */
+export const HONOR_PTS = { firstBallot: 28, hof: 20, rafters: 12, raftersMax: 3 };
 
 export const TIERS: { tier: TierKey; name: string; color: string; items: TierItem[] }[] = [
   {
@@ -69,6 +72,10 @@ export const TIERS: { tier: TierKey; name: string; color: string; items: TierIte
       { key: 'WCGOLD', label: 'FIBA World Cup gold', pts: 1.5 },
       { key: 'NBACUP', label: 'NBA Cup', pts: 1.5 },
       { key: 'SIXTH', label: 'Sixth Man of the Year', pts: LEGACY.sixth },
+      { key: 'ASTLEAD', label: 'Assists title', pts: LEGACY.statTitle },
+      { key: 'REBLEAD', label: 'Rebounding title', pts: LEGACY.statTitle },
+      { key: 'STLLEAD', label: 'Steals title', pts: LEGACY.statTitle },
+      { key: 'BLKLEAD', label: 'Blocks title', pts: LEGACY.statTitle },
     ],
   },
   {

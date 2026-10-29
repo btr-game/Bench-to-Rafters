@@ -26,7 +26,7 @@ import {
 import { chance, clamp, int, normal, range, weightedIndex, type Rng } from '../rng';
 import type { Attrs, GameLog, GameState, HalfPlan, League, LevelKey, RoleKey, SeasonRecord, SeasonState, StatLine, Team } from '../types';
 import { ovrOf } from '../player/ovr';
-import { applyHalfGrowth, perfFactor } from '../player/growth';
+import { applyHalfGrowth, eliteMult, perfFactor } from '../player/growth';
 import { healDays, rollInjury } from '../player/injury';
 import { scoutEstimate } from '../player/create';
 import {
@@ -489,7 +489,7 @@ function growthAfterHalf(s: GameState, acc: HalfAcc, level: LevelKey, ovr: numbe
     plan: season.plan,
     planDef: plan,
     outMost: acc.injuredGames > acc.games / 2,
-    extraMult: outcome.growth * p.growthMultNext * MODES[s.mode ?? 'standard'].growth * youthGrowthMult(s) * (s.flags.fast && s.mode !== 'lab' && s.mode !== 'fast' ? FAST_GROWTH : 1),
+    extraMult: outcome.growth * p.growthMultNext * MODES[s.mode ?? 'standard'].growth * youthGrowthMult(s) * eliteMult(s.mode ?? 'standard', before) * (s.flags.fast && s.mode !== 'lab' && s.mode !== 'fast' ? FAST_GROWTH : 1),
     morale: p.morale,
     lab: s.mode === 'lab',
   });
@@ -876,6 +876,10 @@ const REP_BUMP: Record<string, number> = {
   ROY: 5,
   DPOY: 5,
   SCORING: 4,
+  ASTLEAD: 3,
+  REBLEAD: 3,
+  STLLEAD: 2,
+  BLKLEAD: 2,
   NAISMITH: 10,
   AA1: 6,
   AA2: 4,

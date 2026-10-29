@@ -1,4 +1,5 @@
 import {
+  MODES,
   ATTR_MAX,
   ATTRS,
   BASE_RATE,
@@ -29,6 +30,7 @@ import {
   WEAR,
   LAB,
   type PlanDef,
+  type Mode,
 } from '../balance';
 import { addCredits } from '../career/lab';
 import { chance, clamp, normal, range, type Rng } from '../rng';
@@ -112,6 +114,12 @@ export interface HalfGrowthCtx {
   extraMult?: number;
   morale?: number;
   lab?: boolean; // built in a lab: paid out as credits (career/lab.ts)
+}
+
+/** The elite climb (round 12): growth slows above the mode's line, so reaching the top takes work. */
+export function eliteMult(mode: Mode, ovr: number): number {
+  const e = MODES[mode].elite;
+  return e ? Math.max(e.min, 1 - Math.max(0, ovr - e.from) * e.per) : 1;
 }
 
 /** Applies one half-season of growth to the user. Returns the gain per attribute. */

@@ -6,7 +6,9 @@ import { NBA_TEAMS } from '../src/content/teams';
 import { growRookie, newLegends, playNext, playSeason } from '../src/engine/mini/legends';
 import * as F from '../src/engine/mini/frontOffice';
 import { contestRng, simRound, shotResult, zoneWidth } from '../src/engine/mini/threes';
-import { canClaimMini, claimMini } from '../src/engine/career/miniBonus';
+import { canClaimMini, claimMini, claimsUsed, MINI_CLAIMS } from '../src/engine/career/miniBonus';
+import { labBestSpend, labBuy, labPlaySeason, labSpreadSpend, LAB_GAME, newLabGame } from '../src/engine/mini/labGame';
+import { bailOut, contestRng as dunkRng, dunkDifficulty, dunkTaps, judge, tapQuality, type DunkDesign } from '../src/engine/mini/dunk';
 import { newGame } from '../src/engine/flow';
 
 describe('mini-games', () => {
@@ -63,15 +65,19 @@ describe('mini-games', () => {
 });
 
 describe('mini-game career bonuses', () => {
-  it('pays once per mini-game per season, by result, and as credits in the lab', () => {
+  it('pays up to four claims a season, each worth a little less, and as credits in the lab', () => {
     const s = newGame(31, { name: 'Bo Nus', number: 1, pos: 'SG', archetype: 0, focus: ['SHT', 'IQ'] });
     const sht = s.player.attrs.SHT;
     expect(canClaimMini(s, 'threes')).toBe(true);
     claimMini(s, { game: 'threes', score: 27, won: true, own: true });
     expect(s.player.attrs.SHT).toBeCloseTo(sht + 1.5, 6);
-    expect(canClaimMini(s, 'threes')).toBe(false);
+    claimMini(s, { game: 'threes', score: 27, won: true, own: true });
+    expect(s.player.attrs.SHT).toBeCloseTo(sht + 1.5 + Math.round(1.5 * MINI_CLAIMS.share[1] * 10) / 10, 6);
+    claimMini(s, { game: 'dunk', best: 46, won: true });
+    claimMini(s, { game: 'lab', peak: 91 });
+    expect(claimsUsed(s)).toBe(MINI_CLAIMS.perSeason);
+    expect(canClaimMini(s, 'legends')).toBe(false);
     expect(claimMini(s, { game: 'threes', score: 30, won: true, own: true })).toBe('');
-    expect(canClaimMini(s, 'legends')).toBe(true);
     s.year += 1;
     expect(canClaimMini(s, 'threes')).toBe(true);
     const lab = newGame(32, { name: 'La B', number: 1, pos: 'SG', archetype: 0, focus: [], mode: 'lab' });
@@ -79,5 +85,55 @@ describe('mini-game career bonuses', () => {
     claimMini(lab, { game: 'legends', reached: 'champion' });
     expect(lab.player.attrs.IQ).toBe(iq);
     expect(lab.player.lab!.credits).toBeCloseTo(1, 6);
+  });
+});
+
+describe('round 12 mini-games', () => {
+  it('a lab run lasts ten seasons; spending on what matters beats spreading it evenly', () => {
+    const run = (spend: (st: ReturnType<typeof newLabGame>) => void, seed: number) => {
+      const st = newLabGame(seed, 'Lab Rat', 'PG', 75);
+      while (!st.over) {
+        spend(st);
+        labPlaySeason(st);
+      }
+      expect(st.history.length).toBe(LAB_GAME.seasons);
+      return st.peak;
+    };
+    let best = 0;
+    let even = 0;
+    for (let i = 0; i < 40; i++) {
+      best += run(labBestSpend, 500 + i) / 40;
+      even += run(labSpreadSpend, 500 + i) / 40;
+    }
+    expect(best).toBeGreaterThan(even + 3);
+    expect(best).toBeGreaterThan(84);
+    expect(best).toBeLessThan(93);
+    const st = newLabGame(9, 'x', 'C', 84);
+    const before = st.attrs.INT;
+    const c = st.credits;
+    expect(labBuy(st, 'INT')).toBe(true);
+    expect(st.attrs.INT).toBe(Math.min(99, before + LAB_GAME.step));
+    expect(st.credits).toBeCloseTo(c - 1, 6);
+  });
+
+  it('a dunk: harder designs score more when landed, and three misses get booed', () => {
+    const r = dunkRng(4);
+    const easy: DunkDesign = { takeoff: 'stand', moves: ['two'], prop: 'none' };
+    const hard: DunkDesign = { takeoff: 'ft', moves: ['360', 'legs'], prop: 'over' };
+    expect(dunkDifficulty(hard)).toBe(12);
+    expect(dunkTaps(r, hard, 85).length).toBe(5);
+    expect(dunkTaps(r, easy, 85).length).toBe(2);
+    const t = dunkTaps(r, hard, 85)[0];
+    expect(tapQuality(t.centre, t)).toBeCloseTo(1, 6);
+    expect(tapQuality(t.centre + t.zone, t)).toBeNull();
+    let e = 0;
+    let h = 0;
+    for (let i = 0; i < 30; i++) {
+      e += judge(r, easy, [1, 1], 1, []).total;
+      h += judge(r, hard, [0.7, 0.7, 0.7, 0.7, 0.7], 1, []).total;
+    }
+    expect(h / 30).toBeGreaterThan(e / 30 + 8);
+    expect(judge(r, hard, [1, 1, 1, 1, 1], 1, []).total).toBeLessThanOrEqual(50);
+    expect(bailOut(r).total).toBeLessThan(e / 30);
   });
 });

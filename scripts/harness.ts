@@ -291,17 +291,19 @@ export function summarize(results: CareerResult[], ms: number): Summary {
 // play styles) peaks in the low 70s with a wide spread; starting OVR is Laplace around 40;
 // a hidden growth rate lets some players surge. These are the Standard mode's targets; the
 // other modes are checked by tests/modes.test.ts.
+// round 12: the top end of Regular guy is harder to reach (narrower potential and the elite
+// climb), so the star outcomes sit lower: about half as many MVPs and a third fewer Hall of Famers.
 export const TARGETS: Record<Policy, Record<string, [number, number]>> = {
   random: {
     meanPeak: [66, 71],
     playedNba: [0.56, 0.7],
     nba5: [0.42, 0.57],
-    allStar: [0.27, 0.4],
-    allNba: [0.21, 0.34],
-    allNba1: [0.15, 0.27],
-    mvp: [0.07, 0.15],
+    allStar: [0.19, 0.33],
+    allNba: [0.12, 0.26],
+    allNba1: [0.07, 0.2],
+    mvp: [0.02, 0.08],
     title: [0.11, 0.19],
-    hof: [0.17, 0.29],
+    hof: [0.08, 0.19],
     // round 7: the wider spread sends more weak college seniors into the draft pool
     undraftedOfDeclared: [0.28, 0.45],
     meanNbaSeasons: [9, 12],
@@ -311,12 +313,12 @@ export const TARGETS: Record<Policy, Record<string, [number, number]>> = {
     meanPeak: [71.5, 76.5],
     playedNba: [0.65, 0.78],
     nba5: [0.55, 0.7],
-    allStar: [0.33, 0.46],
-    allNba: [0.26, 0.39],
-    allNba1: [0.19, 0.31],
-    mvp: [0.12, 0.21],
-    title: [0.28, 0.4],
-    hof: [0.24, 0.36],
+    allStar: [0.26, 0.4],
+    allNba: [0.18, 0.32],
+    allNba1: [0.11, 0.25],
+    mvp: [0.04, 0.11],
+    title: [0.26, 0.4],
+    hof: [0.13, 0.25],
     undraftedOfDeclared: [0.28, 0.45],
     meanNbaSeasons: [11, 14],
     medianRetireAge: [32, 36],

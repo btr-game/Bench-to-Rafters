@@ -39,6 +39,12 @@ export function legacyScore(s: GameState): number {
       case 'SCORING':
         pts += LEGACY.scoring;
         break;
+      case 'ASTLEAD':
+      case 'REBLEAD':
+      case 'STLLEAD':
+      case 'BLKLEAD':
+        pts += LEGACY.statTitle;
+        break;
       case 'SIXTH':
         pts += LEGACY.sixth;
         break;

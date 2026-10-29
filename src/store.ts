@@ -12,7 +12,7 @@ import { seasonLabel } from './ui/format';
 
 export type Tab = 'home' | 'season' | 'player' | 'league' | 'records';
 export type Theme = 'auto' | 'light' | 'dark';
-export type Mini = 'hub' | 'office' | 'threes' | 'legends' | 'lab';
+export type Mini = 'hub' | 'office' | 'threes' | 'legends' | 'lab' | 'dunk';
 
 /** A short interstitial between steps (not part of the saved game). */
 export type Transition =

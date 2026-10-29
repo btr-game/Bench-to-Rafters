@@ -680,3 +680,77 @@ Reached from the start page and from the bottom of Home (a career in progress is
   is live: the same score the voters use (value per game plus team record) on the season so far,
   with the other players' lines projected from the stat model for the games their team has played
   (no random draws, so it does not change the season). Between seasons it shows the final voting.
+
+## Round 12 (playtest feedback)
+
+- **Front Office season reel:** the season no longer jumps straight to the result. The record
+  counts up game by game (a seeded order of the final wins and losses, 35 ms a game) with a
+  streak strip of the last 12, a line at the All-Star break, then each playoff series one at a
+  time. Skip any time.
+- **Starting five, clearer and easier:** the recruit card shows where the team stands ("Your team
+  now: 9th of 30, playoff team") and, after a move, the change this summer (rank and team
+  strength before and after, who joined, and the new outlook). Interest is about 5 points higher
+  at every level, so a first option on a decent team usually has a willing target.
+- **Positions in the five:** a recruit replaces the weakest starter in his position group (guards
+  PG/SG, forwards SF/PF, bigs C) when there is one, otherwise the weakest starter. The new five may
+  have at most three guards, three forwards and two centers; a move that breaks that shows "No fit"
+  and the reason ("Too many forwards in the five"). Swaps across groups still work while the five
+  stays within those limits.
+- **End page:** a "NBA teams" section lists every NBA team he played for, with years, seasons,
+  points, rebounds and assists per game and any titles there.
+- **Mini-games exit:** "Back to career" (or "Exit" with no career) sits at the top right of every
+  mini-game screen; "All games" goes back to the list.
+- **Built in a lab, the mini-game:** no longer a career. Pick a position, a height and a name, then
+  ten seasons (ages 19-28) on one screen each: the summer pays credits (12 at 19 down to 3 at 28,
+  plus or minus 15%), and 45% of summers have a twist (a breakthrough summer, an injury, a mentor,
+  a bad summer, an elite camp). Each tap adds 3 to a rating for the career lab's price (1 credit,
+  1.5 from 80, 2 from 90); "Spread it evenly" is the lazy option. The season plays from OVR: a stat
+  line, a record and awards (All-Star from about 79, All-NBA from 86, MVP from 90 on a 50-win
+  team, titles, Defensive Player of the Year), then a grade. Peaks over 300 runs per position:
+  best-value spending 86-89, random taps 83-84, spread evenly 80-85. The old lab career mode is
+  kept for existing saves.
+- **Dunk contest (new mini-game):** four dunkers (you and three of twelve greats), two dunks each,
+  the top two go to a two-dunk final. Each dunk is built from a takeoff (standing, running, from the
+  free-throw line), one or two moves (two-hand, tomahawk, reverse, windmill, 360, between the legs,
+  behind the back) and a prop (off the glass, a lob, over a teammate); difficulty is the sum of the
+  parts (0-13). Every part with difficulty is one timing tap, plus the finish. The green is
+  0.30 wide, +0.006 per point of athleticism above 80, -0.035 per point of the part's difficulty
+  (at least 0.08), and the marker sweeps faster for harder dunks. A missed tap fails the attempt;
+  three attempts, -2.5 for each failed one, three misses score about 30. Judges: 30 + 1.6 per
+  difficulty point + up to 7 for clean timing + 0.6 per part not shown yet (up to 2), split over
+  five judges with a little noise, 6-10 each. The others are simulated around their skill (43.5-48
+  a dunk, sd 2.6, 6% chance of a miss-filled 30). With a career, you dunk as your player and his
+  athleticism sets the green. Ideas for later: a dunker card (height, hops, flair), a crowd meter
+  that adds to the judges' score, celebrity props, an alley-oop partner chosen from your career
+  teammates.
+- **Mini-game claims:** up to four claims a season across all mini-games (was one per game), each
+  worth less than the last: 100%, 75%, 55%, 40%. At most about 4 rating points a season, the same
+  ballpark as before with five games instead of three. Dunk contest: athleticism +0.3 / 0.6 / 1 /
+  1.5 for a best dunk of 35 / 40 / 45 / 49+, finishing half that, reputation +3 for the winner.
+  Built in a lab: basketball IQ +0.15 / 0.4 / 0.7 / 1 for a peak under 85 / 85 / 90 / 95.
+- **Legacy:** the Hall of Fame (28 points on the first ballot, 20 otherwise) and the rafters
+  (12 a team, up to three) are worth twice as much: they happen once. New league titles (tier C,
+  1.5 points each): assists, rebounds, steals and blocks per game, decided like the scoring title
+  among qualified NBA players; each adds a little reputation and shows as a race in the season's
+  award voting.
+- **To do:** a box at the top of Home's left column: "Now" (the decision waiting, or the next
+  step), then queued decisions and anything worth a look (a focus change unlocked, starting-five
+  recruits, a height mismatch, lab credits, programs). Body text is a size larger (18.5 px).
+- **Identity page:** three cards: who you are (name, number), where you start (a grid of twelve
+  countries with each one's road to the pros, "Surprise me", the rest in a list, and the country's
+  notes), and on the court (position, hand).
+- **Regular guy balance (the top end was too easy to reach):** diagnostics on 400 careers per
+  play style (seeds 960000+) showed that high-potential careers nearly always reach their
+  ceiling: careers with potential 85-90 peaked at 87.9 on average, so the top end was set almost
+  entirely by how many players rolled a high potential. Two changes:
+  1. Potential is narrower: base 37, mu 3.44, sigma 0.40 (was base 40, mu 3.33, sigma 0.66). The
+     median is about the same (68 vs 68), the 90th percentile drops from about 95 to 89.
+  2. The elite climb: above OVR 85 each half's growth shrinks by 7% per point (0.65x at 90, at
+     least 0.4x), Regular guy only. The last steps to the top take real seasons.
+  Smart play, before → after: mean peak 75.2 → 74.5; peak 90+ 19.0% → 11.5%; 95+ 10.5% → 3.3%;
+  98+ 3.5% → 0.3%; seasons at 90+ per career 1.68 → 0.84; MVP 14.8% → 7.0%; Hall of Fame
+  25.5% → 18.8%; All-Star 37.5% → 32.3%; reached the NBA 71.8% → 76.8%; title 37.8% → 33.5%.
+  Random play: mean 70.2 → 69.3; 90+ 11.5% → 5.5%; MVP 11.3% → 4.8%; HOF 20.0% → 12.8%.
+  Trials on the way: sigma 0.52 alone gave 90+ 14.5%; sigma 0.44 13.8%; plus a 5% elite climb
+  12.8%; sigma 0.40 with a 7% climb 11.5% but 84.5% reached the NBA (too few busts), fixed by the
+  lower base. Harness targets moved with it (smart MVP 4-11%, HOF 13-25%, All-Star 26-40%).

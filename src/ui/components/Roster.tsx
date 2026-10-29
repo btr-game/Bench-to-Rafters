@@ -2,7 +2,8 @@
 
 import type { GameState } from '../../engine/types';
 import { STARTERS_RECRUIT } from '../../engine/balance';
-import { canRecruit, recruitInfo, scoutingBoard, starters } from '../../engine/career/recruit';
+import { canRecruit, outlookOf, recruitInfo, scoutingBoard, starters } from '../../engine/career/recruit';
+import { ordinal } from '../format';
 import { STORY_LABEL } from '../../engine/world/stories';
 import { ovrOf } from '../../engine/player/ovr';
 import { fmtMoney } from '../../engine/economy/salary';
@@ -46,6 +47,31 @@ export function RecruitCard({ g }: { g: GameState }) {
           </div>
         ))}
       </div>
+      <div className="five-outlook">
+        <div>
+          <span className="kicker">Your team now</span>
+          <b>
+            {ordinal(info.rank)} of 30 · {outlookOf(info.rank)}
+          </b>
+        </div>
+        {info.before && (
+          <div className={`five-delta${info.strength > info.before.strength ? ' up' : ' down'}`}>
+            <span className="kicker">This summer</span>
+            <b>
+              {ordinal(info.before.rank)} → {ordinal(info.rank)}
+            </b>
+            <span className="small">
+              Team strength {info.before.strength.toFixed(1)} → {info.strength.toFixed(1)} ({info.strength >= info.before.strength ? '+' : ''}
+              {(info.strength - info.before.strength).toFixed(1)}){info.joined.length ? ` · new: ${info.joined.join(', ')}` : ''}
+            </span>
+            {outlookOf(info.before.rank) !== outlookOf(info.rank) && (
+              <span className="small">
+                {outlookOf(info.before.rank)} → <b>{outlookOf(info.rank)}</b>
+              </span>
+            )}
+          </div>
+        )}
+      </div>
       <div className={`cap-line${room < 0 ? ' over' : ''}`}>
         Payroll {fmtMoney(info.payroll)} of a {fmtMoney(info.cap)} cap · {room >= 0 ? `${fmtMoney(room)} room` : `${fmtMoney(-room)} over: incoming salary must be within 125% of outgoing`}
       </div>
@@ -66,9 +92,10 @@ export function RecruitCard({ g }: { g: GameState }) {
                 <span className={`scout-rec rec-${t.rec.toLowerCase()}`}>Scouts: {t.rec}</span>
               </div>
               <span className="small rec-why prose">{t.why}</span>
+              {t.lineup && <span className="small warn-text">{t.lineup}</span>}
             </div>
-            <button className="btn small" disabled={!t.fits || left <= 0} onClick={() => recruit(t.p.id)}>
-              {t.fits ? 'Recruit' : `Need ${fmtMoney(t.short)}`}
+            <button className="btn small" disabled={!t.fits || !!t.lineup || left <= 0} onClick={() => recruit(t.p.id)} title={t.lineup ?? ''}>
+              {t.lineup ? 'No fit' : t.fits ? 'Recruit' : `Need ${fmtMoney(t.short)}`}
             </button>
           </div>
         ))}

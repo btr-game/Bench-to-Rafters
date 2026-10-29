@@ -12,7 +12,9 @@ import { startArc } from '../src/engine/events/arcs';
 import { winningEdge } from '../src/engine/career/team';
 import { ovrOf } from '../src/engine/player/ovr';
 import { compareCareer, rankModelFit } from '../src/engine/awards/compare';
-import { blendPlans, DIFFICULTIES } from '../src/engine/balance';
+import { blendPlans, DIFFICULTIES, LEGACY } from '../src/engine/balance';
+import { legacyScore } from '../src/engine/awards/legacy';
+import { HONOR_PTS } from '../src/engine/awards/tiers';
 import { makeRng, next, normal } from '../src/engine/rng';
 import type { GameState } from '../src/engine/types';
 import { runCareer } from '../scripts/harness';
@@ -449,9 +451,22 @@ describe('round 9: starting five, league stories, finals drama', () => {
         expect(s.contract!.salary).toBeCloseTo(Math.round(salary * 0.9 * 10) / 10, 6);
         const mine = s.nba!.teams.find((t) => t.id === s.teamId)!;
         for (const t of scoutingBoard(s).filter((x) => x.fits)) {
+          if (t.lineup) {
+            expect(recruitPlayer(s, t.p.id)).toBe(false);
+            continue;
+          }
           if (recruitPlayer(s, t.p.id)) {
             expect(mine.roster.some((p) => p.id === t.p.id)).toBe(true);
             expect(t.team.roster.some((p) => p.id === t.out[0].id)).toBe(true);
+            // round 12: the five keeps some shape (at most three guards, three forwards, two centers)
+            const five = [s.player.pos, ...[...mine.roster].sort((a, b) => b.ovr - a.ovr).slice(0, 4).map((p) => p.pos)];
+            const n = (g: string[]) => five.filter((p) => g.includes(p)).length;
+            expect(n(['PG', 'SG'])).toBeLessThanOrEqual(3);
+            expect(n(['SF', 'PF'])).toBeLessThanOrEqual(3);
+            expect(n(['C'])).toBeLessThanOrEqual(2);
+            const info = recruitInfo(s);
+            expect(info.joined).toContain(t.p.name);
+            expect(info.before).toBeDefined();
           }
         }
         expect(recruitInfo(s).asks).toBeGreaterThan(0);
@@ -513,5 +528,14 @@ describe('round 11: the MVP race', () => {
     }
     expect(live).toBe(true);
     expect(final).toBe(true);
+  });
+
+  it('legacy: league stat titles count, and the Hall of Fame and the rafters weigh the most', () => {
+    const s = newGame(77, { name: 'Lee Der', number: 3, pos: 'PG', archetype: 0, focus: ['PLY', 'IQ'] });
+    const base = legacyScore(s);
+    for (const key of ['ASTLEAD', 'REBLEAD', 'STLLEAD', 'BLKLEAD']) s.awards.push({ year: s.year, level: 'NBA', key, label: key });
+    expect(legacyScore(s) - base).toBeCloseTo(4 * LEGACY.statTitle, 6);
+    expect(HONOR_PTS.firstBallot).toBeGreaterThan(LEGACY.mvp);
+    expect(HONOR_PTS.hof).toBeGreaterThan(LEGACY.statTitle * 10);
   });
 });

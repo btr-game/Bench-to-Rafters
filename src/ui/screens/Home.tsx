@@ -274,20 +274,38 @@ function Context({ g }: { g: GameState }) {
   return null;
 }
 
+/**
+ * What to do, at the side (round 12): the choice in front of him, what is queued after it, and
+ * anything worth doing between seasons, so the next step is always obvious.
+ */
 function Todo({ g }: { g: GameState }) {
-  const items = [
-    ...g.pending.slice(1).map((d) => d.title),
-    ...g.player.programs.map((p) => `${p.name}: ${p.seasonsLeft} season${p.seasonsLeft === 1 ? '' : 's'} left`),
+  const pr = prompt(g);
+  const now = pr.type === 'decision' ? pr.decision.title : pr.type === 'advance' ? pr.label : null;
+  const items: { text: string; hot?: boolean }[] = [
+    ...g.pending.slice(1).map((d) => ({ text: d.title })),
+    ...(canChangeFocus(g) ? [{ text: 'Pick new focus stats (Offseason moves)', hot: true }] : []),
+    ...(canRecruit(g) && (g.recruit?.moves ?? 0) < STARTERS_RECRUIT.moves ? [{ text: 'Build the starting five (Offseason moves)', hot: true }] : []),
+    ...(heightMismatch(g) && canChangePosition(g) ? [{ text: 'Size check: think about another position', hot: true }] : []),
+    ...(g.mode === 'lab' && (g.player.lab?.credits ?? 0) >= 1 ? [{ text: `Spend ${Math.floor(g.player.lab!.credits)} lab credits`, hot: true }] : []),
+    ...g.player.programs.map((p) => ({ text: `${p.name}: ${p.seasonsLeft} season${p.seasonsLeft === 1 ? '' : 's'} left` })),
   ];
   return (
-    <section className="card stack">
+    <section className="card stack todo">
       <div className="sec-title">{UI.hub.todo}</div>
+      {now && (
+        <div className="todo-now">
+          <span className="kicker">Now</span>
+          <b>{now}</b>
+        </div>
+      )}
       {items.length === 0 ? (
-        <p className="muted small">{UI.hub.nothingPending}</p>
+        !now && <p className="muted small">{UI.hub.nothingPending}</p>
       ) : (
-        <ul className="small" style={{ paddingLeft: 18 }}>
-          {items.map((t, i) => (
-            <li key={i}>{t}</li>
+        <ul className="todo-list">
+          {items.map((x, i) => (
+            <li key={i} className={x.hot ? 'hot' : ''}>
+              {x.text}
+            </li>
           ))}
         </ul>
       )}
@@ -525,6 +543,7 @@ export function Home({ g }: { g: GameState }) {
   return (
     <div className="home-grid">
       <div className="stack">
+        <Todo g={g} />
         <PlayerCard g={g} />
         <ScoutCard g={g} compact />
         <MvpRace g={g} />
@@ -575,7 +594,6 @@ export function Home({ g }: { g: GameState }) {
           <div className="sec-title">Milestones</div>
           <MilestoneStrip reached={g.milestones} />
         </section>
-        <Todo g={g} />
         <MiniGamesCard />
         {g.step === 'summary' && canRetire(g) && <RetireCard g={g} />}
         {g.feed[0] && (

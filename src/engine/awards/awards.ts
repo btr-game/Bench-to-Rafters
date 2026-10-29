@@ -170,6 +170,19 @@ export function nbaAwards(cands: Cand[]): AwardOutcome {
   const scorers = [...elig].sort((a, b) => ppg(b) - ppg(a));
   out.races.push(race('Scoring title', scorers, ppg));
   if (scorers[0]?.isUser) out.wins.push({ key: 'SCORING', label: 'Scoring title' });
+  // the other per-game leaders (round 12)
+  const leaders: [string, string, 'ast' | 'reb' | 'stl' | 'blk'][] = [
+    ['ASTLEAD', 'Assists title', 'ast'],
+    ['REBLEAD', 'Rebounding title', 'reb'],
+    ['STLLEAD', 'Steals title', 'stl'],
+    ['BLKLEAD', 'Blocks title', 'blk'],
+  ];
+  for (const [key, label, stat] of leaders) {
+    const per = (c: Cand) => perGame(c.line, stat);
+    const ranked = [...elig].sort((a, b) => per(b) - per(a));
+    out.races.push(race(label, ranked, per));
+    if (ranked[0]?.isUser) out.wins.push({ key, label });
+  }
   return out;
 }
 

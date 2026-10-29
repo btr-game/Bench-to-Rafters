@@ -15,6 +15,11 @@ import { MiniGamesCard } from '../mini/MiniGames';
 const pick = <T,>(a: readonly T[]): T => a[Math.floor(Math.random() * a.length)];
 const uiRng = makeRng(Math.floor(Math.random() * 2 ** 31));
 
+/** Countries shown as big buttons on the identity page; the rest are in a list. */
+/** The kind of road each country's players take, in a few words. */
+const ROAD: Record<string, string> = { us: 'High school, AAU, college', canada: 'Prep school, then the NCAA', euro: 'Club academy, pro at 16-18', academy: 'Academies and clubs', asia: 'School teams, then college or pro', aus: 'Centre of Excellence' };
+const FEATURED = ['USA', 'Canada', 'France', 'Spain', 'Serbia', 'Australia', 'Japan', 'South Korea', 'China', 'Nigeria', 'Brazil', 'Philippines'];
+
 const midHeight = (pos: Pos): number => Math.round((HEIGHT_RANGE[pos][0] + HEIGHT_RANGE[pos][1]) / 2);
 
 function cards(pos: Pos): Attrs[] {
@@ -135,64 +140,96 @@ export function Create({ lab: labGame = false }: { lab?: boolean } = {}) {
       )}
 
       {step === 1 && (
-        <section className="card form">
-          <div className="field">
-            <label htmlFor="f-name">{UI.create.name}</label>
-            <input id="f-name" type="text" maxLength={28} value={name} onChange={(e) => setName(e.target.value)} />
-          </div>
-          <div className="field">
-            <label htmlFor="f-num">{UI.create.number}</label>
-            <input id="f-num" type="number" min={0} max={99} value={number} onChange={(e) => setNumber(e.target.value)} />
-          </div>
-          <fieldset>
-            <legend>Dominant hand</legend>
-            <div className="seg">
-              <button aria-pressed={hand === 'R'} onClick={() => setHand('R')}>
-                Right
-              </button>
-              <button aria-pressed={hand === 'L'} onClick={() => setHand('L')}>
-                Left
-              </button>
+        <section className="stack identity">
+          <div className="card stack">
+            <div className="sec-title">Who are you?</div>
+            <div className="id-row">
+              <div className="field">
+                <label htmlFor="f-name">{UI.create.name}</label>
+                <input id="f-name" type="text" maxLength={28} value={name} onChange={(e) => setName(e.target.value)} />
+              </div>
+              <div className="field id-num">
+                <label htmlFor="f-num">{UI.create.number}</label>
+                <input id="f-num" type="number" min={0} max={99} value={number} onChange={(e) => setNumber(e.target.value)} />
+              </div>
             </div>
-            <p className="muted small">Lefties are rarer, so defenders see them less. Either way, your weak hand starts raw; you can train it later.</p>
-          </fieldset>
-          <div className="field">
-            <label htmlFor="f-country">Nationality</label>
-            <select id="f-country" value={country} onChange={(e) => setCountry(e.target.value)}>
-              <option value="">Let the game decide</option>
-              {[...ORIGINS].sort((a, b) => a.country.localeCompare(b.country)).map((o) => (
-                <option key={o.country} value={o.country}>
-                  {o.country}
-                </option>
-              ))}
-            </select>
-            {country ? (
-              <ul className="country-notes small">
-                {edgeOf(country).notes.map((n) => (
-                  <li key={n}>{n}</li>
-                ))}
-              </ul>
-            ) : (
-              <p className="muted small">Half of all careers start in the United States; the rest begin in academies and clubs around the world.</p>
-            )}
           </div>
-          <div className="assigned">
-            <div className="kicker">{UI.create.assignedTitle}</div>
-            <div className="small">{UI.create.assignedText}</div>
-          </div>
-          <fieldset>
-            <legend>{UI.create.position}</legend>
-            <div className="seg">
-              {POSITIONS.map((p) => (
-                <button key={p} aria-pressed={p === pos} onClick={() => choosePos(p)} title={NAMES.pos[p]}>
-                  {p}
+
+          <div className="card stack nation-card">
+            <div className="sec-title">Where do you start?</div>
+            <p className="small muted">Your country sets your road until college or the pros: the youth system, the showcases, and who calls first.</p>
+            <div className="nation-grid">
+              <button className={`nation${country === '' ? ' on' : ''}`} aria-pressed={country === ''} onClick={() => setCountry('')}>
+                <b>Surprise me</b>
+                <small>By real-world odds</small>
+              </button>
+              {FEATURED.map((c) => (
+                <button key={c} className={`nation${country === c ? ' on' : ''}`} aria-pressed={country === c} onClick={() => setCountry(c)}>
+                  <b>{c === 'USA' ? 'United States' : c}</b>
+                  <small>{ROAD[ORIGINS.find((o) => o.country === c)?.path ?? 'us']}</small>
                 </button>
               ))}
             </div>
-            <p className="muted small">
-              {NAMES.pos[pos]} · grows to {ht(hMin)}–{ht(hMax)}
-            </p>
-          </fieldset>
+            <div className="field">
+              <label htmlFor="f-country">More countries</label>
+              <select id="f-country" value={FEATURED.includes(country) ? '' : country} onChange={(e) => setCountry(e.target.value)}>
+                <option value="">Choose…</option>
+                {[...ORIGINS]
+                  .filter((o) => !FEATURED.includes(o.country))
+                  .sort((a, b) => a.country.localeCompare(b.country))
+                  .map((o) => (
+                    <option key={o.country} value={o.country}>
+                      {o.country}
+                    </option>
+                  ))}
+              </select>
+            </div>
+            <div className="nation-notes">
+              <div className="kicker">{country ? `Your road from ${country === 'USA' ? 'the United States' : country}` : 'Your road'}</div>
+              {country ? (
+                <ul>
+                  {edgeOf(country).notes.map((n) => (
+                    <li key={n}>{n}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="small">Half of all careers start in the United States; the rest begin in academies and clubs around the world.</p>
+              )}
+            </div>
+          </div>
+
+          <div className="card stack">
+            <div className="sec-title">On the court</div>
+            <fieldset>
+              <legend>{UI.create.position}</legend>
+              <div className="seg">
+                {POSITIONS.map((p) => (
+                  <button key={p} aria-pressed={p === pos} onClick={() => choosePos(p)} title={NAMES.pos[p]}>
+                    {p}
+                  </button>
+                ))}
+              </div>
+              <p className="muted small">
+                {NAMES.pos[pos]} · grows to {ht(hMin)}–{ht(hMax)}
+              </p>
+            </fieldset>
+            <fieldset>
+              <legend>Dominant hand</legend>
+              <div className="seg">
+                <button aria-pressed={hand === 'R'} onClick={() => setHand('R')}>
+                  Right
+                </button>
+                <button aria-pressed={hand === 'L'} onClick={() => setHand('L')}>
+                  Left
+                </button>
+              </div>
+              <p className="muted small">Lefties are rarer, so defenders see them less. Either way, your weak hand starts raw.</p>
+            </fieldset>
+            <div className="assigned">
+              <div className="kicker">{UI.create.assignedTitle}</div>
+              <div className="small">{UI.create.assignedText}</div>
+            </div>
+          </div>
         </section>
       )}
 

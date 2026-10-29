@@ -1,6 +1,6 @@
 // Front Office screens (engine/mini/frontOffice.ts).
 
-import { useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import * as F from '../../engine/mini/frontOffice';
 import type { FoState, Tactic } from '../../engine/mini/frontOffice';
 import { fmtMoney } from '../../engine/economy/salary';
@@ -300,14 +300,92 @@ function Market({ fo, act }: { fo: FoState; act: (fn: (f: FoState) => void) => v
   );
 }
 
+/**
+ * The season, animated (round 12: "the season simulation seems abrupt"): the record counts up
+ * game by game along a path that ends at the real record, the All-Star break and the final
+ * standing get a line, then each playoff series he played appears in turn. Skip shows the end.
+ */
+function SeasonReel({ fo, onDone }: { fo: FoState; onDone: () => void }) {
+  const last = fo.history[fo.history.length - 1];
+  const team = F.myTeam(fo);
+  const b = fo.world.nba?.bracket;
+  const path = useMemo(() => {
+    // a plausible order of wins and losses with exactly his record (seeded by the season)
+    let x = (last.year * 2654435761 + last.w * 97) >>> 0 || 1;
+    const rnd = () => ((x ^= x << 13), (x ^= x >>> 17), (x ^= x << 5), (x >>> 0) / 4294967296);
+    const games = [...Array(last.w).fill(1), ...Array(last.l).fill(0)];
+    for (let i = games.length - 1; i > 0; i--) {
+      const j = Math.floor(rnd() * (i + 1));
+      [games[i], games[j]] = [games[j], games[i]];
+    }
+    return games as number[];
+  }, [last]);
+  const series = (b?.rounds ?? []).flatMap((r) => r.series.filter((s) => s.a === fo.mine || s.b === fo.mine).map((s) => ({ round: r.name, s })));
+  const total = path.length + series.length + 1;
+  const [i, setI] = useState(0);
+  useEffect(() => {
+    if (i >= total) {
+      onDone();
+      return;
+    }
+    const t = setTimeout(() => setI((x) => x + 1), i < path.length ? 35 : 900);
+    return () => clearTimeout(t);
+  }, [i, total, path.length, onDone]);
+  const played = path.slice(0, Math.min(i, path.length));
+  const w = played.filter((g) => g === 1).length;
+  const l = played.length - w;
+  const name = (id: string) => fo.world.nba?.teams.find((x) => x.id === id)?.short ?? id;
+  return (
+    <section className="card stack fo-reel" style={{ borderTop: `5px solid ${team.color}` }}>
+      <div className="kicker">{i < path.length ? `Game ${played.length} of ${path.length}` : 'The postseason'}</div>
+      <div className="row">
+        <div className="rec-big">
+          {w}–{l}
+        </div>
+        <div className="spacer" />
+        <div className="streak">
+          {played.slice(-12).map((g, k) => (
+            <span key={k} className={g ? 'win' : 'loss'} />
+          ))}
+        </div>
+      </div>
+      {played.length >= 41 && <div className="small">All-Star break: {played.slice(0, 41).filter((g) => g === 1).length}–{41 - played.slice(0, 41).filter((g) => g === 1).length}.</div>}
+      {i >= path.length && (
+        <div className="small">
+          Regular season over: {last.w}–{last.l}, {last.seed <= 15 ? `${ordinal(last.seed)} in the ${team.conf}` : ''}.
+        </div>
+      )}
+      {series.slice(0, Math.max(0, i - path.length)).map(({ round, s }) => {
+        const won = s.winner === fo.mine;
+        const mine = s.a === fo.mine ? s.wa : s.wb;
+        const theirs = s.a === fo.mine ? s.wb : s.wa;
+        return (
+          <div key={round} className={`fo-series ${won ? 'won' : 'lost'}`}>
+            <span className="kicker">{round}</span>
+            <b>
+              {won ? 'Beat' : 'Lost to'} the {name(s.a === fo.mine ? s.b : s.a)} {mine}–{theirs}
+            </b>
+          </div>
+        );
+      })}
+      <button className="btn ghost small reel-skip" onClick={() => setI(total)}>
+        Skip
+      </button>
+    </section>
+  );
+}
+
+
 export function FrontOffice() {
   const [seed] = useState(() => Math.floor(Math.random() * 2 ** 31));
   const list = useMemo(() => F.franchises(seed), [seed]);
   const [fo, setFo] = useState<FoState | null>(null);
+  const [reel, setReel] = useState(false);
   const act = (fn: (f: FoState) => void) => {
     if (!fo) return;
     const n = structuredClone(fo);
     fn(n);
+    if (fo.phase === 'tactic' && n.phase === 'results') setReel(true);
     setFo(n);
   };
 
@@ -377,7 +455,8 @@ export function FrontOffice() {
           </div>
         </section>
       )}
-      {(fo.phase === 'results' || fo.phase === 'over') && last && (
+      {fo.phase === 'results' && last && reel && <SeasonReel fo={fo} onDone={() => setReel(false)} />}
+      {(fo.phase === 'results' || fo.phase === 'over') && last && !reel && (
         <section className="card stack">
           <div className="sum-head">
             <div className="rec">
@@ -413,10 +492,10 @@ export function FrontOffice() {
           </button>
         </section>
       )}
-      {fo.history.length > 0 && (
+      {fo.history.length > (reel ? 1 : 0) && (
         <section className="card stack">
           <div className="sec-title">Your seasons</div>
-          {fo.history.map((h, i) => (
+          {(reel ? fo.history.slice(0, -1) : fo.history).map((h, i) => (
             <div key={i} className="small">
               Season {i + 1}: {h.w}–{h.l}, {h.exit.toLowerCase()} ({F.TACTIC_LABEL[h.tactic].name})
             </div>
