@@ -1,6 +1,8 @@
 // Mini-games (rounds 10-12): Front Office, the three-point and dunk contests, Built in a lab and the legends showdown.
 // They sit beside the career: opening one never touches the career in progress.
 
+import { Icon } from '../art/Icon';
+import { ICON_FOR } from '../art/icons';
 import { useStore } from '../../store';
 import { MINI_CLAIMS, claimsUsed, miniProgress, type MiniId } from '../../engine/career/miniBonus';
 import { FrontOffice } from './FrontOffice';
@@ -43,7 +45,10 @@ function Hub() {
                 <span>{x.tag}</span>
                 {pr && <span className={`hub-state${locked ? '' : ' open'}`}>{locked ? 'Locked' : 'Unlocked'}</span>}
               </span>
-              <b className="hub-name">{x.name}</b>
+              <b className="hub-name with-icon">
+                <Icon name={x.id === 'office' ? 'office' : x.id === 'lab' ? 'lab' : ICON_FOR[x.id] ?? ''} size={34} />
+                {x.name}
+              </b>
               <small>{x.text}</small>
               {pr && (
                 <span className="hub-req">

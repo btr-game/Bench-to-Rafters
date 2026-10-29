@@ -77,7 +77,7 @@ ul { margin: 0; }
 .fill.bad { background: var(--bad); }
 .fill.ink { background: var(--ink); }
 .attrs { display: grid; gap: 7px; }
-.attr { display: grid; grid-template-columns: 100px minmax(0, 1fr) 34px 40px; gap: 10px; align-items: center; font-size: 15.5px; }
+.attr { display: grid; grid-template-columns: 136px minmax(0, 1fr) 34px 40px; gap: 10px; align-items: center; font-size: 15.5px; }
 .attr .v { font-family: var(--f-mono); font-weight: 500; text-align: right; font-variant-numeric: tabular-nums; }
 .attr .d { font-family: var(--f-mono); font-size: 13.5px; text-align: right; }
 .attr .d.up { color: var(--good); }
@@ -1217,3 +1217,10 @@ td .art-team { display: inline-block; vertical-align: middle; margin: -3px 8px -
 .pos-check { position: absolute; top: 10px; right: 10px; padding: 2px 8px; border-radius: 999px; background: #fff; color: var(--pos); font-size: 12px; font-weight: 700; }
 @media (max-width: 899px) { .pos-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 599px) { .pos-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } .pos-head b { font-size: 32px; } }
+.pix-icon { image-rendering: pixelated; flex: none; }
+.with-icon { display: inline-flex; align-items: center; gap: 8px; }
+.attr-name { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+.guide-card summary { grid-template-columns: auto minmax(0, 1fr); column-gap: 12px; align-items: center; }
+.guide-card summary .pix-icon { grid-row: span 2; }
+.set-row > div { flex: 1; }
+.attr-name { white-space: nowrap; }

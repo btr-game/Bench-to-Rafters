@@ -1,3 +1,5 @@
+import { Icon } from '../art/Icon';
+import { ICON_FOR, archetypeIcon } from '../art/icons';
 import { useState } from 'react';
 import { ARCHETYPES } from '../../engine/player/archetypes';
 import { rerollAttrs } from '../../engine/player/create';
@@ -330,7 +332,10 @@ export function Create() {
                   setRolled((r) => ({ ...r, arch: false }));
                 }}
               >
-                <h3>{a.name}</h3>
+                <h3 className="with-icon">
+                  <Icon name={archetypeIcon(a.name)} size={30} />
+                  {a.name}
+                </h3>
                 <div className="muted small">{a.blurb}</div>
                 <div className="mini-attrs">
                   {ATTRS.map((k) => (
@@ -354,7 +359,8 @@ export function Create() {
           <div className="focus-grid">
             {ATTRS.map((k) => (
               <button key={k} className={`choice${focus.includes(k) ? ' selected' : ''}`} aria-pressed={focus.includes(k)} onClick={() => toggleFocus(k)}>
-                <span className="label">
+                <span className="label with-icon">
+                  <Icon name={ICON_FOR[k]} size={26} />
                   {NAMES.attr[k]} <span className="muted">{attrs[k]}</span>
                 </span>
                 <small>{NAMES.attrBlurb[k]}</small>

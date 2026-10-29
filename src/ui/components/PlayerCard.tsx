@@ -1,3 +1,5 @@
+import { Icon } from '../art/Icon';
+import { ICON_FOR } from '../art/icons';
 import { PlayerArt, styleLeague } from '../art/Player';
 import { heightMismatch } from '../../engine/flow';
 import type { GameState } from '../../engine/types';
@@ -16,7 +18,8 @@ export function AttrRows({ g, compare }: { g: GameState; compare?: Record<string
         const d = compare ? v - compare[k] : 0;
         return (
           <div className="attr" key={k}>
-            <span>
+            <span className="attr-name">
+              <Icon name={ICON_FOR[k]} size={20} />
               {NAMES.attr[k]}
               {p.focus.includes(k) && (
                 <span className="focus-dot" title="Focus stat" aria-label="focus stat">

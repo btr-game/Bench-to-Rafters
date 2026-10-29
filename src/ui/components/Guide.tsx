@@ -1,6 +1,8 @@
 // The guide (playtest round 7: "some functions are hard to recognize"): every feature, what
 // it does and where it lives, one tap from the header.
 
+import { Icon } from '../art/Icon';
+import { GUIDE_ICON } from '../art/icons';
 import { useEffect, useState } from 'react';
 import { useStore } from '../../store';
 import { canChangeFocus, prompt } from '../../engine/flow';
@@ -189,6 +191,7 @@ export function GuideButton() {
                   {sec.items.map(([k, v]) => (
                     <details key={k} className="guide-card">
                       <summary>
+                        <Icon name={GUIDE_ICON[k] ?? ''} size={30} />
                         <b>{k}</b>
                         <span>{teaser(v)}</span>
                       </summary>

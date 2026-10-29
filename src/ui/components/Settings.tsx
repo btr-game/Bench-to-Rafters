@@ -1,6 +1,7 @@
 // The top bar's tools (round 14): one settings menu instead of switches scattered over the
 // screens, a "next step" button that lets you carry on from any tab, and keyboard shortcuts.
 
+import { Icon } from '../art/Icon';
 import { useEffect, useRef, useState } from 'react';
 import type { GameState } from '../../engine/types';
 import { prompt } from '../../engine/flow';
@@ -8,8 +9,10 @@ import { useStore, type Tab, type Theme } from '../../store';
 
 /** A switch row: label, short note, on/off button. */
 function Toggle({ label, note, on, onClick }: { label: string; note: string; on: boolean; onClick: () => void }) {
+  const icon = /fast/i.test(label) ? 'fast' : /simple/i.test(label) ? 'simple' : /guide/i.test(label) ? 'guide' : /master/i.test(label) ? 'master' : /playoff/i.test(label) ? 'bracket' : '';
   return (
     <div className="set-row">
+      <Icon name={icon} size={26} />
       <div>
         <b>{label}</b>
         <small>{note}</small>

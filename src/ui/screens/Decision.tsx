@@ -1,5 +1,7 @@
 // Renders whatever decision is at the front of the queue.
 
+import { Icon } from '../art/Icon';
+import { choiceIcon } from '../art/icons';
 import { useState } from 'react';
 import type { Decision, GameState, Offer } from '../../engine/types';
 import type { LiveRequest } from '../../engine/career/live';
@@ -86,7 +88,10 @@ function PlanPicker({ d }: { d: Decision }) {
         <div className={`plans${d.data?.single ? ' plan-groups' : ''}`}>
           {enabled.map((c) => (
             <button key={c.id} className="choice" onClick={() => choose(c.id)}>
-              <span className="label">{c.label}</span>
+              <span className="label with-icon">
+                <Icon name={choiceIcon(c.id)} size={26} />
+                {c.label}
+              </span>
               <small>{c.detail}</small>
             </button>
           ))}
@@ -106,7 +111,8 @@ function PlanPicker({ d }: { d: Decision }) {
           const on = picked.includes(c.id);
           return (
             <button key={c.id} className={`choice${on ? ' selected' : ''}`} aria-pressed={on} disabled={c.disabled} onClick={() => toggle(c.id)}>
-              <span className="label">
+              <span className="label with-icon">
+                <Icon name={choiceIcon(c.id)} size={26} />
                 {on && <span className={`plan-tag ${picked.indexOf(c.id) === 0 ? 'main' : 'side'}`}>{picked.indexOf(c.id) === 0 ? 'Main' : 'Side'}</span>}
                 {c.label}
               </span>

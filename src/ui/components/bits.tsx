@@ -1,5 +1,7 @@
 // Small presentational components shared by the screens.
 
+import { Icon } from '../art/Icon';
+import { meterIcon } from '../art/icons';
 import type { ReactNode } from 'react';
 import type { Reaction, StatLine } from '../../engine/types';
 import { MILESTONES, UI } from '../../content/strings';
@@ -79,7 +81,10 @@ export function Meter({ label, value, tone }: { label: string; value: number; to
   return (
     <div className="meter">
       <div className="lab">
-        <span>{label}</span>
+        <span className="with-icon">
+          <Icon name={meterIcon(label)} size={20} />
+          {label}
+        </span>
         <span>{v}</span>
       </div>
       <div className="track" role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={v}>
