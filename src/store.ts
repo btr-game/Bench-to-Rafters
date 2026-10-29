@@ -11,6 +11,7 @@ import { seasonLabel } from './ui/format';
 
 export type Tab = 'home' | 'season' | 'player' | 'league' | 'records';
 export type Theme = 'auto' | 'light' | 'dark';
+export type Mini = 'hub' | 'office' | 'threes' | 'legends';
 
 /** A short interstitial between steps (not part of the saved game). */
 export type Transition =
@@ -38,6 +39,8 @@ interface Store {
   payCut: () => void;
   endTransition: () => void;
   reset: () => void;
+  mini: Mini | null;
+  setMini: (m: Mini | null) => void;
   setTab: (t: Tab) => void;
   setTheme: (t: Theme) => void;
 }
@@ -199,6 +202,11 @@ export const useStore = create<Store>((set, get) => ({
   },
   endTransition: () => set({ transition: null }),
   reset: () => set({ game: null, tab: 'home', transition: null }),
+  mini: null,
+  setMini: (mini) => {
+    set({ mini });
+    top();
+  },
   setTab: (tab) => {
     set({ tab });
     top();

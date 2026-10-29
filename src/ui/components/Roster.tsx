@@ -63,7 +63,7 @@ export function RecruitCard({ g }: { g: GameState }) {
               </span>
               <div className="row" style={{ gap: 6 }}>
                 <span className={`interest i-${t.label === 'Interested' ? 'hi' : t.label === 'Open to it' ? 'mid' : 'lo'}`}>{t.label}</span>
-                <span className={`rec rec-${t.rec.toLowerCase()}`}>Scouts: {t.rec}</span>
+                <span className={`scout-rec rec-${t.rec.toLowerCase()}`}>Scouts: {t.rec}</span>
               </div>
               <span className="small rec-why">{t.why}</span>
             </div>

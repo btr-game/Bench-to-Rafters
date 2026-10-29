@@ -10,6 +10,7 @@ import { useStore } from '../../store';
 import { ORIGINS } from '../../content/origins';
 import { edgeOf } from '../../engine/career/nationality';
 import { ht } from '../format';
+import { MiniGamesCard } from '../mini/MiniGames';
 
 const pick = <T,>(a: readonly T[]): T => a[Math.floor(Math.random() * a.length)];
 const uiRng = makeRng(Math.floor(Math.random() * 2 ** 31));
@@ -118,6 +119,7 @@ export function Create() {
             ))}
           </div>
           <p className="muted small">The league is the same in every mode. What changes is your potential, how fast you grow, how often you get hurt and how much of the game you play yourself.</p>
+          <MiniGamesCard />
 
         </section>
       )}

@@ -602,3 +602,33 @@ nationality; event results that really differ; rare mold-breaking players; heigh
   position, minus 0.3 for a player paid over 28% of the cap who adds little. High from 1.9,
   Moderate from 0.85: over 216 board entries in 12 star careers, 35% High, 29% Moderate,
   37% Low (each board has two stars, who are usually High but Unlikely to come).
+
+## Round 10: mini-games
+
+Reached from the start page and from the bottom of Home (a career in progress is untouched).
+
+- **Front Office:** six seasons running a franchise in the career's simulated NBA (same world
+  code). Draft: 100-prospect class, the other 29 teams pick off the consensus board; 8 scouting
+  points a draft narrow the ranges (current level sd 6/3.5/2/1, ceiling sd 9/5.5/3/1.5) and
+  reveal strengths and weaknesses, work ethic (the real hidden development factor) and medicals
+  (8% red flags really develop at 60% speed and lose 4 points of ceiling). Market: three trade
+  offers a summer (value = (OVR - 66 + upside)^2 x an age factor; salaries fit the cap or 125%),
+  overseas signings (EuroLeague and leagues abroad, OVR around 70-72 with an occasional find,
+  fuzzy until scouted) by cap room, the mid-level exception (7% of the cap, once a season) or the
+  minimum; releases leave dead money. Game plan: four identities with a fit read from the roster
+  (up to +1.6 team strength, down to -1). Two seasons of grace, then two missed postseasons in a
+  row gets you fired. A plain bot (no smart trades) won no titles in 6 runs; a careful player can.
+- **Three-point contest:** five racks, 60 seconds, money balls worth 2, a money-ball rack of your
+  choice (34 max). Stop a sweeping meter in the green zone (width 0.07 + 0.0011 x skill of the
+  meter, narrowing 12% by the last ball); the bright middle is a swish, the edge can rim out. Your
+  career player can shoot (skill from shooting and range) or pick a famous shooter. Simulated
+  shooters average 21.5-23 points; top three go to the final.
+- **Legends showdown:** every franchise with its all-time starting five (150 different players,
+  each on the team of his peak; LeBron is a Cavalier). Ratings are the five's average plus
+  balance, squeezed toward 90 by 0.65 so the gaps are not absolute. A 29-game season (everyone
+  plays everyone once), eight a conference, four best-of-seven rounds. Before each series the
+  scouts describe the opponent's style; the right plan is worth +2.2, the wrong one -0.8. Title
+  odds in 300 runs with the right plans: Lakers 58%, Celtics 37%, Bulls 6%, Heat 5%, Grizzlies
+  under 1%. Franchises are labeled Favorite, Contender, Dark horse and Long shot.
+- Fixed in passing: the scouts' recommendation badge reused the `.rec` class, which also styles
+  the season-summary record, so the big win-loss number had gone white on white.

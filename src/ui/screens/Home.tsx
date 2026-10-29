@@ -5,6 +5,7 @@ import { ATTRS, LEVELS } from '../../engine/balance';
 import { NAMES, UI } from '../../content/strings';
 import { useStore } from '../../store';
 import { LabCard } from '../components/Lab';
+import { MiniGamesCard } from '../mini/MiniGames';
 import { RecruitCard, StoriesCard } from '../components/Roster';
 import { canRecruit, recruitInfo } from '../../engine/career/recruit';
 import { STARTERS_RECRUIT } from '../../engine/balance';
@@ -555,6 +556,7 @@ export function Home({ g }: { g: GameState }) {
           <MilestoneStrip reached={g.milestones} />
         </section>
         <Todo g={g} />
+        <MiniGamesCard />
         {g.step === 'summary' && canRetire(g) && <RetireCard g={g} />}
         {g.feed[0] && (
           <section className="card">

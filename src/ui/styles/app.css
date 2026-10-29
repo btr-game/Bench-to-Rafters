@@ -610,8 +610,47 @@ button.banner { border: 0; font: inherit; text-align: left; }
 .story-superteam .story-tag, .story-dynasty .story-tag { background: var(--gold); color: #1a1205; }
 .story-underdog .story-tag { background: var(--good); color: #fff; }
 
-.rec { font-family: var(--f-mono); font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; padding: 1px 7px; border-radius: 5px; color: #fff; }
+.scout-rec { font-family: var(--f-mono); font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; padding: 1px 7px; border-radius: 5px; color: #fff; }
 .rec-high { background: var(--good); }
 .rec-moderate { background: var(--warn); }
 .rec-low { background: var(--muted); }
 .rec-why { font-style: italic; color: var(--muted); }
+
+/* mini-games */
+.legend-team { gap: 8px; padding: 10px 12px; }
+.legend-head { display: grid; gap: 2px; text-align: left; background: none; border: 0; padding: 0; width: 100%; color: inherit; }
+.tier-chip { justify-self: start; font-family: var(--f-mono); font-size: 11.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 1px 7px; border-radius: 5px; color: #fff; background: var(--muted); }
+.tier-chip.t-favorite { background: var(--gold); color: #1a1205; }
+.tier-chip.t-contender { background: var(--good); }
+.tier-chip.t-dark-horse { background: var(--warn); }
+.scout-hint { margin: 0; padding: 8px 10px; border-radius: 8px; background: var(--accent-soft); }
+.report { display: grid; gap: 2px; padding: 6px 8px; border-radius: 6px; background: var(--surface-2); }
+button.scout-row { text-align: left; background: var(--surface); color: inherit; width: 100%; }
+.scout-row.target.on { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.offer-box { padding: 10px; border: 1px dashed var(--accent); border-radius: 8px; }
+.offer-picks { display: flex; flex-wrap: wrap; gap: 6px; }
+.pick-chip { padding: 5px 9px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface-2); font-size: 14.5px; min-height: 36px; }
+.pick-chip.on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.mood.m-they { color: var(--good); }
+.mood.m-close { color: var(--warn); }
+.mood.m-not, .mood.m-no { color: var(--bad); }
+.warn-text { color: var(--bad); }
+.link-btn { background: none; border: 0; color: var(--accent); font-size: 13px; text-decoration: underline; padding: 4px; min-height: 32px; }
+.threes { gap: 12px; }
+.three-score { font-family: var(--f-display); font-weight: 900; font-size: 44px; line-height: 0.9; text-align: right; font-variant-numeric: tabular-nums; }
+.three-score small { display: block; font-family: var(--f-mono); font-size: 14px; font-weight: 500; color: var(--muted); }
+.racks { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.rack { display: flex; justify-content: center; gap: 3px; padding: 6px 2px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface-2); }
+.rack.now { border-color: var(--accent); }
+.rack.money-rack { background: color-mix(in srgb, var(--gold) 16%, var(--surface-2)); }
+.ball { width: 11px; height: 11px; border-radius: 50%; background: #d9772b; opacity: 0.55; }
+.ball.money { background: var(--gold); box-shadow: 0 0 0 1px #8a6508 inset; }
+.ball.make { opacity: 1; box-shadow: 0 0 0 2px var(--good); }
+.ball.miss { opacity: 0.18; }
+.meter { position: relative; height: 34px; border-radius: 8px; background: var(--surface-2); border: 1px solid var(--line); overflow: hidden; }
+.meter-zone { position: absolute; top: 0; bottom: 0; background: color-mix(in srgb, var(--good) 40%, transparent); }
+.meter-sweet { position: absolute; top: 0; bottom: 0; background: var(--good); }
+.meter-mark { position: absolute; top: -2px; bottom: -2px; width: 4px; margin-left: -2px; background: var(--ink); border-radius: 2px; left: 50%; }
+.three-flash { min-height: 30px; font-family: var(--f-display); font-weight: 800; font-size: 26px; text-transform: uppercase; text-align: center; }
+.shoot-btn { min-height: 64px; font-size: 30px; touch-action: manipulation; }
+.nb-scroll { min-width: 0; max-width: 100%; }

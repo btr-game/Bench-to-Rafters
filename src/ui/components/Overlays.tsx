@@ -256,7 +256,7 @@ const TAG_LABEL: Record<string, string> = {
 };
 
 /** Three quarters in a blink, then crunch time one play at a time. Skip shows the end. */
-function FinalReel({ m }: { m: Moment }) {
+export function FinalReel({ m }: { m: Moment }) {
   const d = m.drama!;
   const game = m.game!;
   const warm = 10;

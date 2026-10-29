@@ -7,6 +7,7 @@ import { Home } from './screens/Home';
 import { LeagueTab, PlayerTab, RecordsTab, SeasonTab } from './screens/Tabs';
 import { Retirement } from './screens/Retirement';
 import { Overlays } from './components/Overlays';
+import { MiniGames } from './mini/MiniGames';
 
 const HOST_THEME = typeof document !== 'undefined' ? document.documentElement.getAttribute('data-theme') : null;
 
@@ -66,6 +67,7 @@ export function App() {
   const tab = useStore((s) => s.tab);
   const theme = useStore((s) => s.theme);
   const reset = useStore((s) => s.reset);
+  const mini = useStore((s) => s.mini);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -76,6 +78,7 @@ export function App() {
     } else root.setAttribute('data-theme', theme);
   }, [theme]);
 
+  if (mini) return <MiniGames />;
   if (!game) return <Create />;
 
   const retired = game.step === 'retired';
