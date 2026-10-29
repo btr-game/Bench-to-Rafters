@@ -136,7 +136,7 @@ export function beginSeason(s: GameState): void {
     attrsStart: { ...s.player.attrs },
     ...(() => {
       const f = startTeamFactors(s, team);
-      return { teamBonus: f.bonus, teamNotes: f.notes };
+      return { teamBonus: f.bonus, teamNotes: f.notes, postBonus: f.post, styleFx: f.fx };
     })(),
     halfLines: [],
     injuredGames: 0,
@@ -162,6 +162,8 @@ const PLAN_TEXT: Record<HalfPlan, PlanText> = {
   playmaking: { id: 'playmaking', label: 'Film and reads', detail: 'Study the game. Passing and feel improve; coaches trust you more.' },
   defense: { id: 'defense', label: 'Lockdown', detail: 'Make defense your identity. Coaches notice.' },
   offhand: { id: 'offhand', label: 'Off-hand work', detail: 'Drill your weak hand every day. Finishing with both hands; little else grows.' },
+  speed: { id: 'speed', label: 'Speed and agility', detail: 'Sprints, footwork and first-step work: athleticism, perimeter defense and finishing. Slightly more injury risk.' },
+  mentor: { id: 'mentor', label: 'Learn from a vet', detail: 'Shadow a veteran: basketball IQ, defensive habits and a cleaner jumper. Easy on the body; the coach likes it.' },
 };
 const PLAN_IDS = Object.keys(PLAN_TEXT) as HalfPlan[];
 /** Fast break: five training groups, one a season. */
@@ -205,7 +207,7 @@ export function pushPlanDecision(s: GameState, half: 1 | 2): void {
   pushDecision(s, {
     kind: 'plan',
     title: half === 1 ? 'First-half plan' : 'Second-half plan',
-    text: injured ? 'You are injured. Recovery is the only plan available.' : 'Pick one or two plans for the next half. The first is your main plan and keeps most of its effect; a second is a side plan with a smaller boost.',
+    text: injured ? 'You are injured. Recovery is the only plan available.' : 'Pick one or two plans for the next half. One plan alone works a little better than its listing (focused work); add a second and the first keeps most of its effect while the side plan adds a smaller boost.',
     choices: plans.map((p) => ({ id: p.id, label: p.label, detail: p.detail, disabled: injured && p.id !== 'recovery' })),
     data: { half },
   });
@@ -281,8 +283,8 @@ function makeHook(s: GameState, league: League, level: LevelKey, acc: HalfAcc, s
       minutes = rollMinutes(rng, season.role, level, !!post);
       if (p.injury && p.injury.key === 'dtd') minutes = chance(rng, 0.5) ? 0 : Math.round(minutes * 0.85);
       if (minutes > 0) {
-        const moraleMult = MORALE_PERF(p.morale) * (1 + (form - 1) * FORM.shootingShare);
-        const usage = (usageWeight(p.attrs) / usageMean) * (season.fuel ? 1.06 : 1) * plan.usage * Math.pow(form, 0.8);
+        const moraleMult = MORALE_PERF(p.morale) * (1 + (form - 1) * FORM.shootingShare) * (season.styleFx?.perf ?? 1);
+        const usage = (usageWeight(p.attrs) / usageMean) * (season.fuel ? 1.06 : 1) * plan.usage * Math.pow(form, 0.8) * (season.styleFx?.usage ?? 1);
         const e = expected(userProfile(s), level, minutes, usage, moraleMult);
         const started = season.role === 'key' || season.role === 'starter';
         if (live) {
@@ -291,7 +293,7 @@ function makeHook(s: GameState, league: League, level: LevelKey, acc: HalfAcc, s
             e,
             started,
             level,
-            my: team.strength + (season.teamBonus ?? 0) + impact + edgeFor(p.attrs, ovr, minutes / L.gameLen, true) + plan.teamBoost,
+            my: team.strength + (season.teamBonus ?? 0) + (post ? (season.postBonus ?? 0) : 0) + impact + edgeFor(p.attrs, ovr, minutes / L.gameLen, true) + plan.teamBoost,
             opp: opp.strength,
             oppName: opp.name,
             homeAdv: level !== 'NBA' ? 0 : home ? 1 : -1,
@@ -333,7 +335,7 @@ function makeHook(s: GameState, league: League, level: LevelKey, acc: HalfAcc, s
     let them: number;
     if (liveResult) ({ win, us, them } = liveResult);
     else {
-      win = chance(rng, winProb(team.strength + (season.teamBonus ?? 0) + impact + boost, opp.strength, post && level !== 'NBA' ? 0 : home ? 1 : -1));
+      win = chance(rng, winProb(team.strength + (season.teamBonus ?? 0) + (post ? (season.postBonus ?? 0) : 0) + impact + boost, opp.strength, post && level !== 'NBA' ? 0 : home ? 1 : -1));
       us = Math.round(GAME_POINTS[level] + normal(rng, 0, 9));
       if (line && line.pts > us - 15) us = line.pts + int(rng, 15, 30);
       // postseason games run closer: more of them come down to the last minutes

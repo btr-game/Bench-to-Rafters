@@ -12,7 +12,6 @@
 
 import type { Decision, GameState, Moment } from './types';
 import { advance, canChangeFocus, choose, heightMismatch, prompt } from './flow';
-import { canRecruit } from './career/recruit';
 import { pushPlanDecision } from './career/season';
 
 /** Story pages worth stopping for in fast break. */
@@ -42,9 +41,14 @@ function autoChoice(s: GameState, d: Decision): string | null {
   return null;
 }
 
-/** An offseason with something to do: stop there once so the player can act. */
+/**
+ * Stop once in every offseason after high school, so the offseason moves (position, number,
+ * trade request, starting five, retiring) are always reachable. Round 13 bug fix: it used to
+ * stop only for a focus unlock, a recruit board, a size problem or age 30+, so in most summers
+ * the moves could not be reached at all.
+ */
 function worthStopping(s: GameState): boolean {
-  return canChangeFocus(s) || canRecruit(s) || heightMismatch(s) !== null || s.player.age >= 30;
+  return s.stage !== 'HS' || canChangeFocus(s) || heightMismatch(s) !== null;
 }
 
 /** Runs the game forward until the next real choice. */

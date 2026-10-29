@@ -1,6 +1,8 @@
 // Headless career runner used by `npm run sim` and the balance test.
 // It drives the game only through flow.ts, exactly like the UI.
 
+import { claimMini, type MiniResult } from '../src/engine/career/miniBonus';
+import { canSetStyle, setStyle, styleEffect, TEAM_STYLES, type TeamStyle } from '../src/engine/career/identity';
 import { advance, choose, newGame, prompt } from '../src/engine/flow';
 import { fastForward } from '../src/engine/fast';
 import { labCost, spendCredits } from '../src/engine/career/lab';
@@ -155,7 +157,25 @@ export interface CareerResult {
   stars: number;
 }
 
-export function runCareer(seed: number, policy: Policy, mode: Mode = 'standard'): CareerResult {
+/**
+ * Mini-game play for the diagnostics (round 13): none; casual (one claim a season with a decent
+ * result); grinder (both claims every season with top results that suit his position).
+ */
+export type MiniPlay = 'none' | 'casual' | 'grinder';
+
+function playMinis(s: GameState, how: MiniPlay): void {
+  if (how === 'none' || s.stage === 'HS' || s.flags.harnessMini === s.year) return;
+  s.flags.harnessMini = s.year;
+  const shooter = s.player.pos === 'PG' || s.player.pos === 'SG' || s.player.pos === 'SF';
+  const top: MiniResult = shooter ? { game: 'threes', score: 27, won: true, own: true } : { game: 'dunk', best: 48, won: true };
+  if (how === 'casual') claimMini(s, shooter ? { game: 'threes', score: 23, won: false, own: true } : { game: 'dunk', best: 44, won: false });
+  else {
+    claimMini(s, top);
+    claimMini(s, { game: 'legends', reached: 'champion' });
+  }
+}
+
+export function runCareer(seed: number, policy: Policy, mode: Mode = 'standard', minis: MiniPlay = 'none'): CareerResult {
   const r = makeRng(seed ^ 0x9e3779b9);
   const s = newGame(seed, { ...randomInput(r, policy), mode });
   // the harness simulates every postseason (the playable replay would only slow it down)
@@ -183,6 +203,14 @@ export function runCareer(seed: number, policy: Policy, mode: Mode = 'standard')
     // fast break plays like the app does: it runs on to the next real choice
     if (s.flags.fast) fastForward(s);
     if (s.mode === 'lab') labSpend(s, policy, r);
+    if (s.step === 'offseason') {
+      playMinis(s, minis);
+      // the smart player sets the team style that suits him best once he starts
+      if (policy === 'smart' && canSetStyle(s)) {
+        const best = (Object.keys(TEAM_STYLES) as TeamStyle[]).map((k) => ({ k, e: styleEffect(s, k) })).sort((a, b) => b.e.regular + b.e.playoff - (a.e.regular + a.e.playoff))[0];
+        setStyle(s, best.k);
+      }
+    }
     steps++;
   }
   const nbaRows = s.history.filter((h) => h.level === 'NBA' && h.line.gp > 0);

@@ -32,7 +32,9 @@ interface Store {
   changePosition: (pos: Pos) => void;
   togglePlayoffs: () => void;
   toggleFast: () => void;
-  requestTrade: () => void;
+  requestTrade: (aim?: import('./engine/career/team').TradeAim) => void;
+  /** Runs an engine change on a copy of the game (round 13: one action instead of one per feature). */
+  mutate: (fn: (g: GameState) => void) => void;
   changeNumber: (n: number) => void;
   changeFocus: (keys: AttrKey[]) => void;
   labSpend: (k: AttrKey, points: number) => void;
@@ -47,15 +49,24 @@ interface Store {
   setTheme: (t: Theme) => void;
   simple: boolean; // simple text: fewer words, just the choices (round 11)
   toggleSimple: () => void;
+  guide: boolean; // guide mode: highlights what to do next (round 13)
+  toggleGuide: () => void;
 }
 
-function loadSimple(): boolean {
+const loadFlag = (key: string): boolean => {
   try {
-    return localStorage.getItem('btr-simple') === '1';
+    return localStorage.getItem(key) === '1';
   } catch {
     return false;
   }
-}
+};
+const saveFlag = (key: string, on: boolean): void => {
+  try {
+    localStorage.setItem(key, on ? '1' : '0');
+  } catch {
+    /* storage can be unavailable; the setting still applies for this visit */
+  }
+};
 
 function loadTheme(): Theme {
   try {
@@ -79,15 +90,17 @@ export const useStore = create<Store>((set, get) => ({
   game: null,
   tab: 'home',
   theme: loadTheme(),
-  simple: loadSimple(),
+  simple: loadFlag('btr-simple'),
   toggleSimple: () => {
     const simple = !get().simple;
-    try {
-      localStorage.setItem('btr-simple', simple ? '1' : '0');
-    } catch {
-      /* storage can be unavailable; the setting still applies for this visit */
-    }
+    saveFlag('btr-simple', simple);
     set({ simple });
+  },
+  guide: loadFlag('btr-guide-mode'),
+  toggleGuide: () => {
+    const guide = !get().guide;
+    saveFlag('btr-guide-mode', guide);
+    set({ guide });
   },
   transition: null,
   start: (input, seed) => {
@@ -176,11 +189,18 @@ export const useStore = create<Store>((set, get) => ({
     changeNumber(next, n);
     set({ game: next });
   },
-  requestTrade: () => {
+  requestTrade: (aim) => {
     const g = get().game;
     if (!g) return;
     const next = structuredClone(g);
-    requestTrade(next);
+    requestTrade(next, aim);
+    set({ game: next });
+  },
+  mutate: (fn) => {
+    const g = get().game;
+    if (!g) return;
+    const next = structuredClone(g);
+    fn(next);
     set({ game: next });
   },
   toggleFast: () => {

@@ -245,6 +245,44 @@ export function prospectReport(c: FoProspect): {
   };
 }
 
+/**
+ * The scouts' recommendations for the pick (round 13). Built only from what the reports show, so
+ * scouting a prospect sharpens the advice: his level now, his ceiling (weighted more), what the
+ * roster needs (no rotation-level player at his position), and once known his work ethic and
+ * medicals. Unscouted prospects carry a small penalty for the guesswork. Best three, with why.
+ */
+export function draftRecs(fo: FoState, max = 3): { i: number; score: number; why: string[] }[] {
+  const d = fo.draft;
+  if (!d) return [];
+  const top8 = [...myTeam(fo).roster].sort((a, b) => b.ovr - a.ovr).slice(0, 8);
+  const mid = (r: [number, number]) => (r[0] + r[1]) / 2;
+  return d.cls
+    .map((c, i) => ({ c, i }))
+    .filter(({ c }) => !c.takenBy)
+    .map(({ c, i }) => {
+      const rp = prospectReport(c);
+      const why: string[] = [];
+      let score = mid(rp.now) * 0.35 + mid(rp.ceiling) * 0.65;
+      if (mid(rp.ceiling) >= 86) why.push('star ceiling');
+      if (!top8.some((p) => p.pos === c.pr.p.pos && p.ovr >= 76)) {
+        score += 2;
+        why.push(`you need a ${c.pr.p.pos}`);
+      }
+      if (rp.ethic === 'Gym rat') (score += 1.5), why.push('gym rat');
+      if (rp.ethic === 'Coasts on talent') (score -= 2), why.push('coasts');
+      if (rp.medical === 'Red flag') (score -= 4), why.push('medical red flag');
+      else if (rp.medical === 'Some wear on the knees') score -= 1.5;
+      if (c.level === 0) {
+        score -= 1;
+        why.push('not scouted yet');
+      }
+      if (mid(rp.now) >= 76) why.push('ready to play');
+      return { i, score: Math.round(score * 10) / 10, why };
+    })
+    .sort((a, b) => b.score - a.score)
+    .slice(0, max);
+}
+
 // ---------- the market ----------
 
 function startMarket(fo: FoState): void {

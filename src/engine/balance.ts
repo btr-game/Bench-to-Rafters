@@ -205,10 +205,34 @@ export const TWO_PLAN_SHARE = { main: 0.8, side: 0.45 };
 // from training.
 export const LAB = { rate: 0.85, cost: [[0, 1], [80, 1.5], [90, 2]] as [number, number][] };
 
-/** The plan that actually applies: one plan as is, or a main plan and a side plan blended. */
+/**
+ * Round 13: a single plan (no side plan) is a little stronger than its listed effect: focused
+ * work. Every effect moves `amp` times as far from neutral, and growth gets `growth` on top.
+ */
+export const SOLO_PLAN = { amp: 1.1, growth: 1.03 };
+
+/** The plan that actually applies: one plan, a little amplified, or a main plan and a side plan blended. */
 export function blendPlans(a: HalfPlan, b?: HalfPlan | null): PlanDef {
   const A = HALF_PLANS[a];
-  if (!b || b === a) return A;
+  if (!b || b === a) {
+    const k = SOLO_PLAN.amp;
+    const m = (x: number) => 1 + (x - 1) * k;
+    const attrs = A.attrs ? (Object.fromEntries(Object.entries(A.attrs).map(([key, v]) => [key, m(v as number)])) as Partial<Record<AttrKey, number>>) : undefined;
+    return {
+      ...A,
+      growth: m(A.growth) * SOLO_PLAN.growth,
+      injury: m(A.injury),
+      morale: A.morale * k,
+      trust: A.trust * k,
+      rep: [A.rep[0] * k, A.rep[1] * k],
+      usage: m(A.usage),
+      teamBoost: A.teamBoost * k,
+      attrs,
+      other: A.other !== undefined ? m(A.other) : undefined,
+      rangeGain: A.rangeGain ? A.rangeGain * k : undefined,
+      offhandGain: A.offhandGain ? A.offhandGain * k : undefined,
+    };
+  }
   const B = HALF_PLANS[b];
   const { main, side } = TWO_PLAN_SHARE;
   const mult = (x: number, y: number) => 1 + (x - 1) * main + (y - 1) * side;
@@ -245,6 +269,9 @@ export const HALF_PLANS: Record<HalfPlan, PlanDef> = {
   playmaking: { growth: 1.0, injury: 1.0, morale: 0, trust: 2, rep: [0, 0], usage: 0.97, teamBoost: 0.2, attrs: { PLY: 2.3, IQ: 1.5 }, other: 0.6 },
   defense: { growth: 1.0, injury: 1.05, morale: 0, trust: 3, rep: [0, 0], usage: 0.95, teamBoost: 0.3, attrs: { PER: 2.6, INT: 2.0 }, other: 0.6 },
   offhand: { growth: 1.0, injury: 1.0, morale: -1, trust: 0, rep: [0, 0], usage: 0.97, teamBoost: 0, attrs: { FIN: 1.5, PLY: 1.3 }, other: 0.5, offhandGain: 7 },
+  // round 13: two more, so the grid of twelve fills
+  speed: { growth: 1.0, injury: 1.1, morale: 0, trust: 0, rep: [0, 0], usage: 1, teamBoost: 0, attrs: { ATH: 2.3, PER: 1.5, FIN: 1.2 }, other: 0.6 },
+  mentor: { growth: 0.98, injury: 0.9, morale: 2, trust: 2, rep: [0, 0], usage: 0.98, teamBoost: 0.1, attrs: { IQ: 2.2, PER: 1.2, SHT: 1.1 }, other: 0.7 },
 };
 
 // Each half rolls an outcome for the plan. Morale shifts the odds toward breakthroughs.

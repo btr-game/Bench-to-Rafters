@@ -14,6 +14,7 @@ import { TEAM_FACTORS as T } from '../balance';
 import { chance, clamp, int, pick, range } from '../rng';
 import type { GameState, League, Team } from '../types';
 import { adjust, logDecision, pushMoment, teamById, userOvr } from './common';
+import { currentStyle, fitLabel, styleEffect, styleFit, TEAM_STYLES } from './identity';
 
 /** 1 = the best roster in the league. */
 export function rosterRank(league: League, teamId: string): number {
@@ -33,7 +34,7 @@ function streakWith(s: GameState, teamId: string): number {
 }
 
 /** The team bonus at the start of a season, with lines for the season preview. */
-export function startTeamFactors(s: GameState, team: Team): { bonus: number; notes: string[] } {
+export function startTeamFactors(s: GameState, team: Team): { bonus: number; notes: string[]; post: number; fx?: { perf: number; usage: number } } {
   const notes: string[] = [];
   let bonus = 0;
   const streak = streakWith(s, team.id);
@@ -48,7 +49,18 @@ export function startTeamFactors(s: GameState, team: Team): { bonus: number; not
     bonus += g;
     notes.push(`Star gravity: good players want to play with you (+${g.toFixed(1)})`);
   }
-  return { bonus: Math.round(bonus * 10) / 10, notes };
+  // round 13: the team style he set (career/identity.ts)
+  const style = currentStyle(s);
+  let post = 0;
+  let fx: { perf: number; usage: number } | undefined;
+  if (style && s.teamId === team.id) {
+    const e = styleEffect(s, style);
+    bonus += e.regular;
+    post = e.playoff - e.regular;
+    fx = { perf: e.perf, usage: e.usage };
+    notes.push(`${TEAM_STYLES[style].name}: ${fitLabel(styleFit(s, style)).toLowerCase()} (${e.regular >= 0 ? '+' : ''}${e.regular}, playoffs ${e.playoff >= 0 ? '+' : ''}${e.playoff})`);
+  }
+  return { bonus: Math.round(bonus * 10) / 10, notes, post: Math.round(post * 10) / 10, fx };
 }
 
 const DEADLINE_NAMES = ['a veteran sharpshooter', 'an All-Star forward', 'a rim-protecting center', 'a two-way wing', 'a former Sixth Man of the Year'];
@@ -114,31 +126,72 @@ export function canRequestTrade(s: GameState): boolean {
   return s.step === 'offseason' && s.stage === 'NBA' && !!s.contract && s.contract.years > 0 && s.flags.tradeAsk !== s.year && !!s.nba;
 }
 
-/** The player asks out. A better team may trade for him; if not, the relationship suffers. */
-export function requestTrade(s: GameState): void {
+/**
+ * Round 13 ("give the users a little choice"): where he asks to go. Each target changes the odds
+ * that a deal gets done and what follows:
+ * - better: any team with a better roster (the old request).
+ * - contender: a top-five roster. More likely to win; he may come off the bench.
+ * - champion: last year's champion or a dynasty. The best title odds, the hardest deal to get.
+ * - rival: the team he is feuding with. Long odds, a headline either way: reputation if it
+ *   happens, a ruined locker room if it does not.
+ * - needed: a weaker team that would make him its first option. Easy to get, a bigger role.
+ */
+export type TradeAim = 'better' | 'contender' | 'champion' | 'rival' | 'needed';
+export const TRADE_AIM: Record<TradeAim, { label: string; text: string; odds: number; risk: 'Low' | 'Medium' | 'High' }> = {
+  better: { label: 'Any better team', text: 'Let the front office find a deal with a team that has a better roster.', odds: 1, risk: 'Low' },
+  contender: { label: 'A contender', text: 'A top-five roster. A real shot at a ring; you may lose your starting spot.', odds: 0.85, risk: 'Medium' },
+  champion: { label: 'The champions', text: 'Join last year\'s champion. The best title odds, the hardest deal to get done.', odds: 0.6, risk: 'Medium' },
+  rival: { label: 'Your rival', text: 'Ask to be sent to the team you are feuding with. Long odds; huge headlines if it happens, a poisoned locker room if it does not.', odds: 0.55, risk: 'High' },
+  needed: { label: 'A team that needs you', text: 'A weaker team that would build around you. Easy to get; a bigger role, fewer wins.', odds: 1.35, risk: 'Low' },
+};
+
+/** The teams each aim would send him to (best first), and the odds word for the screen. */
+export function tradeOptions(s: GameState): { aim: TradeAim; teams: Team[]; chance: number }[] {
+  const nba = s.nba;
+  if (!nba || !s.teamId) return [];
+  const ovr = userOvr(s);
+  const mine = rosterRank(nba, s.teamId);
+  const fits = (t: Team) => t.id !== s.teamId && ovr >= (t.roster[8]?.ovr ?? 70) - 2;
+  const base = clamp(T.tradeBase + (ovr - 75) * T.tradePerOvr + s.player.rep / 200, T.tradeMin, T.tradeMax);
+  const champName = s.nbaHistory[s.nbaHistory.length - 1]?.champion;
+  const rivalId = (s.stories ?? []).find((x) => x.kind === 'rival')?.teamId ?? s.nemesis;
+  const byRank = [...nba.teams].sort((a, b) => b.strength - a.strength);
+  const pools: Record<TradeAim, Team[]> = {
+    better: byRank.filter((t) => fits(t) && rosterRank(nba, t.id) < mine),
+    contender: byRank.slice(0, 5).filter(fits),
+    champion: nba.teams.filter((t) => t.name === champName && fits(t)),
+    rival: nba.teams.filter((t) => t.id === rivalId && t.id !== s.teamId),
+    needed: byRank.filter((t) => t.id !== s.teamId && (t.roster[0]?.ovr ?? 99) < ovr && rosterRank(nba, t.id) > mine),
+  };
+  return (Object.keys(TRADE_AIM) as TradeAim[]).map((aim) => ({ aim, teams: pools[aim], chance: clamp(base * TRADE_AIM[aim].odds, 0.05, 0.85) })).filter((o) => o.teams.length > 0);
+}
+
+export const oddsWord = (p: number): 'High' | 'Moderate' | 'Low' => (p >= 0.45 ? 'High' : p >= 0.25 ? 'Moderate' : 'Low');
+
+/** The player asks out. A deal may get done; if not, the relationship suffers. */
+export function requestTrade(s: GameState, aim: TradeAim = 'better'): void {
   if (!canRequestTrade(s)) return;
+  const opt = tradeOptions(s).find((o) => o.aim === aim);
   s.flags.tradeAsk = s.year;
   const nba = s.nba!;
-  const ovr = userOvr(s);
-  const mine = rosterRank(nba, s.teamId!);
-  // teams with better rosters where he would at least make the rotation
-  const takers = nba.teams.filter((t) => t.id !== s.teamId && rosterRank(nba, t.id) < mine && ovr >= (t.roster[8]?.ovr ?? 70) - 2);
-  const p = clamp(T.tradeBase + (ovr - 75) * T.tradePerOvr + s.player.rep / 200, T.tradeMin, T.tradeMax);
-  if (takers.length === 0 || !chance(s.rng, p)) {
-    s.player.trust = adjust(s.player.trust, -10);
-    s.player.morale = adjust(s.player.morale, -4);
-    logDecision(s, 'trade', 'Asked for a trade. Nobody bit.', s.teamId!);
-    s.toast = 'The front office shopped you around. No deal. Things are awkward at practice now.';
+  if (!opt || !chance(s.rng, opt.chance)) {
+    const harsh = aim === 'rival';
+    s.player.trust = adjust(s.player.trust, harsh ? -16 : -10);
+    s.player.morale = adjust(s.player.morale, harsh ? -7 : -4);
+    logDecision(s, 'trade', `Asked for a trade (${TRADE_AIM[aim].label.toLowerCase()}). Nobody bit.`, s.teamId!);
+    s.toast = harsh ? 'Word got out that you wanted to join your rival. No deal, and your teammates have not forgotten.' : 'The front office shopped you around. No deal. Things are awkward at practice now.';
     return;
   }
-  const to = takers.sort((a, b) => b.strength - a.strength)[int(s.rng, 0, Math.min(2, takers.length - 1))];
+  const to = opt.teams[int(s.rng, 0, Math.min(aim === 'better' ? 2 : 1, opt.teams.length - 1))];
   const from = teamById(nba, s.teamId)!;
   s.teamId = to.id;
   s.contract!.teamId = to.id;
-  s.player.trust = 45;
+  s.player.trust = aim === 'needed' ? 60 : 45;
   s.player.morale = adjust(s.player.morale, 6);
-  logDecision(s, 'trade', `Traded from the ${from.name} to the ${to.name} at his request.`, to.id);
-  pushMoment(s, { kind: 'commit', title: 'Traded', teamName: to.name, color: to.color, text: `You asked out, and the ${from.name} found a deal. You are a member of the ${to.name}.`, lines: [`Roster rank: ${rosterRank(nba, to.id)} of ${nba.teams.length}`, 'Same contract, new team'] });
+  if (aim === 'rival') s.player.rep = clamp(s.player.rep + 4, 0, 100);
+  logDecision(s, 'trade', `Traded from the ${from.name} to the ${to.name} at his request (${TRADE_AIM[aim].label.toLowerCase()}).`, to.id);
+  const extra = aim === 'rival' ? ['The rivalry is personal now (reputation +4)'] : aim === 'needed' ? ['They will build around you'] : aim === 'champion' ? ['Joining the champions'] : [];
+  pushMoment(s, { kind: 'commit', title: 'Traded', teamName: to.name, color: to.color, text: `You asked out, and the ${from.name} found a deal. You are a member of the ${to.name}.`, lines: [`Roster rank: ${rosterRank(nba, to.id)} of ${nba.teams.length}`, 'Same contract, new team', ...extra] });
   s.toast = `Traded to the ${to.name}.`;
 }
 

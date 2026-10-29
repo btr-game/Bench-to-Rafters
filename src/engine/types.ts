@@ -7,7 +7,7 @@ export type AttrKey = 'SHT' | 'FIN' | 'PLY' | 'PER' | 'INT' | 'REB' | 'ATH' | 'I
 export type Attrs = Record<AttrKey, number>;
 export type LevelKey = 'HSJV' | 'HSV' | 'NCAA' | 'GL' | 'EU' | 'INT' | 'NBA';
 export type Stage = 'HS' | 'NCAA' | 'GL' | 'EU' | 'INT' | 'NBA' | 'FA' | 'RETIRED';
-export type HalfPlan = 'balanced' | 'grind' | 'recovery' | 'spotlight' | 'teamfirst' | 'shooting' | 'strength' | 'playmaking' | 'defense' | 'offhand';
+export type HalfPlan = 'balanced' | 'grind' | 'recovery' | 'spotlight' | 'teamfirst' | 'shooting' | 'strength' | 'playmaking' | 'defense' | 'offhand' | 'speed' | 'mentor';
 export type RoleKey = 'key' | 'starter' | 'sixth' | 'rotation' | 'bench' | 'deep';
 export type GrowthType = 'early' | 'standard' | 'late';
 export type AgingProfile = 'durable' | 'normal' | 'fragile';
@@ -337,6 +337,8 @@ export interface SeasonState {
   allStar?: boolean;
   allStarRank?: number;
   teamBonus?: number; // team factors this season (career/team.ts)
+  postBonus?: number; // added to the team bonus in postseason games (team style, team story)
+  styleFx?: { perf: number; usage: number }; // his fit with the team's style (career/identity.ts)
   teamNotes?: string[];
   outcomes?: { half: number; plan: HalfPlan; plan2?: HalfPlan | null; outcome: string; text: string; ovrGain: number }[];
 }
@@ -461,6 +463,7 @@ export interface GameState {
   recruit?: import('./career/recruit').RecruitState; // NBA: building the starting five this summer
   stories?: import('./world/stories').LeagueStory[]; // this season's league storylines
   nemesis?: string; // team id that ended his last season (flags.nemesisYear says when)
+  teamStyle?: { key: import('./career/identity').TeamStyle; teamId: string }; // the style he set for his team
   highs?: { nba: Partial<Record<HighKey, CareerHigh>>; all: Partial<Record<HighKey, CareerHigh>> };
   flags: Record<string, number>; // small story switches (powerhouse school, power agent...)
   schoolColor: string;

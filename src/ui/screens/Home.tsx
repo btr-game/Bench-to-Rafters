@@ -1,4 +1,7 @@
 import type { AttrKey, GameState, SeasonRecord } from '../../engine/types';
+import { GuideSpotWrap } from '../components/Guide';
+import { canSetStyle, currentStyle, fitLabel, setStyle, styleEffect, styleFit, TEAM_STYLES, type TeamStyle } from '../../engine/career/identity';
+import { oddsWord, TRADE_AIM, tradeOptions, type TradeAim } from '../../engine/career/team';
 import { canChangeFocus, canChangePosition, canRequestTrade, canRetire, heightMismatch, positionOptions, prompt } from '../../engine/flow';
 import { useState } from 'react';
 import { ATTRS, LEVELS } from '../../engine/balance';
@@ -352,15 +355,18 @@ function FocusCard({ g }: { g: GameState }) {
 }
 
 /** Everything he can change between seasons, in one place near the top of the screen. */
+type Move = 'position' | 'number' | 'retire' | 'trade' | 'roster' | 'style';
+
 function OffseasonMoves({ g }: { g: GameState }) {
   const focusOpen = canChangeFocus(g);
   // a size problem opens the position card straight away
-  const [open, setOpen] = useState<'position' | 'number' | 'retire' | 'trade' | 'roster' | null>(heightMismatch(g) && canChangePosition(g) ? 'position' : canRecruit(g) && !g.recruit?.moves ? 'roster' : null);
+  const [open, setOpen] = useState<Move | 'focus' | null>(heightMismatch(g) && canChangePosition(g) ? 'position' : null);
   const p = g.player;
   const bar = breakthroughBar(p.age);
   const focusDone = g.flags.focusYear === g.year;
   const rec = recruitInfo(g);
-  const tiles: { id: 'focus' | 'position' | 'number' | 'retire' | 'trade' | 'roster'; label: string; sub: string; state: 'hot' | 'ready' | 'locked'; show: boolean }[] = [
+  const style = currentStyle(g);
+  const tiles: { id: 'focus' | Move; label: string; sub: string; state: 'hot' | 'ready' | 'locked'; show: boolean }[] = [
     {
       id: 'focus',
       label: 'Focus stats',
@@ -375,6 +381,13 @@ function OffseasonMoves({ g }: { g: GameState }) {
       label: 'Starting five',
       sub: canRecruit(g) ? `Scout and recruit: ${Math.max(0, STARTERS_RECRUIT.moves - rec.moves)} signing${STARTERS_RECRUIT.moves - rec.moves === 1 ? '' : 's'} left` : 'Locked: become your team’s first option',
       state: canRecruit(g) ? (rec.moves === 0 && rec.asks === 0 ? 'hot' : 'ready') : 'locked',
+      show: g.stage === 'NBA' && !!g.contract && g.contract.years > 0,
+    },
+    {
+      id: 'style',
+      label: 'Team style',
+      sub: canSetStyle(g) ? (style ? `${TEAM_STYLES[style].name} · change it` : 'Set how your team plays') : g.flags.styleYear === g.year ? 'Set this summer' : 'Locked: start for your NBA team first',
+      state: canSetStyle(g) ? (style ? 'ready' : 'hot') : 'locked',
       show: g.stage === 'NBA' && !!g.contract && g.contract.years > 0,
     },
     { id: 'trade', label: 'Request a trade', sub: g.flags.tradeAsk === g.year ? 'Asked this summer' : 'Ask out for a better team', state: canRequestTrade(g) ? 'ready' : 'locked', show: g.stage === 'NBA' && !!g.contract && g.contract.years > 0 },
@@ -395,21 +408,23 @@ function OffseasonMoves({ g }: { g: GameState }) {
               key={x.id}
               className={`move-tile ${x.state}${open === x.id ? ' on' : ''}`}
               disabled={x.state === 'locked'}
-              aria-expanded={x.id === 'focus' ? focusOpen : open === x.id}
-              onClick={() => x.id !== 'focus' && setOpen(open === x.id ? null : (x.id as 'position' | 'number' | 'retire' | 'trade' | 'roster'))}
+              aria-expanded={open === x.id}
+              onClick={() => setOpen(open === x.id ? null : x.id)}
             >
               {x.state === 'hot' && <span className="unlock-tag">New</span>}
+              {x.state === 'locked' && <span className="lock-tag">Locked</span>}
               <b>{x.label}</b>
               <small>{x.sub}</small>
             </button>
           ))}
       </div>
-      {focusOpen && <FocusCard g={g} />}
+      {open === 'focus' && focusOpen && <FocusCard g={g} />}
       {open === 'position' && canChangePosition(g) && <PositionCard g={g} />}
       {open === 'number' && <NumberCard g={g} />}
       {open === 'retire' && canRetire(g) && <RetireCard g={g} />}
       {open === 'trade' && canRequestTrade(g) && <TradeCard g={g} />}
       {open === 'roster' && <RecruitCard g={g} />}
+      {open === 'style' && canSetStyle(g) && <StyleCard g={g} />}
     </section>
   );
 }
@@ -481,29 +496,67 @@ function PositionCard({ g }: { g: GameState }) {
 
 function TradeCard({ g }: { g: GameState }) {
   const ask = useStore((s) => s.requestTrade);
-  const [armed, setArmed] = useState(false);
+  const [aim, setAim] = useState<TradeAim | null>(null);
   const rank = g.nba && g.teamId ? rosterRank(g.nba, g.teamId) : 0;
+  const opts = tradeOptions(g);
+  const pick = opts.find((o) => o.aim === aim);
   return (
     <section className="card stack">
       <div className="sec-title">Request a trade</div>
-      <p className="small muted">
-        Your team's roster ranks {ordinal(rank)} in the league. Ask out and the front office will try to move you to a better team. Better players and
-        bigger names get moved more easily. If nobody bites, your coach will not forget it.
-      </p>
-      {armed ? (
-        <div className="row" style={{ gap: 8 }}>
-          <button className="btn" onClick={ask}>
-            Yes, ask for a trade
+      <p className="small muted">Your team ranks {ordinal(rank)}. Where do you want to go? If nobody bites, your coach will not forget it.</p>
+      <div className="stack trade-aims">
+        {opts.map((o) => (
+          <button key={o.aim} className={`choice${aim === o.aim ? ' selected' : ''}`} aria-pressed={aim === o.aim} onClick={() => setAim(o.aim)}>
+            <span className="label">
+              {TRADE_AIM[o.aim].label}
+              <span className={`scout-rec rec-${oddsWord(o.chance) === 'High' ? 'high' : oddsWord(o.chance) === 'Moderate' ? 'moderate' : 'low'}`}>{oddsWord(o.chance)} odds</span>
+              <span className={`risk risk-${TRADE_AIM[o.aim].risk.toLowerCase()}`}>{TRADE_AIM[o.aim].risk} risk</span>
+            </span>
+            <small>
+              {TRADE_AIM[o.aim].text} {o.teams.length <= 3 ? `(${o.teams.map((t) => t.short).join(', ')})` : ''}
+            </small>
           </button>
-          <button className="btn ghost" onClick={() => setArmed(false)}>
-            Never mind
-          </button>
-        </div>
-      ) : (
-        <button className="btn ghost" onClick={() => setArmed(true)}>
-          Ask for a trade
-        </button>
-      )}
+        ))}
+      </div>
+      <button className="btn" disabled={!pick} onClick={() => pick && ask(pick.aim)}>
+        {pick ? `Ask for a trade: ${TRADE_AIM[pick.aim].label.toLowerCase()}` : 'Pick where you want to go'}
+      </button>
+    </section>
+  );
+}
+
+function StyleCard({ g }: { g: GameState }) {
+  const mutate = useStore((s) => s.mutate);
+  const now = currentStyle(g);
+  return (
+    <section className="card stack">
+      <div className="row">
+        <div className="sec-title">Team style</div>
+        <div className="spacer" />
+        <span className="small muted">{now ? `Now: ${TEAM_STYLES[now].name}` : 'Not set'}</span>
+      </div>
+      <p className="small muted">You start here, so you have a say in how the team plays. The style moves the team's strength and how well you fit in it. One change a summer.</p>
+      <div className="stack style-list">
+        {(Object.keys(TEAM_STYLES) as TeamStyle[])
+          .map((k) => ({ k, f: styleFit(g, k), e: styleEffect(g, k) }))
+          .sort((a, b) => b.e.regular + b.e.playoff - (a.e.regular + a.e.playoff))
+          .map(({ k, f, e }) => (
+            <button key={k} className={`choice${now === k ? ' selected' : ''}`} onClick={() => mutate((x) => setStyle(x, k))}>
+              <span className="label">
+                {TEAM_STYLES[k].name}
+                <span className={`scout-rec rec-${fitLabel(f) === 'Poor fit' ? 'low' : fitLabel(f) === 'Okay' ? 'moderate' : 'high'}`}>{fitLabel(f)}</span>
+                <span className="style-fx">
+                  {e.regular >= 0 ? '+' : ''}
+                  {e.regular} / playoffs {e.playoff >= 0 ? '+' : ''}
+                  {e.playoff}
+                </span>
+              </span>
+              <small>
+                {TEAM_STYLES[k].text} Fits {TEAM_STYLES[k].fits}.
+              </small>
+            </button>
+          ))}
+      </div>
     </section>
   );
 }
@@ -543,13 +596,15 @@ export function Home({ g }: { g: GameState }) {
   return (
     <div className="home-grid">
       <div className="stack">
-        <Todo g={g} />
+        <div className="o-todo">
+          <Todo g={g} />
+        </div>
         <PlayerCard g={g} />
         <ScoutCard g={g} compact />
         <MvpRace g={g} />
       </div>
       <div className="stack">
-        <section className="card stack">
+        <section className="card stack o-main">
           <SeasonHeader g={g} />
           {g.result ? (
             <div className={`result-card${g.result.tierKey ? ` tier-${g.result.tierKey}` : ''}`}>
@@ -572,6 +627,7 @@ export function Home({ g }: { g: GameState }) {
             g.toast && <div className="toast">{g.toast}</div>
           )}
           {g.flags.fast ? <FastRecap g={g} /> : null}
+          <GuideSpotWrap g={g} spot="main">
           <div className="stack fade-in" key={pr.type === 'decision' ? pr.decision.id : `${g.year}-${g.step}`}>
             {!g.flags.fast && (
               <div className="prose">
@@ -585,9 +641,16 @@ export function Home({ g }: { g: GameState }) {
               </button>
             )}
           </div>
+          </GuideSpotWrap>
         </section>
         {/* between seasons, the moves come first: right under the main card */}
-        {g.step === 'offseason' && g.stage !== 'RETIRED' && <OffseasonMoves g={g} />}
+        {g.step === 'offseason' && g.stage !== 'RETIRED' && (
+          <div className="o-moves">
+            <GuideSpotWrap g={g} spot="moves">
+              <OffseasonMoves g={g} />
+            </GuideSpotWrap>
+          </div>
+        )}
         {g.mode === 'lab' && <LabCard g={g} />}
         <StoriesCard g={g} />
         <section className="card stack">

@@ -483,8 +483,10 @@ button.banner { border: 0; font: inherit; text-align: left; }
 .move-tile small { font-size: 14px; color: var(--muted); line-height: 1.3; }
 .move-tile.ready:hover, .move-tile.on { border-color: var(--ink); }
 .move-tile.on { box-shadow: inset 0 0 0 1px var(--ink); }
-.move-tile.locked { opacity: 0.7; border-style: dashed; }
-.move-tile.locked:disabled { opacity: 0.75; }
+.move-tile.locked { border-style: dashed; background: repeating-linear-gradient(135deg, var(--surface-2) 0 10px, var(--surface) 10px 20px); cursor: not-allowed; }
+.move-tile.locked b { color: var(--muted); }
+.move-tile.locked small { color: var(--muted); }
+.lock-tag { position: absolute; top: -9px; right: 10px; font-family: var(--f-mono); font-size: 11.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 1px 7px; border-radius: 5px; background: var(--muted); color: var(--surface); }
 .move-tile.hot { border: 2px solid var(--gold); background: color-mix(in srgb, var(--gold) 14%, var(--surface)); animation: glow 1.8s ease-in-out infinite; }
 .move-tile.hot small { color: var(--ink); }
 .move-tile .unlock-tag { position: absolute; top: -9px; right: 10px; }
@@ -850,3 +852,43 @@ button.scout-row { text-align: left; background: var(--surface); color: inherit;
 .fo-rotation span { padding: 4px 9px; border-radius: 99px; border: 1px solid var(--line); }
 .fo-rotation span.starter { border-color: var(--accent); }
 .fo-rotation b { font-family: var(--f-mono); }
+
+/* Round 13: your team's story, calls, trade aims, team style */
+.story-mine { border-left-width: 7px; background: color-mix(in srgb, var(--accent) 10%, var(--surface-2)); }
+.story-mine .story-tag { background: var(--accent); color: var(--accent-ink); }
+.story-fx { font-family: var(--f-mono); font-size: 13.5px; color: var(--good); }
+.story-call { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 2px; }
+.story-call .small { flex: 1 1 160px; font-weight: 600; }
+.story-call .btn { min-height: 34px; padding: 4px 14px; font-size: 15px; }
+.story-called { font-family: var(--f-mono); font-size: 13px; color: var(--muted); }
+.story-called.right { color: var(--good); }
+.story-called.wrong { color: var(--bad); }
+.trade-aims .label, .style-list .label { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.style-fx { font-family: var(--f-mono); font-size: 13px; color: var(--muted); font-weight: 500; }
+.fo-recs { display: grid; gap: 6px; padding: 10px; border-radius: 10px; border: 1px solid var(--good); background: color-mix(in srgb, var(--good) 7%, var(--surface)); }
+.fo-rec { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; gap: 10px; align-items: center; }
+.fo-rec-n { font-family: var(--f-display); font-weight: 800; font-size: 20px; color: var(--muted); text-align: center; }
+.fo-rec.top .fo-rec-n { color: var(--good); }
+
+/* Round 13: guide mode */
+.guide-mode { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 10px; border: 2px solid var(--accent); background: var(--accent-soft); }
+.guide-mode > div { flex: 1; }
+.icon-btn.guide-on { border-color: var(--accent); color: var(--accent); font-weight: 700; }
+.guide-target { position: relative; display: grid; gap: 10px; padding: 10px; margin: -10px; border-radius: 12px; box-shadow: 0 0 0 3px var(--accent); animation: guide-pulse 1.8s ease-in-out infinite; }
+.guide-tip { position: relative; padding: 9px 12px; border-radius: 10px; background: var(--accent); color: var(--accent-ink); font-size: 16px; line-height: 1.35; }
+.guide-tip b { font-family: var(--f-mono); font-size: 12.5px; letter-spacing: 0.08em; text-transform: uppercase; margin-right: 6px; }
+.guide-tip::after { content: ''; position: absolute; left: 22px; bottom: -7px; border: 7px solid transparent; border-bottom: 0; border-top-color: var(--accent); }
+@keyframes guide-pulse { 0%, 100% { box-shadow: 0 0 0 3px var(--accent); } 50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent) 35%, transparent); } }
+@media (prefers-reduced-motion: reduce) { .guide-target { animation: none; } }
+
+/* Round 13: less scrolling on phones. The two columns melt into one list: the to-do box, then
+   the main card, then the offseason moves, then the player card and everything else. */
+@media (max-width: 899px) {
+  .home-grid { display: flex; flex-direction: column; }
+  .home-grid > .stack { display: contents; }
+  .home-grid > .stack > * { order: 10; }
+  .home-grid .o-todo { order: 1; }
+  .home-grid .o-main { order: 2; }
+  .home-grid .o-moves { order: 3; }
+}
+.story-call .btn { flex: none; width: auto; }

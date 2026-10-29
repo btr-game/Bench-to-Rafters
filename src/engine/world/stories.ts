@@ -7,14 +7,21 @@
 // - Dynasty (NBA): last year's champion goes for a repeat. Last dance: an old contender's
 //   final run. Tank: a team gives up on the season (strength -1.5). Favorite: the team to beat.
 // Each story has a status at midseason and a verdict once the postseason is over.
+// Round 13 ("it doesn't seem impactful"):
+// - His own team gets a story in some seasons (grit, a chip on the shoulder, pace, a
+//   brotherhood, showtime), and it moves the team: some in the regular season, some in May.
+// - Call it: before the second half he can call how up to three stories end. Right calls
+//   earn reputation (fans and media love a good call).
+// - Grudges pay off: knocking the rival out of the playoffs is worth reputation and morale.
 
-import { chance, pick, shuffle } from '../rng';
+import { chance, next, pick, shuffle } from '../rng';
 import type { Bracket, GameState, League, Team } from '../types';
 import { standings } from '../sim/leagueSim';
 import { nbaStrength } from './nbaWorld';
-import { logDecision, pushMoment } from '../career/common';
+import { logDecision, pushMoment, userOvr } from '../career/common';
 
-export type StoryKind = 'superteam' | 'underdog' | 'rival' | 'dynasty' | 'lastdance' | 'tank' | 'favorite';
+export type StoryKind = 'superteam' | 'underdog' | 'rival' | 'dynasty' | 'lastdance' | 'tank' | 'favorite' | MineKind;
+export type MineKind = 'grit' | 'chip' | 'pace' | 'bond' | 'showtime';
 
 export interface LeagueStory {
   kind: StoryKind;
@@ -24,6 +31,9 @@ export interface LeagueStory {
   status?: string;
   result?: string;
   vs?: { w: number; l: number }; // his record against this team (rivals)
+  mine?: { regular: number; playoff: number }; // his own team's story and what it adds
+  call?: boolean; // his call on how it ends (see callQuestion)
+  called?: 'right' | 'wrong';
 }
 
 export const STORY_LABEL: Record<StoryKind, string> = {
@@ -34,9 +44,55 @@ export const STORY_LABEL: Record<StoryKind, string> = {
   lastdance: 'Last dance',
   tank: 'Tanking',
   favorite: 'The favorite',
+  grit: 'Your team',
+  chip: 'Your team',
+  pace: 'Your team',
+  bond: 'Your team',
+  showtime: 'Your team',
 };
 
-export const STORY = { underdog: 2, tank: -1.5, superteamFrom: 78 };
+export const STORY = { underdog: 2, tank: -1.5, superteamFrom: 78, mineChance: 0.4, calls: 3, callRep: 2, grudgeRep: 3, showtimeRep: 3 };
+
+/** His team's possible stories: what each adds (regular season, playoffs) and how it reads. */
+export const MINE: Record<MineKind, { regular: number; playoff: number; title: (t: string) => string; text: (t: string) => string }> = {
+  grit: { regular: 0.3, playoff: 1.2, title: (t) => `Defense travels in ${t}`, text: (t) => `The ${t} have bought in on defense. Nobody wants to see them in a seven-game series.` },
+  chip: { regular: 0.8, playoff: 0.6, title: () => 'A chip on the shoulder', text: (t) => `Last season ended badly and the ${t} have not forgotten. Every practice has an edge to it.` },
+  pace: { regular: 1.2, playoff: -0.3, title: () => 'Seven seconds or less', text: (t) => `The ${t} are the fastest team in the league. Great TV in January; the playoffs will slow them down.` },
+  bond: { regular: 0.9, playoff: 0.6, title: (t) => `The ${t} brotherhood`, text: () => `The same core, another year together. They finish each other's sentences on the floor.` },
+  showtime: { regular: 0.6, playoff: 0.2, title: (t) => `Showtime in ${t}`, text: () => `Sold-out arenas on the road, your highlights on every show. The whole league is watching your team.` },
+};
+
+/** The yes-or-no call for a story (null: nothing to call). */
+export function callQuestion(st: LeagueStory): string | null {
+  switch (st.kind) {
+    case 'superteam':
+    case 'dynasty':
+    case 'favorite':
+      return 'Will they win the title?';
+    case 'lastdance':
+      return 'Will they reach the conference finals?';
+    case 'underdog':
+      return 'Will they make the playoffs?';
+    case 'tank':
+      return 'Will they finish bottom three?';
+    case 'rival':
+      return 'Will you finish with a better record?';
+    default:
+      return null;
+  }
+}
+
+/** Can he still make calls this season (before the second half), and how many are left. */
+export function callsLeft(s: GameState): number {
+  if (!s.season || s.season.half >= 2 || s.step === 'summary' || s.step === 'offseason') return 0;
+  return Math.max(0, STORY.calls - (s.stories ?? []).filter((x) => x.call !== undefined).length);
+}
+
+export function makeCall(s: GameState, i: number, yes: boolean): void {
+  const st = s.stories?.[i];
+  if (!st || st.call !== undefined || !callQuestion(st) || callsLeft(s) <= 0) return;
+  st.call = yes;
+}
 
 const ranked = (lg: League): Team[] => [...lg.teams].sort((a, b) => b.strength - a.strength);
 
@@ -83,6 +139,29 @@ function formSuperteam(s: GameState, lg: League, mine: string | null): LeagueSto
 }
 
 /** The season's storylines, set when the season begins. */
+/** Sometimes his own team is a story, and it moves the team (round 13). */
+function mineStory(s: GameState, lg: League, mine: string): LeagueStory | null {
+  const t = lg.teams.find((x) => x.id === mine);
+  if (!t || !s.season || !chance(s.rng, STORY.mineChance)) return null;
+  const streak = s.history.filter((h) => h.teamId === mine).length;
+  const pool: [MineKind, number][] = [
+    ['grit', 1],
+    ['pace', 1],
+    ['chip', s.flags.nemesisYear === s.year - 1 ? 3 : 0],
+    ['bond', streak >= 2 ? 2 : 0],
+    ['showtime', lg.level === 'NBA' && userOvr(s) >= 85 ? 2 : 0],
+  ];
+  const total = pool.reduce((a, [, w]) => a + w, 0);
+  let r = next(s.rng) * total;
+  const kind = pool.find(([, w]) => (r -= w) < 0)?.[0] ?? 'grit';
+  const m = MINE[kind];
+  s.season.teamBonus = Math.round(((s.season.teamBonus ?? 0) + m.regular) * 10) / 10;
+  s.season.postBonus = Math.round(((s.season.postBonus ?? 0) + m.playoff - m.regular) * 10) / 10;
+  s.season.teamNotes = [...(s.season.teamNotes ?? []), `${m.title(t.short)} (${m.regular >= 0 ? '+' : ''}${m.regular}, playoffs ${m.playoff >= 0 ? '+' : ''}${m.playoff})`];
+  if (kind === 'chip') s.player.morale = Math.min(100, s.player.morale + 4);
+  return { kind, teamId: t.id, title: m.title(t.short), text: m.text(t.name), mine: { regular: m.regular, playoff: m.playoff } };
+}
+
 export function startStories(s: GameState, lg: League): void {
   const mine = lg.userTeamId;
   const order = ranked(lg);
@@ -96,6 +175,8 @@ export function startStories(s: GameState, lg: League): void {
     }
   };
   const nba = lg.level === 'NBA';
+  const own = mine ? mineStory(s, lg, mine) : null;
+  if (own) stories.push(own);
   if (nba && chance(s.rng, 0.55)) add(formSuperteam(s, lg, mine));
   // the defending champion
   const last = s.nbaHistory[s.nbaHistory.length - 1];
@@ -198,8 +279,38 @@ export function finishStories(s: GameState, lg: League): void {
       lastdance: () => (r.depth === 99 ? 'One last ring for the old guys.' : `The window closes: ${r.text}.`),
       tank: () => `${t.w}–${t.l}. Mission accomplished, if you can call it that.`,
       favorite: () => (r.depth === 99 ? 'They lived up to it.' : `Not this year: ${r.text}.`),
+      grit: () => (r.depth >= 1 ? `The defense carried you: ${r.text}.` : `Tough to play against, but ${r.text}.`),
+      chip: () => (r.depth >= 1 ? `Point made: ${r.text}.` : `Still waiting for redemption: ${r.text}.`),
+      pace: () => `${t.w}–${t.l} at full speed; in the postseason you ${r.text}.`,
+      bond: () => (r.depth >= 1 ? `Together to the end: ${r.text}.` : `Close as ever, but ${r.text}.`),
+      showtime: () => (r.depth >= 0 ? `Must-see TV all year (reputation +${STORY.showtimeRep}); you ${r.text}.` : `All the cameras, none of the playoff games.`),
     };
     st.result = verdict[st.kind]();
+    if (st.kind === 'showtime' && r.depth >= 0) s.player.rep = Math.min(100, s.player.rep + STORY.showtimeRep);
+    // his calls
+    if (st.call !== undefined) {
+      const order = standings(lg.teams);
+      const me = lg.teams.find((x) => x.id === mine);
+      const truth: Partial<Record<StoryKind, boolean>> = {
+        superteam: r.depth === 99,
+        dynasty: r.depth === 99,
+        favorite: r.depth === 99,
+        lastdance: r.depth >= deep - 1 && r.depth >= 0,
+        underdog: r.depth >= 0,
+        tank: order.indexOf(t) >= order.length - 3,
+        rival: !!me && me.w > t.w,
+      };
+      const right = truth[st.kind] === st.call;
+      st.called = right ? 'right' : 'wrong';
+      if (right) s.player.rep = Math.min(100, s.player.rep + STORY.callRep);
+    }
+  }
+  // a grudge settled: he knocked the rival out of the playoffs
+  const rv = (s.stories ?? []).find((x) => x.kind === 'rival');
+  if (b && mine && rv && b.rounds.some((rd) => rd.series.some((x) => (x.a === rv.teamId || x.b === rv.teamId) && (x.a === mine || x.b === mine) && x.winner === mine))) {
+    s.player.rep = Math.min(100, s.player.rep + STORY.grudgeRep);
+    s.player.morale = Math.min(100, s.player.morale + 5);
+    rv.result = `Grudge settled: you knocked them out (reputation +${STORY.grudgeRep}). ${rv.result ?? ''}`.trim();
   }
   // whoever ended his season becomes next year's grudge
   if (b && mine && b.champion !== mine) {

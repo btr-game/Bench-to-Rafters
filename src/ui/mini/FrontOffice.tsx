@@ -85,6 +85,7 @@ function Draft({ fo, act }: { fo: FoState; act: (fn: (f: FoState) => void) => vo
   const onClock = d.order[d.at] === fo.mine;
   const avail = d.cls.map((c, i) => ({ c, i })).filter((x) => !x.c.takenBy).slice(0, 20);
   const recent = d.cls.filter((c) => c.takenBy && c.pick).sort((a, b) => b.pick! - a.pick!).slice(0, 4);
+  const recs = useMemo(() => F.draftRecs(fo), [fo]);
   const [open, setOpen] = useState<number | null>(null);
   return (
     <section className="card stack">
@@ -97,6 +98,30 @@ function Draft({ fo, act }: { fo: FoState; act: (fn: (f: FoState) => void) => vo
         Scouting points left: <b>{fo.scout}</b>. Each point takes a closer look at one prospect: tighter ranges, then strengths and weaknesses, work ethic, and finally the medicals.
       </p>
       {recent.length > 0 && <div className="small muted">Just went: {recent.map((c) => `${c.pick}. ${c.pr.p.name} (${c.takenBy})`).join(' · ')}</div>}
+      {recs.length > 0 && (
+        <div className="fo-recs">
+          <div className="kicker">Scouts' board</div>
+          {recs.map((r, k) => {
+            const c = d.cls[r.i];
+            return (
+              <div key={c.pr.p.id} className={`fo-rec${k === 0 ? ' top' : ''}`}>
+                <span className="fo-rec-n">{k + 1}</span>
+                <div>
+                  <b>
+                    {c.pr.p.name} <span className="muted small">{c.pr.p.pos} · #{c.rank} on the consensus board</span>
+                  </b>
+                  <div className="small muted">{r.why.length ? r.why.join(' · ') : 'best value on the board'}</div>
+                </div>
+                {onClock && (
+                  <button className="btn small" onClick={() => act((f) => F.draftPlayer(f, r.i))}>
+                    Draft
+                  </button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
       <div className="scout-list">
         {avail.map(({ c, i }) => {
           const rp = F.prospectReport(c);
