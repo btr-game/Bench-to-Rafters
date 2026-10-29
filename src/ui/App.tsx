@@ -1,5 +1,8 @@
 import { GuideButton } from './components/Guide';
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
+import type { GameState } from '../engine/types';
+import { NextStep, SettingsMenu, useKeys } from './components/Settings';
+import { tabKey } from './selectors';
 import { useStore, type Tab } from '../store';
 import { UI } from '../content/strings';
 import { Create } from './screens/Create';
@@ -19,45 +22,38 @@ const ICONS: Record<Tab, ReactNode> = {
   records: <path d="M7 4h10v5a5 5 0 0 1-10 0zM12 14v4M8 21h8M7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3" />,
 };
 
-function TabBar() {
+/** The main tabs: along the top on a computer, along the bottom on a phone. A dot marks a tab with something new. */
+function TabBar({ g, top = false }: { g: GameState; top?: boolean }) {
   const tab = useStore((s) => s.tab);
   const setTab = useStore((s) => s.setTab);
+  const seen = useStore((s) => s.seen);
   return (
-    <nav className="tabbar" aria-label="Main">
-      {(Object.keys(UI.tabs) as Tab[]).map((t) => (
-        <button key={t} aria-current={tab === t ? 'page' : undefined} onClick={() => setTab(t)}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            {ICONS[t]}
-          </svg>
-          {UI.tabs[t]}
-        </button>
-      ))}
+    <nav className={top ? 'toptabs' : 'tabbar'} aria-label="Main">
+      {(Object.keys(UI.tabs) as Tab[]).map((t) => {
+        const fresh = t !== tab && seen[t] !== undefined && seen[t] !== tabKey(g, t);
+        return (
+          <button key={t} aria-current={tab === t ? 'page' : undefined} onClick={() => setTab(t)} title={`${UI.tabs[t]} (${t[0].toUpperCase()})`}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              {ICONS[t]}
+            </svg>
+            {UI.tabs[t]}
+            {fresh && <span className="tab-dot" aria-label="new" />}
+          </button>
+        );
+      })}
     </nav>
   );
 }
 
-function ThemeButton() {
-  const theme = useStore((s) => s.theme);
-  const setTheme = useStore((s) => s.setTheme);
-  const next = theme === 'auto' ? 'dark' : theme === 'dark' ? 'light' : 'auto';
+/** Fast break, one tap from anywhere. */
+function FastChip({ g }: { g: GameState }) {
+  const toggle = useStore((s) => s.toggleFast);
+  if (g.mode === 'lab' || g.step === 'retired') return null;
+  const on = !!g.flags.fast;
   return (
-    <button className="icon-btn" onClick={() => setTheme(next)} aria-label={`Theme: ${theme}. Switch to ${next}.`}>
-      {theme === 'auto' ? 'Auto' : theme === 'dark' ? 'Dark' : 'Light'}
-    </button>
-  );
-}
-
-/** Two taps to abandon a career (browser confirm dialogs are not available everywhere). */
-function NewButton({ retired, onReset }: { retired: boolean; onReset: () => void }) {
-  const [armed, setArmed] = useState(false);
-  useEffect(() => {
-    if (!armed) return;
-    const t = setTimeout(() => setArmed(false), 3000);
-    return () => clearTimeout(t);
-  }, [armed]);
-  return (
-    <button className="icon-btn" onClick={() => (retired || armed ? onReset() : setArmed(true))}>
-      {armed ? 'Tap again to quit' : 'New'}
+    <button className={`fast-toggle${on ? ' on' : ''}`} aria-pressed={on} onClick={toggle} title="Fast break: quick seasons, you still make every real call">
+      <span className="fast-dot" aria-hidden="true" />
+      Fast<span className="hide-narrow"> break</span>
     </button>
   );
 }
@@ -66,7 +62,6 @@ export function App() {
   const game = useStore((s) => s.game);
   const tab = useStore((s) => s.tab);
   const theme = useStore((s) => s.theme);
-  const reset = useStore((s) => s.reset);
   const mini = useStore((s) => s.mini);
   const simple = useStore((s) => s.simple);
   useEffect(() => {
@@ -82,6 +77,8 @@ export function App() {
     } else root.setAttribute('data-theme', theme);
   }, [theme]);
 
+  useKeys(!mini && !!game);
+
   if (mini) return <MiniGames />;
   if (!game) return <Create />;
 
@@ -93,10 +90,12 @@ export function App() {
           <div className="brand">
             Bench to <span>Rafters</span>
           </div>
+          <TabBar g={game} top />
           <div className="top-right">
+            <NextStep g={game} />
+            <FastChip g={game} />
             <GuideButton />
-            <ThemeButton />
-            <NewButton retired={retired} onReset={reset} />
+            <SettingsMenu g={game} />
           </div>
         </header>
         <div className="tab-view" key={tab}>
@@ -108,7 +107,7 @@ export function App() {
         </div>
       </div>
       <Overlays g={game} />
-      <TabBar />
+      <TabBar g={game} />
     </>
   );
 }

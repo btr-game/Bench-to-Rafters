@@ -8,7 +8,7 @@
 // - Front Office: basketball IQ and a little playmaking by titles and playoff runs.
 // In a lab career the boost is paid as credits, like everything else there.
 
-import { ATTR_MAX } from '../balance';
+import { ATTR_MAX, modeDial } from '../balance';
 import { clamp } from '../rng';
 import type { AttrKey, GameState } from '../types';
 import { NAMES } from '../../content/strings';
@@ -80,7 +80,7 @@ export const taperAt = (rating: number): number => MINI_TAPER.find(([from]) => r
 /** The reward scaled by how many claims were already made this season, and tapered near the top. */
 export function scaledReward(s: GameState, r: MiniResult): ReturnType<typeof miniReward> {
   const w = miniReward(r);
-  const k = nextShare(s);
+  const k = nextShare(s) * modeDial(s.mode, 'mini');
   const attrs: Partial<Record<AttrKey, number>> = {};
   // bigs turn the playmaking and perimeter part into what counts for them
   const big = s.player.pos === 'PF' || s.player.pos === 'C';
@@ -89,7 +89,7 @@ export function scaledReward(s: GameState, r: MiniResult): ReturnType<typeof min
     const a = to(a0);
     if (v) attrs[a] = Math.round(((attrs[a] ?? 0) + v * k * (isLab(s) ? 1 : taperAt(s.player.attrs[a]))) * 10) / 10;
   }
-  return { attrs, range: w.range ? Math.round(w.range * k * 10) / 10 : 0, rep: w.rep ? Math.round(w.rep * k) : 0 };
+  return { attrs, range: w.range ? Math.round(w.range * k * 10) / 10 : 0, rep: w.rep ? Math.round(w.rep * nextShare(s)) : 0 };
 }
 
 /** Applies the bonus to the career. Returns a line for the screen. */

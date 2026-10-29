@@ -248,7 +248,7 @@ export function gameRequest(s: GameState, round: string, oppName: string, home: 
   ];
   if (bestOf > 1) choices.push({ id: 'series', label: 'Simulate the rest of this series' });
   choices.push({ id: 'all', label: 'Simulate the rest of the postseason' });
-  choices.push({ id: 'always', label: 'Always simulate postseasons', detail: 'You can turn playable games back on from the Player tab' });
+  choices.push({ id: 'always', label: 'Always simulate postseasons', detail: 'You can turn playable games back on in Settings' });
   return {
     stage: 'game',
     title: `${round}${bestOf > 1 ? ` · Game ${sr!.game}` : ''}`,

@@ -853,3 +853,44 @@ Reached from the start page and from the bottom of Home (a career in progress is
   document, only the owner reads them all, with an inbox for the owner), and a scheduled task
   on the owner's side reads new notes and forwards them by email. Note: viewers with view-only
   access cannot write to the database, so they would need Contributor access to send feedback.
+
+## Round 14
+
+- **Tabs on a computer:** the five tabs moved into the top bar (sticky), the phone keeps its
+  bottom bar. A dot marks a tab whose content moved on since it was last opened (new games,
+  a rating change, new records; `tabKey` in `ui/selectors.ts`).
+- **Next step from any tab:** a button by the tabs plays the next step (or goes back to the
+  choice waiting at Home), so the other pages never block the game.
+- **Page banners:** every tab opens with a banner in team colours with its key numbers. Season:
+  record, streak, last ten, a points-per-game chart, the log and standings side by side. Player:
+  a ratings shape with the season's start dashed behind it, status, contract, profile, scouting.
+  League: both conferences side by side, leaders, voting, record book. Records: a career
+  headline, then the tables; the decision log shows the latest 12.
+- **Settings in one menu:** theme, Fast break, playable playoff games (it was a button deep in
+  the Player tab), Simple text, guide mode, New career. Fast break also stays one tap away in the
+  top bar.
+- **Autosave:** the career saves to the browser after every change (half a second later), one
+  slot, a few hundred KB; the start page offers to continue it. "New career" in Settings clears it.
+- **Keyboard:** Enter presses the main button (or an overlay's), 1-9 press the choices in the main
+  card (numbered tags show on computers), H/S/P/L/R switch tabs.
+- **Convenience:** the main button sticks to the bottom of the screen while a long card scrolls;
+  to-do items jump to their spot and flash it; Home's centre column is just the game (mini-games
+  and fan reactions moved to the side column, milestones under the player card).
+- **Graphics slots:** `components/Art.tsx` (player portrait, team logo, banner court) with simple
+  stand-ins; `docs/graphics-plan.md` lists the rest.
+- **Fix:** the League tab showed the season the NBA world was built in, not the current one.
+- **Regular guy balance** ("everything is a little inflated apart from Stars; Reality is fine; for
+  Regular aim for -3 to -5 average peak, -5 to -7 points of MVP, -25 points of titles; casual can
+  be the standard"). Measured with casual mini-game play (one claim a season), smart play:
+  - Per-mode dials in `MODES` (missing = 1, so Reality and Stars are untouched): `mini` scales the
+    rating part of a mini-game claim (Regular 0.7; reputation unchanged), `teamFx` scales the team
+    factors around him (chemistry, star gravity, team style, his team's storyline; Regular 0.3),
+    `ringChase` scales a contender's minimum-deal offer (Regular 0.25).
+  - Potential base 37 to 33.
+  - Before → after (400 careers, seeds 960000+): mean peak 79.18 → 75.11; MVP 16.0% → 10.0%;
+    titles 49.6% → 26.5%; All-Star 53.2% → 36.3%; reached the NBA 92.4% → 78.8%; HOF 29.6% → 18.3%.
+  - Without mini-games (250): mean 71.6 smart / 67.2 random, titles 23.6% / 9.6%, MVP 6.8% / 2.8%.
+    Grinders (two top claims a season): mean 78.0, titles 40.0%, MVP 10.8%.
+  - Titles barely moved with the potential alone (38-41%) or with the player's own impact on
+    winning scaled down (no change); about half came as a non-key player and the most from 30+, so
+    the team-factor and ring-chase dials do the work. Harness targets moved with it.

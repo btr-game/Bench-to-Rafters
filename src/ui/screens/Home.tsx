@@ -46,6 +46,7 @@ import { ScoutCard } from "../components/ScoutCard";
 import { DecisionView } from "./Decision";
 import { fmtMoney, ht, ordinal, pg, seasonLabel, signed } from "../format";
 import { team } from "../selectors";
+import { TeamArt } from "../components/Art";
 import { breakthroughBar } from "../../engine/career/breakthrough";
 import { rosterRank, winningEdge } from "../../engine/career/team";
 import { ovrOf } from "../../engine/player/ovr";
@@ -157,7 +158,8 @@ function SeasonHeader({ g }: { g: GameState }) {
               : "";
   return (
     <div className="turn-head">
-      <div style={{ minWidth: 0 }}>
+      {t && <TeamArt abbr={t.abbr || t.short} color={t.color} size={52} />}
+      <div style={{ minWidth: 0, flex: 1 }}>
         <div className="kicker">
           {seasonLabel(g.year)} · {stepName}
         </div>
@@ -189,48 +191,11 @@ function SeasonHeader({ g }: { g: GameState }) {
             <small>RECORD</small>
           </div>
         )}
-        {g.mode === "lab" ? (
+        {g.mode === "lab" && (
           <span className="fast-toggle on lab-badge">Lab</span>
-        ) : (
-          <FastToggle g={g} />
         )}
-        <SimpleToggle />
       </div>
     </div>
-  );
-}
-
-/** Simple text on or off: fewer words, just the choices (a display setting, not part of the save). */
-function SimpleToggle() {
-  const on = useStore((s) => s.simple);
-  const toggle = useStore((s) => s.toggleSimple);
-  return (
-    <button
-      className={`fast-toggle${on ? " on" : ""}`}
-      aria-pressed={on}
-      onClick={toggle}
-      title="Simple text: hide descriptions and flavour, keep the choices"
-    >
-      <span className="fast-dot" aria-hidden="true" />
-      Simple text {on ? "on" : "off"}
-    </button>
-  );
-}
-
-/** Fast break on or off, any time. */
-function FastToggle({ g }: { g: GameState }) {
-  const toggle = useStore((s) => s.toggleFast);
-  const on = !!g.flags.fast;
-  return (
-    <button
-      className={`fast-toggle${on ? " on" : ""}`}
-      aria-pressed={on}
-      onClick={toggle}
-      title="Fast break: quick seasons, you still make every real call"
-    >
-      <span className="fast-dot" aria-hidden="true" />
-      Fast break {on ? "on" : "off"}
-    </button>
   );
 }
 
@@ -417,22 +382,26 @@ function Todo({ g }: { g: GameState }) {
       : pr.type === "advance"
         ? pr.label
         : null;
-  const items: { text: string; hot?: boolean }[] = [
+  const items: { text: string; hot?: boolean; go?: string }[] = [
     ...g.pending.slice(1).map((d) => ({ text: d.title })),
     ...(canChangeFocus(g)
-      ? [{ text: "Pick new focus stats (Offseason moves)", hot: true }]
+      ? [{ text: "Pick new focus stats", hot: true, go: ".o-moves" }]
       : []),
     ...(canRecruit(g) && (g.recruit?.moves ?? 0) < STARTERS_RECRUIT.moves
-      ? [{ text: "Build the starting five (Offseason moves)", hot: true }]
+      ? [{ text: "Build the starting five", hot: true, go: ".o-moves" }]
+      : []),
+    ...(canSetStyle(g) && !currentStyle(g)
+      ? [{ text: "Set your team's style", hot: true, go: ".o-moves" }]
       : []),
     ...(heightMismatch(g) && canChangePosition(g)
-      ? [{ text: "Size check: think about another position", hot: true }]
+      ? [{ text: "Size check: think about another position", hot: true, go: ".o-moves" }]
       : []),
     ...(g.mode === "lab" && (g.player.lab?.credits ?? 0) >= 1
       ? [
           {
             text: `Spend ${Math.floor(g.player.lab!.credits)} lab credits`,
             hot: true,
+            go: ".lab-card",
           },
         ]
       : []),
@@ -444,10 +413,10 @@ function Todo({ g }: { g: GameState }) {
     <section className="card stack todo">
       <div className="sec-title">{UI.hub.todo}</div>
       {now && (
-        <div className="todo-now">
+        <button className="todo-now" onClick={() => jump(".o-main")}>
           <span className="kicker">Now</span>
           <b>{now}</b>
-        </div>
+        </button>
       )}
       {items.length === 0 ? (
         !now && <p className="muted small">{UI.hub.nothingPending}</p>
@@ -455,13 +424,29 @@ function Todo({ g }: { g: GameState }) {
         <ul className="todo-list">
           {items.map((x, i) => (
             <li key={i} className={x.hot ? "hot" : ""}>
-              {x.text}
+              {x.go ? (
+                <button className="todo-go" onClick={() => jump(x.go!)}>
+                  {x.text} →
+                </button>
+              ) : (
+                x.text
+              )}
             </li>
           ))}
         </ul>
       )}
     </section>
   );
+}
+
+/** Scrolls to a part of the page and flashes it, so a to-do leads straight to its spot. */
+function jump(sel: string) {
+  const el = document.querySelector<HTMLElement>(sel);
+  if (!el) return;
+  el.scrollIntoView({ behavior: "smooth", block: "start" });
+  el.classList.remove("flash");
+  void el.offsetWidth;
+  el.classList.add("flash");
 }
 
 function FocusCard({ g }: { g: GameState }) {
@@ -898,6 +883,10 @@ export function Home({ g }: { g: GameState }) {
         </div>
         <PlayerCard g={g} />
         <ScoutCard g={g} compact />
+        <section className="card stack">
+          <div className="sec-title">Milestones</div>
+          <MilestoneStrip reached={g.milestones} />
+        </section>
       </div>
       <div className="stack home-center">
         <section className="card stack o-main">
@@ -944,7 +933,7 @@ export function Home({ g }: { g: GameState }) {
               )}
               {pr.type === "decision" && <DecisionView g={g} d={pr.decision} />}
               {pr.type === "advance" && (
-                <button className="btn block" onClick={advance}>
+                <button className="btn block main-go" onClick={advance}>
                   {pr.label}
                 </button>
               )}
@@ -961,17 +950,7 @@ export function Home({ g }: { g: GameState }) {
         )}
         {g.mode === "lab" && <LabCard g={g} />}
         {g.step === "summary" && canRetire(g) && <RetireCard g={g} />}
-        <section className="card stack">
-          <div className="sec-title">Milestones</div>
-          <MilestoneStrip reached={g.milestones} />
-        </section>
-        <MiniGamesCard />
-        {g.feed[0] && (
-          <section className="card prose">
-            <ReactionCard r={g.feed[0]} />
-          </section>
-        )}
-        {last && g.step !== "summary" && (
+        {last && g.step !== "summary" && !g.flags.fast && (
           <section className="card stack prose">
             <div className="kicker">Last season</div>
             <div className="small">
@@ -984,6 +963,12 @@ export function Home({ g }: { g: GameState }) {
       <div className="stack home-side">
         <MvpRace g={g} />
         <StoriesCard g={g} />
+        <MiniGamesCard />
+        {g.feed[0] && (
+          <section className="card prose">
+            <ReactionCard r={g.feed[0]} />
+          </section>
+        )}
       </div>
     </div>
   );

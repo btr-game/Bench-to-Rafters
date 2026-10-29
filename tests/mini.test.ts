@@ -10,6 +10,7 @@ import { canClaimMini, claimMini, claimsUsed, MINI_CLAIMS, miniReward, taperAt }
 import { labBestSpend, labBuy, labPlaySeason, labSpreadSpend, LAB_GAME, newLabGame } from '../src/engine/mini/labGame';
 import { bailOut, contestRng as dunkRng, dunkDifficulty, dunkTaps, judge, tapQuality, type DunkDesign } from '../src/engine/mini/dunk';
 import { newGame } from '../src/engine/flow';
+import { modeDial } from '../src/engine/balance';
 
 describe('mini-games', () => {
   it('every franchise has an all-time five, one per position, and nobody plays for two teams', () => {
@@ -72,10 +73,13 @@ describe('mini-game career bonuses', () => {
     expect(top).toBe(4);
     expect(canClaimMini(s, 'threes')).toBe(true);
     claimMini(s, { game: 'threes', score: 27, won: true, own: true });
-    expect(s.player.attrs.SHT).toBeCloseTo(sht + top * taperAt(sht), 6);
+    // Regular guy turns the rating part down (round 14)
+    const dial = modeDial(s.mode, 'mini');
+    expect(dial).toBeLessThan(1);
+    expect(s.player.attrs.SHT).toBeCloseTo(sht + Math.round(top * dial * taperAt(sht) * 10) / 10, 6);
     const mid = s.player.attrs.SHT;
     claimMini(s, { game: 'threes', score: 27, won: true, own: true });
-    expect(s.player.attrs.SHT).toBeCloseTo(mid + Math.round(top * MINI_CLAIMS.share[1] * taperAt(mid) * 10) / 10, 6);
+    expect(s.player.attrs.SHT).toBeCloseTo(mid + Math.round(top * MINI_CLAIMS.share[1] * dial * taperAt(mid) * 10) / 10, 6);
     expect(claimsUsed(s)).toBe(MINI_CLAIMS.perSeason);
     expect(canClaimMini(s, 'legends')).toBe(false);
     expect(claimMini(s, { game: 'threes', score: 30, won: true, own: true })).toBe('');

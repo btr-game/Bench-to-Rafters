@@ -40,3 +40,23 @@ export function stageLine(g: GameState): string {
 export const roleName = (g: GameState): string => (g.season ? NAMES.role[g.season.role] : '—');
 export const repName = (g: GameState): string => repLabel(g.player.rep);
 export const health = (g: GameState): string => healthLabel(g.player);
+
+/**
+ * What each tab shows, boiled down to a key (round 14): when the key moves on while the player
+ * is elsewhere, the tab gets a "new" dot. Home has none; it is where the game happens.
+ */
+export function tabKey(g: GameState, tab: 'home' | 'season' | 'player' | 'league' | 'records'): string {
+  const s = g.season;
+  switch (tab) {
+    case 'season':
+      return `${g.year}:${s ? s.games.length + s.postGames.length + (s.preGames?.length ?? 0) + (s.cupGames?.length ?? 0) : 0}`;
+    case 'player':
+      return `${Math.round(ovr(g))}:${g.player.pos}`;
+    case 'league':
+      return `${g.nbaHistory.length}`;
+    case 'records':
+      return `${g.history.length}:${g.awards.length}:${g.tournaments.length}`;
+    default:
+      return '';
+  }
+}

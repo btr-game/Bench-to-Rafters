@@ -6,10 +6,10 @@ import { ATTRS, DIFFICULTIES, HEIGHT_RANGE, MODES, POSITIONS, type Mode } from '
 import type { AttrKey, Attrs, Pos } from '../../engine/types';
 import { NAMES, UI } from '../../content/strings';
 import { FIRST_NAMES, LAST_NAMES } from '../../content/names';
-import { useStore } from '../../store';
+import { savedCareer, useStore } from '../../store';
 import { ORIGINS } from '../../content/origins';
 import { edgeOf } from '../../engine/career/nationality';
-import { ht } from '../format';
+import { ht, seasonLabel } from '../format';
 import { MiniGamesCard } from '../mini/MiniGames';
 
 const pick = <T,>(a: readonly T[]): T => a[Math.floor(Math.random() * a.length)];
@@ -26,6 +26,30 @@ function cards(pos: Pos): Attrs[] {
 }
 
 /** The new-career page. */
+/** A career saved on this device: one tap picks it up (round 14). */
+function ResumeCard() {
+  const resume = useStore((s) => s.resume);
+  const [save] = useState(savedCareer);
+  const [failed, setFailed] = useState(false);
+  if (!save) return null;
+  return (
+    <section className="card resume-card">
+      <div style={{ minWidth: 0 }}>
+        <div className="kicker">{save.retired ? 'Finished career' : 'Career in progress'}</div>
+        <b className="resume-name">{save.name}</b>
+        <div className="muted small">
+          {seasonLabel(save.year)}
+          {save.ovr ? ` · peak OVR ${save.ovr}` : ''}
+        </div>
+        {failed && <div className="small" style={{ color: 'var(--bad)' }}>That save could not be read. Start a new career below.</div>}
+      </div>
+      <button className="btn" onClick={() => setFailed(!resume())}>
+        {save.retired ? 'Look back' : 'Continue'}
+      </button>
+    </section>
+  );
+}
+
 export function Create() {
   const start = useStore((s) => s.start);
   const [step, setStep] = useState(0);
@@ -89,6 +113,7 @@ export function Create() {
           {UI.create.random}
         </button>
       </header>
+      <ResumeCard />
       <section className="hero">
         <div className="kicker">A basketball career game</div>
         <h1>

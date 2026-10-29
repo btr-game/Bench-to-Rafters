@@ -9,6 +9,7 @@
 
 import type { AttrKey, GameState, RoleKey } from '../types';
 import { clamp } from '../rng';
+import { modeDial } from '../balance';
 import { logDecision, userOvr } from './common';
 
 export type TeamStyle = 'pace' | 'defense' | 'motion' | 'inside' | 'star';
@@ -53,7 +54,8 @@ export function styleEffect(s: GameState, key: TeamStyle): { regular: number; pl
   const st = TEAM_STYLES[key];
   const f = styleFit(s, key);
   const star = key === 'star' ? clamp((userOvr(s) - STYLE.starFrom) * STYLE.starPer, -STYLE.starMax, STYLE.starMax) : 0;
-  const r1 = (x: number) => Math.round(x * 10) / 10;
+  const d = modeDial(s.mode, 'teamFx');
+  const r1 = (x: number) => Math.round(x * d * 10) / 10;
   return {
     regular: r1(st.regular + f * STYLE.team + star),
     playoff: r1(st.playoff + f * STYLE.team + star),

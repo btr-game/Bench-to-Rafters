@@ -15,6 +15,7 @@
 // - Grudges pay off: knocking the rival out of the playoffs is worth reputation and morale.
 
 import { chance, next, pick, shuffle } from '../rng';
+import { modeDial } from '../balance';
 import type { Bracket, GameState, League, Team } from '../types';
 import { standings } from '../sim/leagueSim';
 import { nbaStrength } from './nbaWorld';
@@ -154,7 +155,8 @@ function mineStory(s: GameState, lg: League, mine: string): LeagueStory | null {
   const total = pool.reduce((a, [, w]) => a + w, 0);
   let r = next(s.rng) * total;
   const kind = pool.find(([, w]) => (r -= w) < 0)?.[0] ?? 'grit';
-  const m = MINE[kind];
+  const d = modeDial(s.mode, 'teamFx');
+  const m = { ...MINE[kind], regular: Math.round(MINE[kind].regular * d * 10) / 10, playoff: Math.round(MINE[kind].playoff * d * 10) / 10 };
   s.season.teamBonus = Math.round(((s.season.teamBonus ?? 0) + m.regular) * 10) / 10;
   s.season.postBonus = Math.round(((s.season.postBonus ?? 0) + m.playoff - m.regular) * 10) / 10;
   s.season.teamNotes = [...(s.season.teamNotes ?? []), `${m.title(t.short)} (${m.regular >= 0 ? '+' : ''}${m.regular}, playoffs ${m.playoff >= 0 ? '+' : ''}${m.playoff})`];

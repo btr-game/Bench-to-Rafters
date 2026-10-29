@@ -14,7 +14,7 @@ import { healDays } from '../player/injury';
 import { updateScouting } from '../player/create';
 import { ovrOf } from '../player/ovr';
 import { fmtMoney, minSalary, rookieScale } from '../economy/salary';
-import { LEVELS } from '../balance';
+import { LEVELS, modeDial } from '../balance';
 import {
   adjust,
   logDecision,
@@ -481,7 +481,7 @@ function pushFreeAgency(s: GameState, lastShare: number, lastRole: RoleKey): voi
   // ring chasing: a contender with a spot for a veteran or a role player, at the minimum
   const fa = userOvr(s);
   const benchLast = lastRole === 'bench' || lastRole === 'deep';
-  if (s.nba && (s.player.age >= TEAM_FACTORS.ringChaseAge || benchLast) && chance(s.rng, TEAM_FACTORS.ringChaseChance)) {
+  if (s.nba && (s.player.age >= TEAM_FACTORS.ringChaseAge || benchLast) && chance(s.rng, TEAM_FACTORS.ringChaseChance * modeDial(s.mode, 'ringChase'))) {
     const contenders = [...s.nba.teams].sort((a, b) => b.strength - a.strength).slice(0, 4);
     const c = contenders.find((t) => t.id !== s.teamId && !offers.some((o) => o.teamId === t.id) && fa >= (t.roster[11]?.ovr ?? 70) - 2);
     if (c) offers.push(nbaOffer(s, c, fa >= (c.roster[8]?.ovr ?? 75) ? 'rotation' : 'bench', minSalary(s.year + 1, s.serviceYears), 1, 'min', 'Ring chase: a title contender with a spot for you'));

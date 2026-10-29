@@ -85,7 +85,7 @@ export interface SkewDist {
   min: number;
   max: number;
 }
-export const POTENTIAL: SkewDist = { base: 37, mu: 3.44, sigma: 0.4, min: 40, max: 103 };
+export const POTENTIAL: SkewDist = { base: 33, mu: 3.44, sigma: 0.4, min: 36, max: 103 };
 export const ELITE_CLIMB = { from: 85, per: 0.07, min: 0.4 };
 
 // Difficulty modes (playtest round 6). Each sets the potential distribution, a growth
@@ -104,8 +104,12 @@ export const FAST_GROWTH = 1.3;
 // floor.ovr at floor.age, so every career that lasts that long reaches it
 // elite (round 12): above `from` OVR every half's growth shrinks by `per` a point, down to `min`,
 // so a high ceiling is no longer a sure thing: the last steps to the top take real work.
-export const MODES: Record<Mode, { name: string; blurb: string; potential: SkewDist; growth: number; injury: number; scoutMid: number; floor?: { age: number; ovr: number; until: number }; elite?: { from: number; per: number; min: number } }> = {
-  standard: { name: 'Regular guy', blurb: 'The full game. Most careers peak in the 60s and 70s; the NBA is common, stardom is earned.', potential: POTENTIAL, growth: 0.94, injury: 1, scoutMid: 70, elite: ELITE_CLIMB },
+// round 14: per-mode dials for the systems that sit outside growth. mini scales what a mini-game
+// claim pays into ratings; teamFx scales the team factors around him (chemistry, star gravity,
+// team style, his team's storyline); ringChase scales the odds that a contender has a
+// minimum-deal spot for him. Missing = 1.
+export const MODES: Record<Mode, { name: string; blurb: string; potential: SkewDist; growth: number; injury: number; scoutMid: number; floor?: { age: number; ovr: number; until: number }; elite?: { from: number; per: number; min: number }; mini?: number; teamFx?: number; ringChase?: number }> = {
+  standard: { name: 'Regular guy', blurb: 'The full game. Most careers peak in the 60s and 70s; the NBA is common, stardom is earned.', potential: POTENTIAL, growth: 0.94, injury: 1, scoutMid: 70, elite: ELITE_CLIMB, mini: 0.7, teamFx: 0.3, ringChase: 0.25 },
   // fast break: the regular game at a quick pace (engine/fast.ts). The quick pace means fewer
   // events, one training group a season and no shop, so the head start is set by simulation:
   // mean peak 76.4 against 73.6 for Regular guy (300 smart careers each, round 8).
@@ -642,3 +646,6 @@ export const EVENTS = { midseasonMax: 2, offseasonMax: 2, midseasonChance: 0.9, 
 // real NBA trade). A pay cut (10% at a time, up to 30%) frees room and shows players he is
 // serious about winning.
 export const STARTERS_RECRUIT = { capShare: 1, match: 1.25, moves: 2, asks: 3, cutStep: 0.1, maxCut: 0.3, board: 6, cutInterest: 0.07 };
+
+/** A mode's dial (round 14): 1 unless the mode sets it. */
+export const modeDial = (mode: Mode, k: 'mini' | 'teamFx' | 'ringChase'): number => MODES[mode]?.[k] ?? 1;

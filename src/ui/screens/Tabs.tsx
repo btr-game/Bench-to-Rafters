@@ -5,20 +5,21 @@ import { TrophyCabinet, trophyItems } from '../components/Trophies';
 import { CareerHighs } from '../components/Highs';
 import { NbaBracket } from '../components/NbaBracket';
 import { TextBracket } from '../components/TextBracket';
-import { useState } from 'react';
-import type { GameState, League, SeasonRecord, SeriesResult, StatLine, Team } from '../../engine/types';
-import { LEVELS } from '../../engine/balance';
+import { useState, type ReactNode } from 'react';
+import { CourtArt, PlayerArt, TeamArt } from '../components/Art';
+import type { GameLog, GameState, League, SeasonRecord, SeriesResult, StatLine, Team } from '../../engine/types';
+import { ATTRS, LEVELS } from '../../engine/balance';
+import { ovrOf } from '../../engine/player/ovr';
 import { standings } from '../../engine/sim/leagueSim';
 import { addLine, emptyLine, perGame } from '../../engine/sim/statModel';
-import { count, legacyScore, nbaTitles } from '../../engine/awards/legacy';
+import { count, legacyScore, nbaTitles, verdictFor } from '../../engine/awards/legacy';
 import { NAMES } from '../../content/strings';
 import { Card, Meter, Scoreboard } from '../components/bits';
 import { AttrRows } from '../components/PlayerCard';
 import { ScoutCard } from '../components/ScoutCard';
 import { fmtMoney, ht, pct, pg, seasonLabel } from '../format';
 import { ordinal } from '../../engine/career/season';
-import { useStore } from '../../store';
-import { league as leagueOf, ovr } from '../selectors';
+import { league as leagueOf, ovr, roleName, stageLine, team as teamOf } from '../selectors';
 
 // ---------- Season ----------
 
@@ -205,39 +206,198 @@ function BracketView({ g }: { g: GameState }) {
   );
 }
 
-export function SeasonTab({ g }: { g: GameState }) {
-  const [view, setView] = useState<'log' | 'standings' | 'bracket'>('log');
+/** The season's games with a line or a result, preseason and Cup left out. */
+const realGames = (g: GameState) => (g.season ? [...g.season.games, ...g.season.postGames] : []);
+
+/** The last ten results as colored blocks. */
+function FormStrip({ games }: { games: GameLog[] }) {
+  const last = games.slice(-10);
+  if (last.length === 0) return null;
   return (
-    <Card title="Season" kicker={seasonLabel(g.year)}>
-      <div className="subtabs">
-        {(['log', 'standings', 'bracket'] as const).map((v) => (
-          <button key={v} aria-pressed={view === v} onClick={() => setView(v)}>
-            {v === 'log' ? 'Game log' : v === 'standings' ? 'Standings' : 'Bracket'}
-          </button>
-        ))}
+    <div className="form-strip" aria-label={`Last ${last.length}: ${last.map((x) => x.res).join(' ')}`}>
+      {last.map((x, i) => (
+        <span key={i} className={x.res === 'W' ? 'w' : 'l'} title={`${x.res} ${x.us}–${x.them} ${x.home ? 'vs' : '@'} ${x.opp}`}>
+          {x.res}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function streakOf(games: GameLog[]): string {
+  if (games.length === 0) return '—';
+  const last = games[games.length - 1].res;
+  let n = 0;
+  for (let i = games.length - 1; i >= 0 && games[i].res === last; i--) n++;
+  return `${last}${n}`;
+}
+
+/** His points, game by game: a bar per game, colored by the result. */
+function PointsChart({ games }: { games: GameLog[] }) {
+  const played = games.filter((x) => x.line);
+  if (played.length < 3) return null;
+  const max = Math.max(30, ...played.map((x) => x.line!.pts));
+  const avg = played.reduce((t, x) => t + x.line!.pts, 0) / played.length;
+  const w = 6;
+  const h = 70;
+  return (
+    <figure className="pts-chart">
+      <figcaption className="row">
+        <span className="kicker">Points, game by game</span>
+        <span className="spacer" />
+        <span className="small muted">
+          <i className="key w" /> win <i className="key l" /> loss · average {avg.toFixed(1)}
+        </span>
+      </figcaption>
+      <svg viewBox={`0 0 ${games.length * w} ${h}`} preserveAspectRatio="none" role="img" aria-label={`Points per game, average ${avg.toFixed(1)}`}>
+        {games.map((x, i) => {
+          const v = x.line ? (x.line.pts / max) * (h - 4) : 2;
+          return <rect key={i} x={i * w + 1} y={h - v} width={w - 2} height={v} className={x.line ? (x.res === 'W' ? 'w' : 'l') : 'dnp'} />;
+        })}
+        <line x1="0" x2={games.length * w} y1={h - (avg / max) * (h - 4)} y2={h - (avg / max) * (h - 4)} className="avg" />
+      </svg>
+    </figure>
+  );
+}
+
+/** Standings for his conference (or the other one), compact enough for a side column. */
+function ConfStandings({ g }: { g: GameState }) {
+  const lg = leagueOf(g);
+  const mine = lg?.teams.find((t) => t.id === g.teamId);
+  const [conf, setConf] = useState(mine?.conf ?? 'East');
+  if (!lg) return <p className="muted">No league right now.</p>;
+  if (lg.level === 'NBA')
+    return (
+      <div className="stack" style={{ gap: 8 }}>
+        <div className="subtabs">
+          {['East', 'West'].map((c) => (
+            <button key={c} aria-pressed={conf === c} onClick={() => setConf(c)}>
+              {c}
+            </button>
+          ))}
+        </div>
+        <StandingsTable lg={lg} teams={lg.teams.filter((t) => t.conf === conf)} userId={g.teamId} />
       </div>
-      {view === 'log' && <GameLogTable g={g} />}
-      {view === 'standings' && <Standings g={g} />}
-      {view === 'bracket' && <BracketView g={g} />}
-    </Card>
+    );
+  return <Standings g={g} />;
+}
+
+/** A page banner: art on the left, the headline, then the numbers that matter (round 14). */
+export function PageHero({ art, kicker, title, sub, color, stats, children }: { art?: ReactNode; kicker: string; title: string; sub?: ReactNode; color?: string; stats: { k: string; v: ReactNode; tone?: 'good' | 'bad' }[]; children?: ReactNode }) {
+  return (
+    <header className="page-hero" style={color ? { ['--team' as string]: color } : undefined}>
+      <CourtArt />
+      {art && <div className="hero-art">{art}</div>}
+      <div className="hero-main">
+        <div className="kicker">{kicker}</div>
+        <h1 className="hero-title">{title}</h1>
+        {sub && <div className="hero-sub">{sub}</div>}
+        {children}
+      </div>
+      <dl className="hero-stats">
+        {stats.map((x) => (
+          <div key={x.k} className={x.tone ?? ''}>
+            <dt>{x.k}</dt>
+            <dd>{x.v}</dd>
+          </div>
+        ))}
+      </dl>
+    </header>
+  );
+}
+
+export function SeasonTab({ g }: { g: GameState }) {
+  const lg = leagueOf(g);
+  const t = teamOf(g);
+  const s = g.season;
+  const games = realGames(g);
+  const all = s ? [...(s.preGames ?? []), ...s.games, ...(s.cupGames ?? []), ...s.postGames] : [];
+  const played = all.filter((x) => x.line);
+  const avg = (k: 'pts' | 'reb' | 'ast') => (played.length ? (played.reduce((a, x) => a + x.line![k], 0) / played.length).toFixed(1) : '—');
+  const confTeams = lg && t ? standings(lg.level === 'NBA' || lg.level === 'NCAA' ? lg.teams.filter((x) => x.conf === t.conf) : lg.teams) : [];
+  const place = t ? confTeams.findIndex((x) => x.id === t.id) + 1 : 0;
+  const [view, setView] = useState<'season' | 'bracket'>('season');
+  const hasBracket = !!lg?.bracket;
+  // after retirement there is no team: the last season stands in
+  const last = !t ? g.lastSummary : null;
+  return (
+    <div className="page">
+      <PageHero
+        art={t ? <TeamArt abbr={t.abbr || t.short} color={t.color} size={84} /> : undefined}
+        color={t?.color ?? last?.teamColor}
+        kicker={`${seasonLabel(last?.year ?? g.year)} · ${lg ? (lg.label ?? LEVELS[lg.level].name) : last ? 'Final season' : 'Season'}`}
+        title={t?.name ?? last?.teamName ?? 'Season'}
+        sub={place > 0 ? `${ordinal(place)} in the ${lg?.level === 'NBA' ? `${t!.conf}ern Conference` : lg?.level === 'NCAA' ? t!.conf : 'league'}` : last ? `${last.w}–${last.l}, ${last.result.toLowerCase()}` : 'The season has not started'}
+        stats={[
+          { k: 'Record', v: t ? `${t.w}–${t.l}` : last ? `${last.w}–${last.l}` : '—' },
+          { k: 'Streak', v: streakOf(games), tone: games.length ? (games[games.length - 1].res === 'W' ? 'good' : 'bad') : undefined },
+          { k: 'Your PTS', v: avg('pts') },
+          { k: 'REB', v: avg('reb') },
+          { k: 'AST', v: avg('ast') },
+        ]}
+      >
+        <FormStrip games={games} />
+      </PageHero>
+      {hasBracket && (
+        <div className="subtabs">
+          <button aria-pressed={view === 'season'} onClick={() => setView('season')}>
+            Season
+          </button>
+          <button aria-pressed={view === 'bracket'} onClick={() => setView('bracket')}>
+            Postseason bracket
+          </button>
+        </div>
+      )}
+      {view === 'bracket' && hasBracket ? (
+        <Card title="Postseason">
+          <BracketView g={g} />
+        </Card>
+      ) : (
+        <div className="page-grid wide-side">
+          <Card title="Games" kicker={`${all.length} played`}>
+            <PointsChart games={all} />
+            <GameLogTable g={g} />
+          </Card>
+          <Card title="Standings">
+            <ConfStandings g={g} />
+          </Card>
+        </div>
+      )}
+    </div>
   );
 }
 
 // ---------- Player ----------
 
-function PlayoffToggle({ g }: { g: GameState }) {
-  const toggle = useStore((s) => s.togglePlayoffs);
-  const sim = !!g.flags.simPostseason;
+/** The eight ratings as a shape, with the start of the season dashed behind it. */
+function Radar({ g, compare }: { g: GameState; compare?: Record<string, number> }) {
+  const n = ATTRS.length;
+  const R = 92;
+  const c = 130;
+  const pt = (i: number, v: number) => {
+    const a = (Math.PI * 2 * i) / n - Math.PI / 2;
+    const r = (Math.max(0, Math.min(99, v)) / 99) * R;
+    return `${(c + Math.cos(a) * r).toFixed(1)},${(c + Math.sin(a) * r).toFixed(1)}`;
+  };
+  const shape = (vals: (k: string) => number) => ATTRS.map((k, i) => pt(i, vals(k))).join(' ');
   return (
-    <div className="row" style={{ gap: 10, marginTop: 10 }}>
-      <span className="small">
-        Postseason games: <b>{sim ? 'simulated' : 'playable'}</b>
-      </span>
-      <div className="spacer" />
-      <button className="btn ghost small" onClick={toggle}>
-        {sim ? 'Make them playable' : 'Always simulate'}
-      </button>
-    </div>
+    <svg className="radar" viewBox="0 0 260 260" role="img" aria-label="Ratings shape">
+      {[25, 50, 75, 99].map((v) => (
+        <polygon key={v} points={ATTRS.map((_, i) => pt(i, v)).join(' ')} className="ring" />
+      ))}
+      {compare && <polygon points={shape((k) => compare[k])} className="was" />}
+      <polygon points={shape((k) => g.player.attrs[k as keyof typeof g.player.attrs])} className="now" />
+      {ATTRS.map((k, i) => {
+        const a = (Math.PI * 2 * i) / n - Math.PI / 2;
+        const x = c + Math.cos(a) * (R + 22);
+        const y = c + Math.sin(a) * (R + 16);
+        return (
+          <text key={k} x={x} y={y} textAnchor={Math.abs(Math.cos(a)) < 0.2 ? 'middle' : Math.cos(a) > 0 ? 'start' : 'end'} dominantBaseline="middle" className={g.player.focus.includes(k) ? 'focus' : ''}>
+            {k} {Math.round(g.player.attrs[k])}
+          </text>
+        );
+      })}
+    </svg>
   );
 }
 
@@ -245,106 +405,131 @@ export function PlayerTab({ g }: { g: GameState }) {
   const p = g.player;
   const c = g.contract;
   const lg = leagueOf(g);
-  const contractTeam = c && lg ? lg.teams.find((t) => t.id === c.teamId)?.name : null;
+  const t = teamOf(g);
+  const contractTeam = c && lg ? lg.teams.find((x) => x.id === c.teamId)?.name : null;
+  const now = Math.round(ovr(g));
+  const start = g.season?.attrsStart ? Math.round(ovrOf(g.season.attrsStart as GameState['player']['attrs'], p.pos)) : now;
   return (
-    <div className="home-grid">
-      <div className="stack">
-      <ScoutCard g={g} />
-      <Card title="Ratings" kicker={`${NAMES.pos[p.pos]} · OVR ${Math.round(ovr(g))} · peak ${Math.round(p.peakOvr)}`}>
-        <AttrRows g={g} compare={g.season?.attrsStart} />
-        <p className="muted small">● focus stat. Changes are since the start of this season.</p>
-        <div className="sec-title">Meters</div>
-        <div className="meters">
-          <Meter label="Range" value={p.range} tone="ink" />
-          <Meter label={`${p.hand === 'L' ? 'Right' : 'Left'} hand (weak hand)`} value={p.offhand} tone="ink" />
-        </div>
-      </Card>
-      </div>
-      <div className="stack">
-        <Card title="Status">
+    <div className="page">
+      <PageHero
+        art={<PlayerArt number={p.number} color={t?.color} size={96} />}
+        color={t?.color}
+        kicker={`#${p.number} · ${NAMES.pos[p.pos]} · ${ht(p.height)}`}
+        title={p.name}
+        sub={`${t ? `${t.name} · ` : ''}${stageLine(g)}`}
+        stats={[
+          { k: 'OVR', v: now, tone: now > start ? 'good' : now < start ? 'bad' : undefined },
+          { k: 'Peak', v: Math.round(p.peakOvr) },
+          { k: 'Age', v: p.age },
+          { k: 'Role', v: roleName(g) },
+          { k: 'Scouts', v: p.scoutGrade ?? '—' },
+        ]}
+      />
+      <div className="page-grid three">
+        <Card title="Ratings" kicker={now !== start ? `OVR ${start} → ${now} this season` : 'This season'}>
+          <Radar g={g} compare={g.season?.attrsStart} />
+          <AttrRows g={g} compare={g.season?.attrsStart} />
+          <p className="muted small">● focus stat · the dashed shape is where you started the season.</p>
           <div className="meters">
-            <Meter label="Morale" value={p.morale} />
-            <Meter label="Coach trust" value={p.trust} />
-            <Meter label="Reputation" value={p.rep} tone="ink" />
-            <Meter label="Body wear" value={p.wear ?? 0} tone={(p.wear ?? 0) >= 50 ? "bad" : (p.wear ?? 0) >= 25 ? "warn" : "good"} />
-            <p className="small muted" style={{ margin: 0 }}>Body wear builds with heavy minutes, hard plans and injuries, and makes aging hit harder after 30. Recovery plans, rest summers and health purchases bring it down.</p>
+            <Meter label="Range" value={p.range} tone="ink" />
+            <Meter label={`${p.hand === 'L' ? 'Right' : 'Left'} hand (weak hand)`} value={p.offhand} tone="ink" />
           </div>
-          <dl className="facts">
-            <div>
-              <dt>Height</dt>
-              <dd>
-                {ht(p.height)}
-                {p.height < p.heightProj ? <span className="muted"> → about {ht(p.heightProj)}</span> : null}
-              </dd>
-            </div>
-            <div>
-              <dt>Wingspan</dt>
-              <dd>{ht(p.wingspan)}</dd>
-            </div>
-            <div>
-              <dt>Hometown</dt>
-              <dd>{p.hometown}</dd>
-              <dt>Nationality</dt>
-              <dd>{p.country}</dd>
-            </div>
-            <div>
-              <dt>Shoots</dt>
-              <dd>{p.hand === 'L' ? 'Left-handed' : 'Right-handed'}</dd>
-            </div>
-            <div style={{ gridColumn: '1 / -1' }}>
-              <dt>Scouts' read on your game</dt>
-              <dd>
-                {(p.fit ?? [{ name: p.archetype, conf: 1 }]).map((f) => `${f.name} ${Math.round(f.conf * 100)}%`).join(' · ')}
-                {p.anomaly ? ` · rare: ${p.anomaly}` : ''}
-              </dd>
-            </div>
-            <div>
-              <dt>Captain</dt>
-              <dd>{p.captain ? 'Yes' : 'No'}</dd>
-            </div>
-          </dl>
-          <PlayoffToggle g={g} />
         </Card>
-        <Card title="Scouting">
-          {p.scoutGrade ? (
-            <p>
-              Scouts' potential grade: <b>{p.scoutGrade}</b>, projected ceiling {p.scoutRange![0]}–{p.scoutRange![1]}.
-            </p>
-          ) : (
-            <p className="muted">Scouts post a potential grade after your sophomore season.</p>
-          )}
-          <p className="muted small">Your true potential, growth curve and durability are hidden. The grade gets more accurate as you get older.</p>
-          {g.stars > 1 && g.stage === 'HS' && (
-            <p>
-              Recruiting: <b>{'★'.repeat(g.stars)}</b>
-              {g.recruitRank ? `, ranked ${g.recruitRank} in the class` : ''}
-            </p>
-          )}
-        </Card>
-        <Card title="Contract and money">
-          {c && g.stage !== 'HS' ? (
-            <p>
-              {contractTeam ?? c.teamId}: {g.stage === 'NCAA' ? (c.kind === 'walkon' ? 'walk-on' : 'scholarship') : `${fmtMoney(c.salary)} a year`}, {c.years} year
-              {c.years === 1 ? '' : 's'} left{c.teamOptionYears.length > 0 ? ' (team options in the final years)' : ''}.
-            </p>
-          ) : (
-            <p className="muted">No contract.</p>
-          )}
-          <p>
-            Bank {fmtMoney(p.bank)} · career earnings {fmtMoney(p.earnings)}
-          </p>
-        </Card>
-        {p.programs.length > 0 && (
-          <Card title="Programs">
-            <ul className="small" style={{ paddingLeft: 18 }}>
-              {p.programs.map((x) => (
-                <li key={x.id}>
-                  {x.name}: {x.seasonsLeft} season{x.seasonsLeft === 1 ? '' : 's'} left
-                </li>
-              ))}
-            </ul>
+        <div className="stack">
+          <Card title="Status">
+            <div className="meters">
+              <Meter label="Morale" value={p.morale} tone={p.morale < 35 ? 'bad' : p.morale > 70 ? 'good' : undefined} />
+              <Meter label="Coach trust" value={p.trust} tone={p.trust <= 30 ? 'bad' : p.trust >= 70 ? 'good' : undefined} />
+              <Meter label="Reputation" value={p.rep} tone="ink" />
+              <Meter label="Body wear" value={p.wear ?? 0} tone={(p.wear ?? 0) >= 50 ? 'bad' : (p.wear ?? 0) >= 25 ? 'warn' : 'good'} />
+            </div>
+            <p className="small muted">Body wear builds with heavy minutes, hard plans and injuries, and makes aging hit harder after 30. Recovery plans, rest summers and health purchases bring it down.</p>
           </Card>
-        )}
+          <Card title="Contract and money">
+            {c && g.stage !== 'HS' ? (
+              <p>
+                {contractTeam ?? c.teamId}: {g.stage === 'NCAA' ? (c.kind === 'walkon' ? 'walk-on' : 'scholarship') : `${fmtMoney(c.salary)} a year`}, {c.years} year
+                {c.years === 1 ? '' : 's'} left{c.teamOptionYears.length > 0 ? ' (team options in the final years)' : ''}.
+              </p>
+            ) : (
+              <p className="muted">No contract.</p>
+            )}
+            <dl className="facts">
+              <div>
+                <dt>Bank</dt>
+                <dd>{fmtMoney(p.bank)}</dd>
+              </div>
+              <div>
+                <dt>Career earnings</dt>
+                <dd>{fmtMoney(p.earnings)}</dd>
+              </div>
+            </dl>
+            {p.programs.length > 0 && (
+              <ul className="small" style={{ paddingLeft: 18 }}>
+                {p.programs.map((x) => (
+                  <li key={x.id}>
+                    {x.name}: {x.seasonsLeft} season{x.seasonsLeft === 1 ? '' : 's'} left
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
+          <Card title="Profile">
+            <dl className="facts">
+              <div>
+                <dt>Height</dt>
+                <dd>
+                  {ht(p.height)}
+                  {p.height < p.heightProj ? <span className="muted"> → about {ht(p.heightProj)}</span> : null}
+                </dd>
+              </div>
+              <div>
+                <dt>Wingspan</dt>
+                <dd>{ht(p.wingspan)}</dd>
+              </div>
+              <div>
+                <dt>Hometown</dt>
+                <dd>{p.hometown}</dd>
+              </div>
+              <div>
+                <dt>Nationality</dt>
+                <dd>{p.country}</dd>
+              </div>
+              <div>
+                <dt>Shoots</dt>
+                <dd>{p.hand === 'L' ? 'Left-handed' : 'Right-handed'}</dd>
+              </div>
+              <div>
+                <dt>Captain</dt>
+                <dd>{p.captain ? 'Yes' : 'No'}</dd>
+              </div>
+              <div style={{ gridColumn: '1 / -1' }}>
+                <dt>Scouts' read on your game</dt>
+                <dd>
+                  {(p.fit ?? [{ name: p.archetype, conf: 1 }]).map((f) => `${f.name} ${Math.round(f.conf * 100)}%`).join(' · ')}
+                  {p.anomaly ? ` · rare: ${p.anomaly}` : ''}
+                </dd>
+              </div>
+              {g.stars > 1 && g.stage === 'HS' && (
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <dt>Recruiting</dt>
+                  <dd>
+                    {'★'.repeat(g.stars)}
+                    {g.recruitRank ? `, ranked ${g.recruitRank} in the class` : ''}
+                  </dd>
+                </div>
+              )}
+            </dl>
+          </Card>
+        </div>
+        <div className="stack">
+          <ScoutCard g={g} />
+          {!p.scoutGrade && (
+            <Card title="Scouting">
+              <p className="muted">Scouts post a potential grade after your sophomore season. Your true potential, growth curve and durability stay hidden.</p>
+            </Card>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -411,65 +596,94 @@ export function LeagueTab({ g }: { g: GameState }) {
     ? [...withLines].sort((a, b) => perGame(b.p.s!, 'pts') - perGame(a.p.s!, 'pts')).slice(0, 15)
     : [...players].sort((a, b) => b.p.ovr - a.p.ovr).slice(0, 15);
   const races = g.lastSummary?.races ?? [];
+  const best = standings(lg.teams)[0];
+  const mine = lg.teams.find((t) => t.id === g.teamId);
+  const last = g.nbaHistory[g.nbaHistory.length - 1];
+  const conf = lg.level === 'NBA' ? ['East', 'West'] : [];
   return (
-    <div className="stack">
-      <Card title={lg.label ?? LEVELS[lg.level].name} kicker={seasonLabel(lg.year)}>
-        <Standings g={{ ...g, league: lg, stage: lg.level === 'NBA' ? 'NBA' : g.stage }} />
-      </Card>
-      <Card title={withLines.length ? 'Scoring leaders' : 'Top players'} kicker="Fictional players">
-        <div className="tbl-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>#</th>
-                <th className="l">Player</th>
-                <th className="l">Team</th>
-                <th>Age</th>
-                <th>OVR</th>
-                {withLines.length > 0 && <th>PPG</th>}
-              </tr>
-            </thead>
-            <tbody>
-              {leaders.map(({ p, t }, i) => (
-                <tr key={p.id}>
-                  <td>{i + 1}</td>
-                  <td className="l">
-                    {p.name} <span className="muted">{p.pos}</span>
-                  </td>
-                  <td className="l">
-                    <span className="sw" style={{ background: t.color }} />
-                    {t.abbr}
-                  </td>
-                  <td>{p.age}</td>
-                  <td>{Math.round(p.ovr)}</td>
-                  {withLines.length > 0 && <td>{perGame(p.s!, 'pts').toFixed(1)}</td>}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </Card>
-      {races.length > 0 && (
-        <Card title="Last season's award voting">
-          {races.map((r) => (
-            <div key={r.award} className="stack" style={{ gap: 4, marginBottom: 10 }}>
-              <b>{r.award === 'MVP' ? 'MVP voting' : r.award}</b>
-              <ol className="vote-list">
-                {r.top.map((x, i) => (
-                  <li key={i} className={x.isUser ? 'me' : ''}>
-                    <span>
-                      {x.name} <span className="muted">({x.team}{x.ovr ? ` · OVR ${x.ovr}` : ''})</span>
-                    </span>
-                    {x.line && <span className="muted small">{x.line}</span>}
-                  </li>
-                ))}
-              </ol>
-              {r.userRank && r.userRank > r.top.length ? <span className="small muted">You finished {ordinal(r.userRank)}.</span> : null}
-            </div>
+    <div className="page">
+      <PageHero
+        kicker={seasonLabel(g.year)}
+        title={lg.label ?? LEVELS[lg.level].name}
+        sub={mine ? `Your team: ${mine.name}, ${mine.w}–${mine.l}` : 'Fictional players and teams'}
+        color={mine?.color}
+        stats={[
+          { k: 'Best record', v: best && best.w + best.l > 0 ? `${best.short} ${best.w}–${best.l}` : '—' },
+          { k: 'Scoring leader', v: withLines.length ? `${leaders[0].p.name.split(' ').slice(-1)[0]} ${perGame(leaders[0].p.s!, 'pts').toFixed(1)}` : '—' },
+          ...(last ? [{ k: 'Last champion', v: last.champion }] : []),
+        ]}
+      />
+      {conf.length ? (
+        <div className="page-grid two">
+          {conf.map((c) => (
+            <Card key={c} title={`${c}ern Conference`}>
+              <StandingsTable lg={lg} teams={lg.teams.filter((t) => t.conf === c)} userId={g.teamId} />
+            </Card>
           ))}
+        </div>
+      ) : (
+        <Card title="Standings">
+          <Standings g={{ ...g, league: lg, stage: g.stage }} />
         </Card>
       )}
-      {g.nbaHistory.length > 0 && <NbaHistoryCard g={g} />}
+      <div className="page-grid two">
+        <Card title={withLines.length ? 'Scoring leaders' : 'Top players'} kicker="Fictional players">
+          <div className="tbl-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th className="l">Player</th>
+                  <th className="l">Team</th>
+                  <th>Age</th>
+                  <th>OVR</th>
+                  {withLines.length > 0 && <th>PPG</th>}
+                </tr>
+              </thead>
+              <tbody>
+                {leaders.map(({ p, t }, i) => (
+                  <tr key={p.id}>
+                    <td>{i + 1}</td>
+                    <td className="l">
+                      {p.name} <span className="muted">{p.pos}</span>
+                    </td>
+                    <td className="l">
+                      <span className="sw" style={{ background: t.color }} />
+                      {t.abbr}
+                    </td>
+                    <td>{p.age}</td>
+                    <td>{Math.round(p.ovr)}</td>
+                    {withLines.length > 0 && <td>{perGame(p.s!, 'pts').toFixed(1)}</td>}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+        {races.length > 0 ? (
+          <Card title="Last season's award voting">
+            {races.map((r) => (
+              <div key={r.award} className="stack" style={{ gap: 4, marginBottom: 10 }}>
+                <b>{r.award === 'MVP' ? 'MVP voting' : r.award}</b>
+                <ol className="vote-list">
+                  {r.top.map((x, i) => (
+                    <li key={i} className={x.isUser ? 'me' : ''}>
+                      <span>
+                        {x.name} <span className="muted">({x.team}{x.ovr ? ` · OVR ${x.ovr}` : ''})</span>
+                      </span>
+                      {x.line && <span className="muted small">{x.line}</span>}
+                    </li>
+                  ))}
+                </ol>
+                {r.userRank && r.userRank > r.top.length ? <span className="small muted">You finished {ordinal(r.userRank)}.</span> : null}
+              </div>
+            ))}
+          </Card>
+        ) : (
+          g.nbaHistory.length > 0 && <NbaHistoryCard g={g} />
+        )}
+      </div>
+      {races.length > 0 && g.nbaHistory.length > 0 && <NbaHistoryCard g={g} />}
     </div>
   );
 }
@@ -542,72 +756,94 @@ export function RecordsTab({ g }: { g: GameState }) {
   const pro = g.history.filter((h) => h.level === 'NBA' || h.level === 'GL' || h.level === 'EU' || h.level === 'INT');
   const nbaT = totals(nba);
   const proT = totals(pro);
+  const [allLog, setAllLog] = useState(false);
+  const log = [...g.log].reverse();
+  const t = teamOf(g);
+  const v = verdictFor(g);
   return (
-    <div className="stack">
+    <div className="page">
+      <PageHero
+        art={<PlayerArt number={g.player.number} color={t?.color} size={84} />}
+        color={t?.color}
+        kicker={`${g.history.length} season${g.history.length === 1 ? '' : 's'} · legacy score ${legacyScore(g)}`}
+        title={`${g.player.name}: the career`}
+        sub={g.history.length ? `On course for: ${v.tier}` : 'Your seasons show up here after the first one.'}
+        stats={[
+          { k: 'NBA seasons', v: nba.length },
+          { k: 'NBA points', v: Math.round(nbaT.pts).toLocaleString() },
+          { k: 'Titles', v: nbaTitles(g) },
+          { k: 'MVPs', v: count(g, 'MVP') },
+          { k: 'All-Star', v: count(g, 'ALLSTAR') },
+        ]}
+      />
       <Card title="Season by season">
         {g.history.length === 0 ? <p className="muted">Your seasons show up here after the first one.</p> : <HistoryTable rows={g.history} />}
         <p className="muted small">High school and college seasons are listed but do not count toward pro career totals.</p>
       </Card>
-      {g.tournaments.length > 0 && (
-        <Card title="Tournaments" kicker="Tap an event to see every game">
-          <div className="stack" style={{ gap: 6 }}>
-            {[...g.tournaments].reverse().map((t, i) => (
-              <details key={i} className="tourney">
-                <summary>
-                  <span className="tourney-head">
-                    <b>
-                      {t.name}
-                    </b>
-                    <span className="muted small">
-                      {t.year} · {t.team} · {t.result}
-                    </span>
-                  </span>
-                  <span className="num small">{t.line && t.line.gp ? `${pg(t.line, 'pts')} PPG` : '—'}</span>
-                </summary>
-                <div className="series-games">
-                  {(t.games ?? []).map((gm, k) => (
-                    <span key={k}>
-                      {gm.post ?? `Game ${k + 1}`}: {gm.res} {gm.us}–{gm.them} vs {gm.opp}
-                      {gm.line ? ` · ${gm.line.pts} pts, ${gm.line.reb} reb, ${gm.line.ast} ast` : ' · DNP'}
-                    </span>
-                  ))}
-                  {(t.notes ?? []).map((n, k) => (
-                    <span key={`n${k}`} className={n.startsWith('Champion') ? 'strong' : ''}>
-                      {n}
-                    </span>
-                  ))}
-                  {!t.games && !t.notes && <span>No game details for this event.</span>}
-                </div>
-              </details>
-            ))}
-          </div>
+      <div className="page-grid two">
+        <TrophyCabinet g={g} />
+        <Card title="Career totals" kicker={`Legacy score ${legacyScore(g)}`}>
+          {nbaT.gp > 0 && (
+            <>
+              <div className="kicker">
+                NBA · {nba.length} seasons · {nbaT.gp} games
+              </div>
+              <Scoreboard line={nbaT} />
+              <p className="num small">
+                {Math.round(nbaT.pts).toLocaleString()} points · {Math.round(nbaT.reb).toLocaleString()} rebounds · {Math.round(nbaT.ast).toLocaleString()} assists ·{' '}
+                {nbaTitles(g)} title{nbaTitles(g) === 1 ? '' : 's'} · {count(g, 'ALLSTAR')} All-Star
+              </p>
+            </>
+          )}
+          {proT.gp > nbaT.gp && (
+            <>
+              <div className="kicker">All pro leagues · {proT.gp} games</div>
+              <Scoreboard line={proT} />
+            </>
+          )}
+          {proT.gp === 0 && <p className="muted">No pro games yet.</p>}
         </Card>
-      )}
-      <TrophyCabinet g={g} />
-      <CareerHighs g={g} />
+      </div>
+      <div className="page-grid two">
+        <CareerHighs g={g} />
+        {g.tournaments.length > 0 && (
+          <Card title="Tournaments" kicker="Tap an event to see every game">
+            <div className="stack" style={{ gap: 6 }}>
+              {[...g.tournaments].reverse().map((x, i) => (
+                <details key={i} className="tourney">
+                  <summary>
+                    <span className="tourney-head">
+                      <b>{x.name}</b>
+                      <span className="muted small">
+                        {x.year} · {x.team} · {x.result}
+                      </span>
+                    </span>
+                    <span className="num small">{x.line && x.line.gp ? `${pg(x.line, 'pts')} PPG` : '—'}</span>
+                  </summary>
+                  <div className="series-games">
+                    {(x.games ?? []).map((gm, k) => (
+                      <span key={k}>
+                        {gm.post ?? `Game ${k + 1}`}: {gm.res} {gm.us}–{gm.them} vs {gm.opp}
+                        {gm.line ? ` · ${gm.line.pts} pts, ${gm.line.reb} reb, ${gm.line.ast} ast` : ' · DNP'}
+                      </span>
+                    ))}
+                    {(x.notes ?? []).map((n, k) => (
+                      <span key={`n${k}`} className={n.startsWith('Champion') ? 'strong' : ''}>
+                        {n}
+                      </span>
+                    ))}
+                    {!x.games && !x.notes && <span>No game details for this event.</span>}
+                  </div>
+                </details>
+              ))}
+            </div>
+          </Card>
+        )}
+      </div>
       <LegacyTierList g={g} />
-      <Card title="Career totals" kicker={`Legacy score ${legacyScore(g)}`}>
-        {nbaT.gp > 0 && (
-          <>
-            <div className="kicker">NBA · {nba.length} seasons · {nbaT.gp} games</div>
-            <Scoreboard line={nbaT} />
-            <p className="num small">
-              {Math.round(nbaT.pts).toLocaleString()} points · {Math.round(nbaT.reb).toLocaleString()} rebounds · {Math.round(nbaT.ast).toLocaleString()} assists ·{' '}
-              {nbaTitles(g)} title{nbaTitles(g) === 1 ? '' : 's'} · {count(g, 'ALLSTAR')} All-Star
-            </p>
-          </>
-        )}
-        {proT.gp > nbaT.gp && (
-          <>
-            <div className="kicker">All pro leagues · {proT.gp} games</div>
-            <Scoreboard line={proT} />
-          </>
-        )}
-        {proT.gp === 0 && <p className="muted">No pro games yet.</p>}
-      </Card>
-      <Card title="Decision log">
+      <Card title="Decision log" kicker={`${log.length} entries`}>
         <ul className="feed">
-          {[...g.log].reverse().map((e, i) => (
+          {(allLog ? log : log.slice(0, 12)).map((e, i) => (
             <li key={i}>
               <span className="t">
                 {e.year} · {e.age}
@@ -616,6 +852,11 @@ export function RecordsTab({ g }: { g: GameState }) {
             </li>
           ))}
         </ul>
+        {log.length > 12 && (
+          <button className="btn ghost small" onClick={() => setAllLog(!allLog)}>
+            {allLog ? 'Show the latest only' : `Show all ${log.length}`}
+          </button>
+        )}
       </Card>
     </div>
   );

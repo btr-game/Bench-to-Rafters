@@ -9,6 +9,7 @@ import { create } from 'zustand';
 import type { AttrKey, GameLog, GameState, Pos } from './engine/types';
 import { advance as engineAdvance, changeFocus, changeNumber, changePosition, choose as engineChoose, dismissMoment, newGame, retireByChoice, spendCredits, type CreateInput } from './engine/flow';
 import { seasonLabel } from './ui/format';
+import { tabKey } from './ui/selectors';
 
 export type Tab = 'home' | 'season' | 'player' | 'league' | 'records';
 export type Theme = 'auto' | 'light' | 'dark';
@@ -51,7 +52,50 @@ interface Store {
   toggleSimple: () => void;
   guide: boolean; // guide mode: highlights what to do next (round 13)
   toggleGuide: () => void;
+  /** The tab keys last seen (round 14): a tab whose key moved on shows a "new" dot. */
+  seen: Partial<Record<Tab, string>>;
+  /** Picks up the career saved on this device; false if there is none or it cannot be read. */
+  resume: () => boolean;
+  /** Whether the autosave works here ('off' when the browser blocks storage or the save is too big). */
+  saving: 'ok' | 'off';
 }
+
+// ---------- autosave (round 14) ----------
+// One career, saved on this device after every change, so closing the tab loses nothing.
+
+const SAVE_KEY = 'btr-save-v1';
+
+export function savedCareer(): { name: string; year: number; ovr?: number; retired: boolean } | null {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return null;
+    const head = JSON.parse(raw) as { meta?: { name: string; year: number; ovr?: number; retired: boolean } };
+    return head.meta ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function writeSave(g: GameState | null): boolean {
+  try {
+    if (!g) {
+      localStorage.removeItem(SAVE_KEY);
+      return true;
+    }
+    const meta = { name: g.player.name, year: g.year, ovr: Math.round(g.player.peakOvr), retired: g.step === 'retired' };
+    localStorage.setItem(SAVE_KEY, JSON.stringify({ meta, game: g }));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+const allSeen = (g: GameState): Partial<Record<Tab, string>> => ({
+  season: tabKey(g, 'season'),
+  player: tabKey(g, 'player'),
+  league: tabKey(g, 'league'),
+  records: tabKey(g, 'records'),
+});
 
 const loadFlag = (key: string): boolean => {
   try {
@@ -107,7 +151,21 @@ export const useStore = create<Store>((set, get) => ({
     const s = seed ?? Math.floor(Math.random() * 2 ** 31);
     const game = newGame(s, input);
     fastForward(game);
-    set({ game, tab: 'home', transition: null, mini: null });
+    set({ game, tab: 'home', transition: null, mini: null, seen: allSeen(game) });
+  },
+  seen: {},
+  saving: 'ok',
+  resume: () => {
+    try {
+      const raw = localStorage.getItem(SAVE_KEY);
+      if (!raw) return false;
+      const game = (JSON.parse(raw) as { game: GameState }).game;
+      if (!game?.player || !game.step) return false;
+      set({ game, tab: 'home', transition: null, mini: null, seen: allSeen(game) });
+      return true;
+    } catch {
+      return false;
+    }
   },
   choose: (choiceId) => {
     const g = get().game;
@@ -256,7 +314,10 @@ export const useStore = create<Store>((set, get) => ({
     top();
   },
   setTab: (tab) => {
-    set({ tab });
+    const g = get().game;
+    // leaving a tab and opening one both count as having seen them
+    const seen = g ? { ...get().seen, [get().tab]: tabKey(g, get().tab), [tab]: tabKey(g, tab) } : get().seen;
+    set({ tab, seen });
     top();
   },
   setTheme: (theme) => {
@@ -269,6 +330,17 @@ export const useStore = create<Store>((set, get) => ({
     set({ theme });
   },
 }));
+
+// save a moment after each change (a whole career is a few hundred KB of JSON)
+let saveTimer: ReturnType<typeof setTimeout> | null = null;
+useStore.subscribe((now, before) => {
+  if (now.game === before.game) return;
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    const ok = writeSave(useStore.getState().game);
+    if ((ok ? 'ok' : 'off') !== useStore.getState().saving) useStore.setState({ saving: ok ? 'ok' : 'off' });
+  }, 500);
+});
 
 // development only: lets browser tests load a finished career (stripped from production builds)
 if (import.meta.env.DEV) (window as unknown as { __btr?: typeof useStore }).__btr = useStore;

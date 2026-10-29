@@ -10,7 +10,7 @@
 // - Trade requests: an NBA player under contract can ask out, once a summer.
 // These all go into the season's team bonus, added to the team's strength in his games.
 
-import { TEAM_FACTORS as T } from '../balance';
+import { TEAM_FACTORS as T, modeDial } from '../balance';
 import { chance, clamp, int, pick, range } from '../rng';
 import type { GameState, League, Team } from '../types';
 import { adjust, logDecision, pushMoment, teamById, userOvr } from './common';
@@ -37,15 +37,16 @@ function streakWith(s: GameState, teamId: string): number {
 export function startTeamFactors(s: GameState, team: Team): { bonus: number; notes: string[]; post: number; fx?: { perf: number; usage: number } } {
   const notes: string[] = [];
   let bonus = 0;
+  const d = modeDial(s.mode, 'teamFx');
   const streak = streakWith(s, team.id);
   if (streak >= 1) {
-    const c = Math.min(T.chemistryMax, streak * T.chemistryPer);
+    const c = Math.min(T.chemistryMax, streak * T.chemistryPer) * d;
     bonus += c;
     if (streak >= 2) notes.push(`Chemistry: your ${streak + 1}th season together (+${c.toFixed(1)})`);
   }
   const ovr = userOvr(s);
   if (s.stage === 'NBA' && ovr >= T.starFrom) {
-    const g = Math.min(T.starMax, (ovr - T.starFrom) * T.starPer);
+    const g = Math.min(T.starMax, (ovr - T.starFrom) * T.starPer) * d;
     bonus += g;
     notes.push(`Star gravity: good players want to play with you (+${g.toFixed(1)})`);
   }
