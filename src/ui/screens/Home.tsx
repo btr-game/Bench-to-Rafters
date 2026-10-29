@@ -1,28 +1,55 @@
-import type { AttrKey, GameState, SeasonRecord } from '../../engine/types';
-import { GuideSpotWrap } from '../components/Guide';
-import { canSetStyle, currentStyle, fitLabel, setStyle, styleEffect, styleFit, TEAM_STYLES, type TeamStyle } from '../../engine/career/identity';
-import { oddsWord, TRADE_AIM, tradeOptions, type TradeAim } from '../../engine/career/team';
-import { canChangeFocus, canChangePosition, canRequestTrade, canRetire, heightMismatch, positionOptions, prompt } from '../../engine/flow';
-import { useState } from 'react';
-import { ATTRS, LEVELS } from '../../engine/balance';
-import { NAMES, UI } from '../../content/strings';
-import { useStore } from '../../store';
-import { LabCard } from '../components/Lab';
-import { MvpRace } from '../components/MvpRace';
-import { MiniGamesCard } from '../mini/MiniGames';
-import { RecruitCard, StoriesCard } from '../components/Roster';
-import { canRecruit, recruitInfo } from '../../engine/career/recruit';
-import { STARTERS_RECRUIT } from '../../engine/balance';
-import { Banners, MilestoneStrip, ReactionCard, Scoreboard } from '../components/bits';
-import { PlayerCard } from '../components/PlayerCard';
-import { ScoutCard } from '../components/ScoutCard';
-import { DecisionView } from './Decision';
-import { fmtMoney, ht, ordinal, pg, seasonLabel, signed } from '../format';
-import { team } from '../selectors';
-import { breakthroughBar } from '../../engine/career/breakthrough';
-import { rosterRank, winningEdge } from '../../engine/career/team';
-import { ovrOf } from '../../engine/player/ovr';
-import { perGame } from '../../engine/sim/statModel';
+import type { AttrKey, GameState, SeasonRecord } from "../../engine/types";
+import { GuideSpotWrap } from "../components/Guide";
+import {
+  canSetStyle,
+  currentStyle,
+  fitLabel,
+  setStyle,
+  styleEffect,
+  styleFit,
+  TEAM_STYLES,
+  type TeamStyle,
+} from "../../engine/career/identity";
+import {
+  oddsWord,
+  TRADE_AIM,
+  tradeOptions,
+  type TradeAim,
+} from "../../engine/career/team";
+import {
+  canChangeFocus,
+  canChangePosition,
+  canRequestTrade,
+  canRetire,
+  heightMismatch,
+  positionOptions,
+  prompt,
+} from "../../engine/flow";
+import { useState } from "react";
+import { ATTRS, LEVELS } from "../../engine/balance";
+import { NAMES, UI } from "../../content/strings";
+import { useStore } from "../../store";
+import { LabCard } from "../components/Lab";
+import { MvpRace } from "../components/MvpRace";
+import { MiniGamesCard } from "../mini/MiniGames";
+import { RecruitCard, StoriesCard } from "../components/Roster";
+import { canRecruit, recruitInfo } from "../../engine/career/recruit";
+import { STARTERS_RECRUIT } from "../../engine/balance";
+import {
+  Banners,
+  MilestoneStrip,
+  ReactionCard,
+  Scoreboard,
+} from "../components/bits";
+import { PlayerCard } from "../components/PlayerCard";
+import { ScoutCard } from "../components/ScoutCard";
+import { DecisionView } from "./Decision";
+import { fmtMoney, ht, ordinal, pg, seasonLabel, signed } from "../format";
+import { team } from "../selectors";
+import { breakthroughBar } from "../../engine/career/breakthrough";
+import { rosterRank, winningEdge } from "../../engine/career/team";
+import { ovrOf } from "../../engine/player/ovr";
+import { perGame } from "../../engine/sim/statModel";
 
 export function SeasonSummary({ rec }: { rec: SeasonRecord }) {
   const delta = rec.ovrEnd - rec.ovrStart;
@@ -39,33 +66,47 @@ export function SeasonSummary({ rec }: { rec: SeasonRecord }) {
           </div>
           <b>{rec.result}</b>
           <div className="muted small">
-            {NAMES.role[rec.role]} · {l.gp > 0 ? `${l.gs} starts · ${(l.min / l.gp).toFixed(1)} MPG` : 'Did not play'}
+            {NAMES.role[rec.role]} ·{" "}
+            {l.gp > 0
+              ? `${l.gs} starts · ${(l.min / l.gp).toFixed(1)} MPG`
+              : "Did not play"}
           </div>
         </div>
       </div>
       <div className="ovr-move num">
-        OVR {Math.round(rec.ovrStart)} → {Math.round(rec.ovrEnd)}{' '}
-        <span className={delta >= 0 ? 'up' : 'down'}>
-          {delta >= 0 ? '▲' : '▼'} {signed(delta)}
+        OVR {Math.round(rec.ovrStart)} → {Math.round(rec.ovrEnd)}{" "}
+        <span className={delta >= 0 ? "up" : "down"}>
+          {delta >= 0 ? "▲" : "▼"} {signed(delta)}
         </span>
       </div>
       <div className="kicker">Regular season</div>
       <Scoreboard line={l} />
       {rec.post.gp > 0 && (
         <p className="num small">
-          Postseason · {rec.post.gp} games · {pg(rec.post, 'pts')} PTS · {pg(rec.post, 'reb')} REB · {pg(rec.post, 'ast')} AST
+          Postseason · {rec.post.gp} games · {pg(rec.post, "pts")} PTS ·{" "}
+          {pg(rec.post, "reb")} REB · {pg(rec.post, "ast")} AST
         </p>
       )}
-      {rec.awards.length > 0 && <Banners items={rec.awards.map((a) => ({ label: a, gold: /Champion|MVP|Player of the Year|champion/.test(a) }))} />}
+      {rec.awards.length > 0 && (
+        <Banners
+          items={rec.awards.map((a) => ({
+            label: a,
+            gold: /Champion|MVP|Player of the Year|champion/.test(a),
+          }))}
+        />
+      )}
       {rec.breakthrough && (
         <div className="unlock-banner">
           <span className="unlock-tag">Breakthrough</span>
-          <span>{rec.breakthrough} Focus change unlocked for this offseason.</span>
+          <span>
+            {rec.breakthrough} Focus change unlocked for this offseason.
+          </span>
         </div>
       )}
       {rec.newHighs && rec.newHighs.length > 0 && (
         <div className="small">
-          <b>New NBA career high{rec.newHighs.length > 1 ? 's' : ''}:</b> {rec.newHighs.join(', ')}
+          <b>New NBA career high{rec.newHighs.length > 1 ? "s" : ""}:</b>{" "}
+          {rec.newHighs.join(", ")}
         </div>
       )}
       {rec.races.some((r) => r.userRank !== null && r.userRank <= 10) && (
@@ -74,19 +115,27 @@ export function SeasonSummary({ rec }: { rec: SeasonRecord }) {
             .filter((r) => r.userRank !== null && r.userRank <= 10)
             .map((r) => (
               <li key={r.award}>
-                <b>{r.award}:</b> {r.userRank === 1 ? 'Won' : `${ordinal(r.userRank!)}`}
-                {r.userRank !== 1 && r.top[0] ? `. Winner: ${r.top[0].name}, ${r.top[0].team}` : ''}
+                <b>{r.award}:</b>{" "}
+                {r.userRank === 1 ? "Won" : `${ordinal(r.userRank!)}`}
+                {r.userRank !== 1 && r.top[0]
+                  ? `. Winner: ${r.top[0].name}, ${r.top[0].team}`
+                  : ""}
               </li>
             ))}
         </ul>
       )}
       {rec.bestGame?.line && (
         <p className="muted small">
-          Best game: {rec.bestGame.line.pts} PTS, {rec.bestGame.line.reb} REB, {rec.bestGame.line.ast} AST vs {rec.bestGame.opp} ({rec.bestGame.res}{' '}
+          Best game: {rec.bestGame.line.pts} PTS, {rec.bestGame.line.reb} REB,{" "}
+          {rec.bestGame.line.ast} AST vs {rec.bestGame.opp} ({rec.bestGame.res}{" "}
           {rec.bestGame.us}–{rec.bestGame.them})
         </p>
       )}
-      {rec.salary > 0 && <p className="muted small">Salary this season: {fmtMoney(rec.salary)}</p>}
+      {rec.salary > 0 && (
+        <p className="muted small">
+          Salary this season: {fmtMoney(rec.salary)}
+        </p>
+      )}
     </div>
   );
 }
@@ -95,28 +144,56 @@ function SeasonHeader({ g }: { g: GameState }) {
   const t = team(g);
   const s = g.season;
   const stepName =
-    g.step === 'preseason' ? 'Preseason' : g.step === 'midseason' ? 'Midseason' : g.step === 'postseason' ? 'Postseason' : g.step === 'summary' ? 'Season over' : g.step === 'offseason' ? 'Offseason' : '';
+    g.step === "preseason"
+      ? "Preseason"
+      : g.step === "midseason"
+        ? "Midseason"
+        : g.step === "postseason"
+          ? "Postseason"
+          : g.step === "summary"
+            ? "Season over"
+            : g.step === "offseason"
+              ? "Offseason"
+              : "";
   return (
     <div className="turn-head">
       <div style={{ minWidth: 0 }}>
         <div className="kicker">
           {seasonLabel(g.year)} · {stepName}
         </div>
-        <h2>{t ? t.name : 'Offseason'}</h2>
-        {g.step === 'offseason' ? (
-          <div className="muted small">{g.stage === 'NBA' || g.stage === 'GL' || g.stage === 'EU' || g.stage === 'INT' || g.stage === 'NCAA' ? LEVELS[g.stage].name : g.league?.label ? 'Youth basketball' : 'High school'}</div>
+        <h2>{t ? t.name : "Offseason"}</h2>
+        {g.step === "offseason" ? (
+          <div className="muted small">
+            {g.stage === "NBA" ||
+            g.stage === "GL" ||
+            g.stage === "EU" ||
+            g.stage === "INT" ||
+            g.stage === "NCAA"
+              ? LEVELS[g.stage].name
+              : g.league?.label
+                ? "Youth basketball"
+                : "High school"}
+          </div>
         ) : (
-          s && <div className="muted small">{g.league?.label ?? LEVELS[s.level].name}</div>
+          s && (
+            <div className="muted small">
+              {g.league?.label ?? LEVELS[s.level].name}
+            </div>
+          )
         )}
       </div>
       <div className="turn-side">
-        {t && s && g.step !== 'offseason' && (
+        {t && s && g.step !== "offseason" && (
           <div className="record">
             {t.w}–{t.l}
             <small>RECORD</small>
           </div>
         )}
-        {g.mode === 'lab' ? <span className="fast-toggle on lab-badge">Lab</span> : <FastToggle g={g} />}
+        {g.mode === "lab" ? (
+          <span className="fast-toggle on lab-badge">Lab</span>
+        ) : (
+          <FastToggle g={g} />
+        )}
         <SimpleToggle />
       </div>
     </div>
@@ -128,9 +205,14 @@ function SimpleToggle() {
   const on = useStore((s) => s.simple);
   const toggle = useStore((s) => s.toggleSimple);
   return (
-    <button className={`fast-toggle${on ? ' on' : ''}`} aria-pressed={on} onClick={toggle} title="Simple text: hide descriptions and flavour, keep the choices">
+    <button
+      className={`fast-toggle${on ? " on" : ""}`}
+      aria-pressed={on}
+      onClick={toggle}
+      title="Simple text: hide descriptions and flavour, keep the choices"
+    >
       <span className="fast-dot" aria-hidden="true" />
-      Simple text {on ? 'on' : 'off'}
+      Simple text {on ? "on" : "off"}
     </button>
   );
 }
@@ -140,9 +222,14 @@ function FastToggle({ g }: { g: GameState }) {
   const toggle = useStore((s) => s.toggleFast);
   const on = !!g.flags.fast;
   return (
-    <button className={`fast-toggle${on ? ' on' : ''}`} aria-pressed={on} onClick={toggle} title="Fast break: quick seasons, you still make every real call">
+    <button
+      className={`fast-toggle${on ? " on" : ""}`}
+      aria-pressed={on}
+      onClick={toggle}
+      title="Fast break: quick seasons, you still make every real call"
+    >
       <span className="fast-dot" aria-hidden="true" />
-      Fast break {on ? 'on' : 'off'}
+      Fast break {on ? "on" : "off"}
     </button>
   );
 }
@@ -161,34 +248,47 @@ function FastRecap({ g }: { g: GameState }) {
         <b>
           {r.w}–{r.l}
         </b>
-        , {r.result.toLowerCase()} · {r.line.gp > 0 ? `${perGame(r.line, 'pts').toFixed(1)} PTS, ${perGame(r.line, 'reb').toFixed(1)} REB, ${perGame(r.line, 'ast').toFixed(1)} AST` : 'did not play'} · OVR{' '}
-        {Math.round(r.ovrStart)} → {Math.round(r.ovrEnd)} <span className={d >= 0 ? 'up' : 'down'}>({signed(d)})</span>
+        , {r.result.toLowerCase()} ·{" "}
+        {r.line.gp > 0
+          ? `${perGame(r.line, "pts").toFixed(1)} PTS, ${perGame(r.line, "reb").toFixed(1)} REB, ${perGame(r.line, "ast").toFixed(1)} AST`
+          : "did not play"}{" "}
+        · OVR {Math.round(r.ovrStart)} → {Math.round(r.ovrEnd)}{" "}
+        <span className={d >= 0 ? "up" : "down"}>({signed(d)})</span>
       </div>
-      {r.awards.length > 0 && <div className="small">{r.awards.join(' · ')}</div>}
+      {r.awards.length > 0 && (
+        <div className="small">{r.awards.join(" · ")}</div>
+      )}
       {r.breakthrough && (
         <div className="small">
           <span className="unlock-tag">Breakthrough</span> {r.breakthrough}
         </div>
       )}
-      {r.newHighs && r.newHighs.length > 0 && <div className="small">New NBA career high: {r.newHighs.join(', ')}</div>}
+      {r.newHighs && r.newHighs.length > 0 && (
+        <div className="small">
+          New NBA career high: {r.newHighs.join(", ")}
+        </div>
+      )}
     </div>
   );
 }
 
 function PlanOutcomes({ g, half }: { g: GameState; half?: number }) {
-  const list = (g.season?.outcomes ?? []).filter((o) => half === undefined || o.half === half);
+  const list = (g.season?.outcomes ?? []).filter(
+    (o) => half === undefined || o.half === half,
+  );
   if (list.length === 0) return null;
   return (
     <div className="stack" style={{ gap: 6 }}>
       {list.map((o, i) => (
-        <div key={i} className={`outcome ${o.outcome.split(' ')[0].toLowerCase()}`}>
+        <div
+          key={i}
+          className={`outcome ${o.outcome.split(" ")[0].toLowerCase()}`}
+        >
           <div className="kicker">
-            {o.half === 1 ? 'First half' : 'Second half'} · {NAMES.plan[o.plan]}
-            {o.plan2 ? ` + ${NAMES.plan[o.plan2]}` : ''} · {o.outcome}
+            {o.half === 1 ? "First half" : "Second half"} · {NAMES.plan[o.plan]}
+            {o.plan2 ? ` + ${NAMES.plan[o.plan2]}` : ""} · {o.outcome}
           </div>
-          <div>
-            {o.text}
-          </div>
+          <div>{o.text}</div>
         </div>
       ))}
     </div>
@@ -198,15 +298,26 @@ function PlanOutcomes({ g, half }: { g: GameState; half?: number }) {
 /** How good his team is, and the team factors working for or against it this season. */
 function TeamOutlook({ g }: { g: GameState }) {
   const s = g.season;
-  const lg = g.stage === 'NBA' ? g.nba : g.league;
+  const lg = g.stage === "NBA" ? g.nba : g.league;
   if (!s || !lg || !g.teamId || lg.teams.length < 4) return null;
   const rank = rosterRank(lg, g.teamId);
   const n = lg.teams.length;
   const edge = winningEdge(g.player.attrs, ovrOf(g.player.attrs, g.player.pos));
-  const tag = rank <= Math.max(1, Math.round(n * 0.1)) ? 'title contender' : rank <= Math.round(n * 0.3) ? 'playoff team' : rank <= Math.round(n * 0.6) ? 'middle of the pack' : 'rebuilding';
+  const tag =
+    rank <= Math.max(1, Math.round(n * 0.1))
+      ? "title contender"
+      : rank <= Math.round(n * 0.3)
+        ? "playoff team"
+        : rank <= Math.round(n * 0.6)
+          ? "middle of the pack"
+          : "rebuilding";
   return (
     <div className="small">
-      Roster: <b>{ordinal(rank)} of {n}</b> ({tag})
+      Roster:{" "}
+      <b>
+        {ordinal(rank)} of {n}
+      </b>{" "}
+      ({tag})
       {(s.teamNotes ?? []).map((x) => (
         <div key={x} className="muted">
           {x}
@@ -214,7 +325,12 @@ function TeamOutlook({ g }: { g: GameState }) {
       ))}
       {edge.traits.length > 0 && (
         <div className="muted">
-          Winning player: {edge.traits.map((x) => (x === '3&D' ? x : x.toLowerCase())).join(', ')} (+{edge.regular.toFixed(1)} to the team, +{edge.playoff.toFixed(1)} in the playoffs, at full minutes)
+          Winning player:{" "}
+          {edge.traits
+            .map((x) => (x === "3&D" ? x : x.toLowerCase()))
+            .join(", ")}{" "}
+          (+{edge.regular.toFixed(1)} to the team, +{edge.playoff.toFixed(1)} in
+          the playoffs, at full minutes)
         </div>
       )}
     </div>
@@ -223,24 +339,26 @@ function TeamOutlook({ g }: { g: GameState }) {
 
 function Context({ g }: { g: GameState }) {
   const s = g.season;
-  if (g.step === 'preseason' && s) {
+  if (g.step === "preseason" && s) {
     return (
       <div className="recap">
         <div className="kicker">Season preview</div>
         <div>
-          Projected role: <b>{NAMES.role[s.role]}</b> (number {s.roleRank} on the depth chart).
+          Projected role: <b>{NAMES.role[s.role]}</b> (number {s.roleRank} on
+          the depth chart).
         </div>
         <TeamOutlook g={g} />
         {s.preReport && <div className="small">{s.preReport}</div>}
-        {g.contract && g.stage !== 'HS' && g.stage !== 'NCAA' && (
+        {g.contract && g.stage !== "HS" && g.stage !== "NCAA" && (
           <div className="muted small">
-            Contract: {fmtMoney(g.contract.salary)} a year, {g.contract.years} year{g.contract.years === 1 ? '' : 's'} left.
+            Contract: {fmtMoney(g.contract.salary)} a year, {g.contract.years}{" "}
+            year{g.contract.years === 1 ? "" : "s"} left.
           </div>
         )}
       </div>
     );
   }
-  if (g.step === 'midseason' && s) {
+  if (g.step === "midseason" && s) {
     const half = s.halfLines[0];
     return (
       <div className="stack">
@@ -249,9 +367,15 @@ function Context({ g }: { g: GameState }) {
           {s.midReport.map((line, i) => (
             <div key={i}>{line}</div>
           ))}
-          {s.preReport && <div className="muted small">Preseason: {s.preReport}</div>}
+          {s.preReport && (
+            <div className="muted small">Preseason: {s.preReport}</div>
+          )}
           {s.allStarRank !== undefined && (
-            <div className="small">{s.allStar ? 'All-Star selection' : `All-Star voting: ${s.allStarRank}th in the conference`}</div>
+            <div className="small">
+              {s.allStar
+                ? "All-Star selection"
+                : `All-Star voting: ${s.allStarRank}th in the conference`}
+            </div>
           )}
         </div>
         <PlanOutcomes g={g} half={1} />
@@ -259,18 +383,22 @@ function Context({ g }: { g: GameState }) {
       </div>
     );
   }
-  if (g.step === 'summary' && s?.summary)
+  if (g.step === "summary" && s?.summary)
     return (
       <div className="stack">
         <SeasonSummary rec={s.summary} />
         <PlanOutcomes g={g} />
       </div>
     );
-  if (g.step === 'offseason') {
+  if (g.step === "offseason") {
     return (
       <div className="recap">
         <div className="kicker">Offseason · age {g.player.age}</div>
-        {g.notes.length === 0 ? <div className="muted">A quiet summer.</div> : g.notes.map((n, i) => <div key={i}>{n}</div>)}
+        {g.notes.length === 0 ? (
+          <div className="muted">A quiet summer.</div>
+        ) : (
+          g.notes.map((n, i) => <div key={i}>{n}</div>)
+        )}
       </div>
     );
   }
@@ -283,14 +411,34 @@ function Context({ g }: { g: GameState }) {
  */
 function Todo({ g }: { g: GameState }) {
   const pr = prompt(g);
-  const now = pr.type === 'decision' ? pr.decision.title : pr.type === 'advance' ? pr.label : null;
+  const now =
+    pr.type === "decision"
+      ? pr.decision.title
+      : pr.type === "advance"
+        ? pr.label
+        : null;
   const items: { text: string; hot?: boolean }[] = [
     ...g.pending.slice(1).map((d) => ({ text: d.title })),
-    ...(canChangeFocus(g) ? [{ text: 'Pick new focus stats (Offseason moves)', hot: true }] : []),
-    ...(canRecruit(g) && (g.recruit?.moves ?? 0) < STARTERS_RECRUIT.moves ? [{ text: 'Build the starting five (Offseason moves)', hot: true }] : []),
-    ...(heightMismatch(g) && canChangePosition(g) ? [{ text: 'Size check: think about another position', hot: true }] : []),
-    ...(g.mode === 'lab' && (g.player.lab?.credits ?? 0) >= 1 ? [{ text: `Spend ${Math.floor(g.player.lab!.credits)} lab credits`, hot: true }] : []),
-    ...g.player.programs.map((p) => ({ text: `${p.name}: ${p.seasonsLeft} season${p.seasonsLeft === 1 ? '' : 's'} left` })),
+    ...(canChangeFocus(g)
+      ? [{ text: "Pick new focus stats (Offseason moves)", hot: true }]
+      : []),
+    ...(canRecruit(g) && (g.recruit?.moves ?? 0) < STARTERS_RECRUIT.moves
+      ? [{ text: "Build the starting five (Offseason moves)", hot: true }]
+      : []),
+    ...(heightMismatch(g) && canChangePosition(g)
+      ? [{ text: "Size check: think about another position", hot: true }]
+      : []),
+    ...(g.mode === "lab" && (g.player.lab?.credits ?? 0) >= 1
+      ? [
+          {
+            text: `Spend ${Math.floor(g.player.lab!.credits)} lab credits`,
+            hot: true,
+          },
+        ]
+      : []),
+    ...g.player.programs.map((p) => ({
+      text: `${p.name}: ${p.seasonsLeft} season${p.seasonsLeft === 1 ? "" : "s"} left`,
+    })),
   ];
   return (
     <section className="card stack todo">
@@ -306,7 +454,7 @@ function Todo({ g }: { g: GameState }) {
       ) : (
         <ul className="todo-list">
           {items.map((x, i) => (
-            <li key={i} className={x.hot ? 'hot' : ''}>
+            <li key={i} className={x.hot ? "hot" : ""}>
               {x.text}
             </li>
           ))}
@@ -320,7 +468,14 @@ function FocusCard({ g }: { g: GameState }) {
   const change = useStore((s) => s.changeFocus);
   const p = g.player;
   const [pick, setPick] = useState<AttrKey[]>(p.focus);
-  const toggle = (k: AttrKey) => setPick((f) => (f.includes(k) ? f.filter((x) => x !== k) : f.length >= 2 ? [f[1], k] : [...f, k]));
+  const toggle = (k: AttrKey) =>
+    setPick((f) =>
+      f.includes(k)
+        ? f.filter((x) => x !== k)
+        : f.length >= 2
+          ? [f[1], k]
+          : [...f, k],
+    );
   const same = pick.length === 2 && pick.every((k) => p.focus.includes(k));
   const b = g.breakthrough;
   return (
@@ -331,67 +486,141 @@ function FocusCard({ g }: { g: GameState }) {
       </div>
       {b && (
         <p className="small" style={{ margin: 0 }}>
-          {b.ovr >= breakthroughBar(p.age).ovr ? `Your OVR jumped ${b.ovr} this season.` : `Your ${NAMES.attr[b.key].toLowerCase()} jumped ${b.gain} this season.`} Focus stats grow about twice
-          as fast. This chance lasts until next season starts; the next one comes with your next breakthrough.
+          {b.ovr >= breakthroughBar(p.age).ovr
+            ? `Your OVR jumped ${b.ovr} this season.`
+            : `Your ${NAMES.attr[b.key].toLowerCase()} jumped ${b.gain} this season.`}{" "}
+          Focus stats grow about twice as fast. This chance lasts until next
+          season starts; the next one comes with your next breakthrough.
         </p>
       )}
       <div className="row">
-        <span className="small muted">Now: {p.focus.map((k) => NAMES.attr[k]).join(' + ')}</span>
+        <span className="small muted">
+          Now: {p.focus.map((k) => NAMES.attr[k]).join(" + ")}
+        </span>
       </div>
       <div className="focus-grid">
         {ATTRS.map((k) => (
-          <button key={k} className={`choice${pick.includes(k) ? ' selected' : ''}`} aria-pressed={pick.includes(k)} onClick={() => toggle(k)}>
+          <button
+            key={k}
+            className={`choice${pick.includes(k) ? " selected" : ""}`}
+            aria-pressed={pick.includes(k)}
+            onClick={() => toggle(k)}
+          >
             <span className="label">
-              {NAMES.attr[k]} <span className="muted">{Math.round(p.attrs[k])}</span>
+              {NAMES.attr[k]}{" "}
+              <span className="muted">{Math.round(p.attrs[k])}</span>
             </span>
           </button>
         ))}
       </div>
-      <button className="btn" disabled={pick.length !== 2 || same} onClick={() => change(pick)}>
-        {same ? 'Pick two new focus stats' : `Focus on ${pick.map((k) => NAMES.attr[k]).join(' and ')}`}
+      <button
+        className="btn"
+        disabled={pick.length !== 2 || same}
+        onClick={() => change(pick)}
+      >
+        {same
+          ? "Pick two new focus stats"
+          : `Focus on ${pick.map((k) => NAMES.attr[k]).join(" and ")}`}
       </button>
     </section>
   );
 }
 
 /** Everything he can change between seasons, in one place near the top of the screen. */
-type Move = 'position' | 'number' | 'retire' | 'trade' | 'roster' | 'style';
+type Move = "position" | "number" | "retire" | "trade" | "roster" | "style";
 
 function OffseasonMoves({ g }: { g: GameState }) {
   const focusOpen = canChangeFocus(g);
   // a size problem opens the position card straight away
-  const [open, setOpen] = useState<Move | 'focus' | null>(heightMismatch(g) && canChangePosition(g) ? 'position' : null);
+  const [open, setOpen] = useState<Move | "focus" | null>(
+    heightMismatch(g) && canChangePosition(g) ? "position" : null,
+  );
   const p = g.player;
   const bar = breakthroughBar(p.age);
   const focusDone = g.flags.focusYear === g.year;
   const rec = recruitInfo(g);
   const style = currentStyle(g);
-  const tiles: { id: 'focus' | Move; label: string; sub: string; state: 'hot' | 'ready' | 'locked'; show: boolean }[] = [
+  const tiles: {
+    id: "focus" | Move;
+    label: string;
+    sub: string;
+    state: "hot" | "ready" | "locked";
+    show: boolean;
+  }[] = [
     {
-      id: 'focus',
-      label: 'Focus stats',
-      sub: focusDone ? 'Changed this offseason' : focusOpen ? 'Unlocked by your breakthrough' : `Locked: needs a breakthrough season (OVR +${bar.ovr} or one rating +${bar.attr} at your age)`,
-      state: focusOpen ? 'hot' : 'locked',
-      show: g.mode !== 'lab',
-    },
-    { id: 'position', label: 'Position', sub: heightMismatch(g) ? 'Size check: another spot fits you' : `${NAMES.pos[p.pos]} · one move a summer`, state: canChangePosition(g) ? (heightMismatch(g) ? 'hot' : 'ready') : 'locked', show: true },
-    { id: 'number', label: 'Jersey number', sub: `Now #${p.number}`, state: 'ready', show: g.stage !== 'RETIRED' },
-    {
-      id: 'roster',
-      label: 'Starting five',
-      sub: canRecruit(g) ? `Scout and recruit: ${Math.max(0, STARTERS_RECRUIT.moves - rec.moves)} signing${STARTERS_RECRUIT.moves - rec.moves === 1 ? '' : 's'} left` : 'Locked: become your team’s first option',
-      state: canRecruit(g) ? (rec.moves === 0 && rec.asks === 0 ? 'hot' : 'ready') : 'locked',
-      show: g.stage === 'NBA' && !!g.contract && g.contract.years > 0,
+      id: "focus",
+      label: "Focus stats",
+      sub: focusDone
+        ? "Changed this offseason"
+        : focusOpen
+          ? "Unlocked by your breakthrough"
+          : `Locked: needs a breakthrough season (OVR +${bar.ovr} or one rating +${bar.attr} at your age)`,
+      state: focusOpen ? "hot" : "locked",
+      show: g.mode !== "lab",
     },
     {
-      id: 'style',
-      label: 'Team style',
-      sub: canSetStyle(g) ? (style ? `${TEAM_STYLES[style].name} · change it` : 'Set how your team plays') : g.flags.styleYear === g.year ? 'Set this summer' : 'Locked: start for your NBA team first',
-      state: canSetStyle(g) ? (style ? 'ready' : 'hot') : 'locked',
-      show: g.stage === 'NBA' && !!g.contract && g.contract.years > 0,
+      id: "position",
+      label: "Position",
+      sub: heightMismatch(g)
+        ? "Size check: another spot fits you"
+        : `${NAMES.pos[p.pos]} · one move a summer`,
+      state: canChangePosition(g)
+        ? heightMismatch(g)
+          ? "hot"
+          : "ready"
+        : "locked",
+      show: true,
     },
-    { id: 'trade', label: 'Request a trade', sub: g.flags.tradeAsk === g.year ? 'Asked this summer' : 'Ask out for a better team', state: canRequestTrade(g) ? 'ready' : 'locked', show: g.stage === 'NBA' && !!g.contract && g.contract.years > 0 },
-    { id: 'retire', label: 'Retire', sub: 'Hang it up on your terms', state: 'ready', show: canRetire(g) },
+    {
+      id: "number",
+      label: "Jersey number",
+      sub: `Now #${p.number}`,
+      state: "ready",
+      show: g.stage !== "RETIRED",
+    },
+    {
+      id: "roster",
+      label: "Starting five",
+      sub: canRecruit(g)
+        ? `Scout and recruit: ${Math.max(0, STARTERS_RECRUIT.moves - rec.moves)} signing${STARTERS_RECRUIT.moves - rec.moves === 1 ? "" : "s"} left`
+        : "Locked: become your team’s first option",
+      state: canRecruit(g)
+        ? rec.moves === 0 && rec.asks === 0
+          ? "hot"
+          : "ready"
+        : "locked",
+      show: g.stage === "NBA" && !!g.contract && g.contract.years > 0,
+    },
+    {
+      id: "style",
+      label: "Team style",
+      sub: canSetStyle(g)
+        ? style
+          ? `${TEAM_STYLES[style].name} · change it`
+          : "Set how your team plays"
+        : g.flags.styleYear === g.year
+          ? "Set this summer"
+          : "Locked: start for your NBA team first",
+      state: canSetStyle(g) ? (style ? "ready" : "hot") : "locked",
+      show: g.stage === "NBA" && !!g.contract && g.contract.years > 0,
+    },
+    {
+      id: "trade",
+      label: "Request a trade",
+      sub:
+        g.flags.tradeAsk === g.year
+          ? "Asked this summer"
+          : "Ask out for a better team",
+      state: canRequestTrade(g) ? "ready" : "locked",
+      show: g.stage === "NBA" && !!g.contract && g.contract.years > 0,
+    },
+    {
+      id: "retire",
+      label: "Retire",
+      sub: "Hang it up on your terms",
+      state: "ready",
+      show: canRetire(g),
+    },
   ];
   return (
     <section className="card stack moves">
@@ -406,25 +635,25 @@ function OffseasonMoves({ g }: { g: GameState }) {
           .map((x) => (
             <button
               key={x.id}
-              className={`move-tile ${x.state}${open === x.id ? ' on' : ''}`}
-              disabled={x.state === 'locked'}
+              className={`move-tile ${x.state}${open === x.id ? " on" : ""}`}
+              disabled={x.state === "locked"}
               aria-expanded={open === x.id}
               onClick={() => setOpen(open === x.id ? null : x.id)}
             >
-              {x.state === 'hot' && <span className="unlock-tag">New</span>}
-              {x.state === 'locked' && <span className="lock-tag">Locked</span>}
+              {x.state === "hot" && <span className="unlock-tag">New</span>}
+              {x.state === "locked" && <span className="lock-tag">Locked</span>}
               <b>{x.label}</b>
               <small>{x.sub}</small>
             </button>
           ))}
       </div>
-      {open === 'focus' && focusOpen && <FocusCard g={g} />}
-      {open === 'position' && canChangePosition(g) && <PositionCard g={g} />}
-      {open === 'number' && <NumberCard g={g} />}
-      {open === 'retire' && canRetire(g) && <RetireCard g={g} />}
-      {open === 'trade' && canRequestTrade(g) && <TradeCard g={g} />}
-      {open === 'roster' && <RecruitCard g={g} />}
-      {open === 'style' && canSetStyle(g) && <StyleCard g={g} />}
+      {open === "focus" && focusOpen && <FocusCard g={g} />}
+      {open === "position" && canChangePosition(g) && <PositionCard g={g} />}
+      {open === "number" && <NumberCard g={g} />}
+      {open === "retire" && canRetire(g) && <RetireCard g={g} />}
+      {open === "trade" && canRequestTrade(g) && <TradeCard g={g} />}
+      {open === "roster" && <RecruitCard g={g} />}
+      {open === "style" && canSetStyle(g) && <StyleCard g={g} />}
     </section>
   );
 }
@@ -433,7 +662,12 @@ function NumberCard({ g }: { g: GameState }) {
   const change = useStore((s) => s.changeNumber);
   const [n, setN] = useState(String(g.player.number));
   const v = Number(n);
-  const ok = n.trim() !== '' && Number.isInteger(v) && v >= 0 && v <= 99 && v !== g.player.number;
+  const ok =
+    n.trim() !== "" &&
+    Number.isInteger(v) &&
+    v >= 0 &&
+    v <= 99 &&
+    v !== g.player.number;
   return (
     <section className="card stack">
       <div className="row">
@@ -442,7 +676,15 @@ function NumberCard({ g }: { g: GameState }) {
         <span className="small muted">Now #{g.player.number}</span>
       </div>
       <div className="row" style={{ gap: 8 }}>
-        <input aria-label="New jersey number" type="number" min={0} max={99} value={n} onChange={(e) => setN(e.target.value)} style={{ maxWidth: 110 }} />
+        <input
+          aria-label="New jersey number"
+          type="number"
+          min={0}
+          max={99}
+          value={n}
+          onChange={(e) => setN(e.target.value)}
+          style={{ maxWidth: 110 }}
+        />
         <button className="btn ghost" disabled={!ok} onClick={() => change(v)}>
           Switch number
         </button>
@@ -458,32 +700,43 @@ function PositionCard({ g }: { g: GameState }) {
   const opts = positionOptions(g);
   const mm = heightMismatch(g);
   return (
-    <section className={`card stack${mm ? ' warn-card' : ''}`}>
+    <section className={`card stack${mm ? " warn-card" : ""}`}>
       <div className="row">
         <div className="sec-title">Position</div>
         <div className="spacer" />
         <span className="small muted">
           {NAMES.pos[p.pos]} · {ht(p.height)}
-          {p.height < p.heightProj ? ` (projected ${ht(p.heightProj)})` : ''}
+          {p.height < p.heightProj ? ` (projected ${ht(p.heightProj)})` : ""}
         </span>
       </div>
       {mm && (
         <p className="height-warn-text">
           <b>Size check:</b> {mm.text}
-          {mm.better.length > 0 ? ` ${mm.better.map((o) => NAMES.pos[o.pos]).join(' or ')} would fit.` : ''}
+          {mm.better.length > 0
+            ? ` ${mm.better.map((o) => NAMES.pos[o.pos]).join(" or ")} would fit.`
+            : ""}
         </p>
       )}
       {open || mm ? (
         <div className="stack" style={{ gap: 6 }}>
           {opts.map((o) => (
-            <button key={o.pos} className="choice" disabled={!o.allowed} onClick={() => change(o.pos)}>
+            <button
+              key={o.pos}
+              className="choice"
+              disabled={!o.allowed}
+              onClick={() => change(o.pos)}
+            >
               <span className="label">
-                {NAMES.pos[o.pos]} <span className="muted">· OVR {Math.round(o.ovr)}</span>
+                {NAMES.pos[o.pos]}{" "}
+                <span className="muted">· OVR {Math.round(o.ovr)}</span>
               </span>
               <small>{o.fit}</small>
             </button>
           ))}
-          <p className="small muted">One move per offseason. Your OVR is re-weighted for the new spot, and the coach needs time to trust you there.</p>
+          <p className="small muted">
+            One move per offseason. Your OVR is re-weighted for the new spot,
+            and the coach needs time to trust you there.
+          </p>
         </div>
       ) : (
         <button className="btn ghost" onClick={() => setOpen(true)}>
@@ -503,23 +756,48 @@ function TradeCard({ g }: { g: GameState }) {
   return (
     <section className="card stack">
       <div className="sec-title">Request a trade</div>
-      <p className="small muted">Your team ranks {ordinal(rank)}. Where do you want to go? If nobody bites, your coach will not forget it.</p>
+      <p className="small muted">
+        Your team ranks {ordinal(rank)}. Where do you want to go? If nobody
+        bites, your coach will not forget it.
+      </p>
       <div className="stack trade-aims">
         {opts.map((o) => (
-          <button key={o.aim} className={`choice${aim === o.aim ? ' selected' : ''}`} aria-pressed={aim === o.aim} onClick={() => setAim(o.aim)}>
+          <button
+            key={o.aim}
+            className={`choice${aim === o.aim ? " selected" : ""}`}
+            aria-pressed={aim === o.aim}
+            onClick={() => setAim(o.aim)}
+          >
             <span className="label">
               {TRADE_AIM[o.aim].label}
-              <span className={`scout-rec rec-${oddsWord(o.chance) === 'High' ? 'high' : oddsWord(o.chance) === 'Moderate' ? 'moderate' : 'low'}`}>{oddsWord(o.chance)} odds</span>
-              <span className={`risk risk-${TRADE_AIM[o.aim].risk.toLowerCase()}`}>{TRADE_AIM[o.aim].risk} risk</span>
+              <span
+                className={`scout-rec rec-${oddsWord(o.chance) === "High" ? "high" : oddsWord(o.chance) === "Moderate" ? "moderate" : "low"}`}
+              >
+                {oddsWord(o.chance)} odds
+              </span>
+              <span
+                className={`risk risk-${TRADE_AIM[o.aim].risk.toLowerCase()}`}
+              >
+                {TRADE_AIM[o.aim].risk} risk
+              </span>
             </span>
             <small>
-              {TRADE_AIM[o.aim].text} {o.teams.length <= 3 ? `(${o.teams.map((t) => t.short).join(', ')})` : ''}
+              {TRADE_AIM[o.aim].text}{" "}
+              {o.teams.length <= 3
+                ? `(${o.teams.map((t) => t.short).join(", ")})`
+                : ""}
             </small>
           </button>
         ))}
       </div>
-      <button className="btn" disabled={!pick} onClick={() => pick && ask(pick.aim)}>
-        {pick ? `Ask for a trade: ${TRADE_AIM[pick.aim].label.toLowerCase()}` : 'Pick where you want to go'}
+      <button
+        className="btn"
+        disabled={!pick}
+        onClick={() => pick && ask(pick.aim)}
+      >
+        {pick
+          ? `Ask for a trade: ${TRADE_AIM[pick.aim].label.toLowerCase()}`
+          : "Pick where you want to go"}
       </button>
     </section>
   );
@@ -533,21 +811,36 @@ function StyleCard({ g }: { g: GameState }) {
       <div className="row">
         <div className="sec-title">Team style</div>
         <div className="spacer" />
-        <span className="small muted">{now ? `Now: ${TEAM_STYLES[now].name}` : 'Not set'}</span>
+        <span className="small muted">
+          {now ? `Now: ${TEAM_STYLES[now].name}` : "Not set"}
+        </span>
       </div>
-      <p className="small muted">You start here, so you have a say in how the team plays. The style moves the team's strength and how well you fit in it. One change a summer.</p>
+      <p className="small muted">
+        You start here, so you have a say in how the team plays. The style moves
+        the team's strength and how well you fit in it. One change a summer.
+      </p>
       <div className="stack style-list">
         {(Object.keys(TEAM_STYLES) as TeamStyle[])
           .map((k) => ({ k, f: styleFit(g, k), e: styleEffect(g, k) }))
-          .sort((a, b) => b.e.regular + b.e.playoff - (a.e.regular + a.e.playoff))
+          .sort(
+            (a, b) => b.e.regular + b.e.playoff - (a.e.regular + a.e.playoff),
+          )
           .map(({ k, f, e }) => (
-            <button key={k} className={`choice${now === k ? ' selected' : ''}`} onClick={() => mutate((x) => setStyle(x, k))}>
+            <button
+              key={k}
+              className={`choice${now === k ? " selected" : ""}`}
+              onClick={() => mutate((x) => setStyle(x, k))}
+            >
               <span className="label">
                 {TEAM_STYLES[k].name}
-                <span className={`scout-rec rec-${fitLabel(f) === 'Poor fit' ? 'low' : fitLabel(f) === 'Okay' ? 'moderate' : 'high'}`}>{fitLabel(f)}</span>
+                <span
+                  className={`scout-rec rec-${fitLabel(f) === "Poor fit" ? "low" : fitLabel(f) === "Okay" ? "moderate" : "high"}`}
+                >
+                  {fitLabel(f)}
+                </span>
                 <span className="style-fx">
-                  {e.regular >= 0 ? '+' : ''}
-                  {e.regular} / playoffs {e.playoff >= 0 ? '+' : ''}
+                  {e.regular >= 0 ? "+" : ""}
+                  {e.regular} / playoffs {e.playoff >= 0 ? "+" : ""}
                   {e.playoff}
                 </span>
               </span>
@@ -568,8 +861,12 @@ function RetireCard({ g }: { g: GameState }) {
     <section className="card stack">
       <div className="sec-title">Your call</div>
       <p className="small muted">
-        You can hang it up between any two seasons. At {g.player.age}, with {g.history.filter((h) => h.level === 'NBA').length} NBA season
-        {g.history.filter((h) => h.level === 'NBA').length === 1 ? '' : 's'} behind you.
+        You can hang it up between any two seasons. At {g.player.age}, with{" "}
+        {g.history.filter((h) => h.level === "NBA").length} NBA season
+        {g.history.filter((h) => h.level === "NBA").length === 1
+          ? ""
+          : "s"}{" "}
+        behind you.
       </p>
       {armed ? (
         <div className="row" style={{ gap: 8 }}>
@@ -601,23 +898,29 @@ export function Home({ g }: { g: GameState }) {
         </div>
         <PlayerCard g={g} />
         <ScoutCard g={g} compact />
-        <MvpRace g={g} />
       </div>
-      <div className="stack">
+      <div className="stack home-center">
         <section className="card stack o-main">
           <SeasonHeader g={g} />
           {g.result ? (
-            <div className={`result-card${g.result.tierKey ? ` tier-${g.result.tierKey}` : ''}`}>
+            <div
+              className={`result-card${g.result.tierKey ? ` tier-${g.result.tierKey}` : ""}`}
+            >
               <div className="kicker">
                 {g.result.title} · {g.result.choice}
               </div>
-              {g.result.tier && <span className="result-tier">{g.result.tier}</span>}
+              {g.result.tier && (
+                <span className="result-tier">{g.result.tier}</span>
+              )}
               <p className="result-text prose">{g.result.text}</p>
               {g.result.changes.length > 0 && (
                 <div className="result-chips">
                   {g.result.changes.map((c, i) => (
-                    <span key={i} className={`result-chip ${c.good ? 'up' : 'down'}`}>
-                      {c.good ? '▲' : '▼'} {c.label} <b>{c.value}</b>
+                    <span
+                      key={i}
+                      className={`result-chip ${c.good ? "up" : "down"}`}
+                    >
+                      {c.good ? "▲" : "▼"} {c.label} <b>{c.value}</b>
                     </span>
                   ))}
                 </div>
@@ -628,50 +931,59 @@ export function Home({ g }: { g: GameState }) {
           )}
           {g.flags.fast ? <FastRecap g={g} /> : null}
           <GuideSpotWrap g={g} spot="main">
-          <div className="stack fade-in" key={pr.type === 'decision' ? pr.decision.id : `${g.year}-${g.step}`}>
-            {!g.flags.fast && (
-              <div className="prose">
-                <Context g={g} />
-              </div>
-            )}
-            {pr.type === 'decision' && <DecisionView g={g} d={pr.decision} />}
-            {pr.type === 'advance' && (
-              <button className="btn block" onClick={advance}>
-                {pr.label}
-              </button>
-            )}
-          </div>
+            <div
+              className="stack fade-in"
+              key={
+                pr.type === "decision" ? pr.decision.id : `${g.year}-${g.step}`
+              }
+            >
+              {!g.flags.fast && (
+                <div className="prose">
+                  <Context g={g} />
+                </div>
+              )}
+              {pr.type === "decision" && <DecisionView g={g} d={pr.decision} />}
+              {pr.type === "advance" && (
+                <button className="btn block" onClick={advance}>
+                  {pr.label}
+                </button>
+              )}
+            </div>
           </GuideSpotWrap>
         </section>
         {/* between seasons, the moves come first: right under the main card */}
-        {g.step === 'offseason' && g.stage !== 'RETIRED' && (
+        {g.step === "offseason" && g.stage !== "RETIRED" && (
           <div className="o-moves">
             <GuideSpotWrap g={g} spot="moves">
               <OffseasonMoves g={g} />
             </GuideSpotWrap>
           </div>
         )}
-        {g.mode === 'lab' && <LabCard g={g} />}
-        <StoriesCard g={g} />
+        {g.mode === "lab" && <LabCard g={g} />}
+        {g.step === "summary" && canRetire(g) && <RetireCard g={g} />}
         <section className="card stack">
           <div className="sec-title">Milestones</div>
           <MilestoneStrip reached={g.milestones} />
         </section>
         <MiniGamesCard />
-        {g.step === 'summary' && canRetire(g) && <RetireCard g={g} />}
         {g.feed[0] && (
           <section className="card prose">
             <ReactionCard r={g.feed[0]} />
           </section>
         )}
-        {last && g.step !== 'summary' && (
+        {last && g.step !== "summary" && (
           <section className="card stack prose">
             <div className="kicker">Last season</div>
             <div className="small">
-              {seasonLabel(last.year)} · {last.teamName}: {last.w}–{last.l}, {last.result}. {perGame(last.line, 'pts').toFixed(1)} PPG.
+              {seasonLabel(last.year)} · {last.teamName}: {last.w}–{last.l},{" "}
+              {last.result}. {perGame(last.line, "pts").toFixed(1)} PPG.
             </div>
           </section>
         )}
+      </div>
+      <div className="stack home-side">
+        <MvpRace g={g} />
+        <StoriesCard g={g} />
       </div>
     </div>
   );

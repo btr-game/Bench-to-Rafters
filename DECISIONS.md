@@ -803,3 +803,47 @@ Reached from the start page and from the bottom of Home (a career in progress is
   amount as credits.
 - **Round 12d:** Front Office is three seasons (was four). Missing the playoffs in seasons 2 and 3
   means fired (an F). Grades: two titles A+, one title A, B from 4 points, C from 2.
+
+## Round 13
+
+- **Cleanup first:** removed the old lab-career entry on the create page (nothing opened it
+  since the lab became a mini-game; the engine mode stays for old saves), six unused helpers and
+  twelve unused CSS rules (about 90 lines). The store got one generic `mutate` action so new
+  features do not each need a copy-pasted store action.
+- **Offseason moves bug:** in fast break the game ran straight through the offseason unless a
+  focus change, a recruit board, a size problem or age 30+ made it stop, so position, number,
+  trade and retire were out of reach in most summers. It now stops once in every offseason after
+  high school. Locked tiles are striped, greyed and tagged "Locked", with the reason; every card
+  opens from its tile (only a size warning opens by itself).
+- **Plans:** Speed and agility (athleticism 2.3x, perimeter D 1.5x, finishing 1.2x, injury 1.1x)
+  and Learn from a vet (basketball IQ 2.2x, perimeter D 1.2x, shooting 1.1x, injury 0.9x, trust
+  and morale +2) make twelve. A single plan moves every effect 10% further from neutral and grows
+  3% faster (focused work); two plans blend as before (main 80%, side 45%).
+- **Team style** (NBA, once he started for the team last season; one change a summer, reset on a
+  team change): Run and gun (+1.0 regular season, -0.3 playoffs), Defense first (+0.3 / +1.1),
+  Ball movement (+0.6 / +0.5), Inside out (+0.6 / +0.4), Run it through you (by his OVR: +0.15
+  per point above 82, up to ±1.8, usage x1.12). Fit = the style's ratings against his OVR,
+  -1 to +1: it adds up to ±0.5 team strength, ±5% to his shooting and ±6% to his usage.
+- **Around the league, more impact:** 40% of seasons his own team is a story: Defense travels
+  (+0.3 / playoffs +1.2), A chip on the shoulder (after being knocked out; +0.8 / +0.6, morale
+  +4), Seven seconds or less (+1.2 / -0.3), Brotherhood (2+ seasons together; +0.9 / +0.6),
+  Showtime (NBA, OVR 85+; +0.6 / +0.2, reputation +3 with a playoff berth). Call it: before the
+  second half, up to three yes-or-no calls on how stories end; right calls are worth reputation +2.
+  Knocking the rival out of the playoffs: reputation +3, morale +5.
+- **Trade requests with a choice:** any better team (the old odds), a contender (top five, x0.85),
+  the champions (x0.6), the rival (x0.55; on failure trust -16 and morale -7; on success
+  reputation +4) or a team that needs you (weaker roster, would make him its first option,
+  x1.35, trust 60). Each shows its odds (High from 45%, Moderate from 25%) and risk.
+- **Guide mode:** a switch in the guide. The next thing to do (the decision or button, or the
+  offseason moves when something there is waiting) gets a glowing outline and a short note.
+- **Front Office draft advice:** the scouts' top three among available prospects, from what the
+  reports show: 35% current level, 65% ceiling, +2 if the roster lacks a 76+ player at his
+  position, gym rat +1.5, coasting -2, a red flag -4, unscouted -1, with the reasons listed.
+- **Content:** ten events (the team style questioned, the media chasing your team's story, the
+  tape of the game that ended your season, rest nights, mentoring a rookie, the last shot, and
+  two storylines over two summers: a documentary crew, a youth camp back home) and fourteen shop
+  items (film tablet, ball machine, cryotherapy, a private chef, a home gym, a podcast...).
+- **Less scrolling on phones:** the two columns become one list in this order: to do, the main
+  card, offseason moves, then the player card and the rest. On an offseason screen the main
+  card moved from about 1,700 px down to 467 px, and the page from 8,024 px to 4,843 px. The
+  recruit board and the storylines show the first three or four with a "show all".

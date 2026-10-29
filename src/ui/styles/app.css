@@ -892,3 +892,18 @@ button.scout-row { text-align: left; background: var(--surface); color: inherit;
   .home-grid .o-moves { order: 3; }
 }
 .story-call .btn { flex: none; width: auto; }
+
+/* Round 13: the computer browser. Three columns on wide screens (left: to do and the player;
+   centre: the season and the offseason moves; right: the league), so a season fits on one
+   screen with little scrolling. Between 900 and 1279 px the league column sits under the centre. */
+@media (min-width: 900px) {
+  .home-grid { grid-template-areas: 'left center' 'left side'; }
+  .home-grid > .stack:first-child { grid-area: left; grid-row: span 2; }
+  .home-grid > .home-center { grid-area: center; }
+  .home-grid > .home-side { grid-area: side; }
+}
+@media (min-width: 1280px) {
+  .wrap { max-width: 1500px; }
+  .home-grid { grid-template-columns: 330px minmax(0, 1fr) 380px; grid-template-areas: 'left center side'; }
+  .home-grid > .stack:first-child { grid-row: auto; }
+}
