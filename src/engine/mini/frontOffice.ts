@@ -386,14 +386,6 @@ export function tradeBoard(fo: FoState, max = 3): { tops: Record<number, TradeId
   return { tops, best };
 }
 
-/** The best deals for you (see tradeBoard). */
-export const bestTrades = (fo: FoState, max = 3): TradeIdea[] => tradeBoard(fo, max).best;
-
-/** The top suggested offer for a player, or null when nothing on the roster gets it done. */
-export function suggestOffer(fo: FoState, targetId: number): number[] | null {
-  return tradeIdeas(fo, targetId, 1)[0]?.ids ?? null;
-}
-
 export function proposeTrade(fo: FoState, targetId: number, offer: number[]): boolean {
   const m = fo.market;
   if (!m || fo.phase !== 'market' || m.trades >= FO.trades) return false;

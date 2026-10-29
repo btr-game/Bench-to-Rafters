@@ -794,4 +794,3 @@ export const ARC_EVENTS: EventDef[] = [
   },
 ];
 
-export const ARC_IDS = ARCS.map((a) => a.id);

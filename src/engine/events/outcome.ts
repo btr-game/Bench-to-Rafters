@@ -82,11 +82,6 @@ export function vary(s: GameState, before: Snap, good?: number, bad?: number): n
   return f;
 }
 
-/** True when the choice changed anything at all. */
-export function changedAny(s: GameState, before: Snap): boolean {
-  return changes(s, before).length > 0;
-}
-
 /** What changed, for the result card: green for good news, red for bad. */
 export function changes(s: GameState, before: Snap): EventResult['changes'] {
   const p = s.player;
@@ -120,8 +115,3 @@ export function changes(s: GameState, before: Snap): EventResult['changes'] {
   return out;
 }
 
-export function sizeNote(f: number): string {
-  if (f >= 1.35) return 'It hit harder than expected.';
-  if (f <= 0.7) return 'It turned out smaller than expected.';
-  return '';
-}

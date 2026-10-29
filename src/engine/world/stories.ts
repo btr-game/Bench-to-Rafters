@@ -216,8 +216,3 @@ export function finishStories(s: GameState, lg: League): void {
   }
 }
 
-/** A playoff meeting with a storyline team gets billed. */
-export function storyFor(s: GameState, teamId: string): LeagueStory | undefined {
-  return s.stories?.find((x) => x.teamId === teamId);
-}
-

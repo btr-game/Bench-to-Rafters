@@ -97,10 +97,6 @@ ul { margin: 0; }
 .record { font-family: var(--f-display); font-weight: 800; font-size: 30px; line-height: 1; font-variant-numeric: tabular-nums; text-align: right; }
 .record small { font-family: var(--f-mono); font-size: 13.5px; letter-spacing: 0.1em; color: var(--muted); display: block; font-weight: 400; }
 .recap { display: grid; gap: 4px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2); font-size: 16.5px; }
-.callout { padding: 12px 14px; border-radius: 8px; border: 1px solid var(--line); font-size: 16.5px; display: grid; gap: 2px; }
-.callout.accent { border-color: var(--accent); background: var(--accent-soft); }
-.callout.good { border-color: var(--good); }
-.callout.bad { border-color: var(--bad); }
 
 /* choices */
 .choices { display: grid; gap: 8px; }
@@ -374,7 +370,6 @@ table.quarters td, table.quarters th { text-align: center; }
 .banner.drop { animation: dropIn 0.55s ease both; }
 
 .anomaly-tag { color: #B8860B; font-weight: 800; }
-.country-notes { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 2px; }
 
 /* legacy tier list and ladder (round 7) */
 .tiers { display: grid; gap: 8px; }
@@ -529,7 +524,6 @@ button.banner { border: 0; font: inherit; text-align: left; }
 .fast-recap { display: grid; gap: 4px; padding: 10px 12px; border-radius: 10px; background: var(--surface-2); border-left: 5px solid var(--accent); }
 .fast-recap .up { color: var(--good); }
 .fast-recap .down { color: var(--bad); }
-.fast-card.selected { border-color: var(--accent); }
 .fit-tag { justify-self: start; display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 13.5px; font-weight: 700; color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent); background: var(--accent-soft); }
 .plan-tag { display: inline-block; margin-right: 6px; padding: 1px 7px; border-radius: 5px; font-family: var(--f-mono); font-size: 11.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; vertical-align: middle; color: #fff; }
 .plan-tag.main { background: var(--accent); }
@@ -545,10 +539,6 @@ button.banner { border: 0; font: inherit; text-align: left; }
 .lab-row .btn.small { padding: 6px 10px; min-width: 44px; }
 .lab-ovr { font-family: var(--f-mono); font-size: 16px; }
 .lab-badge { cursor: default; }
-.height-pick { display: grid; gap: 6px; }
-.height-pick input[type='range'] { width: 100%; }
-.height-pick .ht-val { font-family: var(--f-display); font-size: 30px; font-weight: 800; }
-.height-pick .warn { color: var(--bad); }
 
 /* the last minutes of a final */
 .drama-feed { display: grid; gap: 8px; min-height: 220px; align-content: start; }
@@ -617,7 +607,6 @@ button.banner { border: 0; font: inherit; text-align: left; }
 .rec-why { font-style: italic; color: var(--muted); }
 
 /* mini-games */
-.legend-team { gap: 8px; padding: 10px 12px; }
 .legend-head { display: grid; gap: 2px; text-align: left; background: none; border: 0; padding: 0; width: 100%; color: inherit; }
 .tier-chip { justify-self: start; font-family: var(--f-mono); font-size: 11.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 1px 7px; border-radius: 5px; color: #fff; background: var(--muted); }
 .tier-chip.t-favorite { background: var(--gold); color: #1a1205; }
@@ -627,7 +616,6 @@ button.banner { border: 0; font: inherit; text-align: left; }
 .report { display: grid; gap: 2px; padding: 6px 8px; border-radius: 6px; background: var(--surface-2); }
 button.scout-row { text-align: left; background: var(--surface); color: inherit; width: 100%; }
 .scout-row.target.on { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
-.offer-box { padding: 10px; border: 1px dashed var(--accent); border-radius: 8px; }
 .offer-picks { display: flex; flex-wrap: wrap; gap: 6px; }
 .pick-chip { padding: 5px 9px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface-2); font-size: 14.5px; min-height: 36px; }
 .pick-chip.on { background: var(--ink); color: var(--bg); border-color: var(--ink); }

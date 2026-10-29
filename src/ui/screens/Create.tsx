@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ARCHETYPES } from '../../engine/player/archetypes';
 import { rerollAttrs } from '../../engine/player/create';
 import { makeRng } from '../../engine/rng';
-import { ATTRS, DIFFICULTIES, HEIGHT_LIMITS, HEIGHT_RANGE, MODES, POSITIONS, type Mode } from '../../engine/balance';
+import { ATTRS, DIFFICULTIES, HEIGHT_RANGE, MODES, POSITIONS, type Mode } from '../../engine/balance';
 import type { AttrKey, Attrs, Pos } from '../../engine/types';
 import { NAMES, UI } from '../../content/strings';
 import { FIRST_NAMES, LAST_NAMES } from '../../content/names';
@@ -20,18 +20,15 @@ const uiRng = makeRng(Math.floor(Math.random() * 2 ** 31));
 const ROAD: Record<string, string> = { us: 'High school, AAU, college', canada: 'Prep school, then the NCAA', euro: 'Club academy, pro at 16-18', academy: 'Academies and clubs', asia: 'School teams, then college or pro', aus: 'Centre of Excellence' };
 const FEATURED = ['USA', 'Canada', 'France', 'Spain', 'Serbia', 'Australia', 'Japan', 'South Korea', 'China', 'Nigeria', 'Brazil', 'Philippines'];
 
-const midHeight = (pos: Pos): number => Math.round((HEIGHT_RANGE[pos][0] + HEIGHT_RANGE[pos][1]) / 2);
 
 function cards(pos: Pos): Attrs[] {
   return ARCHETYPES[pos].map((a) => ({ ...a.attrs }));
 }
 
-/** The new-career page. `lab` opens it as the Built in a lab mini-game (round 11). */
-export function Create({ lab: labGame = false }: { lab?: boolean } = {}) {
+/** The new-career page. */
+export function Create() {
   const start = useStore((s) => s.start);
-  const setMini = useStore((s) => s.setMini);
-  const hasCareer = useStore((s) => !!s.game);
-  const [step, setStep] = useState(labGame ? 1 : 0);
+  const [step, setStep] = useState(0);
   const [name, setName] = useState(`${pick(FIRST_NAMES)} ${pick(LAST_NAMES)}`);
   const [number, setNumber] = useState(String(Math.floor(Math.random() * 35)));
   const [pos, setPos] = useState<Pos>('SG');
@@ -39,14 +36,11 @@ export function Create({ lab: labGame = false }: { lab?: boolean } = {}) {
   const [cands, setCands] = useState<Attrs[]>(() => cards('SG'));
   const [focus, setFocus] = useState<AttrKey[]>([]);
   const [hand, setHand] = useState<'R' | 'L'>('R');
-  const [mode, setMode] = useState<Mode>(labGame ? 'lab' : 'standard');
+  const [mode, setMode] = useState<Mode>('standard');
   const [country, setCountry] = useState(''); // '' = the game decides, by real-world odds
-  const [height, setHeight] = useState(midHeight('SG')); // built in a lab: the player picks it
-  const lab = mode === 'lab';
 
   const choosePos = (p: Pos) => {
     setPos(p);
-    setHeight(midHeight(p));
     setCands(cards(p));
     setArch(0);
     setFocus([]);
@@ -69,9 +63,8 @@ export function Create({ lab: labGame = false }: { lab?: boolean } = {}) {
   const attrs = cands[arch];
   const archetype = ARCHETYPES[pos][arch];
   const [hMin, hMax] = HEIGHT_RANGE[pos];
-  const canNext = step === 1 ? name.trim().length > 0 : step === 3 ? lab || focus.length === 2 : true;
-  const steps = UI.create.steps.map((x, i) => (i === 3 && lab ? 'Height' : i === 0 && labGame ? 'Lab' : x));
-  const [armed, setArmed] = useState(false);
+  const canNext = step === 1 ? name.trim().length > 0 : step === 3 ? focus.length === 2 : true;
+  const steps = UI.create.steps;
 
   const begin = () =>
     start({
@@ -80,10 +73,9 @@ export function Create({ lab: labGame = false }: { lab?: boolean } = {}) {
       pos,
       archetype: arch,
       attrs,
-      focus: lab ? [] : focus,
+      focus,
       hand,
       mode,
-      height: lab ? height : undefined,
       country: country || undefined,
     });
 
@@ -98,17 +90,11 @@ export function Create({ lab: labGame = false }: { lab?: boolean } = {}) {
         </button>
       </header>
       <section className="hero">
-        <div className="kicker">{labGame ? 'Mini-game · Built in a lab' : 'A basketball career game'}</div>
+        <div className="kicker">A basketball career game</div>
         <h1>
           Bench<span>to Rafters</span>
         </h1>
-        {labGame && (
-          <p className="lede">
-            Build a player your way: training and events pay out credits, and you spend them on any rating. Pick your own height. It plays at fast-break pace.
-            {hasCareer ? ' Starting a lab player ends the career you have in progress.' : ''}
-          </p>
-        )}
-        <p className="lede" hidden={labGame}>
+        <p className="lede">
           Start at 14, in an American high school or a club academy somewhere in the world. Find your road to the NBA through college, Europe or
           the G League, get drafted, and find out whether your jersey ends up hanging in the rafters.
         </p>
@@ -262,29 +248,7 @@ export function Create({ lab: labGame = false }: { lab?: boolean } = {}) {
         </section>
       )}
 
-      {step === 3 && lab && (
-        <section className="card stack height-pick">
-          <div className="sec-title">Height</div>
-          <p className="muted small">In the lab you choose how tall you grow. Taller helps rebounding and rim protection; shorter helps handling and quickness. Below 6′0″ or above 7′3″ is rare territory and costs more than it gives.</p>
-          <div className="ht-val">{ht(height)}</div>
-          <input type="range" min={HEIGHT_LIMITS.min} max={HEIGHT_LIMITS.max} step={1} value={height} onChange={(e) => setHeight(Number(e.target.value))} aria-label="Full-grown height" />
-          <div className="row small muted">
-            <span>{ht(HEIGHT_LIMITS.min)}</span>
-            <div className="spacer" />
-            <span>
-              Usual for a {NAMES.pos[pos].toLowerCase()}: {ht(hMin)}–{ht(hMax)}
-            </span>
-            <div className="spacer" />
-            <span>{ht(HEIGHT_LIMITS.max)}</span>
-          </div>
-          {(height < HEIGHT_LIMITS.bandLo || height > HEIGHT_LIMITS.bandHi) && (
-            <p className="small warn">{height < HEIGHT_LIMITS.bandLo ? 'Very small: finishing, rim protection and rebounding take a hit.' : 'Very tall: slower on the perimeter, harder on the body.'}</p>
-          )}
-          <p className="muted small">No focus stats in the lab: you spend credits on any rating you want.</p>
-        </section>
-      )}
-
-      {step === 3 && !lab && (
+      {step === 3 && (
         <section className="card stack">
           <div className="sec-title">Focus stats</div>
           <p className="muted small">{UI.create.focusHelp}</p>
@@ -319,32 +283,21 @@ export function Create({ lab: labGame = false }: { lab?: boolean } = {}) {
               <div className="cell" key={k}>
                 <div className="k">
                   {k}
-                  {!lab && focus.includes(k) ? ' ●' : ''}
+                  {focus.includes(k) ? ' ●' : ''}
                 </div>
                 <div className="v">{attrs[k]}</div>
               </div>
             ))}
           </div>
-          {lab ? (
-            <p className="muted small">
-              Built to grow to {ht(height)}. Training and events pay out credits; spend them on any rating from the home screen. This card is a typical {archetype.name.toLowerCase()}; your real starting level is set at tryouts.
-            </p>
-          ) : (
           <p className="muted small">
             Focus: {focus.map((k) => NAMES.attr[k]).join(' and ')}. Height: still growing, most end up {ht(hMin + (archetype.height ?? 0))}–{ht(hMax + (archetype.height ?? 0))}, some well outside it. This card is a typical {archetype.name.toLowerCase()}; your real starting level is set at tryouts. {UI.create.assignedText}
           </p>
-          )}
         </section>
       )}
 
       <div style={{ height: 14 }} />
       <div className="row-end">
-        {labGame && step === 1 && (
-          <button className="btn ghost" onClick={() => setMini('hub')}>
-            {UI.create.back}
-          </button>
-        )}
-        {step > (labGame ? 1 : 0) && (
+        {step > 0 && (
           <button className="btn ghost" onClick={() => setStep(step - 1)}>
             {UI.create.back}
           </button>
@@ -354,8 +307,8 @@ export function Create({ lab: labGame = false }: { lab?: boolean } = {}) {
             {UI.create.next}
           </button>
         ) : (
-          <button className="btn" onClick={() => (labGame && hasCareer && !armed ? setArmed(true) : begin())}>
-            {labGame && hasCareer && armed ? 'Tap again: end my career' : UI.create.start}
+          <button className="btn" onClick={begin}>
+            {UI.create.start}
           </button>
         )}
       </div>
