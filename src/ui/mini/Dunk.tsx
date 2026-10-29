@@ -6,7 +6,7 @@ import { shuffle } from '../../engine/rng';
 import { useStore } from '../../store';
 import { MiniBonus } from './MiniBonus';
 import { DunkStage } from './DunkStage';
-import { kitFor } from '../art/Player';
+import { kitFor, styleLeague } from '../art/Player';
 import { team as teamOf } from '../selectors';
 
 /** One part of a dunk to pick: its name and difficulty dots; a check mark when chosen. */
@@ -185,7 +185,7 @@ export function DunkGame() {
   const game = useStore((s) => s.game);
   // the stage: the dunker in his team's road kit, and how far through the taps he is
   const myTeam = game ? teamOf(game) : null;
-  const kit = kitFor(myTeam?.name ?? '', myTeam?.abbr ?? '', myTeam?.color ?? '#1D428A', 'road');
+  const kit = kitFor(myTeam?.name ?? '', myTeam?.abbr ?? '', myTeam?.color ?? '#1D428A', 'road', styleLeague(game?.stage));
   const [tapsDone, setTapsDone] = useState(0);
   const me: Dunker = { name: game ? game.player.name : 'You', skill: 0, me: true };
   const ath = game ? Math.round(Math.max(40, Math.min(99, game.player.attrs.ATH))) : 85;

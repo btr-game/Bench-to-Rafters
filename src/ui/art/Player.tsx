@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { NBA_TEAMS } from '../../content/teams';
-import { TEAM_STYLE, genericKits, type Kit } from '../../content/teamStyle';
+import { TEAM_STYLE, leagueKits, type Kit, type KitLeague } from '../../content/teamStyle';
 import { hash } from './color';
 import { toPaths } from './pixel';
 import type { Pos } from '../../engine/types';
@@ -14,6 +14,10 @@ const SKINS = ['#F1C9A5', '#E0A982', '#C68A5E', '#A86E45', '#8A5534', '#6B3F26',
 const HAIRS = ['#1C1512', '#2B1E16', '#4A3221', '#7A5230', '#B88A4A'];
 
 export type KitName = 'home' | 'road' | 'city';
+
+/** The league whose style a team's kit and crest follow, from the level being played. */
+export const styleLeague = (level?: string): KitLeague | undefined =>
+  level === 'HS' || level === 'HSV' || level === 'HSJV' ? 'HS' : level === 'NCAA' || level === 'GL' || level === 'EU' || level === 'INT' || level === 'NBA' ? level : undefined;
 
 /** Guards handle it, wings shoot it, bigs dunk it. */
 export const poseFor = (pos?: Pos): Pose => (pos === 'SF' ? JUMPER : pos === 'PF' || pos === 'C' ? DUNK : DRIBBLE);
@@ -33,19 +37,20 @@ export function lookOf(name: string, shoe: string): Look {
 }
 
 /** The kit a team wears: its own for NBA clubs, one built from its colour for everyone else. */
-export function kitFor(teamName: string, abbr: string, color: string, which: KitName): Kit {
+export function kitFor(teamName: string, abbr: string, color: string, which: KitName, league?: KitLeague): Kit {
   const nba = NBA_TEAMS.find((t) => t.abbr === abbr && teamName.includes(t.nick));
-  const set = nba ? TEAM_STYLE[nba.abbr] : genericKits(color, (teamName.split(' ').pop() ?? '').toUpperCase());
-  return set[which];
+  if (nba) return TEAM_STYLE[nba.abbr][which];
+  const parent = league === 'GL' ? NBA_TEAMS.find((t) => t.gl === teamName) : undefined;
+  return leagueKits(league, color, teamName, parent && TEAM_STYLE[parent.abbr])[which];
 }
 
-export function PlayerArt({ name, number, pos, color = '#2A2F36', team = '', abbr = '', kit = 'home', size = 96 }: { name: string; number: number; pos?: Pos; color?: string; team?: string; abbr?: string; kit?: KitName; size?: number }) {
+export function PlayerArt({ name, number, pos, color = '#2A2F36', team = '', abbr = '', kit = 'home', league, size = 96 }: { name: string; number: number; pos?: Pos; color?: string; team?: string; abbr?: string; kit?: KitName; league?: KitLeague; size?: number }) {
   const pose = poseFor(pos);
   const paths = useMemo(() => {
-    const k = kitFor(team, abbr, color, kit);
+    const k = kitFor(team, abbr, color, kit, league);
     const shoe = kit === 'home' ? '#F2F2F2' === k.base ? k.ink : k.trim : k.base === '#FFFFFF' ? k.ink : k.base;
     return toPaths(paint(pose, k, lookOf(name, shoe), number));
-  }, [pose, name, number, color, team, abbr, kit]);
+  }, [pose, name, number, color, team, abbr, kit, league]);
   return (
     <svg xmlns="http://www.w3.org/2000/svg" className="art art-player" data-art="player-sprite" width={(size * pose.w) / pose.h} height={size} viewBox={`0 0 ${pose.w} ${pose.h}`} shapeRendering="crispEdges" role="img" aria-label={`${name}, number ${number}`}>
       {paths.map((p) => (

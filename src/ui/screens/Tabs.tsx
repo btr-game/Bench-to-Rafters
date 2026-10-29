@@ -8,7 +8,7 @@ import { TextBracket } from '../components/TextBracket';
 import { useState, type ReactNode } from 'react';
 import { VenueArt, venueOf, type VenueKind } from '../art/Venue';
 import { TeamArt } from '../art/Crest';
-import { PlayerArt, kitFor, type KitName } from '../art/Player';
+import { PlayerArt, kitFor, styleLeague, type KitName } from '../art/Player';
 import { JerseyArt } from '../art/Jersey';
 import type { GameLog, GameState, League, SeasonRecord, SeriesResult, StatLine, Team } from '../../engine/types';
 import { ATTRS, LEVELS } from '../../engine/balance';
@@ -104,7 +104,7 @@ function StandingsTable({ lg, teams, userId, title }: { lg: League; teams: Team[
               <tr key={t.id} className={t.id === userId ? 'me' : ''}>
                 <td>{i + 1}</td>
                 <td className="l">
-                  <TeamArt name={t.name} abbr={t.abbr || t.short} color={t.color} size={24} />
+                  <TeamArt name={t.name} abbr={t.abbr || t.short} color={t.color} league={styleLeague(lg.level)} size={24} />
                   {lg.level === 'NBA' ? t.name : t.short}
                 </td>
                 <td>{t.w}</td>
@@ -327,7 +327,7 @@ export function SeasonTab({ g }: { g: GameState }) {
     <div className="page">
       <PageHero
         venue={venueOf(g)}
-        art={t ? <TeamArt name={t.name} abbr={t.abbr || t.short} color={t.color} size={92} /> : undefined}
+        art={t ? <TeamArt name={t.name} abbr={t.abbr || t.short} color={t.color} league={styleLeague(g.stage)} size={92} /> : undefined}
         color={t?.color ?? last?.teamColor}
         kicker={`${seasonLabel(last?.year ?? g.year)} · ${lg ? (lg.label ?? LEVELS[lg.level].name) : last ? 'Final season' : 'Season'}`}
         title={t?.name ?? last?.teamName ?? 'Season'}
@@ -418,7 +418,7 @@ export function PlayerTab({ g }: { g: GameState }) {
     <div className="page">
       <PageHero
         venue={venueOf(g)}
-        art={<PlayerArt name={p.name} number={p.number} pos={p.pos} color={t?.color} team={t?.name} abbr={t?.abbr} kit={kit} size={150} />}
+        art={<PlayerArt name={p.name} number={p.number} pos={p.pos} color={t?.color} team={t?.name} abbr={t?.abbr} league={styleLeague(g.stage)} kit={kit} size={150} />}
         color={t?.color}
         kicker={`#${p.number} · ${NAMES.pos[p.pos]} · ${ht(p.height)}`}
         title={p.name}
@@ -447,7 +447,7 @@ export function PlayerTab({ g }: { g: GameState }) {
               <div className="kits">
                 {(['home', 'road', 'city'] as const).map((k) => (
                   <button key={k} className="kit" aria-pressed={kit === k} onClick={() => setKit(k)}>
-                    <JerseyArt kit={kitFor(t.name, t.abbr, t.color, k)} number={p.number} size={76} label={`${t.name} ${k} jersey`} />
+                    <JerseyArt kit={kitFor(t.name, t.abbr, t.color, k, styleLeague(g.stage))} number={p.number} size={76} label={`${t.name} ${k} jersey`} />
                     <span>{k === 'city' ? 'City edition' : k === 'home' ? 'Home' : 'Road'}</span>
                   </button>
                 ))}
@@ -783,7 +783,7 @@ export function RecordsTab({ g }: { g: GameState }) {
     <div className="page">
       <PageHero
         venue={venueOf(g)}
-        art={<PlayerArt name={g.player.name} number={g.player.number} pos={g.player.pos} color={t?.color} team={t?.name} abbr={t?.abbr} size={120} />}
+        art={<PlayerArt name={g.player.name} number={g.player.number} pos={g.player.pos} color={t?.color} team={t?.name} abbr={t?.abbr} league={styleLeague(g.stage)} size={120} />}
         color={t?.color}
         kicker={`${g.history.length} season${g.history.length === 1 ? '' : 's'} · legacy score ${legacyScore(g)}`}
         title={`${g.player.name}: the career`}

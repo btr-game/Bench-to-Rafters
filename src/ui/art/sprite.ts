@@ -196,6 +196,8 @@ export function paint(pose: Pose, kit: Kit, look: Look, number: number): string[
       else if (kit.pattern === 'pinstripe' && x % 3 === 0) out[y][x] = dark(out[y][x], 0.12);
       else if (kit.pattern === 'sash' && Math.abs(x - nx - (y - ny) * 0.55 + 4) < 1.2) out[y][x] = trim[b];
       else if (kit.pattern === 'panel' && x > nx + 2) out[y][x] = dark(out[y][x], 0.1);
+      else if (kit.pattern === 'sponsor' && y >= pose.chest[1] + 6 && y <= pose.chest[1] + 7) out[y][x] = trim[b];
+      else if (kit.pattern === 'varsity' && (y === armpit + 2 || y === armpit + 4)) out[y][x] = trim[b];
       // the hem tucked into the shorts
       if (at(x, y + 1) === P.shorts && at(x, y + 2) === P.shorts && y > armpit) out[y][x] = jersey[3];
     }

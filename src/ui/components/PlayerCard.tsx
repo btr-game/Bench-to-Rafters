@@ -1,4 +1,4 @@
-import { PlayerArt } from '../art/Player';
+import { PlayerArt, styleLeague } from '../art/Player';
 import { heightMismatch } from '../../engine/flow';
 import type { GameState } from '../../engine/types';
 import { ATTRS } from '../../engine/balance';
@@ -43,7 +43,7 @@ export function PlayerCard({ g, compact = false }: { g: GameState; compact?: boo
   return (
     <section className="card pc">
       <div className="pc-head">
-        <PlayerArt name={p.name} number={p.number} pos={p.pos} color={t?.color} team={t?.name} abbr={t?.abbr} kit="road" size={92} />
+        <PlayerArt name={p.name} number={p.number} pos={p.pos} color={t?.color} team={t?.name} abbr={t?.abbr} league={styleLeague(g.stage)} kit="road" size={92} />
         <div className="ovr" aria-label={`Overall ${Math.round(ovr(g))}`}>
           <b>{Math.round(ovr(g))}</b>
           <small>OVR</small>

@@ -42,6 +42,8 @@ function paintJersey(kit: Kit, number: number): string[][] {
       if (g[y][x] === kit.base && kit.pattern === 'pinstripe' && x % 3 === 0) g[y][x] = dark(kit.base, 0.12);
       if (g[y][x] === kit.base && kit.pattern === 'sash' && Math.abs(x - y * 0.8 - 2) < 1.6) g[y][x] = kit.trim;
       if (g[y][x] === kit.base && kit.pattern === 'panel' && x > 22) g[y][x] = dark(kit.base, 0.1);
+      if (g[y][x] === kit.base && kit.pattern === 'sponsor' && y >= 38 && y <= 42) g[y][x] = kit.trim;
+      if (g[y][x] === kit.base && kit.pattern === 'varsity' && (y === 44 || y === 46)) g[y][x] = kit.trim;
       if (g[y][x] === kit.base && x < 12 && y > 14) g[y][x] = light(kit.base, white ? 0 : 0.08);
       if (y === H - 2 && inside(x, y + 1)) g[y][x] = fold; // hem
     }

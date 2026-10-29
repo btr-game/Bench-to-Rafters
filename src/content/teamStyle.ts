@@ -40,7 +40,7 @@ export interface Kit {
   ink: string; // wordmark and number
   trim: string; // collar, armholes, the number's outline, the shorts stripe
   word: string; // across the chest
-  pattern?: 'pinstripe' | 'sash' | 'panel';
+  pattern?: 'pinstripe' | 'sash' | 'panel' | 'sponsor' | 'varsity';
 }
 
 export interface TeamStyle {
@@ -90,7 +90,33 @@ export const TEAM_STYLE: Record<string, TeamStyle> = {
   SAS: S('#C4CED4', '#000000', '#00B2A9', 'spur', K(W, '#000000', '#C4CED4', 'SPURS'), K('#000000', W, '#C4CED4', 'SAN ANTONIO'), K('#000000', '#00B2A9', '#EF426F', 'SA')),
 };
 
-/** Kits for teams without an entry (college, G League, clubs abroad, national teams): built from the one colour. */
+export type KitLeague = 'HS' | 'NCAA' | 'GL' | 'EU' | 'INT' | 'NBA';
+
+/** A word for the chest from a team's name: the shortest part that reads (8 letters at most). */
+const chestWord = (name: string) => {
+  const words = name.toUpperCase().replace(/[^A-Z ]/g, '').split(' ').filter((w) => w.length > 2 && !['THE', 'HIGH', 'SCHOOL', 'ACADEMY'].includes(w));
+  // nothing short enough: the initials ('FC Barcelona' wears FCB)
+  return words.find((w) => w.length <= 8) ?? (name.toUpperCase().match(/\b[A-Z]/g)?.join('').slice(0, 4) || 'TEAM');
+};
+
+/**
+ * Kits for every other team (round 17), built from its one colour in its league's style:
+ * college block lettering, varsity stripes in high school, a sponsor band across the chest
+ * for clubs abroad. G KitLeague affiliates borrow their NBA parent's kits.
+ */
+export function leagueKits(league: KitLeague | undefined, color: string, name: string, parent?: TeamStyle): Pick<TeamStyle, 'home' | 'road' | 'city'> {
+  const word = chestWord(name);
+  if (league === 'GL' && parent) {
+    const city = name.split(' ')[0].toUpperCase().slice(0, 8);
+    return { home: { ...parent.home, word }, road: { ...parent.road, word: city }, city: { ...parent.city, word } };
+  }
+  if (league === 'NCAA') return { home: K(W, color, '#1A1A1A', word), road: K(color, W, '#1A1A1A', word), city: K('#9AA2B0', color, W, word) };
+  if (league === 'HS') return { home: K(W, color, color, word, 'varsity'), road: K(color, W, W, word, 'varsity'), city: K('#1A1A1A', color, color, word, 'varsity') };
+  if (league === 'EU' || league === 'INT') return { home: K(W, color, color, word, 'sponsor'), road: K(color, W, W, word, 'sponsor'), city: K('#1A1A1A', color, W, word, 'sponsor') };
+  return genericKits(color, word);
+}
+
+/** Kits for teams without an entry (college, G KitLeague, clubs abroad, national teams): built from the one colour. */
 export function genericKits(color: string, word: string): Pick<TeamStyle, 'home' | 'road' | 'city'> {
   return { home: K(W, color, '#1A1A1A', word), road: K(color, W, '#1A1A1A', word), city: K('#1A1A1A', color, W, word) };
 }
