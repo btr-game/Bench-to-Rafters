@@ -5,6 +5,7 @@ import { ATTRS, LEVELS } from '../../engine/balance';
 import { NAMES, UI } from '../../content/strings';
 import { useStore } from '../../store';
 import { LabCard } from '../components/Lab';
+import { MvpRace } from '../components/MvpRace';
 import { MiniGamesCard } from '../mini/MiniGames';
 import { RecruitCard, StoriesCard } from '../components/Roster';
 import { canRecruit, recruitInfo } from '../../engine/career/recruit';
@@ -526,6 +527,7 @@ export function Home({ g }: { g: GameState }) {
       <div className="stack">
         <PlayerCard g={g} />
         <ScoutCard g={g} compact />
+        <MvpRace g={g} />
       </div>
       <div className="stack">
         <section className="card stack">

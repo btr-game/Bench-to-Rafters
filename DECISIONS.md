@@ -673,3 +673,10 @@ Reached from the start page and from the bottom of Home (a career in progress is
   helper notes and choice details, and cuts decision texts to their first sentence; choices keep
   their names and risk tags, results keep their chips. A display preference stored in the browser
   (not the save). On a midseason screen with an event the page got about 20% shorter.
+- **MVP race:** in the NBA, once the player is at MVP level (OVR 92+) or in the top five, Home
+  shows the race in the side column: the top five (and his place if lower) with stat lines,
+  team records and a bar for how close each is, plus a word on his chances (neck and neck within
+  1 point of voting score, within reach within 3, a long way back within 6). During the season it
+  is live: the same score the voters use (value per game plus team record) on the season so far,
+  with the other players' lines projected from the stat model for the games their team has played
+  (no random draws, so it does not change the season). Between seasons it shows the final voting.

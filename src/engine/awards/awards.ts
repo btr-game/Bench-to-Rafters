@@ -44,10 +44,11 @@ function defScore(per: number, int: number, l: StatLine, team: Team): number {
   return 0.3 * kneeDef(per) + 0.3 * kneeDef(int) + (4 * l.stl) / g + (4 * l.blk) / g + (team.w - team.l) * 0.06;
 }
 
-export function buildCandidates(league: League, user: UserCandInput | null): Cand[] {
+export function buildCandidates(league: League, user: UserCandInput | null, lines?: Map<number, StatLine>): Cand[] {
   const out: Cand[] = [];
   for (const t of league.teams) {
-    for (const p of t.roster) {
+    for (const p0 of t.roster) {
+      const p = lines?.has(p0.id) ? { ...p0, s: lines.get(p0.id) } : p0;
       if (!p.s || p.s.gp === 0) continue;
       const a = genProfile(p).attrs;
       out.push({
@@ -203,4 +204,37 @@ export function simpleAwards(league: League, cands: Cand[], userConf: string | n
     if (userVal >= 0 && userVal < 5) out.wins.push({ key: `${league.level}ALL`, label: `All-${lname} Team` });
   }
   return out;
+}
+
+export interface MvpLadder {
+  rows: { name: string; team: string; record: string; line: string; score: number; isUser: boolean }[];
+  userRank: number | null;
+  gap: number; // the user's score behind the leader (0 when he leads)
+  games: number; // games played so far by the leaders
+}
+
+/**
+ * The MVP race as it stands (round 11: "show the MVP race at the side"): the same score the
+ * voters use at the end (value per game plus the team's record), from the season so far.
+ */
+export function mvpLadder(league: League, user: UserCandInput | null, n = 5, lines?: Map<number, StatLine>): MvpLadder {
+  const cands = buildCandidates(league, user, lines);
+  const maxGp = Math.max(1, ...cands.map((c) => c.line.gp));
+  // nobody who has missed most of the season so far
+  const elig = cands.filter((c) => c.line.gp >= maxGp * 0.6);
+  const score = (c: Cand) => {
+    const g = c.team.w + c.team.l;
+    return c.value + (g > 0 ? (c.team.w / g - 0.5) * 82 : 0) * 0.25;
+  };
+  const ranked = [...elig].sort((a, b) => score(b) - score(a));
+  const userIdx = ranked.findIndex((c) => c.isUser);
+  const lead = ranked[0] ? score(ranked[0]) : 0;
+  const pick = ranked.slice(0, n);
+  if (userIdx >= n) pick.push(ranked[userIdx]);
+  return {
+    rows: pick.map((c) => ({ name: c.name, team: c.team.abbr, record: `${c.team.w}–${c.team.l}`, line: statText(c.line), score: Math.round(score(c) * 10) / 10, isUser: c.isUser })),
+    userRank: userIdx >= 0 ? userIdx + 1 : null,
+    gap: userIdx >= 0 ? Math.round((lead - score(ranked[userIdx])) * 10) / 10 : 0,
+    games: maxGp,
+  };
 }

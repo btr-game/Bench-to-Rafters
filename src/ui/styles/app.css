@@ -687,3 +687,16 @@ button.scout-row { text-align: left; background: var(--surface); color: inherit;
 .simple .fit-tag { display: none !important; }
 .simple .choice { min-height: 44px; }
 .simple .plans { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+
+/* MVP race */
+.mvp-race { border-top: 4px solid var(--gold); }
+.mvp-ladder { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.mvp-ladder li { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 8px; align-items: start; padding: 6px 8px; border-radius: 8px; background: var(--surface-2); }
+.mvp-ladder li.me { box-shadow: inset 3px 0 0 var(--accent); background: var(--accent-soft); }
+.mvp-rank { font-family: var(--f-display); font-weight: 900; font-size: 22px; line-height: 1; }
+.mvp-who { display: grid; gap: 2px; min-width: 0; }
+.mvp-who b { overflow-wrap: anywhere; }
+.mvp-who small { color: var(--muted); font-size: 13px; }
+.mvp-bar { height: 5px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.mvp-bar span { display: block; height: 100%; background: var(--gold); }
+.mvp-ladder li.me .mvp-bar span { background: var(--accent); }

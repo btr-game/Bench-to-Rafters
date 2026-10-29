@@ -2,7 +2,7 @@
 
 import { LEVELS, RANK_MINUTES } from '../balance';
 import { int, next, normal, type Rng } from '../rng';
-import type { GenPlayer, League, LevelKey, Team } from '../types';
+import type { GenPlayer, League, LevelKey, StatLine, Team } from '../types';
 import { addLine, emptyLine, expected, genProfile, genUsageWeight, seasonLineFromExpected, valuePerGame } from './statModel';
 
 export interface UserSlot {
@@ -103,4 +103,30 @@ export function resetSeasonLines(league: League): void {
   }
   league.round = 0;
   league.bracket = null;
+}
+
+/**
+ * Season lines so far for every generated player, without touching the random stream (for the
+ * live MVP race, round 11): the expected line at his rank and minutes over the games his team
+ * has played. Real lines are only written when the season ends (accumulateHalf).
+ */
+export function projectedLines(league: League, userTeamId: string | null, userRank: number | null): Map<number, StatLine> {
+  const out = new Map<number, StatLine>();
+  for (const team of league.teams) {
+    const games = team.w + team.l;
+    if (games === 0) continue;
+    const roster = [...team.roster].sort((a, b) => b.ovr - a.ovr);
+    const skip = team.id === userTeamId && userRank ? userRank : 0; // his place on the depth chart
+    const mean = teamUsageMean(league.level, roster, null);
+    let rank = 1;
+    for (const p of roster) {
+      if (rank === skip) rank++;
+      const minutes = rankMinutes(league.level, rank);
+      const e = expected(genProfile(p), league.level, minutes, genUsageWeight(p) / mean);
+      const gp = minutes < 0.6 ? Math.round(games * 0.15) : games;
+      out.set(p.id, seasonLineFromExpected(e, gp, rank <= 5 ? gp : 0, 1));
+      rank++;
+    }
+  }
+  return out;
 }

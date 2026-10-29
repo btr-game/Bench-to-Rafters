@@ -5,6 +5,7 @@ import { advance, canChangePosition, canRetire, changePosition, choose, newGame,
 import { fastForward, setFast } from '../src/engine/fast';
 import { bankGains, labCost, spendCredits } from '../src/engine/career/lab';
 import { pushShop } from '../src/engine/economy/shop';
+import { liveMvpRace } from '../src/engine/career/mvpRace';
 import { buildDrama } from '../src/engine/story/drama';
 import { canRecruit, recruitInfo, recruitPlayer, scoutingBoard, takePayCut } from '../src/engine/career/recruit';
 import { startArc } from '../src/engine/events/arcs';
@@ -483,5 +484,34 @@ describe('round 11: fast break is a switch', () => {
     const f = newGame(9102, { ...input, mode: 'fast' });
     expect(f.mode).toBe('standard');
     expect(f.flags.fast).toBe(1);
+  });
+});
+
+describe('round 11: the MVP race', () => {
+  it('shows a live ladder at midseason once a star is in the race, and the final voting after the season', () => {
+    const s = newGame(4243, { name: 'Sam Star', number: 1, pos: 'SF', archetype: 0, focus: ['SHT', 'FIN'], mode: 'stars' });
+    s.flags.simPostseason = 1;
+    let live = false;
+    let final = false;
+    for (let i = 0; i < 8000 && !(live && final); i++) {
+      if (s.stage === 'NBA' && (s.step === 'midseason' || s.step === 'summary')) {
+        const r = liveMvpRace(s);
+        if (r && !r.final && r.rows.length >= 5) {
+          live = true;
+          expect(r.rows.every((x) => x.score > 0 && x.score < 100)).toBe(true);
+          expect(r.rows.some((x) => x.isUser)).toBe(true);
+        }
+        if (r && r.final) {
+          final = true;
+          expect(r.userRank).toBe(s.lastSummary!.races.find((x) => x.award === 'MVP')!.userRank);
+        }
+      }
+      const pr = prompt(s);
+      if (pr.type === 'retired') break;
+      if (pr.type === 'decision') choose(s, (pr.decision.choices.find((c) => !c.disabled && c.id !== 'retire') ?? pr.decision.choices.find((c) => !c.disabled))!.id);
+      else advance(s);
+    }
+    expect(live).toBe(true);
+    expect(final).toBe(true);
   });
 });
