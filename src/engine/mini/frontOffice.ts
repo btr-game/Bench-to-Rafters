@@ -1,5 +1,5 @@
-// Front Office (round 10): the game from the other chair. You run an NBA franchise for four
-// seasons (six until round 12b) in the same simulated league the career mode uses (world/nbaWorld.ts):
+// Front Office (round 10): the game from the other chair. You run an NBA franchise for three
+// seasons (six until round 12b, then four) in the same simulated league the career mode uses (world/nbaWorld.ts):
 // - Draft: a class of prospects with scouting reports. Every report starts vague; scouting
 //   points buy a closer look (current level, ceiling, strengths and weaknesses, work ethic,
 //   medicals). The other 29 teams draft off the consensus board.
@@ -7,8 +7,7 @@
 //   cap or the 125% rule) and sign players from Europe and the leagues abroad (cap room, the
 //   mid-level exception once a season, or the minimum). Their reports are fuzzy until scouted.
 // - Identity: a game plan for the season that fits your roster or does not.
-// - Season: the league plays it out. After the first season, two missed postseasons in a row
-//   and you are fired.
+// - Season: the league plays it out. Miss the playoffs in seasons 2 and 3 and you are fired.
 // Real numbers stay hidden behind ranges and words, as in the career mode.
 
 import { DRAFT, ATTRS } from '../balance';
@@ -28,7 +27,7 @@ import { EURO_CLUBS, INT_LEAGUES } from '../../content/teams';
 import { NAMES } from '../../content/strings';
 
 export const FO = {
-  seasons: 4,
+  seasons: 3,
   draftScout: 8,
   marketScout: 5,
   trades: 3,
@@ -586,8 +585,8 @@ export function grade(fo: FoState): { letter: string; text: string } {
   if (fo.fired) return { letter: 'F', text: 'Fired. The owner wanted wins.' };
   if (titles >= 2) return { letter: 'A+', text: 'A dynasty. Your name goes on the building.' };
   if (titles === 1) return { letter: 'A', text: 'You brought home a title.' };
-  if (score >= 5) return { letter: 'B', text: 'A winner every year, just not the last one.' };
-  if (score >= 2.5) return { letter: 'C', text: 'Respectable. The fans wanted more.' };
+  if (score >= 4) return { letter: 'B', text: 'A winner every year, just not the last one.' };
+  if (score >= 2) return { letter: 'C', text: 'Respectable. The fans wanted more.' };
   return { letter: 'D', text: 'You kept your job. Barely.' };
 }
 

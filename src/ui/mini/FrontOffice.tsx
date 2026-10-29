@@ -486,7 +486,7 @@ export function FrontOffice() {
       <section className="stack">
         <div className="kicker">Front Office</div>
         <h2 className="title">Pick your franchise</h2>
-        <p className="small muted">Four seasons. After the first one, miss the playoffs two years in a row and the owner fires you.</p>
+        <p className="small muted">Three seasons. The first is a free pass; miss the playoffs in both of the next two and the owner fires you.</p>
         <div className="scout-list">
           {list.map((t) => (
             <button key={t.id} className="scout-row target" style={{ borderLeft: `6px solid ${t.color}` }} onClick={() => setFo(F.newFrontOffice(seed, t.id))}>

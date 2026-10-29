@@ -801,3 +801,5 @@ Reached from the start page and from the bottom of Home (a career in progress is
   (100%, 50%), so at most about 1.5-1.8 OVR a season from mini-games. To keep them from being a
   road to 99, a rating of 85+ gets 60% of the bonus and 92+ gets 35%. Lab careers get the full
   amount as credits.
+- **Round 12d:** Front Office is three seasons (was four). Missing the playoffs in seasons 2 and 3
+  means fired (an F). Grades: two titles A+, one title A, B from 4 points, C from 2.
