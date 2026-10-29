@@ -392,7 +392,7 @@ function MomentPage({ m, g }: { m: Moment; g: GameState }) {
           <div className="stack reveal" style={{ gap: 12 }}>
             <div className="kicker on-dark">{KICKER[m.kind]}</div>
             <div className="moment-title">{m.title}</div>
-            <p className="on-dark lede-dark">{m.text}</p>
+            <p className="on-dark lede-dark prose">{m.text}</p>
             {m.kind === 'awards' ? (
               <div className="banners">
                 {m.lines?.map((x, i) => (

@@ -669,3 +669,7 @@ Reached from the start page and from the bottom of Home (a career in progress is
   for the title, +0.7 for the Finals, +0.4 for the conference finals, +0.15 otherwise. Front
   Office: IQ up to +1 from titles and playoff runs, playmaking +0.4 with a title; nothing if fired.
   A lab career gets the same amount as credits.
+- **Simple text:** a switch next to Fast break. It hides descriptions, flavour, fan reactions,
+  helper notes and choice details, and cuts decision texts to their first sentence; choices keep
+  their names and risk tags, results keep their chips. A display preference stored in the browser
+  (not the save). On a midseason screen with an event the page got about 20% shorter.

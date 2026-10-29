@@ -6,7 +6,7 @@ import type { LiveRequest } from '../../engine/career/live';
 import { LEVELS } from '../../engine/balance';
 import { NAMES } from '../../content/strings';
 import { useStore } from '../../store';
-import { fmtMoney, ordinal } from '../format';
+import { brief, fmtMoney, ordinal } from '../format';
 import { NBA_TEAMS } from '../../content/teams';
 
 const TIER: Record<string, string> = { blue: 'Blue blood', power: 'Power program', major: 'Major conference', mid: 'Mid-major' };
@@ -82,7 +82,7 @@ function PlanPicker({ d }: { d: Decision }) {
     return (
       <div className="stack">
         <div className="sec-title">{d.title}</div>
-        <p className="muted small">{d.text}</p>
+        <p className="muted small prose">{d.text}</p>
         <div className={`plans${d.data?.single ? ' plan-groups' : ''}`}>
           {enabled.map((c) => (
             <button key={c.id} className="choice" onClick={() => choose(c.id)}>
@@ -100,7 +100,7 @@ function PlanPicker({ d }: { d: Decision }) {
   return (
     <div className="stack">
       <div className="sec-title">{d.title}</div>
-      <p className="muted small">{d.text}</p>
+      <p className="muted small prose">{d.text}</p>
       <div className="plans">
         {d.choices.map((c) => {
           const on = picked.includes(c.id);
@@ -124,6 +124,7 @@ function PlanPicker({ d }: { d: Decision }) {
 
 function LiveView({ g, d }: { g: GameState; d: Decision }) {
   const choose = useStore((s) => s.choose);
+  const simple = useStore((s) => s.simple);
   const r = d.data?.req as LiveRequest;
   const team = g.season ? (g.stage === 'NBA' ? g.nba : g.league)?.teams.find((t) => t.id === g.teamId) : null;
   const me = team?.short ?? 'You';
@@ -192,7 +193,7 @@ function LiveView({ g, d }: { g: GameState; d: Decision }) {
           )}
         </>
       )}
-      <p>{d.text}</p>
+      <p>{brief(d.text, simple)}</p>
       {r.recent.length > 0 && (
         <div className="small muted">
           {r.recent.map((x, i) => (
@@ -216,6 +217,7 @@ function LiveView({ g, d }: { g: GameState; d: Decision }) {
 
 export function DecisionView({ g, d }: { g: GameState; d: Decision }) {
   const choose = useStore((s) => s.choose);
+  const simple = useStore((s) => s.simple);
   const offers = (d.data?.offers as Offer[] | undefined) ?? [];
   const offerIds = new Set(offers.map((o) => o.id));
   const extra = d.choices.filter((c) => !offerIds.has(c.id));
@@ -234,7 +236,7 @@ export function DecisionView({ g, d }: { g: GameState; d: Decision }) {
             {d.title}
           </h2>
         </div>
-        <p>{d.text}</p>
+        <p>{brief(d.text, simple)}</p>
         <div className="shop">
           {items.map((c) => {
             const [name, price] = c.label.split(' · ');
@@ -266,7 +268,7 @@ export function DecisionView({ g, d }: { g: GameState; d: Decision }) {
         </h2>
       </div>
       {typeof d.data?.fit === 'string' && <span className="fit-tag">Fits your game · {d.data.fit as string}</span>}
-      <p>{d.text}</p>
+      <p>{brief(d.text, simple)}</p>
       {isDraftNight && (
         <>
           {extra.map((c) => (

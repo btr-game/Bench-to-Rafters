@@ -45,6 +45,16 @@ interface Store {
   setMini: (m: Mini | null) => void;
   setTab: (t: Tab) => void;
   setTheme: (t: Theme) => void;
+  simple: boolean; // simple text: fewer words, just the choices (round 11)
+  toggleSimple: () => void;
+}
+
+function loadSimple(): boolean {
+  try {
+    return localStorage.getItem('btr-simple') === '1';
+  } catch {
+    return false;
+  }
 }
 
 function loadTheme(): Theme {
@@ -69,6 +79,16 @@ export const useStore = create<Store>((set, get) => ({
   game: null,
   tab: 'home',
   theme: loadTheme(),
+  simple: loadSimple(),
+  toggleSimple: () => {
+    const simple = !get().simple;
+    try {
+      localStorage.setItem('btr-simple', simple ? '1' : '0');
+    } catch {
+      /* storage can be unavailable; the setting still applies for this visit */
+    }
+    set({ simple });
+  },
   transition: null,
   start: (input, seed) => {
     const s = seed ?? Math.floor(Math.random() * 2 ** 31);

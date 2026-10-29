@@ -7,3 +7,10 @@ export const seasonLabel = (y: number): string => `${y}–${String(y + 1).slice(
 export const pg = (l: StatLine, k: keyof StatLine): string => (l.gp > 0 ? (l[k] / l.gp).toFixed(1) : '—');
 export const pct = (made: number, att: number): string => (att > 0 ? ((made / att) * 100).toFixed(1) : '—');
 export const signed = (x: number, digits = 1): string => `${x >= 0 ? '+' : '−'}${Math.abs(x).toFixed(digits)}`;
+
+/** Simple text (round 11): the first sentence of a longer text. */
+export function brief(text: string, simple: boolean): string {
+  if (!simple || !text) return text;
+  const m = text.match(/^.*?[.!?](\s|$)/);
+  return m ? m[0].trim() : text;
+}

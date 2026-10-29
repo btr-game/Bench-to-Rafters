@@ -676,3 +676,14 @@ button.scout-row { text-align: left; background: var(--surface); color: inherit;
 .fo-rating span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .fo-rating b { font-family: var(--f-mono); text-align: right; }
 @media (max-width: 420px) { .fo-ratings { grid-template-columns: 1fr; } }
+
+/* simple text (round 11): fewer words, just the choices */
+.simple .prose,
+.simple .home-grid p.muted.small,
+.simple .home-grid .choice small,
+.simple .home-grid .item small,
+.simple .move-tile small,
+.simple .reaction,
+.simple .fit-tag { display: none !important; }
+.simple .choice { min-height: 44px; }
+.simple .plans { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }

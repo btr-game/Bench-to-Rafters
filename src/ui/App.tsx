@@ -68,6 +68,10 @@ export function App() {
   const theme = useStore((s) => s.theme);
   const reset = useStore((s) => s.reset);
   const mini = useStore((s) => s.mini);
+  const simple = useStore((s) => s.simple);
+  useEffect(() => {
+    document.documentElement.classList.toggle('simple', simple);
+  }, [simple]);
 
   useEffect(() => {
     const root = document.documentElement;

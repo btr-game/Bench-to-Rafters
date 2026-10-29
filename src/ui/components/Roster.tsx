@@ -65,7 +65,7 @@ export function RecruitCard({ g }: { g: GameState }) {
                 <span className={`interest i-${t.label === 'Interested' ? 'hi' : t.label === 'Open to it' ? 'mid' : 'lo'}`}>{t.label}</span>
                 <span className={`scout-rec rec-${t.rec.toLowerCase()}`}>Scouts: {t.rec}</span>
               </div>
-              <span className="small rec-why">{t.why}</span>
+              <span className="small rec-why prose">{t.why}</span>
             </div>
             <button className="btn small" disabled={!t.fits || left <= 0} onClick={() => recruit(t.p.id)}>
               {t.fits ? 'Recruit' : `Need ${fmtMoney(t.short)}`}
@@ -101,7 +101,7 @@ export function StoriesCard({ g }: { g: GameState }) {
                 <span className="story-tag">{STORY_LABEL[x.kind]}</span>
                 <b>{x.title}</b>
               </div>
-              <div className="small">{x.result ?? x.text}</div>
+              <div className={`small${x.result ? '' : ' prose'}`}>{x.result ?? x.text}</div>
               {(x.status || (x.kind === 'rival' && x.vs && x.vs.w + x.vs.l > 0)) && (
                 <div className="small muted">
                   {x.status ? `${t?.short ?? ''} ${x.status}` : ''}

@@ -113,8 +113,21 @@ function SeasonHeader({ g }: { g: GameState }) {
           </div>
         )}
         {g.mode === 'lab' ? <span className="fast-toggle on lab-badge">Lab</span> : <FastToggle g={g} />}
+        <SimpleToggle />
       </div>
     </div>
+  );
+}
+
+/** Simple text on or off: fewer words, just the choices (a display setting, not part of the save). */
+function SimpleToggle() {
+  const on = useStore((s) => s.simple);
+  const toggle = useStore((s) => s.toggleSimple);
+  return (
+    <button className={`fast-toggle${on ? ' on' : ''}`} aria-pressed={on} onClick={toggle} title="Simple text: hide descriptions and flavour, keep the choices">
+      <span className="fast-dot" aria-hidden="true" />
+      Simple text {on ? 'on' : 'off'}
+    </button>
   );
 }
 
@@ -523,7 +536,7 @@ export function Home({ g }: { g: GameState }) {
                 {g.result.title} · {g.result.choice}
               </div>
               {g.result.tier && <span className="result-tier">{g.result.tier}</span>}
-              <p className="result-text">{g.result.text}</p>
+              <p className="result-text prose">{g.result.text}</p>
               {g.result.changes.length > 0 && (
                 <div className="result-chips">
                   {g.result.changes.map((c, i) => (
@@ -539,7 +552,11 @@ export function Home({ g }: { g: GameState }) {
           )}
           {g.flags.fast ? <FastRecap g={g} /> : null}
           <div className="stack fade-in" key={pr.type === 'decision' ? pr.decision.id : `${g.year}-${g.step}`}>
-            {!g.flags.fast && <Context g={g} />}
+            {!g.flags.fast && (
+              <div className="prose">
+                <Context g={g} />
+              </div>
+            )}
             {pr.type === 'decision' && <DecisionView g={g} d={pr.decision} />}
             {pr.type === 'advance' && (
               <button className="btn block" onClick={advance}>
@@ -559,12 +576,12 @@ export function Home({ g }: { g: GameState }) {
         <MiniGamesCard />
         {g.step === 'summary' && canRetire(g) && <RetireCard g={g} />}
         {g.feed[0] && (
-          <section className="card">
+          <section className="card prose">
             <ReactionCard r={g.feed[0]} />
           </section>
         )}
         {last && g.step !== 'summary' && (
-          <section className="card stack">
+          <section className="card stack prose">
             <div className="kicker">Last season</div>
             <div className="small">
               {seasonLabel(last.year)} · {last.teamName}: {last.w}–{last.l}, {last.result}. {perGame(last.line, 'pts').toFixed(1)} PPG.
