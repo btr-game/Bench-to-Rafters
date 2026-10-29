@@ -77,7 +77,7 @@ function HalfSim({ t, onDone }: { t: Extract<Transition, { kind: 'half' }>; onDo
             </div>
           ))}
         </div>
-        <button className="btn ghost-dark" onClick={done ? onDone : skip}>
+        <button className="btn ghost-dark" onClick={done ? onDone : skip} data-skip={done ? undefined : ''}>
           {done ? 'Continue' : 'Skip'}
         </button>
       </div>
@@ -236,7 +236,7 @@ function TitleGame({ m, g, onDone }: { m: Moment; g: GameState; onDone?: () => v
           <Recap m={m} />
         </>
       ) : (
-        <button className="btn ghost-dark" onClick={skip}>
+        <button className="btn ghost-dark" onClick={skip} data-skip="">
           Skip to the final buzzer
         </button>
       )}
@@ -328,7 +328,7 @@ export function FinalReel({ m, onDone }: { m: Moment; onDone?: () => void }) {
           <Recap m={m} />
         </>
       ) : (
-        <button className="btn ghost-dark" onClick={() => setI(n)}>
+        <button className="btn ghost-dark" onClick={() => setI(n)} data-skip="">
           Skip to the final buzzer
         </button>
       )}
@@ -427,13 +427,14 @@ function MoodFx({ mood, color }: { mood: NonNullable<Moment['mood']>; color: str
 function MomentPage({ m, g }: { m: Moment; g: GameState }) {
   const dismiss = useStore((s) => s.dismissMoment);
   const ref = useRef<HTMLButtonElement>(null);
-  useEffect(() => {
-    ref.current?.focus({ preventScroll: true });
-  }, [m.id]);
   // a reel plays first; the celebration (or the heartbreak) lands when it ends
   const reel = !!m.game && (!!m.drama || m.kind === 'title');
   const [ended, setEnded] = useState(!reel);
   useEffect(() => setEnded(!reel), [m.id, reel]);
+  // Continue takes focus only once the buzzer sounds, so Enter can't skip past the reel
+  useEffect(() => {
+    if (ended) ref.current?.focus({ preventScroll: true });
+  }, [m.id, ended]);
   const end = useCallback(() => setEnded(true), []);
   return (
     <div className={`overlay moment ${m.kind}${m.mood && ended ? ` mood-${m.mood}` : ''}`} style={{ ['--team' as string]: m.color }} role="dialog" aria-modal="true" aria-label={m.title}>

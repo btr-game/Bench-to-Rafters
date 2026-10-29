@@ -22,8 +22,8 @@ const SECTIONS: { title: string; where: string; items: [string, string][] }[] = 
       ['Settings', 'Top right: theme, Fast break, playable playoff games, Simple text, Guide mode, Master mode and a new career. Your difficulty is always shown next to the name of the game.'],
       ['Fast break and Simple text', 'The two switches in the top bar. Fast break: quick seasons with one training group, no shop, no national team and simulated playoffs, while you still make every real call. Simple text: descriptions and flavour hidden, just the choices.'],
       ['Guide mode', 'Turn it on here, in Settings or with G. The next thing to do glows on every screen, with a short note on how it works.'],
-      ['Master mode', 'For experienced players, in Settings: no recommendations anywhere. No scouts’ calls, no fit tags, no suggested deals, no trade odds, no guide hints. You read the game yourself.'],
-      ['Keyboard', 'On a computer: Enter presses the main button (or leaves the shop). 1 to 9, then 0, - and =, pick a choice (the small numbers on the buttons). H, S, P, L and R switch tabs, F toggles Fast break and G toggles Guide mode.'],
+      ['Master mode', 'For experienced players, in Settings or with M: no recommendations anywhere. No scouts’ calls, no fit tags, no suggested deals, no trade odds, no guide hints. You read the game yourself.'],
+      ['Keyboard', 'On a computer: Enter presses the main button (or leaves the shop). While a final plays out (league, NBA Cup or Olympic gold), Enter skips to the final buzzer first, so you never miss the result. 1 to 9, then 0, - and =, pick a choice (the small numbers on the buttons). H, S, P, L and R switch tabs, F toggles Fast break, G Guide mode and M Master mode.'],
     ],
   },
   {

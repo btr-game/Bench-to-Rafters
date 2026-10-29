@@ -923,8 +923,6 @@ button.scout-row { text-align: left; background: var(--surface); color: inherit;
 .icon-btn { display: inline-flex; align-items: center; gap: 6px; }
 @media (max-width: 599px) {
   .hide-narrow { display: none; }
-  .top { flex-wrap: wrap; }
-  .top-right { flex-wrap: wrap; justify-content: flex-end; }
   .next-step { position: fixed; left: 12px; right: 12px; bottom: calc(var(--tabbar-h) + 10px + env(safe-area-inset-bottom, 0px)); max-width: none; z-index: 19; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18); }
 }
 @media (hover: none) { .hide-touch { display: none; } }
@@ -1156,9 +1154,21 @@ button.todo-now { width: 100%; text-align: left; border: 0; font: inherit; color
 .brand { white-space: nowrap; }
 .brand-wrap { flex: none; }
 .mode-badge .short { display: none; }
-@media (max-width: 1279px) { .mode-badge .long { display: none; } .mode-badge .short { display: inline; } }
+@media (max-width: 1599px) { .mode-badge .long { display: none; } .mode-badge .short { display: inline; } }
 .guide-quick li { align-content: start; }
 /* round 16: random picks on the creation pages */
 .seg .seg-random { border-style: dashed; color: var(--accent); font-weight: 700; }
 .seg .seg-random:hover { border-color: var(--accent); }
 .rolled { color: var(--accent); font-weight: 600; }
+/* round 16: the top bar always fits (Master mode made the difficulty badge longer and the bar
+   ran off the side): short labels up to 1600 px, and the tabs on their own row below 1280 px */
+.top-right { min-width: 0; }
+@media (max-width: 1599px) { .top .hide-narrow { display: none; } }
+@media (min-width: 900px) and (max-width: 1339px) {
+  .top { flex-wrap: wrap; row-gap: 6px; }
+  .toptabs { order: 3; flex-basis: 100%; justify-content: flex-start; margin-left: -10px; }
+}
+@media (max-width: 899px) {
+  .top { flex-wrap: wrap; }
+  .top-right { flex-wrap: wrap; justify-content: flex-end; }
+}

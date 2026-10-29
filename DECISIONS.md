@@ -991,3 +991,11 @@ Reached from the start page and from the bottom of Home (a career in progress is
   purchase (the browser would otherwise press that button again). The leave button shows the key
   and takes no number tag.
 - **Manual:** a Starting a career section.
+- **Master mode overflow:** the long difficulty label (plus " · Master") pushed the top bar past
+  the window, so the page scrolled sideways. The top bar shows short labels below 1600px, puts
+  the tabs on a second row at 900–1339px and wraps below 900px (tablets used to keep one row).
+  Checked at 12 widths from 360 to 1920px, Master on and off.
+- **M** toggles Master mode, like F and G.
+- **Enter during a final reel** presses "Skip to the final buzzer" (marked `data-skip`; the half
+  simulation's Skip too) instead of Continue, and Continue only takes focus once the reel has
+  ended. A second Enter continues, so an early Enter never skips the result.

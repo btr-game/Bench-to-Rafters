@@ -31,12 +31,12 @@ export function SettingsMenu({ g }: { g: GameState | null }) {
   const toggleSimple = useStore((s) => s.toggleSimple);
   const guide = useStore((s) => s.guide);
   const toggleGuide = useStore((s) => s.toggleGuide);
+  const toggleMaster = useStore((s) => s.toggleMaster);
   const toggleFast = useStore((s) => s.toggleFast);
   const togglePlayoffs = useStore((s) => s.togglePlayoffs);
   const reset = useStore((s) => s.reset);
   const saving = useStore((s) => s.saving);
   const master = useStore((s) => s.master);
-  const toggleMaster = useStore((s) => s.toggleMaster);
 
   useEffect(() => {
     if (!open) return;
@@ -89,7 +89,7 @@ export function SettingsMenu({ g }: { g: GameState | null }) {
           <div className="set-keys hide-touch">
             <b>Keyboard</b>
             <span>
-              <kbd>Enter</kbd> continue (or leave the shop) · <kbd>1</kbd>–<kbd>9</kbd> <kbd>0</kbd> <kbd>-</kbd> <kbd>=</kbd> pick a choice · <kbd>H</kbd> <kbd>S</kbd> <kbd>P</kbd> <kbd>L</kbd> <kbd>R</kbd> tabs · <kbd>F</kbd> fast break · <kbd>G</kbd> guide mode
+              <kbd>Enter</kbd> continue, leave the shop or skip a final to the buzzer · <kbd>1</kbd>–<kbd>9</kbd> <kbd>0</kbd> <kbd>-</kbd> <kbd>=</kbd> pick a choice · <kbd>H</kbd> <kbd>S</kbd> <kbd>P</kbd> <kbd>L</kbd> <kbd>R</kbd> tabs · <kbd>F</kbd> fast break · <kbd>G</kbd> guide mode · <kbd>M</kbd> master mode
             </span>
           </div>
           <div className="set-foot">
@@ -141,6 +141,7 @@ export function useKeys(active: boolean) {
   const game = useStore((s) => s.game);
   const toggleFast = useStore((s) => s.toggleFast);
   const toggleGuide = useStore((s) => s.toggleGuide);
+  const toggleMaster = useStore((s) => s.toggleMaster);
 
   // number the choices in the main card
   useEffect(() => {
@@ -164,6 +165,13 @@ export function useKeys(active: boolean) {
           leave.click();
           return;
         }
+        // a game reel is running: Enter jumps to the final buzzer, never past the result
+        const skip = dialog?.querySelector<HTMLElement>('[data-skip]');
+        if (skip) {
+          e.preventDefault();
+          skip.click();
+          return;
+        }
         if (t.tagName === 'BUTTON') return; // the browser presses a focused button itself
         const target = dialog ? (dialog.querySelector<HTMLElement>('.btn:not(:disabled)') ?? dialog) : tab === 'home' ? document.querySelector<HTMLElement>('.o-main .btn.block:not(:disabled)') : null;
         if (target) {
@@ -184,12 +192,13 @@ export function useKeys(active: boolean) {
       const k = e.key.toLowerCase();
       if (k === 'f' && game && game.mode !== 'lab' && game.step !== 'retired') return toggleFast();
       if (k === 'g') return toggleGuide();
+      if (k === 'm') return toggleMaster();
       const to = TAB_KEYS[k];
       if (to && game) setTab(to);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [active, tab, setTab, game, toggleFast, toggleGuide]);
+  }, [active, tab, setTab, game, toggleFast, toggleGuide, toggleMaster]);
 }
 
 function choices(): HTMLElement[] {
