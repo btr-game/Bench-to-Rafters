@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { advance, canChangePosition, canRetire, changePosition, choose, newGame, positionOptions, prompt, retireByChoice } from '../src/engine/flow';
-import { fastForward } from '../src/engine/fast';
+import { fastForward, setFast } from '../src/engine/fast';
 import { bankGains, labCost, spendCredits } from '../src/engine/career/lab';
 import { pushShop } from '../src/engine/economy/shop';
 import { buildDrama } from '../src/engine/story/drama';
@@ -11,7 +11,7 @@ import { startArc } from '../src/engine/events/arcs';
 import { winningEdge } from '../src/engine/career/team';
 import { ovrOf } from '../src/engine/player/ovr';
 import { compareCareer, rankModelFit } from '../src/engine/awards/compare';
-import { blendPlans } from '../src/engine/balance';
+import { blendPlans, DIFFICULTIES } from '../src/engine/balance';
 import { makeRng, next, normal } from '../src/engine/rng';
 import type { GameState } from '../src/engine/types';
 import { runCareer } from '../scripts/harness';
@@ -464,5 +464,24 @@ describe('round 9: starting five, league stories, finals drama', () => {
     }
     expect(sawStories).toBe(true);
     expect(tried).toBe(true);
+  });
+});
+
+describe('round 11: fast break is a switch', () => {
+  it('flipping it rebuilds the plan on screen and the first page offers three difficulties', () => {
+    const s = newGame(9101, input);
+    const d0 = prompt(s);
+    expect(d0.type === 'decision' && d0.decision.kind).toBe('plan');
+    setFast(s, true);
+    const d1 = prompt(s);
+    expect(d1.type === 'decision' && d1.decision.data?.single).toBe(true);
+    setFast(s, false);
+    const d2 = prompt(s);
+    expect(d2.type === 'decision' && d2.decision.kind === 'plan' && !d2.decision.data?.single).toBe(true);
+    expect(DIFFICULTIES).toEqual(['standard', 'reality', 'stars']);
+    // an old "fast" game is the regular game with the switch on
+    const f = newGame(9102, { ...input, mode: 'fast' });
+    expect(f.mode).toBe('standard');
+    expect(f.flags.fast).toBe(1);
   });
 });

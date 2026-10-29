@@ -90,6 +90,15 @@ export const POTENTIAL: SkewDist = { base: 40, mu: 3.33, sigma: 0.66, min: 42, m
 // Difficulty modes (playtest round 6). Each sets the potential distribution, a growth
 // multiplier and an injury multiplier; the league around the player is the same.
 export type Mode = 'standard' | 'reality' | 'stars' | 'fast' | 'lab';
+/** The difficulties offered on the first page (round 11). Fast break is a switch in the game; the lab is a mini-game. */
+export const DIFFICULTIES: Mode[] = ['standard', 'reality', 'stars'];
+/**
+ * Fast break skips the shop, the national team and most turning points, and runs one plan a
+ * season, so it grows a player a little faster to make up for it (and a little more: about 3
+ * OVR of head start, as the fast break mode had). Applies in any difficulty while it is on.
+ * Regular guy, 200 smart careers, same seeds: 74.1 without; 75.9 at 1.2x, 77.9 at 1.35x.
+ */
+export const FAST_GROWTH = 1.3;
 // floor: in stars mode he is never further behind than a straight line from his start to
 // floor.ovr at floor.age, so every career that lasts that long reaches it
 export const MODES: Record<Mode, { name: string; blurb: string; potential: SkewDist; growth: number; injury: number; scoutMid: number; floor?: { age: number; ovr: number; until: number } }> = {

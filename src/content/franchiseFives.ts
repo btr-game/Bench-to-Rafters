@@ -15,6 +15,7 @@ export interface LegendSpot {
   ovr: number;
   peak: string; // his peak years with this team
   tag: 'shooter' | 'inside' | 'defense' | 'creator' | 'scorer';
+  rookie?: boolean; // the player's own super-rookie (legends showdown)
 }
 
 const L = (name: string, pos: Pos, ovr: number, peak: string, tag: LegendSpot['tag']): LegendSpot => ({ name, pos, ovr, peak, tag });

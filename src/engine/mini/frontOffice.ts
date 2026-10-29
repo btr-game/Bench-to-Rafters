@@ -13,7 +13,8 @@
 
 import { DRAFT, ATTRS } from '../balance';
 import { chance, clamp, int, makeRng, normal, pick, range, shuffle, type Rng } from '../rng';
-import type { GameState, GenPlayer, Team } from '../types';
+import type { AttrKey, GameState, GenPlayer, Team } from '../types';
+import { ovrOf } from '../player/ovr';
 import { newGame } from '../flow';
 import { buildNba } from '../world/leagues';
 import { quickNbaSeason, playoffTeamIds, warmUpNba } from '../career/nbaYear';
@@ -36,6 +37,7 @@ export const FO = {
   rosterMax: 15,
   rosterMin: 13,
   match: 1.25,
+  accept: 0.88, // a team takes a deal worth this share of what it gives up (round 11: lowered from 1.02)
   // scouting: how wide the ranges are at each level (current OVR, ceiling)
   ovrSd: [6, 3.5, 2, 1],
   potSd: [9, 5.5, 3, 1.5],
@@ -280,7 +282,8 @@ export const capOf = (fo: FoState): number => capFor(fo.world.year);
 export function tradeValue(p: GenPlayer): number {
   const age = p.age <= 24 ? 1.15 : p.age <= 29 ? 1 : p.age <= 32 ? 0.8 : 0.55;
   const upside = p.age <= 24 ? Math.max(0, p.pot - p.ovr) * 1.2 : 0;
-  return Math.pow(Math.max(0, p.ovr - 66 + upside * 0.35), 2) * age;
+  // stars cost extra: nobody gives one up for a pile of good players
+  return Math.pow(Math.max(0, p.ovr - 66 + upside * 0.35), 2) * age * (p.ovr >= 88 ? 1.35 : 1);
 }
 
 export function tradeTargets(fo: FoState): { p: GenPlayer; team: Team }[] {
@@ -293,6 +296,7 @@ export function tradeTargets(fo: FoState): { p: GenPlayer; team: Team }[] {
 }
 
 /** A vague read of a proposed trade: does the other side like it, and do the salaries work. */
+/** A vague read of a proposed trade: does the other side like it, and do the salaries work. */
 export function tradeRead(fo: FoState, targetId: number, offer: number[]): { mood: 'No chance' | 'Not enough' | 'Close' | 'They like it'; salaryOk: boolean; ratio: number } {
   const tg = tradeTargets(fo).find((x) => x.p.id === targetId);
   const mine = myTeam(fo);
@@ -302,7 +306,32 @@ export function tradeRead(fo: FoState, targetId: number, offer: number[]): { moo
   const ratio = give / Math.max(1, tradeValue(tg.p));
   const outPay = out.reduce((a, p) => a + p.salary, 0);
   const salaryOk = payroll(fo) - outPay + tg.p.salary <= capOf(fo) || tg.p.salary <= outPay * FO.match + 0.1;
-  return { mood: ratio >= 1.15 ? 'They like it' : ratio >= 0.95 ? 'Close' : ratio >= 0.6 ? 'Not enough' : 'No chance', salaryOk, ratio };
+  return { mood: ratio >= FO.accept + 0.1 ? 'They like it' : ratio >= FO.accept - 0.12 ? 'Close' : ratio >= 0.45 ? 'Not enough' : 'No chance', salaryOk, ratio };
+}
+
+/**
+ * The cheapest package the other team would take for a player (round 11: suggested offers):
+ * every combination of one to three of his players, the salaries working, the value at least
+ * what they want; the one that gives up the least. Null when nothing on the roster gets it done.
+ */
+export function suggestOffer(fo: FoState, targetId: number): number[] | null {
+  const mine = [...myTeam(fo).roster].sort((a, b) => tradeValue(a) - tradeValue(b));
+  let best: { ids: number[]; cost: number } | null = null;
+  const consider = (ids: number[]) => {
+    const r = tradeRead(fo, targetId, ids);
+    if (!r.salaryOk || r.ratio < FO.accept + 0.05) return;
+    const cost = mine.filter((p) => ids.includes(p.id)).reduce((a, p) => a + tradeValue(p), 0);
+    if (!best || cost < best.cost) best = { ids, cost };
+  };
+  const n = mine.length;
+  for (let a = 0; a < n; a++) {
+    consider([mine[a].id]);
+    for (let b = a + 1; b < n; b++) {
+      consider([mine[a].id, mine[b].id]);
+      for (let c = b + 1; c < n; c++) consider([mine[a].id, mine[b].id, mine[c].id]);
+    }
+  }
+  return best ? (best as { ids: number[] }).ids : null;
 }
 
 export function proposeTrade(fo: FoState, targetId: number, offer: number[]): boolean {
@@ -312,7 +341,7 @@ export function proposeTrade(fo: FoState, targetId: number, offer: number[]): bo
   const tg = tradeTargets(fo).find((x) => x.p.id === targetId);
   if (!tg || !read.salaryOk || offer.length === 0 || offer.length > 3) return false;
   m.trades++;
-  const ok = read.ratio * range(rng(fo), 0.85, 1.15) >= 1.02;
+  const ok = read.ratio * range(rng(fo), 0.9, 1.1) >= FO.accept;
   if (!ok) {
     fo.log.push(`The ${tg.team.name} turned down an offer for ${tg.p.name}.`);
     fo.news = [`The ${tg.team.name} said no to your offer for ${tg.p.name}.`];
@@ -336,6 +365,27 @@ export function proposeTrade(fo: FoState, targetId: number, offer: number[]): bo
   fo.log.push(`Traded ${out.map((o) => o.name).join(' and ')} to the ${tg.team.name} for ${tg.p.name}.`);
   fo.news = [`Deal done: ${tg.p.name} is yours. ${out.map((o) => o.name).join(' and ')} head to the ${tg.team.name}.`];
   return true;
+}
+
+/**
+ * A player's eight ratings (round 11: "make the ratings accessible"): generated players carry
+ * only an OVR and an archetype, so the archetype's shape is shifted until it matches his OVR.
+ */
+export function ratingsOf(p: GenPlayer): Record<AttrKey, number> {
+  const arch = ARCHETYPES[p.pos][p.shape] ?? ARCHETYPES[p.pos][0];
+  const shift = p.ovr - ovrOf(arch.attrs, p.pos);
+  const out = {} as Record<AttrKey, number>;
+  for (const k of ATTRS) out[k] = Math.round(clamp(arch.attrs[k] + shift, 20, 99));
+  return out;
+}
+
+/** A word on where a player is headed. */
+export function outlook(p: GenPlayer): string {
+  if (p.age <= 24 && p.pot - p.ovr >= 6) return 'Still rising';
+  if (p.age <= 27) return 'In his prime soon';
+  if (p.age <= 30) return 'In his prime';
+  if (p.age <= 32) return 'Starting to slow down';
+  return 'On the way down';
 }
 
 export function scoutFree(fo: FoState, i: number): void {

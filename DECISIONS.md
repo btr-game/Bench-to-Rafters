@@ -632,3 +632,32 @@ Reached from the start page and from the bottom of Home (a career in progress is
   under 1%. Franchises are labeled Favorite, Contender, Dark horse and Long shot.
 - Fixed in passing: the scouts' recommendation badge reused the `.rec` class, which also styles
   the season-summary record, so the big win-loss number had gone white on white.
+
+## Round 11
+
+- **Difficulty is back on the first page:** Regular guy, Reality hits hard, Shoot for the stars.
+  Fast break is no longer a mode but a switch in the game, in any difficulty; flipping it
+  rebuilds a plan decision already on screen (five groups and one tap, or the two-plan picker),
+  and the shop, national team and extra turning points follow the switch. To keep its small head
+  start it grows the player 1.3x while it is on (Regular guy, 200 smart careers: 74.1 without;
+  75.9 at 1.2x and 77.9 at 1.35x, so 1.3x is about +3). Old saves in the fast mode load as Regular
+  guy with the switch on.
+- **Built in a lab** moved to the mini-games: the same career, started from the hub (it ends a
+  career in progress, after a second tap).
+- **Three-point contest, livelier:** every ball has its own pace (0.8-1.35x) and its own sweet
+  spot (anywhere from 32% to 68% of the meter); 22% of balls get a sudden surge (1.8-2.5x for a
+  quarter to half a second); three makes in a row sets you on fire (a 35% wider green until a
+  miss); money balls have a 15% narrower green; the last ten seconds run 18% faster.
+- **Front Office trades, easier and readable:** a team now takes a deal worth 88% of what it
+  gives up (was 102%), stars (88+) cost 35% more. Tapping any player opens his eight ratings (his
+  archetype's shape shifted to his OVR) and an outlook. Each target has a suggested offer: the
+  cheapest one-to-three-player package that works (over six test runs, 40 of 48 targets had one
+  and most suggested offers were accepted). The market is three tabs (trades, abroad, roster) of
+  one-line rows that open into a card.
+- **Legends showdown, with your super-rookie:** pick a franchise, name a rookie and choose the
+  legend he replaces; four development years (Shooting lab, Go get buckets, Film and reads,
+  Weight room, Lockdown; the most-used becomes his identity) take him from about 72 toward a
+  ceiling of 88-99 (median 92; breakthrough and setback years). He counts three times in the team
+  rating and brings his own form (sd 2) to every series; his series line is shown and he can be
+  series MVP. Title odds with the right plans and a scorer rookie in place of the weakest legend
+  (300 runs): Lakers 40%, Celtics 25%, Bulls 15%, Heat 8%, Grizzlies and Clippers about 1%.

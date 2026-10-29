@@ -33,7 +33,8 @@ export function newGame(seed: number, input: CreateInput): GameState {
   player.peakOvr = ovrOf(player.attrs, player.pos);
   const s: GameState = {
     version: 1,
-    mode: input.mode ?? 'standard',
+    // fast break is a switch inside the game now (round 11), on top of a difficulty
+    mode: input.mode === 'fast' ? 'standard' : (input.mode ?? 'standard'),
     seed,
     rng,
     nextId: 1,

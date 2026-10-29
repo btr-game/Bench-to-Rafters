@@ -5,9 +5,28 @@
 // are simulated from their skill. The green zone grows with skill, and narrows a little as
 // the round goes on (tired arms).
 
-import { chance, makeRng, normal, type Rng } from '../rng';
+import { chance, makeRng, next, normal, type Rng } from '../rng';
 
 export const THREES = { racks: 5, balls: 5, seconds: 60, money: 2, zoneBase: 0.07, zoneSkill: 0.0011, tire: 0.12, sweepMs: 1050, rimMargin: 0.45 };
+// Round 11: a livelier meter. Every ball has its own pace and its own sweet spot, some balls
+// get a sudden surge partway through, three makes in a row sets you on fire (a wider green
+// until you miss), and the last ten seconds speed everything up.
+export const LIVELY = { pace: [0.8, 1.35] as [number, number], centre: [0.32, 0.68] as [number, number], surgeChance: 0.22, surgeMult: [1.8, 2.5] as [number, number], surgeAt: [150, 900] as [number, number], surgeLen: [220, 450] as [number, number], fireAfter: 3, fireZone: 1.35, crunchFrom: 10, crunch: 1.18, moneyZone: 0.85 };
+
+export interface BallSetup {
+  pace: number; // multiplies the sweep speed
+  centre: number; // where the green zone sits (0-1)
+  surge: { at: number; len: number; mult: number } | null; // ms after the ball comes up
+}
+
+/** The pace, the sweet spot and any surge for one ball. */
+export function ballSetup(r: Rng, i: number): BallSetup {
+  const L = LIVELY;
+  const rnd = (a: [number, number]) => a[0] + next(r) * (a[1] - a[0]);
+  // the first ball of the round sits in the middle at a normal pace
+  if (i === 0) return { pace: 1, centre: 0.5, surge: null };
+  return { pace: rnd(L.pace), centre: rnd(L.centre), surge: chance(r, L.surgeChance) ? { at: rnd(L.surgeAt), len: rnd(L.surgeLen), mult: rnd(L.surgeMult) } : null };
+}
 
 export interface Shooter {
   name: string;
@@ -51,8 +70,8 @@ export function simRound(r: Rng, skill: number): number {
 }
 
 /** Where a stop of the meter lands: a make, a rim-out (maybe in), or a miss. */
-export function shotResult(r: Rng, pos: number, zone: number): 'swish' | 'make' | 'rim' | 'miss' {
-  const d = Math.abs(pos - 0.5);
+export function shotResult(r: Rng, pos: number, zone: number, centre = 0.5): 'swish' | 'make' | 'rim' | 'miss' {
+  const d = Math.abs(pos - centre);
   if (d <= zone * 0.18) return 'swish';
   if (d <= zone / 2) return 'make';
   if (d <= zone / 2 + THREES.rimMargin * zone) return chance(r, 0.35) ? 'make' : 'rim';

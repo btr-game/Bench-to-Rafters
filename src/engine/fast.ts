@@ -13,6 +13,7 @@
 import type { Decision, GameState, Moment } from './types';
 import { advance, canChangeFocus, choose, heightMismatch, prompt } from './flow';
 import { canRecruit } from './career/recruit';
+import { pushPlanDecision } from './career/season';
 
 /** Story pages worth stopping for in fast break. */
 const BIG_EVENT = /Breakthrough season|The leap|Everything changes|Exempted|rafters/i;
@@ -71,4 +72,22 @@ export function fastForward(s: GameState): void {
   s.moments = s.moments.filter(isBig);
   s.result ??= result;
   s.toast ??= toast;
+}
+
+/**
+ * Fast break on or off (round 11: "once the user clicks fast break, it should totally
+ * change"). The switch takes effect at once: a plan decision already on screen is rebuilt in
+ * the new style (five training groups and one tap, or the full two-plan picker), and from then
+ * on the shop, the national team and extra turning points follow the switch.
+ */
+export function setFast(s: GameState, on: boolean): void {
+  s.flags.fast = on ? 1 : 0;
+  if (!on) s.flags.simPostseason = 0;
+  const d = s.pending[0];
+  if (d && d.kind === 'plan') {
+    s.pending.shift();
+    pushPlanDecision(s, ((d.data?.half as number) === 2 ? 2 : 1) as 1 | 2);
+    s.pending.unshift(s.pending.pop()!);
+  }
+  if (on) fastForward(s);
 }

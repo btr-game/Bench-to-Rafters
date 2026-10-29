@@ -9,7 +9,7 @@ import {
   HEIGHT_LIMITS,
   GAME_POINTS,
   GROWTH_RATE,
-  MODES,
+  MODES, FAST_GROWTH,
   AGENT_CUT,
   DEEP_BENCH,
   FORM,
@@ -489,7 +489,7 @@ function growthAfterHalf(s: GameState, acc: HalfAcc, level: LevelKey, ovr: numbe
     plan: season.plan,
     planDef: plan,
     outMost: acc.injuredGames > acc.games / 2,
-    extraMult: outcome.growth * p.growthMultNext * MODES[s.mode ?? 'standard'].growth * youthGrowthMult(s),
+    extraMult: outcome.growth * p.growthMultNext * MODES[s.mode ?? 'standard'].growth * youthGrowthMult(s) * (s.flags.fast && s.mode !== 'lab' && s.mode !== 'fast' ? FAST_GROWTH : 1),
     morale: p.morale,
     lab: s.mode === 'lab',
   });

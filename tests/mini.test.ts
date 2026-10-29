@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import { FRANCHISE_FIVES } from '../src/content/franchiseFives';
 import { NBA_TEAMS } from '../src/content/teams';
-import { newLegends, playNext, playSeason } from '../src/engine/mini/legends';
+import { growRookie, newLegends, playNext, playSeason } from '../src/engine/mini/legends';
 import * as F from '../src/engine/mini/frontOffice';
 import { contestRng, simRound, shotResult, zoneWidth } from '../src/engine/mini/threes';
 
@@ -15,8 +15,15 @@ describe('mini-games', () => {
     expect(FRANCHISE_FIVES.CLE.some((p) => p.name === 'LeBron James')).toBe(true);
   });
 
-  it('a legends run plays a season and the playoffs to a champion', () => {
-    const st = newLegends(42, 'LAL');
+  it('a legends run grows a super-rookie into the five, then plays a season and the playoffs', () => {
+    const st = newLegends(42, 'LAL', 'Sam Star', 'Elgin Baylor');
+    expect(st.phase).toBe('grow');
+    for (let i = 0; i < 4; i++) growRookie(st, 'defense');
+    expect(st.phase).toBe('season');
+    const five = st.teams.find((t) => t.id === 'LAL')!.five;
+    expect(five.some((p) => p.rookie && p.name === 'Sam Star')).toBe(true);
+    expect(five.length).toBe(5);
+    expect(st.rookie.ovr).toBeGreaterThan(80);
     playSeason(st);
     for (let i = 0; i < 4 && st.phase === 'plan'; i++) playNext(st, 'star');
     expect(st.phase).toBe('over');

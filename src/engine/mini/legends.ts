@@ -1,13 +1,18 @@
-// Legends showdown (round 10): every franchise plays with its all-time starting five
-// (content/franchiseFives.ts). The player picks one, plays a 29-game season (one game against
-// every other franchise), and then has to get through four best-of-seven rounds against the
-// powerhouses. Before every series he picks a game plan, and the scouts say what kind of team
-// is coming: the right plan against the right style is worth a few points of rating.
+// Legends showdown (rounds 10-11): every franchise plays with its all-time starting five
+// (content/franchiseFives.ts). The player picks a franchise and grows one super-rookie over
+// four seasons (the Shoot for the stars potential: 85 to 99), who takes the place of one of
+// the legends. The rookie counts double in the team rating and brings his own form to every
+// series, so he can swing it. Then a 29-game season (one game against every other franchise)
+// and four best-of-seven rounds against the powerhouses. Before every series the player picks
+// a game plan, and the scouts say what kind of team is coming: the right plan against the
+// right style is worth a few points of rating.
 
 import { FRANCHISE_FIVES, type LegendSpot } from '../../content/franchiseFives';
 import { NBA_TEAMS } from '../../content/teams';
-import { HOME_COURT } from '../balance';
-import { chance, int, makeRng, normal, type Rng } from '../rng';
+import { chance, int, makeRng, next, normal, type Rng } from '../rng';
+import { HOME_COURT, MODES } from '../balance';
+import { drawPotential } from '../player/create';
+import type { Pos } from '../types';
 import { buildDrama, type Drama } from '../story/drama';
 
 export type Plan = 'pace' | 'lock' | 'paint' | 'star';
@@ -30,7 +35,28 @@ export const STYLE_HINT: Record<Style, string> = {
 /** Which plan beats which style. */
 const COUNTER: Record<Plan, Style> = { pace: 'paint', lock: 'shooting', paint: 'defense', star: 'star' };
 // legends are closer to each other than ratings suggest: a wider scale than the NBA sim's
-export const LEGENDS = { counter: 2.2, wrong: -0.8, starGap: 0.3, scale: 6, squeeze: 0.65 };
+export const LEGENDS = { counter: 2.2, wrong: -0.8, starGap: 0.3, scale: 6, squeeze: 0.65, rookieWeight: 3, formSd: 2, startOvr: 72, growShare: [0.35, 0.4, 0.5, 0.7], breakthrough: 0.12, setback: 0.08 };
+// a super-rookie's ceiling: the Shoot for the stars model, a notch higher (median about 92)
+export const ROOKIE_POT = { ...MODES.stars.potential, base: 86, sigma: 0.5, min: 88, max: 99 };
+
+export type Focus = LegendSpot['tag'];
+export const FOCUS_LABEL: Record<Focus, { name: string; text: string }> = {
+  shooter: { name: 'Shooting lab', text: 'Thousands of threes. He becomes a floor spacer.' },
+  scorer: { name: 'Go get buckets', text: 'Isolation, footwork, the mid-range. A scorer.' },
+  creator: { name: 'Film and reads', text: 'Passing and feel. He runs the show.' },
+  inside: { name: 'Weight room', text: 'Strength and touch inside. A force in the paint.' },
+  defense: { name: 'Lockdown', text: 'Footwork and length. He takes the other team’s best player.' },
+};
+
+export interface Rookie {
+  name: string;
+  pos: Pos;
+  ovr: number;
+  pot: number;
+  season: number; // development seasons done (0-4)
+  focus: Focus[];
+  replaces: string; // the legend he takes the place of
+}
 
 export interface LTeam {
   id: string;
@@ -54,13 +80,15 @@ export interface LSeries {
   winner: string;
   plan?: Plan; // his plan, when he played in it
   mvp?: string;
+  rookieLine?: string; // the rookie's numbers in the series
 }
 
 export interface LegendsState {
   rng: Rng;
   mine: string;
   teams: LTeam[];
-  phase: 'season' | 'plan' | 'over';
+  phase: 'grow' | 'season' | 'plan' | 'over';
+  rookie: Rookie;
   rounds: { name: string; series: LSeries[] }[];
   next: { opp: string; round: number } | null; // the series he is about to play
   champion: string | null;
@@ -85,7 +113,8 @@ function styleOf(five: LegendSpot[]): Style {
 
 /** Team rating: the five's average, plus a little for balance (a creator, a big, a shooter, a stopper). */
 export function ratingOf(five: LegendSpot[]): number {
-  const avg = five.reduce((a, p) => a + p.ovr, 0) / five.length;
+  const w = (p: LegendSpot) => (p.rookie ? LEGENDS.rookieWeight : 1);
+  const avg = five.reduce((a, p) => a + p.ovr * w(p), 0) / five.reduce((a, p) => a + w(p), 0);
   const has = (t: LegendSpot['tag']) => five.some((p) => p.tag === t);
   const balance = (has('creator') ? 0.4 : 0) + (has('inside') ? 0.4 : 0) + (has('shooter') ? 0.4 : 0) + (has('defense') ? 0.4 : 0);
   // legends are closer to each other than their numbers: squeeze the gaps toward 90
@@ -99,8 +128,61 @@ export function legendTeams(): LTeam[] {
   });
 }
 
-export function newLegends(seed: number, mine: string): LegendsState {
-  return { rng: makeRng(seed), mine, teams: legendTeams(), phase: 'season', rounds: [], next: null, champion: null, out: null, log: [] };
+/** A franchise run, starting with the rookie's first development season. */
+export function newLegends(seed: number, mine: string, rookieName: string, replaces: string): LegendsState {
+  const rng = makeRng(seed);
+  const teams = legendTeams();
+  const legend = teams.find((t) => t.id === mine)!.five.find((p) => p.name === replaces) ?? teams.find((t) => t.id === mine)!.five[0];
+  const rookie: Rookie = {
+    name: rookieName.trim() || 'The Rookie',
+    pos: legend.pos,
+    ovr: Math.round((LEGENDS.startOvr + normal(rng, 0, 3)) * 10) / 10,
+    pot: drawPotential(rng, ROOKIE_POT),
+    season: 0,
+    focus: [],
+    replaces: legend.name,
+  };
+  return { rng, mine, rookie, teams, phase: 'grow', rounds: [], next: null, champion: null, out: null, log: [] };
+}
+
+/** One development season for the rookie (four in all), then he joins the team. */
+export function growRookie(st: LegendsState, focus: Focus): string {
+  if (st.phase !== 'grow') return '';
+  const r = st.rookie;
+  const share = LEGENDS.growShare[r.season] ?? 0.5;
+  let mult = 0.75 + next(st.rng) * 0.5;
+  let note = '';
+  if (chance(st.rng, LEGENDS.breakthrough)) {
+    mult *= 1.6;
+    note = 'A breakthrough year.';
+  } else if (chance(st.rng, LEGENDS.setback)) {
+    mult *= 0.35;
+    note = 'A hard year: an injury cost him months.';
+  }
+  const gain = Math.max(0.5, (r.pot - r.ovr) * share * mult);
+  r.ovr = Math.round(Math.min(r.pot, r.ovr + gain) * 10) / 10;
+  r.focus.push(focus);
+  r.season++;
+  const line = `Year ${r.season} (${FOCUS_LABEL[focus].name}): OVR ${Math.round(r.ovr)}${note ? `. ${note}` : ''}`;
+  st.log.push(line);
+  if (r.season >= LEGENDS.growShare.length) joinTeam(st);
+  return line;
+}
+
+/** His main identity: the focus he chose most (the latest breaks a tie). */
+export function rookieTag(r: Rookie): Focus {
+  const n = (f: Focus) => r.focus.filter((x) => x === f).length;
+  return [...r.focus].reverse().sort((a, b) => n(b) - n(a))[0] ?? 'scorer';
+}
+
+function joinTeam(st: LegendsState): void {
+  const me = st.teams.find((t) => t.id === st.mine)!;
+  const r = st.rookie;
+  me.five = me.five.map((p) => (p.name === r.replaces ? { name: r.name, pos: r.pos, ovr: Math.round(r.ovr), peak: 'rookie', tag: rookieTag(r), rookie: true } : p));
+  me.rating = ratingOf(me.five);
+  me.style = styleOf(me.five);
+  st.log.push(`${r.name} joins the starting five in place of ${r.replaces}.`);
+  st.phase = 'season';
 }
 
 const byId = (st: LegendsState, id: string) => st.teams.find((t) => t.id === id)!;
@@ -173,8 +255,10 @@ function playSeries(st: LegendsState, s: LSeries, plan?: Plan): void {
   const B = byId(st, s.b);
   const mineA = s.a === st.mine;
   const mineB = s.b === st.mine;
-  const bonusA = mineA ? planBonus(st, plan, B) : 0;
-  const bonusB = mineB ? planBonus(st, plan, A) : 0;
+  // the rookie brings his own form to every series: he can carry it, or not
+  const form = mineA || mineB ? normal(st.rng, 0, LEGENDS.formSd) : 0;
+  const bonusA = mineA ? planBonus(st, plan, B) + form : 0;
+  const bonusB = mineB ? planBonus(st, plan, A) + form : 0;
   // 2-2-1-1-1: the higher seed is home in games 1, 2, 5, 7
   const home = [1, 1, -1, -1, 1, -1, 1];
   let g = 0;
@@ -189,7 +273,17 @@ function playSeries(st: LegendsState, s: LSeries, plan?: Plan): void {
   s.plan = mineA || mineB ? plan : undefined;
   const w = byId(st, s.winner);
   const star = [...w.five].sort((p, q) => q.ovr - p.ovr)[chance(st.rng, 0.7) ? 0 : 1];
-  s.mvp = `${star.name}: ${(18 + (star.ovr - 85) * 0.9 + normal(st.rng, 0, 3)).toFixed(1)} PTS`;
+  const starPts = 18 + (star.ovr - 85) * 0.9 + normal(st.rng, 0, 3);
+  s.mvp = `${star.name}: ${starPts.toFixed(1)} PTS`;
+  if (mineA || mineB) {
+    const r = st.rookie;
+    const tag = rookieTag(r);
+    const pts = 16 + (r.ovr - 85) * 1.1 + form * 3 + normal(st.rng, 0, 2);
+    const reb = (tag === 'inside' ? 10 : tag === 'defense' ? 7 : 5) + normal(st.rng, 0, 1.2);
+    const ast = (tag === 'creator' ? 9 : tag === 'scorer' ? 4 : 3) + normal(st.rng, 0, 1);
+    s.rookieLine = `${r.name}: ${pts.toFixed(1)} PTS, ${reb.toFixed(1)} REB, ${ast.toFixed(1)} AST${form > 1 ? ', on fire' : form < -1 ? ', a rough series' : ''}`;
+    if (s.winner === st.mine && pts >= starPts - 1) s.mvp = `${r.name}: ${pts.toFixed(1)} PTS`;
+  }
 }
 
 /** The next series he plays, or the end. */
@@ -216,7 +310,7 @@ export function playNext(st: LegendsState, plan: Plan): void {
   const won = my.winner === st.mine;
   const mw = my.a === st.mine ? my.wa : my.wb;
   const ml = my.a === st.mine ? my.wb : my.wa;
-  st.log.push(`${round.name}: ${won ? 'beat' : 'lost to'} the ${opp.name} ${mw}–${ml} (${PLAN_LABEL[plan].name}).`);
+  st.log.push(`${round.name}: ${won ? 'beat' : 'lost to'} the ${opp.name} ${mw}–${ml} (${PLAN_LABEL[plan].name}). ${my.rookieLine ?? ''}`);
   if (r === ROUNDS.length - 1 || !won) {
     // the last game of his last series, play by play
     const last = my.games[my.games.length - 1];
@@ -229,7 +323,7 @@ export function playNext(st: LegendsState, plan: Plan): void {
       opp: opp.id,
       won,
       round: round.name,
-      drama: buildDrama({ us, them }, { me: null, mates: me.five.map((p) => p.name), opps: opp.five.map((p) => p.name), us: me.id, them: opp.id }, (st.rng.s ^ (us * 131 + them)) >>> 0),
+      drama: buildDrama({ us, them }, { me: st.rookie.name, mates: me.five.filter((p) => !p.rookie).map((p) => p.name), opps: opp.five.map((p) => p.name), us: me.id, them: opp.id }, (st.rng.s ^ (us * 131 + them)) >>> 0),
     };
   }
   if (!won) {

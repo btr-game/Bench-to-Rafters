@@ -1,54 +1,79 @@
 // Front Office screens (engine/mini/frontOffice.ts).
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import * as F from '../../engine/mini/frontOffice';
 import type { FoState, Tactic } from '../../engine/mini/frontOffice';
 import { fmtMoney } from '../../engine/economy/salary';
 import { NbaBracket } from '../components/NbaBracket';
 import { ordinal } from '../format';
+import { ATTRS } from '../../engine/balance';
+import { NAMES } from '../../content/strings';
+import type { GenPlayer } from '../../engine/types';
 
 const PHASES: FoState['phase'][] = ['draft', 'market', 'tactic', 'results'];
 const PHASE_NAME: Record<string, string> = { draft: 'Draft', market: 'Trades and signings', tactic: 'Game plan', results: 'Season', over: 'The verdict' };
 
+/** A player's ratings and outlook, shown when his row is tapped. */
+function PlayerCard({ p, extra }: { p: GenPlayer; extra?: ReactNode }) {
+  const r = F.ratingsOf(p);
+  return (
+    <div className="fo-card">
+      <div className="small muted">
+        {p.pos} · age {p.age} · {F.outlook(p)} · {fmtMoney(p.salary)} × {p.contractYears} yr
+      </div>
+      <div className="fo-ratings">
+        {ATTRS.map((k) => (
+          <div key={k} className="fo-rating">
+            <span>{NAMES.attr[k]}</span>
+            <div className="track">
+              <div className={`fill${r[k] >= 85 ? ' good' : r[k] < 60 ? ' bad' : ''}`} style={{ width: `${r[k]}%` }} />
+            </div>
+            <b>{r[k]}</b>
+          </div>
+        ))}
+      </div>
+      {extra}
+    </div>
+  );
+}
+
+/** One compact row; tap to open the player's card. */
+function Row({ p, open, onTap, right, sub }: { p: GenPlayer; open: boolean; onTap: () => void; right?: ReactNode; sub?: string }) {
+  return (
+    <button className={`fo-row${open ? ' on' : ''}`} onClick={onTap} aria-expanded={open}>
+      <span className="fo-pos">{p.pos}</span>
+      <span className="fo-name">
+        {p.name}
+        {sub && <small>{sub}</small>}
+      </span>
+      <span className="fo-ovr">{Math.round(p.ovr)}</span>
+      {right}
+    </button>
+  );
+}
+
 function Roster({ fo, act, canRelease }: { fo: FoState; act: (fn: (f: FoState) => void) => void; canRelease: boolean }) {
   const r = [...F.myTeam(fo).roster].sort((a, b) => b.ovr - a.ovr);
+  const [open, setOpen] = useState<number | null>(null);
   return (
-    <div className="tbl-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th className="l">Player</th>
-            <th>Pos</th>
-            <th>Age</th>
-            <th>OVR</th>
-            <th>Salary</th>
-            <th>Yrs</th>
-            {canRelease && <th />}
-          </tr>
-        </thead>
-        <tbody>
-          {r.map((p, i) => (
-            <tr key={p.id} className={i < 5 ? 'me' : ''}>
-              <td className="l">
-                {p.name}
-                {p.rookie ? ' (R)' : ''}
-              </td>
-              <td>{p.pos}</td>
-              <td>{p.age}</td>
-              <td>{Math.round(p.ovr)}</td>
-              <td>{fmtMoney(p.salary)}</td>
-              <td>{p.contractYears}</td>
-              {canRelease && (
-                <td>
-                  <button className="link-btn" onClick={() => act((f) => F.release(f, p.id))}>
-                    Release
+    <div className="fo-list">
+      {r.map((p, i) => (
+        <div key={p.id}>
+          <Row p={p} open={open === p.id} onTap={() => setOpen(open === p.id ? null : p.id)} sub={i < 5 ? 'Starter' : p.rookie ? 'Rookie' : undefined} />
+          {open === p.id && (
+            <PlayerCard
+              p={p}
+              extra={
+                canRelease && (
+                  <button className="btn ghost small" onClick={() => act((f) => F.release(f, p.id))}>
+                    Release (salary still counts this season)
                   </button>
-                </td>
-              )}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+                )
+              }
+            />
+          )}
+        </div>
+      ))}
     </div>
   );
 }
@@ -124,125 +149,149 @@ function Draft({ fo, act }: { fo: FoState; act: (fn: (f: FoState) => void) => vo
 
 function Market({ fo, act }: { fo: FoState; act: (fn: (f: FoState) => void) => void }) {
   const m = fo.market!;
+  const [tab, setTab] = useState<'roster' | 'trades' | 'abroad'>('trades');
   const [target, setTarget] = useState<number | null>(null);
   const [offer, setOffer] = useState<number[]>([]);
+  const [openFree, setOpenFree] = useState<number | null>(null);
   const targets = F.tradeTargets(fo);
-  const read = target !== null ? F.tradeRead(fo, target, offer) : null;
+  const read = target !== null && offer.length ? F.tradeRead(fo, target, offer) : null;
+  const suggestion = useMemo(() => (target !== null ? F.suggestOffer(fo, target) : null), [fo, target]);
   const room = F.capOf(fo) - F.payroll(fo);
   const mine = [...F.myTeam(fo).roster].sort((a, b) => b.ovr - a.ovr);
+  const name = (id: number) => mine.find((p) => p.id === id)?.name ?? '';
   return (
     <>
-      <section className="card stack">
-        <div className="row">
-          <div className="sec-title">Your roster</div>
-          <div className="spacer" />
-          <span className="small muted">{F.myTeam(fo).roster.length} players</span>
-        </div>
-        <div className={`cap-line${room < 0 ? ' over' : ''}`}>
-          Payroll {fmtMoney(F.payroll(fo))} of a {fmtMoney(F.capOf(fo))} cap · {room >= 0 ? `${fmtMoney(room)} room` : `${fmtMoney(-room)} over`}
-          {m.dead > 0 ? ` · ${fmtMoney(m.dead)} dead money` : ''}
-        </div>
-        <Roster fo={fo} act={act} canRelease />
-      </section>
+      <div className={`cap-line${room < 0 ? ' over' : ''}`}>
+        {fmtMoney(F.payroll(fo))} of {fmtMoney(F.capOf(fo))} · {room >= 0 ? `${fmtMoney(room)} room` : `${fmtMoney(-room)} over the cap`}
+        {m.dead > 0 ? ` · ${fmtMoney(m.dead)} dead` : ''}
+      </div>
+      <div className="subtabs">
+        {(
+          [
+            ['trades', `Trades (${F.FO.trades - m.trades} left)`],
+            ['abroad', `Abroad (${F.FO.signings - m.signings} left)`],
+            ['roster', `Roster (${mine.length})`],
+          ] as const
+        ).map(([k, label]) => (
+          <button key={k} aria-pressed={tab === k} onClick={() => setTab(k)}>
+            {label}
+          </button>
+        ))}
+      </div>
 
-      <section className="card stack">
-        <div className="row">
-          <div className="sec-title">Trade market</div>
-          <div className="spacer" />
-          <span className="small muted">{F.FO.trades - m.trades} offers left</span>
-        </div>
-        <p className="small muted">Pick a target, then pick up to three of your players to send. Teams want value back: young upside counts, old contracts do not. Salaries must fit the cap or come within 125%.</p>
-        <div className="scout-list">
-          {targets.map(({ p, team }) => (
-            <button key={p.id} className={`scout-row target${target === p.id ? ' on' : ''}`} onClick={() => setTarget(target === p.id ? null : p.id)}>
-              <div className="scout-main">
-                <b>
-                  {p.name} <span className="muted">· {p.pos}, {p.age}</span>
-                </b>
-                <span className="small muted">
-                  {team.name} · OVR {Math.round(p.ovr)} · {fmtMoney(p.salary)} × {p.contractYears} yr
-                </span>
+      {tab === 'roster' && (
+        <section className="card stack">
+          <p className="small muted">Tap a player for his ratings. Releasing frees a roster spot; his salary still counts this season.</p>
+          <Roster fo={fo} act={act} canRelease />
+        </section>
+      )}
+
+      {tab === 'trades' && (
+        <section className="card stack">
+          <p className="small muted">Tap a target to see his ratings and what it might take. The suggested offer is the least you would have to give up.</p>
+          <div className="fo-list">
+            {targets.map(({ p, team }) => (
+              <div key={p.id}>
+                <Row
+                  p={p}
+                  open={target === p.id}
+                  onTap={() => {
+                    setTarget(target === p.id ? null : p.id);
+                    setOffer([]);
+                  }}
+                  sub={`${team.abbr} · ${fmtMoney(p.salary)}`}
+                />
+                {target === p.id && (
+                  <PlayerCard
+                    p={p}
+                    extra={
+                      <div className="stack" style={{ gap: 8 }}>
+                        {suggestion ? (
+                          <button className="btn ghost small" onClick={() => setOffer(suggestion)}>
+                            Use suggested offer: {suggestion.map((id) => name(id).split(' ').slice(-1)[0]).join(' + ')}
+                          </button>
+                        ) : (
+                          <div className="small muted">Nothing on your roster gets this one done.</div>
+                        )}
+                        <div className="small">Or build your own (up to three):</div>
+                        <div className="offer-picks">
+                          {mine.map((q) => (
+                            <button key={q.id} className={`pick-chip${offer.includes(q.id) ? ' on' : ''}`} onClick={() => setOffer((o) => (o.includes(q.id) ? o.filter((x) => x !== q.id) : o.length >= 3 ? o : [...o, q.id]))}>
+                              {q.name.split(' ').slice(-1)[0]} {Math.round(q.ovr)}
+                            </button>
+                          ))}
+                        </div>
+                        {read && (
+                          <div className="small">
+                            Their front office: <b className={`mood m-${read.mood.split(' ')[0].toLowerCase()}`}>{read.mood}</b>
+                            {!read.salaryOk && <span className="warn-text"> · the salaries do not work</span>}
+                          </div>
+                        )}
+                        <button
+                          className="btn"
+                          disabled={!read || !read.salaryOk || m.trades >= F.FO.trades}
+                          onClick={() => {
+                            act((f) => F.proposeTrade(f, p.id, offer));
+                            setOffer([]);
+                            setTarget(null);
+                          }}
+                        >
+                          Make the offer
+                        </button>
+                      </div>
+                    }
+                  />
+                )}
               </div>
-            </button>
-          ))}
-        </div>
-        {target !== null && (
-          <div className="stack offer-box">
-            <div className="small">Your offer:</div>
-            <div className="offer-picks">
-              {mine.map((p) => (
-                <button key={p.id} className={`pick-chip${offer.includes(p.id) ? ' on' : ''}`} onClick={() => setOffer((o) => (o.includes(p.id) ? o.filter((x) => x !== p.id) : o.length >= 3 ? o : [...o, p.id]))}>
-                  {p.name.split(' ').slice(-1)[0]} {Math.round(p.ovr)}
-                </button>
-              ))}
-            </div>
-            {read && offer.length > 0 && (
-              <div className="small">
-                Their front office: <b className={`mood m-${read.mood.split(' ')[0].toLowerCase()}`}>{read.mood}</b>
-                {!read.salaryOk && <span className="warn-text"> · the salaries do not work</span>}
-              </div>
-            )}
-            <button
-              className="btn"
-              disabled={!read || !read.salaryOk || offer.length === 0 || m.trades >= F.FO.trades}
-              onClick={() => {
-                act((f) => F.proposeTrade(f, target, offer));
-                setOffer([]);
-                setTarget(null);
-              }}
-            >
-              Make the offer
-            </button>
+            ))}
           </div>
-        )}
-      </section>
+        </section>
+      )}
 
-      <section className="card stack">
-        <div className="row">
-          <div className="sec-title">Europe and beyond</div>
-          <div className="spacer" />
-          <span className="small muted">
-            {F.FO.signings - m.signings} signings left · scouting {fo.scout}
-          </span>
-        </div>
-        <p className="small muted">Players from the EuroLeague and leagues abroad. Their level is a guess until your scouts go and see them. Sign with cap room, the mid-level exception (once a season) or the minimum.</p>
-        <div className="scout-list">
-          {m.free.map((f, i) => {
-            const rp = F.freeReport(f);
-            const how = F.signHow(fo, i);
-            return (
-              <div key={f.p.id} className="scout-row">
-                <div className="scout-main">
-                  <b>
-                    {f.p.name} <span className="muted">· {f.p.pos}, {f.p.age}</span>
-                  </b>
-                  <span className="small muted">
-                    {f.from} · {rp.type}
-                  </span>
-                  <span className="small">
-                    Level {rp.now[0]}–{rp.now[1]} · asks {fmtMoney(f.ask)}
-                    {rp.strengths.length ? ` · ${rp.strengths.join(', ')}` : ''}
-                  </span>
-                </div>
-                <div className="stack" style={{ gap: 6 }}>
-                  {f.signed ? (
-                    <span className="small">Signed</span>
-                  ) : (
-                    <>
-                      <button className="btn ghost small" disabled={fo.scout <= 0 || f.level >= 2} onClick={() => act((x) => F.scoutFree(x, i))}>
-                        Scout
-                      </button>
-                      <button className="btn small" disabled={!how} onClick={() => act((x) => F.signFree(x, i))} title={how ? '' : 'No room under the cap'}>
-                        {how === 'mle' ? 'Sign (MLE)' : 'Sign'}
-                      </button>
-                    </>
+      {tab === 'abroad' && (
+        <section className="card stack">
+          <p className="small muted">EuroLeague and leagues abroad. Their level is a guess until scouted (scouting points: {fo.scout}). Sign with cap room, the mid-level exception once a season, or the minimum.</p>
+          <div className="fo-list">
+            {m.free.map((f, i) => {
+              const rp = F.freeReport(f);
+              const how = F.signHow(fo, i);
+              return (
+                <div key={f.p.id}>
+                  <button className={`fo-row${openFree === i ? ' on' : ''}`} onClick={() => setOpenFree(openFree === i ? null : i)}>
+                    <span className="fo-pos">{f.p.pos}</span>
+                    <span className="fo-name">
+                      {f.p.name}
+                      <small>
+                        {f.from.replace(/ \(.*\)$/, '')} · asks {fmtMoney(f.ask)}
+                      </small>
+                    </span>
+                    <span className="fo-ovr">{f.signed ? 'Signed' : `${rp.now[0]}–${rp.now[1]}`}</span>
+                  </button>
+                  {openFree === i && (
+                    <div className="fo-card">
+                      <div className="small muted">
+                        {f.from} · age {f.p.age} · {rp.type}
+                        {rp.strengths.length ? ` · good at ${rp.strengths.join(', ').toLowerCase()}` : ''}
+                      </div>
+                      {f.level >= 2 && <PlayerCard p={f.p} />}
+                      {!f.signed && (
+                        <div className="row" style={{ gap: 8 }}>
+                          <button className="btn ghost small" disabled={fo.scout <= 0 || f.level >= 2} onClick={() => act((x) => F.scoutFree(x, i))}>
+                            Scout ({f.level}/2)
+                          </button>
+                          <button className="btn small" disabled={!how} onClick={() => act((x) => F.signFree(x, i))}>
+                            {how === 'mle' ? 'Sign (mid-level)' : how ? 'Sign' : 'No room'}
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      </section>
+              );
+            })}
+          </div>
+        </section>
+      )}
       <button className="btn block" onClick={() => act(F.toTactics)}>
         Done: set the game plan
       </button>

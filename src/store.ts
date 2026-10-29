@@ -1,7 +1,7 @@
 // The single app store. The engine mutates a GameState in place, so every action works
 // on a structured clone and swaps it in; React sees a new object each time.
 
-import { fastForward } from './engine/fast';
+import { fastForward, setFast } from './engine/fast';
 import { requestTrade } from './engine/career/team';
 import { recruitPlayer, takePayCut } from './engine/career/recruit';
 import { create } from 'zustand';
@@ -11,7 +11,7 @@ import { seasonLabel } from './ui/format';
 
 export type Tab = 'home' | 'season' | 'player' | 'league' | 'records';
 export type Theme = 'auto' | 'light' | 'dark';
-export type Mini = 'hub' | 'office' | 'threes' | 'legends';
+export type Mini = 'hub' | 'office' | 'threes' | 'legends' | 'lab';
 
 /** A short interstitial between steps (not part of the saved game). */
 export type Transition =
@@ -72,7 +72,7 @@ export const useStore = create<Store>((set, get) => ({
     const s = seed ?? Math.floor(Math.random() * 2 ** 31);
     const game = newGame(s, input);
     fastForward(game);
-    set({ game, tab: 'home', transition: null });
+    set({ game, tab: 'home', transition: null, mini: null });
   },
   choose: (choiceId) => {
     const g = get().game;
@@ -165,9 +165,7 @@ export const useStore = create<Store>((set, get) => ({
     const g = get().game;
     if (!g) return;
     const next = structuredClone(g);
-    next.flags.fast = next.flags.fast ? 0 : 1;
-    if (next.flags.fast) fastForward(next);
-    else next.flags.simPostseason = 0;
+    setFast(next, !next.flags.fast);
     set({ game: next, transition: null });
   },
   togglePlayoffs: () => {

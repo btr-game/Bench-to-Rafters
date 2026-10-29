@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ARCHETYPES } from '../../engine/player/archetypes';
 import { rerollAttrs } from '../../engine/player/create';
 import { makeRng } from '../../engine/rng';
-import { ATTRS, HEIGHT_LIMITS, HEIGHT_RANGE, MODES, POSITIONS, type Mode } from '../../engine/balance';
+import { ATTRS, DIFFICULTIES, HEIGHT_LIMITS, HEIGHT_RANGE, MODES, POSITIONS, type Mode } from '../../engine/balance';
 import type { AttrKey, Attrs, Pos } from '../../engine/types';
 import { NAMES, UI } from '../../content/strings';
 import { FIRST_NAMES, LAST_NAMES } from '../../content/names';
@@ -21,9 +21,12 @@ function cards(pos: Pos): Attrs[] {
   return ARCHETYPES[pos].map((a) => ({ ...a.attrs }));
 }
 
-export function Create() {
+/** The new-career page. `lab` opens it as the Built in a lab mini-game (round 11). */
+export function Create({ lab: labGame = false }: { lab?: boolean } = {}) {
   const start = useStore((s) => s.start);
-  const [step, setStep] = useState(0);
+  const setMini = useStore((s) => s.setMini);
+  const hasCareer = useStore((s) => !!s.game);
+  const [step, setStep] = useState(labGame ? 1 : 0);
   const [name, setName] = useState(`${pick(FIRST_NAMES)} ${pick(LAST_NAMES)}`);
   const [number, setNumber] = useState(String(Math.floor(Math.random() * 35)));
   const [pos, setPos] = useState<Pos>('SG');
@@ -31,7 +34,7 @@ export function Create() {
   const [cands, setCands] = useState<Attrs[]>(() => cards('SG'));
   const [focus, setFocus] = useState<AttrKey[]>([]);
   const [hand, setHand] = useState<'R' | 'L'>('R');
-  const [mode, setMode] = useState<Mode>('standard');
+  const [mode, setMode] = useState<Mode>(labGame ? 'lab' : 'standard');
   const [country, setCountry] = useState(''); // '' = the game decides, by real-world odds
   const [height, setHeight] = useState(midHeight('SG')); // built in a lab: the player picks it
   const lab = mode === 'lab';
@@ -62,7 +65,8 @@ export function Create() {
   const archetype = ARCHETYPES[pos][arch];
   const [hMin, hMax] = HEIGHT_RANGE[pos];
   const canNext = step === 1 ? name.trim().length > 0 : step === 3 ? lab || focus.length === 2 : true;
-  const steps = UI.create.steps.map((x, i) => (i === 3 && lab ? 'Height' : x));
+  const steps = UI.create.steps.map((x, i) => (i === 3 && lab ? 'Height' : i === 0 && labGame ? 'Lab' : x));
+  const [armed, setArmed] = useState(false);
 
   const begin = () =>
     start({
@@ -89,11 +93,17 @@ export function Create() {
         </button>
       </header>
       <section className="hero">
-        <div className="kicker">A basketball career game</div>
+        <div className="kicker">{labGame ? 'Mini-game · Built in a lab' : 'A basketball career game'}</div>
         <h1>
           Bench<span>to Rafters</span>
         </h1>
-        <p className="lede">
+        {labGame && (
+          <p className="lede">
+            Build a player your way: training and events pay out credits, and you spend them on any rating. Pick your own height. It plays at fast-break pace.
+            {hasCareer ? ' Starting a lab player ends the career you have in progress.' : ''}
+          </p>
+        )}
+        <p className="lede" hidden={labGame}>
           Start at 14, in an American high school or a club academy somewhere in the world. Find your road to the NBA through college, Europe or
           the G League, get drafted, and find out whether your jersey ends up hanging in the rafters.
         </p>
@@ -109,16 +119,16 @@ export function Create() {
 
       {step === 0 && (
         <section className="stack">
-          <div className="kicker">Choose how you want to play</div>
+          <div className="kicker">Choose how hard the road is</div>
           <div className="modes">
-            {(Object.keys(MODES) as Mode[]).map((m) => (
+            {DIFFICULTIES.map((m) => (
               <button key={m} className={`choice mode-card${mode === m ? ' selected' : ''}`} aria-pressed={mode === m} onClick={() => setMode(m)}>
                 <span className="label">{MODES[m].name}</span>
                 <small>{MODES[m].blurb}</small>
               </button>
             ))}
           </div>
-          <p className="muted small">The league is the same in every mode. What changes is your potential, how fast you grow, how often you get hurt and how much of the game you play yourself.</p>
+          <p className="muted small">The league is the same at every difficulty. What changes is your potential, how fast you grow and how often you get hurt. Want it quicker? Flip the Fast break switch inside the game, any time.</p>
           <MiniGamesCard />
 
         </section>
@@ -292,7 +302,12 @@ export function Create() {
 
       <div style={{ height: 14 }} />
       <div className="row-end">
-        {step > 0 && (
+        {labGame && step === 1 && (
+          <button className="btn ghost" onClick={() => setMini('hub')}>
+            {UI.create.back}
+          </button>
+        )}
+        {step > (labGame ? 1 : 0) && (
           <button className="btn ghost" onClick={() => setStep(step - 1)}>
             {UI.create.back}
           </button>
@@ -302,8 +317,8 @@ export function Create() {
             {UI.create.next}
           </button>
         ) : (
-          <button className="btn" onClick={begin}>
-            {UI.create.start}
+          <button className="btn" onClick={() => (labGame && hasCareer && !armed ? setArmed(true) : begin())}>
+            {labGame && hasCareer && armed ? 'Tap again: end my career' : UI.create.start}
           </button>
         )}
       </div>
