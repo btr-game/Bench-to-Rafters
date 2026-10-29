@@ -91,6 +91,18 @@ const SECTIONS: { title: string; where: string; items: [string, string][] }[] = 
     ],
   },
   {
+    title: 'The look',
+    where: 'Everywhere: pixel art for your player, your teams and your story',
+    items: [
+      ['Your player', 'A pixel player with a big head, in your team’s kit. His look (skin, hair, a beard, a headband or an arm sleeve) comes with his name and stays all career; the pose shows his position: the point guard low on the dribble, the two guard bouncing it, the wing on a jumper, the four with the ball on his hip, the five flying in for a dunk.'],
+      ['Kits', 'Player tab: every team has a home, road and city jersey. NBA teams wear their own colours and wordmarks; every other team gets a kit in its colours. Tap a kit to dress your player in it.'],
+      ['Legends', 'Every legend is drawn with his real look: Iverson’s cornrows and headband, Kareem’s goggles, Dr. J’s afro, Bird’s mop, LeBron’s beard. You meet them in the Legends showdown and the contests.'],
+      ['Story scenes', 'Turning points, storyline chapters, draft night and story pages open with a picture of where it happens: the arena, the gym, the city at night, home, the agent’s office, the clinic, the press room, a street court, the locker room, the draft stage, a title night, an awards stage or a medal game.'],
+      ['Crests, banners and rings', 'Teams carry crests in their colours. Records shows your championship banners and rings, the trophy cabinet has an icon for every honour, and a retired number hangs as a banner in the rafters.'],
+      ['Contests', 'The three-point and dunk contests play out in a full arena: the crowd, the LED ribbon, a scoreboard, the shot or the dunk animated, and the judges’ cards.'],
+    ],
+  },
+  {
     title: 'The goal',
     where: 'The end of your career',
     items: [
@@ -239,7 +251,7 @@ export function guideStep(g: GameState): { spot: GuideSpot; text: string } {
         ? 'Choose where you play next. Compare the role, the level and the money: minutes matter most for growth.'
         : d.kind === 'draft' || d.kind === 'declare' || d.kind === 'withdraw'
           ? 'A draft decision. The scouting report shows where you are projected to go.'
-          : 'A turning point: pick how you respond. The result is rolled each time; the risk tag shows how swingy it is.');
+          : 'A turning point (the picture shows where it happens): pick how you respond. The result is rolled each time; the risk tag shows how swingy it is.');
     return { spot: 'main', text };
   }
   if (g.step === 'offseason' && (canChangeFocus(g) || (canRecruit(g) && !(g.recruit?.moves ?? 0)) || (canSetStyle(g) && !currentStyle(g)))) {

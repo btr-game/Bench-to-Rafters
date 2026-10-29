@@ -157,7 +157,7 @@ const ICONS = {
     'OOOO......OOOO..',
   ],
 };
-export type IconKind = keyof typeof ICONS;
+type IconKind = keyof typeof ICONS;
 
 /** The icon for an award, by its key (engine/awards/tiers.ts) or, failing that, its name. */
 export function iconFor(key: string, label: string): { icon: IconKind; metal: Metal } {

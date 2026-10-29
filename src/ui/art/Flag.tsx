@@ -149,8 +149,6 @@ const FLAGS: Record<string, (g: G) => void> = {
   },
 };
 
-export const hasFlag = (country: string) => !!FLAGS[country];
-
 export function FlagArt({ country, size = 24 }: { country: string; size?: number }) {
   const paths = useMemo(() => {
     const g: G = Array.from({ length: H }, () => Array(W).fill(''));

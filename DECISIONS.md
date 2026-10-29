@@ -999,3 +999,33 @@ Reached from the start page and from the bottom of Home (a career in progress is
 - **Enter during a final reel** presses "Skip to the final buzzer" (marked `data-skip`; the half
   simulation's Skip too) instead of Continue, and Continue only takes focus once the reel has
   ended. A second Enter continues, so an early Enter never skips the result.
+
+## Round 17: graphics
+
+- **The version without graphics** is kept on the `pre-graphics` branch and its own published
+  page.
+- **Logos:** the real logos are trademarks, so each NBA team gets its own crest: a motif in its
+  real colours (a shamrock, a bridge, a bull's horns...), not a copy. Jerseys follow the real
+  home, road and city colours and wordmarks. Other leagues get simpler kits and crests made from
+  the team colour.
+- **Players:** the first two sprites (a lit skeleton, then a 1.5x version) did not come close to
+  the owner's hand-drawn references, and a generator that has to draw any player in any kit and
+  pose cannot match pixels placed by an artist. The owner's fallback was "go cute like the last
+  one" (the Tiny Hoopers style), so the players are drawn that way: a big head on a small body,
+  flat colours with one shade, a dark outline. The five poses (PG low dribble, SG dribble, SF
+  jumper follow-through, PF ball on the hip, C one-hand dunk), a portrait crop, the face, 13 hair
+  styles, 7 facial hair styles and the gear (headband, goggles, unibrow, sleeve, wristband) are
+  pixel maps drawn by hand, one letter per pixel, and painted in the kit. The sprite and the
+  portrait share one look, so a legend is the same person everywhere.
+- **Looks:** legends take theirs from `content/legendLooks.ts` (about 155, from each player's
+  well-known look at his peak with that franchise). Everyone else gets one from a hash of the
+  name, so a career keeps its face.
+- **Story scenes:** events carry no category, so the scene is picked from the title by keyword
+  (nine places plus draft, title, award and medal nights); story pages use their kind. On a
+  court the player plays his position's pose, off it he stands, and on a title or medal night he
+  throws a fist up.
+- **Contests:** scenes that animate the ball themselves use the pose with its ball taken out
+  (`noBall`), so there is never a second ball in the player's hand.
+- **Not yet done:** team touches in the interface (stripes, crest watermarks), hardwood and
+  streetball textures, and country backdrops for high school abroad and overseas leagues.
+- **Balance:** no engine change this round, so no harness run.

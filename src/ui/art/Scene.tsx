@@ -14,13 +14,13 @@ import { DRIBBLE, DUNK, JUMPER, LOWDRIBBLE, TRIPLE, noBall, paint } from './spri
 // room) and four big nights (draft night, a title, an award, a medal), with the player standing
 // in it in his team's colours.
 
-export type SceneKind = 'arena' | 'gym' | 'night' | 'home' | 'office' | 'clinic' | 'press' | 'street' | 'locker' | 'draft' | 'title' | 'award' | 'medal';
+type SceneKind = 'arena' | 'gym' | 'night' | 'home' | 'office' | 'clinic' | 'press' | 'street' | 'locker' | 'draft' | 'title' | 'award' | 'medal';
 
 const W = 192;
 const H = 72;
 
 /** Which scene a story belongs in, from its title (and kind, for story pages). */
-export function sceneFor(title: string, kind?: string): SceneKind {
+function sceneFor(title: string, kind?: string): SceneKind {
   const t = title.toLowerCase();
   if (kind === 'intro') return 'street';
   if (kind === 'commit') return 'press';
@@ -267,7 +267,7 @@ const STANDING = noBall(DRIBBLE);
 const FIST_UP = noBall(JUMPER);
 const COURT: SceneKind[] = ['arena', 'street'];
 
-export function SceneArt({ kind, kit, name, number, pos, accent }: { kind: SceneKind; kit: Kit; name: string; number: number; pos?: Pos; accent: string }) {
+function SceneArt({ kind, kit, name, number, pos, accent }: { kind: SceneKind; kit: Kit; name: string; number: number; pos?: Pos; accent: string }) {
   const bg = useMemo(() => toPaths(paintScene(kind, accent)), [kind, accent]);
   // on the court he plays his position; at a title or a medal he throws a fist up; off it he just stands
   const pose = kind === 'title' || kind === 'medal' ? FIST_UP : kind === 'gym' ? DUNK : COURT.includes(kind) ? POSES[pos ?? 'SG'] : STANDING;

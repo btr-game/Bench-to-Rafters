@@ -11,8 +11,8 @@ import { DRIBBLE, DUNK, JUMPER, LOWDRIBBLE, TRIPLE, paint, type Look, type Pose 
 // headband or an arm sleeve) comes from his name, so he looks the same all career; the kit
 // changes with every team: home, road or city edition.
 
-export const SKINS = ['#F3D2B8', '#E8BC98', '#D4A077', '#B67F55', '#8E5B3A', '#6B4029', '#4C2C1C'];
-export const HAIRS: Record<LegendLook['color'], string> = { k: '#231B18', b: '#5A3A22', l: '#D9B26A', r: '#B4532A', g: '#9AA0A8', x: '#3FBF6A' };
+const SKINS = ['#F3D2B8', '#E8BC98', '#D4A077', '#B67F55', '#8E5B3A', '#6B4029', '#4C2C1C'];
+const HAIRS: Record<LegendLook['color'], string> = { k: '#231B18', b: '#5A3A22', l: '#D9B26A', r: '#B4532A', g: '#9AA0A8', x: '#3FBF6A' };
 
 export type KitName = 'home' | 'road' | 'city';
 
@@ -23,7 +23,7 @@ export const styleLeague = (level?: string): KitLeague | undefined =>
 /** One pose per position: the point guard low on the dribble, the two guard driving, the wing
  * rising for a jumper, the four in triple threat, the five flying in for a dunk. */
 const POSES = { PG: LOWDRIBBLE, SG: DRIBBLE, SF: JUMPER, PF: TRIPLE, C: DUNK };
-export const poseFor = (pos?: Pos): Pose => POSES[pos ?? 'SG'];
+const poseFor = (pos?: Pos): Pose => POSES[pos ?? 'SG'];
 
 /** How a player looks: a legend as he really did (content/legendLooks.ts), anyone else from his name. */
 export function lookOf(name: string, shoe: string): Look {
