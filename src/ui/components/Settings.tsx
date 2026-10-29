@@ -157,9 +157,15 @@ export function useKeys(active: boolean) {
       if (t.closest('input, textarea, select, [contenteditable]')) return;
       const dialog = document.querySelector<HTMLElement>('[role="dialog"]');
       if (e.key === 'Enter') {
+        // the shop: Enter always leaves, even with an item's button still focused after a purchase
+        const leave = !dialog && tab === 'home' ? document.querySelector<HTMLElement>('.o-main [data-enter]') : null;
+        if (leave) {
+          e.preventDefault();
+          leave.click();
+          return;
+        }
         if (t.tagName === 'BUTTON') return; // the browser presses a focused button itself
-        // the main button, or the one marked as the way on (leaving the shop)
-        const target = dialog ? (dialog.querySelector<HTMLElement>('.btn:not(:disabled)') ?? dialog) : tab === 'home' ? document.querySelector<HTMLElement>('.o-main .btn.block:not(:disabled), .o-main [data-enter]') : null;
+        const target = dialog ? (dialog.querySelector<HTMLElement>('.btn:not(:disabled)') ?? dialog) : tab === 'home' ? document.querySelector<HTMLElement>('.o-main .btn.block:not(:disabled)') : null;
         if (target) {
           e.preventDefault();
           target.click();
@@ -187,5 +193,5 @@ export function useKeys(active: boolean) {
 }
 
 function choices(): HTMLElement[] {
-  return [...document.querySelectorAll<HTMLElement>('.o-main button.choice:not(:disabled), .o-main button.offer, .o-main button.item:not(:disabled)')].slice(0, CHOICE_KEYS.length);
+  return [...document.querySelectorAll<HTMLElement>('.o-main button.choice:not(:disabled):not([data-enter]), .o-main button.offer, .o-main button.item:not(:disabled)')].slice(0, CHOICE_KEYS.length);
 }

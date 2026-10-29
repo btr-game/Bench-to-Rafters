@@ -252,7 +252,9 @@ export function DecisionView({ g, d }: { g: GameState; d: Decision }) {
           })}
         </div>
         <button className="choice" data-enter onClick={() => choose('leave')}>
-          <span className="label">Leave the shop</span>
+          <span className="label">
+            Leave the shop <kbd className="hide-touch">Enter</kbd>
+          </span>
           <small>Save the money.</small>
         </button>
       </div>

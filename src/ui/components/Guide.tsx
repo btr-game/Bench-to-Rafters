@@ -207,7 +207,7 @@ export function guideStep(g: GameState): { spot: GuideSpot; text: string } {
     const d = pr.decision;
     const HINT: Record<string, string> = {
       plan: 'Pick your training plan for this half. One plan alone works a little better; tap a second to add a side plan. Then confirm (Enter).',
-      shop: 'The shop: buy something that helps (ratings, health, fame) or leave it.',
+      shop: 'The shop: buy something that helps (ratings, health, fame), then press Enter (or Leave the shop) to move on.',
       summer: 'Pick your summer program: it shapes next season\u2019s growth and your body.',
       live: 'A playoff game: pick a tactic for this quarter, or simulate the game, the series or the rest.',
       national: 'A national team call: medals and reputation, at the cost of rest.',
