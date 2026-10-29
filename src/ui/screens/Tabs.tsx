@@ -8,7 +8,8 @@ import { TextBracket } from '../components/TextBracket';
 import { useState, type ReactNode } from 'react';
 import { VenueArt, venueOf, type VenueKind } from '../art/Venue';
 import { TeamArt } from '../art/Crest';
-import { PlayerArt } from '../art/Player';
+import { PlayerArt, kitFor, type KitName } from '../art/Player';
+import { JerseyArt } from '../art/Jersey';
 import type { GameLog, GameState, League, SeasonRecord, SeriesResult, StatLine, Team } from '../../engine/types';
 import { ATTRS, LEVELS } from '../../engine/balance';
 import { ovrOf } from '../../engine/player/ovr';
@@ -412,11 +413,12 @@ export function PlayerTab({ g }: { g: GameState }) {
   const contractTeam = c && lg ? lg.teams.find((x) => x.id === c.teamId)?.name : null;
   const now = Math.round(ovr(g));
   const start = g.season?.attrsStart ? Math.round(ovrOf(g.season.attrsStart as GameState['player']['attrs'], p.pos)) : now;
+  const [kit, setKit] = useState<KitName>('home');
   return (
     <div className="page">
       <PageHero
         venue={venueOf(g)}
-        art={<PlayerArt name={p.name} number={p.number} color={t?.color} size={128} />}
+        art={<PlayerArt name={p.name} number={p.number} pos={p.pos} color={t?.color} team={t?.name} abbr={t?.abbr} kit={kit} size={150} />}
         color={t?.color}
         kicker={`#${p.number} · ${NAMES.pos[p.pos]} · ${ht(p.height)}`}
         title={p.name}
@@ -440,6 +442,18 @@ export function PlayerTab({ g }: { g: GameState }) {
           </div>
         </Card>
         <div className="stack">
+          {t && (
+            <Card title="Kits" kicker={t.name}>
+              <div className="kits">
+                {(['home', 'road', 'city'] as const).map((k) => (
+                  <button key={k} className="kit" aria-pressed={kit === k} onClick={() => setKit(k)}>
+                    <JerseyArt kit={kitFor(t.name, t.abbr, t.color, k)} number={p.number} size={76} label={`${t.name} ${k} jersey`} />
+                    <span>{k === 'city' ? 'City edition' : k === 'home' ? 'Home' : 'Road'}</span>
+                  </button>
+                ))}
+              </div>
+            </Card>
+          )}
           <Card title="Status">
             <div className="meters">
               <Meter label="Morale" value={p.morale} tone={p.morale < 35 ? 'bad' : p.morale > 70 ? 'good' : undefined} />
@@ -769,7 +783,7 @@ export function RecordsTab({ g }: { g: GameState }) {
     <div className="page">
       <PageHero
         venue={venueOf(g)}
-        art={<PlayerArt name={g.player.name} number={g.player.number} color={t?.color} size={112} />}
+        art={<PlayerArt name={g.player.name} number={g.player.number} pos={g.player.pos} color={t?.color} team={t?.name} abbr={t?.abbr} size={120} />}
         color={t?.color}
         kicker={`${g.history.length} season${g.history.length === 1 ? '' : 's'} · legacy score ${legacyScore(g)}`}
         title={`${g.player.name}: the career`}

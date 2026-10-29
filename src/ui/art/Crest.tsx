@@ -1,10 +1,14 @@
 import { useMemo } from 'react';
-import { hash, ink, shade, tint } from './color';
+import { NBA_TEAMS } from '../../content/teams';
+import { TEAM_STYLE, type TeamStyle } from '../../content/teamStyle';
+import { hash, ink, rgb, shade, tint } from './color';
+import { MOTIFS } from './motifs';
 import { glyph, inCircle, inPoly, toPaths, type Pt } from './pixel';
 
-// Team crests (round 17), in pixels to match the player sprites. Generic on purpose: no real
-// logos. Each team gets a shape, a pattern and an emblem picked from its name, painted in its
-// own colour, so the same team always wears the same crest and neighbours rarely match.
+// Team crests (round 17), in pixels to match the player sprites. NBA teams get their real colours
+// and a motif that nods to the club (content/teamStyle.ts, art/motifs.ts); never a copy of a real
+// logo. Every other team (college, G League, clubs abroad) gets a generic crest: a shape, a
+// pattern and an emblem picked from its name, painted in its own colour.
 
 const N = 24;
 const SHAPES: ((x: number, y: number) => boolean)[] = [
@@ -68,10 +72,63 @@ function paintCrest(name: string, abbr: string, color: string): string[][] {
   return grid;
 }
 
+const lum = (c: string) => {
+  const [r, g, b] = rgb(c);
+  return 0.299 * r + 0.587 * g + 0.114 * b;
+};
+/** The first colour that stands out on the background. */
+const against = (bg: string, ...options: string[]) => options.find((c) => Math.abs(lum(c) - lum(bg)) > 70) ?? ink(bg);
+
+const M = 32;
+// 0 shield, 1 roundel, 2 hexagon, 3 pennant, 4 badge: the outline closest to each club's own style
+const NBA_SHAPE: Record<string, number> = { BOS: 1, BKN: 1, NYK: 1, PHI: 1, TOR: 1, DET: 1, IND: 1, MIL: 1, ATL: 1, MIA: 1, WAS: 1, DEN: 1, GSW: 1, LAL: 1, HOU: 1, CLE: 0, NOP: 0, SAC: 0, POR: 0, ORL: 0, CHI: 4, UTA: 4, DAL: 4, MEM: 4, CHA: 2, MIN: 2, OKC: 2, SAS: 3, PHX: 3, LAC: 3 };
+
+function paintNbaCrest(abbr: string, st: TeamStyle): string[][] {
+  const shapeAt = SHAPES[NBA_SHAPE[abbr] ?? hash(abbr) % SHAPES.length];
+  const inside = (x: number, y: number) => x >= 0 && y >= 0 && x < M && y < M && shapeAt(((x + 0.5) * 24) / M, ((y + 0.5) * 24) / M);
+  const ring = against(st.c1, st.c2, st.c3, '#FFFFFF');
+  const motifInk = against(st.c1, st.c2 === ring ? '#FFFFFF' : st.c2, '#FFFFFF', st.c3);
+  const accent = against(motifInk, st.c3, st.c1, st.c2);
+  const grid: string[][] = Array.from({ length: M }, () => Array(M).fill(''));
+  for (let y = 0; y < M; y++)
+    for (let x = 0; x < M; x++) {
+      if (!inside(x, y)) {
+        if (inside(x - 1, y) || inside(x + 1, y) || inside(x, y - 1) || inside(x, y + 1)) grid[y][x] = '#17131A';
+        continue;
+      }
+      const d1 = !inside(x - 1, y) || !inside(x + 1, y) || !inside(x, y - 1) || !inside(x, y + 1);
+      const d2 = !inside(x - 2, y) || !inside(x + 2, y) || !inside(x, y - 2) || !inside(x, y + 2);
+      const d3 = !inside(x - 3, y) || !inside(x + 3, y) || !inside(x, y - 3) || !inside(x, y + 3);
+      grid[y][x] = d1 ? shade(ring, 0.25) : d2 ? ring : d3 ? shade(st.c1, 0.35) : y < 10 && (x + y) % 9 === 0 ? tint(st.c1, 0.1) : st.c1;
+    }
+  const motif = MOTIFS[TEAM_STYLE[abbr].motif];
+  const x0 = Math.floor((M - motif[0].length) / 2);
+  const y0 = 4 + Math.floor((13 - motif.length) / 2);
+  const shadow = shade(st.c1, 0.45);
+  motif.forEach((row, dy) => [...row].forEach((ch, dx) => ch !== '.' && inside(x0 + dx + 1, y0 + dy + 1) && grid[y0 + dy + 1][x0 + dx + 1] === st.c1 && (grid[y0 + dy + 1][x0 + dx + 1] = shadow)));
+  motif.forEach((row, dy) => [...row].forEach((ch, dx) => ch !== '.' && (grid[y0 + dy][x0 + dx] = ch === '+' ? accent : motifInk)));
+  // the team code on a band across the bottom
+  const band = shade(st.c1, 0.4);
+  for (let y = 20; y < 27; y++) for (let x = 0; x < M; x++) if (inside(x, y) && inside(x - 3, y) && inside(x + 3, y)) grid[y][x] = band;
+  const label = abbr.toUpperCase();
+  const width = label.length * 4 - 1;
+  const lx = Math.floor((M - width) / 2);
+  [...label].forEach((ch, i) => {
+    const g = glyph(ch);
+    for (let k = 0; k < 15; k++) if (g[k] === '1') grid[21 + Math.floor(k / 3)][lx + i * 4 + (k % 3)] = ring === '#FFFFFF' || lum(ring) > 120 ? ring : '#FFFFFF';
+  });
+  return grid;
+}
+
+/** The NBA team a crest belongs to, if any (a college or club abroad can share a short code). */
+const nbaAbbr = (name: string, abbr: string) => (TEAM_STYLE[abbr] && NBA_TEAMS.some((t) => t.abbr === abbr && name.includes(t.nick)) ? abbr : null);
+
 export function TeamArt({ name, abbr, color = '#2A2F36', size = 44 }: { name: string; abbr: string; color?: string; size?: number }) {
-  const paths = useMemo(() => toPaths(paintCrest(name, abbr, color)), [name, abbr, color]);
+  const nba = nbaAbbr(name, abbr);
+  const paths = useMemo(() => toPaths(nba ? paintNbaCrest(nba, TEAM_STYLE[nba]) : paintCrest(name, abbr, color)), [nba, name, abbr, color]);
+  const n = nba ? M : N;
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" className="art art-team" data-art="team-logo" width={size} height={size} viewBox={`0 0 ${N} ${N}`} shapeRendering="crispEdges" role="img" aria-label={`${name} crest`}>
+    <svg xmlns="http://www.w3.org/2000/svg" className="art art-team" data-art="team-logo" width={size} height={size} viewBox={`0 0 ${n} ${n}`} shapeRendering="crispEdges" role="img" aria-label={`${name} crest`}>
       {paths.map((p) => (
         <path key={p.fill} d={p.d} fill={p.fill} />
       ))}

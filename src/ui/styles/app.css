@@ -1178,3 +1178,7 @@ td .art-team { display: inline-block; vertical-align: middle; margin: -3px 8px -
 .page-hero .art-venue { position: absolute; right: 0; bottom: 0; height: 100%; width: 100%; color: var(--team, var(--accent)); opacity: 0.24; pointer-events: none; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .page-hero .art-venue { opacity: 0.4; } }
 :root[data-theme="dark"] .page-hero .art-venue { opacity: 0.4; }
+.kits { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.kit { display: grid; justify-items: center; gap: 4px; padding: 8px 4px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); font-size: 14px; }
+.kit[aria-pressed='true'] { border-color: var(--team, var(--accent)); box-shadow: inset 0 0 0 1px var(--team, var(--accent)); background: var(--surface-2); }
+.art-jersey { image-rendering: pixelated; }

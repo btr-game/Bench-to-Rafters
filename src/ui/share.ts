@@ -40,11 +40,11 @@ function mainTeam(g: GameState): { name: string; color: string } | null {
 }
 
 /** His sprite, as on the pages, drawn off-screen and turned into an image for the canvas. */
-async function portrait(g: GameState, color: string): Promise<HTMLImageElement | null> {
+async function portrait(g: GameState, color: string, teamName: string): Promise<HTMLImageElement | null> {
   try {
     const host = document.createElement('div');
     const root = createRoot(host);
-    flushSync(() => root.render(createElement(PlayerArt, { name: g.player.name, number: g.player.number, color, size: 240 })));
+    flushSync(() => root.render(createElement(PlayerArt, { name: g.player.name, number: g.player.number, pos: g.player.pos, color, team: teamName, abbr: NBA_TEAMS.find((t) => teamName.includes(t.nick))?.abbr ?? '', size: 240 })));
     // an SVG image can't reach the page's fonts: the jersey number falls back to a system face
     const svg = host.innerHTML.replace(/var\(--f-display\)/g, 'Impact, Arial Narrow, sans-serif');
     root.unmount();
@@ -99,10 +99,10 @@ export async function drawCareerCard(g: GameState): Promise<HTMLCanvasElement> {
   ctx.fillRect(60, 120, W - 120, 330);
   ctx.fillStyle = tc;
   ctx.fillRect(60, 120, 10, 330);
-  const face = await portrait(g, tc);
+  const face = await portrait(g, tc, team?.name ?? '');
   if (face) {
     ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(face, 104, 140, 126, 168);
+    ctx.drawImage(face, 100, 136, (face.width * 172) / face.height, 172);
     ctx.imageSmoothingEnabled = true;
   }
 
