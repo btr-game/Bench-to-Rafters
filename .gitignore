@@ -13,3 +13,6 @@ build
 coverage
 *.pem
 *.key
+
+# local art preview page (round 17), not part of the game
+preview/
