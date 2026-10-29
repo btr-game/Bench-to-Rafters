@@ -4,7 +4,7 @@ import { toPaths, DIGITS } from '../art/pixel';
 import { blankGrid, paintCrowd, paintFloor, paintRibbon } from '../art/arena';
 import { ballValue, THREES } from '../../engine/mini/threes';
 import { mix } from '../art/color';
-import { paint, DRIBBLE, JUMPER } from '../art/sprite';
+import { paint, noBall, DRIBBLE, JUMPER } from '../art/sprite';
 import { lookOf } from '../art/Player';
 
 // The three-point contest arena (round 17), in pixels: a crowd behind the glass, the hoop and
@@ -97,7 +97,7 @@ export function ThreesCourt({ kit, name, accent, rack, balls, moneyRack, onFire,
   const arena = useMemo(() => toPaths(paintArena(accent)), [accent]);
   const shooter = useMemo(() => {
     const look = lookOf(name, kit.base === '#FFFFFF' ? kit.ink : kit.base);
-    return { stand: toPaths(paint(DRIBBLE, kit, look, 0)), shoot: toPaths(paint(JUMPER, kit, look, 0)) };
+    return { stand: toPaths(paint(DRIBBLE, kit, look, 0)), shoot: toPaths(paint(noBall(JUMPER), kit, look, 0)) };
   }, [name, kit]);
   const [flight, setFlight] = useState<Flight | null>(null);
   const [pos, setPos] = useState<[number, number] | null>(null);
@@ -107,8 +107,9 @@ export function ThreesCourt({ kit, name, accent, rack, balls, moneyRack, onFire,
   // the shooter stands on the outside of his rack
   const sx = rx + (rx < 120 ? 14 : rx > 200 ? -14 : 16);
   const sy = ry + 4;
-  const scale = 0.62;
-  const hand: [number, number] = [sx + (8 - 22) * scale, sy - 62 * scale + 6 * scale];
+  // the ball leaves from over his head, where the jumper holds it
+  const hand: [number, number] = [sx - JUMPER.w / 2 + 14, sy - JUMPER.h + 2];
+  const body = shooting ? JUMPER : DRIBBLE;
 
   useEffect(() => {
     if (!shot) return;
@@ -200,7 +201,7 @@ export function ThreesCourt({ kit, name, accent, rack, balls, moneyRack, onFire,
         }),
       )}
       {/* the shooter */}
-      <g transform={`translate(${sx - 22 * scale} ${sy - 62 * scale}) scale(${scale})`}>
+      <g transform={`translate(${Math.round(sx - body.w / 2)} ${sy - body.h})`}>
         {(shooting ? shooter.shoot : shooter.stand).map((p) => (
           <path key={p.fill} d={p.d} fill={p.fill} />
         ))}

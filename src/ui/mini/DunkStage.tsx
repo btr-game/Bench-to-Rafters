@@ -5,7 +5,7 @@ import { blankGrid, paintCrowd, paintFloor, paintRibbon } from '../art/arena';
 import { mix } from '../art/color';
 import { DIGITS, toPaths } from '../art/pixel';
 import { lookOf } from '../art/Player';
-import { DRIBBLE, DUNK, paint } from '../art/sprite';
+import { DRIBBLE, DUNK, noBall, paint, type Pose } from '../art/sprite';
 
 // The dunk contest stage (round 17), side on: the crowd, the stanchion, glass and rim on the
 // right, hardwood with the free-throw line, the judges' table up front. The dunker runs in from
@@ -17,7 +17,7 @@ const SW = 320;
 const SH = 180;
 const FLOOR = 150; // where feet land
 const RIM: [number, number] = [258, 74];
-const SCALE = 0.85;
+const SCALE = 1.4;
 const START: Record<string, number> = { stand: 214, run: 52, ft: 44 };
 const TAKEOFF: Record<string, number> = { stand: 222, run: 196, ft: 150 };
 
@@ -67,7 +67,8 @@ function path(d: DunkDesign, t: number): { x: number; y: number; air: boolean; f
   return { x: rx - 12 - u * 8, y: FLOOR - 52 + 52 * u * u, air: u < 0.95, flip: false };
 }
 
-function Sprite({ paths, x, y, flip = false, scale = SCALE, w = 44, h = 62 }: { paths: { fill: string; d: string }[]; x: number; y: number; flip?: boolean; scale?: number; w?: number; h?: number }) {
+function Sprite({ paths, x, y, flip = false, scale = SCALE, pose = DRIBBLE }: { paths: { fill: string; d: string }[]; x: number; y: number; flip?: boolean; scale?: number; pose?: Pose }) {
+  const { w, h } = pose;
   // anchored at the feet, centred
   const tx = Math.round(x - (w * scale) / 2);
   const ty = Math.round(y - h * scale);
@@ -104,7 +105,7 @@ export function DunkStage({ kit, name, design, phase, progress = 0, made = true,
     const look = lookOf(name, kit.base === '#FFFFFF' ? kit.ink : kit.base);
     const mate = { base: '#3A3D46', ink: '#FFFFFF', trim: '#F5C542', word: 'ALL-STAR' };
     const mateLook = lookOf(`${name} teammate`, '#18141C');
-    return { run: toPaths(paint(DRIBBLE, kit, look, 0)), fly: toPaths(paint(DUNK, kit, look, 0)), mate: toPaths(paint(DRIBBLE, mate, mateLook, 0)) };
+    return { run: toPaths(paint(noBall(DRIBBLE), kit, look, 0)), fly: toPaths(paint(noBall(DUNK), kit, look, 0)), mate: toPaths(paint(noBall(DRIBBLE), mate, mateLook, 0)) };
   }, [name, kit]);
   const [t, setT] = useState(phase === 'replay' ? 0 : 0);
   const raf = useRef(0);
@@ -166,14 +167,14 @@ export function DunkStage({ kit, name, design, phase, progress = 0, made = true,
         ))}
       </g>
       {/* a teammate: lobbing from the wing, or standing in the way to be jumped over */}
-      {design.prop === 'lob' && <Sprite paths={sprites.mate} x={96} y={FLOOR - 6} scale={0.7} flip />}
-      {design.prop === 'over' && <Sprite paths={sprites.mate} x={(TAKEOFF[design.takeoff] ?? 196) + 14} y={FLOOR} scale={0.72} />}
+      {design.prop === 'lob' && <Sprite paths={sprites.mate} x={96} y={FLOOR - 6} scale={1.15} flip />}
+      {design.prop === 'over' && <Sprite paths={sprites.mate} x={(TAKEOFF[design.takeoff] ?? 196) + 14} y={FLOOR} scale={1.2} />}
       {/* rim and net, shaking on a slam */}
       <g transform={`translate(0 ${shake})`}>
         <path d={`M${RIM[0] - 14} ${RIM[1]}h14v2h-14z`} fill="#E2551B" />
         <path d={`M${RIM[0] - 13} ${RIM[1] + 2}h1v9h-1z M${RIM[0] - 9} ${RIM[1] + 2}h1v10h-1z M${RIM[0] - 5} ${RIM[1] + 2}h1v10h-1z M${RIM[0] - 2} ${RIM[1] + 2}h1v9h-1z M${RIM[0] - 12} ${RIM[1] + 6}h10v1h-10z M${RIM[0] - 11} ${RIM[1] + 10}h8v1h-8z`} fill="#F4F6FA" className={slam ? 'whip' : ''} />
       </g>
-      <Sprite paths={p.air ? sprites.fly : sprites.run} x={p.x} y={p.y} flip={p.flip} />
+      <Sprite paths={p.air ? sprites.fly : sprites.run} pose={p.air ? DUNK : DRIBBLE} x={p.x} y={p.y} flip={p.flip} />
       {ball && (
         <g transform={`translate(${Math.round(ball[0]) - 3} ${Math.round(ball[1]) - 3})`}>
           <rect x="1" y="0" width="5" height="7" fill="#18141C" />

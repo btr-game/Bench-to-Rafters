@@ -1224,3 +1224,15 @@ td .art-team { display: inline-block; vertical-align: middle; margin: -3px 8px -
 .guide-card summary .pix-icon { grid-row: span 2; }
 .set-row > div { flex: 1; }
 .attr-name { white-space: nowrap; }
+
+/* story scenes (round 17): a wide pixel picture over turning points and story pages */
+.art-scene { display: block; width: 100%; height: auto; aspect-ratio: 192 / 72; image-rendering: pixelated; border-radius: 10px; }
+.overlay .art-scene { max-width: 640px; }
+/* the start page: the five positions on a street court beside the title */
+.hero.with-lineup { grid-template-columns: minmax(0, 1fr) minmax(0, 520px); align-items: end; column-gap: 28px; }
+.hero.with-lineup > :not(.art-lineup) { grid-column: 1; }
+.hero .art-lineup { grid-column: 2; grid-row: 1 / span 3; align-self: center; }
+@media (max-width: 900px) {
+  .hero.with-lineup { grid-template-columns: minmax(0, 1fr); }
+  .hero .art-lineup { grid-column: 1; grid-row: auto; }
+}

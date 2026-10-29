@@ -1,6 +1,7 @@
 // Renders whatever decision is at the front of the queue.
 
 import { Icon } from '../art/Icon';
+import { StoryScene } from '../art/Scene';
 import { choiceIcon, shopIcon } from '../art/icons';
 import { useState } from 'react';
 import type { Decision, GameState, Offer } from '../../engine/types';
@@ -271,6 +272,7 @@ export function DecisionView({ g, d }: { g: GameState; d: Decision }) {
   const isDraftNight = d.kind === 'info' && !!d.data?.draft;
   return (
     <div className="stack">
+      {(d.kind === 'event' || isDraftNight) && <StoryScene g={g} title={d.title} kind={isDraftNight ? 'draft' : undefined} />}
       <div>
         <div className="kicker">{kickerFor(d)}</div>
         <h2 className="title" style={{ fontFamily: 'var(--f-display)', fontSize: 28, textTransform: 'uppercase', lineHeight: 1 }}>

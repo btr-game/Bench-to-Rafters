@@ -7,6 +7,7 @@ import { LEVELS } from '../../engine/balance';
 import { useStore, type Transition } from '../../store';
 import { ordinal } from '../format';
 import { stageLine } from '../selectors';
+import { StoryScene } from '../art/Scene';
 
 const reducedMotion = () => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
@@ -448,6 +449,7 @@ function MomentPage({ m, g }: { m: Moment; g: GameState }) {
           <DraftReveal m={m} />
         ) : (
           <div className="stack reveal" style={{ gap: 12 }}>
+            <StoryScene g={g} title={m.title} kind={m.kind} />
             <div className="kicker on-dark">{KICKER[m.kind]}</div>
             <div className="moment-title">{m.title}</div>
             <p className="on-dark lede-dark prose">{m.text}</p>

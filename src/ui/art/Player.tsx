@@ -4,14 +4,15 @@ import { TEAM_STYLE, leagueKits, type Kit, type KitLeague } from '../../content/
 import { hash } from './color';
 import { toPaths } from './pixel';
 import type { Pos } from '../../engine/types';
-import { DRIBBLE, DUNK, JUMPER, LOWDRIBBLE, TRIPLE, hi, paint, type Look, type Pose } from './sprite';
+import { legendLook, type LegendLook } from '../../content/legendLooks';
+import { DRIBBLE, DUNK, JUMPER, LOWDRIBBLE, TRIPLE, paint, type Look, type Pose } from './sprite';
 
 // The player, as a pixel-art sprite in his team's kit (round 17). His look (skin, hair, a
 // headband or an arm sleeve) comes from his name, so he looks the same all career; the kit
 // changes with every team: home, road or city edition.
 
-const SKINS = ['#F1C9A5', '#E0A982', '#C68A5E', '#A86E45', '#8A5534', '#6B3F26', '#523020'];
-const HAIRS = ['#1C1512', '#2B1E16', '#4A3221', '#7A5230', '#B88A4A'];
+export const SKINS = ['#F3D2B8', '#E8BC98', '#D4A077', '#B67F55', '#8E5B3A', '#6B4029', '#4C2C1C'];
+export const HAIRS: Record<LegendLook['color'], string> = { k: '#231B18', b: '#5A3A22', l: '#D9B26A', r: '#B4532A', g: '#9AA0A8', x: '#3FBF6A' };
 
 export type KitName = 'home' | 'road' | 'city';
 
@@ -21,21 +22,20 @@ export const styleLeague = (level?: string): KitLeague | undefined =>
 
 /** One pose per position: the point guard low on the dribble, the two guard driving, the wing
  * rising for a jumper, the four in triple threat, the five flying in for a dunk. */
-const HI = { PG: hi(LOWDRIBBLE), SG: hi(DRIBBLE), SF: hi(JUMPER), PF: hi(TRIPLE), C: hi(DUNK) };
-export const poseFor = (pos?: Pos): Pose => HI[pos ?? 'SG'];
+const POSES = { PG: LOWDRIBBLE, SG: DRIBBLE, SF: JUMPER, PF: TRIPLE, C: DUNK };
+export const poseFor = (pos?: Pos): Pose => POSES[pos ?? 'SG'];
 
+/** How a player looks: a legend as he really did (content/legendLooks.ts), anyone else from his name. */
 export function lookOf(name: string, shoe: string): Look {
+  const l = legendLook(name);
+  if (l) return { skin: SKINS[Math.max(0, Math.min(6, l.skin - 1))], hair: HAIRS[l.color], style: l.hair, face: l.face, gear: l.gear, shoe };
   const h = hash(name);
   const h2 = hash(`${name}~`);
-  return {
-    skin: SKINS[h % SKINS.length],
-    hair: HAIRS[(h >>> 5) % 3 === 0 ? (h >>> 9) % HAIRS.length : 0],
-    hairStyle: (h2 >>> 3) % 5,
-    beard: (h2 >>> 7) % 3 === 0,
-    headband: (h2 >>> 11) % 4 === 0,
-    sleeve: (h2 >>> 15) % 4 === 0,
-    shoe,
-  };
+  const skin = h % SKINS.length;
+  const styles: Look['style'][] = ['short', 'buzz', 'short', 'flattop', 'afro', 'cornrows', 'twists', 'curly', 'bald', skin < 2 ? 'parted' : 'short'];
+  const faces: Look['face'][] = ['none', 'none', 'none', 'goatee', 'beard', 'stubble', 'mustache'];
+  const gear = [(h2 >>> 11) % 5 === 0 && 'headband', (h2 >>> 15) % 5 === 0 && 'sleeve', (h2 >>> 19) % 4 === 0 && 'wristband'].filter((x): x is string => !!x);
+  return { skin: SKINS[skin], hair: HAIRS[skin < 2 && (h >>> 9) % 3 === 0 ? 'b' : 'k'], style: styles[(h2 >>> 3) % styles.length], face: faces[(h2 >>> 7) % faces.length], gear, shoe };
 }
 
 /** The kit a team wears: its own for NBA clubs, one built from its colour for everyone else. */

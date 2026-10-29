@@ -14,7 +14,10 @@ import { edgeOf } from '../../engine/career/nationality';
 import { ht, seasonLabel } from '../format';
 import { MiniGamesCard } from '../mini/MiniGames';
 import { FlagArt } from '../art/Flag';
-import { PositionCard } from '../art/PositionCard';
+import { POS_STYLE, PositionCard } from '../art/PositionCard';
+import { LineupArt } from '../art/Scene';
+
+const LINEUP_COLORS = Object.fromEntries(Object.entries(POS_STYLE).map(([p, st]) => [p, st.color])) as Record<Pos, string>;
 
 const pick = <T,>(a: readonly T[]): T => a[Math.floor(Math.random() * a.length)];
 const uiRng = makeRng(Math.floor(Math.random() * 2 ** 31));
@@ -137,7 +140,8 @@ export function Create() {
         </button>
       </header>
       <ResumeCard />
-      <section className="hero">
+      <section className="hero with-lineup">
+        <LineupArt colors={LINEUP_COLORS} />
         <div className="kicker">A basketball career game</div>
         <h1>
           Bench<span>to Rafters</span>
