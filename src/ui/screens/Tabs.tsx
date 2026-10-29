@@ -6,7 +6,9 @@ import { CareerHighs } from '../components/Highs';
 import { NbaBracket } from '../components/NbaBracket';
 import { TextBracket } from '../components/TextBracket';
 import { useState, type ReactNode } from 'react';
-import { CourtArt, PlayerArt, TeamArt } from '../components/Art';
+import { VenueArt, venueOf, type VenueKind } from '../art/Venue';
+import { TeamArt } from '../art/Crest';
+import { PlayerArt } from '../art/Player';
 import type { GameLog, GameState, League, SeasonRecord, SeriesResult, StatLine, Team } from '../../engine/types';
 import { ATTRS, LEVELS } from '../../engine/balance';
 import { ovrOf } from '../../engine/player/ovr';
@@ -101,7 +103,7 @@ function StandingsTable({ lg, teams, userId, title }: { lg: League; teams: Team[
               <tr key={t.id} className={t.id === userId ? 'me' : ''}>
                 <td>{i + 1}</td>
                 <td className="l">
-                  <span className="sw" style={{ background: t.color }} />
+                  <TeamArt name={t.name} abbr={t.abbr || t.short} color={t.color} size={24} />
                   {lg.level === 'NBA' ? t.name : t.short}
                 </td>
                 <td>{t.w}</td>
@@ -283,10 +285,10 @@ function ConfStandings({ g }: { g: GameState }) {
 }
 
 /** A page banner: art on the left, the headline, then the numbers that matter (round 14). */
-export function PageHero({ art, kicker, title, sub, color, stats, children }: { art?: ReactNode; kicker: string; title: string; sub?: ReactNode; color?: string; stats: { k: string; v: ReactNode; tone?: 'good' | 'bad' }[]; children?: ReactNode }) {
+export function PageHero({ art, venue, kicker, title, sub, color, stats, children }: { art?: ReactNode; venue: VenueKind; kicker: string; title: string; sub?: ReactNode; color?: string; stats: { k: string; v: ReactNode; tone?: 'good' | 'bad' }[]; children?: ReactNode }) {
   return (
     <header className="page-hero" style={color ? { ['--team' as string]: color } : undefined}>
-      <CourtArt />
+      <VenueArt kind={venue} />
       {art && <div className="hero-art">{art}</div>}
       <div className="hero-main">
         <div className="kicker">{kicker}</div>
@@ -323,7 +325,8 @@ export function SeasonTab({ g }: { g: GameState }) {
   return (
     <div className="page">
       <PageHero
-        art={t ? <TeamArt abbr={t.abbr || t.short} color={t.color} size={84} /> : undefined}
+        venue={venueOf(g)}
+        art={t ? <TeamArt name={t.name} abbr={t.abbr || t.short} color={t.color} size={92} /> : undefined}
         color={t?.color ?? last?.teamColor}
         kicker={`${seasonLabel(last?.year ?? g.year)} · ${lg ? (lg.label ?? LEVELS[lg.level].name) : last ? 'Final season' : 'Season'}`}
         title={t?.name ?? last?.teamName ?? 'Season'}
@@ -412,7 +415,8 @@ export function PlayerTab({ g }: { g: GameState }) {
   return (
     <div className="page">
       <PageHero
-        art={<PlayerArt number={p.number} color={t?.color} size={96} />}
+        venue={venueOf(g)}
+        art={<PlayerArt name={p.name} number={p.number} color={t?.color} size={128} />}
         color={t?.color}
         kicker={`#${p.number} · ${NAMES.pos[p.pos]} · ${ht(p.height)}`}
         title={p.name}
@@ -603,6 +607,7 @@ export function LeagueTab({ g }: { g: GameState }) {
   return (
     <div className="page">
       <PageHero
+        venue={venueOf(g)}
         kicker={seasonLabel(g.year)}
         title={lg.label ?? LEVELS[lg.level].name}
         sub={mine ? `Your team: ${mine.name}, ${mine.w}–${mine.l}` : 'Fictional players and teams'}
@@ -763,7 +768,8 @@ export function RecordsTab({ g }: { g: GameState }) {
   return (
     <div className="page">
       <PageHero
-        art={<PlayerArt number={g.player.number} color={t?.color} size={84} />}
+        venue={venueOf(g)}
+        art={<PlayerArt name={g.player.name} number={g.player.number} color={t?.color} size={112} />}
         color={t?.color}
         kicker={`${g.history.length} season${g.history.length === 1 ? '' : 's'} · legacy score ${legacyScore(g)}`}
         title={`${g.player.name}: the career`}

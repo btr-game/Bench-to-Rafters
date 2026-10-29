@@ -46,7 +46,7 @@ import { ScoutCard } from "../components/ScoutCard";
 import { DecisionView } from "./Decision";
 import { fmtMoney, ht, ordinal, pg, seasonLabel, signed } from "../format";
 import { team } from "../selectors";
-import { TeamArt } from "../components/Art";
+import { TeamArt } from "../art/Crest";
 import { breakthroughBar } from "../../engine/career/breakthrough";
 import { rosterRank, winningEdge } from "../../engine/career/team";
 import { ovrOf } from "../../engine/player/ovr";
@@ -158,7 +158,7 @@ function SeasonHeader({ g }: { g: GameState }) {
               : "";
   return (
     <div className="turn-head">
-      {t && <TeamArt abbr={t.abbr || t.short} color={t.color} size={52} />}
+      {t && <TeamArt name={t.name} abbr={t.abbr || t.short} color={t.color} size={56} />}
       <div style={{ minWidth: 0, flex: 1 }}>
         <div className="kicker">
           {seasonLabel(g.year)} · {stepName}

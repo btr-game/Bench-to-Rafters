@@ -1,7 +1,11 @@
 // The shareable career card (playtest round 7): the final page drawn onto a canvas, so it can
 // be saved as a PNG or sent through the phone's share sheet.
 
+import { createElement } from 'react';
+import { flushSync } from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import type { GameState } from '../engine/types';
+import { PlayerArt } from './art/Player';
 import { championships, count, hallOfFame, nbaCareerPoints, nbaTitles, raftersTeams, verdictFor } from '../engine/awards/legacy';
 import { seasonLabel } from './format';
 import { TIERS, legacyRank, tierCounts } from '../engine/awards/tiers';
@@ -35,30 +39,22 @@ function mainTeam(g: GameState): { name: string; color: string } | null {
   return [...n.values()].sort((a, b) => b.k - a.k)[0] ?? null;
 }
 
-/** A jersey in his team's colour with his number (the portrait slot's stand-in, as on the pages). */
-function jersey(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, color: string, num: number): void {
-  const k = size / 100;
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.scale(k, k);
-  ctx.fillStyle = color;
-  ctx.strokeStyle = 'rgba(255,255,255,0.25)';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  for (const [i, [px, py]] of [[30, 8], [42, 8], [50, 18], [58, 8], [70, 8], [90, 22], [82, 40], [74, 36], [74, 94], [26, 94], [26, 36], [18, 40], [10, 22]].entries()) {
-    if (i === 0) ctx.moveTo(px, py);
-    else ctx.lineTo(px, py);
+/** His sprite, as on the pages, drawn off-screen and turned into an image for the canvas. */
+async function portrait(g: GameState, color: string): Promise<HTMLImageElement | null> {
+  try {
+    const host = document.createElement('div');
+    const root = createRoot(host);
+    flushSync(() => root.render(createElement(PlayerArt, { name: g.player.name, number: g.player.number, color, size: 240 })));
+    // an SVG image can't reach the page's fonts: the jersey number falls back to a system face
+    const svg = host.innerHTML.replace(/var\(--f-display\)/g, 'Impact, Arial Narrow, sans-serif');
+    root.unmount();
+    const img = new Image();
+    img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+    await img.decode();
+    return img;
+  } catch {
+    return null;
   }
-  ctx.closePath();
-  ctx.fill();
-  ctx.stroke();
-  const n = parseInt(color.replace('#', ''), 16);
-  const lum = 0.299 * ((n >> 16) & 255) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255);
-  ctx.fillStyle = lum > 165 ? '#111' : '#fff';
-  ctx.font = `900 34px ${DISPLAY}`;
-  ctx.textAlign = 'center';
-  ctx.fillText(String(num), 50, 72);
-  ctx.restore();
 }
 
 function wrap(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, max: number, lh: number): number {
@@ -103,7 +99,12 @@ export async function drawCareerCard(g: GameState): Promise<HTMLCanvasElement> {
   ctx.fillRect(60, 120, W - 120, 330);
   ctx.fillStyle = tc;
   ctx.fillRect(60, 120, 10, 330);
-  jersey(ctx, 92, 150, 150, tc, p.number);
+  const face = await portrait(g, tc);
+  if (face) {
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(face, 104, 140, 126, 168);
+    ctx.imageSmoothingEnabled = true;
+  }
 
   ctx.textBaseline = 'alphabetic';
   ctx.fillStyle = '#f4f1ea';

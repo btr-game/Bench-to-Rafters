@@ -1,3 +1,4 @@
+import { PlayerArt } from '../art/Player';
 import { heightMismatch } from '../../engine/flow';
 import type { GameState } from '../../engine/types';
 import { ATTRS } from '../../engine/balance';
@@ -41,27 +42,28 @@ export function PlayerCard({ g, compact = false }: { g: GameState; compact?: boo
   const t = team(g);
   return (
     <section className="card pc">
-      <div className="pc-top">
-        <div style={{ minWidth: 0 }}>
-          <div className="kicker">
-            #{p.number} · {p.pos} · {ht(p.height)}
-            {heightMismatch(g) ? (
-              <span className="height-warn" title={heightMismatch(g)!.text}>
-                {' '}
-                SIZE
-              </span>
-            ) : null}{' '}
-            · {p.archetype}
-            {p.anomaly && <span className="anomaly-tag" title="A rare player who breaks the mold"> · {p.anomaly}</span>}
-          </div>
-          <h2 className="pc-name">{p.name}</h2>
-          {t && <TeamChip name={t.name} color={t.color} />}
-          <div className="muted small">{stageLine(g)}</div>
-        </div>
+      <div className="pc-head">
+        <PlayerArt name={p.name} number={p.number} color={t?.color} size={88} />
         <div className="ovr" aria-label={`Overall ${Math.round(ovr(g))}`}>
           <b>{Math.round(ovr(g))}</b>
           <small>OVR</small>
         </div>
+      </div>
+      <div style={{ minWidth: 0 }}>
+        <div className="kicker">
+          #{p.number} · {p.pos} · {ht(p.height)}
+          {heightMismatch(g) ? (
+            <span className="height-warn" title={heightMismatch(g)!.text}>
+              {' '}
+              SIZE
+            </span>
+          ) : null}{' '}
+          · {p.archetype}
+          {p.anomaly && <span className="anomaly-tag" title="A rare player who breaks the mold"> · {p.anomaly}</span>}
+        </div>
+        <h2 className="pc-name">{p.name}</h2>
+        {t && <TeamChip name={t.name} color={t.color} />}
+        <div className="muted small">{stageLine(g)}</div>
       </div>
       <dl className="facts">
         <div>
