@@ -4,18 +4,18 @@
 import type { GameState } from '../../engine/types';
 import { raftersDetail, raftersNearMiss, RAFTERS_POINTS } from '../../engine/awards/details';
 import { Card } from './bits';
+import { BannerArt } from '../art/Trophy';
 
 const yrs = (a: number, b: number) => (a === b ? String(a + 1) : `${a}–${b + 1}`);
+// on the banner itself: '38-47'
+const short = (y: string) => y.replace(/\d\d(\d\d)/g, '$1').replace('–', '-');
 
-function Banner({ name, number, color, years, team, i }: { name: string; number: number; color: string; years: string; team: string; i: number }) {
+function Banner({ name, number, color, years, team, i, size = 250 }: { name: string; number: number; color: string; years: string; team: string; i: number; size?: number }) {
+  const last = name.split(' ').pop() ?? name;
   return (
-    <div className="rf-banner" style={{ ['--c' as string]: color, animationDelay: `${0.25 + i * 0.35}s` }}>
-      <div className="rf-strings" aria-hidden="true" />
-      <div className="rf-cloth">
-        <small>{team}</small>
-        <b>{number}</b>
-        <span>{name}</span>
-        <em>{years}</em>
+    <div className="rf-banner" style={{ animationDelay: `${0.25 + i * 0.35}s` }} title={team}>
+      <div className="rf-cloth-art">
+        <BannerArt kind="retired" color={color} lines={[last, short(years)]} number={number} size={size} />
       </div>
     </div>
   );
@@ -61,7 +61,7 @@ export function RaftersSummary({ g, onOpen }: { g: GameState; onOpen: () => void
       <section className="rf-mini" onClick={onOpen} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && onOpen()}>
         <div className="rf-mini-hang">
           {teams.map((t, i) => (
-            <Banner key={t.id} i={i} name={g.player.name} number={g.player.number} color={t.color} years={yrs(t.first, t.last)} team={t.name} />
+            <Banner key={t.id} i={i} name={g.player.name} number={g.player.number} color={t.color} years={yrs(t.first, t.last)} team={t.name} size={96} />
           ))}
         </div>
         <div>

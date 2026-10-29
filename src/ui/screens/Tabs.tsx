@@ -1,7 +1,7 @@
 // Season, Player, League and Records tabs.
 
 import { LegacyTierList } from '../components/Legacy';
-import { TrophyCabinet, trophyItems } from '../components/Trophies';
+import { BannersAndRings, TrophyCabinet, trophyItems } from '../components/Trophies';
 import { CareerHighs } from '../components/Highs';
 import { NbaBracket } from '../components/NbaBracket';
 import { TextBracket } from '../components/TextBracket';
@@ -15,7 +15,7 @@ import { ATTRS, LEVELS } from '../../engine/balance';
 import { ovrOf } from '../../engine/player/ovr';
 import { standings } from '../../engine/sim/leagueSim';
 import { addLine, emptyLine, perGame } from '../../engine/sim/statModel';
-import { count, legacyScore, nbaTitles, verdictFor } from '../../engine/awards/legacy';
+import { championships, count, legacyScore, nbaTitles, verdictFor } from '../../engine/awards/legacy';
 import { NAMES } from '../../content/strings';
 import { Card, Meter, Scoreboard } from '../components/bits';
 import { AttrRows } from '../components/PlayerCard';
@@ -800,6 +800,11 @@ export function RecordsTab({ g }: { g: GameState }) {
         {g.history.length === 0 ? <p className="muted">Your seasons show up here after the first one.</p> : <HistoryTable rows={g.history} />}
         <p className="muted small">High school and college seasons are listed but do not count toward pro career totals.</p>
       </Card>
+      {championships(g).length > 0 && (
+        <Card title="Banners and rings" kicker="Every title hangs in the rafters">
+          <BannersAndRings g={g} />
+        </Card>
+      )}
       <div className="page-grid two">
         <TrophyCabinet g={g} />
         <Card title="Career totals" kicker={`Legacy score ${legacyScore(g)}`}>

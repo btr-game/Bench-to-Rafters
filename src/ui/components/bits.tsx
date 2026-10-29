@@ -32,6 +32,7 @@ export function Scoreboard({ line, showGp = true }: { line: StatLine; showGp?: b
 
 export interface BannerItem {
   label: string;
+  icon?: ReactNode;
   count?: number;
   gold?: boolean;
   accent?: boolean;
@@ -45,6 +46,7 @@ export function Banners({ items, onSelect, selected }: { items: BannerItem[]; on
         const cls = `banner${b.gold ? ' gold' : b.accent ? ' accent' : ''}${onSelect ? ' tappable' : ''}${selected === b.label ? ' on' : ''}`;
         const inner = (
           <>
+            {b.icon}
             {b.count && b.count > 1 ? <b>×{b.count}</b> : null}
             <span>{b.label}</span>
           </>

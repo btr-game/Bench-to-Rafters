@@ -6,7 +6,7 @@ import { NAMES, UI } from '../../content/strings';
 import { useStore } from '../../store';
 import { Card, ReactionCard } from '../components/bits';
 import { HistoryTable } from './Tabs';
-import { TrophyCabinet } from '../components/Trophies';
+import { BannersAndRings, TrophyCabinet } from '../components/Trophies';
 import { CareerHighs } from '../components/Highs';
 import { RaftersPage, RaftersSummary } from '../components/Rafters';
 import { fmtMoney, seasonLabel } from '../format';
@@ -91,6 +91,7 @@ function Championships({ g }: { g: GameState }) {
   });
   return (
     <Card title="Championships" kicker={nba.length ? `${nba.length}× NBA champion · ${byTeam.join(', ')}` : `${titles.length} title${titles.length > 1 ? 's' : ''}`}>
+      <BannersAndRings g={g} />
       <div className="titles">
         {titles.map((x, i) => (
           <div key={i} className={`title-row${x.nba ? ' nba' : ''}`} style={{ borderLeftColor: x.teamColor }}>

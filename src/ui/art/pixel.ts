@@ -27,6 +27,7 @@ export function glyph(ch: string): string {
   const c = ch.toUpperCase();
   if (c >= '0' && c <= '9') return DIGITS[+c];
   if (c >= 'A' && c <= 'Z') return LETTERS[c.charCodeAt(0) - 65];
+  if (c === '-') return '000000111000000';
   return '000000000000000';
 }
 
