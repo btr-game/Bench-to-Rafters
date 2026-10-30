@@ -30,7 +30,10 @@ export function NameCard({ g }: { g: GameState }) {
         <dl className="facts">
           <div>
             <dt>{d.kind === 'deal' ? 'Brand deal' : 'Signature line'}</dt>
-            <dd style={{ color: d.color }}>{d.brand}</dd>
+            <dd>
+              <i className="brand-dot" style={{ background: d.color }} />
+              {d.brand}
+            </dd>
           </div>
           <div>
             <dt>{d.left > 0 ? 'This season' : 'Deal'}</dt>

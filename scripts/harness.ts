@@ -12,6 +12,7 @@ import { makeRng, next, pick, int, type Rng } from '../src/engine/rng';
 import type { Choice, Decision, GameState, Pos } from '../src/engine/types';
 import { careerIndex, count, legacyScore } from '../src/engine/awards/legacy';
 import { ovrOf } from '../src/engine/player/ovr';
+import { earnedNow, NO_TOTALS } from '../src/engine/achievements';
 import { trueShooting, valuePerGame } from '../src/engine/sim/statModel';
 import { FIRST_NAMES, LAST_NAMES } from '../src/content/names';
 
@@ -156,6 +157,7 @@ export interface CareerResult {
   legacy: number;
   index: { total: number; best: number; score: number }; // round 25: the leaderboards' career index
   nickname: string | null; // round 25: what the media called him (nickname id)
+  achievements: string[]; // round 25: the achievement ids the career earned (checked for ones that never or always fire)
   brand: { kind: 'deal' | 'line'; earned: number; shoe: number } | null;
   money: { hired: number; staffPaid: number; fines: number; finedFor: number; legacy: number; pressers: number; seasons: number; rival: string | null; h2h: [number, number]; news: string[] }; // round 25: staff, fines, legacy projects, press conferences
   peakOvr: number;
@@ -265,6 +267,7 @@ export function runCareer(seed: number, policy: Policy, mode: Mode = 'standard',
     legacy: legacyScore(s),
     index: careerIndex(s),
     nickname: s.player.nickname?.id ?? null,
+    achievements: earnedNow(s, NO_TOTALS),
     money: {
       hired: s.log.filter((x) => x.kind === 'staff' && x.text.startsWith('Hired')).length,
       staffPaid: (s.player.staff ?? []).reduce((a, m) => a + m.paid, 0),

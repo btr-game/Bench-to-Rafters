@@ -7,7 +7,7 @@
 import { LEVELS, MAX_SHARE, NEGOTIATE, ROLE_ORDER } from '../balance';
 import { clamp, next } from '../rng';
 import { capFor, fmtMoney } from '../economy/salary';
-import { userOvr } from './common';
+import { logDecision, userOvr } from './common';
 import { offerChoice } from './offers';
 import type { GameState, Offer } from '../types';
 
@@ -49,6 +49,7 @@ export function negotiate(s: GameState, offerId: string, ask: Ask): string | nul
     said = `${o.teamName} pull the offer. "We wish him well."`;
   }
   const i = offers.indexOf(o);
+  logDecision(s, 'talks', `${o.teamName}: ${said}`);
   if (now) {
     now.asked = (o.asked ?? 0) + 1;
     offers[i] = now;

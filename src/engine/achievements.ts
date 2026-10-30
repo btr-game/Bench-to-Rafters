@@ -13,6 +13,7 @@ import { legendarySeasons } from './awards/legendary';
 import { activeDuo, activeTrio } from './career/duo';
 import { ovrOf } from './player/ovr';
 import { weightOf } from './player/weight';
+import { ACHIEVEMENTS_25 } from './achievements25';
 
 export type AchTier = 'bench' | 'rotation' | 'starter' | 'allstar' | 'hof';
 export const ACH_TIERS: { key: AchTier; name: string; color: string }[] = [
@@ -356,6 +357,8 @@ export const ACHIEVEMENTS: Achievement[] = [
   A('daily1', 'Daily Grind', 'bench', 'Play a daily challenge.', (f) => f.t.daily >= 1),
   A('daily7', 'Week Streak', 'rotation', 'Play the daily challenge on seven days.', (f) => f.t.daily >= 7),
   A('daily30', 'Month of Sundays', 'allstar', 'Play the daily challenge on thirty days.', (f) => f.t.daily >= 30),
+  // round 25: the book past 500 (achievements25.ts)
+  ...ACHIEVEMENTS_25,
 ];
 
 // the ones that only read the totals kept across careers (they can be checked with no career open)

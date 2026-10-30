@@ -1582,3 +1582,32 @@ Reached from the start page and from the bottom of Home (a career in progress is
   noise) while a career is on screen, off in mini-games (they have their own) and on the pages.
   The audio wakes on the first click, as browsers require. The settings menu has a Sound effects
   switch (on by default) and a Music switch (off by default), kept on this device.
+- **The achievement book passes 500** (the owner: "all the way up to 500 and beyond... very unique
+  ones"). 288 new ones (engine/achievements25.ts) make 516: 56 bench, 96 rotation, 107 starter,
+  146 All-Star and 111 Hall of Fame, every name a pun and no name or id repeated. They cover this
+  round's systems (nicknames by kind, brands and signature shoes, staff, fines, press conferences,
+  rivals, contract talks, the collection, the wardrobe, visits, the career index, legacy
+  projects, family and investments), season lines at every level from high school to the NBA,
+  single games, draft night, paydays, odd seasons (a guard who rebounds like a centre, a sixth man
+  who scores), career totals, award pairs, medals, roles and choices along the way. Thresholds
+  follow the sim's own ranges rather than the real NBA's: over 240 test careers the best steals
+  season was 1.92 a game, minutes topped out at 35.6, free throws ran from 74% to 90% and the
+  best college scorer averaged 22, so five that could never happen (38 minutes a game, a season
+  with no threes, straight from high school to the NBA, eight OVR lost inside one season, eight
+  seasons without a two-week injury) were replaced and the rest set to what a great season looks like here. Over 400 smart harness
+  careers a career earns 80.05 achievements on average; the new ones are earned by 23.0% of
+  careers on average at bench tier, 15.3% rotation, 14.0% starter, 11.2% All-Star and 6.0% Hall
+  of Fame. The ones the harness never earns are choices it never makes (contract talks, the
+  wardrobe, visits, luxury items, fiery answers, trade requests, retiring young). The harness now
+  reports each career's achievements, so a broken one shows up as never or always earned.
+- **Contrast and keyboard pass** (the owner: "yeah of course"). A scan measured every piece of
+  text on all five tabs in both themes against its real background (WCAG: 4.5:1, or 3:1 for
+  large text), with a career that has this round's cards. Fixes: the light theme's orange is a
+  shade deeper (#b5410f: white text on it 5.63:1, orange text on its tint 4.61:1; it was 4.34
+  and 3.55), text on gold and amber tags is dark ink in both themes, gold used as a text colour
+  has a darker light-theme token, badge text picks white or ink by contrast ratio (gold badges
+  get ink), locked mini-game tiles no longer fade, faded labels lost their opacity, and the
+  name card shows the brand in ink beside a colour swatch. After the fixes nothing fails except
+  the achievement toasts while they fade in. Tabbing through every tab reaches each control
+  with a visible focus ring, nothing clickable is mouse-only, and story pages (a fine, a
+  nickname) close with Enter.

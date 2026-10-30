@@ -1,5 +1,6 @@
 import type { GameState } from '../../engine/types';
 import { LEGEND_PTS, TIERS, legacyRank, tierCounts } from '../../engine/awards/tiers';
+import { ink } from '../art/color';
 import { Card } from './bits';
 
 /** The tier list: every honour by weight, with what this career earned highlighted. */
@@ -10,7 +11,7 @@ export function LegacyTierList({ g }: { g: GameState }) {
       <div className="tiers">
         {TIERS.map((t) => (
           <div key={t.tier} className="tier-row">
-            <div className="tier-badge" style={{ background: t.color }}>
+            <div className="tier-badge" style={{ background: t.color, color: ink(t.color) }}>
               <b>{t.tier}</b>
               <small>{t.name}</small>
             </div>

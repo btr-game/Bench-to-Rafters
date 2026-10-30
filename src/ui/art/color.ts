@@ -27,8 +27,13 @@ export function mix(a: string, b: string, t: number): string {
 export const shade = (hex: string, t: number) => mix(hex, '#000000', t);
 export const tint = (hex: string, t: number) => mix(hex, '#ffffff', t);
 
-/** Readable ink on a colour: near-black on light colours, white on dark ones. */
+/** Readable ink on a colour: near-black or white, whichever stands out more (round 25: by the
+ * WCAG contrast ratio, so mid tones like gold get dark ink). */
 export function ink(hex: string): string {
-  const [r, g, b] = rgb(hex);
-  return 0.299 * r + 0.587 * g + 0.114 * b > 165 ? '#14161A' : '#FFFFFF';
+  const L = rgb(hex)
+    .map((v) => v / 255)
+    .map((v) => (v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)));
+  const lum = 0.2126 * L[0] + 0.7152 * L[1] + 0.0722 * L[2];
+  // against white (1.05 / (lum + 0.05)) or near-black (luminance about 0.008)
+  return 1.05 / (lum + 0.05) >= (lum + 0.05) / 0.058 ? '#FFFFFF' : '#14161A';
 }
