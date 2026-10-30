@@ -565,9 +565,9 @@ button.banner { border: 0; font: inherit; text-align: left; }
 
 /* starting five and scouting board */
 .five { display: grid; gap: 2px; font-size: 15.5px; }
-.five-row { display: grid; grid-template-columns: 40px 34px minmax(0, 1fr) 34px 70px; gap: 8px; padding: 5px 8px; border-radius: 6px; background: var(--surface-2); align-items: center; }
+.five-row { display: grid; grid-template-columns: 40px minmax(0, 1fr) 40px 80px; gap: 8px; padding: 5px 8px; border-radius: 6px; background: var(--surface-2); align-items: center; }
 .five-row b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.five-row span:nth-child(4), .five-row span:nth-child(5) { text-align: right; font-family: var(--f-mono); }
+.five-row > span:nth-child(3), .five-row > span:nth-child(4) { text-align: right; font-family: var(--f-mono); }
 .five-row.mine { box-shadow: inset 3px 0 0 var(--accent); }
 .five-row.weakest { box-shadow: inset 3px 0 0 var(--muted); }
 .cap-line { font-family: var(--f-mono); font-size: 13.5px; padding: 8px 10px; border-radius: 8px; border: 1px dashed var(--line); }
@@ -1192,7 +1192,7 @@ td .art-team { display: inline-block; vertical-align: middle; margin: -3px 8px -
 .nation .art-flag { display: block; margin-bottom: 6px; }
 .with-flag { display: flex; align-items: center; gap: 8px; }
 .lg-faces { grid-area: faces; display: flex; gap: 2px; align-items: end; margin: 4px 0 2px; }
-.five-row .art-bust, .lg-bench-row .art-bust, .dunk-row .art-bust { justify-self: center; }
+.lg-bench-row .art-bust, .dunk-row .art-bust { justify-self: center; }
 .art-bust { image-rendering: pixelated; display: block; }
 .shooter-choice { display: grid; justify-items: center; align-content: start; gap: 4px; text-align: center; }
 .shooter-choice .art-player, .shooter-choice .art-bust { margin-bottom: 4px; }

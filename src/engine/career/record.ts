@@ -104,7 +104,7 @@ export function careerRecord(g: GameState, now = new Date()): CareerRecord {
     peak: p.peakOvr,
     tier: v.tier,
     verdict: v.line,
-    legacy: r.pts,
+    legacy: Math.round(r.pts),
     rank: r.rank,
     rankBehind: r.rank <= 100 && r.above ? r.above.name : null,
     hof,

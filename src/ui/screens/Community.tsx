@@ -335,7 +335,8 @@ export function CommunityPage() {
     ['hall', 'Reality 99 hall', 'hall'],
     ['plaza', 'Statue plaza', 'statue'],
     ['feedback', 'Send feedback', 'envelope'],
-    ...(c?.isOwner && c.kind === 'shared' ? ([['inbox', 'Inbox', 'inbox']] as [Tab, string, string][]) : []),
+    // the inbox is the maker's, on the shared page (and in the dev deck, on local notes)
+    ...(c?.isOwner && (c.kind === 'shared' || __DEV_DECK__) ? ([['inbox', 'Inbox', 'inbox']] as [Tab, string, string][]) : []),
   ];
   return (
     <div className="wrap">

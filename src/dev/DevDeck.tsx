@@ -1,0 +1,217 @@
+// The dev deck (round 24, owner: "make a dev version, grant access to everything, a deck of
+// cards I can look through, titled with which function they are; when I click on them, a page
+// with that function opens"). Flip through the deck (or see it as a grid), open a card, and the
+// game itself takes over with that function on screen; the bar at the bottom brings you back.
+
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { App } from '../ui/App';
+import { GuideTour } from '../ui/components/GuideTour';
+import { AchToasts } from '../ui/screens/Achievements';
+import { Icon } from '../ui/art/Icon';
+import { useStore } from '../store';
+import { CARDS, GROUPS, setAchievements, type DevCard, type Group } from './cards';
+
+const groupOf = (g: Group) => GROUPS.find((x) => x.key === g)!;
+
+/** Back to a clean slate between cards: no game, no page, no switches left on. */
+function clean(): void {
+  useStore.setState({ game: null, page: null, mini: null, transition: null, daily: null, tab: 'home', toasts: [], guide: false, master: false, simple: false });
+  setAchievements(true);
+}
+
+/** One card face: the suit strip, the corner indices, the big icon, the function's name. */
+function Face({ c, n, size = 'big', onClick, tabIndex }: { c: DevCard; n: number; size?: 'big' | 'small'; onClick?: () => void; tabIndex?: number }) {
+  const g = groupOf(c.group);
+  return (
+    <button className={`dk-card ${size}`} style={{ ['--suit' as string]: g.color }} onClick={onClick} tabIndex={tabIndex} aria-label={`${c.title}: ${c.blurb}`}>
+      <span className="dk-strip">{c.group}</span>
+      <span className="dk-corner tl">
+        <b>{n}</b>
+        <Icon name={g.icon} size={16} />
+      </span>
+      <span className="dk-corner br">
+        <b>{n}</b>
+        <Icon name={g.icon} size={16} />
+      </span>
+      <span className="dk-art">
+        <Icon name={c.icon} size={size === 'big' ? 96 : 52} />
+      </span>
+      <span className="dk-title">{c.title}</span>
+      {size === 'big' && <span className="dk-blurb">{c.blurb}</span>}
+    </button>
+  );
+}
+
+function press(sel: string): void {
+  const el = sel.startsWith('text=') ? [...document.querySelectorAll<HTMLElement>('button')].find((b) => b.textContent?.trim() === sel.slice(5)) : document.querySelector<HTMLElement>(sel);
+  if (!el) return;
+  el.scrollIntoView({ block: 'center' });
+  if (el.tagName === 'BUTTON') el.click();
+}
+
+export function DevDeck() {
+  const [group, setGroup] = useState<Group | 'all'>('all');
+  const [q, setQ] = useState('');
+  const [view, setView] = useState<'deck' | 'grid'>('deck');
+  const [at, setAt] = useState(0);
+  const [open, setOpen] = useState<DevCard | null>(null);
+  const [busy, setBusy] = useState<DevCard | null>(null);
+  const [miss, setMiss] = useState<string | null>(null);
+  const list = useMemo(() => CARDS.filter((c) => (group === 'all' || c.group === group) && (!q || `${c.title} ${c.blurb}`.toLowerCase().includes(q.toLowerCase()))), [group, q]);
+  const cur = Math.min(at, Math.max(0, list.length - 1));
+  const numberOf = (c: DevCard) => CARDS.indexOf(c) + 1;
+
+  const deal = useCallback((c: DevCard) => {
+    setBusy(c);
+    setMiss(null);
+    // let "Dealing" paint before the engine plays a career or two
+    window.setTimeout(() => {
+      clean();
+      let ok: boolean | void = false;
+      try {
+        ok = c.open();
+      } catch (e) {
+        console.error(e);
+        ok = false;
+      }
+      setBusy(null);
+      if (ok === false) {
+        setMiss(`No test career reached "${c.title}" this time.`);
+        clean();
+        return;
+      }
+      setOpen(c);
+      window.scrollTo(0, 0);
+      if (c.press) window.setTimeout(() => press(c.press!), 450);
+    }, 40);
+  }, []);
+  const back = () => {
+    clean();
+    setOpen(null);
+  };
+
+  // arrows flip the deck, Enter opens the card on top
+  useEffect(() => {
+    if (open || view !== 'deck') return;
+    const key = (e: KeyboardEvent) => {
+      if ((e.target as HTMLElement).tagName === 'INPUT') return;
+      if (e.key === 'ArrowRight') setAt((i) => Math.min(list.length - 1, i + 1));
+      else if (e.key === 'ArrowLeft') setAt((i) => Math.max(0, i - 1));
+      else if (e.key === 'Enter' && list[cur]) deal(list[cur]);
+      else return;
+      e.preventDefault();
+    };
+    window.addEventListener('keydown', key);
+    return () => window.removeEventListener('keydown', key);
+  }, [open, view, list, cur, deal]);
+
+  if (open)
+    return (
+      <>
+        <App />
+        <GuideTour />
+        <AchToasts />
+        <div className="dk-bar" role="toolbar" aria-label="Dev deck">
+          <button className="btn small" onClick={back}>
+            Back to the deck
+          </button>
+          <span>
+            <small>Card {numberOf(open)}</small>
+            <b>{open.title}</b>
+          </span>
+          <button className="btn small ghost" onClick={() => deal(open)}>
+            Deal it again
+          </button>
+        </div>
+      </>
+    );
+
+  return (
+    <div className="dk">
+      <header className="dk-head">
+        <div>
+          <div className="kicker">Bench to Rafters · dev version</div>
+          <h1 className="hub-title">The dev deck</h1>
+          <p className="prose">
+            Every function in the game, one card each, {CARDS.length} in all. Open a card and the game itself takes over with that function on screen, everything unlocked. Cards that need a career play one with the balance harness's smart player first, so a few take a second or two.
+          </p>
+        </div>
+        <div className="dk-tools">
+          <input className="dk-search" placeholder="Find a function" value={q} onChange={(e) => (setQ(e.target.value), setAt(0))} aria-label="Find a function" />
+          <div className="seg">
+            {(['deck', 'grid'] as const).map((v) => (
+              <button key={v} aria-pressed={view === v} onClick={() => setView(v)}>
+                {v === 'deck' ? 'Deck' : 'Grid'}
+              </button>
+            ))}
+          </div>
+        </div>
+      </header>
+      <div className="dk-suits">
+        <button className="dk-suit" aria-pressed={group === 'all'} onClick={() => (setGroup('all'), setAt(0))}>
+          All <small>{CARDS.length}</small>
+        </button>
+        {GROUPS.map((g) => (
+          <button key={g.key} className="dk-suit" style={{ ['--suit' as string]: g.color }} aria-pressed={group === g.key} onClick={() => (setGroup(g.key), setAt(0))}>
+            <Icon name={g.icon} size={18} />
+            {g.key} <small>{CARDS.filter((c) => c.group === g.key).length}</small>
+          </button>
+        ))}
+      </div>
+      {miss && <p className="dk-miss">{miss}</p>}
+      {list.length === 0 ? (
+        <p className="muted">No card matches.</p>
+      ) : view === 'deck' ? (
+        <section className="dk-table">
+          <div className="dk-fan">
+            {list.map((c, i) => {
+              const d = i - cur;
+              if (Math.abs(d) > 3) return null;
+              return (
+                <div key={c.id} className={`dk-slot${d === 0 ? ' front' : ''}`} style={{ ['--d' as string]: d, zIndex: 10 - Math.abs(d) }}>
+                  <Face c={c} n={numberOf(c)} onClick={() => (d === 0 ? deal(c) : setAt(i))} tabIndex={d === 0 ? 0 : -1} />
+                </div>
+              );
+            })}
+          </div>
+          <div className="dk-nav">
+            <button className="btn ghost" disabled={cur === 0} onClick={() => setAt(cur - 1)}>
+              Previous
+            </button>
+            <span className="dk-count">
+              {cur + 1} / {list.length}
+            </span>
+            <button className="btn ghost" disabled={cur >= list.length - 1} onClick={() => setAt(cur + 1)}>
+              Next
+            </button>
+            <button className="btn" onClick={() => deal(list[cur])}>
+              Open this card
+            </button>
+          </div>
+          <div className="dk-index">
+            {list.map((c, i) => (
+              <button key={c.id} className={i === cur ? 'on' : ''} style={{ ['--suit' as string]: groupOf(c.group).color }} onClick={() => setAt(i)}>
+                {c.title}
+              </button>
+            ))}
+          </div>
+        </section>
+      ) : (
+        <section className="dk-grid">
+          {list.map((c) => (
+            <Face key={c.id} c={c} n={numberOf(c)} size="small" onClick={() => deal(c)} />
+          ))}
+        </section>
+      )}
+      {busy && (
+        <div className="dk-dealing" role="status">
+          <div className="dk-dealing-card" style={{ ['--suit' as string]: groupOf(busy.group).color }}>
+            <Icon name={busy.icon} size={64} />
+            <b>Dealing {busy.title}</b>
+            <small>Playing a career to get there…</small>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

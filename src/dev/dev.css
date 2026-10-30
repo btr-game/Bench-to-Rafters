@@ -1,0 +1,59 @@
+/* The dev deck (round 24): playing cards in the game's pixel style. */
+.dk { max-width: 1240px; margin: 0 auto; padding: 24px 24px 60px; display: grid; gap: 18px; }
+.dk-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px; }
+.dk-head .prose { max-width: 68ch; margin: 6px 0 0; }
+.dk-tools { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.dk-search { min-width: 220px; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; }
+.dk-suits { display: flex; flex-wrap: wrap; gap: 8px; }
+.dk-suit { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; font-weight: 600; cursor: pointer; }
+.dk-suit small { font-family: var(--f-mono); color: var(--muted); }
+.dk-suit[aria-pressed='true'] { background: var(--suit, var(--ink)); border-color: var(--suit, var(--ink)); color: #fff; }
+.dk-suit[aria-pressed='true'] small { color: rgba(255, 255, 255, 0.8); }
+.dk-miss { margin: 0; padding: 10px 14px; border-radius: 8px; background: color-mix(in srgb, var(--bad) 10%, var(--surface)); color: var(--bad); }
+
+/* a card face */
+.dk-card { position: relative; display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 34px 18px 22px; border-radius: 14px; border: 3px solid #1b1820; background: var(--surface); color: var(--ink); font: inherit; text-align: center; cursor: pointer; box-shadow: inset 0 0 0 4px var(--surface), inset 0 0 0 6px color-mix(in srgb, var(--suit) 70%, transparent), 0 10px 24px rgba(0, 0, 0, 0.18); transition: transform 0.25s ease, box-shadow 0.2s ease; }
+.dk-card.big { width: 280px; height: 392px; }
+.dk-card.small { width: 100%; min-height: 220px; padding: 30px 12px 18px; }
+.dk-card:hover { box-shadow: inset 0 0 0 4px var(--surface), inset 0 0 0 6px var(--suit), 0 14px 30px rgba(0, 0, 0, 0.24); }
+.dk-card:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.dk-strip { position: absolute; left: 10px; right: 10px; top: 10px; height: 18px; border-radius: 4px; background: var(--suit); color: #fff; font-family: var(--f-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; line-height: 18px; }
+.dk-corner { position: absolute; display: grid; justify-items: center; gap: 2px; font-family: var(--f-display); font-size: 20px; line-height: 1; color: var(--suit); }
+.dk-corner.tl { left: 12px; top: 34px; }
+.dk-corner.br { right: 12px; bottom: 12px; transform: rotate(180deg); }
+.dk-card.small .dk-corner { display: none; }
+.dk-art { display: grid; place-items: center; width: 150px; height: 150px; margin-top: 12px; border-radius: 12px; background: repeating-linear-gradient(45deg, color-mix(in srgb, var(--suit) 14%, var(--surface-2)) 0 6px, color-mix(in srgb, var(--suit) 7%, var(--surface-2)) 6px 12px); box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--suit) 35%, transparent); }
+.dk-card.small .dk-art { width: 86px; height: 86px; margin-top: 4px; }
+.dk-title { font-family: var(--f-display); font-size: 26px; line-height: 1.02; text-transform: uppercase; }
+.dk-card.small .dk-title { font-size: 18px; }
+.dk-blurb { color: var(--muted); font-size: 14.5px; line-height: 1.35; }
+
+/* the deck: the top card in the middle, the next ones fanned out behind it */
+.dk-table { display: grid; gap: 18px; justify-items: center; padding: 18px 0 6px; border-radius: 18px; background: radial-gradient(ellipse at 50% 40%, color-mix(in srgb, #2b8a3e 30%, var(--surface-2)), var(--surface-2) 70%); }
+.dk-fan { position: relative; width: 100%; height: 430px; overflow: hidden; }
+.dk-slot { position: absolute; left: 50%; top: 14px; transform: translateX(calc(-50% + var(--d) * 150px)) rotate(calc(var(--d) * 4deg)) scale(calc(1 - min(abs(var(--d)), 3) * 0.1)); transform-origin: 50% 120%; opacity: calc(1 - min(abs(var(--d)), 3) * 0.22); transition: transform 0.35s cubic-bezier(.3, .7, .3, 1), opacity 0.3s; }
+.dk-slot.front .dk-card { transform: translateY(-4px); }
+.dk-slot:not(.front) .dk-blurb { visibility: hidden; }
+.dk-nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px; }
+.dk-count { font-family: var(--f-mono); font-weight: 700; min-width: 70px; text-align: center; }
+.dk-index { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; padding: 0 16px 16px; }
+.dk-index button { padding: 4px 9px; border-radius: 6px; border: 1px solid var(--line); border-left: 4px solid var(--suit); background: var(--surface); color: var(--ink); font: inherit; font-size: 13px; cursor: pointer; }
+.dk-index button.on { background: var(--suit); color: #fff; border-color: var(--suit); }
+.dk-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; }
+
+/* dealing, and the bar that brings you back */
+.dk-dealing { position: fixed; inset: 0; z-index: 400; display: grid; place-items: center; background: rgba(10, 12, 16, 0.55); }
+.dk-dealing-card { display: grid; justify-items: center; gap: 10px; padding: 28px 34px; border-radius: 14px; border: 3px solid #1b1820; background: var(--surface); box-shadow: inset 0 0 0 6px color-mix(in srgb, var(--suit) 60%, transparent); animation: dk-deal 0.9s ease-in-out infinite alternate; }
+.dk-dealing-card b { font-family: var(--f-display); font-size: 24px; text-transform: uppercase; }
+.dk-dealing-card small { color: var(--muted); }
+@keyframes dk-deal { from { transform: rotate(-2deg); } to { transform: rotate(2deg) translateY(-4px); } }
+.dk-bar { position: fixed; left: 16px; bottom: 16px; z-index: 300; display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; border: 2px solid #1b1820; background: var(--surface); box-shadow: 0 8px 22px rgba(0, 0, 0, 0.25); max-width: calc(100vw - 32px); }
+.dk-bar span { display: grid; min-width: 0; }
+.dk-bar small { font-family: var(--f-mono); font-size: 11px; color: var(--muted); text-transform: uppercase; }
+.dk-bar b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 640px) {
+  .dk { padding: 16px; }
+  .dk-card.big { width: 230px; height: 330px; }
+  .dk-fan { height: 360px; }
+  .dk-slot { transform: translateX(calc(-50% + var(--d) * 90px)) rotate(calc(var(--d) * 4deg)) scale(calc(1 - min(abs(var(--d)), 3) * 0.1)); }
+}

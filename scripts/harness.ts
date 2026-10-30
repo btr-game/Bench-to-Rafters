@@ -64,7 +64,7 @@ export function smartChoice(s: GameState, d: Decision, r: Rng): string {
     case 'transfer':
       return 'enter';
     case 'retirePrompt':
-      return s.player.age >= (Number(process.env.RETIRE_AGE) || 32) ? 'retire' : 'go';
+      return s.player.age >= (Number(globalThis.process?.env?.RETIRE_AGE) || 32) ? 'retire' : 'go';
     case 'declare':
     case 'withdraw': {
       const c = ch.find((x) => x.id === 'declare' || x.id === 'stay')!;
