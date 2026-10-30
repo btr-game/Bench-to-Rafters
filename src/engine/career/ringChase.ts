@@ -46,12 +46,15 @@ export const chaserRoleFor = (s: GameState): ChaserRole => CHASER_ROLES[chaserRo
 
 /** Offered at the retirement prompt and with the last-chance offers, to former NBA players. */
 export function canChaseRing(s: GameState): boolean {
-  return !!s.nba && s.nbaGames > 0 && !s.player.ringChaser && userOvr(s) >= RC.minOvr && s.player.age <= RC.maxAge;
+  const ovr = userOvr(s);
+  // round 22: a former star can still sell his experience a little below the usual bar
+  const enough = ovr >= RC.minOvr || (s.player.peakOvr >= RC.starPeak && ovr >= RC.starMinOvr);
+  return !!s.nba && s.nbaGames > 0 && !s.player.ringChaser && enough && s.player.age <= RC.maxAge;
 }
 
 export const ringChaseChoice = () => ({
   id: 'ringchase',
-  label: 'Chase a ring: take a specialist role',
+  label: 'Become a veteran specialist: chase a ring',
   detail: 'Reinvent your game for a contender: pick the role next. Your best skill gets sharper, what the role does not use fades for good.',
 });
 

@@ -522,7 +522,7 @@ export const LEGACY = {
 };
 
 // round 15: a veteran can become a ring chaser (career/ringChase.ts) instead of retiring
-export const RING_CHASE = { minOvr: 66, maxAge: 38, contenders: 6, offers: 2 };
+export const RING_CHASE = { minOvr: 66, starPeak: 85, starMinOvr: 56, maxAge: 38, contenders: 6, offers: 2 };
 
 // §12 contracts
 export const CAP = { start: 165, inflation: 0.03 };

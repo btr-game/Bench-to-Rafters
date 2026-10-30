@@ -30,7 +30,10 @@ function Hub() {
     <section className="stack stage-in">
       <div>
         <div className="kicker">Mini-games</div>
-        <h1 className="hub-title">Pick a game</h1>
+        <h1 className="hub-title with-icon">
+          <Icon name="controller" size={40} />
+          Pick a game
+        </h1>
         <p className="small muted">
           {career
             ? `For ${career.player.name}: each game opens when his ratings reach it, and a good result earns a rating bonus (${MINI_CLAIMS.perSeason - claimsUsed(career)} of ${MINI_CLAIMS.perSeason} claims left this season).`
@@ -132,7 +135,10 @@ export function MiniGamesCard() {
   const setMini = useStore((s) => s.setMini);
   return (
     <section className="card stack">
-      <div className="sec-title">Mini-games</div>
+      <div className="sec-title with-icon">
+        <Icon name="controller" size={28} />
+        Mini-games
+      </div>
       <p className="small muted">Front Office, the three-point and dunk contests, 3-on-3 streetball, Built in a lab, the legends showdown and the daily challenge. With a career, each opens when your ratings reach it.</p>
       <button className="btn ghost" onClick={() => setMini('hub')}>
         Play a mini-game

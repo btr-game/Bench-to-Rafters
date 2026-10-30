@@ -6,7 +6,7 @@ import { CareerHighs } from '../components/Highs';
 import { NbaBracket } from '../components/NbaBracket';
 import { TextBracket } from '../components/TextBracket';
 import { useState, type ReactNode } from 'react';
-import { VenueArt, placeOf, venueOf, type VenueKind } from '../art/Venue';
+import { VenueArt, arenaOf, placeOf, venueOf, type VenueKind } from '../art/Venue';
 import { TeamArt } from '../art/Crest';
 import { PlayerArt, kitFor, styleLeague, type KitName } from '../art/Player';
 import { JerseyArt } from '../art/Jersey';
@@ -306,10 +306,10 @@ function trimOf(g: GameState): string | undefined {
 }
 
 /** A page banner: art on the left, the headline, then the numbers that matter (round 14). */
-export function PageHero({ art, venue, place, stripe, kicker, title, sub, color, stats, children }: { art?: ReactNode; venue: VenueKind; place?: string | null; stripe?: string; kicker: string; title: string; sub?: ReactNode; color?: string; stats: { k: string; v: ReactNode; tone?: 'good' | 'bad' }[]; children?: ReactNode }) {
+export function PageHero({ art, venue, place, arena, stripe, kicker, title, sub, color, stats, children }: { art?: ReactNode; venue: VenueKind; place?: string | null; arena?: string; stripe?: string; kicker: string; title: string; sub?: ReactNode; color?: string; stats: { k: string; v: ReactNode; tone?: 'good' | 'bad' }[]; children?: ReactNode }) {
   return (
     <header className="page-hero" style={{ ...(color ? { ['--team' as string]: color } : {}), ...(stripe ? { ['--team2' as string]: stripe } : {}) }}>
-      <VenueArt kind={venue} place={place} />
+      <VenueArt kind={venue} place={place} arena={arena} />
       {art && <div className="hero-art">{art}</div>}
       <div className="hero-main">
         <div className="kicker">{kicker}</div>
@@ -347,6 +347,7 @@ export function SeasonTab({ g }: { g: GameState }) {
     <div className="page">
       <PageHero
         venue={venueOf(g)}
+        arena={arenaOf(g)}
         place={placeOf(g)}
         stripe={trimOf(g)}
         art={t ? <TeamArt name={t.name} abbr={t.abbr || t.short} color={t.color} league={styleLeague(g.stage)} size={92} /> : undefined}
@@ -440,6 +441,7 @@ export function PlayerTab({ g }: { g: GameState }) {
     <div className="page">
       <PageHero
         venue={venueOf(g)}
+        arena={arenaOf(g)}
         place={placeOf(g)}
         stripe={trimOf(g)}
         art={
@@ -679,6 +681,7 @@ export function LeagueTab({ g }: { g: GameState }) {
     <div className="page">
       <PageHero
         venue={venueOf(g)}
+        arena={arenaOf(g)}
         place={placeOf(g)}
         stripe={trimOf(g)}
         kicker={seasonLabel(g.year)}
@@ -840,6 +843,7 @@ export function RecordsTab({ g }: { g: GameState }) {
     <div className="page">
       <PageHero
         venue={venueOf(g)}
+        arena={arenaOf(g)}
         place={placeOf(g)}
         stripe={trimOf(g)}
         art={<PlayerArt name={g.player.name} number={g.player.number} pos={g.player.pos} color={t?.color} team={t?.name} abbr={t?.abbr} league={styleLeague(g.stage)} size={120} />}

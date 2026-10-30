@@ -432,7 +432,8 @@ function proContractStep(s: GameState): void {
   const offers: Offer[] = s.nba ? nbaOffersForProspect(s) : [];
   const expired = !c || c.years <= 0;
   if (expired) {
-    const fade = FA_INTEREST.minorAgeFade(s.player.age);
+    // no G League offers for veterans (round 22)
+    const fade = s.player.age >= 30 ? 0 : FA_INTEREST.minorAgeFade(s.player.age);
     if (s.stage === 'GL' && ovr >= 54 && chance(s.rng, fade)) offers.push(glOffer(s, ovr, (s.teamId ?? 'GL-LAL').replace('GL-', '')));
     offers.push(...europeOffers(s, ovr, ovr >= 52 ? 2 : 1));
     if ((s.stage === 'EU' || s.stage === 'INT') && ovr >= 54 && chance(s.rng, fade)) offers.push(glOffer(s, ovr));
@@ -527,7 +528,8 @@ function pushLastChance(s: GameState, why: string): void {
   }
   const offers: Offer[] = [...europeOffers(s, ovr, ovr >= 52 ? 2 : 1), ...intOffers(s, ovr, 2, { cba: s.player.age >= 29 })];
   offers.push(...homeLeagueOffers(s).filter((x) => !offers.some((y) => y.teamName === x.teamName)));
-  if (ovr >= 56 && chance(s.rng, FA_INTEREST.minorAgeFade(s.player.age))) offers.push(glOffer(s, ovr));
+  // round 22: the G League is for young players on the way up, not veterans on the way out
+  if (ovr >= 56 && s.player.age < 30 && chance(s.rng, FA_INTEREST.minorAgeFade(s.player.age))) offers.push(glOffer(s, ovr));
   const choices = offers.map(offerChoice);
   if (canChaseRing(s)) choices.push(ringChaseChoice());
   choices.push({ id: 'retire', label: 'Retire', detail: 'Hang them up.' });
@@ -556,8 +558,9 @@ function retireCheck(s: GameState, lastShare: number, share: number, role: RoleK
       title: 'Time to think about it',
       text: `You are ${Math.round(p.peakOvr - ovr)} points off your peak and the minutes have dried up. Your agent thinks it might be time.`,
       choices: [
-        { id: 'go', label: 'Find a last chance', detail: 'Keep playing wherever someone will have you.' },
+        // a veteran who can still help a contender sees that first
         ...(canChaseRing(s) ? [ringChaseChoice()] : []),
+        { id: 'go', label: 'Find a last chance', detail: s.player.age >= 30 ? 'Keep playing wherever someone will have you, at home or abroad.' : 'Keep playing wherever someone will have you.' },
         { id: 'retire', label: 'Retire', detail: 'Go out on your own terms.' },
       ],
       data: { share, role },

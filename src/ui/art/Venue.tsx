@@ -4,6 +4,8 @@ import { EURO_CLUBS } from '../../content/teams';
 import { intLeagueOf } from '../../engine/world/leagues';
 import { team as teamOf } from '../selectors';
 import { Landmarks, hasPlace } from './places';
+import { TEAM_STYLE } from '../../content/teamStyle';
+import { MOTIFS } from './motifs';
 
 // Venues behind the page banners (round 17): the gym, the arena or the hall where he plays this
 // year, drawn in one colour (his team's) and faded toward the text. A high school gym with
@@ -11,6 +13,11 @@ import { Landmarks, hasPlace } from './places';
 // jumbotron and banners in the rafters, a European hall under roof trusses with flags.
 
 export type VenueKind = 'gym' | 'college' | 'nba' | 'hall';
+
+/** The NBA team whose arena the banner shows (round 22), when he plays in the NBA. */
+export function arenaOf(g: GameState): string | undefined {
+  return g.stage === 'NBA' ? teamOf(g)?.abbr : undefined;
+}
 
 export function venueOf(g: GameState): VenueKind {
   const s = g.stage;
@@ -61,29 +68,75 @@ const CROWD = {
   abroad: crowd(340, 1200, 172, 3, 18, 3.4, 13),
 };
 
-function Nba() {
+// Round 22: every NBA team gets its own arena. The real number of championship banners hangs in
+// the rafters (up to twelve; the rest are counted on the last one), the roof is a truss, a dome or
+// a flat deck, the team's motif hangs over centre court, and its name runs along the stands.
+const NBA_TITLES: Record<string, number> = { BOS: 18, LAL: 17, GSW: 7, CHI: 6, SAS: 5, DET: 3, MIA: 3, PHI: 3, NYK: 2, HOU: 2, MIL: 2, OKC: 2, DEN: 1, CLE: 1, DAL: 1, TOR: 1, POR: 1, SAC: 1, ATL: 1, WAS: 1 };
+const ROOF: Record<string, 'truss' | 'dome' | 'deck'> = {};
+['BOS', 'NYK', 'CHI', 'DET', 'IND', 'MIL', 'CLE', 'PHI', 'BKN', 'WAS'].forEach((a) => (ROOF[a] = 'truss'));
+['LAL', 'LAC', 'GSW', 'PHX', 'SAS', 'HOU', 'DAL', 'DEN', 'UTA', 'OKC'].forEach((a) => (ROOF[a] = 'dome'));
+
+function Nba({ abbr }: { abbr?: string }) {
+  const st = abbr ? TEAM_STYLE[abbr] : undefined;
+  const roof = (abbr && ROOF[abbr]) ?? 'deck';
+  const titles = abbr ? (NBA_TITLES[abbr] ?? 0) : 3;
+  const shown = Math.min(12, titles);
+  const motif = st ? MOTIFS[st.motif] : null;
+  const word = st?.home.word ?? '';
   return (
     <g>
-      {/* roof and light rig */}
-      <path d="M0 12 H1200 M0 22 H1200" stroke="currentColor" strokeWidth="2" opacity=".5" />
-      {Array.from({ length: 30 }, (_, i) => (
-        <path key={i} d={`M${i * 40} 12 L${i * 40 + 20} 22 L${i * 40 + 40} 12`} fill="none" stroke="currentColor" strokeWidth="1.4" opacity=".45" />
-      ))}
+      {roof === 'truss' && (
+        <>
+          <path d="M0 12 H1200 M0 22 H1200" stroke="currentColor" strokeWidth="2" opacity=".5" />
+          {Array.from({ length: 30 }, (_, i) => (
+            <path key={i} d={`M${i * 40} 12 L${i * 40 + 20} 22 L${i * 40 + 40} 12`} fill="none" stroke="currentColor" strokeWidth="1.4" opacity=".45" />
+          ))}
+        </>
+      )}
+      {roof === 'dome' && (
+        <>
+          <path d="M0 40 Q600 -40 1200 40" fill="none" stroke="currentColor" strokeWidth="3" opacity=".5" />
+          {Array.from({ length: 12 }, (_, i) => (
+            <path key={i} d={`M${100 * i + 50} ${(40 - 80 * Math.sin((Math.PI * (100 * i + 50)) / 1200) * 0.5).toFixed(1)} L600 -20`} stroke="currentColor" strokeWidth="1" opacity=".25" />
+          ))}
+        </>
+      )}
+      {roof === 'deck' && <path d="M0 10 H1200 M0 18 H1200 M0 26 H1200" stroke="currentColor" strokeWidth="1.6" opacity=".4" />}
       <path d="M560 22 L470 215 L600 215 Z M960 22 L920 215 L1050 215 Z" fill="currentColor" opacity=".07" />
-      {/* jumbotron */}
-      <path d="M745 22 V34 M805 22 V34" stroke="currentColor" strokeWidth="2" opacity=".6" />
-      <rect x="710" y="34" width="130" height="58" rx="5" fill="currentColor" opacity=".55" />
-      <rect x="718" y="41" width="114" height="38" rx="2" fill="currentColor" opacity=".45" />
-      <rect x="722" y="92" width="106" height="8" rx="2" fill="currentColor" opacity=".5" />
-      {/* banners in the rafters: titles and retired jerseys */}
-      {[900, 946, 992, 1038, 1084, 1130].map((x, i) => (
-        <g key={x} opacity=".55">
-          <path d={`M${x} 22 h36 v58 l-18 -9 l-18 9 z`} fill="currentColor" />
-          {i % 2 === 1 && <path d={`M${x + 8} 34 h6 l4 4 l4 -4 h6 l4 6 l-5 3 v20 h-18 v-20 l-5 -3 z`} fill="#fff" opacity=".55" />}
+      {/* the team's motif over centre court, or the jumbotron */}
+      {motif ? (
+        <g opacity=".6">
+          <path d="M490 22 V26 M570 22 V26" stroke="currentColor" strokeWidth="2" />
+          {motif.flatMap((row, y) => [...row].map((ch, x) => (ch === '.' ? null : <rect key={`${x}-${y}`} x={470 + x * 8} y={26 + y * 8} width="8" height="8" fill="currentColor" opacity={ch === '+' ? 0.6 : 1} />)))}
         </g>
-      ))}
+      ) : (
+        <>
+          <path d="M745 22 V34 M805 22 V34" stroke="currentColor" strokeWidth="2" opacity=".6" />
+          <rect x="710" y="34" width="130" height="58" rx="5" fill="currentColor" opacity=".55" />
+        </>
+      )}
+      {/* championship banners in the rafters, as many as the franchise has won */}
+      {Array.from({ length: shown }, (_, i) => {
+        const x = 1166 - i * 38;
+        return (
+          <g key={i} opacity=".55">
+            <path d={`M${x} 22 h30 v52 l-15 -8 l-15 8 z`} fill="currentColor" />
+            <rect x={x + 9} y="34" width="12" height="12" fill="#fff" opacity=".5" />
+            {i === shown - 1 && titles > shown && (
+              <text x={x + 15} y="66" textAnchor="middle" fontSize="13" fontWeight="700" fontFamily="sans-serif" fill="#fff" opacity=".8">
+                ×{titles}
+              </text>
+            )}
+          </g>
+        );
+      })}
       <path d={CROWD.nbaUpper} fill="currentColor" opacity=".38" />
-      <rect x="280" y="152" width="920" height="9" fill="currentColor" opacity=".5" />
+      <rect x="280" y="148" width="920" height="16" fill="currentColor" opacity=".5" />
+      {word && (
+        <text x="740" y="161" textAnchor="middle" fontSize="15" fontWeight="900" letterSpacing="18" fontFamily="sans-serif" fill="#fff" opacity=".65">
+          {word}
+        </text>
+      )}
       <path d={CROWD.nbaLower} fill="currentColor" opacity=".55" />
       <path d="M0 214 H1200" stroke="currentColor" strokeWidth="3" opacity=".6" />
       <path d="M1040 240 A90 26 0 0 1 1200 222" fill="none" stroke="currentColor" strokeWidth="2" opacity=".5" />
@@ -178,8 +231,8 @@ function Abroad({ place }: { place: string }) {
   );
 }
 
-const scene = (kind: VenueKind, place?: string | null) =>
-  place ? <Abroad place={place} /> : kind === 'gym' ? <Gym /> : kind === 'college' ? <College /> : kind === 'hall' ? <Hall /> : <Nba />;
+const scene = (kind: VenueKind, place?: string | null, arena?: string) =>
+  place ? <Abroad place={place} /> : kind === 'gym' ? <Gym /> : kind === 'college' ? <College /> : kind === 'hall' ? <Hall /> : <Nba abbr={arena} />;
 
 // The scene is drawn as a vector once, then sampled down to a coarse grid (4 units a pixel) and
 // redrawn as crisp blocks in a few strengths of the team colour: the pixel-art look of the
@@ -223,8 +276,8 @@ async function pixelate(svg: string): Promise<string[]> {
   return paths;
 }
 
-export function VenueArt({ kind, place }: { kind: VenueKind; place?: string | null }) {
-  const key = place ? `${kind}:${place}` : kind;
+export function VenueArt({ kind, place, arena }: { kind: VenueKind; place?: string | null; arena?: string }) {
+  const key = `${kind}:${place ?? ''}:${kind === 'nba' ? (arena ?? '') : ''}`;
   const [paths, setPaths] = useState(() => cache.get(key) ?? null);
   const src = useRef<SVGSVGElement>(null);
   useEffect(() => {
@@ -248,7 +301,7 @@ export function VenueArt({ kind, place }: { kind: VenueKind; place?: string | nu
       {!paths && (
         // the vector drawing, kept out of sight: it is only read once to make the pixels
         <svg ref={src} xmlns="http://www.w3.org/2000/svg" width="1200" height="240" viewBox="0 0 1200 240" style={{ color: '#000' }} visibility="hidden">
-          {scene(kind, place)}
+          {scene(kind, place, arena)}
         </svg>
       )}
     </svg>
