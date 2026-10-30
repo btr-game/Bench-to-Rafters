@@ -11,6 +11,10 @@ import { FIRST_NAMES, LAST_NAMES } from '../../content/names';
 import type { Pos } from '../../engine/types';
 import { ht } from '../format';
 import { MiniBonus } from './MiniBonus';
+import { EvolutionArt } from '../art/Evolution';
+
+/** The lab's kit: lab-coat white with a blue trim. */
+const LAB_KIT = { base: '#1C7ED6', ink: '#FFFFFF', trim: '#F4F4F4', word: 'LAB' };
 
 const POSITIONS: Pos[] = ['PG', 'SG', 'SF', 'PF', 'C'];
 
@@ -74,6 +78,7 @@ export function LabGame() {
         <div className="kicker">Built in a lab · results</div>
         <section className="card stack lab-end">
           <div className="lab-grade">{g.letter}</div>
+          <EvolutionArt ovr={st.peak} pos={st.pos} name={st.name} number={23} kit={LAB_KIT} size={170} />
           <h2 className="title">{st.name}</h2>
           <p className="small">
             Peak {Math.round(st.peak)} OVR · {g.text}
@@ -124,6 +129,7 @@ export function LabGame() {
             <span className="small muted">credits</span>
           </div>
         </div>
+        <EvolutionArt ovr={ovr} pos={st.pos} name={st.name} number={23} kit={LAB_KIT} size={170} />
         {last && (
           <p className="small lab-last">
             Last season: {last.line} · {last.record}

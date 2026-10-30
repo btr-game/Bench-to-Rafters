@@ -78,7 +78,7 @@ const SECTIONS: { title: string; where: string; items: [string, string][] }[] = 
       ['Three-point contest', 'Five racks, 60 seconds. Stop the meter in the green; the bright middle is a swish. Money balls are worth 2, and one rack of your choice is all money balls. You shoot from behind the arc at every rack.'],
       ['Dunk contest', 'Two dunks a round, three attempts a dunk, the top two go to the final. Build each dunk from a takeoff, moves and a prop; each part is one timing tap. 9s and 10s take a hard dunk timed cleanly.'],
       ['Legends showdown', 'Every franchise’s all-time five, each with an identity (Showtime, Bad Boys, Grit and grind...). With a career, your own player takes a legend’s place; without, you build a rookie. Chemistry (how you fit the identity, a hole you fill, roles that overlap) moves the team rating. Then the season and four playoff rounds.'],
-      ['Built in a lab', 'Design a player and build him over ten seasons, one screen each: spend each summer’s credits on ratings, then watch the season play out. A grade at the end. Every rating has its icon, as in your career.'],
+      ['Built in a lab', 'Design a player and build him over ten seasons, one screen each: spend each summer’s credits on ratings, then watch the season play out. A grade at the end. Every rating has its icon, as in your career. Your player evolves as his OVR climbs: a small cute sprite as a raw prospect, a bigger one at 66, the detailed player standing with the ball at 75 (Starter), in his position\u2019s action at 85 (All-Star) and a signature move in a gold glow at 92 (MVP). A track under him shows every stage, and he flashes when he levels up. A Built in a lab career shows the same evolution on the Player tab.'],
     ],
   },
   {

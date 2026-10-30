@@ -1193,3 +1193,11 @@ Reached from the start page and from the bottom of Home (a career in progress is
   defense −3, rebounding −2, rim protection −2) and Veteran leader (basketball IQ +7, playmaking
   +2; athleticism −3, finishing −2, rebounding −2). The balance harness never chases a ring, so
   its numbers are unchanged.
+- **Built in a lab: the player evolves** (`art/Evolution.tsx`): five stages by OVR. Raw
+  prospect (under 66) is the cute sprite, small; Rising (66+) the cute sprite, bigger; Starter
+  (75+) the detailed traced player standing with the ball; All-Star (85+) the detailed player in
+  his position's action; MVP (92+) a signature move (PG no-look pass, SG fadeaway, SF two-hand
+  dunk, PF post move, C skyhook) in a gold glow. A track shows all five, with the stages ahead
+  as silhouettes, and the art flashes with an "Evolved" tag when he moves up. It shows in the
+  mini-game (during the build and on the results) and, in a Built in a lab career, in the Player
+  tab's banner and an Evolution card.

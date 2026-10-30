@@ -1295,3 +1295,22 @@ td .art-team { display: inline-block; vertical-align: middle; margin: -3px 8px -
 .duo-card { border-left: 4px solid #7048E8; }
 .duo-meter { height: 8px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
 .duo-meter span { display: block; height: 100%; background: linear-gradient(90deg, #7048E8, #E03131); }
+
+/* round 20: Built in a lab, the player's evolution */
+.evo { display: grid; gap: 10px; justify-items: center; }
+.evo-art { position: relative; display: grid; place-items: end center; width: 100%; border-radius: 10px; padding-top: 8px; background: linear-gradient(180deg, #0e1014 0%, #1b1e24 70%, #C99A62 70%, #B98048 100%); }
+.evo-art .art { image-rendering: pixelated; margin-bottom: 6px; max-height: 100%; width: auto; }
+.evo-mvp .evo-art { background: radial-gradient(circle at 50% 55%, rgba(252, 196, 25, 0.55), transparent 55%), linear-gradient(180deg, #0e1014 0%, #1b1e24 70%, #C99A62 70%, #B98048 100%); }
+.evo-mvp .evo-art .art { filter: drop-shadow(0 0 6px rgba(252, 196, 25, 0.9)); }
+.evo-flash { animation: evo-flash 1.4s ease-out; }
+@keyframes evo-flash { 0% { filter: brightness(3) saturate(0); } 25% { filter: brightness(2.2); } 100% { filter: none; } }
+.evo-tag { position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); background: #FCC419; color: #18141C; font-weight: 800; font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; white-space: nowrap; }
+.evo-track { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; width: 100%; }
+.evo-track li { display: grid; justify-items: center; gap: 2px; font-size: 11px; text-align: center; }
+.evo-mini { display: grid; place-items: end center; height: 52px; }
+.evo-mini .art { height: 48px; width: auto; image-rendering: pixelated; }
+.evo-track li.next .evo-mini { filter: brightness(0) opacity(0.35); }
+.evo-track li.now .evo-name { color: var(--accent); font-weight: 800; }
+.evo-name { font-weight: 700; line-height: 1.1; }
+.evo-from { font-family: var(--f-mono); color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { .evo-flash { animation: none; } }
