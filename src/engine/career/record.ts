@@ -63,7 +63,7 @@ function mainTeam(g: GameState): { name: string; color: string } | null {
 }
 
 /** One finished career, by its seed, name and the age he retired at. */
-export const recordId = (g: GameState): string => `${g.seed}-${g.player.name}-${g.retiredAt ?? g.player.age}`;
+const recordId = (g: GameState): string => `${g.seed}-${g.player.name}-${g.retiredAt ?? g.player.age}`;
 
 export function careerRecord(g: GameState, now = new Date()): CareerRecord {
   const p = g.player;

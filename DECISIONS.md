@@ -1317,4 +1317,69 @@ Reached from the start page and from the bottom of Home (a career in progress is
   surge chance is worked out per player: only at 25 or younger with a hidden growth rate above 1.1,
   weight (rate - 1.1) x 0.25, from 2.32% a half at rate 1.2 to 16.8% at 2.2 (normal mood). The game
   reference now spells this out.
-- Translations and the action-cam mini-game are kept in `ROADMAP.md` for later.
+- **Translations** (Korean, Chinese, French, Spanish, Japanese) were dropped for now at the owner's
+  call and kept in `ROADMAP.md`.
+- **"How the game decides"** went into the project summary: titles, MVP, the draft and growth in
+  plain words, with the series and title odds worked out (a 60% team wins a series 71.02% of the
+  time and the title 25.44%).
+- **UI fixes.** No HIGH RISK chip on Spotlight (it was only a label); focus names no longer break
+  mid-word; plan icons stay beside their names; the scouting report's blank header is gone; the
+  pixel body map moved up beside the ratings; New career sits right under Court in Settings.
+- **The guide** became short bullets under the same headers, and **Guide mode** became a tour of
+  every control, each shown once (80 steps), including ones that unlock later. Turned back on, it
+  starts over.
+- **Achievements** (owner: "hundreds, some extremely hard, puns, tiers, permanent"). 228 in five
+  tiers (bench, rotation, starter, All-Star, Hall of Fame), checked as a career goes, kept on the
+  device across careers. A banner drops in for each new one (three at most at once, each fading
+  after 4.5 s or on a click); the book on the start page shows the unearned ones by name only.
+- **Long careers** (owner: "LeBron is still playing well; 85 max at 40; 50 the hard limit"). Every
+  Recovery plan, health item, rest summer and low-wear season adds to a hidden longevity score that
+  slows aging and sudden declines; above 37 the ratings meet a ceiling that falls to 85 at 40.
+  Measured: a body kept that way averages 83.36 at 40. Nobody plays past 50 (an achievement).
+- **Plan strips.** Plans carry a thin colour strip like shop items.
+- **Playable finals** (owner: "a mini-game, skippable: play, watch or skip"). NBA, Olympic, World
+  Cup and other big finals open on a choice. Playing them stops before each of his team's big
+  possessions: pick a move, stop the meter (its green widens with the rating the move uses). The
+  result was settled by the season (titles, awards and the bracket depend on it), so the plays
+  score as written; the timing earns a clutch rating (reputation, mood, achievements). Each kind
+  of final has its own floor and the opponent wears its own colours.
+- **Community.** Leaderboards (today and all time, per difficulty), a Reality 99 hall, a statue
+  plaza (Regular guy, 150+ legacy, gold from 220 or a first-ballot Hall of Famer, 100 at most,
+  pay respects), a feedback page that only the owner can read, and a live strip after the owner's
+  reference image (players now, careers since you came, today's theme, the latest news). It runs
+  on the claude.ai page's shared database, falls back to this device elsewhere, and needs no
+  address anywhere (the owner's email is never in the code). The score is provisional (legacy
+  plus peak OVR above 60) until the owner picks one; hosting (claude.ai or a website) is open.
+- **Daily challenge** (owner: "lock minigames entirely"). No mini-game card or hub, no playable
+  finals (watch or skip), and fast break and simulated playoffs stay on.
+- **Three-point contest.** The setup drew the shooter at the chosen money rack, but every round
+  starts at rack 1 (the owner's bug report). The preview starts him there and the buttons say
+  "Money rack".
+- **Dunk contest** (owner: "too easy", "no overlaps in moves"). Narrower greens, a faster sweep,
+  cards one point stricter, more for clean timing, rivals two points stronger. A move he lands is
+  gone for the rest of the contest (takeoffs and props can repeat; the rivals follow the rule
+  too), with three new moves so four dunks still have a choice. A modelled player going for hard
+  dunks now wins 59-69% with sharp timing (35 ms error) and 19-43% with average timing (55 ms);
+  before it was 96.5-99.8%.
+- **3-on-3 streetball** (owner: "every player has a ball", "the ball moves randomly", "one game",
+  "important shots play the finals animation"). One game to 11 against the crew holding the court.
+  The six sprites hold no ball and stand by role; the one ball follows the play's own path. Drives
+  and pull-ups ask for a timing tap and play out on the action cam in a new park setting.
+  Results: rout, win, close loss, out, paid as before. A modelled casual player wins 40.8%.
+- **Roster and fit** (owner: "show a roster; the randoms determine team chemistry a bit"). Roster
+  players get ratings from their archetype around their OVR. Every team has a system (its coach's,
+  or the style he set). A Roster fit line joins the team factors: the better of a balanced profile
+  and one that peaks where the system wants it, plus the bench against the league's usual bench,
+  the five counting three times the bench. Calibrated on 1,100 measured seasons so the average
+  roster adds nothing (mean +0.025, p10 -0.72, p90 +0.76 at full strength; Regular guy halves
+  it). The recruiting scouts weigh the fit too. The Player tab shows the roster.
+- **Dev deck** (owner: "a dev version, a deck of cards, each opens that function"). A separate
+  page (`dev.html`, `npm run build:dev`) with 60 cards in seven suits; cards that need a career
+  play one with the harness's smart player until the state shows up, then the game opens on it.
+  It surfaced three fixes: the five builder's names were cut to two letters, career records kept
+  legacy points unrounded, and the harness read `process.env` (not there in a browser).
+- **Graphic-less version removed** (owner's call): its artifact was deleted.
+- **Graphics** (the owner's new standing rule): pixel icons for the career log, feedback, statues,
+  the 99 hall, the live strip, paying respects ("press F"), the inbox, the community, the timing
+  meter and the roster; medals for every achievement tier; bronze and gold statues; a floor per
+  kind of final; the park for streetball.

@@ -68,7 +68,7 @@ export function benchOf(roster: GenPlayer[], five: GenPlayer[]): GenPlayer[] {
 const SYSTEMS: TeamStyle[] = ['pace', 'defense', 'motion', 'inside'];
 
 /** How the team plays: the style he set (unless it is just "through you"), else its coach's system. */
-export function teamSystem(s: GameState, team: Team): { key: TeamStyle; his: boolean } {
+function teamSystem(s: GameState, team: Team): { key: TeamStyle; his: boolean } {
   const set = s.teamId === team.id ? currentStyle(s) : null;
   if (set && set !== 'star') return { key: set, his: true };
   let h = 7;

@@ -73,7 +73,7 @@ function records(): CareerRecord[] {
   return recs;
 }
 
-export function seedCommunity(): void {
+function seedCommunity(): void {
   const rs = records();
   if (!rs.length) return;
   const day = todayKey();

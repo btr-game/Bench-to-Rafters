@@ -18,15 +18,11 @@ Ideas the owner has asked to keep for later. Not started unless marked.
 - Suggested order: the interface first (start page, menus, tabs, buttons, settings, headings),
   then the most-seen prompts, then events and the guide.
 
-## Online community (owner, round 24; in progress)
+## Online community (owner, round 24)
 
-- Leaderboards, daily and all-time, for each difficulty. The ranking metric is still to be decided
-  (legacy points alone are not good enough).
-- Reality hits hard: a hall of fame for careers that reach a shown 99 OVR.
-- Statues (Regular guy only, legacy points about 150-200 and up, 100 at most), with bronze or gold
-  player art; other players can open the card and pay respects.
-- A feedback page that reaches the owner without showing the address.
-- A live strip in the spirit of the owner's reference image: people playing now, careers since you
-  opened the page, a feed of recent moments, a theme of the day.
-- Hosting decision pending: the claude.ai page (only invited Contributors can post) or a website
-  with its own database (anyone can post).
+- Built in round 24: leaderboards (today and all time, per difficulty), the Reality 99 hall, the
+  statue plaza, the feedback page and the live strip, on the claude.ai page's shared database.
+- Still open, for the owner to decide:
+  - the ranking metric (provisional: legacy points plus one point per peak OVR above 60);
+  - hosting: the claude.ai page (only invited Contributors can post) or a website with its own
+    database (anyone can post; Supabase or similar, plus a function that emails the feedback).

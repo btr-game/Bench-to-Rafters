@@ -171,7 +171,7 @@ export function wearMult(p: UserPlayer): number {
 }
 
 /** How much the care he has taken of his body slows aging (1 = not at all). */
-export function longevityMult(p: UserPlayer): number {
+function longevityMult(p: UserPlayer): number {
   return p.age >= LONGEVITY.from ? 1 - Math.min(LONGEVITY.max, (p.longevity ?? 0) * LONGEVITY.per) : 1;
 }
 
