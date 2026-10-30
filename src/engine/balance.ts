@@ -526,6 +526,15 @@ export const LEGACY = {
 // a point (1 / ovrPer) for every OVR above ovrFloor
 export const CAREER_INDEX = { stretch: 5, ovrFloor: 60, ovrPer: 10 };
 
+// round 25: nicknames and brands (career/nickname.ts). The media names him once his reputation
+// reaches `rep` (Star); brands call from `brandRep` (Superstar) in a pro league, and again when a
+// deal runs out while he is still above `renewRep`. A deal pays `deal.share` of the cap a season
+// (times reputation / brandRep); a signature line pays `line.base` of the cap plus `line.royalty`
+// of it times how far his reputation is above 60 (out of 40), and puts out a shoe every season
+// once he reaches `shoeRep` (Icon).
+export const NICKNAME = { rep: 55, noise: 0.2 };
+export const BRAND = { brandRep: 70, renewRep: 60, shoeRep: 85, deal: { years: 4, share: 0.04 }, line: { years: 6, base: 0.015, royalty: 0.06 }, rep: 1, morale: 2 };
+
 // round 15: a veteran can become a ring chaser (career/ringChase.ts) instead of retiring
 export const RING_CHASE = { minOvr: 66, starPeak: 85, starMinOvr: 56, maxAge: 38, from: 1, contenders: 7, offers: 2 };
 

@@ -76,6 +76,7 @@ import { recordInjury, trainMuscles } from '../player/body';
 import { cityHalf } from './cityCulture';
 import { duoEffect, growBonds } from './duo';
 import { NAMES } from '../../content/strings';
+import { awardNickname, payBrand } from './nickname';
 
 /** What he adds to winning beyond his OVR, scaled by his share of the game (career/team.ts). */
 const edgeFor = (a: Attrs, ovr: number, share: number, post: boolean): number => {
@@ -803,6 +804,10 @@ function finishSeason(s: GameState): void {
   const endorse = s.stage === 'NBA' ? Math.pow(p.rep / 100, 3) * 20 : s.stage === 'NCAA' ? 0.003 + (p.rep / 100) * 0.15 : s.stage === 'EU' || s.stage === 'GL' ? (p.rep / 100) * 0.05 : 0;
   p.bank += endorse;
   p.earnings += endorse;
+  // round 25: his own deal with a brand
+  const brand = payBrand(s);
+  p.bank += brand;
+  p.earnings += brand;
 
   const ovrEnd = userOvr(s);
   p.peakOvr = Math.max(p.peakOvr, ovrEnd);
@@ -866,6 +871,7 @@ function finishSeason(s: GameState): void {
   }
   season.summary = rec;
   s.lastSummary = rec;
+  awardNickname(s, team.color, team.name);
   s.feed.unshift(reactionsForSeason(s, rec));
   if (s.feed.length > 12) s.feed.length = 12;
 

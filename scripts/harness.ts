@@ -13,6 +13,7 @@ import type { Choice, Decision, GameState, Pos } from '../src/engine/types';
 import { careerIndex, count, legacyScore } from '../src/engine/awards/legacy';
 import { ovrOf } from '../src/engine/player/ovr';
 import { trueShooting, valuePerGame } from '../src/engine/sim/statModel';
+import { FIRST_NAMES, LAST_NAMES } from '../src/content/names';
 
 export type Policy = 'random' | 'smart';
 
@@ -27,6 +28,12 @@ function randomInput(r: Rng, policy: Policy) {
   }
   void arch;
   return { name: 'Sim Player', number: 7, pos, archetype, focus, hometown: 'Anytown', highSchool: 'Lincoln High' };
+}
+
+/** A name and number from the seed (round 25: nicknames read looks off the name), without touching the rng. */
+function simIdentity(seed: number): { name: string; number: number } {
+  const k = (seed * 2654435761) >>> 0;
+  return { name: `${FIRST_NAMES[k % FIRST_NAMES.length]} ${LAST_NAMES[(k >>> 8) % LAST_NAMES.length]}`, number: (k >>> 16) % 100 };
 }
 
 const enabled = (d: Decision): Choice[] => d.choices.filter((c) => !c.disabled);
@@ -53,6 +60,9 @@ export function smartChoice(s: GameState, d: Decision, r: Rng): string {
       const buy = ch.filter((c) => c.id !== 'leave' && /Training|Recovery|Shoes/.test(String(c.tags?.[0]))).sort((a, b) => Number(b.meta?.price) - Number(a.meta?.price))[0];
       return buy?.id ?? 'leave';
     }
+    case 'brand':
+      // a signature line for a big name, the sure deal otherwise
+      return ch.find((c) => c.id.startsWith(s.player.rep >= 80 ? 'line:' : 'deal:'))?.id ?? 'later';
     case 'assign':
       return 'go';
     case 'youth':
@@ -143,6 +153,8 @@ export interface CareerResult {
   verdict: string;
   legacy: number;
   index: { total: number; best: number; score: number }; // round 25: the leaderboards' career index
+  nickname: string | null; // round 25: what the media called him (nickname id)
+  brand: { kind: 'deal' | 'line'; earned: number; shoe: number } | null;
   peakOvr: number;
   potential: number;
   startOvr: number;
@@ -195,7 +207,7 @@ function playMinis(s: GameState, how: MiniPlay): void {
 
 export function runCareer(seed: number, policy: Policy, mode: Mode = 'standard', minis: MiniPlay = 'none'): CareerResult {
   const r = makeRng(seed ^ 0x9e3779b9);
-  const s = newGame(seed, { ...randomInput(r, policy), mode });
+  const s = newGame(seed, { ...randomInput(r, policy), ...simIdentity(seed), mode });
   // the harness simulates every postseason (the playable replay would only slow it down)
   s.flags.simPostseason = 1;
   const snapshots: CareerResult['snapshots'] = [];
@@ -249,6 +261,8 @@ export function runCareer(seed: number, policy: Policy, mode: Mode = 'standard',
     verdict: s.verdict ?? '?',
     legacy: legacyScore(s),
     index: careerIndex(s),
+    nickname: s.player.nickname?.id ?? null,
+    brand: s.player.brand ? { kind: s.player.brand.kind, earned: s.player.brand.earned, shoe: s.player.brand.shoe } : null,
     peakOvr: s.player.peakOvr,
     potential: s.player.potential,
     startOvr: ovrOf(s.player.startAttrs, s.player.pos),

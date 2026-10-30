@@ -22,6 +22,7 @@ import { raftersTeams } from './awards/legacy';
 import { UI } from '../content/strings';
 import { bankGains, isLab, labState } from './career/lab';
 import { prepareRecruit } from './career/recruit';
+import { resolveBrand } from './career/nickname';
 
 export type Prompt =
   | { type: 'decision'; decision: Decision }
@@ -180,6 +181,9 @@ function chooseInner(s: GameState, choiceId: string): void {
       return;
     case 'shop':
       s.toast = resolveShop(s, d, choiceId);
+      return;
+    case 'brand':
+      s.toast = resolveBrand(s, d, choiceId);
       return;
     case 'assign':
       if (choiceId === 'go') {

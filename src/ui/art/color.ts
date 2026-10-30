@@ -1,15 +1,7 @@
 // Shared helpers for the procedural artwork (round 17): a string hash for stable per-name
 // choices, and colour math so art can tint itself from team.color.
 
-/** FNV-1a: the same name always gives the same number. */
-export function hash(s: string): number {
-  let h = 2166136261;
-  for (let i = 0; i < s.length; i++) {
-    h ^= s.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return h >>> 0;
-}
+export { hash } from '../../content/looks';
 
 const clamp = (x: number) => Math.max(0, Math.min(255, Math.round(x)));
 

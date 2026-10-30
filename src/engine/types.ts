@@ -139,6 +139,28 @@ export interface UserPlayer {
   wear: number; // body wear 0-100 (see WEAR)
   longevity?: number; // round 24: hidden, built by looking after the body (see LONGEVITY)
   lab?: { credits: number; earned: number; spent: Partial<Record<AttrKey, number>> }; // built in a lab
+  nickname?: Nickname; // round 25: what the media calls him (career/nickname.ts)
+  brand?: BrandDeal; // round 25: his own logo on a brand's products
+}
+
+export interface Nickname {
+  id: string; // content/nicknames.ts
+  name: string; // with his name, number or town filled in
+  why: string;
+  reasons: string[]; // what the picker saw in him
+  year: number;
+}
+
+export interface BrandDeal {
+  brand: string;
+  color: string;
+  kind: 'deal' | 'line'; // a fixed deal, or a signature line that pays with his fame
+  years: number;
+  left: number; // seasons to go
+  perYear: number; // $M: the fixed pay, or the line's base
+  since: number;
+  earned: number; // $M so far
+  shoe: number; // signature shoes released (the next is shoe + 1)
 }
 
 export interface GenPlayer {
@@ -425,6 +447,7 @@ export interface Moment {
   // round 15: how the page celebrates (or doesn't) once any game reel has finished
   mood?: 'champion' | 'gold' | 'silver' | 'bronze' | 'heartbreak' | 'out';
   duo?: boolean; // round 22: the page where a duo forms shows the two of them
+  logo?: string; // round 25: a nickname's logo (content/nicknames.ts id)
 }
 
 export interface GameState {

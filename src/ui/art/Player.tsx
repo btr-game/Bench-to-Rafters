@@ -1,10 +1,10 @@
 import { useMemo } from 'react';
 import { NBA_TEAMS } from '../../content/teams';
 import { TEAM_STYLE, leagueKits, type Kit, type KitLeague } from '../../content/teamStyle';
-import { hash } from './color';
 import { toPaths } from './pixel';
 import type { Pos } from '../../engine/types';
-import { legendLook, type LegendLook } from '../../content/legendLooks';
+import type { LegendLook } from '../../content/legendLooks';
+import { lookTraits } from '../../content/looks';
 import { DRIBBLE, DUNK, JUMPER, LOWDRIBBLE, TRIPLE, noBall as withoutBall, paint, type Look, type Pose } from './sprite';
 
 // The player, as a pixel-art sprite in his team's kit (round 17). His look (skin, hair, a
@@ -27,15 +27,8 @@ const poseFor = (pos?: Pos): Pose => POSES[pos ?? 'SG'];
 
 /** How a player looks: a legend as he really did (content/legendLooks.ts), anyone else from his name. */
 export function lookOf(name: string, shoe: string): Look {
-  const l = legendLook(name);
-  if (l) return { skin: SKINS[Math.max(0, Math.min(6, l.skin - 1))], hair: HAIRS[l.color], style: l.hair, face: l.face, gear: l.gear, shoe };
-  const h = hash(name);
-  const h2 = hash(`${name}~`);
-  const skin = h % SKINS.length;
-  const styles: Look['style'][] = ['short', 'buzz', 'short', 'flattop', 'afro', 'cornrows', 'twists', 'curly', 'bald', skin < 2 ? 'parted' : 'short'];
-  const faces: Look['face'][] = ['none', 'none', 'none', 'goatee', 'beard', 'stubble', 'mustache'];
-  const gear = [(h2 >>> 11) % 5 === 0 && 'headband', (h2 >>> 15) % 5 === 0 && 'sleeve', (h2 >>> 19) % 4 === 0 && 'wristband'].filter((x): x is string => !!x);
-  return { skin: SKINS[skin], hair: HAIRS[skin < 2 && (h >>> 9) % 3 === 0 ? 'b' : 'k'], style: styles[(h2 >>> 3) % styles.length], face: faces[(h2 >>> 7) % faces.length], gear, shoe };
+  const t = lookTraits(name);
+  return { skin: SKINS[t.skin], hair: HAIRS[t.hair], style: t.style, face: t.face, gear: t.gear, shoe };
 }
 
 /** The kit a team wears: its own for NBA clubs, one built from its colour for everyone else. */

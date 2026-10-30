@@ -17,6 +17,7 @@ import { cityCultureOf } from '../../engine/career/cityCulture';
 import { fanCultureOf } from '../../engine/career/fanCulture';
 import { BodyMap } from '../components/BodyMap';
 import { RosterCard } from '../components/TeamRoster';
+import { NameCard } from '../components/NameCard';
 import { AchievementsCard } from './Achievements';
 import { FlagArt } from '../art/Flag';
 import type { GameLog, GameState, League, SeasonRecord, SeriesResult, StatLine, Team } from '../../engine/types';
@@ -512,7 +513,7 @@ export function PlayerTab({ g }: { g: GameState }) {
         color={t?.color}
         kicker={`#${p.number} · ${NAMES.pos[p.pos]} · ${ht(p.height)} · ${weightOf(p)} lb`}
         title={p.name}
-        sub={`${t ? `${t.name} · ` : ''}${stageLine(g)}`}
+        sub={`${p.nickname ? `\u201c${p.nickname.name}\u201d · ` : ''}${t ? `${t.name} · ` : ''}${stageLine(g)}`}
         stats={[
           { k: 'OVR', v: now, tone: now > start ? 'good' : now < start ? 'bad' : undefined },
           { k: 'Peak', v: Math.round(p.peakOvr) },
@@ -582,6 +583,7 @@ export function PlayerTab({ g }: { g: GameState }) {
               </ul>
             )}
           </Card>
+          <NameCard g={g} />
           {g.mode === 'lab' && (
             <Card title="Evolution">
               <EvolutionArt ovr={now} name={p.name} number={p.number} kit={{ base: t?.color ?? '#1C7ED6', ink: '#FFFFFF', trim: '#F4F4F4', word: '' }} size={130} />

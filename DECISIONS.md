@@ -1431,3 +1431,25 @@ Reached from the start page and from the bottom of Home (a career in progress is
   sneaker company. Their effects grow with the price but stay in the old range (morale, profile,
   goodwill, health and aging, a little growth). The stock now favours things costing 1% of the
   bank or more, so a rich player sees rich things. New pixel icons: horse, rocket, arena, heart.
+- **Nicknames and brands** (the owner: a nickname from appearance, style, name and story once the
+  reputation is high enough; at higher reputation brand deals with the player's own logo; about a
+  hundred nicknames with logos for an AI to assign). 136 made-up nicknames
+  (content/nicknames.ts), each with the traits it suits and a logo. The picker
+  (career/nickname.ts) reads about seventy traits off the player: how he looks (height, weight,
+  hair, beard, headband, left hand), what stands out in his ratings, his best per-game numbers,
+  his archetype, his story (late bloomer, abroad, loyal, journeyman, comebacks, clutch, rings) and
+  his name and number. It scores each nickname by fit (weighted traits over the square root of
+  the weights, so a long list is no free win) plus a little luck, and keeps the reasons. Story
+  traits many players share stop short of 1 so a skill nobody else has wins. At reputation 55
+  (Star) the papers name him; at 70 (Superstar) in a pro league two brands bid each summer: a
+  fixed deal (4% of the cap a season, scaled by reputation, 4 seasons) or a signature line
+  (1.5% of the cap plus a royalty of up to 6% of it with reputation above 60, 6 seasons, and a
+  shoe a season once he is an Icon at 85). Over 600 harness careers: 58.8333% earn a nickname,
+  65 different ones come up and the most common takes 8.2153%; 43.1667% sign a brand deal,
+  earning $134.5785M on average over the career.
+- **Logos** are 32-pixel badges in two colours at most (the owner: black and white preferred):
+  six shapes, the motif drawn as line art (outline, shading and the seams between fill colours
+  in ink) and the player's initials. 21 new motifs were drawn for them (wings, note, axe, bear,
+  mountain, cloud, drop, feather, key, knight, hook, lighthouse, bolt, hammer, owl, snake, shark,
+  comet, anchor, wolf, crown). The look traits moved from the sprite code to content/looks.ts so
+  the engine can read them.

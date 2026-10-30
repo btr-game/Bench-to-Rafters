@@ -66,6 +66,7 @@ export function PlayerCard({ g, compact = false }: { g: GameState; compact?: boo
           {p.anomaly && <span className="anomaly-tag" title="A rare player who breaks the mold"> · {p.anomaly}</span>}
         </div>
         <h2 className="pc-name">{p.name}</h2>
+        {p.nickname && <div className="pc-nick">&ldquo;{p.nickname.name}&rdquo;</div>}
         {t && <TeamChip name={t.name} color={t.color} />}
         <div className="muted small">{stageLine(g)}</div>
       </div>

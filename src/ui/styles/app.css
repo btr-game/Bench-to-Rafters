@@ -1646,3 +1646,24 @@ td .art-team { display: inline-block; vertical-align: middle; margin: -3px 8px -
 .ld-grade.g-A { background: #69DB7C; }
 .ld-grade.g-B { background: #74C0FC; }
 .ld-grade.g-C { background: #FFA94D; }
+
+/* round 25: the nickname and its logo (Player tab) */
+.name-row {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+.nick-name {
+  font-family: var(--f-display);
+  font-weight: 800;
+  font-size: 26px;
+  letter-spacing: 0.02em;
+  line-height: 1.1;
+}
+.pc-nick {
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: 0.03em;
+  color: var(--accent);
+}

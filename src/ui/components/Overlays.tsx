@@ -12,6 +12,7 @@ import { league, stageLine, team } from '../selectors';
 import { ActionCam, type CamSide, type Venue } from '../art/ActionCam';
 import { ClutchPanel, GRADE_NOTE, GRADE_POINTS, calledPlay, clutchMoves, type ClutchMove, type Grade } from './Clutch';
 import { Icon } from '../art/Icon';
+import { NickLogo } from '../art/NickLogo';
 import { ORIGINS } from '../../content/origins';
 import { kitFor, styleLeague } from '../art/Player';
 import { genericKits } from '../../content/teamStyle';
@@ -591,7 +592,7 @@ function MomentPage({ m, g }: { m: Moment; g: GameState }) {
           <DraftReveal m={m} />
         ) : (
           <div className="stack reveal" style={{ gap: 12 }}>
-            {m.duo && activeDuo(g) ? <DuoArt g={g} b={activeDuo(g)!} third={activeTrio(g)} size={170} /> : <StoryScene g={g} title={m.title} kind={m.kind} prize={m.kind === 'awards' ? m.lines?.[0] : m.kind === 'title' ? m.title : m.kind === 'tournament' ? `${m.title}. ${m.text}` : undefined} />}
+            {m.logo ? <NickLogo id={m.logo} name={g.player.name} size={160} /> : m.duo && activeDuo(g) ? <DuoArt g={g} b={activeDuo(g)!} third={activeTrio(g)} size={170} /> : <StoryScene g={g} title={m.title} kind={m.kind} prize={m.kind === 'awards' ? m.lines?.[0] : m.kind === 'title' ? m.title : m.kind === 'tournament' ? `${m.title}. ${m.text}` : undefined} />}
             <div className="kicker on-dark">{KICKER[m.kind]}</div>
             <div className="moment-title">{m.title}</div>
             <p className="on-dark lede-dark prose">{m.text}</p>

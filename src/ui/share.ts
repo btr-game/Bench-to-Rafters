@@ -102,7 +102,9 @@ export async function drawCareerCard(rec: CareerRecord): Promise<HTMLCanvasEleme
   const nameBottom = wrap(ctx, rec.name.toUpperCase(), 262, 262, 500, 80);
   ctx.fillStyle = '#c9c4ba';
   ctx.font = `400 26px ${BODY}`;
-  ctx.fillText(`${rec.country} · retired at ${rec.retiredAt}${team ? ` · ${team.name}` : ''}`, 262, Math.min(420, nameBottom + 6));
+  // round 25: what the media called him, under his name
+  const nick = rec.nickname ? `\u201c${rec.nickname.name}\u201d · ` : '';
+  ctx.fillText(`${nick}${rec.country} · retired at ${rec.retiredAt}${team ? ` · ${team.name}` : ''}`, 262, Math.min(420, nameBottom + 6));
   if (rec.ringChaser) {
     ctx.fillStyle = '#ffd76a';
     ctx.font = `600 22px ${MONO}`;
