@@ -1,7 +1,8 @@
 // Offseason shop: a random stock of about six items, up to three purchases per summer.
 
-import { ATTR_MAX, ATTRS, LONGEVITY, WEAR } from '../balance';
-import { clamp, shuffle, weightedIndex } from '../rng';
+import { ATTR_MAX, ATTRS, LONGEVITY, VISIT, WEAR } from '../balance';
+import { clamp, pick, shuffle, weightedIndex } from '../rng';
+import { VISITS } from '../../content/visits';
 import type { Decision, GameState } from '../types';
 import { SHOP_ITEMS, type ShopItem, type WearSlot } from '../../content/shop';
 import { logDecision, pushDecision } from '../career/common';
@@ -140,4 +141,17 @@ export function resolveShop(s: GameState, d: Decision, id: string): string | nul
     s.pending.unshift(s.pending.pop()!);
   }
   return `${it.name}: ${describeItem(it)}.`;
+}
+
+/** A visit to something he owns (round 25): once a season each, a little lift, and a little fame for the public ones. */
+export function visitItem(s: GameState, id: string): string | null {
+  const v = VISITS[id];
+  const p = s.player;
+  if (!v || !s.purchases.includes(id)) return null;
+  const seen = (p.visits ??= {});
+  if (seen[id] === s.year) return null;
+  seen[id] = s.year;
+  p.morale = clamp(p.morale + VISIT.morale, 0, 100);
+  if (v.rep) p.rep = clamp(p.rep + v.rep, 0, 100);
+  return pick(s.rng, v.lines);
 }

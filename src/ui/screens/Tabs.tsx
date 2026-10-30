@@ -19,6 +19,7 @@ import { BodyMap } from '../components/BodyMap';
 import { RosterCard } from '../components/TeamRoster';
 import { NameCard } from '../components/NameCard';
 import { WardrobeCard } from '../components/Wardrobe';
+import { CollectionCard } from '../components/Collection';
 import { AchievementsCard } from './Achievements';
 import { FlagArt } from '../art/Flag';
 import type { GameLog, GameState, League, SeasonRecord, SeriesResult, StatLine, Team } from '../../engine/types';
@@ -586,6 +587,7 @@ export function PlayerTab({ g }: { g: GameState }) {
           </Card>
           <NameCard g={g} />
           <WardrobeCard g={g} />
+          <CollectionCard g={g} />
           {g.mode === 'lab' && (
             <Card title="Evolution">
               <EvolutionArt ovr={now} name={p.name} number={p.number} kit={{ base: t?.color ?? '#1C7ED6', ink: '#FFFFFF', trim: '#F4F4F4', word: '' }} size={130} />

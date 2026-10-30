@@ -533,6 +533,8 @@ export const CAREER_INDEX = { stretch: 5, ovrFloor: 60, ovrPer: 10 };
 // of it times how far his reputation is above 60 (out of 40), and puts out a shoe every season
 // once he reaches `shoeRep` (Icon).
 export const NICKNAME = { rep: 55, noise: 0.2 };
+// round 25: a visit to something he owns (content/visits.ts), once a season each
+export const VISIT = { morale: 2 };
 export const BRAND = { brandRep: 70, renewRep: 60, shoeRep: 85, deal: { years: 4, share: 0.04 }, line: { years: 6, base: 0.015, royalty: 0.06 }, rep: 1, morale: 2 };
 
 // round 15: a veteran can become a ring chaser (career/ringChase.ts) instead of retiring

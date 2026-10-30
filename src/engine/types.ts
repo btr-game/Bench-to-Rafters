@@ -141,6 +141,7 @@ export interface UserPlayer {
   lab?: { credits: number; earned: number; spent: Partial<Record<AttrKey, number>> }; // built in a lab
   nickname?: Nickname; // round 25: what the media calls him (career/nickname.ts)
   brand?: BrandDeal; // round 25: his own logo on a brand's products
+  visits?: Record<string, number>; // round 25: shop id -> the season he last went (content/visits.ts)
   wardrobe?: { owned: string[]; on: Partial<Record<import('../content/shop').WearSlot, string>> }; // round 25: accessories (shop ids); 'none' takes a slot off
 }
 

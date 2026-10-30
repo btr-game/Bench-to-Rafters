@@ -1462,3 +1462,11 @@ Reached from the start page and from the bottom of Home (a career in progress is
   dressed, with a swatch per accessory he owns, "None" to take a slot off and "Own look" to go
   back to the look his name gives him. His sprite wears them everywhere he appears. Every shop
   visit now shows at most one item per shelf (six shelves, six items).
+- **The collection, and visits** (the owner: a showcase of what was bought, and a way to visit
+  or use the car, the jet, the house...). The Player tab lists everything bought, by shelf, with
+  its icon (accessories stay in the wardrobe). 34 of the lasting things (content/visits.ts) have
+  a button ("Take it for a drive", "Fly somewhere", "Shoot on the roof"...): once a season each,
+  a short scene of him there (a backdrop for the road, the sky, the sea, home, a court, a field,
+  the city or the night) with one of its lines, +2 morale, and +1 reputation for the public ones
+  (the foundation, the restaurant, the arena...). Experiences that are over once bought (a
+  vacation, a dinner) have no visit.
