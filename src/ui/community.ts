@@ -19,6 +19,8 @@ import { todayKey } from '../engine/mini/daily';
  */
 export const scoreOf = (r: CareerRecord): number => Math.round(r.legacy + Math.max(0, Math.round(r.peak) - 60));
 export const SCORE_NOTE = 'Score (provisional): legacy points + one point for every peak OVR above 60.';
+/** Round 24 (owner): the board ranks players by their best career; this many make it. */
+export const BOARD_SIZE = 100;
 
 /** Statues: Regular guy careers from this many legacy points; the plaza holds 100. */
 export const STATUE = { minLegacy: 150, max: 100, gold: 220 };
@@ -33,6 +35,18 @@ export interface ScoreRow {
   score: number;
   rec: CareerRecord;
   mine: boolean;
+  by?: string; // who posted it (the shared page only)
+}
+
+/** Each player once, at their best career, best first. */
+function bestPerPlayer(rows: ScoreRow[]): ScoreRow[] {
+  const seen = new Set<string>();
+  return rows.filter((r) => {
+    const who = r.by ?? r.id;
+    if (seen.has(who)) return false;
+    seen.add(who);
+    return true;
+  });
 }
 export interface StatueRow {
   id: string;
@@ -121,7 +135,7 @@ function localCommunity(): Community {
       return lload()
         .scores.filter((x) => x.mode === mode && (scope === 'all' || x.day === day))
         .sort((a, b) => b.score - a.score)
-        .slice(0, 25);
+        .slice(0, BOARD_SIZE);
     },
     async hall() {
       return lload().scores.filter((x) => hall99Ok(x.rec));
@@ -208,7 +222,7 @@ function sharedCommunity(db: Db, uid: string | null, owner: boolean, canWrite: b
   const me = uid ?? 'anon';
   const row = (s: Snap): ScoreRow | null => {
     const d = s.data();
-    return d ? { id: s.id, mode: d.mode as Mode, day: d.day as string, score: d.score as number, rec: d.rec as CareerRecord, mine: d.by === me } : null;
+    return d ? { id: s.id, mode: d.mode as Mode, day: d.day as string, score: d.score as number, rec: d.rec as CareerRecord, mine: d.by === me, by: d.by as string | undefined } : null;
   };
   const pushFeed = async (t: string) => {
     const ref = db.doc('feed/live');
@@ -232,8 +246,9 @@ function sharedCommunity(db: Db, uid: string | null, owner: boolean, canWrite: b
     async scores(mode, scope) {
       let q = db.collection('scores').where('mode', '==', mode);
       if (scope === 'day') q = q.where('day', '==', todayKey());
-      const snap = await q.orderBy('score', 'desc').limit(25).get();
-      return snap.docs.map(row).filter((x): x is ScoreRow => !!x);
+      // enough careers to find the best hundred players, each counted once
+      const snap = await q.orderBy('score', 'desc').limit(BOARD_SIZE * 8).get();
+      return bestPerPlayer(snap.docs.map(row).filter((x): x is ScoreRow => !!x)).slice(0, BOARD_SIZE);
     },
     async hall() {
       const snap = await db.collection('scores').where('mode', '==', 'reality').orderBy('score', 'desc').limit(200).get();

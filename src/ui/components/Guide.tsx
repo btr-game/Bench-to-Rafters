@@ -117,7 +117,7 @@ const SECTIONS: { title: string; where: string; items: [string, string[]][] }[] 
     items: [
       ['Career log', ['The career cards of your last 5 finished careers.', 'A warning at 4; when full, a new career replaces the oldest.', 'Show, download or delete any card.']],
       ['Achievements', ['Hundreds of milestones in five tiers, kept for good across careers.', 'A banner drops in when you earn one; tap it away.', 'Ones you haven’t earned show only their name: a riddle.']],
-      ['Leaderboards', ['Today and all time, for each difficulty.', 'Scored on legacy plus peak OVR for now.']],
+      ['Leaderboards', ['Today and all time, for each difficulty.', 'The top 100 players, each at their best career.', 'Scored on legacy plus peak OVR for now.']],
       ['Reality 99 hall', ['Every Reality hits hard career that reaches 99.']],
       ['Statue plaza', ['Regular guy careers with 150+ legacy can raise a statue; gold from 220 or a first-ballot Hall of Famer.', 'Up to 100 statues. Pay your respects to the others.']],
       ['Send feedback', ['A note straight to the game’s maker. Nobody else reads it.']],

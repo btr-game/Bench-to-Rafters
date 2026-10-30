@@ -9,6 +9,7 @@ import type { AttrKey, Attrs, GameState, GenPlayer, Pos } from '../../engine/typ
 import { NAMES } from '../../content/strings';
 import { PlayerArt, kitFor, styleLeague } from '../art/Player';
 import { Icon } from '../art/Icon';
+import { PlaybookArt } from '../art/Playbook';
 import { Card } from './bits';
 import { league as leagueOf, ovr, team as teamOf } from '../selectors';
 
@@ -76,7 +77,9 @@ export function RosterCard({ g }: { g: GameState }) {
           <b>{word(fit.depth, 'Deep', 'About usual', 'Thin')}</b>
         </div>
       </div>
-      <div className="roster-profile" aria-label="The team's average ratings">
+      <div className="roster-system">
+        <PlaybookArt style={fit.system} size={150} />
+        <div className="roster-profile" aria-label="The team's average ratings">
         {ATTRS.map((k) => {
           const v = fit.profile[k];
           const key = (sys.weights[k] ?? 0) > 0;
@@ -87,6 +90,7 @@ export function RosterCard({ g }: { g: GameState }) {
             </div>
           );
         })}
+        </div>
       </div>
       <p className="small muted">
         The team's average ratings (the five counts three times the bench). Gold bars are the ones {sys.name.toLowerCase()} leans on. Chemistry is good when the profile is well spread, when it peaks where the system wants it, and when the bench is better than most.

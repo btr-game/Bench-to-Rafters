@@ -10,7 +10,7 @@ import { ARCHETYPES } from '../../engine/player/archetypes';
 import { dailyInput, todayKey } from '../../engine/mini/daily';
 import { NAMES } from '../../content/strings';
 import { useStore } from '../../store';
-import { SCORE_NOTE, STATUE, community, hall99Ok, scoreOf, statueOk, type Community as Api, type FeedItem, type FeedbackRow, type ScoreRow, type StatueRow, type WriteResult } from '../community';
+import { SCORE_NOTE, BOARD_SIZE, STATUE, community, hall99Ok, scoreOf, statueOk, type Community as Api, type FeedItem, type FeedbackRow, type ScoreRow, type StatueRow, type WriteResult } from '../community';
 import { drawCareerCard } from '../share';
 import { StatueArt } from '../art/Statue';
 import { PlayerArt } from '../art/Player';
@@ -145,7 +145,9 @@ function Board({ c }: { c: Api }) {
           </button>
         </div>
       </div>
-      <p className="small muted">{SCORE_NOTE}</p>
+      <p className="small muted">
+        {c.kind === 'shared' ? `The top ${BOARD_SIZE} players, each at their best career.` : 'Offline: your own best careers on this device.'} {SCORE_NOTE}
+      </p>
       {rows === null ? (
         <p className="muted">Loading…</p>
       ) : rows.length === 0 ? (

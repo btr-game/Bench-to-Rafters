@@ -33,6 +33,7 @@ import { useStore } from "../../store";
 import { LabCard } from "../components/Lab";
 import { MvpRace } from "../components/MvpRace";
 import { MiniGamesCard } from "../mini/MiniGames";
+import { PlaybookArt } from "../art/Playbook";
 import { DuoCard, RecruitCard, StoriesCard } from "../components/Roster";
 import { canRecruit, recruitInfo } from "../../engine/career/recruit";
 import { STARTERS_RECRUIT } from "../../engine/balance";
@@ -851,9 +852,11 @@ function StyleCard({ g }: { g: GameState }) {
           .map(({ k, f, e }) => (
             <button
               key={k}
-              className={`choice${now === k ? " selected" : ""}`}
+              className={`choice style-choice${now === k ? " selected" : ""}`}
               onClick={() => mutate((x) => setStyle(x, k))}
             >
+              {/* round 24: each style as the coach draws it */}
+              <PlaybookArt style={k} size={120} />
               <span className="label">
                 {TEAM_STYLES[k].name}
                 {!master && (
