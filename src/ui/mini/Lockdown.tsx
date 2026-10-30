@@ -7,7 +7,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from '../../store';
 import { RHYTHM, accuracy, gradeOf, judgeAt, makeChart, PATTERNS, type Chart, type Judge, type Lane, type Note, type Tally } from '../../engine/mini/rhythm';
 import { MiniBonus } from './MiniBonus';
-import { PlayerArt } from '../art/Player';
+import { PlayerArt, kitFor, styleLeague } from '../art/Player';
+import { ballSpot, heroGrid } from '../art/Hero';
+import type { HeroPose } from '../art/heroRows';
+import { genericKits, type Kit } from '../../content/teamStyle';
+import { team as teamOf } from '../selectors';
 import { Icon } from '../art/Icon';
 
 const W = 360;
@@ -22,6 +26,179 @@ const COLOR = [
   { base: '#4DABF7', dark: '#1971C2', light: '#A5D8FF', name: 'STEAL', key: 'S' },
 ];
 const JUDGE_COLOR: Record<string, string> = { perfect: '#FFD43B', good: '#69DB7C', miss: '#FF6B6B', held: '#FFD43B', dropped: '#FF6B6B' };
+
+// ---------- the play behind the lanes (round 25, the owner: a player shooting, something like that) ----------
+
+// A side view: the hoop on the right, their ball handler on the left going at it, you between
+// him and the rim. He dribbles on the beat; a block, a steal, a bucket or a blow-by plays out
+// whenever a note is judged. The sprites are the action cam's traced players.
+type Act = 'block' | 'steal' | 'score' | 'blowby';
+const ACT_LEN = 0.6; // seconds a reaction plays
+const K = 1.55; // sprite scale
+const FLOOR = 382; // where the feet are
+const OX = 112; // their ball handler
+const DX = 226; // you
+const RIM: [number, number] = [318, 226];
+// poses that face right as drawn (the rest face left, or straight on)
+const FACES_RIGHT = new Set<HeroPose>(['drive', 'finish', 'lowdribble', 'push', 'contest', 'facing']);
+const NEUTRAL = new Set<HeroPose>(['stance', 'wall', 'reach', 'hesitation', 'spread']);
+const BALL_ROWS = ['..OOO..', '.OuBBO.', 'OuBBBbO', 'OBLBBbO', 'OBBLbbO', '.ObbbO.', '..OOO..'];
+const BALL_PAL: Record<string, string> = { O: '#1B1820', B: '#E8782A', u: '#F5A15F', b: '#C2571B', L: '#6A3416' };
+const THEM: Kit = genericKits('#C92A2A', 'VISITORS').road;
+
+interface Sprite {
+  cv: HTMLCanvasElement;
+  w: number;
+  h: number;
+  ball: [number, number]; // the ball in his hands, from his feet in the middle
+}
+function makeSprite(pose: HeroPose, kit: Kit, model: string, number: number, noBall: boolean, toRight: boolean): Sprite {
+  const flip = !NEUTRAL.has(pose) && FACES_RIGHT.has(pose) !== toRight;
+  const g = heroGrid(pose, kit, model, number, noBall, flip);
+  const h = g.length;
+  const w = g[0].length;
+  const cv = document.createElement('canvas');
+  cv.width = w;
+  cv.height = h;
+  const c = cv.getContext('2d')!;
+  g.forEach((row, y) => row.forEach((col, x) => {
+    if (!col) return;
+    c.fillStyle = col;
+    c.fillRect(flip ? w - 1 - x : x, y, 1, 1);
+  }));
+  const [fx, fy] = ballSpot(pose);
+  return { cv, w, h, ball: [((flip ? 1 - fx : fx) - 0.5) * w * K, -(1 - fy) * h * K] };
+}
+function ballSprite(): HTMLCanvasElement {
+  const cv = document.createElement('canvas');
+  cv.width = 7;
+  cv.height = 7;
+  const c = cv.getContext('2d')!;
+  BALL_ROWS.forEach((r, y) => [...r].forEach((ch, x) => {
+    if (!BALL_PAL[ch]) return;
+    c.fillStyle = BALL_PAL[ch];
+    c.fillRect(x, y, 1, 1);
+  }));
+  return cv;
+}
+const ease = (x: number) => (x <= 0 ? 0 : x >= 1 ? 1 : 1 - (1 - x) * (1 - x));
+const lerp = (a: [number, number], b: [number, number], k: number): [number, number] => [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k];
+
+function makeScene(me: { name: string; number: number } | null, myKit: Kit) {
+  const cache = new Map<string, Sprite>();
+  const sprite = (who: 'them' | 'me', pose: HeroPose, noBall: boolean): Sprite => {
+    const key = `${who}|${pose}|${noBall}`;
+    let s = cache.get(key);
+    if (!s) {
+      s = who === 'them' ? makeSprite(pose, THEM, 'Their guard', 3, noBall, true) : makeSprite(pose, myKit, me?.name ?? 'Lockdown', me?.number ?? 7, noBall, false);
+      cache.set(key, s);
+    }
+    return s;
+  };
+  const ball = ballSprite();
+  const put = (c: CanvasRenderingContext2D, s: Sprite, x: number, up: number) => {
+    c.fillStyle = 'rgba(0,0,0,0.3)';
+    c.fillRect(x - 22, FLOOR - 2, 44, 4);
+    c.drawImage(s.cv, Math.round(x - (s.w * K) / 2), Math.round(FLOOR - s.h * K - up), s.w * K, s.h * K);
+  };
+  const putBall = (c: CanvasRenderingContext2D, [x, y]: [number, number]) => c.drawImage(ball, Math.round(x - 7), Math.round(y - 7), 14, 14);
+  const hand = (s: Sprite, x: number, up: number): [number, number] => [x + s.ball[0], FLOOR + s.ball[1] - up];
+
+  /** The court, the hoop and the play at time t: `act` is the latest reaction, `hold` a long note being held. */
+  return (c: CanvasRenderingContext2D, t: number, beat: number, act: { kind: Act | null; at: number }, hold: [boolean, boolean]) => {
+    // the arena: dark stands with a few lights, the floor, the paint under the rim
+    c.fillStyle = '#1A1D24';
+    c.fillRect(0, 0, W, FLOOR - 40);
+    c.fillStyle = '#232733';
+    for (let y = 70; y < FLOOR - 60; y += 14) for (let x = (y / 14) % 2 ? 4 : 11; x < W; x += 14) c.fillRect(x, y, 4, 4);
+    c.fillStyle = '#5A3E28';
+    c.fillRect(0, FLOOR - 40, W, H - FLOOR + 40);
+    c.fillStyle = '#4E3522';
+    for (let y = FLOOR - 36; y < H; y += 10) c.fillRect(0, y, W, 2);
+    c.fillStyle = '#6E2F27';
+    c.fillRect(256, FLOOR - 40, W - 256, 52);
+    c.fillStyle = '#E9ECEF';
+    c.fillRect(256, FLOOR - 40, 2, 52);
+    // the hoop: pole, backboard, rim and net
+    c.fillStyle = '#495057';
+    c.fillRect(350, 150, 6, FLOOR - 150);
+    c.fillStyle = '#DEE2E6';
+    c.fillRect(338, 170, 6, 70);
+    c.fillStyle = '#E8590C';
+    c.fillRect(300, RIM[1] - 2, 38, 4);
+    c.fillStyle = 'rgba(241,243,245,0.75)';
+    for (let i = 0; i < 5; i++) c.fillRect(302 + i * 8, RIM[1] + 2, 2, 18 - i);
+
+    const age = act.kind ? t - act.at : 9;
+    const on = act.kind && age >= 0 && age < ACT_LEN ? act.kind : null;
+    const k = on ? age / ACT_LEN : 0;
+    const shuffle = Math.sin((t / (beat * 2)) * Math.PI * 2) * 6;
+    let them: Sprite;
+    let tx = OX + shuffle * 0.6;
+    let tUp = 0;
+    let you: Sprite;
+    let yx = DX + shuffle;
+    let yUp = 0;
+    let b: [number, number] | null = null; // the ball, when it is not in a sprite's hands
+    const jump = (start: number, len: number, hgt: number) => (k < start || k > start + len ? 0 : Math.sin(((k - start) / len) * Math.PI) * hgt);
+    if (on === 'block') {
+      them = sprite('them', 'jumper', k > 0.25);
+      tUp = jump(0, 0.75, 26);
+      you = sprite('me', 'contest', true);
+      yUp = jump(0.08, 0.75, 34);
+      yx = DX - 24 * ease(k * 3);
+      if (k > 0.25) {
+        const from = hand(sprite('them', 'jumper', false), tx, jump(0, 0.75, 26) || 20);
+        b = lerp(from, [-30, from[1] - 150], ease((k - 0.25) / 0.6));
+      }
+    } else if (on === 'steal') {
+      them = sprite('them', 'lowdribble', true);
+      you = sprite('me', 'steal', true);
+      yx = DX - 34 * ease(k * 2.5);
+      const from = hand(sprite('them', 'lowdribble', false), tx, 0);
+      b = lerp(from, [yx + 40, FLOOR - 14], ease(k * 2));
+    } else if (on === 'score') {
+      them = sprite('them', 'jumper', k > 0.3);
+      tUp = jump(0, 0.7, 26);
+      you = sprite('me', 'stance', true);
+      if (k > 0.3) {
+        const from = hand(sprite('them', 'jumper', false), tx, 24);
+        const q = Math.min(1, (k - 0.3) / 0.5);
+        const p = lerp(from, [RIM[0] + 2, RIM[1] - 6], q);
+        b = q < 1 ? [p[0], p[1] - Math.sin(q * Math.PI) * 70] : [RIM[0] + 2, RIM[1] + 10 + (k - 0.8) * 120];
+      }
+    } else if (on === 'blowby') {
+      them = sprite('them', 'drive', false);
+      tx = OX + 120 * ease(k * 1.4) - (k > 0.75 ? 120 * ((k - 0.75) / 0.25) : 0);
+      you = sprite('me', 'reach', true);
+    } else if (hold[0]) {
+      // a long block note: he backs you down, you wall up
+      them = sprite('them', 'post', false);
+      tx = OX + 30;
+      you = sprite('me', 'wall', true);
+      yx = DX - 8;
+    } else if (hold[1]) {
+      // a long steal note: you slide with him, hand on the ball
+      them = sprite('them', 'handle', false);
+      tx = OX + Math.sin(t * 5) * 18;
+      you = sprite('me', 'stance', true);
+      yx = DX + Math.sin(t * 5) * 18;
+    } else {
+      // the dribble: the ball hits the floor on the beat
+      them = sprite('them', 'lowdribble', true);
+      you = sprite('me', 'stance', true);
+      const h = hand(sprite('them', 'lowdribble', false), tx, 0);
+      const ph = (((t % beat) + beat) % beat) / beat;
+      b = [h[0], FLOOR - 6 - (FLOOR - 6 - h[1]) * Math.sin(ph * Math.PI)];
+    }
+    put(c, them, tx, tUp);
+    put(c, you, yx, yUp);
+    if (b) putBall(c, b);
+    // dim it all so the notes stay easy to read
+    c.fillStyle = 'rgba(21,23,29,0.42)';
+    c.fillRect(0, 0, W, H);
+  };
+}
 
 interface Live extends Note {
   judged: Judge | null;
@@ -86,6 +263,15 @@ function heard(ctx: AudioContext): number {
 
 function Stage({ chart, audio, muted, onDone }: { chart: Chart; audio: AudioContext | null; muted: boolean; onDone: (t: Tally) => void }) {
   const canvas = useRef<HTMLCanvasElement>(null);
+  const game = useStore((s) => s.game);
+  // you defend in your team's home kit (anyone else in a blue one)
+  const scene = useMemo(() => {
+    const t = game ? teamOf(game) : null;
+    const me = game && game.step !== 'retired' ? game.player : null;
+    return makeScene(me, t ? kitFor(t.name, t.abbr, t.color, 'home', styleLeague(game?.stage)) : genericKits('#1D428A', 'LOCKDOWN').home);
+    // the kit is set when the run starts
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const gain = useRef<GainNode | null>(null);
   const st = useRef({
     notes: chart.notes.map((n) => ({ ...n, judged: null, tail: null })) as Live[],
@@ -95,6 +281,7 @@ function Stage({ chart, audio, muted, onDone }: { chart: Chart; audio: AudioCont
     flash: [-9, -9],
     holding: [null, null] as (Live | null)[],
     judge: { text: '', kind: '', at: -9 },
+    act: { kind: null as Act | null, at: -9 },
     start: 0,
     perf0: 0,
     done: false,
@@ -118,7 +305,8 @@ function Stage({ chart, audio, muted, onDone }: { chart: Chart; audio: AudioCont
     } else s.perf0 = performance.now() / 1000 + 0.35;
     const last = Math.max(...chart.notes.map((n) => n.t + n.len));
     const say = (text: string, kind: string, t: number) => (s.judge = { text, kind, at: t });
-    const hit = (kind: Judge | 'held' | 'dropped', t: number) => {
+    const hit = (kind: Judge | 'held' | 'dropped', t: number, lane: Lane) => {
+      if (kind !== 'held') s.act = { kind: kind === 'miss' || kind === 'dropped' ? (lane === 0 ? 'score' : 'blowby') : lane === 0 ? 'block' : 'steal', at: t };
       if (kind === 'miss' || kind === 'dropped') s.combo = 0;
       else s.combo += 1;
       s.tally.maxCombo = Math.max(s.tally.maxCombo, s.combo);
@@ -133,7 +321,7 @@ function Stage({ chart, audio, muted, onDone }: { chart: Chart; audio: AudioCont
       if (!n) return;
       const j = judgeAt(t - n.t)!;
       n.judged = j;
-      hit(j, t);
+      hit(j, t, lane);
       if (j !== 'miss' && n.len > 0) s.holding[lane] = n;
     };
     const release = (lane: Lane) => {
@@ -143,7 +331,7 @@ function Stage({ chart, audio, muted, onDone }: { chart: Chart; audio: AudioCont
       if (!n) return;
       s.holding[lane] = null;
       n.tail = t >= n.t + n.len - RHYTHM.holdGrace ? 'held' : 'dropped';
-      hit(n.tail, t);
+      hit(n.tail, t, lane);
     };
     const laneOf = (e: KeyboardEvent): Lane | null => (e.code === 'KeyA' ? 0 : e.code === 'KeyS' ? 1 : null);
     const kd = (e: KeyboardEvent) => {
@@ -185,13 +373,13 @@ function Stage({ chart, audio, muted, onDone }: { chart: Chart; audio: AudioCont
     const frame = () => {
       const t = now();
       // missed notes, and long notes held all the way
-      for (const n of s.notes) if (!n.judged && t - n.t > RHYTHM.good) (n.judged = 'miss'), hit('miss', t);
+      for (const n of s.notes) if (!n.judged && t - n.t > RHYTHM.good) (n.judged = 'miss'), hit('miss', t, n.lane);
       for (const l of [0, 1] as Lane[]) {
         const n = s.holding[l];
         if (n && t >= n.t + n.len) {
           s.holding[l] = null;
           n.tail = 'held';
-          hit('held', t);
+          hit('held', t, l);
         }
       }
       draw(c, t);
@@ -203,14 +391,13 @@ function Stage({ chart, audio, muted, onDone }: { chart: Chart; audio: AudioCont
       raf = requestAnimationFrame(frame);
     };
     const draw = (c: CanvasRenderingContext2D, t: number) => {
-      c.fillStyle = '#15171D';
-      c.fillRect(0, 0, W, H);
-      // the lanes: a strip of hardwood each, the paint at the bottom
+      scene(c, t, chart.beat, s.act, [!!s.holding[0], !!s.holding[1]]);
+      // the lanes: a see-through strip each, over the play
       for (const l of [0, 1] as Lane[]) {
         const x = LANE_X[l];
-        c.fillStyle = '#20242D';
+        c.fillStyle = 'rgba(21,23,29,0.5)';
         c.fillRect(x, 0, LANE_W, H);
-        c.fillStyle = '#262B35';
+        c.fillStyle = 'rgba(255,255,255,0.04)';
         for (let y = ((t * SPEED) % 24) - 24; y < H; y += 24) c.fillRect(x, Math.round(y), LANE_W, 2);
         if (t - s.flash[l] < 0.12 || s.down[l]) {
           c.fillStyle = COLOR[l].base + '22';

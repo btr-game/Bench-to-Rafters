@@ -217,6 +217,12 @@ export function useStatuePaths(pose: HeroPose, metal: 'bronze' | 'gold') {
   return useMemo(() => toPaths(rowsOf(pose).map((r) => [...r].map((c) => (TONE[c] === undefined ? '' : METAL[metal][TONE[c]])))), [pose, metal]);
 }
 
+/** A traced player's pixels in the action cam's flat colours, for scenes drawn on a canvas (round 25: Lockdown). */
+export function heroGrid(pos: HeroPose, kit: Kit, model: string, number: number, noBall: boolean, mirror: boolean): string[][] {
+  const look = lookOf(model, '#2A2D34');
+  return paintHero(pos, kit, look.skin, look.hair, number, undefined, noBall, true, mirror);
+}
+
 /** The paths of a traced player in a kit (for scenes that place him themselves). */
 export function useHeroPaths(pos: HeroPose, kit: Kit, model: string, number: number, opts: { noBall?: boolean; flat?: boolean; mirror?: boolean } = {}) {
   const look = lookOf(model, '#2A2D34');

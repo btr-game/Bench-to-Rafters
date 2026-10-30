@@ -1410,3 +1410,9 @@ Reached from the start page and from the bottom of Home (a career in progress is
 
 - **Keyboard shortcuts**: F (fast break), G (guide mode) and M (master mode) are gone (the owner);
   those switches stay in the settings menu. Enter, the number row and the tab letters remain.
+- **Lockdown gets a play behind the lanes** (the owner: "a player shooting the ball, something
+  like that"). A side view of a half court: their ball handler dribbles on the beat, you guard him,
+  and each judged note plays out with the action cam's traced players: a block (he rises, you
+  swat it away), a steal (you poke it loose), a missed block note is a jumper that drops, a missed
+  steal note a blow-by; holding a long note shows you walling up a post-up or sliding with his
+  handle. The scene is dimmed and the lanes see-through, so the notes stay easy to read.
