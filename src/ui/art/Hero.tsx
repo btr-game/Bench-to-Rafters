@@ -209,6 +209,14 @@ function paintHero(pos: HeroPose, kit: Kit, skin: string, hair: string, number: 
   return rows.map((r) => r.map((c) => pal[c] ?? ''));
 }
 
+// round 24: statues. The same traced pose cast in metal: every part keeps its light and shade, in
+// five tones of bronze or gold (no number on the jersey).
+const TONE: Record<string, number> = { O: 0, d: 1, k: 1, L: 1, s: 2, j: 2, p: 2, b: 2, w: 2, f: 2, H: 2, S: 3, J: 3, P: 3, B: 3, W: 3, F: 3, T: 3, R: 3, E: 3, l: 4, i: 4, u: 4, h: 4 };
+const METAL = { bronze: ['#3B2410', '#6E4520', '#94622F', '#B98142', '#E0AE6E'], gold: ['#4A3305', '#8A6410', '#B8891C', '#E2B33C', '#FFE38A'] };
+export function useStatuePaths(pose: HeroPose, metal: 'bronze' | 'gold') {
+  return useMemo(() => toPaths(rowsOf(pose).map((r) => [...r].map((c) => (TONE[c] === undefined ? '' : METAL[metal][TONE[c]])))), [pose, metal]);
+}
+
 /** The paths of a traced player in a kit (for scenes that place him themselves). */
 export function useHeroPaths(pos: HeroPose, kit: Kit, model: string, number: number, opts: { noBall?: boolean; flat?: boolean; mirror?: boolean } = {}) {
   const look = lookOf(model, '#2A2D34');

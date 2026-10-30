@@ -1553,3 +1553,45 @@ td .art-team { display: inline-block; vertical-align: middle; margin: -3px 8px -
 .clutch-score { display: flex; align-items: baseline; gap: 12px; justify-content: center; color: var(--board-ink, #fff); }
 .clutch-score b { font-family: var(--f-display); font-weight: 900; font-size: 54px; line-height: 0.9; color: var(--led); }
 .clutch-score span { font-family: var(--f-mono); font-size: 14px; letter-spacing: 0.06em; text-transform: uppercase; }
+
+/* the community (round 24): the live strip, the boards, the hall and the statue plaza */
+.live-strip { display: grid; gap: 10px; padding: 14px 16px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); margin-bottom: 12px; }
+.live-nums { display: flex; flex-wrap: wrap; gap: 28px; }
+.live-nums > div { display: grid; }
+.live-nums b { font-family: var(--f-display); font-weight: 900; font-size: 46px; line-height: 0.9; font-variant-numeric: tabular-nums; }
+.live-nums small { color: var(--muted); font-size: 14px; }
+.live-theme { font-size: 15.5px; }
+.live-chip { display: inline-block; padding: 2px 10px; border-radius: 999px; background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--accent); font-weight: 700; font-size: 13.5px; }
+.live-feed { display: flex; align-items: baseline; gap: 8px; font-size: 15px; }
+.live-feed small { color: var(--accent); }
+.live-dot { width: 9px; height: 9px; border-radius: 50%; background: #E64980; flex: none; transform: translateY(-1px); animation: pulse 1.6s ease-in-out infinite; }
+.board-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.board-list li { display: grid; gap: 8px; }
+.board-row { width: 100%; display: grid; grid-template-columns: 34px auto minmax(0, 1fr) auto; gap: 12px; align-items: center; text-align: left; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); }
+.board-list li.mine .board-row { border-color: var(--accent); box-shadow: inset 4px 0 0 var(--accent); }
+.board-rank { font-family: var(--f-display); font-weight: 900; font-size: 26px; text-align: center; color: var(--muted); }
+.board-list li:nth-child(-n + 3) .board-rank { color: var(--gold, #E2B33C); }
+.board-who { display: grid; min-width: 0; }
+.board-who b { font-size: 17px; overflow-wrap: anywhere; }
+.board-who small { color: var(--muted); font-size: 13.5px; }
+.board-who .you { font-family: var(--f-mono); font-size: 11px; text-transform: uppercase; color: var(--accent); margin-left: 6px; }
+.board-score { font-family: var(--f-display); font-weight: 900; font-size: 30px; font-variant-numeric: tabular-nums; }
+.hall-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 8px; }
+.hall-card { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 12px 14px; border-radius: 12px; border: 1px solid #B26BFF; background: color-mix(in srgb, #B26BFF 8%, var(--surface)); }
+.hall-card div { display: grid; }
+.hall-card small { color: var(--muted); }
+.hall-99 { font-family: var(--f-display); font-weight: 900; font-size: 40px; color: #B26BFF; }
+.plaza { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; align-items: end; padding: 16px; border-radius: 12px; background: linear-gradient(#C9D6E3, #E8E1D5 70%); }
+:root[data-theme='dark'] .plaza { background: linear-gradient(#1D2733, #2B2A28 70%); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme='light']) .plaza { background: linear-gradient(#1D2733, #2B2A28 70%); } }
+.plaza-spot { display: grid; justify-items: center; gap: 6px; text-align: center; }
+.plaza-statue { background: none; border: 0; padding: 0; cursor: pointer; }
+.statue { display: grid; justify-items: center; }
+.statue svg { image-rendering: pixelated; filter: drop-shadow(0 4px 0 rgba(0, 0, 0, 0.25)); }
+.plinth { display: grid; justify-items: center; min-width: 120px; padding: 6px 12px 8px; background: linear-gradient(#9AA0A6, #6C737B); border: 2px solid #3D434A; border-radius: 3px; color: #F4F1EA; box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.25); }
+.plinth b { font-family: var(--f-display); font-weight: 800; font-size: 16px; text-transform: uppercase; letter-spacing: 0.04em; }
+.plinth small { font-family: var(--f-mono); font-size: 11px; opacity: 0.85; }
+.statue.gold .plinth { border-color: #8A6410; }
+.inbox-msg p { margin: 0; }
+.community-note { flex-wrap: wrap; }
+.field textarea, .field input { width: 100%; }

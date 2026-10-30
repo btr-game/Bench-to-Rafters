@@ -16,6 +16,7 @@ import { MiniGamesCard } from '../mini/MiniGames';
 import { CareerLogCard } from './CareerLog';
 import { GuideButton } from '../components/Guide';
 import { AchievementsCard } from './Achievements';
+import { CommunityCard, LiveStrip } from './Community';
 import { FlagArt } from '../art/Flag';
 import { POS_STYLE, PositionCard } from '../art/PositionCard';
 import { HeroArt, archPose } from '../art/Hero';
@@ -146,6 +147,7 @@ export function Create() {
           </button>
         </div>
       </header>
+      <LiveStrip />
       <ResumeCard />
       <section className="hero with-lineup">
         <LineupArt />
@@ -186,6 +188,7 @@ export function Create() {
             <MiniGamesCard />
             <CareerLogCard />
             <AchievementsCard />
+            <CommunityCard />
           </div>
         </section>
       )}

@@ -16,6 +16,7 @@ import { legacyIndex } from '../../engine/awards/tiers';
 import { useMemo, useState } from 'react';
 import { careerRecord } from '../../engine/career/record';
 import { CardActions, LoggedNote } from './CareerLog';
+import { CommunityNote } from './Community';
 import { LegendarySeasons } from '../components/Legendary';
 import { CareerTimeline } from '../components/Timeline';
 import { DailyResult } from '../mini/Daily';
@@ -191,6 +192,7 @@ export function Retirement({ g }: { g: GameState }) {
         <div className="verdict">{v.tier}</div>
         <p className="lede">{v.line}</p>
         <LoggedNote />
+        {!g.flags.daily && g.mode !== 'lab' && <CommunityNote rec={rec} />}
         {hof && <div className="toast">{hof === 'first' ? 'Inducted into the Hall of Fame on the first ballot.' : 'Inducted into the Hall of Fame.'}</div>}
         <div className="row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
           <CardActions rec={rec} />

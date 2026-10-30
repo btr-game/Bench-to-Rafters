@@ -15,13 +15,14 @@ import { weightOf } from './engine/player/weight';
 import { careerRecord } from './engine/career/record';
 import { logCareer, type LogResult } from './ui/careerLog';
 import { checkAch, countCareer } from './ui/achievements';
+import { community } from './ui/community';
 import type { AchTier } from './engine/achievements';
 
 export type Tab = 'home' | 'season' | 'player' | 'league' | 'records';
 export type Theme = 'auto' | 'light' | 'dark';
 /** The page background: plain, a hardwood floor or streetball asphalt (round 17). */
 export type Court = 'classic' | 'hardwood' | 'street';
-export type Page = 'log' | 'achievements';
+export type Page = 'log' | 'achievements' | 'community';
 export type Mini = 'hub' | 'office' | 'threes' | 'legends' | 'lab' | 'dunk' | 'street' | 'daily';
 
 /** A short interstitial between steps (not part of the saved game). */
@@ -437,7 +438,10 @@ useStore.subscribe((now, before) => {
   const g = now.game;
   if (!g || !before.game || g === before.game || g.step !== 'retired' || before.game.step === 'retired') return;
   if (now.daily || g.flags.daily || g.mode === 'lab') return;
-  useStore.setState({ logged: logCareer(careerRecord(g)) });
+  const rec = careerRecord(g);
+  useStore.setState({ logged: logCareer(rec) });
+  // round 24: onto the leaderboards (and the news feed) for everyone who shares this page
+  void community().then((c) => c.postCareer(rec));
 });
 
 // round 24: achievements, checked a moment after each change; a career that ends counts first

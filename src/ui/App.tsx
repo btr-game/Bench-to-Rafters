@@ -16,6 +16,7 @@ import { MiniGames } from './mini/MiniGames';
 import { Icon } from './art/Icon';
 import { CareerLog } from './screens/CareerLog';
 import { AchievementBook } from './screens/Achievements';
+import { CommunityPage } from './screens/Community';
 import { ICON_FOR } from './art/icons';
 
 const HOST_THEME = typeof document !== 'undefined' ? document.documentElement.getAttribute('data-theme') : null;
@@ -121,6 +122,7 @@ export function App() {
 
   if (page === 'log') return <CareerLog />;
   if (page === 'achievements') return <AchievementBook />;
+  if (page === 'community') return <CommunityPage />;
   if (mini) return <MiniGames />;
   if (!game) return <Create />;
 
