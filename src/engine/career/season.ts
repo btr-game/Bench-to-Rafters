@@ -144,7 +144,7 @@ export function beginSeason(s: GameState): void {
     ovrStart: ovr,
     attrsStart: { ...s.player.attrs },
     ...(() => {
-      const f = startTeamFactors(s, team);
+      const f = startTeamFactors(s, team, league);
       const d = duoEffect(s);
       return { teamBonus: f.bonus, teamNotes: f.notes, postBonus: f.post, styleFx: f.fx, duoFx: d ? { perf: d.perf, ast: d.ast, usage: d.usage } : undefined };
     })(),

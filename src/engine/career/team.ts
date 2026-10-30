@@ -17,6 +17,7 @@ import { adjust, logDecision, pushMoment, teamById, userOvr } from './common';
 import { currentStyle, fitLabel, styleEffect, styleFit, TEAM_STYLES } from './identity';
 import { duoEffect } from './duo';
 import { FAN_CULTURES } from './fanCulture';
+import { rosterFit } from './roster';
 
 /** 1 = the best roster in the league. */
 export function rosterRank(league: League, teamId: string): number {
@@ -36,7 +37,7 @@ function streakWith(s: GameState, teamId: string): number {
 }
 
 /** The team bonus at the start of a season, with lines for the season preview. */
-export function startTeamFactors(s: GameState, team: Team): { bonus: number; notes: string[]; post: number; fx?: { perf: number; usage: number } } {
+export function startTeamFactors(s: GameState, team: Team, league?: League): { bonus: number; notes: string[]; post: number; fx?: { perf: number; usage: number } } {
   const notes: string[] = [];
   let bonus = 0;
   const d = modeDial(s.mode, 'teamFx');
@@ -76,6 +77,15 @@ export function startTeamFactors(s: GameState, team: Team): { bonus: number; not
     bonus += fans.crowd;
     post += fans.playoff;
     notes.push(`Fans, ${fans.name}: ${fans.crowd ? `+${fans.crowd.toFixed(2)}` : 'no edge'} at home, ${fans.playoff ? `+${fans.playoff.toFixed(2)} more in the playoffs` : 'nothing extra in the playoffs'}`);
+  }
+  // round 24: how the roster around him fits together (career/roster.ts)
+  if (league && team.roster.length >= 5) {
+    const f = rosterFit(s, team, league);
+    if (f.bonus !== 0) {
+      bonus += f.bonus;
+      const why = [f.balance >= f.identity ? (f.balance >= 0 ? 'a balanced five' : 'a lopsided five') : `built for ${TEAM_STYLES[f.system].name.toLowerCase()}`, f.depth >= 0.3 ? 'a deep bench' : f.depth <= -0.3 ? 'a thin bench' : ''].filter(Boolean).join(', ');
+      notes.push(`Roster fit: ${why} (${f.bonus > 0 ? '+' : ''}${f.bonus.toFixed(1)})`);
+    }
   }
   // round 20: a duo lifts everyone around it (career/duo.ts)
   const duo = s.teamId === team.id ? duoEffect(s) : null;

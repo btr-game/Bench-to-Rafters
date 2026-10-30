@@ -17,6 +17,7 @@ import { nbaStrength } from '../world/nbaWorld';
 import { strengthOf } from '../world/gen';
 import { rosterRank } from './team';
 import { meetRecruit } from './duo';
+import { fiveOf, rosterFit } from './roster';
 
 export interface RecruitState {
   year: number;
@@ -32,9 +33,6 @@ export interface RecruitState {
   log?: { ok: boolean; text: string }[];
 }
 
-/** Position groups for the starting five (round 12: "I can't have four forwards"). */
-const GROUP: Record<string, 'G' | 'F' | 'C'> = { PG: 'G', SG: 'G', SF: 'F', PF: 'F', C: 'C' };
-const POS_ORDER: Pos[] = ['PG', 'SG', 'SF', 'PF', 'C'];
 
 /** Where a roster rank leaves a team, in words. */
 export function outlookOf(rank: number): string {
@@ -63,7 +61,9 @@ export interface Target {
 function scoutCall(s: GameState, p: GenPlayer, out: GenPlayer[]): { rec: Target['rec']; why: string } {
   const t = myTeam(s)!;
   const after = [...t.roster.filter((x) => !out.includes(x)), p];
-  const gain = strengthOf(after.map((x) => x.ovr)) - strengthOf(t.roster.map((x) => x.ovr));
+  // round 24: how the roster would fit together counts too (career/roster.ts)
+  const fit = s.nba ? rosterFit(s, { ...t, roster: after }, s.nba).bonus - rosterFit(s, t, s.nba).bonus : 0;
+  const gain = strengthOf(after.map((x) => x.ovr)) - strengthOf(t.roster.map((x) => x.ovr)) + fit;
   const five = [s.player.pos, ...starters(s).map((x) => (out.includes(x) ? p : x).pos)];
   const noBig = !five.some((x) => x === 'C' || x === 'PF');
   const crowded = five.filter((x) => x === p.pos).length >= 3;
@@ -80,32 +80,10 @@ function scoutCall(s: GameState, p: GenPlayer, out: GenPlayer[]): { rec: Target[
 
 const myTeam = (s: GameState): Team | null => teamById(s.nba, s.teamId);
 
-/**
- * The five (round 15: "I should see one player per position"): him at his position and the
- * best teammate at each of the other four. With nobody at a position, the best player of the
- * same group (guards, forwards, bigs) starts there, then anyone.
- */
+/** The five (round 15: "I should see one player per position"): him and the four next to him (career/roster.ts). */
 export function startingFive(s: GameState): { slot: Pos; p: GenPlayer }[] {
   const t = myTeam(s);
-  if (!t) return [];
-  const left = [...t.roster].sort((a, b) => b.ovr - a.ovr);
-  const take = (ok: (x: GenPlayer) => boolean): GenPlayer | null => {
-    const i = left.findIndex(ok);
-    return i < 0 ? null : left.splice(i, 1)[0];
-  };
-  const out: { slot: Pos; p: GenPlayer }[] = [];
-  // fill exact positions first, so a guard is not used up as someone else's stand-in
-  for (const slot of POS_ORDER) {
-    if (slot === s.player.pos) continue;
-    const p = take((x) => x.pos === slot);
-    if (p) out.push({ slot, p });
-  }
-  for (const slot of POS_ORDER) {
-    if (slot === s.player.pos || out.some((x) => x.slot === slot)) continue;
-    const p = take((x) => GROUP[x.pos] === GROUP[slot]) ?? take(() => true);
-    if (p) out.push({ slot, p });
-  }
-  return out.sort((a, b) => POS_ORDER.indexOf(a.slot) - POS_ORDER.indexOf(b.slot));
+  return t ? fiveOf(t.roster, s.player.pos) : [];
 }
 
 /** The four teammates who start next to him. */

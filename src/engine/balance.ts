@@ -573,6 +573,28 @@ export const LONGEVITY = {
 // NBA interest in a free agent. Teams only call when he would rank within `maxRank` on
 // their roster; veterans and little-used players get fewer calls.
 /** Team factors (career/team.ts). Strength points, added to the team in his games. */
+// Round 24 (owner): the roster around him shapes the team's chemistry (career/roster.ts). The
+// profile is the team's average ratings, the starting five (him included) counting three times
+// the bench. Shape: a well-spread profile, or peaks where the team's system wants them, whichever
+// is better. Depth: the bench against the league's usual bench. Calibrated so an average roster
+// adds nothing (see DECISIONS.md, round 24).
+export const ROSTER_FIT = {
+  spread: 0.85, // how much a roster player's archetype leanings show in his ratings
+  noise: 3, // and a little of his own
+  fiveWeight: 0.75,
+  bench: 4, // the rotation players after the five
+  // measured over 1,100 seasons of smart careers: spread p10 2.46, p50 3.40, p90 4.46; lean
+  // toward the system p10 -2.86, p90 2.22; bench against the usual one p10 -3.44, p90 3.78
+  sdRef: 3.4, // the profile's spread (rating points) that counts as neither balanced nor lopsided
+  sdK: 1, // how far from it a fully balanced (or lopsided) profile is
+  leanK: 2.5, // the lean toward the system's ratings that counts as a full match
+  shapeMid: 0.33, // the average of the better of the two, taken off so the average roster is neutral
+  shape: 0.8, // team strength for a full shape score
+  depthK: 3.5, // bench OVR above the league's usual bench for a full depth score
+  depth: 0.5,
+  dialMin: 0.5, // the mode's team-factor dial, but never below this
+};
+
 export const TEAM_FACTORS = {
   chemistryPer: 0.25, // per season in a row with the team
   chemistryMax: 0.8,

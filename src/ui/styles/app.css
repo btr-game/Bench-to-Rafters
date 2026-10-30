@@ -1595,3 +1595,30 @@ td .art-team { display: inline-block; vertical-align: middle; margin: -3px 8px -
 .inbox-msg p { margin: 0; }
 .community-note { flex-wrap: wrap; }
 .field textarea, .field input { width: 100%; }
+
+/* ---- round 24: the roster on the Player tab ---- */
+.roster-fit { display: flex; flex-wrap: wrap; gap: 10px; }
+.roster-chip { display: grid; gap: 2px; padding: 8px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2); min-width: 150px; }
+.roster-chip small { font-family: var(--f-mono); font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.roster-chip b { font-size: 17px; }
+.roster-chip.good { border-color: color-mix(in srgb, var(--good) 55%, var(--line)); background: color-mix(in srgb, var(--good) 10%, var(--surface-2)); }
+.roster-chip.bad { border-color: color-mix(in srgb, var(--bad) 55%, var(--line)); background: color-mix(in srgb, var(--bad) 8%, var(--surface-2)); }
+.roster-profile { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 8px; height: 96px; align-items: end; max-width: 560px; }
+.roster-profile .rp { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 4px; }
+.roster-profile .rp i { display: block; width: 100%; max-width: 34px; border-radius: 4px 4px 0 0; background: color-mix(in srgb, var(--ink) 30%, transparent); }
+.roster-profile .rp i.up { background: color-mix(in srgb, var(--ink) 55%, transparent); }
+.roster-profile .rp.key i { background: #E2B33C; }
+.roster-profile .rp.key i.up { background: #F2C94C; box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.35); }
+.roster-profile .rp small { font-family: var(--f-mono); font-size: 11.5px; font-weight: 700; }
+.roster-profile .rp.key small { color: #B8860B; }
+.roster-list { display: grid; gap: 4px; }
+.roster-head { margin-top: 6px; font-family: var(--f-mono); font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.roster-row { display: grid; grid-template-columns: 44px 34px minmax(0, 1fr) auto 44px; align-items: center; gap: 10px; padding: 4px 10px; border-radius: 8px; background: var(--surface-2); }
+.roster-row.me { background: color-mix(in srgb, var(--accent) 14%, var(--surface-2)); box-shadow: inset 3px 0 0 var(--accent); }
+.roster-slot { font-family: var(--f-mono); font-size: 12.5px; font-weight: 700; color: var(--muted); }
+.roster-name { display: grid; min-width: 0; }
+.roster-name b, .roster-name small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.roster-name small { color: var(--muted); font-size: 13px; }
+.roster-tops { font-family: var(--f-mono); color: var(--muted); white-space: nowrap; }
+.roster-ovr { font-family: var(--f-display); font-size: 24px; text-align: right; font-variant-numeric: tabular-nums; }
+@media (max-width: 640px) { .roster-tops { display: none; } .roster-row { grid-template-columns: 38px 34px minmax(0, 1fr) 40px; } }

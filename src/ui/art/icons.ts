@@ -1195,6 +1195,23 @@ export const ICONS: Record<string, string[]> = {
     'OKwwwwwwwwwwwwKO',
     'OOOOOOOOOOOOOOOO',
   ],
+  roster: [
+    '....OOOOOOOO....',
+    '..OOOKKKKKKOOO..',
+    '..OTTOWWWWOTTO..',
+    '..OTWWWWWWWWTO..',
+    '..OTWOOWKKKWTO..',
+    '..OTWOOWWWWWTO..',
+    '..OTWWWWWWWWTO..',
+    '..OTWOOWKKKWTO..',
+    '..OTWOOWWWWWTO..',
+    '..OTWWWWWWWWTO..',
+    '..OTWOOWKKKWTO..',
+    '..OTWOOWWWWWTO..',
+    '..OTWWWWWWWWTO..',
+    '..OTTTTTTTTTTO..',
+    '..OOOOOOOOOOOO..',
+  ],
   // ---- round 24: community, career log, playable finals ----
   envelope: [
     '.OOOOOOOOOOOOOO.',

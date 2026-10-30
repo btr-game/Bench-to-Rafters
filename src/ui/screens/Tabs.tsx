@@ -16,6 +16,7 @@ import { CareerTimeline } from '../components/Timeline';
 import { cityCultureOf } from '../../engine/career/cityCulture';
 import { fanCultureOf } from '../../engine/career/fanCulture';
 import { BodyMap } from '../components/BodyMap';
+import { RosterCard } from '../components/TeamRoster';
 import { AchievementsCard } from './Achievements';
 import { FlagArt } from '../art/Flag';
 import type { GameLog, GameState, League, SeasonRecord, SeriesResult, StatLine, Team } from '../../engine/types';
@@ -666,6 +667,7 @@ export function PlayerTab({ g }: { g: GameState }) {
           <BodyMap g={g} narrow />
         </div>
       </div>
+      <RosterCard g={g} />
     </div>
   );
 }
