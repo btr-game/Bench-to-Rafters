@@ -1539,3 +1539,15 @@ Reached from the start page and from the bottom of Home (a career in progress is
   out-of-patience team pulls the offer. With an average OVR, a first ask for money is accepted
   33.95% of the time at reputation 30 (35.20% pulled), 47.15% at 60 (27.95% pulled) and 62.05%
   at 90 (20.55% pulled), over 2,000 tries each.
+- **Press conferences** (the owner: one every two or three seasons, not one or two a season).
+  After a season with a story (a title, a lost final, an MVP, DPOY, first-team All-NBA, Rookie or
+  Sixth Man award, an injury of 60 days or more, a slump of three OVR or more, a move to a new
+  team, a contract year), the summer brings three questions (career/press.ts), each answered
+  humble, confident or fiery. Humble: +2 coach trust, +0.5 reputation, +0.1 team strength next
+  season. Confident: +1.5 reputation, +2 morale. Fiery: +2.5 reputation, -2 trust, a 20% chance
+  of a league fine, and next season's locker room either catches fire or splits (+/-0.15). An NBA
+  crowd has a taste: demanding crowds (the boo birds, the Garden crazies) love fire, friendly
+  ones love humility, the rest confidence; a match adds +1 reputation and +1 morale. Next one
+  two or three seasons later. Over 200 harness careers: 5.595 a career, one every 3.685 seasons
+  (high school included); 99% of careers have at least one. The press-conference effect shows in
+  the team strength breakdown.

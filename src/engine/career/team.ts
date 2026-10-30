@@ -18,6 +18,7 @@ import { currentStyle, fitLabel, styleEffect, styleFit, TEAM_STYLES } from './id
 import { duoEffect } from './duo';
 import { FAN_CULTURES } from './fanCulture';
 import { rosterFit } from './roster';
+import { takePressFx } from './press';
 
 /** 1 = the best roster in the league. */
 export function rosterRank(league: League, teamId: string): number {
@@ -101,6 +102,13 @@ export function startTeamFactors(s: GameState, team: Team, league?: League): { b
     bonus += duo.team;
     items.push({ label: (duo.third ? duo.third.nick : duo.b.nick) ?? 'Your duo', value: duo.team });
     notes.push(duo.third ? `${duo.third.nick}: you, ${duo.b.name} and ${duo.third.name} (+${duo.team.toFixed(1)})` : `${duo.b.nick}: you and ${duo.b.name} (+${duo.team.toFixed(1)})`);
+  }
+  // round 25: what he said at the summer's press conference (career/press.ts)
+  const words = s.teamId === team.id ? takePressFx(s) : 0;
+  if (words !== 0) {
+    bonus += words;
+    items.push({ label: 'Your words at the summer press conference', value: words });
+    notes.push(`Your press conference: ${words > 0 ? 'the room bought in' : 'the room split'} (${words > 0 ? '+' : ''}${words.toFixed(2)})`);
   }
   return { bonus: Math.round(bonus * 10) / 10, notes, items, post: Math.round(post * 10) / 10, fx };
 }

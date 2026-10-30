@@ -23,6 +23,7 @@ import { UI } from '../content/strings';
 import { bankGains, isLab, labState } from './career/lab';
 import { prepareRecruit } from './career/recruit';
 import { resolveBrand } from './career/nickname';
+import { resolvePress } from './career/press';
 
 export type Prompt =
   | { type: 'decision'; decision: Decision }
@@ -184,6 +185,9 @@ function chooseInner(s: GameState, choiceId: string): void {
       return;
     case 'brand':
       s.toast = resolveBrand(s, d, choiceId);
+      return;
+    case 'press':
+      s.toast = resolvePress(s, d, choiceId);
       return;
     case 'assign':
       if (choiceId === 'go') {

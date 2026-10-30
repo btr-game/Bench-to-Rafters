@@ -44,6 +44,7 @@ import { NAMES } from '../../content/strings';
 import { buildWord, driftWeight, idealWeight, weightOf } from '../player/weight';
 import { growBonds } from './duo';
 import { pushBrand } from './nickname';
+import { pushPress } from './press';
 
 // ---------- entering the offseason ----------
 
@@ -155,6 +156,7 @@ export function beginOffseason(s: GameState): void {
     // fast break (and the lab) skips the national team: no call-ups, no tournaments
     if (!s.flags.fast) pushNationalTeam(s);
     pushSummer(s);
+    pushPress(s);
     pushBrand(s);
     pushShop(s);
     queueOffseasonEvent(s);

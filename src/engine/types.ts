@@ -144,6 +144,7 @@ export interface UserPlayer {
   visits?: Record<string, number>; // round 25: shop id -> the season he last went (content/visits.ts)
   staff?: StaffMember[]; // round 25: people he pays (career/staff.ts)
   legacyBonus?: number; // round 25: legacy points from the legacy projects he funded
+  press?: { next: number; fx: number }; // round 25: the season of the next press conference, and its effect on next season's team
   wardrobe?: { owned: string[]; on: Partial<Record<import('../content/shop').WearSlot, string>> }; // round 25: accessories (shop ids); 'none' takes a slot off
 }
 

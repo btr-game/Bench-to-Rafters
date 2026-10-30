@@ -45,3 +45,12 @@ export function rollFine(s: GameState, season: SeasonState, rng: Rng, oppShort: 
     lines: [k.title, `Bank: ${fmtMoney(p.bank)}`],
   });
 }
+
+/** A fine for something he said at a press conference (career/press.ts). */
+export function pressFine(s: GameState, rng: Rng): string {
+  const amount = Math.round((s.stage === 'NBA' ? 1 : FINES.abroad) * (0.025 + int(rng, 0, 25) / 1000) * 1000) / 1000;
+  s.player.bank = Math.max(0, s.player.bank - amount);
+  logDecision(s, 'fine', `Fined ${fmtMoney(amount)}: what he said at a press conference.`);
+  pushMoment(s, { kind: 'fine', title: `Fined ${fmtMoney(amount)}`, color: '#3b3f48', text: `You have been fined ${fmtMoney(amount)} for what you said at the press conference. The clip has three million views.`, lines: ['Conduct detrimental to the league', `Bank: ${fmtMoney(s.player.bank)}`] });
+  return fmtMoney(amount);
+}

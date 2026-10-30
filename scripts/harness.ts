@@ -60,6 +60,8 @@ export function smartChoice(s: GameState, d: Decision, r: Rng): string {
       const buy = ch.filter((c) => c.id !== 'leave' && /Training|Recovery|Shoes/.test(String(c.tags?.[0]))).sort((a, b) => Number(b.meta?.price) - Number(a.meta?.price))[0];
       return buy?.id ?? 'leave';
     }
+    case 'press':
+      return 'humble';
     case 'brand':
       // a signature line for a big name, the sure deal otherwise
       return ch.find((c) => c.id.startsWith(s.player.rep >= 80 ? 'line:' : 'deal:'))?.id ?? 'later';
@@ -155,7 +157,7 @@ export interface CareerResult {
   index: { total: number; best: number; score: number }; // round 25: the leaderboards' career index
   nickname: string | null; // round 25: what the media called him (nickname id)
   brand: { kind: 'deal' | 'line'; earned: number; shoe: number } | null;
-  money: { hired: number; staffPaid: number; fines: number; finedFor: number; legacy: number }; // round 25: staff, fines, legacy projects
+  money: { hired: number; staffPaid: number; fines: number; finedFor: number; legacy: number; pressers: number; seasons: number }; // round 25: staff, fines, legacy projects, press conferences
   peakOvr: number;
   potential: number;
   startOvr: number;
@@ -269,6 +271,8 @@ export function runCareer(seed: number, policy: Policy, mode: Mode = 'standard',
       fines: s.log.filter((x) => x.kind === 'fine').length,
       finedFor: s.log.filter((x) => x.kind === 'fine').reduce((a, x) => a + Number(/\$([0-9.]+)K/.exec(x.text)?.[1] ?? 0) / 1000, 0),
       legacy: s.player.legacyBonus ?? 0,
+      pressers: s.log.filter((x) => x.kind === 'press').length / 3,
+      seasons: s.history.length,
     },
     brand: s.player.brand ? { kind: s.player.brand.kind, earned: s.player.brand.earned, shoe: s.player.brand.shoe } : null,
     peakOvr: s.player.peakOvr,
