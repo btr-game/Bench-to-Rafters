@@ -174,6 +174,7 @@ function playMinis(s: GameState, how: MiniPlay): void {
     legends: { game: 'legends', reached: 'champion' },
     office: { game: 'office', titles: 1, playoffs: 3, seasons: 3, fired: false },
     lab: { game: 'lab', peak: 95 },
+    street: { game: 'street', reached: 'king' },
   };
   const ok: Record<MiniId, MiniResult> = {
     threes: { game: 'threes', score: 23, won: false, own: true },
@@ -181,6 +182,7 @@ function playMinis(s: GameState, how: MiniPlay): void {
     legends: { game: 'legends', reached: 'semis' },
     office: { game: 'office', titles: 0, playoffs: 2, seasons: 3, fired: false },
     lab: { game: 'lab', peak: 90 },
+    street: { game: 'street', reached: 'final' },
   };
   const open = (Object.keys(top) as MiniId[]).filter((id) => miniProgress(s, id).open);
   if (open.length === 0) return;

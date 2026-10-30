@@ -15,6 +15,8 @@ import { LegacyRankCard, LegacyTierList } from '../components/Legacy';
 import { legacyIndex } from '../../engine/awards/tiers';
 import { canShareFiles, downloadCareerCard, shareCareerCard } from '../share';
 import { useState } from 'react';
+import { LegendarySeasons } from '../components/Legendary';
+import { CareerTimeline } from '../components/Timeline';
 
 function CareerAnalysis({ g }: { g: GameState }) {
   const c = compareCareer(g);
@@ -268,6 +270,7 @@ export function Retirement({ g }: { g: GameState }) {
           </p>
         )}
       </Card>
+      <LegendarySeasons g={g} />
       <Championships g={g} />
       {g.awards.length > 0 && <TrophyCabinet g={g} />}
       <CareerHighs g={g} />
@@ -277,18 +280,7 @@ export function Retirement({ g }: { g: GameState }) {
           <ReactionCard r={g.feed[0]} />
         </Card>
       )}
-      <Card title="Your story">
-        <ul className="feed">
-          {g.log.map((e, i) => (
-            <li key={i}>
-              <span className="t">
-                {e.year} · {e.age}
-              </span>
-              <span>{e.text}</span>
-            </li>
-          ))}
-        </ul>
-      </Card>
+      <CareerTimeline g={g} />
       <Card title="Season by season">
         <HistoryTable rows={g.history} />
       </Card>

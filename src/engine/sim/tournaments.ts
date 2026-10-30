@@ -7,6 +7,7 @@ import { chance, clamp, int, logistic, normal, range, shuffle } from '../rng';
 import type { GameLog, GameState, LevelKey, RoleKey, StatLine, Team, TourneyRecord } from '../types';
 import { expected, expectedGameScore, gameScore, sampleGame, usageWeight, valuePerGame, genProfile, genUsageWeight, perGame } from './statModel';
 import { scoreFor, winProb, standings } from './leagueSim';
+import { recordInjury } from '../player/body';
 import { rollInjury } from '../player/injury';
 import { ovrOf } from '../player/ovr';
 import { adjust, logDecision, pushDecision, pushMoment, rankOnRoster } from '../career/common';
@@ -54,7 +55,8 @@ export function exhibitionGame(
       const morale = MORALE_PERF(p.morale) * (1 + (form - 1) * 0.3);
       const e = expected(profile(s), level, minutes, ROLE_USAGE[role] * (opts.usage ?? 1) * Math.pow(form, 0.8), morale);
       line = sampleGame(rng, e, role === 'key' || role === 'starter');
-      if (opts.injuries !== false) rollInjury(rng, p, 'balanced', minutes);
+      const inj = opts.injuries !== false ? rollInjury(rng, p, 'balanced', minutes) : null;
+      if (inj) recordInjury(p, inj, s.year);
     }
   }
   const ovr = ovrOf(p.attrs, p.pos);

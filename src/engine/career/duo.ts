@@ -135,6 +135,7 @@ function formDuo(s: GameState, b: Bond): void {
   pushMoment(s, {
     kind: 'event',
     title: `A duo: ${b.nick}`,
+    duo: true,
     teamName: t?.name,
     color: t?.color ?? '#7048E8',
     text: `Season by season it stopped being two players. You and ${b.name} know where the other one is going before he does, and the league has a name for it now: ${b.nick}.`,

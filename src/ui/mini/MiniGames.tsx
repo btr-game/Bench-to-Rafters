@@ -10,12 +10,14 @@ import { LegendsGame } from './Legends';
 import { ThreesGame } from './Threes';
 import { LabGame } from './LabGame';
 import { DunkGame } from './Dunk';
+import { StreetballGame } from './Streetball';
 
 const GAMES: { id: MiniId; name: string; text: string; tag: string; color: string }[] = [
   { id: 'office' as const, tag: 'Strategy', color: '#1C7ED6', name: 'Front Office', text: 'Run an NBA franchise for three seasons. Scout the draft, trade, sign players from Europe and beyond, set the game plan, and win a title before the owner loses patience.' },
   { id: 'threes' as const, tag: 'Timing', color: '#E8590C', name: 'Three-point contest', text: 'Five racks, sixty seconds, a money-ball rack of your choice. Stop the meter in the green. Beat seven of the best shooters ever.' },
   { id: 'dunk' as const, tag: 'Timing', color: '#C2255C', name: 'Dunk contest', text: 'Design your dunks (takeoff, moves, props) and land them one timing tap at a time. Five judges, two rounds, three of the best dunkers ever.' },
   { id: 'lab' as const, tag: 'Building', color: '#2F9E44', name: 'Built in a lab', text: 'Design a player and build him over ten seasons: spend each summer\'s credits on ratings, then watch the season play out. Two minutes a run.' },
+  { id: 'street' as const, tag: 'Action', color: '#2B8A3E', name: '3-on-3 streetball', text: 'King of the court at a city park: beat three crews in a row by ones and twos, make it take it. Pick the play, time your finishes at the rim, read their defense.' },
   { id: 'legends' as const, tag: 'Strategy', color: '#B08900', name: 'Legends showdown', text: 'Every franchise plays with its all-time starting five. Join one (with a career: your own player), mind the chemistry, survive the season, then beat the powerhouses in four playoff rounds.' },
 ];
 
@@ -120,6 +122,7 @@ export function MiniGames() {
       {mini === 'legends' && <LegendsGame />}
       {mini === 'dunk' && <DunkGame />}
       {mini === 'lab' && <LabGame />}
+      {mini === 'street' && <StreetballGame />}
     </div>
   );
 }
@@ -130,7 +133,7 @@ export function MiniGamesCard() {
   return (
     <section className="card stack">
       <div className="sec-title">Mini-games</div>
-      <p className="small muted">Front Office, the three-point and dunk contests, Built in a lab and the legends showdown. With a career, each opens when your ratings reach it.</p>
+      <p className="small muted">Front Office, the three-point and dunk contests, 3-on-3 streetball, Built in a lab, the legends showdown and the daily challenge. With a career, each opens when your ratings reach it.</p>
       <button className="btn ghost" onClick={() => setMini('hub')}>
         Play a mini-game
       </button>

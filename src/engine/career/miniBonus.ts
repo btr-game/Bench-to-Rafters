@@ -6,6 +6,7 @@
 //   Shooting as your own player counts in full, as a legend half.
 // - Legends showdown: basketball IQ by how far the team went.
 // - Front Office: basketball IQ and a little playmaking by titles and playoff runs.
+// - 3-on-3 streetball (round 22): finishing and a little athleticism by how far he went.
 // In a lab career the boost is paid as credits, like everything else there.
 
 import { ATTR_MAX, modeDial } from '../balance';
@@ -15,7 +16,7 @@ import { NAMES } from '../../content/strings';
 import { addCredits, isLab } from './lab';
 import { logDecision, userOvr } from './common';
 
-export type MiniId = 'threes' | 'legends' | 'office' | 'dunk' | 'lab';
+export type MiniId = 'threes' | 'legends' | 'office' | 'dunk' | 'lab' | 'street';
 
 export const MINI_CLAIMS = { perSeason: 2, share: [1, 0.5] };
 
@@ -30,6 +31,7 @@ export const MINI_UNLOCK: Record<MiniId, { key: AttrKey | 'OVR'; at: number; lab
   office: { key: 'IQ', at: 85, label: 'Basketball IQ' },
   lab: { key: 'OVR', at: 82, label: 'OVR' },
   legends: { key: 'OVR', at: 90, label: 'OVR' },
+  street: { key: 'FIN', at: 82, label: 'Finishing' },
 };
 export const MINI_REWARD_MULT = 1.6;
 
@@ -54,14 +56,15 @@ export function syncMiniUnlocks(s: GameState): string[] {
   return fresh;
 }
 
-export const MINI_NAMES: Record<MiniId, string> = { threes: 'Three-point contest', dunk: 'Dunk contest', office: 'Front Office', lab: 'Built in a lab', legends: 'Legends showdown' };
+export const MINI_NAMES: Record<MiniId, string> = { threes: 'Three-point contest', dunk: 'Dunk contest', office: 'Front Office', lab: 'Built in a lab', legends: 'Legends showdown', street: '3-on-3 streetball' };
 
 export type MiniResult =
   | { game: 'threes'; score: number; won: boolean; own: boolean }
   | { game: 'legends'; reached: 'champion' | 'finals' | 'semis' | 'out' }
   | { game: 'office'; titles: number; playoffs: number; seasons: number; fired: boolean }
   | { game: 'dunk'; best: number; won: boolean }
-  | { game: 'lab'; peak: number };
+  | { game: 'lab'; peak: number }
+  | { game: 'street'; reached: 'king' | 'final' | 'won' | 'out' };
 
 /** Claims already made this season. */
 export function claimsUsed(s: GameState): number {
@@ -103,6 +106,11 @@ export function miniReward(r: MiniResult): { attrs: Partial<Record<AttrKey, numb
     case 'lab': {
       const v = r.peak >= 95 ? 3 : r.peak >= 90 ? 2 : r.peak >= 85 ? 1.2 : 0.5;
       return { attrs: { IQ: v, PER: v / 2 } };
+    }
+    case 'street': {
+      // round 22: king of the court is mostly a finishing workout
+      const v = r.reached === 'king' ? 4 : r.reached === 'final' ? 2.5 : r.reached === 'won' ? 1.2 : 0;
+      return { attrs: v ? { FIN: v, ATH: v / 4 } : {}, rep: r.reached === 'king' ? 3 : 0 };
     }
   }
 }

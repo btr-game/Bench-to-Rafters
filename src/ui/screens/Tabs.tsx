@@ -11,6 +11,8 @@ import { TeamArt } from '../art/Crest';
 import { PlayerArt, kitFor, styleLeague, type KitName } from '../art/Player';
 import { JerseyArt } from '../art/Jersey';
 import { EvolutionArt } from '../art/Evolution';
+import { CareerTimeline } from '../components/Timeline';
+import { BodyMap } from '../components/BodyMap';
 import { FlagArt } from '../art/Flag';
 import type { GameLog, GameState, League, SeasonRecord, SeriesResult, StatLine, Team } from '../../engine/types';
 import { ATTRS, LEVELS } from '../../engine/balance';
@@ -603,6 +605,7 @@ export function PlayerTab({ g }: { g: GameState }) {
           )}
         </div>
       </div>
+      <BodyMap g={g} />
     </div>
   );
 }
@@ -831,8 +834,6 @@ export function RecordsTab({ g }: { g: GameState }) {
   const pro = g.history.filter((h) => h.level === 'NBA' || h.level === 'GL' || h.level === 'EU' || h.level === 'INT');
   const nbaT = totals(nba);
   const proT = totals(pro);
-  const [allLog, setAllLog] = useState(false);
-  const log = [...g.log].reverse();
   const t = teamOf(g);
   const v = verdictFor(g);
   return (
@@ -854,6 +855,7 @@ export function RecordsTab({ g }: { g: GameState }) {
           { k: 'All-Star', v: count(g, 'ALLSTAR') },
         ]}
       />
+      <CareerTimeline g={g} />
       <Card title="Season by season">
         {g.history.length === 0 ? <p className="muted">Your seasons show up here after the first one.</p> : <HistoryTable rows={g.history} />}
         <p className="muted small">High school and college seasons are listed but do not count toward pro career totals.</p>
@@ -924,23 +926,6 @@ export function RecordsTab({ g }: { g: GameState }) {
         )}
       </div>
       <LegacyTierList g={g} />
-      <Card title="Decision log" kicker={`${log.length} entries`}>
-        <ul className="feed">
-          {(allLog ? log : log.slice(0, 12)).map((e, i) => (
-            <li key={i}>
-              <span className="t">
-                {e.year} · {e.age}
-              </span>
-              <span>{e.text}</span>
-            </li>
-          ))}
-        </ul>
-        {log.length > 12 && (
-          <button className="btn ghost small" onClick={() => setAllLog(!allLog)}>
-            {allLog ? 'Show the latest only' : `Show all ${log.length}`}
-          </button>
-        )}
-      </Card>
     </div>
   );
 }

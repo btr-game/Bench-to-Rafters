@@ -1,0 +1,58 @@
+// Round 22: a gold card for every legendary season, on the end-of-career page.
+
+import type { GameState } from '../../engine/types';
+import { legendarySeasons } from '../../engine/awards/legendary';
+import { perGame } from '../../engine/sim/statModel';
+import { LEVELS } from '../../engine/balance';
+import { HeroArt, archPose } from '../art/Hero';
+import { kitFor, styleLeague } from '../art/Player';
+import { seasonLabel } from '../format';
+import { Card } from './bits';
+
+export function LegendarySeasons({ g }: { g: GameState }) {
+  const list = legendarySeasons(g);
+  if (list.length === 0) return null;
+  const p = g.player;
+  return (
+    <Card title="Legendary seasons" kicker={`${list.length} season${list.length === 1 ? '' : 's'} for the ages`}>
+      <div className="legend-grid">
+        {list.map((x) => {
+          const h = x.season;
+          const kit = kitFor(h.teamName, '', h.teamColor, 'home', styleLeague(h.stage));
+          return (
+            <article key={h.year} className={`legend-card rank-${Math.min(x.rank, 6)}`} style={{ ['--team' as string]: h.teamColor }}>
+              <div className="legend-band">
+                <span className="num">{seasonLabel(h.year)}</span>
+                <span>Age {h.age}</span>
+              </div>
+              <div className="legend-body">
+                <div className="legend-art">
+                  <HeroArt pose={archPose(p.archetype, p.pos)} kit={kit} model={p.name} number={p.number} size={118} />
+                </div>
+                <div className="legend-text">
+                  <div className="legend-name">{x.name}</div>
+                  <div className="small">{x.line}</div>
+                  <div className="legend-team small muted">
+                    {h.teamName} · {LEVELS[h.level].short} · {h.w}-{h.l}
+                  </div>
+                  <div className="legend-line num">
+                    {perGame(h.line, 'pts').toFixed(1)} PTS · {perGame(h.line, 'reb').toFixed(1)} REB · {perGame(h.line, 'ast').toFixed(1)} AST
+                  </div>
+                </div>
+              </div>
+              {x.honours.length > 0 && (
+                <div className="legend-chips">
+                  {x.honours.map((a) => (
+                    <span key={a} className="chip">
+                      {a}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </article>
+          );
+        })}
+      </div>
+    </Card>
+  );
+}

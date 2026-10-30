@@ -1229,6 +1229,8 @@ export const ICON_FOR: Record<string, string> = {
   // mini-games
   threes: 'shoot',
   dunk: 'finish',
+  street: 'flame',
+  daily: 'calendar',
   legends: 'spotlight',
   // status and settings
   morale: 'morale',

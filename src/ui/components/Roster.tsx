@@ -1,3 +1,4 @@
+import { DuoArt } from '../art/Duo';
 import { useState } from 'react';
 // Round 9: building the starting five (NBA, first option only) and the league's storylines.
 
@@ -186,13 +187,8 @@ export function DuoCard({ g }: { g: GameState }) {
   const years = g.year - (b.formed ?? g.year);
   return (
     <section className="card stack duo-card">
-      <div className="row">
-        <Icon name="teamfirst" size={36} />
-        <div>
-          <div className="kicker">Your duo</div>
-          <div className="sec-title">{b.nick}</div>
-        </div>
-      </div>
+      <div className="kicker">Your duo</div>
+      <DuoArt g={g} b={b} size={112} />
       <p className="small prose">
         You and <b>{b.name}</b> ({b.pos}) · {b.seasons} season{b.seasons === 1 ? '' : 's'} together{years > 0 ? `, a duo for ${years} season${years === 1 ? '' : 's'}` : ', a duo since this summer'}.
       </p>

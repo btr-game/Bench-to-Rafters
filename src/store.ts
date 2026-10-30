@@ -16,7 +16,7 @@ export type Tab = 'home' | 'season' | 'player' | 'league' | 'records';
 export type Theme = 'auto' | 'light' | 'dark';
 /** The page background: plain, a hardwood floor or streetball asphalt (round 17). */
 export type Court = 'classic' | 'hardwood' | 'street';
-export type Mini = 'hub' | 'office' | 'threes' | 'legends' | 'lab' | 'dunk';
+export type Mini = 'hub' | 'office' | 'threes' | 'legends' | 'lab' | 'dunk' | 'street' | 'daily';
 
 /** A short interstitial between steps (not part of the saved game). */
 export type Transition =

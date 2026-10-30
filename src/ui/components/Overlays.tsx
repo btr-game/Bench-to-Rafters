@@ -1,6 +1,8 @@
 // Full-screen interstitials: the half-season ticker, the new-season card, and story
 // pages (moments) such as commitments, draft night, awards and the title game.
 
+import { DuoArt } from '../art/Duo';
+import { activeDuo } from '../../engine/career/duo';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { GameState, Moment } from '../../engine/types';
 import { LEVELS } from '../../engine/balance';
@@ -454,7 +456,7 @@ function MomentPage({ m, g }: { m: Moment; g: GameState }) {
           <DraftReveal m={m} />
         ) : (
           <div className="stack reveal" style={{ gap: 12 }}>
-            <StoryScene g={g} title={m.title} kind={m.kind} prize={m.kind === 'awards' ? m.lines?.[0] : m.kind === 'title' ? m.title : m.kind === 'tournament' ? `${m.title}. ${m.text}` : undefined} />
+            {m.duo && activeDuo(g) ? <DuoArt g={g} b={activeDuo(g)!} size={170} /> : <StoryScene g={g} title={m.title} kind={m.kind} prize={m.kind === 'awards' ? m.lines?.[0] : m.kind === 'title' ? m.title : m.kind === 'tournament' ? `${m.title}. ${m.text}` : undefined} />}
             <div className="kicker on-dark">{KICKER[m.kind]}</div>
             <div className="moment-title">{m.title}</div>
             <p className="on-dark lede-dark prose">{m.text}</p>

@@ -16,6 +16,7 @@ import { ROUND21_EVENTS } from './round21';
 import { ripple } from './ripples';
 import { fitOf, needs } from './director';
 import { syncWeight } from '../player/weight';
+import { recordInjury } from '../player/body';
 import { changes, snap, vary } from './outcome';
 import { rollTier, tierFactors, tierLine, TIERS, twists, type Tier } from './twists';
 
@@ -88,6 +89,7 @@ export function resolveEvent(s: GameState, d: Decision, choiceId: string): strin
   const c = choices.find((x) => x.label === label) ?? choices[choices.length - 1];
   if (!c) return '';
   const before = snap(s);
+  const hurt = s.player.injury;
   const res = c.resolve(s, s.rng);
   // what else the choice sets in motion (events/ripples.ts)
   const more = ripple(s, s.rng, e.id, c.label);
@@ -102,7 +104,9 @@ export function resolveEvent(s: GameState, d: Decision, choiceId: string): strin
   // a new weight shows in his ratings (after the roll, so the two always match)
   syncWeight(s.player);
   const extra = did ? twists(s, tier) : [];
+  if (s.player.injury && s.player.injury !== hurt) recordInjury(s.player, s.player.injury, s.year);
   logDecision(s, 'event', res.log ?? `${e.title}: ${c.label}.`);
+  if (did) s.log[s.log.length - 1].tier = TIERS[tier].label;
   // a backfire replaces the hoped-for outcome with what actually happened
   const lead = did ? tierLine(s.rng, tier) : '';
   const parts = tier === 'backfired' ? [lead, ...extra] : [res.outcome, lead, ...extra];

@@ -71,6 +71,7 @@ import { quickNbaSeason, warmUpNba } from './nbaYear';
 import { reactionsForSeason } from '../story/reactions';
 import { finishStories, startStories, updateStories } from '../world/stories';
 import { changeWeight, halfPlanWeight, weightWear } from '../player/weight';
+import { recordInjury, trainMuscles } from '../player/body';
 import { duoEffect, growBonds } from './duo';
 import { NAMES } from '../../content/strings';
 
@@ -318,6 +319,7 @@ function makeHook(s: GameState, league: League, level: LevelKey, acc: HalfAcc, s
         acc.played++;
         addLine(acc.line, line);
         const inj = rollInjury(rng, p, plan, minutes);
+        if (inj) recordInjury(p, inj, s.year);
         if (inj && (inj.key === 'major' || inj.key === 'season')) {
           pushMoment(s, {
             kind: 'injury',
@@ -492,6 +494,7 @@ function growthAfterHalf(s: GameState, acc: HalfAcc, level: LevelKey, ovr: numbe
   if (outcome.key === 'breakthrough' && (season.plan === 'grind' || season.plan2 === 'grind')) p.growthRate = Math.min(GROWTH_RATE.max, rate * 1.02);
   const before = ovrOf(p.attrs, p.pos);
   const plan = blendPlans(season.plan, season.plan2);
+  const attrs0 = { ...p.attrs };
   applyHalfGrowth(s.rng, p, {
     minutesShare: share,
     played: acc.played > 0,
@@ -505,6 +508,8 @@ function growthAfterHalf(s: GameState, acc: HalfAcc, level: LevelKey, ovr: numbe
     morale: p.morale,
     lab: s.mode === 'lab',
   });
+  // round 22: what this half built, muscle by muscle (the body map)
+  trainMuscles(p, attrs0, season.plan2 && season.plan2 !== season.plan ? [season.plan, season.plan2] : [season.plan]);
   // body wear from this half: minutes played and how hard the plan pushed the body
   const tallWear = (1 + Math.max(0, p.fullHeight - HEIGHT_LIMITS.bandHi) * HEIGHT_LIMITS.tallWear) * weightWear(p);
   p.wear = clamp((p.wear ?? 0) + (share * WEAR.minutes + (plan.injury - 1) * WEAR.plan) * tallWear, 0, 100);
@@ -816,6 +821,8 @@ function finishSeason(s: GameState): void {
     result: post.result,
     ovrStart: season.ovrStart,
     ovrEnd,
+    height: p.height,
+    weight: p.weight,
     awards: labels,
     races: aw.races,
     salary,

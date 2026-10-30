@@ -20,6 +20,15 @@ export interface Injury {
   ovrLoss?: number; // OVR the injury cost right away
 }
 
+/** Round 22: one injury of his career. */
+export interface InjuryRecord {
+  age: number;
+  year?: number;
+  name: string;
+  key: Injury['key'];
+  days: number;
+}
+
 export interface StatLine {
   gp: number;
   gs: number;
@@ -91,6 +100,8 @@ export interface UserPlayer {
   weight?: number; // lb (player/weight.ts); missing in careers saved before round 20
   build?: number; // hidden: his natural frame, lb over (or under) the ideal at adult size
   frame?: Partial<Attrs>; // what his current weight adds to or takes from each rating
+  muscles?: Partial<Record<import('./player/body').Muscle, number>>; // round 22: what training built, by muscle group
+  injuries?: InjuryRecord[]; // round 22: every injury, for the body map and the timeline
   hometown: string;
   country: string; // see content/origins
   highSchool: string;
@@ -254,6 +265,8 @@ export interface SeasonRecord {
   newHighs?: string[]; // NBA career highs set this season
   breakthrough?: string; // what made it a breakthrough season
   holdout?: boolean;
+  height?: number; // round 22: his height and weight at the end of the season
+  weight?: number;
 }
 
 export interface TourneyRecord {
@@ -274,6 +287,7 @@ export interface DecisionLogEntry {
   kind: string;
   text: string;
   ref?: string; // team id, for later story links
+  tier?: string; // round 22: how a turning point turned out (Breakthrough ... Backfired)
 }
 
 export interface Choice {
@@ -409,6 +423,7 @@ export interface Moment {
   lostFinal?: boolean; // a final he lost (the reel ends without the banner)
   // round 15: how the page celebrates (or doesn't) once any game reel has finished
   mood?: 'champion' | 'gold' | 'silver' | 'bronze' | 'heartbreak' | 'out';
+  duo?: boolean; // round 22: the page where a duo forms shows the two of them
 }
 
 export interface GameState {
