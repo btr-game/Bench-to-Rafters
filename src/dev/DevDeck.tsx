@@ -10,6 +10,7 @@ import { AchToasts } from '../ui/screens/Achievements';
 import { Icon } from '../ui/art/Icon';
 import { useStore } from '../store';
 import { CARDS, GROUPS, setAchievements, type DevCard, type Group } from './cards';
+import { Marked, SUMMARY, SummaryPage, searchCards, searchSummary, snippet } from './Summary';
 
 const groupOf = (g: Group) => GROUPS.find((x) => x.key === g)!;
 
@@ -52,12 +53,23 @@ function press(sel: string): void {
 export function DevDeck() {
   const [group, setGroup] = useState<Group | 'all'>('all');
   const [q, setQ] = useState('');
+  const [results, setResults] = useState(false);
+  const [section, setSection] = useState<'cards' | 'summary'>('cards');
+  const [chapter, setChapter] = useState(0);
+  const [focus, setFocus] = useState<number | null>(null);
   const [view, setView] = useState<'deck' | 'grid'>('deck');
   const [at, setAt] = useState(0);
   const [open, setOpen] = useState<DevCard | null>(null);
   const [busy, setBusy] = useState<DevCard | null>(null);
   const [miss, setMiss] = useState<string | null>(null);
-  const list = useMemo(() => CARDS.filter((c) => (group === 'all' || c.group === group) && (!q || `${c.title} ${c.blurb}`.toLowerCase().includes(q.toLowerCase()))), [group, q]);
+  const list = useMemo(() => CARDS.filter((c) => group === 'all' || c.group === group), [group]);
+  const hits = useMemo(() => (results ? { cards: searchCards(q, CARDS), summary: searchSummary(q) } : null), [q, results]);
+  const openChapter = (ci: number, bi: number | null = null) => {
+    setSection('summary');
+    setChapter(ci);
+    setFocus(bi);
+    setResults(false);
+  };
   const cur = Math.min(at, Math.max(0, list.length - 1));
   const numberOf = (c: DevCard) => CARDS.indexOf(c) + 1;
 
@@ -92,7 +104,7 @@ export function DevDeck() {
 
   // arrows flip the deck, Enter opens the card on top
   useEffect(() => {
-    if (open || view !== 'deck') return;
+    if (open || view !== 'deck' || section !== 'cards' || results) return;
     const key = (e: KeyboardEvent) => {
       if ((e.target as HTMLElement).tagName === 'INPUT') return;
       if (e.key === 'ArrowRight') setAt((i) => Math.min(list.length - 1, i + 1));
@@ -103,7 +115,7 @@ export function DevDeck() {
     };
     window.addEventListener('keydown', key);
     return () => window.removeEventListener('keydown', key);
-  }, [open, view, list, cur, deal]);
+  }, [open, view, list, cur, deal, section, results]);
 
   if (open)
     return (
@@ -133,20 +145,84 @@ export function DevDeck() {
           <div className="kicker">Bench to Rafters · dev version</div>
           <h1 className="hub-title">The dev deck</h1>
           <p className="prose">
-            Every function in the game, one card each, {CARDS.length} in all. Open a card and the game itself takes over with that function on screen, everything unlocked. Cards that need a career play one with the balance harness's smart player first, so a few take a second or two.
+            Every function in the game, one card each, {CARDS.length} in all, and the project summary, chapter by chapter. Open a card and the game itself takes over with that function on screen, everything unlocked. Cards that need a career play one with the balance harness's smart player first, so a few take a second or two.
           </p>
         </div>
         <div className="dk-tools">
-          <input className="dk-search" placeholder="Find a function" value={q} onChange={(e) => (setQ(e.target.value), setAt(0))} aria-label="Find a function" />
-          <div className="seg">
-            {(['deck', 'grid'] as const).map((v) => (
-              <button key={v} aria-pressed={view === v} onClick={() => setView(v)}>
-                {v === 'deck' ? 'Deck' : 'Grid'}
-              </button>
-            ))}
+          <div className="seg dk-sections">
+            <button aria-pressed={section === 'cards' && !results} onClick={() => (setSection('cards'), setResults(false))}>
+              Cards
+            </button>
+            <button aria-pressed={section === 'summary' && !results} onClick={() => openChapter(chapter)}>
+              Project summary
+            </button>
+          </div>
+          <div className="dk-searchbox">
+            <input
+              id="dk-search"
+              className="dk-search"
+              type="search"
+              placeholder="Search functions and the summary"
+              value={q}
+              onChange={(e) => (setQ(e.target.value), setResults(!!e.target.value.trim()))}
+              onFocus={() => q.trim() && setResults(true)}
+              aria-label="Search functions and the summary"
+            />
           </div>
         </div>
       </header>
+      {hits ? (
+        <section className="dk-results" aria-label="Search results">
+          <div className="dk-results-head">
+            <b>
+              {hits.cards.length + hits.summary.length} results for “{q.trim()}”
+            </b>
+            <button className="btn small ghost" onClick={() => (setQ(''), setResults(false))}>
+              Clear
+            </button>
+          </div>
+          {hits.cards.length > 0 && (
+            <div className="stack">
+              <div className="kicker">Functions · open the card</div>
+              <div className="dk-hit-cards">
+                {hits.cards.map((c) => (
+                  <button key={c.id} className="dk-hit-card" style={{ ['--suit' as string]: groupOf(c.group).color }} onClick={() => deal(c)}>
+                    <Icon name={c.icon} size={30} />
+                    <span>
+                      <b>
+                        <Marked text={c.title} q={q} />
+                      </b>
+                      <small>
+                        <Marked text={c.blurb} q={q} />
+                      </small>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {hits.summary.length > 0 && (
+            <div className="stack">
+              <div className="kicker">Project summary · go to the passage</div>
+              {hits.summary.map((h) => (
+                <button key={`${h.ci}-${h.bi}`} className="dk-hit" onClick={() => openChapter(h.ci, h.bi)}>
+                  <small>
+                    {SUMMARY.chapters[h.ci].title}
+                    {h.section ? ` › ${h.section}` : ''}
+                  </small>
+                  <span>
+                    <Marked text={snippet(h.text, q)} q={q} />
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+          {hits.cards.length + hits.summary.length === 0 && <p className="muted">Nothing matches. Try fewer or shorter words.</p>}
+        </section>
+      ) : section === 'summary' ? (
+        <SummaryPage chapter={chapter} setChapter={(n) => (setChapter(n), setFocus(null))} focus={focus} q={q} />
+      ) : (
+      <>
       <div className="dk-suits">
         <button className="dk-suit" aria-pressed={group === 'all'} onClick={() => (setGroup('all'), setAt(0))}>
           All <small>{CARDS.length}</small>
@@ -161,7 +237,16 @@ export function DevDeck() {
       {miss && <p className="dk-miss">{miss}</p>}
       {list.length === 0 ? (
         <p className="muted">No card matches.</p>
-      ) : view === 'deck' ? (
+      ) : (
+        <div className="seg dk-views">
+          {(['deck', 'grid'] as const).map((v) => (
+            <button key={v} aria-pressed={view === v} onClick={() => setView(v)}>
+              {v === 'deck' ? 'Deck' : 'Grid'}
+            </button>
+          ))}
+        </div>
+      )}
+      {list.length === 0 ? null : view === 'deck' ? (
         <section className="dk-table">
           <div className="dk-fan">
             {list.map((c, i) => {
@@ -202,6 +287,8 @@ export function DevDeck() {
             <Face key={c.id} c={c} n={numberOf(c)} size="small" onClick={() => deal(c)} />
           ))}
         </section>
+      )}
+      </>
       )}
       {busy && (
         <div className="dk-dealing" role="status">

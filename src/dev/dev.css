@@ -57,3 +57,55 @@
   .dk-fan { height: 360px; }
   .dk-slot { transform: translateX(calc(-50% + var(--d) * 90px)) rotate(calc(var(--d) * 4deg)) scale(calc(1 - min(abs(var(--d)), 3) * 0.1)); }
 }
+
+/* the search: one box for the cards and the summary */
+.dk-sections { flex: none; }
+.dk-searchbox { flex: 1 1 280px; min-width: 0; }
+.dk-searchbox .dk-search { width: 100%; }
+.dk-views { justify-self: start; }
+.dk mark, .sm mark { background: color-mix(in srgb, var(--accent) 26%, transparent); color: inherit; border-radius: 3px; padding: 0 1px; }
+.dk-results { display: grid; gap: 18px; }
+.dk-results-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.dk-results-head b { font-size: 17px; }
+.dk-hit-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px; }
+.dk-hit-card { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); border-left: 5px solid var(--suit); background: var(--surface); color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.dk-hit-card span { display: grid; gap: 2px; min-width: 0; }
+.dk-hit-card small { color: var(--muted); }
+.dk-hit { display: grid; gap: 4px; width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.dk-hit small { font-family: var(--f-mono); font-size: 12px; color: var(--muted); }
+.dk-hit span { line-height: 1.45; }
+.dk-hit:hover, .dk-hit-card:hover { border-color: var(--accent); }
+
+/* the project summary: the chapter list beside one chapter */
+.sm { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 28px; align-items: start; }
+.sm-toc { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); max-height: calc(100vh - 24px); overflow: auto; display: grid; gap: 8px; padding: 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); }
+.sm-doc { font-family: var(--f-display); font-size: 20px; text-transform: uppercase; line-height: 1.05; }
+.sm-toc ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.sm-toc ol > li > button { width: 100%; padding: 6px 8px; border: 0; border-radius: 6px; background: none; color: var(--ink); font: inherit; font-size: 14.5px; text-align: left; cursor: pointer; }
+.sm-toc ol > li > button:hover { background: var(--surface-2); }
+.sm-toc ol > li > button[aria-current='page'] { background: var(--ink); color: var(--bg); font-weight: 700; }
+.sm-toc ul { list-style: none; margin: 4px 0 6px; padding: 0 0 0 12px; display: grid; gap: 2px; border-left: 2px solid var(--line); }
+.sm-toc ul a { display: block; padding: 2px 6px; color: var(--muted); font-size: 13px; text-decoration: none; }
+.sm-toc ul a:hover { color: var(--ink); }
+.sm-main { min-width: 0; display: grid; gap: 10px; max-width: 860px; }
+.sm-title { margin: 0 0 6px; font-family: var(--f-display); font-size: 40px; line-height: 1; text-transform: uppercase; text-wrap: balance; }
+.sm-h2 { margin: 18px 0 0; font-family: var(--f-display); font-size: 24px; text-transform: uppercase; color: var(--accent); }
+.sm-p { margin: 0; line-height: 1.55; max-width: 72ch; }
+.sm-ul { margin: 0; padding-left: 20px; display: grid; gap: 5px; line-height: 1.5; max-width: 76ch; }
+.sm-table { overflow-x: auto; border-radius: 8px; border: 1px solid var(--line); }
+.sm-table table { width: 100%; border-collapse: collapse; font-size: 14px; }
+/* the game's own table style is for stat lines (monospace, right-aligned, no wrapping); a summary table is prose */
+.sm-table table { font-family: inherit; }
+.sm-table th { position: sticky; top: 0; padding: 7px 10px; background: var(--ink); color: var(--bg); text-align: left; font-weight: 700; font-size: 12.5px; white-space: normal; }
+.sm-table td { padding: 6px 10px; border-top: 1px solid var(--line); border-bottom: 0; text-align: left; white-space: normal; vertical-align: top; font-variant-numeric: tabular-nums; }
+.sm-table tr:nth-child(even) td { background: var(--surface-2); }
+.sm-main [data-b] { border-radius: 8px; transition: box-shadow 0.4s, background 0.4s; scroll-margin-top: 24px; }
+.sm-main .sm-flash { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 55%, transparent); background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.sm-pager { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
+.sm-pager .btn { max-width: 48%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 860px) {
+  .sm { grid-template-columns: 1fr; }
+  .sm-toc { position: static; max-height: none; }
+  .sm-pager .btn { max-width: 100%; }
+  .sm-title { font-size: 30px; }
+}

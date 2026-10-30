@@ -1,4 +1,3 @@
-import { useState } from "react";
 import type { GameState } from "../../engine/types";
 import { scoutReport } from "../../engine/career/scouting";
 
@@ -22,8 +21,6 @@ export function ScoutCard({
   compact?: boolean;
 }) {
   const r = scoutReport(g);
-  // on Home the odds fold away (round 13: less scrolling); the Player tab shows everything
-  const [odds, setOdds] = useState(!compact);
   return (
     <section className="card stack scout-card">
       <div className="scout-head">
@@ -45,17 +42,8 @@ export function ScoutCard({
         </b>
         <span className="muted small">{r.peakTier}</span>
       </div>
-      {compact && (
-        <button
-          className="link-btn"
-          aria-expanded={odds}
-          onClick={() => setOdds(!odds)}
-        >
-          {odds ? "Hide the odds" : "Show the odds"}
-        </button>
-      )}
-      {odds && (
-        <div className="chances" role="list">
+      {/* round 24 (owner): the odds always show, on Home too */}
+      <div className="chances" role="list">
           {ODDS_LABEL.map(([k, label]) => {
             const v = r.odds[k as keyof typeof r.odds];
             return (
@@ -71,8 +59,7 @@ export function ScoutCard({
               </div>
             );
           })}
-        </div>
-      )}
+      </div>
       {!compact && (
         <ul className="small muted" style={{ paddingLeft: 18 }}>
           {r.notes.map((n, i) => (

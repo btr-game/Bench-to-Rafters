@@ -161,6 +161,9 @@ function Figure({ shapes, dx, muscles, top, hover, setHover }: { shapes: Shape[]
 }
 
 /** `narrow`: stacked (figures above, numbers below) for a side column. */
+/** Time missed, in days under two weeks (a sore ankle is not "0 wk"), else in weeks. */
+const timeOut = (days: number): string => (days < 14 ? `${days} day${days === 1 ? '' : 's'}` : `${Math.round(days / 7)} wk`);
+
 export function BodyMap({ g, narrow = false }: { g: GameState; narrow?: boolean }) {
   const p = g.player;
   const [hover, setHover] = useState<Muscle | null>(null);
@@ -265,7 +268,7 @@ export function BodyMap({ g, narrow = false }: { g: GameState; narrow?: boolean 
                   <span>
                     {PART_NAME[part]} <span className="muted small">· {list.map((i) => `${i.name}, ${i.age}`).join('; ')}</span>
                   </span>
-                  <b className="num">{Math.round(list.reduce((t, i) => t + i.days, 0) / 7)} wk</b>
+                  <b className="num">{timeOut(list.reduce((t, i) => t + i.days, 0))}</b>
                 </li>
               ))}
             </ul>
