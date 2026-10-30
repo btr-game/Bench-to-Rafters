@@ -1200,6 +1200,7 @@ Reached from the start page and from the bottom of Home (a career in progress is
   NBA 40 (75+), All-Star 56 (80+), MVP the full 80 in a gold glow (89+). The small versions are
   shrunk from the 80-row art (each pixel takes its block's most common colour; thin parts like
   arms survive at the small sizes) and outlined again, and the jersey number appears once a 7x5
-  block of jersey fits. The mini-game shows the player's position pose; a Built in a lab career
-  shows his archetype's pose, in the Player tab's banner and an Evolution card. A track shows
+  block of jersey fits. Owner's follow-up: he stands like on media day with the ball on his hip (the
+  traced media-day pose) at every level, in the mini-game and in a Built in a lab career (the
+  Player tab's banner and an Evolution card). A track shows
   every level, the art flashes when he moves up.

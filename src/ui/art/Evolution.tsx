@@ -1,5 +1,6 @@
 // Built in a lab (round 20, second take: "increase the amount of pixels every time"). The player
-// is the same traced model at every level, drawn at the same size, and each level he gains
+// is the same traced model at every level, standing like on media day with the ball on his hip,
+// drawn at the same size, and each level he gains
 // pixels: high school 14 rows tall, university 20, a lower league 28, the NBA 40, All-Star 56
 // and MVP the full 80 in a gold glow. A track shows every level (the ones ahead as
 // silhouettes), and the art flashes when he moves up.
