@@ -79,44 +79,89 @@ const PART_NAME: Record<BodyPart, string> = { head: 'Head', neck: 'Neck', should
 /** Shade for a muscle: pale when untrained, deep orange when it is his most built. */
 const shade = (v: number, top: number) => `color-mix(in srgb, #E8590C ${Math.round(Math.min(1, v / top) * 85)}%, var(--body-base))`;
 
+// round 24 (owner: "can you make the body map also pixelated?"): the same shapes, sampled onto a
+// grid of square pixels with a dark outline, like the rest of the game's art
+const PX = 6;
+type Key = Muscle | 'base';
+const near = (x: number, y: number, pts: [number, number][], r: number) =>
+  pts.some(([ax, ay], i) => {
+    if (i === 0) return false;
+    const [bx, by] = pts[i - 1];
+    const dx = ax - bx;
+    const dy = ay - by;
+    const t = Math.max(0, Math.min(1, ((x - bx) * dx + (y - by) * dy) / (dx * dx + dy * dy)));
+    return Math.hypot(x - (bx + t * dx), y - (by + t * dy)) <= r;
+  });
+function inTorso(x: number, y: number): boolean {
+  if (y < 64 || y > 208) return false;
+  // the trunk narrows from the shoulders (60-140) to the hips (74-126)
+  const k = (y - 64) / 144;
+  return x >= 60 + 14 * k && x <= 140 - 14 * k;
+}
+function covers(sh: Shape, x: number, y: number): boolean {
+  if (sh.el === 'c') return Math.hypot(x - sh.x, y - sh.y) <= sh.a;
+  if (sh.el === 'r') return x >= sh.x && x <= sh.x + sh.a && y >= sh.y && y <= sh.y + (sh.b ?? 0);
+  return ((x - sh.x) / sh.a) ** 2 + ((y - sh.y) / (sh.b ?? sh.a)) ** 2 <= 1;
+}
+const CACHE = new Map<Shape[], { key: Key | 'line'; d: string }[]>();
+/** The figure as pixel runs, one path per muscle (plus the bare body and the outline). */
+function pixels(shapes: Shape[]): { key: Key | 'line'; d: string }[] {
+  const hit = CACHE.get(shapes);
+  if (hit) return hit;
+  const W = Math.ceil(200 / PX);
+  const H = Math.ceil(410 / PX);
+  const grid: (Key | null)[][] = [];
+  for (let r = 0; r < H; r++) {
+    const row: (Key | null)[] = [];
+    for (let c = 0; c < W; c++) {
+      const x = c * PX + PX / 2;
+      const y = r * PX + PX / 2;
+      let k: Key | null =
+        inTorso(x, y) || near(x, y, [[62, 76], [48, 140], [41, 206]], 11) || near(x, y, [[138, 76], [152, 140], [159, 206]], 11) || near(x, y, [[88, 206], [87, 298], [86, 388]], 15) || near(x, y, [[112, 206], [113, 298], [114, 388]], 15)
+          ? 'base'
+          : null;
+      for (const sh of shapes) if (covers(sh, x, y)) k = sh.m ?? 'base';
+      row.push(k);
+    }
+    grid.push(row);
+  }
+  const runs = new Map<Key | 'line', string>();
+  const add = (k: Key | 'line', c: number, r: number, n: number) => runs.set(k, `${runs.get(k) ?? ''}M${c * PX} ${r * PX}h${n * PX}v${PX}h${-n * PX}z`);
+  grid.forEach((row, r) => {
+    let c = 0;
+    while (c < W) {
+      const k = row[c];
+      const edge = !k && [[0, 1], [0, -1], [1, 0], [-1, 0]].some(([dr, dc]) => grid[r + dr]?.[c + dc]);
+      const key = k ?? (edge ? 'line' : null);
+      let n = 1;
+      while (c + n < W && (row[c + n] ?? ([[0, 1], [0, -1], [1, 0], [-1, 0]].some(([dr, dc]) => grid[r + dr]?.[c + n + dc]) ? 'line' : null)) === key) n++;
+      if (key) add(key, c, r, n);
+      c += n;
+    }
+  });
+  const out = [...runs].map(([key, d]) => ({ key, d }));
+  CACHE.set(shapes, out);
+  return out;
+}
+
 function Figure({ shapes, dx, muscles, top, hover, setHover }: { shapes: Shape[]; dx: number; muscles: Partial<Record<Muscle, number>>; top: number; hover: Muscle | null; setHover: (m: Muscle | null) => void }) {
   return (
-    <g transform={`translate(${dx} 0)`}>
-      <g className="bm-sil">
-        <path d="M60,68 Q100,58 140,68 L132,140 L126,208 L74,208 L68,140 Z" />
-        <polyline points="62,76 48,140 41,206" />
-        <polyline points="138,76 152,140 159,206" />
-        <polyline points="88,206 87,298 86,388" />
-        <polyline points="112,206 113,298 114,388" />
-      </g>
-      {shapes.map((s, i) => {
-        const fill = s.m ? shade(muscles[s.m] ?? 0, top) : 'var(--body-base)';
-        const cls = `bm-part${s.m && hover === s.m ? ' on' : ''}`;
-        const ev = s.m ? { onMouseEnter: () => setHover(s.m), onMouseLeave: () => setHover(null) } : {};
-        const title = s.m ? <title>{`${MUSCLES.find((x) => x.key === s.m)!.name}: ${(muscles[s.m] ?? 0).toFixed(1)}`}</title> : null;
-        if (s.el === 'c')
-          return (
-            <circle key={i} cx={s.x} cy={s.y} r={s.a} fill={fill} className={cls} {...ev}>
-              {title}
-            </circle>
-          );
-        if (s.el === 'r')
-          return (
-            <rect key={i} x={s.x} y={s.y} width={s.a} height={s.b} rx={10} fill={fill} className={cls} {...ev}>
-              {title}
-            </rect>
-          );
+    <g transform={`translate(${dx} 0)`} shapeRendering="crispEdges">
+      {pixels(shapes).map(({ key, d }) => {
+        if (key === 'line') return <path key={key} d={d} className="bm-line" />;
+        if (key === 'base') return <path key={key} d={d} fill="var(--body-base)" />;
         return (
-          <ellipse key={i} cx={s.x} cy={s.y} rx={s.a} ry={s.b} fill={fill} className={cls} {...ev}>
-            {title}
-          </ellipse>
+          <path key={key} d={d} fill={shade(muscles[key] ?? 0, top)} className={`bm-part${hover === key ? ' on' : ''}`} onMouseEnter={() => setHover(key)} onMouseLeave={() => setHover(null)}>
+            <title>{`${MUSCLES.find((x) => x.key === key)!.name}: ${(muscles[key] ?? 0).toFixed(1)}`}</title>
+          </path>
         );
       })}
     </g>
   );
 }
 
-export function BodyMap({ g }: { g: GameState }) {
+/** `narrow`: stacked (figures above, numbers below) for a side column. */
+export function BodyMap({ g, narrow = false }: { g: GameState; narrow?: boolean }) {
   const p = g.player;
   const [hover, setHover] = useState<Muscle | null>(null);
   const muscles = p.muscles ?? {};
@@ -131,7 +176,7 @@ export function BodyMap({ g }: { g: GameState }) {
   const first = growth[0];
   return (
     <Card title="Body map" kicker="What training built, and where it hurt. Hover a muscle for its number.">
-      <div className="bm">
+      <div className={`bm${narrow ? ' narrow' : ''}`}>
         <svg viewBox="0 0 410 428" className="bm-svg" role="img" aria-label="Body map, front and back">
           <text x={100} y={422} textAnchor="middle" className="bm-cap">
             Front
@@ -147,9 +192,9 @@ export function BodyMap({ g }: { g: GameState }) {
               const [x, y] = SPOT[part as Exclude<BodyPart, 'whole'>];
               const bad = list.some((i) => i.key === 'major' || i.key === 'season');
               return (
-                <g key={part} className="bm-hurt">
-                  <circle cx={x} cy={y} r={bad ? 10 : 8} className={bad ? 'major' : ''} />
-                  <text x={x} y={y + 4} textAnchor="middle">
+                <g key={part} className="bm-hurt" shapeRendering="crispEdges">
+                  <rect x={Math.round(x / PX) * PX - (bad ? 12 : 9)} y={Math.round(y / PX) * PX - (bad ? 12 : 9)} width={bad ? 24 : 18} height={bad ? 24 : 18} className={bad ? 'major' : ''} />
+                  <text x={Math.round(x / PX) * PX} y={Math.round(y / PX) * PX + 4} textAnchor="middle">
                     {list.length > 1 ? list.length : '+'}
                   </text>
                   <title>{`${PART_NAME[part]}: ${list.map((i) => `${i.name} (age ${i.age})`).join(', ')}`}</title>

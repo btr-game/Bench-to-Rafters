@@ -661,9 +661,10 @@ export function PlayerTab({ g }: { g: GameState }) {
               <p className="muted">Scouts post a potential grade after your sophomore season. Your true potential, growth curve and durability stay hidden.</p>
             </Card>
           )}
+          {/* round 24: up beside the ratings instead of below the long profile column */}
+          <BodyMap g={g} narrow />
         </div>
       </div>
-      <BodyMap g={g} />
     </div>
   );
 }
