@@ -78,6 +78,23 @@ function DraftBoard({ g }: { g: GameState }) {
 }
 
 /** One or two plans for the half: tap to select, then start. */
+// round 24 (owner): a thin colour strip on each plan, like the shop's items, to tell them apart
+const PLAN_TINT: Record<string, string> = {
+  balanced: '#E2B33C',
+  grind: '#E03131',
+  recovery: '#2F9E44',
+  spotlight: '#F76707',
+  teamfirst: '#7048E8',
+  shooting: '#FD7E14',
+  strength: '#8B5A2B',
+  playmaking: '#1C7ED6',
+  defense: '#364FC7',
+  offhand: '#0CA678',
+  speed: '#FAB005',
+  mentor: '#868E96',
+};
+const planTint = (id: string) => ({ ['--tile' as string]: PLAN_TINT[id] ?? 'var(--line)' });
+
 function PlanPicker({ d }: { d: Decision }) {
   const choose = useStore((s) => s.choose);
   const [picked, setPicked] = useState<string[]>([]);
@@ -90,7 +107,7 @@ function PlanPicker({ d }: { d: Decision }) {
         <p className="muted small prose">{d.text}</p>
         <div className={`plans${d.data?.single ? ' plan-groups' : ''}`}>
           {enabled.map((c) => (
-            <button key={c.id} className="choice" onClick={() => choose(c.id)}>
+            <button key={c.id} className="choice plan-card" style={planTint(c.id)} onClick={() => choose(c.id)}>
               <span className="label with-icon">
                 <Icon name={choiceIcon(c.id)} size={26} />
                 {c.label}
@@ -114,7 +131,7 @@ function PlanPicker({ d }: { d: Decision }) {
         {d.choices.map((c) => {
           const on = picked.includes(c.id);
           return (
-            <button key={c.id} className={`choice${on ? ' selected' : ''}`} aria-pressed={on} disabled={c.disabled} onClick={() => toggle(c.id)}>
+            <button key={c.id} className={`choice plan-card${on ? ' selected' : ''}`} style={planTint(c.id)} aria-pressed={on} disabled={c.disabled} onClick={() => toggle(c.id)}>
               <span className="label with-icon">
                 <Icon name={choiceIcon(c.id)} size={26} />
                 {on && <span className={`plan-tag ${picked.indexOf(c.id) === 0 ? 'main' : 'side'}`}>{picked.indexOf(c.id) === 0 ? 'Main' : 'Side'}</span>}

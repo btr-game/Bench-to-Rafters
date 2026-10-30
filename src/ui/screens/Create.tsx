@@ -15,6 +15,7 @@ import { ht, seasonLabel } from '../format';
 import { MiniGamesCard } from '../mini/MiniGames';
 import { CareerLogCard } from './CareerLog';
 import { GuideButton } from '../components/Guide';
+import { AchievementsCard } from './Achievements';
 import { FlagArt } from '../art/Flag';
 import { POS_STYLE, PositionCard } from '../art/PositionCard';
 import { HeroArt, archPose } from '../art/Hero';
@@ -184,6 +185,7 @@ export function Create() {
           <div className="start-cards">
             <MiniGamesCard />
             <CareerLogCard />
+            <AchievementsCard />
           </div>
         </section>
       )}

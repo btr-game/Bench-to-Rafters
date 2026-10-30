@@ -16,6 +16,7 @@ import { CareerTimeline } from '../components/Timeline';
 import { cityCultureOf } from '../../engine/career/cityCulture';
 import { fanCultureOf } from '../../engine/career/fanCulture';
 import { BodyMap } from '../components/BodyMap';
+import { AchievementsCard } from './Achievements';
 import { FlagArt } from '../art/Flag';
 import type { GameLog, GameState, League, SeasonRecord, SeriesResult, StatLine, Team } from '../../engine/types';
 import { ATTRS, LEVELS } from '../../engine/balance';
@@ -917,6 +918,9 @@ export function RecordsTab({ g }: { g: GameState }) {
         ]}
       />
       <CareerTimeline g={g} />
+      <div className="start-cards">
+        <AchievementsCard />
+      </div>
       <Card title="Season by season">
         {g.history.length === 0 ? <p className="muted">Your seasons show up here after the first one.</p> : <HistoryTable rows={g.history} />}
         <p className="muted small">High school and college seasons are listed but do not count toward pro career totals.</p>

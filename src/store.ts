@@ -14,12 +14,14 @@ import { tabKey } from './ui/selectors';
 import { weightOf } from './engine/player/weight';
 import { careerRecord } from './engine/career/record';
 import { logCareer, type LogResult } from './ui/careerLog';
+import { checkAch, countCareer } from './ui/achievements';
+import type { AchTier } from './engine/achievements';
 
 export type Tab = 'home' | 'season' | 'player' | 'league' | 'records';
 export type Theme = 'auto' | 'light' | 'dark';
 /** The page background: plain, a hardwood floor or streetball asphalt (round 17). */
 export type Court = 'classic' | 'hardwood' | 'street';
-export type Page = 'log';
+export type Page = 'log' | 'achievements';
 export type Mini = 'hub' | 'office' | 'threes' | 'legends' | 'lab' | 'dunk' | 'street' | 'daily';
 
 /** A short interstitial between steps (not part of the saved game). */
@@ -76,6 +78,9 @@ interface Store {
   logged: LogResult | null;
   /** Guide mode's tour has a step on screen (the plain next-step highlight waits for it). */
   tour: boolean;
+  /** Achievements just earned, shown as banners at the top (round 24). */
+  toasts: { id: string; name: string; tier: AchTier; more?: number }[];
+  dismissToast: (id: string) => void;
   /** Round 22: the daily challenge in progress, with the career and setting it stepped away from. */
   daily: { day: string; stash: GameState | null; simple: boolean } | null;
   startDaily: () => void;
@@ -200,6 +205,8 @@ export const useStore = create<Store>((set, get) => ({
   },
   logged: null,
   tour: false,
+  toasts: [],
+  dismissToast: (id) => set({ toasts: get().toasts.filter((x) => x.id !== id) }),
   daily: null,
   startDaily: () => {
     const day = todayKey();
@@ -431,6 +438,23 @@ useStore.subscribe((now, before) => {
   if (!g || !before.game || g === before.game || g.step !== 'retired' || before.game.step === 'retired') return;
   if (now.daily || g.flags.daily || g.mode === 'lab') return;
   useStore.setState({ logged: logCareer(careerRecord(g)) });
+});
+
+// round 24: achievements, checked a moment after each change; a career that ends counts first
+let achTimer: ReturnType<typeof setTimeout> | null = null;
+useStore.subscribe((now, before) => {
+  if (now.game === before.game) return;
+  const g = now.game;
+  if (g && before.game && g !== before.game && g.step === 'retired' && before.game.step !== 'retired' && g.mode !== 'lab') countCareer(g, now.master);
+  if (achTimer) clearTimeout(achTimer);
+  achTimer = setTimeout(() => {
+    const fresh = checkAch(useStore.getState().game);
+    if (!fresh.length) return;
+    // a flood (an old save, a long career at once) shows three and a count of the rest
+    const shown: Store['toasts'] = fresh.slice(0, 3).map((a) => ({ id: a.id, name: a.name, tier: a.tier }));
+    if (fresh.length > 3) shown[2] = { ...shown[2], more: fresh.length - 3 };
+    useStore.setState({ toasts: [...useStore.getState().toasts, ...shown].slice(-4) });
+  }, 400);
 });
 
 // closing the tab inside the half second still keeps the last move
