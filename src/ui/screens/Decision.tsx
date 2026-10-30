@@ -13,6 +13,7 @@ import { NAMES } from '../../content/strings';
 import { useStore } from '../../store';
 import { brief, fmtMoney, ordinal } from '../format';
 import { NBA_TEAMS } from '../../content/teams';
+import { TimingMeter } from '../components/TimingMeter';
 
 const TIER: Record<string, string> = { blue: 'Blue blood', power: 'Power program', major: 'Major conference', mid: 'Mid-major' };
 
@@ -154,6 +155,9 @@ function LiveView({ g, d }: { g: GameState; d: Decision }) {
   const choose = useStore((s) => s.choose);
   const simple = useStore((s) => s.simple);
   const r = d.data?.req as LiveRequest;
+  // round 25: the last possession is his to time; the meter decides the shot
+  const [timed, setTimed] = useState<string | null>(null);
+  const pick = (id: string) => (r.stage === 'clutch' && (id === 'pull' || id === 'drive') ? setTimed(id) : choose(id));
   const team = g.season ? (g.stage === 'NBA' ? g.nba : g.league)?.teams.find((t) => t.id === g.teamId) : null;
   const me = team?.short ?? 'You';
   const started = r.stage !== 'game';
@@ -229,9 +233,15 @@ function LiveView({ g, d }: { g: GameState; d: Decision }) {
           ))}
         </div>
       )}
+      {timed ? (
+        <div className="stack" data-tour="live-meter">
+          <p className="small">Stop the marker in the green. Dead centre and it is nearly automatic; late and it probably rims out.</p>
+          <TimingMeter skill={timed === 'drive' ? g.player.attrs.FIN : g.player.attrs.SHT} label={timed === 'drive' ? 'Finish!' : 'Release!'} onTap={(t) => choose(`${timed}@${t}`)} />
+        </div>
+      ) : (
       <div className="choices">
         {d.choices.map((c, i) => (
-          <button key={c.id} className={`choice${i === 0 && r.stage === 'game' ? ' primary' : ''}`} onClick={() => choose(c.id)}>
+          <button key={c.id} className={`choice${i === 0 && r.stage === 'game' ? ' primary' : ''}`} onClick={() => pick(c.id)}>
             <span className="label">
               {c.label} {c.risk && <span className={`risk risk-${c.risk.toLowerCase()}`}>{c.risk} risk</span>}
             </span>
@@ -239,6 +249,7 @@ function LiveView({ g, d }: { g: GameState; d: Decision }) {
           </button>
         ))}
       </div>
+      )}
     </div>
   );
 }

@@ -537,6 +537,14 @@ export const NICKNAME = { rep: 55, noise: 0.2 };
 export const VISIT = { morale: 2 };
 // round 25: personal staff (career/staff.ts). Pay and benefit by level (a raise moves him up one);
 // benefits a season at level 1, times `effect[level - 1]`; a talk once a season lifts morale.
+// round 25 (the owner: the playable finals change the result): the last possession of a close
+// playable playoff game is a timing meter; the timing moves the chance the shot drops
+export const CLUTCH_TIMING = { perfect: 0.35, good: 0.12, late: -0.15, max: 0.95, min: 0.05 };
+// round 25: contract talks (career/negotiate.ts). Up to `asks` asks an offer; the team's patience
+// starts at `base`, plus reputation / `repPer`, plus how far his OVR is above the league average
+// / `ovrPer`, less `perAsk` for each ask before; a yes gives the whole ask, a "let's meet halfway"
+// half of it, and a team out of patience pulls the offer.
+export const NEGOTIATE = { asks: 2, base: 0.35, repPer: 220, ovrPer: 45, perAsk: 0.2, halfway: 0.45, money: 0.15, maxYears: 5 };
 // round 25: a legacy project funded in an event (events/round25.ts) adds legacy points
 export const LEGACY_PROJECT = { points: 3 };
 export const STAFF_PAY = { pay: [1, 1.7, 2.6], effect: [1, 1.5, 2], talk: 1, afford: 4, max: 6 };

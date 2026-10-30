@@ -362,6 +362,7 @@ export interface Offer {
   tier?: NcaaTier;
   teamOptionYears?: number[];
   note?: string;
+  asked?: number; // round 25: asks made in contract talks (career/negotiate.ts)
 }
 
 export interface SeasonState {

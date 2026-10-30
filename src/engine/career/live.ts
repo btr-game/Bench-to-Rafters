@@ -7,7 +7,7 @@
 // (a tactic) or a close finish (the last possession). That keeps the state plain JSON and
 // the postseason code unchanged.
 
-import { GAME_POINTS, HOME_COURT, LEVELS, WIN_SCALE } from '../balance';
+import { CLUTCH_TIMING, GAME_POINTS, HOME_COURT, LEVELS, WIN_SCALE } from '../balance';
 import { chance, clamp, int, normal } from '../rng';
 import type { GameState, LevelKey, StatLine } from '../types';
 import { addLine, emptyLine, expectedGameScore, gameScore, sampleGame, type Expected } from '../sim/statModel';
@@ -180,7 +180,8 @@ export function playLiveGame(s: GameState, a: LiveGameArgs): { line: StatLine; u
     const drive = clamp(0.42 + (p.attrs.FIN - lv) * 0.006 + (p.morale - 60) * 0.001, 0.18, 0.66);
     const pass = 0.4 - (three ? 0.05 : 0);
     const status = need > 0 ? `Down ${need}` : need < 0 ? `Up ${-need}` : 'Tied';
-    const call = nextPick(s, {
+    // round 25: "pull@perfect": the call, then how his timing on the meter went
+    const [call, timing] = nextPick(s, {
       ...head,
       stage: 'clutch',
       title: 'Last possession',
@@ -195,9 +196,11 @@ export function playLiveGame(s: GameState, a: LiveGameArgs): { line: StatLine; u
         { id: 'drive', label: 'Attack the rim', detail: 'Two points or a foul', risk: drive >= 0.5 ? 'Medium' : 'High' },
         { id: 'pass', label: 'Draw two and find the open man', detail: 'Trust a teammate', risk: 'Medium' },
       ],
-    });
+    }).split('@');
     const pts = call === 'drive' ? 2 : three ? 3 : 2;
-    const prob = call === 'pull' ? pull : call === 'drive' ? drive : pass;
+    const odds = call === 'pull' ? pull : call === 'drive' ? drive : pass;
+    const T = CLUTCH_TIMING;
+    const prob = timing === 'perfect' ? Math.min(T.max, odds + T.perfect) : timing === 'good' ? Math.min(T.max, odds + T.good) : timing === 'late' ? Math.max(T.min, odds + T.late) : odds;
     const made = chance(rng, prob);
     lastShot =
       call === 'pull'

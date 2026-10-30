@@ -142,8 +142,8 @@ export function choose(s: GameState, choiceId: string): void {
 function chooseInner(s: GameState, choiceId: string): void {
   const d = s.pending.shift();
   if (!d) return;
-  // plans may come as two ids joined by '+'
-  const ids = d.kind === 'plan' ? choiceId.split('+').slice(0, 2) : [choiceId];
+  // plans may come as two ids joined by '+'; a last possession as the call and its timing joined by '@' (round 25)
+  const ids = d.kind === 'plan' ? choiceId.split('+').slice(0, 2) : d.kind === 'live' ? [choiceId.split('@')[0]] : [choiceId];
   const c = ids.every((id) => d.choices.some((x) => x.id === id && !x.disabled)) ? d.choices.find((x) => x.id === ids[0]) : undefined;
   if (!c || c.disabled) {
     s.pending.unshift(d);

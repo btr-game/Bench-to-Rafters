@@ -1521,3 +1521,12 @@ Reached from the start page and from the bottom of Home (a career in progress is
   numbers (season.teamFx) as well as notes. The total puts his team in a rank among the league's
   teams. It shows as a bar chart on the Season tab and as "Why it went this way" on the season
   summary.
+- **The playable finals change the result** (the owner: of course). With playable playoffs on,
+  the last possession of a close game (within three points) was already his call; now a pull-up
+  or a drive goes to the timing meter from streetball (moved to components/TimingMeter.tsx), and
+  the timing moves the chance it drops: perfect +35 points (at most 95%), good +12, late -15 (at
+  least 5%). The finals are played this way like every other playable playoff game, so his
+  timing can win or lose a title. The finals reel after the title stays a replay of what
+  happened. A test of 40 careers timing every last shot perfectly against 40 timing them late:
+  899 against 769 last possessions (winning more series means more close games), 27 against 29
+  titles (one shot rarely swings a series; it decides the game it is in).
