@@ -11,22 +11,36 @@ Setup commands are in `SETUP.md`. Ideas kept for later are in `ROADMAP.md`.
 After each request, **clear dead code**: unused functions, exports, imports, CSS rules and
 leftovers of replaced features.
 
-After a long task, **make graphics for the newly added functions** (pixel art in the game's style:
-icons, art for new cards and pages), as part of the same task (owner, round 24).
+**End-of-round checklist** (owner, round 25; it extends the round 21 and 24 rules). During a round,
+build features only; everything below waits until the **end of the round**, in this order, and
+nothing on it is done feature by feature. Keep a running list of what each item will need (new
+functions, systems changed since the last balance run, out-of-date guide sections) and **remind
+the owner when the work looks close to the end of the round**.
 
-Deferred to the end steps (owner's call, round 21): no project summary or report at the end of
-each request any more, and balance checks and guide updates wait too. Keep a running list of
-what they will need (systems changed since the last balance run, guide sections that are out of
-date) and **remind the owner when the work looks close to the end steps**. Those end steps are:
-
-1. **Balance**: measure with the harness (`scripts/harness.ts`, casual mini-game play, smart
-   policy) against the last approved numbers (round 22: mean peak 74.4923, NBA 78.3%,
-   All-Star 35.8%, MVP 11.9%, Hall of Fame 11.2%, titles 29.2%).
-2. **Update the game guide**: the manual (`SECTIONS` and `QUICK` in
-   `src/ui/components/Guide.tsx`: big headers, expandable cards) and Guide mode (`guideStep` in
-   the same file), so both describe the game as it now is.
-3. **Project summary**: only if the owner asks for it again (the Word document in
-   `docs/reports/*-project-summary.docx`).
+1. **Graphics**: pixel art in the game's style for every new function: icons, art for new cards,
+   pages, items and logos.
+2. **Sound**: a sound effect (and music cue, where it fits) for every new function, once the
+   sound system exists.
+3. **Fast break and simple text**: every new screen respects both (fast break skips or
+   auto-resolves it; simple text hides its descriptions).
+4. **Contrast and keyboard**: new UI readable in both themes and usable with the keyboard.
+5. **Achievements** for the new systems.
+6. **Harness**: `smartChoice` in `scripts/harness.ts` handles every new decision kind.
+7. **Dead code**: unused functions, exports, imports, CSS rules, leftovers of replaced features.
+8. **Tests** for new engine logic, then the full checks below (tsc, vitest, build).
+9. **Balance**: measure with the harness (casual mini-game play, smart policy) against the last
+   approved numbers (round 22: mean peak 74.4923, NBA 78.3%, All-Star 35.8%, MVP 11.9%,
+   Hall of Fame 11.2%, titles 29.2%) and report; the owner decides on any change.
+10. **Game guide**: the manual (`SECTIONS` and `QUICK` in `src/ui/components/Guide.tsx`) and
+    Guide mode (the tour steps in `src/ui/components/GuideTour.tsx`), so both describe the game
+    as it now is.
+11. **Dev deck**: a card for every new function or page (`src/dev/cards.ts`).
+12. **Project summary**: the generator's text and data for the new systems, regenerating both the
+    dev deck's summary chapter (`src/dev/summary.json`) and the Word document
+    (`docs/reports/*-project-summary.docx`, sent to the owner when asked).
+13. **DECISIONS.md** for the round (and ROADMAP.md for ideas kept for later).
+14. **Publish both**: the game and the dev deck artifacts (no owner email anywhere), then commit
+    and push.
 
 Other preferences:
 
