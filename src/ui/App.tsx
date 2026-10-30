@@ -14,6 +14,7 @@ import { DailyStrip } from './mini/Daily';
 import { Overlays } from './components/Overlays';
 import { MiniGames } from './mini/MiniGames';
 import { Icon } from './art/Icon';
+import { CareerLog } from './screens/CareerLog';
 import { ICON_FOR } from './art/icons';
 
 const HOST_THEME = typeof document !== 'undefined' ? document.documentElement.getAttribute('data-theme') : null;
@@ -95,6 +96,7 @@ export function App() {
   const theme = useStore((s) => s.theme);
   const court = useStore((s) => s.court);
   const mini = useStore((s) => s.mini);
+  const page = useStore((s) => s.page);
   const simple = useStore((s) => s.simple);
   useEffect(() => {
     document.documentElement.classList.toggle('simple', simple);
@@ -116,6 +118,7 @@ export function App() {
 
   useKeys(!mini && !!game);
 
+  if (page === 'log') return <CareerLog />;
   if (mini) return <MiniGames />;
   if (!game) return <Create />;
 

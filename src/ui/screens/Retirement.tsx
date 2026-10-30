@@ -13,8 +13,9 @@ import { fmtMoney, seasonLabel } from '../format';
 import { compareCareer } from '../../engine/awards/compare';
 import { LegacyRankCard, LegacyTierList } from '../components/Legacy';
 import { legacyIndex } from '../../engine/awards/tiers';
-import { canShareFiles, downloadCareerCard, shareCareerCard } from '../share';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { careerRecord } from '../../engine/career/record';
+import { CardActions, LoggedNote } from './CareerLog';
 import { LegendarySeasons } from '../components/Legendary';
 import { CareerTimeline } from '../components/Timeline';
 import { DailyResult } from '../mini/Daily';
@@ -113,34 +114,6 @@ function Championships({ g }: { g: GameState }) {
   );
 }
 
-function ShareBar({ g }: { g: GameState }) {
-  const [busy, setBusy] = useState(false);
-  const [msg, setMsg] = useState('');
-  const run = async (share: boolean) => {
-    setBusy(true);
-    setMsg('');
-    try {
-      if (share && (await shareCareerCard(g))) setMsg('');
-      else setMsg(await downloadCareerCard(g));
-    } catch {
-      setMsg('Could not make the image in this browser.');
-    }
-    setBusy(false);
-  };
-  return (
-    <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-      <button className="btn" disabled={busy} onClick={() => run(false)}>
-        Download career card
-      </button>
-      {canShareFiles() && (
-        <button className="btn ghost" disabled={busy} onClick={() => run(true)}>
-          Share
-        </button>
-      )}
-      {msg && <span className="small muted">{msg}</span>}
-    </div>
-  );
-}
 
 /** The NBA teams he played for, in order (round 12). */
 function NbaTeams({ g }: { g: GameState }) {
@@ -185,6 +158,7 @@ function NbaTeams({ g }: { g: GameState }) {
 
 export function Retirement({ g }: { g: GameState }) {
   const reset = useStore((s) => s.reset);
+  const rec = useMemo(() => careerRecord(g), [g]);
   const p = g.player;
   const v = verdictFor(g);
   const hof = hallOfFame(g);
@@ -216,9 +190,10 @@ export function Retirement({ g }: { g: GameState }) {
         </div>
         <div className="verdict">{v.tier}</div>
         <p className="lede">{v.line}</p>
+        <LoggedNote />
         {hof && <div className="toast">{hof === 'first' ? 'Inducted into the Hall of Fame on the first ballot.' : 'Inducted into the Hall of Fame.'}</div>}
-        <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-          <ShareBar g={g} />
+        <div className="row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+          <CardActions rec={rec} />
           <button className="btn ghost" onClick={reset}>
             {UI.newCareer}
           </button>

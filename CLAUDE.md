@@ -4,7 +4,7 @@ A browser basketball career game: Vite + React 18 + TypeScript (strict) + Zustan
 seeded, deterministic engine in `src/engine/` that the UI and the balance harness both drive
 through `newGame`, `prompt`, `choose` and `advance` (`src/engine/flow.ts`). Every tunable number
 lives in `src/engine/balance.ts`. Design decisions, round by round, are in `DECISIONS.md`.
-Setup commands are in `SETUP.md`.
+Setup commands are in `SETUP.md`. Ideas kept for later are in `ROADMAP.md`.
 
 ## Standing rules from the owner
 

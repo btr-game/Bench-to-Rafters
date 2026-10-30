@@ -13,6 +13,7 @@ import { ORIGINS } from '../../content/origins';
 import { edgeOf } from '../../engine/career/nationality';
 import { ht, seasonLabel } from '../format';
 import { MiniGamesCard } from '../mini/MiniGames';
+import { CareerLogCard } from './CareerLog';
 import { FlagArt } from '../art/Flag';
 import { POS_STYLE, PositionCard } from '../art/PositionCard';
 import { HeroArt, archPose } from '../art/Hero';
@@ -48,6 +49,7 @@ function ResumeCard() {
           {seasonLabel(save.year)}
           {save.ovr ? ` · peak OVR ${save.ovr}` : ''}
         </div>
+        {!save.retired && !failed && <div className="muted small">Starting a new career below replaces this one.</div>}
         {failed && <div className="small" style={{ color: 'var(--bad)' }}>That save could not be read. Start a new career below.</div>}
       </div>
       <button className="btn" onClick={() => setFailed(!resume())}>
@@ -175,8 +177,10 @@ export function Create() {
             ))}
           </div>
           <p className="muted small">The league is the same at every difficulty. What changes is your potential, how fast you grow and how often you get hurt. Want it quicker? Flip the Fast break switch inside the game, any time.</p>
-          <MiniGamesCard />
-
+          <div className="start-cards">
+            <MiniGamesCard />
+            <CareerLogCard />
+          </div>
         </section>
       )}
 

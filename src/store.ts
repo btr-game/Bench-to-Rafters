@@ -12,11 +12,14 @@ import { advance as engineAdvance, changeFocus, changeNumber, changePosition, ch
 import { seasonLabel } from './ui/format';
 import { tabKey } from './ui/selectors';
 import { weightOf } from './engine/player/weight';
+import { careerRecord } from './engine/career/record';
+import { logCareer, type LogResult } from './ui/careerLog';
 
 export type Tab = 'home' | 'season' | 'player' | 'league' | 'records';
 export type Theme = 'auto' | 'light' | 'dark';
 /** The page background: plain, a hardwood floor or streetball asphalt (round 17). */
 export type Court = 'classic' | 'hardwood' | 'street';
+export type Page = 'log';
 export type Mini = 'hub' | 'office' | 'threes' | 'legends' | 'lab' | 'dunk' | 'street' | 'daily';
 
 /** A short interstitial between steps (not part of the saved game). */
@@ -66,6 +69,11 @@ interface Store {
   resume: () => boolean;
   /** Whether the autosave works here ('off' when the browser blocks storage or the save is too big). */
   saving: 'ok' | 'off';
+  /** Round 24: a page of its own (the career log, the community pages), over the start page or a career. */
+  page: Page | null;
+  setPage: (p: Page | null) => void;
+  /** What logging the career that just ended did (for the note on the retirement page). */
+  logged: LogResult | null;
   /** Round 22: the daily challenge in progress, with the career and setting it stepped away from. */
   daily: { day: string; stash: GameState | null; simple: boolean } | null;
   startDaily: () => void;
@@ -183,6 +191,12 @@ export const useStore = create<Store>((set, get) => ({
   },
   seen: {},
   saving: 'ok',
+  page: null,
+  setPage: (page) => {
+    set({ page });
+    top();
+  },
+  logged: null,
   daily: null,
   startDaily: () => {
     const day = todayKey();
@@ -344,7 +358,11 @@ export const useStore = create<Store>((set, get) => ({
     top();
   },
   endTransition: () => set({ transition: null }),
-  reset: () => set({ game: null, tab: 'home', transition: null }),
+  // ending a career is the only thing that clears the save (round 24)
+  reset: () => {
+    writeSave(null);
+    set({ game: null, tab: 'home', transition: null });
+  },
   mini: null,
   claimMini: (r) => {
     const g = get().game;
@@ -385,18 +403,35 @@ export const useStore = create<Store>((set, get) => ({
   },
 }));
 
-// save a moment after each change (a whole career is a few hundred KB of JSON)
+// save a moment after each change (a whole career is a few hundred KB of JSON). Round 24: the
+// autosave only ever writes a career, never clears one: going back to the start page, or ending a
+// daily challenge started there, used to wipe the career waiting behind Continue.
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
+function flushSave() {
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = null;
+  const st = useStore.getState();
+  if (!st.game || st.daily) return;
+  const ok = writeSave(st.game);
+  if ((ok ? 'ok' : 'off') !== st.saving) useStore.setState({ saving: ok ? 'ok' : 'off' });
+}
 useStore.subscribe((now, before) => {
   if (now.game === before.game) return;
   if (saveTimer) clearTimeout(saveTimer);
   // a daily challenge is never saved: the career on this device stays as it was
-  if (now.daily) return;
-  saveTimer = setTimeout(() => {
-    const ok = writeSave(useStore.getState().game);
-    if ((ok ? 'ok' : 'off') !== useStore.getState().saving) useStore.setState({ saving: ok ? 'ok' : 'off' });
-  }, 500);
+  if (now.daily || !now.game) return;
+  saveTimer = setTimeout(flushSave, 500);
 });
+// round 24: a career that just ended goes into the career log (daily runs and lab players don't)
+useStore.subscribe((now, before) => {
+  const g = now.game;
+  if (!g || !before.game || g === before.game || g.step !== 'retired' || before.game.step === 'retired') return;
+  if (now.daily || g.flags.daily || g.mode === 'lab') return;
+  useStore.setState({ logged: logCareer(careerRecord(g)) });
+});
+
+// closing the tab inside the half second still keeps the last move
+if (typeof window !== 'undefined') window.addEventListener('pagehide', () => saveTimer && flushSave());
 
 // development only: lets browser tests load a finished career (stripped from production builds)
 if (import.meta.env.DEV) (window as unknown as { __btr?: typeof useStore }).__btr = useStore;

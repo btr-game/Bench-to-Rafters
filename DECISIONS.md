@@ -1298,3 +1298,23 @@ Reached from the start page and from the bottom of Home (a career in progress is
   change), a wider potential spread (0.2%, but NBA 53.3% to 48.2%), and a 2% generational draw
   (no more 99s, MVP 1.95% to 3.75%). Owner: the odds are fine; any later fix keeps them under 2%
   for Regular guy and 0.5% for Reality. No change.
+
+## Round 24
+
+- **Continue fixed** (owner: "the continue function doesn't work that well"). Ending a daily
+  challenge started from the start page wrote an empty game over the saved career, so Continue
+  vanished. The autosave now only ever writes a career; only "New career" clears the save. The last
+  move is written straight away when the tab closes, and the Continue card says that starting a
+  new career replaces the saved one.
+- **Career log.** Every finished career leaves its career card in a log on this device (daily runs
+  and lab players don't). Five at most: from four the page warns, and a sixth pushes out the oldest;
+  any card can be deleted. The log keeps a compact career record (`engine/career/record.ts`, about
+  2 KB) rather than the whole save, and the card is now drawn from that record.
+- **Deep bench minutes** (owner: "increase minutes to 0~3 minutes"). A deep-bench player now gets
+  0-3 minutes every game (it was 1-5 minutes in about one game in five, 0.66 a game on average;
+  now 1.5). Needs the next balance check.
+- **Surge** (owner asked why it showed 0%). Not a bug: the table showed a placeholder weight. The
+  surge chance is worked out per player: only at 25 or younger with a hidden growth rate above 1.1,
+  weight (rate - 1.1) x 0.25, from 2.32% a half at rate 1.2 to 16.8% at 2.2 (normal mood). The game
+  reference now spells this out.
+- Translations and the action-cam mini-game are kept in `ROADMAP.md` for later.

@@ -13,7 +13,6 @@ import {
   GROWTH_RATE,
   MODES, FAST_GROWTH,
   AGENT_CUT,
-  DEEP_BENCH,
   FORM,
   blendPlans,
   MORALE_PERF,
@@ -239,11 +238,8 @@ const newAcc = (): HalfAcc => ({ minutes: 0, games: 0, played: 0, gmsc: 0, expGm
 
 function rollMinutes(rng: Rng, role: RoleKey, level: LevelKey, post: boolean): number {
   const len = LEVELS[level].gameLen;
-  if (role === 'deep') {
-    if (!chance(rng, post ? DEEP_BENCH.appearChance / 2 : DEEP_BENCH.appearChance)) return 0;
-    return int(rng, DEEP_BENCH.minutes[0], DEEP_BENCH.minutes[1]);
-  }
   const [a, b] = ROLE_MINUTES[role];
+  if (role === 'deep') return int(rng, a, b);
   const bump = post && (role === 'key' || role === 'starter') ? 2 : 0;
   return clamp(Math.round(((range(rng, a, b) + bump) * len) / 48), 0, len);
 }
@@ -377,7 +373,7 @@ function makeHook(s: GameState, league: League, level: LevelKey, acc: HalfAcc, s
 
 function userSlot(s: GameState, team: Team, level: LevelKey): UserSlot {
   const [a, b] = ROLE_MINUTES[s.season!.role];
-  const mins = s.season!.role === 'deep' ? DEEP_BENCH.appearChance * 3 : ((a + b) / 2) * (LEVELS[level].gameLen / 48);
+  const mins = s.season!.role === 'deep' ? (a + b) / 2 : ((a + b) / 2) * (LEVELS[level].gameLen / 48);
   return { teamId: team.id, rank: s.season!.roleRank, usageW: usageWeight(s.player.attrs), minutes: mins };
 }
 

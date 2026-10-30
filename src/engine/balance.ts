@@ -463,10 +463,10 @@ export const ROLE_MINUTES: Record<RoleKey, [number, number]> = {
   sixth: [24, 28],
   rotation: [14, 22],
   bench: [3, 8],
-  deep: [0, 0],
+  // round 24 (owner): the deep bench gets 0-3 minutes of garbage time every game, whatever the
+  // game's length (it used to be 1-5 minutes in about one game in five)
+  deep: [0, 3],
 };
-// Deep-bench players still log garbage time in some games.
-export const DEEP_BENCH = { appearChance: 0.22, minutes: [1, 5] as [number, number] };
 // Minutes by rank for generated rosters (of 48)
 export const RANK_MINUTES = [35, 33, 31, 29.5, 28.5, 25, 19, 16, 14, 6, 4, 2.5, 1, 0.5, 0.3];
 export const TRUST_ROLE = { up: 70, down: 30 };

@@ -2,7 +2,7 @@
 // NCAA conference tournaments, the high school national invitational, the McDonald's
 // game, and national-team events (youth World Cups, FIBA World Cup, Olympics).
 
-import { DEEP_BENCH, FAN_VOTE, LEVELS, MORALE_PERF, ROLE_MINUTES } from '../balance';
+import { FAN_VOTE, LEVELS, MORALE_PERF, ROLE_MINUTES } from '../balance';
 import { chance, clamp, int, logistic, normal, range, shuffle } from '../rng';
 import type { GameLog, GameState, LevelKey, RoleKey, StatLine, Team, TourneyRecord } from '../types';
 import { expected, expectedGameScore, gameScore, sampleGame, usageWeight, valuePerGame, genProfile, genUsageWeight, perGame } from './statModel';
@@ -45,7 +45,7 @@ export function exhibitionGame(
   let line: StatLine | null = null;
   let minutes = 0;
   if (!p.injury || p.injury.key === 'dtd') {
-    if (role === 'deep') minutes = chance(rng, 0.5) ? int(rng, DEEP_BENCH.minutes[0], DEEP_BENCH.minutes[1] + 4) : 0;
+    if (role === 'deep') minutes = int(rng, ROLE_MINUTES.deep[0], ROLE_MINUTES.deep[1]);
     else {
       const [a, b] = ROLE_MINUTES[role];
       minutes = Math.round((range(rng, a, b) * L.gameLen) / 48);
