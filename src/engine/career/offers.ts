@@ -11,6 +11,7 @@ import { LEVEL_RANK, outlookOf, lastRecord, projectedRank, rankOnRoster, ROLE_LA
 import { fmtMoney, marketValue, minSalary } from '../economy/salary';
 import { starsForColleges } from './origin';
 import { ROLE_ORDER } from '../balance';
+import { newsFx } from './news';
 
 const TIER_LABEL: Record<NcaaTier, string> = { blue: 'Blue blood', power: 'Power program', major: 'Major conference', mid: 'Mid-major' };
 
@@ -285,11 +286,13 @@ export function nbaFreeAgentOffers(s: GameState, ownTeamId: string | null, lastS
   }
   const ageMult = p.age >= F.oldAge ? F.oldMult : p.age >= F.vetAge ? F.vetMult : 1;
   const bar = leagueRankOvr(s, F.maxRank);
-  const lambda = (Math.max(0, ovr - bar) * F.perPoint + lastShare * F.shareW + p.rep * F.repW) * ageMult;
+  // round 25: what the papers wrote this season (career/news.ts)
+  const news = newsFx(s);
+  const lambda = Math.max(0, (Math.max(0, ovr - bar) * F.perPoint + lastShare * F.shareW + p.rep * F.repW) * ageMult + news.offers);
   const n = Math.min(F.maxOffers, poisson(s.rng, lambda));
   for (const team of interestedTeams(s, ovr, p.age >= F.oldAge ? F.oldMaxRank : F.maxRank, n, ownTeamId)) {
     const rank = rankOnRoster(team, ovr);
-    const sal = rank >= F.maxRank - 1 ? minSal : Math.max(minSal, value * range(s.rng, 0.82, 1.08));
+    const sal = rank >= F.maxRank - 1 ? minSal : Math.max(minSal, value * range(s.rng, 0.82, 1.08) * news.salary);
     offers.push(nbaOffer(s, team, roleForRank(rank), round1(sal), clamp(yearsBase + int(s.rng, -2, 0), 1, 5), sal <= minSal ? 'min' : 'standard'));
   }
   return offers;

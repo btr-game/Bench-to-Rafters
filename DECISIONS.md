@@ -1563,3 +1563,15 @@ Reached from the start page and from the bottom of Home (a career in progress is
   column, and the career card names him with the head to head. Over 200 harness careers, all 157
   that reached the NBA had a rival: 43 at the draft level, 91 head to head, 23 MVP rivals; 13.22
   games against him on average, 55.35% won.
+- **Around the league, tied to his career, and the news AI** (the owner: the suggestions are good;
+  an AI whose news changes the options, like trade rumours bringing more offers and more money).
+  At the end of every pro season the papers read the season (career/news.ts) and write about
+  him: trade rumours (low trust, a losing team or a contract year, 55% of those seasons: more
+  suitors and +4% money in the summer's free agency, -2 morale), MVP buzz (top five: +5% money,
+  +1 reputation), questions about his body (a long injury or two: fewer suitors, -6%), a
+  breakout (+4 OVR: more suitors, +3%), doubts (-3 OVR: -4%), how his old team did without him,
+  and where he stands against his rival. NBA free agency adds the suitors and multiplies the
+  money. Around the league now opens with "About you" (this season's news and what it does to
+  his summer), a power ranking (the top five by record, plus his team), and under each story
+  about another team a line on what it means for him (in his way, a likely final opponent, games
+  he should win, a seeding fight).

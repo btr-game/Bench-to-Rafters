@@ -15,8 +15,9 @@ import { Icon } from '../art/Icon';
 import { STORY_ICON } from '../art/icons';
 import { TeamArt } from '../art/Crest';
 import { styleLeague } from '../art/Player';
-import type { Team } from '../../engine/types';
+import type { League, Team } from '../../engine/types';
 import type { LeagueStory } from '../../engine/world/stories';
+import { NEWS_EFFECT } from '../../engine/career/news';
 
 /** A story's banner: the team's crest and the story's mark; a rivalry puts your crest against theirs. */
 function StoryArt({ x, t, me, league }: { x: LeagueStory; t?: Team; me?: Team; league?: string }) {
@@ -208,6 +209,52 @@ export function DuoCard({ g }: { g: GameState }) {
   );
 }
 
+/** Round 25: what a story about another team means for his team. */
+function forYou(t: Team | undefined, me: Team | undefined): string | null {
+  if (!t || !me || t.id === me.id) return null;
+  const same = t.conf === me.conf;
+  if (t.strength >= me.strength + 1) return same ? 'For you: in your way, a likely playoff opponent' : 'For you: a possible opponent in the final';
+  if (t.strength <= me.strength - 3) return 'For you: games you should win';
+  return same ? 'For you: a team you will fight for seeding' : null;
+}
+
+/** Round 25: the league's top five by record (strength breaks ties), and where his team stands. */
+function PowerRanking({ lg, myId }: { lg: League; myId: string | null }) {
+  const ranked = [...lg.teams].sort((a, b) => b.w / Math.max(1, b.w + b.l) - a.w / Math.max(1, a.w + a.l) || b.strength - a.strength);
+  const mine = ranked.findIndex((t) => t.id === myId);
+  const rows = ranked.slice(0, 5).map((t, i) => ({ t, i }));
+  if (mine >= 5) rows.push({ t: ranked[mine], i: mine });
+  return (
+    <ol className="power-rank">
+      {rows.map(({ t, i }) => (
+        <li key={t.id} className={t.id === myId ? 'mine' : ''} value={i + 1}>
+          <span>{t.name}</span>
+          <span className="muted">
+            {t.w}–{t.l}
+          </span>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+/** Round 25: the papers on him this season, and what it does to his summer (career/news.ts). */
+function AboutYou({ g }: { g: GameState }) {
+  const now = (g.news ?? []).filter((n) => n.year === g.year);
+  if (now.length === 0) return null;
+  return (
+    <div className="stack about-you" style={{ gap: 4 }}>
+      <span className="kicker">About you</span>
+      {now.map((n) => (
+        <div key={n.kind} className="small">
+          {n.text}
+          {NEWS_EFFECT[n.kind] && <span className="story-fx"> · {NEWS_EFFECT[n.kind]}</span>}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function StoriesCard({ g }: { g: GameState }) {
   const mutate = useStore((s) => s.mutate);
   const [more, setMore] = useState(false);
@@ -241,6 +288,13 @@ export function StoriesCard({ g }: { g: GameState }) {
         {left > 0 && <span className="small muted">Call it: {left} left</span>}
         <span className="fold-arrow" aria-hidden="true">{open ? '▴' : '▾'}</span>
       </button>
+      <AboutYou g={g} />
+      {open && lg && lg.teams.length >= 6 && (
+        <div className="stack" style={{ gap: 4 }}>
+          <span className="kicker">Power ranking</span>
+          <PowerRanking lg={lg} myId={g.stage === 'NBA' ? g.teamId : lg.userTeamId} />
+        </div>
+      )}
       {!open && (
         <ul className="story-lines">
           {order.map(({ x }) => (
@@ -264,6 +318,7 @@ export function StoriesCard({ g }: { g: GameState }) {
                 <b>{x.title}</b>
               </div>
               <div className={`small${x.result ? '' : ' prose'}`}>{x.result ?? x.text}</div>
+              {!x.mine && forYou(t, lg?.teams.find((y) => y.id === (g.stage === 'NBA' ? g.teamId : lg?.userTeamId))) && <div className="small story-fx">{forYou(t, lg?.teams.find((y) => y.id === (g.stage === 'NBA' ? g.teamId : lg?.userTeamId)))}</div>}
               {x.mine && (
                 <div className="small story-fx">
                   Team strength {x.mine.regular >= 0 ? '+' : ''}

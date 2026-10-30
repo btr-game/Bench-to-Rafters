@@ -519,6 +519,7 @@ export interface GameState {
   teamSeasons: Record<string, number>; // NBA team id -> seasons
   rivals: Record<string, number>; // generated player name -> times they beat you for an award
   rivalry?: Rivalry; // round 25: the one rival (career/rivalry.ts)
+  news?: import('./career/news').NewsItem[]; // round 25: what the papers wrote about him (career/news.ts)
   feed: Reaction[];
   milestones: string[];
   retiredAt: number | null;

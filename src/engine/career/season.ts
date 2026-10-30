@@ -80,6 +80,7 @@ import { awardNickname, payBrand } from './nickname';
 import { rollFine } from './fines';
 import { payStaff } from './staff';
 import { updateRivalry } from './rivalry';
+import { writeNews } from './news';
 
 /** What he adds to winning beyond his OVR, scaled by his share of the game (career/team.ts). */
 const edgeFor = (a: Attrs, ovr: number, share: number, post: boolean): number => {
@@ -878,6 +879,7 @@ function finishSeason(s: GameState): void {
   s.lastSummary = rec;
   awardNickname(s, team.color, team.name);
   updateRivalry(s);
+  writeNews(s);
   s.feed.unshift(reactionsForSeason(s, rec));
   if (s.feed.length > 12) s.feed.length = 12;
 
