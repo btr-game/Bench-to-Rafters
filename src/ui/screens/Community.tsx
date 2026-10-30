@@ -168,7 +168,7 @@ function Board({ c }: { c: Api }) {
                     {NAMES.pos[r.rec.pos]} · {r.rec.tier} · peak {Math.round(r.rec.peak)} · {r.rec.titles} title{r.rec.titles === 1 ? '' : 's'}
                   </small>
                 </span>
-                <span className="board-score">{r.score}</span>
+                <span className="board-score">{r.score.toFixed(1)}</span>
               </button>
               {open === r.id && <CardImage rec={r.rec} />}
             </li>
@@ -401,7 +401,7 @@ export function CommunityNote({ rec }: { rec: CareerRecord }) {
     <div className="log-note community-note">
       <Icon name="podium" size={22} />
       <span>
-        Score {scoreOf(rec)} on the {MODES[rec.mode].name} boards.
+        Career index {scoreOf(rec).toFixed(1)}{rec.index ? ` (career ${rec.index.total.toFixed(1)}, best five seasons ${rec.index.best.toFixed(1)})` : ''} on the {MODES[rec.mode].name} boards.
         {hall99Ok(rec) ? ' A 99 in Reality hits hard: you are in the Reality 99 hall.' : ''}
         {statueOk(rec) && built !== 'ok' ? ` ${rec.legacy} legacy points: this career can have a statue in the plaza.` : ''}
         {built === 'ok' ? ' Your statue stands in the plaza.' : built === 'full' ? ' The plaza is full (100 statues).' : built === 'denied' ? ' Raising a statue needs an invitation to post here.' : built === 'error' ? ' The statue could not be raised. Try again.' : ''}

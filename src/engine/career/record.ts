@@ -3,7 +3,7 @@
 // so a logged career can be looked at and downloaded long after its save is gone.
 
 import type { GameState, Pos } from '../types';
-import { championships, count, hallOfFame, nbaCareerPoints, nbaTitles, raftersTeams, verdictFor } from '../awards/legacy';
+import { careerIndex, championships, count, hallOfFame, nbaCareerPoints, nbaTitles, raftersTeams, verdictFor } from '../awards/legacy';
 import { NBA_TEAMS } from '../../content/teams';
 import { TIERS, legacyRank, tierCounts } from '../awards/tiers';
 import type { Mode } from '../balance';
@@ -25,6 +25,7 @@ export interface CareerRecord {
   tier: string;
   verdict: string;
   legacy: number; // legacy points
+  index?: { total: number; best: number; score: number }; // round 25: the career index (older records have none)
   rank: number; // all-time legacy rank (101 = outside the top 100)
   rankBehind: string | null;
   hof: 'first' | 'hof' | null;
@@ -105,6 +106,7 @@ export function careerRecord(g: GameState, now = new Date()): CareerRecord {
     tier: v.tier,
     verdict: v.line,
     legacy: Math.round(r.pts),
+    index: careerIndex(g),
     rank: r.rank,
     rankBehind: r.rank <= 100 && r.above ? r.above.name : null,
     hof,

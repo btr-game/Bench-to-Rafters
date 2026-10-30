@@ -1416,3 +1416,10 @@ Reached from the start page and from the bottom of Home (a career in progress is
   swat it away), a steal (you poke it loose), a missed block note is a jumper that drops, a missed
   steal note a blow-by; holding a long note shows you walling up a post-up or sliding with his
   handle. The scene is dimmed and the lanes see-through, so the notes stay easy to read.
+- **The leaderboards rank by a career index** (the owner chose it from the suggested metrics). It
+  is built like the JAWS score for real Hall of Fame cases: each season is worth its honours
+  (legacy points of that year's awards), its NBA points (1 per 1,500) and a tenth of a point for
+  every OVR above 60; the index averages the career total with the best five seasons in a row.
+  Over 1,000 harness careers: mean 40.1196, median 17.45, top 10% from 117.82; Hall of Famers
+  average 169.468, careers that never reached the NBA 1.9242; correlation with legacy points
+  0.991186. Records logged before this keep their legacy points as their score.

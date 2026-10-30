@@ -10,7 +10,7 @@ import { ARCHETYPES } from '../src/engine/player/archetypes';
 import { ATTRS, LEGACY, OVR_WEIGHTS, POSITIONS, type Mode } from '../src/engine/balance';
 import { makeRng, next, pick, int, type Rng } from '../src/engine/rng';
 import type { Choice, Decision, GameState, Pos } from '../src/engine/types';
-import { count, legacyScore } from '../src/engine/awards/legacy';
+import { careerIndex, count, legacyScore } from '../src/engine/awards/legacy';
 import { ovrOf } from '../src/engine/player/ovr';
 import { trueShooting, valuePerGame } from '../src/engine/sim/statModel';
 
@@ -142,6 +142,7 @@ export interface CareerResult {
   proCareer: boolean;
   verdict: string;
   legacy: number;
+  index: { total: number; best: number; score: number }; // round 25: the leaderboards' career index
   peakOvr: number;
   potential: number;
   startOvr: number;
@@ -247,6 +248,7 @@ export function runCareer(seed: number, policy: Policy, mode: Mode = 'standard',
     proCareer: s.history.some((h) => h.level === 'NBA' || h.level === 'GL' || h.level === 'EU' || h.level === 'INT'),
     verdict: s.verdict ?? '?',
     legacy: legacyScore(s),
+    index: careerIndex(s),
     peakOvr: s.player.peakOvr,
     potential: s.player.potential,
     startOvr: ovrOf(s.player.startAttrs, s.player.pos),

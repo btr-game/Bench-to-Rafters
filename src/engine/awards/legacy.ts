@@ -1,82 +1,93 @@
-import { LEGACY } from '../balance';
+import { CAREER_INDEX, LEGACY } from '../balance';
 import { RIVALS } from '../../content/teams';
 import type { GameState } from '../types';
 
+/** What one honour adds to the legacy score. */
+function awardPoints(key: string): number {
+  switch (key) {
+    case 'TITLE':
+      return LEGACY.title;
+    case 'TITLEKEY':
+      return LEGACY.titleKey;
+    case 'MVP':
+      return LEGACY.mvp;
+    case 'FMVP':
+      return LEGACY.finalsMvp;
+    case 'ALLNBA1':
+      return LEGACY.allNba[0];
+    case 'ALLNBA2':
+      return LEGACY.allNba[1];
+    case 'ALLNBA3':
+      return LEGACY.allNba[2];
+    case 'ALLSTAR':
+      return LEGACY.allStar;
+    case 'DPOY':
+      return LEGACY.dpoy;
+    case 'ROY':
+      return LEGACY.roy;
+    case 'SCORING':
+      return LEGACY.scoring;
+    case 'ASTLEAD':
+    case 'REBLEAD':
+    case 'STLLEAD':
+    case 'BLKLEAD':
+      return LEGACY.statTitle;
+    case 'SIXTH':
+      return LEGACY.sixth;
+    case 'NCAATITLE':
+      return LEGACY.ncaaTitle;
+    case 'EUMVP':
+    case 'EUTITLE':
+      return LEGACY.euro;
+    case 'OLYGOLD':
+      return 3;
+    case 'WCGOLD':
+    case 'NBACUP':
+      return 1.5;
+    case 'OLYMEDAL':
+    case 'WCMEDAL':
+    case 'CUPMVP':
+      return 0.75;
+    case 'ASIANGOLD':
+      return 0.5;
+    case 'ASIANMEDAL':
+      return 0.25;
+    default:
+      return 0;
+  }
+}
+
 export function legacyScore(s: GameState): number {
   let pts = 0;
-  for (const a of s.awards) {
-    switch (a.key) {
-      case 'TITLE':
-        pts += LEGACY.title;
-        break;
-      case 'TITLEKEY':
-        pts += LEGACY.titleKey;
-        break;
-      case 'MVP':
-        pts += LEGACY.mvp;
-        break;
-      case 'FMVP':
-        pts += LEGACY.finalsMvp;
-        break;
-      case 'ALLNBA1':
-        pts += LEGACY.allNba[0];
-        break;
-      case 'ALLNBA2':
-        pts += LEGACY.allNba[1];
-        break;
-      case 'ALLNBA3':
-        pts += LEGACY.allNba[2];
-        break;
-      case 'ALLSTAR':
-        pts += LEGACY.allStar;
-        break;
-      case 'DPOY':
-        pts += LEGACY.dpoy;
-        break;
-      case 'ROY':
-        pts += LEGACY.roy;
-        break;
-      case 'SCORING':
-        pts += LEGACY.scoring;
-        break;
-      case 'ASTLEAD':
-      case 'REBLEAD':
-      case 'STLLEAD':
-      case 'BLKLEAD':
-        pts += LEGACY.statTitle;
-        break;
-      case 'SIXTH':
-        pts += LEGACY.sixth;
-        break;
-      case 'NCAATITLE':
-        pts += LEGACY.ncaaTitle;
-        break;
-      case 'EUMVP':
-      case 'EUTITLE':
-        pts += LEGACY.euro;
-        break;
-      case 'OLYGOLD':
-        pts += 3;
-        break;
-      case 'WCGOLD':
-      case 'NBACUP':
-        pts += 1.5;
-        break;
-      case 'OLYMEDAL':
-      case 'WCMEDAL':
-      case 'CUPMVP':
-        pts += 0.75;
-        break;
-      case 'ASIANGOLD':
-        pts += 0.5;
-        break;
-      case 'ASIANMEDAL':
-        pts += 0.25;
-        break;
-    }
-  }
+  for (const a of s.awards) pts += awardPoints(a.key);
   pts += nbaCareerPoints(s) / LEGACY.pointsPer;
   return Math.round(pts * 10) / 10;
+}
+
+/**
+ * Round 25: the career index the leaderboards rank by, built like the JAWS score for real Hall of
+ * Fame cases. Each season is worth its honours (as in the legacy score), its NBA points and how
+ * good he was that year (a tenth of a point for every OVR above 60, at any level). The index
+ * averages the career total with the best five seasons in a row, so a long career and a great
+ * peak both count.
+ */
+export function careerIndex(s: GameState): { total: number; best: number; score: number } {
+  const years = [...new Set([...s.history.map((h) => h.year), ...s.awards.map((a) => a.year)])].sort((x, y) => x - y);
+  const value = years.map((y) => {
+    let v = 0;
+    for (const a of s.awards) if (a.year === y) v += awardPoints(a.key);
+    for (const h of s.history)
+      if (h.year === y) {
+        if (h.level === 'NBA') v += (h.line.pts + h.post.pts) / LEGACY.pointsPer;
+        v += Math.max(0, h.ovrEnd - CAREER_INDEX.ovrFloor) / CAREER_INDEX.ovrPer;
+      }
+    return v;
+  });
+  const total = value.reduce((x, v) => x + v, 0);
+  let best = 0;
+  for (let i = 0; i + Math.min(CAREER_INDEX.stretch, value.length) <= value.length; i++) best = Math.max(best, value.slice(i, i + CAREER_INDEX.stretch).reduce((x, v) => x + v, 0));
+  const r1 = (x: number) => Math.round(x * 10) / 10;
+  return { total: r1(total), best: r1(best), score: r1((total + best) / 2) };
 }
 
 export function nbaCareerPoints(s: GameState): number {

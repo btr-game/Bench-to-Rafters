@@ -521,6 +521,11 @@ export const LEGACY = {
   firstBallot: 160, // was 80
 };
 
+// round 25: the leaderboards' career index (awards/legacy.ts careerIndex), like the JAWS score: the
+// career total and the best `stretch` seasons in a row, averaged; a season also counts a tenth of
+// a point (1 / ovrPer) for every OVR above ovrFloor
+export const CAREER_INDEX = { stretch: 5, ovrFloor: 60, ovrPer: 10 };
+
 // round 15: a veteran can become a ring chaser (career/ringChase.ts) instead of retiring
 export const RING_CHASE = { minOvr: 66, starPeak: 85, starMinOvr: 56, maxAge: 38, from: 1, contenders: 7, offers: 2 };
 

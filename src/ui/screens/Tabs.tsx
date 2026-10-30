@@ -24,7 +24,7 @@ import { ATTRS, LEVELS } from '../../engine/balance';
 import { ovrOf } from '../../engine/player/ovr';
 import { standings } from '../../engine/sim/leagueSim';
 import { addLine, emptyLine, perGame } from '../../engine/sim/statModel';
-import { championships, count, legacyScore, nbaTitles, verdictFor } from '../../engine/awards/legacy';
+import { careerIndex, championships, count, legacyScore, nbaTitles, verdictFor } from '../../engine/awards/legacy';
 import { NAMES } from '../../content/strings';
 import { Card, Meter, Scoreboard } from '../components/bits';
 import { AttrRows } from '../components/PlayerCard';
@@ -934,7 +934,7 @@ export function RecordsTab({ g }: { g: GameState }) {
       )}
       <div className="page-grid two">
         <TrophyCabinet g={g} />
-        <Card title="Career totals" kicker={`Legacy score ${legacyScore(g)}`}>
+        <Card title="Career totals" kicker={`Legacy score ${legacyScore(g)} · career index ${careerIndex(g).score.toFixed(1)}`}>
           {nbaT.gp > 0 && (
             <>
               <div className="kicker">
