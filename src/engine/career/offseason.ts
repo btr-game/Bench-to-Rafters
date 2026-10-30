@@ -41,6 +41,8 @@ import { heightMismatch } from './position';
 import { becomeRingChaser, canChaseRing, ringChaseChoice } from './ringChase';
 import { rollSwings } from './swings';
 import { NAMES } from '../../content/strings';
+import { buildWord, driftWeight, idealWeight, weightOf } from '../player/weight';
+import { growBonds } from './duo';
 
 // ---------- entering the offseason ----------
 
@@ -50,6 +52,7 @@ export function beginOffseason(s: GameState): void {
   s.step = 'offseason';
   s.pending = [];
   s.notes = [];
+  const lastIdeal = idealWeight(p.height, p.age);
   p.age += 1;
   growHeight(p);
   const projChange = updateHeightProjection(s.rng, p);
@@ -71,6 +74,11 @@ export function beginOffseason(s: GameState): void {
         : ['No position fits perfectly yet; keep an eye on it'],
     });
   }
+  // bonds with recruited teammates grow, and a duo may form or end (career/duo.ts)
+  growBonds(s, last);
+  // his weight settles toward his natural frame, and the extra (or missing) pounds show in his ratings
+  const lb = driftWeight(s.rng, p, lastIdeal);
+  if (Math.abs(lb) >= 8) note(s, `${lb > 0 ? 'Up' : 'Down'} ${Math.abs(lb)} lb this year: ${weightOf(p)} lb now (${buildWord(p)} for your size).`);
   const aging = applyAging(s.rng, p);
   // the body recovers a little every summer, and less as he gets older
   p.wear = clamp((p.wear ?? 0) - WEAR.summerRest + Math.max(0, p.age - 25) * WEAR.agePerYear, 0, 100);

@@ -32,7 +32,7 @@ import { useStore } from "../../store";
 import { LabCard } from "../components/Lab";
 import { MvpRace } from "../components/MvpRace";
 import { MiniGamesCard } from "../mini/MiniGames";
-import { RecruitCard, StoriesCard } from "../components/Roster";
+import { DuoCard, RecruitCard, StoriesCard } from "../components/Roster";
 import { canRecruit, recruitInfo } from "../../engine/career/recruit";
 import { STARTERS_RECRUIT } from "../../engine/balance";
 import {
@@ -52,6 +52,7 @@ import { breakthroughBar } from "../../engine/career/breakthrough";
 import { rosterRank, winningEdge } from "../../engine/career/team";
 import { ovrOf } from "../../engine/player/ovr";
 import { perGame } from "../../engine/sim/statModel";
+import { weightOf } from "../../engine/player/weight";
 
 export function SeasonSummary({ rec }: { rec: SeasonRecord }) {
   const delta = rec.ovrEnd - rec.ovrStart;
@@ -707,7 +708,7 @@ function PositionCard({ g }: { g: GameState }) {
         <div className="spacer" />
         <span className="small muted">
           {NAMES.pos[p.pos]} · {ht(p.height)}
-          {p.height < p.heightProj ? ` (projected ${ht(p.heightProj)})` : ""}
+          {p.height < p.heightProj ? ` (projected ${ht(p.heightProj)})` : ""} · {weightOf(p)} lb · {ht(p.wingspan)} wingspan
         </span>
       </div>
       {mm && (
@@ -1001,6 +1002,7 @@ export function Home({ g }: { g: GameState }) {
       </div>
       <div className="stack home-side">
         <MvpRace g={g} />
+        <DuoCard g={g} />
         <StoriesCard g={g} />
         <MiniGamesCard />
         {g.feed[0] && (

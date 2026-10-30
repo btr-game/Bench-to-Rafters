@@ -24,6 +24,7 @@ import type { AttrKey, Attrs, Pos, UserPlayer } from '../types';
 import { ARCHETYPES } from './archetypes';
 import { ovrOf } from './ovr';
 import { rollAnomaly } from './anomaly';
+import { startWeight } from './weight';
 
 export function drawPotential(rng: Rng, d: SkewDist): number {
   return Math.round(clamp(d.base + Math.exp(normal(rng, d.mu, d.sigma)), d.min, d.max));
@@ -66,6 +67,8 @@ const weightedPick = (rng: Rng, odds: [number, number][]): number => weighted(rn
 export function createPlayer(rng: Rng, input: CreateInput): UserPlayer {
   const p = buildPlayer(rng, input);
   rollAnomaly(rng, p);
+  startWeight(rng, p);
+  p.startAttrs = { ...p.attrs };
   return p;
 }
 

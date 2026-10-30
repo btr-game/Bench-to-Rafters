@@ -24,6 +24,16 @@ import { ScoutCard } from '../components/ScoutCard';
 import { fmtMoney, ht, pct, pg, seasonLabel } from '../format';
 import { ordinal } from '../../engine/career/season';
 import { league as leagueOf, ovr, roleName, stageLine, team as teamOf } from '../selectors';
+import { buildWord, idealWeight, weightOf } from '../../engine/player/weight';
+
+/** The ratings his weight is adding or taking away right now, biggest first. */
+function frameLine(p: GameState['player']): string {
+  const f = p.frame ?? {};
+  return ATTRS.filter((k) => Math.abs(f[k] ?? 0) >= 0.25)
+    .sort((a, b) => Math.abs(f[b]!) - Math.abs(f[a]!))
+    .map((k) => `${NAMES.attr[k]} ${f[k]! > 0 ? '+' : '−'}${Math.abs(f[k]!).toFixed(1)}`)
+    .join(' · ');
+}
 
 // ---------- Season ----------
 
@@ -431,7 +441,7 @@ export function PlayerTab({ g }: { g: GameState }) {
         stripe={trimOf(g)}
         art={<PlayerArt name={p.name} number={p.number} pos={p.pos} color={t?.color} team={t?.name} abbr={t?.abbr} league={styleLeague(g.stage)} kit={kit} size={150} />}
         color={t?.color}
-        kicker={`#${p.number} · ${NAMES.pos[p.pos]} · ${ht(p.height)}`}
+        kicker={`#${p.number} · ${NAMES.pos[p.pos]} · ${ht(p.height)} · ${weightOf(p)} lb`}
         title={p.name}
         sub={`${t ? `${t.name} · ` : ''}${stageLine(g)}`}
         stats={[
@@ -513,9 +523,27 @@ export function PlayerTab({ g }: { g: GameState }) {
                 </dd>
               </div>
               <div>
-                <dt>Wingspan</dt>
-                <dd>{ht(p.wingspan)}</dd>
+                <dt>Weight</dt>
+                <dd>
+                  {weightOf(p)} lb <span className="muted">· {buildWord(p)} (best about {Math.round(idealWeight(p.height, p.age) / 5) * 5})</span>
+                </dd>
               </div>
+              <div>
+                <dt>Wingspan</dt>
+                <dd>
+                  {ht(p.wingspan)}
+                  <span className="muted">
+                    {' '}
+                    · {Math.abs(p.wingspan - p.height)}″ {p.wingspan >= p.height ? 'over' : 'under'} your height
+                  </span>
+                </dd>
+              </div>
+              {frameLine(p) && (
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <dt>What your weight does</dt>
+                  <dd>{frameLine(p)}</dd>
+                </div>
+              )}
               <div>
                 <dt>Hometown</dt>
                 <dd>{p.hometown}</dd>

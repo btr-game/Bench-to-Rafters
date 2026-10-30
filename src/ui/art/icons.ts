@@ -518,6 +518,21 @@ export const ICONS: Record<string, string[]> = {
     '.OYOOO..........',
     '.OOOO...........',
   ],
+  // a bathroom scale: playing weight (round 20)
+  weight: [
+    '..OOOOOOOOOOOO..',
+    '.OwwwwwwwwwwwwO.',
+    '.OwwOOOOOOOOwwO.',
+    '.OwOLLLLRLLLOwO.',
+    '.OwOLOLLROLLOwO.',
+    '.OwwOOOOOOOOwwO.',
+    '.OwwwwwwwwwwwwO.',
+    '.OwKKKKwwKKKKwO.',
+    '.OwKKKKwwKKKKwO.',
+    '.OwKKKKwwKKKKwO.',
+    '.OwwwwwwwwwwwwO.',
+    '..OOOOOOOOOOOO..',
+  ],
   // ---- the shop ----
   shoe: [
     '................',
@@ -1334,7 +1349,8 @@ export function shopIcon(id: string, name: string): string {
     [/cold|plunge|tub/, 'tub'],
     [/cryo/, 'snow'],
     [/sleep/, 'recovery'],
-    [/chef/, 'chef'],
+    [/chef|meal|shake/, 'chef'],
+    [/scale|bike/, 'weight'],
     [/hyperbaric|recovery/, 'lab'],
     [/gaming|esports/, 'controller'],
     [/seats|courtside/, 'podium'],

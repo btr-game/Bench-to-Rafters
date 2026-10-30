@@ -56,6 +56,29 @@ export const HEIGHT_SURPRISE = { mean: 0.3, sd: 1.7, min: -3, max: 4, growUntil:
 export const HEIGHT_PROJ_SD: Record<number, number> = { 15: 1.4, 16: 1.1, 17: 0.8, 18: 0.5 };
 // Height against the position's norm shifts the starting card a little (per inch).
 export const HEIGHT_ATTR: Partial<Record<AttrKey, number>> = { REB: 0.8, INT: 0.6, PLY: -0.4, ATH: -0.3 };
+// Playing weight (round 20, player/weight.ts). The best playing weight for his height is
+// base + perInch per inch over 6'7", scaled down while he is still a teenager (maturity from
+// 14 to 21). Every 10 lb over it (at adult size) costs athleticism and perimeter defense and
+// adds rebounding, rim protection and finishing up to `strongUpTo`; every 10 lb under it does
+// the opposite, with a little quickness for the first 15 lb and only weakness after that.
+export const WEIGHT = {
+  base: 220,
+  perInch: 6.5,
+  youth: { from: 14, at14: 0.78, perYear: 0.034 },
+  build: { sd: 8, max: 22 }, // his natural frame, lb heavier or lighter than the ideal
+  drift: { pull: 0.45, sd: 3, agePad: 1.6, padFrom: 28 }, // each summer toward his natural weight
+  heavy: { ATH: -1.1, PER: -0.6, REB: 0.8, INT: 0.6, FIN: 0.4 } as Partial<Record<AttrKey, number>>,
+  strongUpTo: 2.5, // units of 10 lb: the strength gains stop here, the slowdown does not
+  light: { REB: -0.7, INT: -0.5, FIN: -0.3 } as Partial<Record<AttrKey, number>>,
+  quickUpTo: 1.5, // the first 15 lb under the ideal: ATH +quick and PER +quick/2 per 10 lb
+  quick: 0.7,
+  skinny: 0.8, // ATH lost per 10 lb beyond quickUpTo
+  maxUnits: 4,
+  wearFrom: 1.5, // units over the ideal where the extra weight starts to wear the body
+  wear: 0.08, // extra body wear per unit beyond wearFrom
+  plan: { strength: 2.5, speed: -1.5, recovery: 1 } as Partial<Record<string, number>>, // lb per half
+  injuredHalf: 3, // lb gained in a half spent mostly injured
+};
 // How far ahead of or behind his card a 14-year-old really is (in OVR points, roughly).
 // Partly linked to potential, mostly not: there are early bloomers and late bloomers.
 // Every card starts near the same level (the archetype sets the shape, not the head start).
@@ -662,6 +685,14 @@ export const EVENTS = { midseasonMax: 2, offseasonMax: 2, midseasonChance: 0.9, 
 // real NBA trade). A pay cut (10% at a time, up to 30%) frees room and shows players he is
 // serious about winning.
 export const STARTERS_RECRUIT = { capShare: 1, match: 1.25, moves: 2, asks: 3, cutStep: 0.1, maxCut: 0.3, board: 6, cutInterest: 0.07 };
+
+// Duos (round 20, career/duo.ts): a recruit's hidden spark is `real` for about a quarter of them,
+// `plain` otherwise, plus `fit` when they play in different position groups. Each season
+// together adds spark * grow, (win% - 0.5) * winW and (trust - 50) * trustW to the bond (sd of
+// noise); at 100 they are a duo. A duo starts at `start` strength and adds `perSeason` a
+// season up to 1: team strength + team, his efficiency x(1 + perf), assists x(1 + ast) and
+// shots x(1 + usage), all times that strength.
+export const DUO = { realChance: 0.25, real: [0.65, 1] as [number, number], plain: [0.05, 0.3] as [number, number], fit: 0.1, grow: 55, winW: 30, trustW: 0.2, sd: 8, start: 0.6, perSeason: 0.15, team: 1.2, perf: 0.035, ast: 0.12, usage: 0.04, stay: 3 };
 
 /** A mode's dial (round 14): 1 unless the mode sets it. */
 export const modeDial = (mode: Mode, k: 'mini' | 'teamFx' | 'ringChase'): number => MODES[mode]?.[k] ?? 1;

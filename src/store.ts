@@ -10,6 +10,7 @@ import type { AttrKey, GameLog, GameState, Pos } from './engine/types';
 import { advance as engineAdvance, changeFocus, changeNumber, changePosition, choose as engineChoose, dismissMoment, newGame, retireByChoice, spendCredits, type CreateInput } from './engine/flow';
 import { seasonLabel } from './ui/format';
 import { tabKey } from './ui/selectors';
+import { weightOf } from './engine/player/weight';
 
 export type Tab = 'home' | 'season' | 'player' | 'league' | 'records';
 export type Theme = 'auto' | 'light' | 'dark';
@@ -183,6 +184,7 @@ export const useStore = create<Store>((set, get) => ({
       if (!raw) return false;
       const game = (JSON.parse(raw) as { game: GameState }).game;
       if (!game?.player || !game.step) return false;
+      weightOf(game.player); // careers saved before round 20 get a weight
       set({ game, tab: 'home', transition: null, mini: null, seen: allSeen(game) });
       return true;
     } catch {

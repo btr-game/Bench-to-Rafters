@@ -1288,3 +1288,9 @@ td .art-team { display: inline-block; vertical-align: middle; margin: -3px 8px -
 @keyframes cel-spark { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
 .art-celebrate { display: block; width: 120px; height: auto; margin: 0 auto; image-rendering: pixelated; }
 @media (prefers-reduced-motion: reduce) { .cel-bounce, .cel-bob, .cel-wiggle, .cel-chomp, .cel-spark { animation: none; } .cel-spark { opacity: 1; } }
+
+/* round 20: the duo */
+.duo-tag { margin-left: 6px; padding: 1px 6px; border-radius: 999px; font-size: 0.72em; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; background: #7048E8; color: #fff; vertical-align: middle; }
+.duo-card { border-left: 4px solid #7048E8; }
+.duo-meter { height: 8px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+.duo-meter span { display: block; height: 100%; background: linear-gradient(90deg, #7048E8, #E03131); }

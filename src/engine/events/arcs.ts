@@ -9,6 +9,7 @@ import type { AttrKey, Decision, GameState, Stage } from '../types';
 import { adjust, logDecision, pushDecision, pushMoment, userOvr } from '../career/common';
 import { changes, snap } from './outcome';
 import type { EventDef } from './defs';
+import { addPounds } from '../player/weight';
 
 export interface ArcState {
   id: string;
@@ -533,8 +534,7 @@ export const ARC_EVENTS: EventDef[] = [
         label: 'Add 15 pounds of muscle',
         detail: 'Slower this season, stronger after',
         resolve: (s) => {
-          bump(s, 'ATH', -1.5);
-          bump(s, 'REB', 1.5);
+          addPounds(s.player, 15, 0.6);
           startArc(s, 'body', { bulk: 1, fresh: 1 });
           return ok('You eat six meals a day. Your jeans stop fitting. Your first step feels heavy.', 'Started a two-year plan to add muscle.');
         },
@@ -543,8 +543,7 @@ export const ARC_EVENTS: EventDef[] = [
         label: 'Get lean and quick',
         detail: 'Lighter this season, quicker after',
         resolve: (s) => {
-          bump(s, 'REB', -1);
-          bump(s, 'INT', -1);
+          addPounds(s.player, -12, 0.6);
           startArc(s, 'body', { bulk: 0, fresh: 1 });
           return ok('Bigger players push you around for a while.', 'Started a two-year plan to get leaner.');
         },

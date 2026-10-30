@@ -6,6 +6,7 @@ import type { Decision, GameState } from '../types';
 import { SHOP_ITEMS, type ShopItem } from '../../content/shop';
 import { logDecision, pushDecision } from '../career/common';
 import { fmtMoney } from './salary';
+import { changeWeight, idealWeight, weightOf } from '../player/weight';
 
 export const MAX_PURCHASES = 3;
 const STOCK = { size: 6, afford: 5 };
@@ -35,6 +36,8 @@ export function describeItem(it: ShopItem): string {
   if (it.morale) parts.push('Lifts your mood');
   if (it.rep) parts.push('Raises your profile');
   if (it.trust) parts.push('Earns goodwill');
+  if (it.toIdeal) parts.push('Gets you closer to your best playing weight');
+  if (it.weight) parts.push(it.weight > 0 ? 'Puts on weight' : 'Takes weight off');
   return parts.join(' · ');
 }
 
@@ -95,6 +98,8 @@ export function applyItem(s: GameState, it: ShopItem): void {
   if (it.morale) p.morale = clamp(p.morale + it.morale, 0, 100);
   if (it.rep) p.rep = clamp(p.rep + it.rep, 0, 100);
   if (it.trust) p.trust = clamp(p.trust + it.trust, 0, 100);
+  if (it.weight) changeWeight(p, it.weight, 0.3);
+  if (it.toIdeal) changeWeight(p, (idealWeight(p.height, p.age) - weightOf(p)) * it.toIdeal, 0.25);
   if (!s.purchases.includes(it.id)) s.purchases.push(it.id);
 }
 

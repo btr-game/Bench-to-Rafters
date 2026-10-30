@@ -8,6 +8,7 @@ import { NAMES } from '../../content/strings';
 import { ht, fmtMoney } from '../format';
 import { health, ovr, repName, roleName, stageLine, team } from '../selectors';
 import { Meter, TeamChip } from './bits';
+import { weightOf } from '../../engine/player/weight';
 
 export function AttrRows({ g, compare }: { g: GameState; compare?: Record<string, number> }) {
   const p = g.player;
@@ -54,7 +55,7 @@ export function PlayerCard({ g, compact = false }: { g: GameState; compact?: boo
       </div>
       <div style={{ minWidth: 0 }}>
         <div className="kicker">
-          #{p.number} · {p.pos} · {ht(p.height)}
+          #{p.number} · {p.pos} · {ht(p.height)} · {weightOf(p)} lb
           {heightMismatch(g) ? (
             <span className="height-warn" title={heightMismatch(g)!.text}>
               {' '}

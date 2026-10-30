@@ -88,6 +88,9 @@ export interface UserPlayer {
   fullHeight: number; // true adult height (hidden while he grows)
   heightProj: number; // the doctors' projection of fullHeight
   wingspan: number;
+  weight?: number; // lb (player/weight.ts); missing in careers saved before round 20
+  build?: number; // hidden: his natural frame, lb over (or under) the ideal at adult size
+  frame?: Partial<Attrs>; // what his current weight adds to or takes from each rating
   hometown: string;
   country: string; // see content/origins
   highSchool: string;
@@ -340,6 +343,7 @@ export interface SeasonState {
   teamBonus?: number; // team factors this season (career/team.ts)
   postBonus?: number; // added to the team bonus in postseason games (team style, team story)
   styleFx?: { perf: number; usage: number }; // his fit with the team's style (career/identity.ts)
+  duoFx?: { perf: number; ast: number; usage: number }; // round 20: his duo (career/duo.ts)
   teamNotes?: string[];
   outcomes?: { half: number; plan: HalfPlan; plan2?: HalfPlan | null; outcome: string; text: string; ovrGain: number }[];
 }
@@ -463,6 +467,7 @@ export interface GameState {
   // the last breakthrough season (career/breakthrough.ts): it unlocks a focus change that offseason
   breakthrough?: { year: number; ovr: number; key: AttrKey; gain: number } | null;
   arcs?: import('./events/arcs').ArcState[]; // storylines still unfolding
+  bonds?: import('./career/duo').Bond[]; // round 20: hidden chemistry with the teammates he recruited
   recruit?: import('./career/recruit').RecruitState; // NBA: building the starting five this summer
   stories?: import('./world/stories').LeagueStory[]; // this season's league storylines
   nemesis?: string; // team id that ended his last season (flags.nemesisYear says when)

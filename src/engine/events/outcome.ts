@@ -8,6 +8,7 @@ import { clamp, normal } from '../rng';
 import type { AttrKey, EventResult, GameState } from '../types';
 import { NAMES } from '../../content/strings';
 import { fmtMoney } from '../economy/salary';
+import { idealWeight, weightOf } from '../player/weight';
 
 interface Snap {
   attrs: Record<AttrKey, number>;
@@ -18,6 +19,7 @@ interface Snap {
   range: number;
   offhand: number;
   height: number;
+  weight: number;
   growth: number;
   rate: number;
   injuryMult: number;
@@ -38,6 +40,7 @@ export function snap(s: GameState): Snap {
     range: p.range,
     offhand: p.offhand,
     height: p.height,
+    weight: weightOf(p),
     growth: p.growthMultNext,
     rate: p.growthRate ?? 1,
     injuryMult: p.injuryMultNext,
@@ -68,6 +71,13 @@ export function vary(s: GameState, before: Snap, good?: number, bad?: number): n
   p.range = scale(before.range, p.range, 0, 99);
   p.offhand = scale(before.offhand, p.offhand, 0, 99);
   p.wear = scale(before.wear, p.wear ?? 0, 0, 100, false);
+  // pounds toward his best playing weight are the good kind
+  const w = weightOf(p);
+  if (w !== before.weight) {
+    const ideal = idealWeight(p.height, p.age);
+    const toward = Math.abs(w - ideal) < Math.abs(before.weight - ideal);
+    p.weight = Math.max(90, Math.round(before.weight + (w - before.weight) * (toward ? fg : fb)));
+  }
   const ratio = (b: number, a: number, upGood = true) => (b > 0 ? b * Math.pow(a / b, k(b, a, upGood)) : a);
   p.growthMultNext = ratio(before.growth, p.growthMultNext);
   p.growthRate = clamp(ratio(before.rate, p.growthRate ?? 1), 0.5, 2.2);
@@ -101,6 +111,11 @@ export function changes(s: GameState, before: Snap): EventResult['changes'] {
   num('Range', p.range - before.range);
   num('Weak hand', p.offhand - before.offhand);
   num('Body wear', (p.wear ?? 0) - before.wear, false);
+  const lb = weightOf(p) - before.weight;
+  if (lb !== 0) {
+    const ideal = idealWeight(p.height, p.age);
+    out.push({ label: 'Weight', value: `${lb > 0 ? '+' : '−'}${Math.abs(lb)} lb`, good: Math.abs(p.weight! - ideal) <= Math.abs(before.weight - ideal) });
+  }
   if (p.height !== before.height) out.push({ label: 'Height', value: `${p.height - before.height > 0 ? '+' : ''}${p.height - before.height} in`, good: true });
   const bank = p.bank - before.bank;
   if (Math.abs(bank) >= 0.0005) out.push({ label: 'Bank', value: `${bank > 0 ? '+' : '−'}${fmtMoney(Math.abs(bank))}`, good: bank > 0 });

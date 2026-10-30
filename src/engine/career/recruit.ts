@@ -16,6 +16,7 @@ import { adjust, logDecision, pushMoment, teamById, userOvr } from './common';
 import { nbaStrength } from '../world/nbaWorld';
 import { strengthOf } from '../world/gen';
 import { rosterRank } from './team';
+import { meetRecruit } from './duo';
 
 export interface RecruitState {
   year: number;
@@ -285,6 +286,7 @@ export function recruitPlayer(s: GameState, id: number): boolean {
   tg.team.strength = nbaStrength(tg.team);
   st.moves++;
   st.joined = [...(st.joined ?? []), tg.p.name];
+  meetRecruit(s, tg.p);
   s.player.morale = adjust(s.player.morale, 4);
   const outNames = tg.out.map((o) => o.name).join(' and ');
   const starter = tg.out[0];

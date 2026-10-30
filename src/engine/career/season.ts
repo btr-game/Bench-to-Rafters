@@ -6,6 +6,7 @@ import { evaluateBreakthrough, updateHighs } from './breakthrough';
 import { edgeOf, youthGrowthMult } from './nationality';
 import {
   WEAR,
+  WEIGHT,
   HEIGHT_LIMITS,
   GAME_POINTS,
   GROWTH_RATE,
@@ -68,6 +69,8 @@ import { allStarWeekend, conferenceTournament, hsNationals, mcdonaldsGame, nbaCu
 import { quickNbaSeason, warmUpNba } from './nbaYear';
 import { reactionsForSeason } from '../story/reactions';
 import { finishStories, startStories, updateStories } from '../world/stories';
+import { changeWeight, halfPlanWeight, weightWear } from '../player/weight';
+import { duoEffect, growBonds } from './duo';
 
 /** What he adds to winning beyond his OVR, scaled by his share of the game (career/team.ts). */
 const edgeFor = (a: Attrs, ovr: number, share: number, post: boolean): number => {
@@ -89,6 +92,7 @@ export function userProfile(s: GameState): Profile {
 
 export function beginSeason(s: GameState): void {
   s.notes = [];
+  growBonds(s, null);
   const ovr = userOvr(s);
   let league: League;
   let teamId: string;
@@ -136,7 +140,8 @@ export function beginSeason(s: GameState): void {
     attrsStart: { ...s.player.attrs },
     ...(() => {
       const f = startTeamFactors(s, team);
-      return { teamBonus: f.bonus, teamNotes: f.notes, postBonus: f.post, styleFx: f.fx };
+      const d = duoEffect(s);
+      return { teamBonus: f.bonus, teamNotes: f.notes, postBonus: f.post, styleFx: f.fx, duoFx: d ? { perf: d.perf, ast: d.ast, usage: d.usage } : undefined };
     })(),
     halfLines: [],
     injuredGames: 0,
@@ -283,9 +288,11 @@ function makeHook(s: GameState, league: League, level: LevelKey, acc: HalfAcc, s
       minutes = rollMinutes(rng, season.role, level, !!post);
       if (p.injury && p.injury.key === 'dtd') minutes = chance(rng, 0.5) ? 0 : Math.round(minutes * 0.85);
       if (minutes > 0) {
-        const moraleMult = MORALE_PERF(p.morale) * (1 + (form - 1) * FORM.shootingShare) * (season.styleFx?.perf ?? 1);
-        const usage = (usageWeight(p.attrs) / usageMean) * (season.fuel ? 1.06 : 1) * plan.usage * Math.pow(form, 0.8) * (season.styleFx?.usage ?? 1);
+        const duo = season.duoFx;
+        const moraleMult = MORALE_PERF(p.morale) * (1 + (form - 1) * FORM.shootingShare) * (season.styleFx?.perf ?? 1) * (duo?.perf ?? 1);
+        const usage = (usageWeight(p.attrs) / usageMean) * (season.fuel ? 1.06 : 1) * plan.usage * Math.pow(form, 0.8) * (season.styleFx?.usage ?? 1) * (duo?.usage ?? 1);
         const e = expected(userProfile(s), level, minutes, usage, moraleMult);
+        if (duo) e.ast *= duo.ast;
         const started = season.role === 'key' || season.role === 'starter';
         if (live) {
           const impact = (ovr - replacement) * (minutes / L.gameLen) * IMPACT_MULT;
@@ -497,8 +504,11 @@ function growthAfterHalf(s: GameState, acc: HalfAcc, level: LevelKey, ovr: numbe
     lab: s.mode === 'lab',
   });
   // body wear from this half: minutes played and how hard the plan pushed the body
-  const tallWear = 1 + Math.max(0, p.fullHeight - HEIGHT_LIMITS.bandHi) * HEIGHT_LIMITS.tallWear;
+  const tallWear = (1 + Math.max(0, p.fullHeight - HEIGHT_LIMITS.bandHi) * HEIGHT_LIMITS.tallWear) * weightWear(p);
   p.wear = clamp((p.wear ?? 0) + (share * WEAR.minutes + (plan.injury - 1) * WEAR.plan) * tallWear, 0, 100);
+  // the weight room puts pounds on, sprints take them off, a half on the injury list adds a few
+  const lb = halfPlanWeight(season.plan, season.plan2) + (acc.injuredGames > acc.games / 2 ? WEIGHT.injuredHalf : 0);
+  if (lb) changeWeight(p, lb, 0.3);
   if (plan.rangeGain) p.range = clamp(p.range + plan.rangeGain * outcome.growth, 0, 99);
   if (plan.offhandGain) p.offhand = clamp(p.offhand + plan.offhandGain * outcome.growth, 0, 99);
   if (outcome.injury) p.injuryMultNext *= outcome.injury;

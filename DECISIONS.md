@@ -1104,3 +1104,56 @@ Reached from the start page and from the bottom of Home (a career in progress is
   poses) holding the trophy over his head, bouncing, the trophy wiggling, sparkles round it; a
   medal story shows him biting the medal. Won title games and finals end on the same
   celebration. All of it stops for reduced motion.
+
+## Round 20
+
+- **Weight** (`player/weight.ts`, `WEIGHT` in balance.ts). Every player has a weight in pounds
+  next to his height, and a best playing weight for his height and age: 220 lb at 6'7", 6.5 lb
+  per inch either way, scaled down for teenagers (78% at 14, full at 21). A hidden natural
+  frame (normal, sd 8 lb, at most ±22) sets where his body wants to be.
+  - **Ratings:** distance from the ideal is counted in units of 10 lb at adult size (a
+    teenager's pounds count for more), at most ±4. Heavy, per unit: athleticism −1.1,
+    perimeter defense −0.6, and up to 2.5 units rebounding +0.8, rim protection +0.6,
+    finishing +0.4. Light: rebounding −0.7, rim protection −0.5, finishing −0.3 per unit;
+    athleticism +0.7 and perimeter defense +0.35 per unit for the first 15 lb, then
+    athleticism −0.8 per unit beyond (too skinny). Over 15 lb heavy adds 8% body wear per unit.
+  - **How it moves:** the effect lives in the ratings. `frame` remembers what the current
+    weight adds, and `syncWeight` moves the ratings by the difference whenever weight, height or
+    age changes, so nothing counts twice. Each summer the body fills out with any growth, then
+    drifts 45% of the way to its natural weight (sd 3 lb), plus 1.6 lb a year after 28. Plans
+    per half: Weight room +2.5 lb, Speed and agility −1.5, Recovery +1 (two plans share it as
+    usual). A half spent mostly injured adds 3 lb.
+  - **Events:** eight new (the strength coach's plan, the summer weigh-in, getting pushed
+    around, holiday break, reporting to camp heavy, a plant-based diet, a burger deal, weeks on
+    the couch), and "Reshape your body" and "Body choice" now really change the weight. The
+    pounds are rolled like every other effect (toward the ideal is the good kind), then the
+    ratings follow; the result card shows "Weight +12 lb".
+  - **Shop:** the personal and private chefs move him halfway (40% for the private chef) to his
+    best weight; new: a nutritionist meal plan, a smart scale, mass-gainer shakes and an air
+    bike, with a scale icon. Five items shared an id with another item (chef, cryotherapy,
+    film tablet, home gym, vision training), so buying the second gave the first one's
+    effects: renamed.
+  - **Display:** height, weight and wingspan on Home's position card, the Player banner and the
+    career card; the Player tab's profile shows the weight with a word for it (heavy, solid,
+    ideal, lean, skinny) and the best weight, the wingspan against the height, and what the
+    weight is doing to the ratings. Careers saved before this round get a weight at the ideal
+    when they load.
+  - **Balance** (casual mini-games, smart policy, the same 1,600 careers before and after):
+    mean peak 74.3362 against 74.5060 (difference −0.1698, standard error 0.4055), NBA 77.2%
+    (78.2%), All-Star 35.3% (36.2%), MVP 10.8% (11.4%), Hall of Fame 11.4% (12.1%), titles
+    33.3% (34.5%). The first version cost more (−0.2174 and NBA −2.1 points): being light hurt
+    more than it helped, and the Grind took weight off, which the smart policy plays until 22.
+    The light side was softened and the Grind no longer changes weight.
+- **Duos** (`career/duo.ts`, `DUO` in balance.ts): hidden chemistry with the teammates he
+  recruits into the starting five. Each recruit gets a hidden spark: a quarter really click
+  (0.65–1), the rest 0.05–0.3, plus 0.1 when they play in different position groups. Each
+  season together adds spark × 55, (win% − 0.5) × 30 and (trust − 50) × 0.2 (noise sd 8) to
+  the bond; at 100 they become a named duo (Lob City, the Twin Towers, the Splash Pair...), a
+  story page says so and the partner signs on for at least three more seasons. The only clues
+  before that are lines in the summer notes. A duo starts at 60% strength and grows 15% a season:
+  at full strength team strength +1.2, his efficiency ×1.035, assists ×1.12 and shots ×1.04.
+  One duo at a time; it ends (with a story page) when either of them leaves the team. Home shows
+  a duo card, the five tags the partner, and the scouting board warns when a move would send him
+  away. The balance harness never recruits, so its numbers are untouched; with 80 simulated
+  stars who recruit (Shoot for the stars), titles per career 3.05 with duos against 2.925
+  without, MVPs 1.5625 against 1.375.

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import type { GameState } from '../../engine/types';
 import { STARTERS_RECRUIT } from '../../engine/balance';
 import { canRecruit, outlookOf, recruitInfo, scoutingBoard, startingFive } from '../../engine/career/recruit';
+import { activeDuo, duoEffect, duoLevel } from '../../engine/career/duo';
 import { ordinal } from '../format';
 import { callQuestion, callsLeft, makeCall, STORY_LABEL } from '../../engine/world/stories';
 import { ovrOf } from '../../engine/player/ovr';
@@ -52,6 +53,7 @@ export function RecruitCard({ g }: { g: GameState }) {
   const left = Math.min(STARTERS_RECRUIT.moves - info.moves, STARTERS_RECRUIT.asks - info.asks);
   const me = g.player;
   const five = startingFive(g);
+  const duo = activeDuo(g);
   const slots = (['PG', 'SG', 'SF', 'PF', 'C'] as const).map((slot) => (slot === me.pos ? { slot, mine: true as const } : { slot, mine: false as const, x: five.find((f) => f.slot === slot)?.p }));
   return (
     <section className="card stack recruit">
@@ -80,6 +82,7 @@ export function RecruitCard({ g }: { g: GameState }) {
               <b>
                 {r.x.name}
                 {r.x.pos !== r.slot && <span className="muted small"> ({r.x.pos})</span>}
+                {duo?.id === r.x.id && <span className="duo-tag">Duo</span>}
               </b>
               <span>{Math.round(r.x.ovr)}</span>
               <span>{fmtMoney(r.x.salary)}</span>
@@ -143,6 +146,7 @@ export function RecruitCard({ g }: { g: GameState }) {
                   {t.out.length > 1 ? `; ${t.out.slice(1).map((o) => o.name).join(' and ')} also go${t.out.length > 2 ? '' : 'es'} for the money` : ''}
                 </span>
               )}
+              {duo && t.out.some((o) => o.id === duo.id) && <span className="small warn-text">Breaks up {duo.nick}</span>}
               <div className="row" style={{ gap: 6 }}>
                 <span className={`interest i-${t.label === 'Interested' ? 'hi' : t.label === 'Open to it' ? 'mid' : 'lo'}`}>{t.label}</span>
                 {!master && <span className={`scout-rec rec-${t.rec.toLowerCase()}`}>Scouts: {t.rec}</span>}
@@ -169,6 +173,35 @@ export function RecruitCard({ g }: { g: GameState }) {
           {info.cut > 0 ? `${Math.round(info.cut * 100)}% cut so far. ` : ''}Frees cap room and makes players likelier to come. A new player takes over his position; the starter there goes the other way.{master ? '' : " The scouts' call is a read, not a promise."}
         </span>
       </div>
+    </section>
+  );
+}
+
+/** Round 20: his duo, once the hidden chemistry with a recruit has grown into one. */
+export function DuoCard({ g }: { g: GameState }) {
+  const fx = duoEffect(g);
+  if (!fx) return null;
+  const b = fx.b;
+  const level = duoLevel(g, b);
+  const years = g.year - (b.formed ?? g.year);
+  return (
+    <section className="card stack duo-card">
+      <div className="row">
+        <Icon name="teamfirst" size={36} />
+        <div>
+          <div className="kicker">Your duo</div>
+          <div className="sec-title">{b.nick}</div>
+        </div>
+      </div>
+      <p className="small prose">
+        You and <b>{b.name}</b> ({b.pos}) · {b.seasons} season{b.seasons === 1 ? '' : 's'} together{years > 0 ? `, a duo for ${years} season${years === 1 ? '' : 's'}` : ', a duo since this summer'}.
+      </p>
+      <div className="duo-meter" aria-label={`Duo strength ${Math.round(level * 100)}%`}>
+        <span style={{ width: `${Math.round(level * 100)}%` }} />
+      </div>
+      <p className="small muted">
+        {level >= 1 ? 'At full strength' : 'Still growing'}: team strength +{fx.team.toFixed(1)}, and your shooting, assists and touches are up. It ends if either of you leaves.
+      </p>
     </section>
   );
 }

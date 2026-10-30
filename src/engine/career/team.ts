@@ -15,6 +15,7 @@ import { chance, clamp, int, pick, range } from '../rng';
 import type { GameState, League, Team } from '../types';
 import { adjust, logDecision, pushMoment, teamById, userOvr } from './common';
 import { currentStyle, fitLabel, styleEffect, styleFit, TEAM_STYLES } from './identity';
+import { duoEffect } from './duo';
 
 /** 1 = the best roster in the league. */
 export function rosterRank(league: League, teamId: string): number {
@@ -67,6 +68,12 @@ export function startTeamFactors(s: GameState, team: Team): { bonus: number; not
     post = e.playoff - e.regular;
     fx = { perf: e.perf, usage: e.usage };
     notes.push(`${TEAM_STYLES[style].name}: ${fitLabel(styleFit(s, style)).toLowerCase()} (${e.regular >= 0 ? '+' : ''}${e.regular}, playoffs ${e.playoff >= 0 ? '+' : ''}${e.playoff})`);
+  }
+  // round 20: a duo lifts everyone around it (career/duo.ts)
+  const duo = s.teamId === team.id ? duoEffect(s) : null;
+  if (duo) {
+    bonus += duo.team;
+    notes.push(`${duo.b.nick}: you and ${duo.b.name} (+${duo.team.toFixed(1)})`);
   }
   return { bonus: Math.round(bonus * 10) / 10, notes, post: Math.round(post * 10) / 10, fx };
 }

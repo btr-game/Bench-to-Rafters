@@ -7,6 +7,7 @@ import { chance, clamp, type Rng } from '../rng';
 import type { AttrKey, GameState, Stage } from '../types';
 import { adjust } from '../career/common';
 import type { EventDef } from './defs';
+import { addPounds } from '../player/weight';
 
 const ALL: Stage[] = ['HS', 'NCAA', 'GL', 'EU', 'INT', 'NBA'];
 const PRO: Stage[] = ['GL', 'EU', 'INT', 'NBA'];
@@ -189,18 +190,17 @@ export const ROUND15_EVENTS: EventDef[] = [
       {
         label: 'Add muscle',
         resolve: (s) => {
-          bump(s, 'INT', 1.2);
-          bump(s, 'REB', 1);
-          bump(s, 'ATH', -0.5);
-          return ok('Eight pounds, all of it useful in the paint (interior D +1.2, rebounding +1, athleticism -0.5).');
+          addPounds(s.player, 8, 0.5);
+          bump(s, 'INT', 0.6);
+          return ok('Eight pounds, all of it useful in the paint.');
         },
       },
       {
         label: 'Get lean',
         resolve: (s) => {
-          bump(s, 'ATH', 1.2);
-          bump(s, 'PER', 0.8);
-          return ok('You are a step quicker in camp (athleticism +1.2, perimeter D +0.8).');
+          addPounds(s.player, -8, 0.5);
+          bump(s, 'ATH', 0.6);
+          return ok('Eight pounds lighter, and a step quicker in camp.');
         },
       },
     ],

@@ -21,6 +21,8 @@ export interface ShopItem {
   morale?: number;
   rep?: number;
   trust?: number;
+  weight?: number; // lb on (or off)
+  toIdeal?: number; // share of the way to his best playing weight
 }
 
 const K = 0.001; // $1K in $M
@@ -59,7 +61,11 @@ export const SHOP_ITEMS: ShopItem[] = [
   { id: 'massage-gun', name: 'Massage gun', category: 'Recovery', price: 0.4 * K, blurb: 'Loosen up after every game.', injuryMult: 0.95 },
   { id: 'cold-tub', name: 'Cold plunge tub', category: 'Recovery', price: 8 * K, blurb: 'Two minutes of misery, nightly.', injuryMult: 0.9 },
   { id: 'sleep-pod', name: 'Sleep pod', category: 'Recovery', price: 35 * K, blurb: 'Nine hours, every night.', morale: 5, injuryMult: 0.95 },
-  { id: 'chef', name: 'Personal chef', category: 'Recovery', price: 200 * K, blurb: 'No more drive-thru.', attrs: { ATH: 0.5 }, injuryMult: 0.9 },
+  { id: 'chef', name: 'Personal chef', category: 'Recovery', price: 200 * K, blurb: 'No more drive-thru.', injuryMult: 0.9, toIdeal: 0.5 },
+  { id: 'meal-plan', name: 'Nutritionist meal plan', category: 'Recovery', price: 2.5 * K, blurb: 'Every meal weighed and counted.', toIdeal: 0.35 },
+  { id: 'smart-scale', name: 'Smart scale', category: 'Gear', price: 0.08 * K, blurb: 'It knows. It always knows.', toIdeal: 0.15 },
+  { id: 'mass-gainer', name: 'Mass-gainer shakes', category: 'Training', price: 0.12 * K, blurb: 'Five thousand calories a day.', weight: 7, attrs: { REB: 0.5 } },
+  { id: 'air-bike', name: 'Air bike', category: 'Training', price: 1.2 * K, blurb: 'Twenty minutes, every morning, no mercy.', weight: -6, attrs: { ATH: 0.5 } },
   { id: 'hyperbaric', name: 'Hyperbaric chamber', category: 'Recovery', price: 120 * K, blurb: 'Slows the clock a little.', declineMult: 0.8 },
   { id: 'recovery-suite', name: 'Recovery suite', category: 'Recovery', price: 5000 * K, blurb: 'Cryo, hydrotherapy, a full staff.', injuryMult: 0.8, declineMult: 0.85 },
   // lifestyle
@@ -151,16 +157,16 @@ export const SHOP_ITEMS: ShopItem[] = [
   { id: 'podcast-studio', name: 'Podcast studio', category: 'Lifestyle', price: 80 * K, blurb: 'Your takes, every Tuesday.', rep: 4, trust: -1 },
   { id: 'restaurant', name: 'Open a restaurant', category: 'Lifestyle', price: 3500 * K, blurb: 'Your grandmother’s recipes, your name on the door.', rep: 3, morale: 6 },
   // round 13
-  { id: 'film-tablet', name: 'Film tablet with clip library', category: 'Training', price: 0.6 * K, blurb: 'Every possession you played, cut and tagged.', attrs: { IQ: 1 } },
+  { id: 'clip-library', name: 'Film tablet with clip library', category: 'Training', price: 0.6 * K, blurb: 'Every possession you played, cut and tagged.', attrs: { IQ: 1 } },
   { id: 'agility-ladder', name: 'Agility ladder and cones', category: 'Gear', price: 0.03 * K, blurb: 'Quick feet, every morning.', attrs: { ATH: 0.5, PER: 0.5 } },
   { id: 'weighted-vest', name: 'Weighted vest', category: 'Gear', price: 0.09 * K, blurb: 'Take it off and you fly.', attrs: { ATH: 0.5, REB: 0.5 }, injuryMult: 1.02 },
   { id: 'ball-machine', name: 'Rebounding ball machine', category: 'Training', price: 8 * K, blurb: 'Five hundred shots an hour, no rebounder needed.', attrs: { SHT: 1 }, range: 1 },
   { id: 'floater-coach', name: 'Floater specialist', category: 'Training', price: 25 * K, blurb: 'The teardrop over the big man, from every angle.', attrs: { FIN: 1, SHT: 0.5 } },
   { id: 'handle-coach', name: 'Ball-handling guru', category: 'Training', price: 30 * K, blurb: 'The one all the stars post videos with.', attrs: { PLY: 1.5 }, rep: 1 },
-  { id: 'cryo', name: 'Cryotherapy sessions', category: 'Recovery', price: 4 * K, blurb: 'Three minutes at minus 110. Bring a hat.', injuryMult: 0.95, declineMult: 0.99 },
-  { id: 'chef', name: 'Private chef', category: 'Recovery', price: 90 * K, blurb: 'No more drive-throughs.', injuryMult: 0.94, declineMult: 0.97 },
-  { id: 'home-gym', name: 'Home gym with a full court', category: 'Training', price: 600 * K, blurb: 'Midnight workouts whenever you want.', focus: 1, growthMult: 1.03 },
-  { id: 'eye-training', name: 'Sports vision training', category: 'Training', price: 3 * K, blurb: 'See the passing lane a beat sooner.', attrs: { PLY: 0.5, PER: 0.5 } },
+  { id: 'cryo-sessions', name: 'Cryotherapy sessions', category: 'Recovery', price: 4 * K, blurb: 'Three minutes at minus 110. Bring a hat.', injuryMult: 0.95, declineMult: 0.99 },
+  { id: 'private-chef', name: 'Private chef', category: 'Recovery', price: 90 * K, blurb: 'No more drive-throughs.', injuryMult: 0.94, declineMult: 0.97, toIdeal: 0.4 },
+  { id: 'home-court', name: 'Home gym with a full court', category: 'Training', price: 600 * K, blurb: 'Midnight workouts whenever you want.', focus: 1, growthMult: 1.03 },
+  { id: 'vision-drills', name: 'Sports vision training', category: 'Training', price: 3 * K, blurb: 'See the passing lane a beat sooner.', attrs: { PLY: 0.5, PER: 0.5 } },
   { id: 'charity-game', name: 'Host a charity game', category: 'Lifestyle', price: 10 * K, blurb: 'Your friends, a packed gym, money for a good cause.', rep: 3, morale: 3, trust: 1 },
   { id: 'podcast', name: 'Start a podcast', category: 'Lifestyle', price: 1 * K, blurb: 'Weekly episodes. What could go wrong?', rep: 2, morale: 1, trust: -1 },
   { id: 'mentor-dinner', name: 'Dinner with a Hall of Famer', category: 'Lifestyle', price: 6 * K, blurb: 'Three hours of stories and one piece of advice.', attrs: { IQ: 0.5 }, morale: 4 },
