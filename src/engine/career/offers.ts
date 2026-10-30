@@ -1,6 +1,7 @@
 // Offer generation for every path: NCAA recruiting, G League, Europe, NBA.
 
 import { cultureByName } from './cityCulture';
+import { fansByName } from './fanCulture';
 import { edgeOf } from './nationality';
 import { FA_INTEREST, LEVELS, NCAA_TIER_STRENGTH, RECRUIT, ROLE_MINUTES } from '../balance';
 import { COLLEGES, EURO_CLUBS, INT_LEAGUES, NBA_TEAMS } from '../../content/teams';
@@ -25,7 +26,7 @@ export function offerChoice(o: Offer): Choice {
   return {
     id: o.id,
     label: o.teamName,
-    detail: `${lvl} · ${ROLE_LABEL[o.role]} · ${money} · ${o.outlook} · Last season ${o.lastRecord}${o.level === 'NBA' && cultureByName(o.teamName) ? ` · City: ${cultureByName(o.teamName)!.name}` : ''}${o.note ? ` · ${o.note}` : ''}`,
+    detail: `${lvl} · ${ROLE_LABEL[o.role]} · ${money} · ${o.outlook} · Last season ${o.lastRecord}${o.level === 'NBA' && cultureByName(o.teamName) ? ` · City: ${cultureByName(o.teamName)!.name} · Fans: ${fansByName(o.teamName)?.name ?? ''}` : ''}${o.note ? ` · ${o.note}` : ''}`,
     tags: [lvl, ROLE_LABEL[o.role], money, o.outlook],
     meta: {
       level: LEVEL_RANK[o.level] + (o.tier ? { blue: 0.6, power: 0.45, major: 0.3, mid: 0.1 }[o.tier] : 0),

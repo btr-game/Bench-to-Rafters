@@ -17,8 +17,8 @@ what they will need (systems changed since the last balance run, guide sections 
 date) and **remind the owner when the work looks close to the end steps**. Those end steps are:
 
 1. **Balance**: measure with the harness (`scripts/harness.ts`, casual mini-game play, smart
-   policy) against the last approved numbers (round 21: mean peak 74.4785, NBA 78.4%,
-   All-Star 34.6%, MVP 11.3%, Hall of Fame 11.3%, titles 36.1%).
+   policy) against the last approved numbers (round 22: mean peak 74.4923, NBA 78.3%,
+   All-Star 35.8%, MVP 11.9%, Hall of Fame 11.2%, titles 29.2%).
 2. **Update the game guide**: the manual (`SECTIONS` and `QUICK` in
    `src/ui/components/Guide.tsx`: big headers, expandable cards) and Guide mode (`guideStep` in
    the same file), so both describe the game as it now is.

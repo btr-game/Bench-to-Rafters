@@ -1,6 +1,7 @@
 // The single app store. The engine mutates a GameState in place, so every action works
 // on a structured clone and swaps it in; React sees a new object each time.
 
+import { dailyInput, dailySeed, todayKey } from './engine/mini/daily';
 import { fastForward, setFast } from './engine/fast';
 import { requestTrade } from './engine/career/team';
 import { recruitPlayer, takePayCut } from './engine/career/recruit';
@@ -65,6 +66,10 @@ interface Store {
   resume: () => boolean;
   /** Whether the autosave works here ('off' when the browser blocks storage or the save is too big). */
   saving: 'ok' | 'off';
+  /** Round 22: the daily challenge in progress, with the career and setting it stepped away from. */
+  daily: { day: string; stash: GameState | null; simple: boolean } | null;
+  startDaily: () => void;
+  endDaily: () => void;
 }
 
 // ---------- autosave (round 14) ----------
@@ -178,6 +183,22 @@ export const useStore = create<Store>((set, get) => ({
   },
   seen: {},
   saving: 'ok',
+  daily: null,
+  startDaily: () => {
+    const day = todayKey();
+    const game = newGame(dailySeed(day), dailyInput(day));
+    game.flags.daily = 1;
+    fastForward(game);
+    const st = get();
+    set({ daily: { day, stash: st.daily?.stash ?? st.game, simple: st.daily?.simple ?? st.simple }, game, simple: true, tab: 'home', transition: null, mini: null, seen: allSeen(game) });
+    top();
+  },
+  endDaily: () => {
+    const d = get().daily;
+    if (!d) return;
+    set({ daily: null, game: d.stash, simple: d.simple, tab: 'home', transition: null, mini: null, seen: d.stash ? allSeen(d.stash) : {} });
+    top();
+  },
   resume: () => {
     try {
       const raw = localStorage.getItem(SAVE_KEY);
@@ -369,6 +390,8 @@ let saveTimer: ReturnType<typeof setTimeout> | null = null;
 useStore.subscribe((now, before) => {
   if (now.game === before.game) return;
   if (saveTimer) clearTimeout(saveTimer);
+  // a daily challenge is never saved: the career on this device stays as it was
+  if (now.daily) return;
   saveTimer = setTimeout(() => {
     const ok = writeSave(useStore.getState().game);
     if ((ok ? 'ok' : 'off') !== useStore.getState().saving) useStore.setState({ saving: ok ? 'ok' : 'off' });

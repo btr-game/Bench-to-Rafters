@@ -10,10 +10,12 @@ import { chance, clamp, pick } from '../rng';
 import type { AttrKey, GameState } from '../types';
 import { adjust, note, teamById } from './common';
 import { NBA_TEAMS } from '../../content/teams';
+import { fanHalf } from './fanCulture';
 import { addPounds, syncWeight, weightUnits } from '../player/weight';
 
 export interface CityCulture {
   name: string;
+  icon: string; // a pixel icon for the card (ui/art/icons.ts)
   /** What living and playing there is like, in a sentence. */
   text: string;
   good: string;
@@ -45,6 +47,7 @@ const distracted = (s: GameState, rng: GameState['rng'], p: number, where: strin
 
 export const CITY_CULTURES: Record<string, CityCulture> = {
   BOS: {
+    icon: 'dynasty',
     name: 'Banner standards',
     text: 'Seventeen banners in the rafters and fans who know every one. Nothing but winning counts.',
     good: 'Basketball IQ grows; winning seasons lift you',
@@ -55,6 +58,7 @@ export const CITY_CULTURES: Record<string, CityCulture> = {
     },
   },
   BKN: {
+    icon: 'house',
     name: 'Brooklyn hustle',
     text: 'A borough of strivers and a front office built on player development.',
     good: 'Young players develop faster',
@@ -65,6 +69,7 @@ export const CITY_CULTURES: Record<string, CityCulture> = {
     },
   },
   NYK: {
+    icon: 'camera',
     name: 'The Garden spotlight',
     text: 'The Mecca. Every good night makes the back page, every bad one too, and the city never sleeps.',
     good: 'Reputation grows fast',
@@ -76,6 +81,7 @@ export const CITY_CULTURES: Record<string, CityCulture> = {
     },
   },
   PHI: {
+    icon: 'rival',
     name: 'Trust the Process',
     text: 'A patient front office and the toughest fans in sports. They booed Santa Claus.',
     good: 'Young players develop a little faster',
@@ -86,6 +92,7 @@ export const CITY_CULTURES: Record<string, CityCulture> = {
     },
   },
   TOR: {
+    icon: 'snow',
     name: 'We the North',
     text: 'A whole country behind one team, and the longest flights in the league.',
     good: 'Team chemistry: a nation pulling together',
@@ -96,6 +103,7 @@ export const CITY_CULTURES: Record<string, CityCulture> = {
     },
   },
   CHI: {
+    icon: 'grind',
     name: 'Windy City grind',
     text: 'A blue-collar town that loves defenders and still measures everyone against the 90s.',
     good: 'Perimeter defense and rebounding grow; the coach trusts grinders',
@@ -108,6 +116,7 @@ export const CITY_CULTURES: Record<string, CityCulture> = {
     },
   },
   CLE: {
+    icon: 'house',
     name: 'Rust Belt loyalty',
     text: 'A small market that never forgets who stayed.',
     good: 'Loyal fans keep your mood and the coach’s trust up',
@@ -119,6 +128,7 @@ export const CITY_CULTURES: Record<string, CityCulture> = {
     },
   },
   DET: {
+    icon: 'strength',
     name: 'Bad Boys',
     text: 'Motor City toughness. Nobody gets an easy basket here.',
     good: 'Interior defense, perimeter defense and rebounding grow',
@@ -131,6 +141,7 @@ export const CITY_CULTURES: Record<string, CityCulture> = {
     },
   },
   IND: {
+    icon: 'shoot',
     name: 'Hoosier hoops',
     text: 'Basketball is a religion in Indiana, and it is played the right way.',
     good: 'Shooting and basketball IQ grow; the fans love you',
@@ -143,6 +154,7 @@ export const CITY_CULTURES: Record<string, CityCulture> = {
     },
   },
   MIL: {
+    icon: 'snow',
     name: 'Small-town focus',
     text: 'Cold, quiet and friendly: nothing to do in winter but work.',
     good: 'Few distractions: you develop a little faster',
@@ -153,6 +165,7 @@ export const CITY_CULTURES: Record<string, CityCulture> = {
     },
   },
   ATL: {
+    icon: 'flame',
     name: 'Nightlife capital',
     text: 'The music capital of the South, and the clubs are open until sunrise.',
     good: 'Your name grows with the city’s music scene',
@@ -163,6 +176,7 @@ export const CITY_CULTURES: Record<string, CityCulture> = {
     },
   },
   CHA: {
+    icon: 'chef',
     name: 'Buzz City ease',
     text: 'Easygoing, warm and full of barbecue.',
     good: 'Good mood all season',
@@ -173,6 +187,7 @@ export const CITY_CULTURES: Record<string, CityCulture> = {
     },
   },
   MIA: {
+    icon: 'palm',
     name: 'Heat Culture',
     text: 'The hardest-working, best-conditioned team in the league, in a city built for parties.',
     good: 'Body-fat tests: your weight moves toward its best, conditioning grows',
@@ -186,6 +201,7 @@ export const CITY_CULTURES: Record<string, CityCulture> = {
     },
   },
   ORL: {
+    icon: 'palm',
     name: 'Sunshine State',
     text: 'Theme parks, sunshine and very little pressure.',
     good: 'Good mood and a fresh body',
@@ -197,6 +213,7 @@ export const CITY_CULTURES: Record<string, CityCulture> = {
     },
   },
   WAS: {
+    icon: 'news',
     name: 'Capital pressure',
     text: 'Power, politics and a media corps that covers everything.',
     good: 'Fame grows',
@@ -207,6 +224,7 @@ export const CITY_CULTURES: Record<string, CityCulture> = {
     },
   },
   DEN: {
+    icon: 'athletic',
     name: 'Mile High',
     text: 'A mile above sea level. Visitors gasp for air in the fourth quarter, and so do newcomers.',
     good: 'After a season of thin air, your stamina and athleticism grow, and so does your development',
@@ -226,6 +244,7 @@ export const CITY_CULTURES: Record<string, CityCulture> = {
     },
   },
   MIN: {
+    icon: 'snow',
     name: 'Northern winters',
     text: 'Long, frozen winters: the gym is the warmest place in town.',
     good: 'Gym rats develop faster',
@@ -236,6 +255,7 @@ export const CITY_CULTURES: Record<string, CityCulture> = {
     },
   },
   OKC: {
+    icon: 'underdog',
     name: 'Draft and develop',
     text: 'A small market that builds through youth, patience and player development.',
     good: 'Young players develop faster',
@@ -246,9 +266,10 @@ export const CITY_CULTURES: Record<string, CityCulture> = {
     },
   },
   POR: {
-    name: 'Rip City',
-    text: 'Rain, coffee and the most loyal crowd in the West.',
-    good: 'Loyal fans keep your mood up',
+    icon: 'tent',
+    name: 'Rain city',
+    text: 'Rain, coffee, forests and bike paths: an easy city to love.',
+    good: 'A city you settle into: your mood stays up',
     bad: 'The longest road trips in the league',
     half: (s) => {
       morale(s, 1.5);
@@ -256,6 +277,7 @@ export const CITY_CULTURES: Record<string, CityCulture> = {
     },
   },
   UTA: {
+    icon: 'athletic',
     name: 'Quiet altitude',
     text: 'Salt Lake City: four thousand feet up and early to bed.',
     good: 'Few distractions; after a season the altitude builds your athleticism',
@@ -267,6 +289,7 @@ export const CITY_CULTURES: Record<string, CityCulture> = {
     },
   },
   GSW: {
+    icon: 'shoot',
     name: 'Splash culture',
     text: 'The team that changed the game from deep, with tech money in every seat.',
     good: 'Shooting and range grow',
@@ -278,6 +301,7 @@ export const CITY_CULTURES: Record<string, CityCulture> = {
     },
   },
   LAC: {
+    icon: 'underdog',
     name: 'The other LA team',
     text: 'Overshadowed in their own city, and playing with a chip on the shoulder.',
     good: 'The chip on your shoulder: the coach trusts you, you work harder',
@@ -289,6 +313,7 @@ export const CITY_CULTURES: Record<string, CityCulture> = {
     },
   },
   LAL: {
+    icon: 'stars',
     name: 'Hollywood',
     text: 'The brightest lights in sports: celebrities courtside, premieres every night.',
     good: 'Fame grows fastest here',
@@ -300,6 +325,7 @@ export const CITY_CULTURES: Record<string, CityCulture> = {
     },
   },
   PHX: {
+    icon: 'flame',
     name: 'Valley heat',
     text: 'Desert sunshine and summer days over 110 degrees.',
     good: 'Conditioning in the heat builds athleticism; sunshine keeps you happy',
@@ -311,8 +337,9 @@ export const CITY_CULTURES: Record<string, CityCulture> = {
     },
   },
   SAC: {
-    name: 'Cowbell loyalty',
-    text: 'The loudest small arena in the league, and a city that loves its only team.',
+    icon: 'teamfirst',
+    name: 'Small capital',
+    text: 'A government town with one team, and the whole city pulling for it.',
     good: 'Team chemistry and a good mood',
     bad: 'A small market grows your fame slowly',
     half: (s) => {
@@ -322,6 +349,7 @@ export const CITY_CULTURES: Record<string, CityCulture> = {
     },
   },
   DAL: {
+    icon: 'chef',
     name: 'Texas-size',
     text: 'Big money, big steaks, big expectations.',
     good: 'Fame and money grow',
@@ -332,6 +360,7 @@ export const CITY_CULTURES: Record<string, CityCulture> = {
     },
   },
   HOU: {
+    icon: 'chart',
     name: 'Space City analytics',
     text: 'Threes, layups and spreadsheets: the numbers decide everything here.',
     good: 'Shooting range and basketball IQ grow',
@@ -343,6 +372,7 @@ export const CITY_CULTURES: Record<string, CityCulture> = {
     },
   },
   MEM: {
+    icon: 'perimeter',
     name: 'Grit and grind',
     text: 'Blues, barbecue and defense. Nothing comes easy in Memphis.',
     good: 'Defense grows and the coach trusts grinders',
@@ -355,6 +385,7 @@ export const CITY_CULTURES: Record<string, CityCulture> = {
     },
   },
   NOP: {
+    icon: 'boat',
     name: 'The Big Easy',
     text: 'Jazz, gumbo and a party every night of the week.',
     good: 'You have never been happier',
@@ -366,6 +397,7 @@ export const CITY_CULTURES: Record<string, CityCulture> = {
     },
   },
   SAS: {
+    icon: 'laurel',
     name: 'The Spurs Way',
     text: 'Fundamentals, discipline and the best sports science in the league. Players last longer here.',
     good: 'Basketball IQ grows and you age more slowly',
@@ -398,6 +430,7 @@ export function cityHalf(s: GameState): string {
   if (!c || !t || !s.season || s.mode === 'lab') return '';
   const ctx: Ctx = { years: s.teamSeasons[t.id] ?? 0, winning: t.w >= t.l, young: s.player.age <= 24 };
   const line = c.half(s, ctx);
+  fanHalf(s);
   syncWeight(s.player);
   if (line) note(s, line);
   return line ? ` ${line}` : '';

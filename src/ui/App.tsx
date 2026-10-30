@@ -10,6 +10,7 @@ import { Create } from './screens/Create';
 import { Home } from './screens/Home';
 import { LeagueTab, PlayerTab, RecordsTab, SeasonTab } from './screens/Tabs';
 import { Retirement } from './screens/Retirement';
+import { DailyStrip } from './mini/Daily';
 import { Overlays } from './components/Overlays';
 import { MiniGames } from './mini/MiniGames';
 import { Icon } from './art/Icon';
@@ -138,6 +139,7 @@ export function App() {
             <SettingsMenu g={game} />
           </div>
         </header>
+        {game.flags.daily ? <DailyStrip g={game} /> : null}
         <div className="tab-view" key={tab}>
           {tab === 'home' && (retired ? <Retirement g={game} /> : <Home g={game} />)}
           {tab === 'season' && <SeasonTab g={game} />}

@@ -16,6 +16,7 @@ import type { GameState, League, Team } from '../types';
 import { adjust, logDecision, pushMoment, teamById, userOvr } from './common';
 import { currentStyle, fitLabel, styleEffect, styleFit, TEAM_STYLES } from './identity';
 import { duoEffect } from './duo';
+import { FAN_CULTURES } from './fanCulture';
 
 /** 1 = the best roster in the league. */
 export function rosterRank(league: League, teamId: string): number {
@@ -68,6 +69,13 @@ export function startTeamFactors(s: GameState, team: Team): { bonus: number; not
     post = e.playoff - e.regular;
     fx = { perf: e.perf, usage: e.usage };
     notes.push(`${TEAM_STYLES[style].name}: ${fitLabel(styleFit(s, style)).toLowerCase()} (${e.regular >= 0 ? '+' : ''}${e.regular}, playoffs ${e.playoff >= 0 ? '+' : ''}${e.playoff})`);
+  }
+  // round 22: the home crowd, and how it rises in the playoffs (career/fanCulture.ts)
+  const fans = s.stage === 'NBA' ? FAN_CULTURES[team.abbr] : undefined;
+  if (fans && (fans.crowd || fans.playoff)) {
+    bonus += fans.crowd;
+    post += fans.playoff;
+    notes.push(`Fans, ${fans.name}: ${fans.crowd ? `+${fans.crowd.toFixed(2)}` : 'no edge'} at home, ${fans.playoff ? `+${fans.playoff.toFixed(2)} more in the playoffs` : 'nothing extra in the playoffs'}`);
   }
   // round 20: a duo lifts everyone around it (career/duo.ts)
   const duo = s.teamId === team.id ? duoEffect(s) : null;

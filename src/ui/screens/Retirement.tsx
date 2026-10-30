@@ -17,6 +17,7 @@ import { canShareFiles, downloadCareerCard, shareCareerCard } from '../share';
 import { useState } from 'react';
 import { LegendarySeasons } from '../components/Legendary';
 import { CareerTimeline } from '../components/Timeline';
+import { DailyResult } from '../mini/Daily';
 
 function CareerAnalysis({ g }: { g: GameState }) {
   const c = compareCareer(g);
@@ -208,6 +209,7 @@ export function Retirement({ g }: { g: GameState }) {
   }
   return (
     <div className="stack">
+      {g.flags.daily ? <DailyResult g={g} /> : null}
       <section className="final stack" style={{ gap: 10 }}>
         <div className="kicker">
           Retired at {g.retiredAt ?? p.age} · {legacyIndex(g)} legacy points · {MODES[g.mode ?? 'standard'].name}

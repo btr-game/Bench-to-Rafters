@@ -522,7 +522,7 @@ export const LEGACY = {
 };
 
 // round 15: a veteran can become a ring chaser (career/ringChase.ts) instead of retiring
-export const RING_CHASE = { minOvr: 66, starPeak: 85, starMinOvr: 56, maxAge: 38, contenders: 6, offers: 2 };
+export const RING_CHASE = { minOvr: 66, starPeak: 85, starMinOvr: 56, maxAge: 38, from: 1, contenders: 7, offers: 2 };
 
 // §12 contracts
 export const CAP = { start: 165, inflation: 0.03 };
@@ -566,6 +566,7 @@ export const TEAM_FACTORS = {
   tradeMax: 0.6,
   ringChaseAge: 30, // contenders offer a minimum deal from this age, or to bench players
   ringChaseChance: 0.5, // a contender actually has a spot
+  playoffGrind: 1.0, // round 22: strength his team gives up in NBA playoff games (every opponent raises its game)
   // winning players: team strength per rating point above his own OVR (career/team.ts winningEdge)
   edge: { perimeter: 0.12, interior: 0.1, glass: 0.05, general: 0.13, threeAndD: 0.14, iq: 0.05, max: 2.5, playoffMult: 1.6, traitFrom: 0.4 },
 };

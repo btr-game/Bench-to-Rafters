@@ -1228,3 +1228,42 @@ Reached from the start page and from the bottom of Home (a career in progress is
   shootaround with a recruited teammate, the duo's last shot, keeping the duo together at
   contract time, grumbling while on Spotlight, the coach noticing Team first, and a young star
   asking a ring chaser for help.
+
+## Round 22
+
+- **Career timeline and journal** (`career/timeline.ts`, `components/Timeline.tsx`): OVR at the end
+  of every season with the big moments drawn on it (titles, honours, legendary seasons, injuries,
+  team moves, duos), and a journal under it that replaces the decision log: every entry, season
+  by season, with how each turning point turned out. On the Records tab and the end-of-career page.
+- **Body map** (`player/body.ts`, `components/BodyMap.tsx`): every half, the ratings he gained are
+  shared out over the muscles that carry them (athleticism to the legs, shooting to the shoulders
+  and arms...), plus the Weight room and Speed plans' own work; every injury is kept and placed on
+  the body by its name; height and weight are kept per season. Front and back views on the Player tab.
+- **Legendary seasons** (`awards/legendary.ts`): one gold card per season that stacked the big
+  honours (MVP and DPOY, MVP and Finals MVP, MVP and the title, ...) or the numbers (a triple-double
+  average, thirty a night), the rarest combination first. On the end-of-career page.
+- **Duo art and the Big Three** (`art/Duo.tsx`, `career/duo.ts`): the duo page and card show the
+  two of them; a second recruit whose bond fills while the duo stands joins it (DUO.trio: more
+  team chemistry, a little more efficiency and assists, a few fewer shots).
+- **Mini-games:** 3-on-3 streetball (`mini/streetball.ts`; king of the court, three crews, a timing
+  tap to finish drives; unlocks at finishing 82 and pays finishing) and the daily challenge
+  (`mini/daily.ts`; one prospect a day from the date, fast break and simple text on, scored by
+  legacy; the career on the device is stashed and never overwritten by the run).
+- **NBA city and fan cultures** (`career/cityCulture.ts`, `career/fanCulture.ts`): every city does
+  something to him each half (Denver's altitude slows a weak athlete in his first season and then
+  builds his athleticism; party cities can pull him out of the gym; San Antonio slows aging;
+  Golden State builds shooters...). Its fans add a home-crowd edge, a playoff edge, and their own
+  reaction to winning and losing. On the Season tab and on NBA offers.
+- **Per-team arenas:** the NBA banner shows each franchise's real number of title banners, its
+  roof, its motif over centre court and its name on the stands.
+- **Fixes:** rating rows share one grid (bars no longer run over the names on narrow cards); the
+  banner's numbers sit on a soft panel; dark-mode streetball background and court; a former star
+  (peak 85+) can become a veteran specialist down to OVR 56 and sees it first; no G League offers
+  from age 30.
+- **Harder titles** (owner: "I still want harder titles"). Ring-chase calls come from teams ranked
+  2-8 at random (not the two best), free-agency ring-chase offers from teams 2-7, and in NBA
+  playoff games his team gives up 1.0 strength (`TEAM_FACTORS.playoffGrind`: every opponent raises
+  its game). Lowering the chemistry cap and the playoff winning-player edge moved titles by
+  nothing measurable, so they stay. 1,600 careers (casual mini-games, smart policy) against the
+  round 21 numbers: mean peak 74.4923 (74.4785), NBA 78.3% (78.4%), All-Star 35.8% (34.6%), MVP
+  11.9% (11.3%), Hall of Fame 11.2% (11.3%), titles 29.2% (36.1%). A grind of 1.5 gave 21.3%.

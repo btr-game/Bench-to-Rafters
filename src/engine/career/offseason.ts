@@ -7,7 +7,7 @@ import { processArcs } from '../events/arcs';
 import { reclassify } from '../player/classify';
 import { pushMilitary } from './nationality';
 import { ATTR_MAX, GROWTH_RATE_AGE, MODES, POSITIONS, WEAR, FA_INTEREST, OVERSEAS_FA, TEAM_FACTORS, OFFSEASON_DAYS, REP, RETIRE, ATTRS, TEAM_OPTION } from '../balance';
-import { chance, clamp, int, logistic, range } from '../rng';
+import { chance, clamp, int, logistic, range, shuffle } from '../rng';
 import type { Contract, Decision, GameState, Offer, RoleKey } from '../types';
 import { applyAging, growHeight, updateHeightProjection } from '../player/growth';
 import { healDays } from '../player/injury';
@@ -492,7 +492,8 @@ function pushFreeAgency(s: GameState, lastShare: number, lastRole: RoleKey): voi
   const fa = userOvr(s);
   const benchLast = lastRole === 'bench' || lastRole === 'deep';
   if (s.nba && (s.player.age >= TEAM_FACTORS.ringChaseAge || benchLast) && chance(s.rng, TEAM_FACTORS.ringChaseChance * modeDial(s.mode, 'ringChase'))) {
-    const contenders = [...s.nba.teams].sort((a, b) => b.strength - a.strength).slice(0, 4);
+    // round 22: a good team a step below the very best (ranks 2-7), not the favourite
+    const contenders = shuffle(s.rng, [...s.nba.teams].sort((a, b) => b.strength - a.strength).slice(1, 7));
     const c = contenders.find((t) => t.id !== s.teamId && !offers.some((o) => o.teamId === t.id) && fa >= (t.roster[11]?.ovr ?? 70) - 2);
     if (c) offers.push(nbaOffer(s, c, fa >= (c.roster[8]?.ovr ?? 75) ? 'rotation' : 'bench', minSalary(s.year + 1, s.serviceYears), 1, 'min', 'Ring chase: a title contender with a spot for you'));
   }

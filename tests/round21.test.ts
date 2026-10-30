@@ -53,7 +53,7 @@ describe('round 21 events', () => {
 
   it('the new events come up in careers', () => {
     const seen = new Set<string>();
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 12; i++) {
       const s = game(2100 + i);
       s.flags.simPostseason = 1;
       for (let k = 0; k < 3000; k++) {

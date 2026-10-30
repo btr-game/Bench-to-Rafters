@@ -11,8 +11,10 @@ import { ThreesGame } from './Threes';
 import { LabGame } from './LabGame';
 import { DunkGame } from './Dunk';
 import { StreetballGame } from './Streetball';
+import { DailyGame } from './Daily';
 
-const GAMES: { id: MiniId; name: string; text: string; tag: string; color: string }[] = [
+const GAMES: { id: MiniId | 'daily'; name: string; text: string; tag: string; color: string }[] = [
+  { id: 'daily' as const, tag: 'Every day', color: '#0B7285', name: 'Daily challenge', text: 'One prospect a day, the same for everyone. A whole career with fast break and simple text, scored by the legacy he leaves. Your own career waits.' },
   { id: 'office' as const, tag: 'Strategy', color: '#1C7ED6', name: 'Front Office', text: 'Run an NBA franchise for three seasons. Scout the draft, trade, sign players from Europe and beyond, set the game plan, and win a title before the owner loses patience.' },
   { id: 'threes' as const, tag: 'Timing', color: '#E8590C', name: 'Three-point contest', text: 'Five racks, sixty seconds, a money-ball rack of your choice. Stop the meter in the green. Beat seven of the best shooters ever.' },
   { id: 'dunk' as const, tag: 'Timing', color: '#C2255C', name: 'Dunk contest', text: 'Design your dunks (takeoff, moves, props) and land them one timing tap at a time. Five judges, two rounds, three of the best dunkers ever.' },
@@ -42,7 +44,7 @@ function Hub() {
       </div>
       <div className="hub-grid">
         {GAMES.map((x) => {
-          const pr = career ? miniProgress(career, x.id) : null;
+          const pr = career && x.id !== 'daily' ? miniProgress(career, x.id) : null;
           const locked = !!pr && !pr.open;
           return (
             <button key={x.id} className={`hub-card${locked ? ' locked' : ''}`} style={{ ['--hub' as string]: x.color }} disabled={locked} onClick={() => setMini(x.id)}>
@@ -51,7 +53,7 @@ function Hub() {
                 {pr && <span className={`hub-state${locked ? '' : ' open'}`}>{locked ? 'Locked' : 'Unlocked'}</span>}
               </span>
               <b className="hub-name with-icon">
-                <Icon name={x.id === 'office' ? 'office' : x.id === 'lab' ? 'lab' : ICON_FOR[x.id] ?? ''} size={34} />
+                <Icon name={x.id === 'office' ? 'office' : x.id === 'lab' ? 'lab' : x.id === 'daily' ? 'calendar' : ICON_FOR[x.id] ?? ''} size={34} />
                 {x.name}
               </b>
               <small>{x.text}</small>
@@ -126,6 +128,7 @@ export function MiniGames() {
       {mini === 'dunk' && <DunkGame />}
       {mini === 'lab' && <LabGame />}
       {mini === 'street' && <StreetballGame />}
+      {mini === 'daily' && <DailyGame />}
     </div>
   );
 }

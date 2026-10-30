@@ -8,11 +8,13 @@ import { TextBracket } from '../components/TextBracket';
 import { useState, type ReactNode } from 'react';
 import { VenueArt, arenaOf, placeOf, venueOf, type VenueKind } from '../art/Venue';
 import { TeamArt } from '../art/Crest';
+import { Icon } from '../art/Icon';
 import { PlayerArt, kitFor, styleLeague, type KitName } from '../art/Player';
 import { JerseyArt } from '../art/Jersey';
 import { EvolutionArt } from '../art/Evolution';
 import { CareerTimeline } from '../components/Timeline';
 import { cityCultureOf } from '../../engine/career/cityCulture';
+import { fanCultureOf } from '../../engine/career/fanCulture';
 import { BodyMap } from '../components/BodyMap';
 import { FlagArt } from '../art/Flag';
 import type { GameLog, GameState, League, SeasonRecord, SeriesResult, StatLine, Team } from '../../engine/types';
@@ -398,20 +400,53 @@ export function SeasonTab({ g }: { g: GameState }) {
   );
 }
 
-/** Round 22: what his NBA city is like, and what it does to him. */
+/** Round 22: what his NBA city and its fans are like, and what they do to him. */
 function CityCard({ g }: { g: GameState }) {
   const c = cityCultureOf(g);
-  if (!c) return null;
+  const f = fanCultureOf(g);
   const t = teamOf(g);
-  const years = t ? (g.teamSeasons[t.id] ?? 0) : 0;
+  if (!c || !t) return null;
+  const years = g.teamSeasons[t.id] ?? 0;
+  const loud = (v: number) => (v >= 0.25 ? 'deafening' : v >= 0.15 ? 'loud' : v > 0 ? 'lively' : 'quiet');
   return (
-    <Card title={c.name} kicker={`City culture · ${t?.name ?? ''}${years ? ` · season ${years + 1} here` : ' · first season here'}`}>
+    <section className="card stack city-card" style={{ ['--team' as string]: t.color }}>
+      <div className="city-head">
+        <TeamArt name={t.name} abbr={t.abbr} color={t.color} league="NBA" size={56} />
+        <span className="city-icon">
+          <Icon name={c.icon} size={40} />
+        </span>
+        <div>
+          <div className="kicker">
+            City culture · {years ? `season ${years + 1} here` : 'first season here'}
+          </div>
+          <div className="sec-title">{c.name}</div>
+        </div>
+      </div>
       <p className="small prose">{c.text}</p>
       <ul className="city-fx small">
         <li className="good">{c.good}</li>
         <li className="bad">{c.bad}</li>
       </ul>
-    </Card>
+      {f && (
+        <div className="city-fans">
+          <div className="city-head">
+            <span className="city-icon">
+              <Icon name="reputation" size={34} />
+            </span>
+            <div>
+              <div className="kicker">The fans</div>
+              <b>{f.name}</b>
+            </div>
+          </div>
+          <p className="small prose">{f.text}</p>
+          <ul className="city-fx small">
+            <li className={f.crowd > 0 ? 'good' : 'flat'}>Home crowd: {loud(f.crowd)}{f.playoff >= 0.3 ? ', and they rise in the playoffs' : ''}</li>
+            <li className={f.win > 1 ? 'good' : 'flat'}>When you win: {f.win >= 3 ? 'you own the city' : f.win >= 2 ? 'they love you' : 'they enjoy it'}</li>
+            <li className={f.lose < 0 ? 'bad' : 'good'}>When you lose: {f.lose <= -3 ? 'brutal' : f.lose < 0 ? 'restless' : f.lose > 0 ? 'still ringing the cowbells' : 'patient'}</li>
+          </ul>
+        </div>
+      )}
+    </section>
   );
 }
 

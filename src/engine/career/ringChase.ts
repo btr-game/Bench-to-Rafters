@@ -4,7 +4,7 @@
 // use fade, his archetype becomes the role, and title contenders offer him a minimum deal.
 
 import { RING_CHASE as RC } from '../balance';
-import { clamp } from '../rng';
+import { clamp, shuffle } from '../rng';
 import type { AttrKey, Decision, GameState, Offer } from '../types';
 import { NAMES } from '../../content/strings';
 import { logDecision, userOvr } from './common';
@@ -86,7 +86,8 @@ export function becomeRingChaser(s: GameState, key?: ChaserKey): Omit<Decision, 
   p.ringChaser = r.name;
   logDecision(s, 'ringchase', `Reinvented himself as a ${r.name.toLowerCase()} to chase a ring.`);
   const nba = s.nba!;
-  const contenders = [...nba.teams].sort((a, b) => b.strength - a.strength).slice(0, RC.contenders).filter((t) => t.id !== s.teamId);
+  // round 22: the very best teams rarely need him; the calls come from good teams a step below
+  const contenders = shuffle(s.rng, [...nba.teams].sort((a, b) => b.strength - a.strength).slice(RC.from, RC.from + RC.contenders).filter((t) => t.id !== s.teamId));
   const offers: Offer[] = contenders.slice(0, RC.offers).map((t) => nbaOffer(s, t, 'rotation', minSalary(s.year + 1, s.serviceYears), 1, 'min', `Ring chase: ${r.name.toLowerCase()} off the bench`));
   return {
     kind: 'offers',

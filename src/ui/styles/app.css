@@ -1463,3 +1463,18 @@ td .art-team { display: inline-block; vertical-align: middle; margin: -3px 8px -
 .city-fx li::before { font-family: var(--f-mono); font-weight: 700; margin-right: 6px; }
 .city-fx .good::before { content: '+'; color: var(--good); }
 .city-fx .bad::before { content: '−'; color: var(--bad); }
+
+/* round 22: daily challenge */
+.daily-card { display: grid; grid-template-columns: auto 1fr auto; gap: 18px; align-items: center; }
+.daily-best, .daily-score { display: flex; flex-direction: column; align-items: center; text-align: center; }
+.daily-best b, .daily-score b { font-family: var(--f-display); font-size: 48px; line-height: 1; }
+.daily-best small, .daily-score small { font-family: var(--f-mono); font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.daily-strip { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 12px; padding: 8px 12px; border-radius: 10px; background: color-mix(in srgb, #0B7285 16%, var(--surface)); border: 1px solid color-mix(in srgb, #0B7285 50%, transparent); }
+.daily-strip .spacer { flex: 1; }
+.daily-result { border: 2px solid #0B7285; }
+@media (max-width: 640px) { .daily-card { grid-template-columns: auto 1fr; } .daily-best { grid-column: 1 / -1; } }
+.city-card { border-top: 4px solid var(--team); }
+.city-head { display: flex; align-items: center; gap: 10px; }
+.city-icon { display: inline-grid; place-items: center; width: 52px; height: 52px; border-radius: 12px; background: color-mix(in srgb, var(--team) 14%, var(--surface)); }
+.city-fans { display: flex; flex-direction: column; gap: 6px; padding-top: 10px; border-top: 1px dashed var(--line); }
+.city-fx .flat::before { content: '·'; color: var(--muted); }

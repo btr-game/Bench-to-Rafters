@@ -24,6 +24,7 @@ import {
   LEVELS,
   RECRUIT,
   ROLE_MINUTES,
+  TEAM_FACTORS,
 } from '../balance';
 import { chance, clamp, int, normal, range, weightedIndex, type Rng } from '../rng';
 import type { Attrs, GameLog, GameState, HalfPlan, League, LevelKey, RoleKey, SeasonRecord, SeasonState, StatLine, Team } from '../types';
@@ -304,7 +305,7 @@ function makeHook(s: GameState, league: League, level: LevelKey, acc: HalfAcc, s
             e,
             started,
             level,
-            my: team.strength + (season.teamBonus ?? 0) + (post ? (season.postBonus ?? 0) : 0) + impact + edgeFor(p.attrs, ovr, minutes / L.gameLen, true) + plan.teamBoost,
+            my: team.strength + (season.teamBonus ?? 0) + (post ? (season.postBonus ?? 0) : 0) + impact + edgeFor(p.attrs, ovr, minutes / L.gameLen, true) + plan.teamBoost - (level === 'NBA' ? TEAM_FACTORS.playoffGrind : 0),
             opp: opp.strength,
             oppName: opp.name,
             homeAdv: level !== 'NBA' ? 0 : home ? 1 : -1,
@@ -347,7 +348,9 @@ function makeHook(s: GameState, league: League, level: LevelKey, acc: HalfAcc, s
     let them: number;
     if (liveResult) ({ win, us, them } = liveResult);
     else {
-      win = chance(rng, winProb(team.strength + (season.teamBonus ?? 0) + (post ? (season.postBonus ?? 0) : 0) + impact + boost, opp.strength, post && level !== 'NBA' ? 0 : home ? 1 : -1));
+      // round 22: in the NBA playoffs every opponent raises its game (titles are harder)
+      const grind = post && level === 'NBA' ? TEAM_FACTORS.playoffGrind : 0;
+      win = chance(rng, winProb(team.strength + (season.teamBonus ?? 0) + (post ? (season.postBonus ?? 0) : 0) + impact + boost - grind, opp.strength, post && level !== 'NBA' ? 0 : home ? 1 : -1));
       us = Math.round(GAME_POINTS[level] + normal(rng, 0, 9));
       if (line && line.pts > us - 15) us = line.pts + int(rng, 15, 30);
       // postseason games run closer: more of them come down to the last minutes
