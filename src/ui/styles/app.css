@@ -1817,3 +1817,26 @@ td .art-team { display: inline-block; vertical-align: middle; margin: -3px 8px -
 .staff-who b { font-family: var(--f-display); font-weight: 800; font-size: 22px; letter-spacing: 0.02em; }
 .staff-said { font-style: italic; margin-top: 4px; }
 .staff-actions { gap: 8px; flex-wrap: wrap; }
+
+/* round 25: every mode, above Around the league */
+.modes-card { gap: 8px; }
+.mode-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.mode-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--f-display);
+  font-weight: 700;
+  font-size: 17px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.mode-chip.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.mode-chip:disabled { opacity: 0.45; cursor: default; }
+.mode-notes { margin: 0; padding-left: 18px; }

@@ -55,6 +55,7 @@ import { rosterRank, winningEdge } from "../../engine/career/team";
 import { ovrOf } from "../../engine/player/ovr";
 import { perGame } from "../../engine/sim/statModel";
 import { weightOf } from "../../engine/player/weight";
+import { ModesCard } from '../components/ModesCard';
 
 export function SeasonSummary({ rec }: { rec: SeasonRecord }) {
   const delta = rec.ovrEnd - rec.ovrStart;
@@ -1009,6 +1010,7 @@ export function Home({ g }: { g: GameState }) {
       <div className="stack home-side">
         <MvpRace g={g} />
         <DuoCard g={g} />
+        <ModesCard g={g} />
         <StoriesCard g={g} />
         <MiniGamesCard />
         {g.feed[0] && (

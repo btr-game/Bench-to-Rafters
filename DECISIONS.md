@@ -1503,3 +1503,12 @@ Reached from the start page and from the bottom of Home (a career in progress is
   building, a restaurant chain, a sneaker startup (shown odds); and three legacy projects for a
   big bank (a practice facility for the old school, the national team, a Hall of Fame wing), each
   +3 legacy points, reputation and morale. 22.25% of careers fund one.
+- **Sim mode, and every mode in one place** (the owner: a simulation mode; the mode switches above
+  Around the league instead of in the top bar). Sim mode is fast break plus the routine calls made
+  for him: the season plan (the training group of his first focus stat, recovery when hurt or
+  low), the summer program (rest when worn), the national team call-up and the G League
+  assignment; it stops only for turning points, offers, the draft, transfers, contracts, brands
+  and storylines (a 12-season test career stopped about three times a season). Turning fast
+  break off ends it. A "How you play" card above Around the league holds Sim, Fast break, Simple
+  text, Guide, Master and Play playoffs as chips, with a line on what each active one does; the
+  Fast and Simple chips left the top bar (the settings menu keeps its switches).

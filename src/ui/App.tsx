@@ -52,18 +52,6 @@ function TabBar({ g, top = false }: { g: GameState; top?: boolean }) {
   );
 }
 
-/** Simple text, one tap from anywhere (round 15: next to Fast break). */
-function SimpleChip() {
-  const on = useStore((s) => s.simple);
-  const toggle = useStore((s) => s.toggleSimple);
-  return (
-    <button data-tour="chip-simple" className={`fast-toggle${on ? ' on' : ''}`} aria-pressed={on} onClick={toggle} title="Simple text: hide descriptions and flavour, keep the choices">
-      <span className="fast-dot" aria-hidden="true" />
-      Simple<span className="hide-narrow"> text</span>
-    </button>
-  );
-}
-
 const SHORT_MODE: Record<string, string> = { standard: 'Regular', reality: 'Reality', stars: 'Stars', fast: 'Fast', lab: 'Lab' };
 
 /** The difficulty, always in view (round 15), and Master mode when it is on. */
@@ -76,19 +64,6 @@ function ModeBadge({ g }: { g: GameState }) {
       <span className="short">{SHORT_MODE[g.mode] ?? g.mode}</span>
       {master && <b> · Master</b>}
     </span>
-  );
-}
-
-/** Fast break, one tap from anywhere. */
-function FastChip({ g }: { g: GameState }) {
-  const toggle = useStore((s) => s.toggleFast);
-  if (g.mode === 'lab' || g.step === 'retired' || g.flags.daily) return null;
-  const on = !!g.flags.fast;
-  return (
-    <button data-tour="chip-fast" className={`fast-toggle${on ? ' on' : ''}`} aria-pressed={on} onClick={toggle} title="Fast break: quick seasons, you still make every real call">
-      <span className="fast-dot" aria-hidden="true" />
-      Fast<span className="hide-narrow"> break</span>
-    </button>
   );
 }
 
@@ -140,8 +115,6 @@ export function App() {
           <TabBar g={game} top />
           <div className="top-right">
             <NextStep g={game} />
-            <FastChip g={game} />
-            <SimpleChip />
             <GuideButton />
             <SettingsMenu g={game} />
           </div>
