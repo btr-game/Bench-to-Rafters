@@ -155,3 +155,9 @@ export function Card({ title, kicker, children, right, tour }: { title?: string;
     </section>
   );
 }
+
+/** A card fast break folds away (round 25: the owner wanted fast break to simplify much more).
+ * It takes no room of its own (display: contents), so grids lay out as before. */
+export function Extra({ children }: { children: ReactNode }) {
+  return <div className="extra">{children}</div>;
+}

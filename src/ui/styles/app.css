@@ -643,14 +643,21 @@ button.scout-row { text-align: left; background: var(--surface); color: inherit;
 .fo-rating b { font-family: var(--f-mono); text-align: right; }
 @media (max-width: 420px) { .fo-ratings { grid-template-columns: 1fr; } }
 
-/* simple text (round 11): fewer words, just the choices */
+/* simple text (round 11): fewer words, just the choices. Round 25 (the owner: simplify much
+   more): every explanation on every tab goes, not just on Home; status lines marked keep stay */
 .simple .prose,
-.simple .home-grid p.muted.small,
-.simple .home-grid .choice small,
-.simple .home-grid .item small,
+.simple p.small.muted:not(.keep),
+.simple .choice small:not(.keep),
+.simple .item small,
 .simple .move-tile small,
 .simple .reaction,
+.simple .mode-notes,
 .simple .fit-tag { display: none !important; }
+
+/* fast break folds the extra cards on every tab (round 25); one button brings them back */
+.extra { display: contents; }
+.fold .extra { display: none; }
+.fold-toggle { display: block; margin: 18px auto 0; }
 .simple .choice { min-height: 44px; }
 .simple .plans { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
 

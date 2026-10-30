@@ -1611,3 +1611,20 @@ Reached from the start page and from the bottom of Home (a career in progress is
   the achievement toasts while they fade in. Tabbing through every tab reaches each control
   with a visible focus ring, nothing clickable is mouse-only, and story pages (a fine, a
   nickname) close with Enter.
+- **Fast break and simple text simplify much more** (the owner: "because there's so much
+  functions now, fast break and simple text should simplify way more"). Fast break now trims the
+  screen as well as the stops: every tab keeps its essentials (Home: the to-do list, the player,
+  the main card, the offseason moves and the mode switches; Season: team strength and the
+  standings; Player: ratings, status, contract and money; League: the standings; Records: the
+  achievements, season by season and career totals) and folds the rest (the scouting report,
+  milestones, the MVP race, the duo, the rival, Around the league, mini-games, the feed, the game
+  log, the city, kits, the name card, staff, the wardrobe, the collection, the profile, the body
+  map, the roster, leaders and voting, the record book, the timeline, banners, trophies, highs,
+  tournaments and the tier list) behind one "Show everything" button at the bottom of the tab.
+  With the test career, the five tabs go from 41 cards and 6,214 words to 15 cards and 1,366
+  words; the Player tab from 7,465 pixels tall to 1,216. A press conference in fast break is one
+  answer whose tone carries through all three questions, and sim mode answers humbly on its own.
+  Simple text now hides explanations on every tab and in every dialog, not only on Home (every
+  small grey paragraph, choice details, the mode notes), keeping status lines a player needs
+  (claims left, the slots warning, the achievement riddles, empty states) and a press answer's
+  tone. With both on, Home has 203 words where it had 503.

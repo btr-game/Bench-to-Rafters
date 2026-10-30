@@ -25,18 +25,18 @@ export function MiniBonus({ result }: { result: MiniResult }) {
       {text ? (
         <p className="small">{text}</p>
       ) : !canClaimMini(game, result.game) && claimsUsed(game) < MINI_CLAIMS.perSeason ? (
-        <p className="small muted">This game is not unlocked for {game.player.name} yet, so this run is for fun. The lobby shows what it takes.</p>
+        <p className="small muted keep">This game is not unlocked for {game.player.name} yet, so this run is for fun. The lobby shows what it takes.</p>
       ) : !canClaimMini(game, result.game) ? (
-        <p className="small muted">All {MINI_CLAIMS.perSeason} claims used for {game.player.name} this season. Come back next season.</p>
+        <p className="small muted keep">All {MINI_CLAIMS.perSeason} claims used for {game.player.name} this season. Come back next season.</p>
       ) : preview.length === 0 ? (
-        <p className="small muted">Not good enough for a bonus this time. You can try again this season.</p>
+        <p className="small muted keep">Not good enough for a bonus this time. You can try again this season.</p>
       ) : (
         <>
           <p className="small">
             For {game.player.name}: {preview.join(', ')}
             {game.mode === 'lab' ? ' (paid as lab credits)' : ''}.
           </p>
-          <p className="small muted">
+          <p className="small muted keep">
             {left} of {MINI_CLAIMS.perSeason} claims left this season{left < MINI_CLAIMS.perSeason ? ' (this one pays half)' : ''}.
           </p>
           <button className="btn" onClick={() => setText(claim(result) || 'Claimed.')}>

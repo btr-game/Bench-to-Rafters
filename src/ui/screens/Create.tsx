@@ -68,7 +68,7 @@ function SavesCard() {
           <h2 className="title">Your careers</h2>
         </div>
       </div>
-      {slots.length === 0 && <p className="small muted">No careers saved yet. Every career is saved here after each move.</p>}
+      {slots.length === 0 && <p className="small muted keep">No careers saved yet. Every career is saved here after each move.</p>}
       {slots.map((x) => (
         <div key={x.id} className="save-row">
           <div style={{ minWidth: 0 }}>
@@ -104,7 +104,7 @@ function SavesCard() {
           )}
         </div>
       ))}
-      {slots.length >= MAX_SLOTS && <p className="small muted">All {MAX_SLOTS} slots are in use: a new career replaces the oldest ({slots[slots.length - 1].name}).</p>}
+      {slots.length >= MAX_SLOTS && <p className="small muted keep">All {MAX_SLOTS} slots are in use: a new career replaces the oldest ({slots[slots.length - 1].name}).</p>}
       <details className="save-import">
         <summary>Import a career from a code</summary>
         <textarea className="save-code" rows={3} value={paste} placeholder="BTR1..." onChange={(e) => (setPaste(e.target.value), setBad(false))} />

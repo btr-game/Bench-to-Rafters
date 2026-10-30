@@ -39,6 +39,7 @@ import { canRecruit, recruitInfo } from "../../engine/career/recruit";
 import { STARTERS_RECRUIT } from "../../engine/balance";
 import {
   Banners,
+  Extra,
   MilestoneStrip,
   ReactionCard,
   Scoreboard,
@@ -133,14 +134,14 @@ export function SeasonSummary({ rec }: { rec: SeasonRecord }) {
         </ul>
       )}
       {rec.bestGame?.line && (
-        <p className="muted small">
+        <p className="muted small keep">
           Best game: {rec.bestGame.line.pts} PTS, {rec.bestGame.line.reb} REB,{" "}
           {rec.bestGame.line.ast} AST vs {rec.bestGame.opp} ({rec.bestGame.res}{" "}
           {rec.bestGame.us}–{rec.bestGame.them})
         </p>
       )}
       {rec.salary > 0 && (
-        <p className="muted small">
+        <p className="muted small keep">
           Salary this season: {fmtMoney(rec.salary)}
         </p>
       )}
@@ -432,7 +433,7 @@ function Todo({ g }: { g: GameState }) {
         </button>
       )}
       {items.length === 0 ? (
-        !now && <p className="muted small">{UI.hub.nothingPending}</p>
+        !now && <p className="muted small keep">{UI.hub.nothingPending}</p>
       ) : (
         <ul className="todo-list">
           {items.map((x, i) => (
@@ -931,11 +932,13 @@ export function Home({ g }: { g: GameState }) {
           <Todo g={g} />
         </div>
         <PlayerCard g={g} />
-        <ScoutCard g={g} compact />
-        <section className="card stack">
-          <div className="sec-title">Milestones</div>
-          <MilestoneStrip reached={g.milestones} />
-        </section>
+        <Extra>
+          <ScoutCard g={g} compact />
+          <section className="card stack">
+            <div className="sec-title">Milestones</div>
+            <MilestoneStrip reached={g.milestones} />
+          </section>
+        </Extra>
       </div>
       <div className="stack home-center">
         <section className="card stack o-main">
@@ -1011,17 +1014,19 @@ export function Home({ g }: { g: GameState }) {
         )}
       </div>
       <div className="stack home-side">
-        <MvpRace g={g} />
-        <DuoCard g={g} />
-        <RivalCard g={g} />
         <ModesCard g={g} />
-        <StoriesCard g={g} />
-        <MiniGamesCard />
-        {g.feed[0] && (
-          <section className="card prose">
-            <ReactionCard r={g.feed[0]} />
-          </section>
-        )}
+        <Extra>
+          <MvpRace g={g} />
+          <DuoCard g={g} />
+          <RivalCard g={g} />
+          <StoriesCard g={g} />
+          <MiniGamesCard />
+          {g.feed[0] && (
+            <section className="card prose">
+              <ReactionCard r={g.feed[0]} />
+            </section>
+          )}
+        </Extra>
       </div>
     </div>
   );

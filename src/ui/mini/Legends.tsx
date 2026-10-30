@@ -422,7 +422,7 @@ export function LegendsGame() {
                 ))}
               </div>
             )}
-            {tab === 'bracket' && (b.rounds.length > 0 ? <TextBracket b={b} league={lg} userTeamId={st.mine} /> : <p className="small muted">The playoffs have not started.</p>)}
+            {tab === 'bracket' && (b.rounds.length > 0 ? <TextBracket b={b} league={lg} userTeamId={st.mine} /> : <p className="small muted keep">The playoffs have not started.</p>)}
             {tab === 'table' && (
               <div className="tbl-wrap">
                 <table>

@@ -5,10 +5,12 @@
 // - no national team (round 8);
 // - at most one turning point at a time, and notices with a single button close themselves;
 // - the postseason is simulated and the shop is skipped;
+// - a press conference is one answer: its tone carries through all three questions (round 25);
 // - "next" screens advance by themselves, and the offseason only stops when there is a move
 //   worth making (an unlocked focus change, the starting five to build, a size problem, or
 //   retirement age);
-// - only the big story pages are shown.
+// - only the big story pages are shown;
+// - on screen, every tab folds its extra cards away behind one button (round 25, App.tsx).
 
 import type { Decision, GameState, Moment } from './types';
 import { advance, canChangeFocus, choose, heightMismatch, prompt } from './flow';
@@ -28,6 +30,8 @@ function isBig(m: Moment): boolean {
 /** A decision fast break makes for the player, or null when it is the player's call. */
 function autoChoice(s: GameState, d: Decision): string | null {
   if (d.kind === 'shop') return d.choices.find((c) => c.id === 'leave')?.id ?? null;
+  // a press conference: the first answer's tone carries through the other two questions
+  if (d.kind === 'press' && typeof d.data?.last === 'string') return d.data.last;
   // a notice with a single button
   const open = d.choices.filter((c) => !c.disabled);
   if (d.kind === 'info' && open.length === 1) return open[0].id;
@@ -44,8 +48,8 @@ function autoChoice(s: GameState, d: Decision): string | null {
 /**
  * Sim mode (round 25, the owner: "sim to the next decision"): fast break, and the routine calls it
  * still leaves to him are made for him too: the season plan (the training group of his first
- * focus stat, or recovery when hurt or low), the summer program, the national team call-up and the
- * G League assignment. It stops for the decisions that shape a career: turning points, offers,
+ * focus stat, or recovery when hurt or low), the summer program, the national team call-up, the
+ * G League assignment and the press conference (humble, round 25). It stops for the decisions that shape a career: turning points, offers,
  * the draft, contracts, brands, storylines, retirement.
  */
 function simChoice(s: GameState, d: Decision): string | null {
@@ -65,6 +69,8 @@ function simChoice(s: GameState, d: Decision): string | null {
       return has(tired ? 'decline' : 'accept') ?? open[0] ?? null;
     case 'assign':
       return has('go') ?? open[0] ?? null;
+    case 'press':
+      return has('humble') ?? open[0] ?? null;
     default:
       return null;
   }

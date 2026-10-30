@@ -144,7 +144,7 @@ export function AchievementBook() {
                       </span>
                     </p>
                   ) : (
-                    <p className="small muted">???</p>
+                    <p className="small muted keep">???</p>
                   )}
                 </div>
               </div>

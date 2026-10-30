@@ -186,7 +186,7 @@ export function CareerTimeline({ g }: { g: GameState }) {
                   </span>
                 )}
               </header>
-              {list.length ? <ul>{list.map((m, i) => <Row key={i} m={m} />)}</ul> : <p className="small muted">A quiet season.</p>}
+              {list.length ? <ul>{list.map((m, i) => <Row key={i} m={m} />)}</ul> : <p className="small muted keep">A quiet season.</p>}
             </section>
           );
         })}

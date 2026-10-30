@@ -126,7 +126,7 @@ function LogEntry({ rec, onDelete }: { rec: CareerRecord; onDelete: () => void }
           </div>
         </div>
       </div>
-      {open && (img === null ? <p className="small muted">Drawing the card…</p> : img ? <img className="log-card-img" src={img} alt={`Career card of ${rec.name}`} /> : <p className="small muted">This browser could not draw the card.</p>)}
+      {open && (img === null ? <p className="small muted keep">Drawing the card…</p> : img ? <img className="log-card-img" src={img} alt={`Career card of ${rec.name}`} /> : <p className="small muted">This browser could not draw the card.</p>)}
       <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
         <button className="btn ghost" onClick={() => setOpen(!open)} aria-expanded={open}>
           {open ? 'Hide the card' : 'Show the card'}

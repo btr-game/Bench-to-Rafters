@@ -87,7 +87,7 @@ export function DailyGame() {
           Start today’s run
         </button>
       )}
-      {streak > 1 && <p className="small muted">You have played on {streak} days.</p>}
+      {streak > 1 && <p className="small muted keep">You have played on {streak} days.</p>}
     </section>
   );
 }

@@ -113,7 +113,7 @@ function CardImage({ rec }: { rec: CareerRecord }) {
       live = false;
     };
   }, [rec]);
-  if (src === null) return <p className="small muted">Drawing the card…</p>;
+  if (src === null) return <p className="small muted keep">Drawing the card…</p>;
   return src ? <img className="log-card-img" src={src} alt={`Career card of ${rec.name}`} /> : null;
 }
 

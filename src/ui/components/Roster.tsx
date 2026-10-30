@@ -131,7 +131,7 @@ export function RecruitCard({ g }: { g: GameState }) {
         Payroll {fmtMoney(info.payroll)} of a {fmtMoney(info.cap)} cap · {room >= 0 ? `${fmtMoney(room)} room` : `${fmtMoney(-room)} over: incoming salary must be within 125% of outgoing`}
       </div>
       <div className="sec-title small-title">Scouting board</div>
-      {board.length === 0 && <p className="small muted">Nobody left on the board this summer.</p>}
+      {board.length === 0 && <p className="small muted keep">Nobody left on the board this summer.</p>}
       <div className="scout-list">
         {(all ? board : board.slice(0, 3)).map((t) => (
           <div key={t.p.id} className="scout-row">

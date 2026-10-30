@@ -259,7 +259,7 @@ export function BodyMap({ g, narrow = false }: { g: GameState; narrow?: boolean 
           )}
           <div className="sec-title">Injuries</div>
           {injuries.length === 0 ? (
-            <p className="small muted">{g.history.length ? 'None on record. Knock on wood.' : 'None yet.'}</p>
+            <p className="small muted keep">{g.history.length ? 'None on record. Knock on wood.' : 'None yet.'}</p>
           ) : (
             <ul className="bm-list">
               {[...byPart.entries()].map(([part, list]) => (

@@ -1,5 +1,5 @@
 import { GuideButton } from './components/Guide';
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import type { GameState } from '../engine/types';
 import { MODES } from '../engine/balance';
 import { NextStep, SettingsMenu, useKeys } from './components/Settings';
@@ -68,6 +68,28 @@ function ModeBadge({ g }: { g: GameState }) {
   );
 }
 
+/** A tab's page. With fast break on, the cards marked Extra fold away and one button at the
+ * bottom brings them back for this visit (round 25). */
+function TabView({ fast, children }: { fast: boolean; children: ReactNode }) {
+  const [all, setAll] = useState(false);
+  const [folded, setFolded] = useState(0);
+  const ref = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    // the cards folded away (a card inside another card counts once)
+    setFolded(ref.current ? [...ref.current.querySelectorAll('.extra .card')].filter((c) => !c.parentElement?.closest('.card')).length : 0);
+  });
+  return (
+    <div ref={ref} className={`tab-view${fast && !all ? ' fold' : ''}`}>
+      {children}
+      {fast && folded > 0 && (
+        <button className="btn ghost fold-toggle" onClick={() => setAll(!all)}>
+          {all ? 'Fold the extra cards' : `Show everything (${folded} more card${folded === 1 ? '' : 's'})`}
+        </button>
+      )}
+    </div>
+  );
+}
+
 export function App() {
   const game = useStore((s) => s.game);
   const tab = useStore((s) => s.tab);
@@ -79,6 +101,7 @@ export function App() {
   useEffect(() => {
     document.documentElement.classList.toggle('simple', simple);
   }, [simple]);
+  const fast = !!game?.flags.fast && game.step !== 'retired';
 
   useEffect(() => {
     const root = document.documentElement;
@@ -145,13 +168,13 @@ export function App() {
           </div>
         </header>
         {game.flags.daily ? <DailyStrip g={game} /> : null}
-        <div className="tab-view" key={tab}>
+        <TabView key={tab} fast={fast}>
           {tab === 'home' && (retired ? <Retirement g={game} /> : <Home g={game} />)}
           {tab === 'season' && <SeasonTab g={game} />}
           {tab === 'player' && <PlayerTab g={game} />}
           {tab === 'league' && <LeagueTab g={game} />}
           {tab === 'records' && <RecordsTab g={game} />}
-        </div>
+        </TabView>
       </div>
       <Overlays g={game} />
       <TabBar g={game} />

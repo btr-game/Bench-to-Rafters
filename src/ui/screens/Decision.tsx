@@ -385,7 +385,8 @@ export function DecisionView({ g, d }: { g: GameState; d: Decision }) {
               <span className="label">
                 {c.label} {c.risk && <span className={`risk risk-${c.risk.toLowerCase()}`}>{c.risk} risk</span>}
               </span>
-              {c.detail && <small>{c.detail}</small>}
+              {/* a press answer's tone is the point, so simple text keeps it */}
+              {c.detail && <small className={d.kind === 'press' ? 'keep' : undefined}>{c.detail}</small>}
             </button>
           ))}
         </div>

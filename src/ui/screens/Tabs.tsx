@@ -31,7 +31,7 @@ import { standings } from '../../engine/sim/leagueSim';
 import { addLine, emptyLine, perGame } from '../../engine/sim/statModel';
 import { careerIndex, championships, count, legacyScore, nbaTitles, verdictFor } from '../../engine/awards/legacy';
 import { NAMES } from '../../content/strings';
-import { Card, Meter, Scoreboard } from '../components/bits';
+import { Card, Extra, Meter, Scoreboard } from '../components/bits';
 import { AttrRows } from '../components/PlayerCard';
 import { ScoutCard } from '../components/ScoutCard';
 import { fmtMoney, ht, pct, pg, seasonLabel } from '../format';
@@ -391,13 +391,17 @@ export function SeasonTab({ g }: { g: GameState }) {
         </Card>
       ) : (
         <div className="page-grid wide-side">
-          <Card title="Games" kicker={`${all.length} played`} tour="season-games">
-            <PointsChart games={all} />
-            <GameLogTable g={g} />
-          </Card>
+          <Extra>
+            <Card title="Games" kicker={`${all.length} played`} tour="season-games">
+              <PointsChart games={all} />
+              <GameLogTable g={g} />
+            </Card>
+          </Extra>
           <div className="stack">
             <StrengthCard g={g} />
-            <CityCard g={g} />
+            <Extra>
+              <CityCard g={g} />
+            </Extra>
             <Card title="Standings">
               <ConfStandings g={g} />
             </Card>
@@ -539,6 +543,7 @@ export function PlayerTab({ g }: { g: GameState }) {
         </Card>
         <div className="stack">
           {t && (
+            <Extra>
             <Card title="Kits" kicker={t.name}>
               <div className="kits">
                 {(['home', 'road', 'city'] as const).map((k) => (
@@ -549,6 +554,7 @@ export function PlayerTab({ g }: { g: GameState }) {
                 ))}
               </div>
             </Card>
+            </Extra>
           )}
           <Card title="Status">
             <div className="meters">
@@ -588,15 +594,18 @@ export function PlayerTab({ g }: { g: GameState }) {
               </ul>
             )}
           </Card>
-          <NameCard g={g} />
-          <StaffCard g={g} />
-          <WardrobeCard g={g} />
-          <CollectionCard g={g} />
+          <Extra>
+            <NameCard g={g} />
+            <StaffCard g={g} />
+            <WardrobeCard g={g} />
+            <CollectionCard g={g} />
+          </Extra>
           {g.mode === 'lab' && (
             <Card title="Evolution">
               <EvolutionArt ovr={now} name={p.name} number={p.number} kit={{ base: t?.color ?? '#1C7ED6', ink: '#FFFFFF', trim: '#F4F4F4', word: '' }} size={130} />
             </Card>
           )}
+          <Extra>
           <Card title="Profile">
             <dl className="facts">
               <div>
@@ -665,8 +674,10 @@ export function PlayerTab({ g }: { g: GameState }) {
               )}
             </dl>
           </Card>
+          </Extra>
         </div>
         <div className="stack">
+          <Extra>
           <ScoutCard g={g} />
           {!p.scoutGrade && (
             <Card title="Scouting">
@@ -675,9 +686,12 @@ export function PlayerTab({ g }: { g: GameState }) {
           )}
           {/* round 24: up beside the ratings instead of below the long profile column */}
           <BodyMap g={g} narrow />
+          </Extra>
         </div>
       </div>
-      <RosterCard g={g} />
+      <Extra>
+        <RosterCard g={g} />
+      </Extra>
     </div>
   );
 }
@@ -777,6 +791,7 @@ export function LeagueTab({ g }: { g: GameState }) {
           <Standings g={{ ...g, league: lg, stage: g.stage }} />
         </Card>
       )}
+      <Extra>
       <div className="page-grid two">
         <Card title={withLines.length ? 'Scoring leaders' : 'Top players'} kicker="Fictional players">
           <div className="tbl-wrap">
@@ -835,6 +850,7 @@ export function LeagueTab({ g }: { g: GameState }) {
         )}
       </div>
       {races.length > 0 && g.nbaHistory.length > 0 && <NbaHistoryCard g={g} />}
+      </Extra>
     </div>
   );
 }
@@ -929,7 +945,9 @@ export function RecordsTab({ g }: { g: GameState }) {
           { k: 'All-Star', v: count(g, 'ALLSTAR') },
         ]}
       />
-      <CareerTimeline g={g} />
+      <Extra>
+        <CareerTimeline g={g} />
+      </Extra>
       <div className="start-cards">
         <AchievementsCard />
       </div>
@@ -937,13 +955,17 @@ export function RecordsTab({ g }: { g: GameState }) {
         {g.history.length === 0 ? <p className="muted">Your seasons show up here after the first one.</p> : <HistoryTable rows={g.history} />}
         <p className="muted small">High school and college seasons are listed but do not count toward pro career totals.</p>
       </Card>
+      <Extra>
       {championships(g).length > 0 && (
         <Card title="Banners and rings" kicker="Every title hangs in the rafters">
           <BannersAndRings g={g} />
         </Card>
       )}
+      </Extra>
       <div className="page-grid two">
-        <TrophyCabinet g={g} />
+        <Extra>
+          <TrophyCabinet g={g} />
+        </Extra>
         <Card title="Career totals" kicker={`Legacy score ${legacyScore(g)} · career index ${careerIndex(g).score.toFixed(1)}`}>
           {nbaT.gp > 0 && (
             <>
@@ -966,6 +988,7 @@ export function RecordsTab({ g }: { g: GameState }) {
           {proT.gp === 0 && <p className="muted">No pro games yet.</p>}
         </Card>
       </div>
+      <Extra>
       <div className="page-grid two">
         <CareerHighs g={g} />
         {g.tournaments.length > 0 && (
@@ -1003,6 +1026,7 @@ export function RecordsTab({ g }: { g: GameState }) {
         )}
       </div>
       <LegacyTierList g={g} />
+      </Extra>
     </div>
   );
 }

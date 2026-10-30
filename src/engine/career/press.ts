@@ -111,15 +111,17 @@ export function pushPress(s: GameState): void {
   askPress(s, topic.id, 0);
 }
 
-function askPress(s: GameState, topic: string, q: number): void {
+function askPress(s: GameState, topic: string, q: number, last?: Tone): void {
   const t = TOPICS.find((x) => x.id === topic)!;
   const [question, answers] = t.questions[q];
+  // fast break: one answer sets the tone, and the other two questions get the same (fast.ts)
+  const fast = !!s.flags.fast;
   const d: Omit<Decision, 'id'> = {
     kind: 'press',
-    title: `Press conference · ${t.title} (${q + 1} of 3)`,
-    text: `"${question}"`,
+    title: fast ? `Press conference · ${t.title}` : `Press conference · ${t.title} (${q + 1} of 3)`,
+    text: fast && q === 0 ? `"${question}" Your answer sets the tone for the whole press conference.` : `"${question}"`,
     choices: answers.map((a, i) => ({ id: TONES[i], label: a, detail: TONES[i] === 'humble' ? 'Humble' : TONES[i] === 'confident' ? 'Confident' : 'Fiery', tags: [TONES[i]] })),
-    data: { topic, q },
+    data: { topic, q, last },
   };
   pushDecision(s, d);
 }
@@ -159,7 +161,7 @@ export function resolvePress(s: GameState, d: Decision, tone: string): string | 
   const q = (d.data?.q as number) ?? 0;
   logDecision(s, 'press', `Press conference: answered ${t}.`);
   if (q < 2) {
-    askPress(s, d.data?.topic as string, q + 1);
+    askPress(s, d.data?.topic as string, q + 1, t);
     s.pending.unshift(s.pending.pop()!);
   }
   return notes.join(' ');
