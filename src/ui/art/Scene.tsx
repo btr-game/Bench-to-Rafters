@@ -7,7 +7,8 @@ import { mix } from './color';
 import { glyph, toPaths } from './pixel';
 import { kitFor, lookOf, styleLeague } from './Player';
 import { POS_STYLE } from './PositionCard';
-import { DRIBBLE, DUNK, JUMPER, LOWDRIBBLE, TRIPLE, noBall, paint } from './sprite';
+import { BITE, CHEER, DRIBBLE, DUNK, JUMPER, LOWDRIBBLE, TRIPLE, noBall, paint } from './sprite';
+import { awardKeyOf, awardPaths } from './Award';
 
 // Story scenes (round 17): a wide pixel picture at the top of every turning point, storyline
 // chapter and story page. Nine places a career happens (the arena, the gym, the city at night,
@@ -268,8 +269,72 @@ const STANDING = noBall(DRIBBLE);
 const FIST_UP = noBall(JUMPER);
 const COURT: SceneKind[] = ['arena', 'street'];
 
-function SceneArt({ kind, kit, name, number, pos, accent }: { kind: SceneKind; kit: Kit; name: string; number: number; pos?: Pos; accent: string }) {
+type Cheer = { mode: 'cheer' | 'bite'; prize: string };
+
+/** Whether a story page celebrates, and how: a trophy over his head, or a medal in his teeth. */
+function cheerOf(kind: SceneKind, prize?: string): Cheer | null {
+  if (!prize) return null;
+  if (kind === 'medal') return /gold|silver|bronze|medal/i.test(prize) ? { mode: 'bite', prize } : null;
+  if (kind === 'award' || kind === 'title') return { mode: 'cheer', prize };
+  return null;
+}
+
+/** The player celebrating (round 19): bouncing with the trophy held high, sparkles round it, or
+ * biting the medal. Drawn in the sprite's own units at (x, y), `scale` times. */
+function Celebrate({ c, kit, name, number, accent, x, y, scale }: { c: Cheer; kit: Kit; name: string; number: number; accent: string; x: number; y: number; scale: number }) {
+  const pose = c.mode === 'cheer' ? CHEER : BITE;
+  const sprite = useMemo(() => toPaths(paint(pose, kit, lookOf(name, kit.base === '#FFFFFF' ? kit.ink : kit.base), number)), [pose, kit, name, number]);
+  const key = awardKeyOf(c.prize);
+  const prize = useMemo(() => awardPaths(key, c.prize, accent), [key, c.prize, accent]);
+  const medal = /bronze/i.test(c.prize) ? ['#D08A4E', '#9A5A2A'] : /silver/i.test(c.prize) ? ['#C9CED8', '#8E95A3'] : ['#F5C542', '#C9921E'];
+  return (
+    <g transform={`translate(${Math.round(x)} ${Math.round(y)}) scale(${scale})`}>
+      <g className={c.mode === 'cheer' ? 'cel-bounce' : 'cel-bob'}>
+        {sprite.map((p) => (
+          <path key={p.fill} d={p.d} fill={p.fill} />
+        ))}
+        {c.mode === 'cheer' ? (
+          <g transform="translate(7 -16) scale(0.75)">
+            <g className="cel-wiggle">
+              {prize.map((p) => (
+                <path key={p.fill} d={p.d} fill={p.fill} />
+              ))}
+            </g>
+          </g>
+        ) : (
+          <g className="cel-chomp">
+            <path d="M14 21L18 17M22 21L19 17" stroke="#1C7ED6" strokeWidth="1.2" />
+            <circle cx="18.5" cy="17.5" r="2.6" fill={medal[0]} stroke="#18141C" strokeWidth="0.6" />
+            <circle cx="18.5" cy="17.5" r="1.3" fill="none" stroke={medal[1]} strokeWidth="0.6" />
+          </g>
+        )}
+        {[
+          [2, -10],
+          [29, -6],
+          [4, 4],
+          [27, 8],
+        ].map(([sx, sy], i) => (
+          <path key={i} className="cel-spark" style={{ animationDelay: `${i * 0.22}s` }} d={`M${sx} ${sy - 2}h1v5h-1zM${sx - 2} ${sy}h5v1h-5z`} fill="#FFF3BF" />
+        ))}
+      </g>
+    </g>
+  );
+}
+
+/** A celebration on its own, for the end of a title game or a final. */
+export function CelebrationArt({ g, prize, mode = 'cheer' }: { g: GameState; prize: string; mode?: 'cheer' | 'bite' }) {
+  const t = teamOf(g);
+  const kit = useMemo(() => kitFor(t?.name ?? '', t?.abbr ?? '', t?.color ?? '#2A2F36', 'home', styleLeague(g.stage)), [t?.name, t?.abbr, t?.color, g.stage]);
+  return (
+    <svg className="art art-celebrate" viewBox="-4 -22 40 60" shapeRendering="crispEdges" role="img" aria-label={`Celebrating: ${prize}`}>
+      <Celebrate c={{ mode, prize }} kit={kit} name={g.player.name} number={g.player.number} accent={t?.color ?? '#C8102E'} x={0} y={0} scale={1} />
+    </svg>
+  );
+}
+
+function SceneArt({ kind, kit, name, number, pos, accent, prize }: { kind: SceneKind; kit: Kit; name: string; number: number; pos?: Pos; accent: string; prize?: string }) {
   const bg = useMemo(() => toPaths(paintScene(kind, accent)), [kind, accent]);
+  const cheer = cheerOf(kind, prize);
   // on the court he plays his position; at a title or a medal he throws a fist up; off it he just stands
   const pose = kind === 'title' || kind === 'medal' ? FIST_UP : kind === 'gym' ? DUNK : COURT.includes(kind) ? POSES[pos ?? 'SG'] : STANDING;
   const sprite = useMemo(() => toPaths(paint(pose, kit, lookOf(name, kit.base === '#FFFFFF' ? kit.ink : kit.base), number)), [pose, kit, name, number]);
@@ -282,20 +347,25 @@ function SceneArt({ kind, kit, name, number, pos, accent }: { kind: SceneKind; k
       {bg.map((p) => (
         <path key={p.fill} d={p.d} fill={p.fill} />
       ))}
-      <g transform={`translate(${Math.round(x)} ${Math.round(y)}) scale(${scale})`}>
-        {sprite.map((p) => (
-          <path key={p.fill} d={p.d} fill={p.fill} />
-        ))}
-      </g>
+      {cheer ? (
+        <Celebrate c={cheer} kit={kit} name={name} number={number} accent={accent} x={96 - 16 * 1.3} y={H - 1 - 36 * 1.3} scale={1.3} />
+      ) : (
+        <g transform={`translate(${Math.round(x)} ${Math.round(y)}) scale(${scale})`}>
+          {sprite.map((p) => (
+            <path key={p.fill} d={p.d} fill={p.fill} />
+          ))}
+        </g>
+      )}
     </svg>
   );
 }
 
-/** The scene for a story, with the player in his current team's home kit. */
-export function StoryScene({ g, title, kind }: { g: GameState; title: string; kind?: string }) {
+/** The scene for a story, with the player in his current team's home kit; `prize` (an award, a
+ * title, a medal) makes him celebrate with it. */
+export function StoryScene({ g, title, kind, prize }: { g: GameState; title: string; kind?: string; prize?: string }) {
   const t = teamOf(g);
   const kit = useMemo(() => kitFor(t?.name ?? '', t?.abbr ?? '', t?.color ?? '#2A2F36', 'home', styleLeague(g.stage)), [t?.name, t?.abbr, t?.color, g.stage]);
-  return <SceneArt kind={sceneFor(title, kind)} kit={kit} name={g.player.name} number={g.player.number} pos={g.player.pos} accent={t?.color ?? '#E8590C'} />;
+  return <SceneArt kind={sceneFor(title, kind)} kit={kit} name={g.player.name} number={g.player.number} pos={g.player.pos} accent={t?.color ?? '#E8590C'} prize={prize} />;
 }
 
 /** The start page: a street court at sunset and a starting five, one of each position. */

@@ -150,6 +150,46 @@ export const DUNK = pose(30, 36, [9, 8], [11, 20], {
   35: '.........oooooooooooo',
 });
 
+/** Both arms straight up: holding a trophy over his head (round 19, celebrations). */
+export const CHEER = pose(30, 34, [9, 9], [11, 21], {
+  1: '......ss..............qq',
+  2: '......SS..............QQ',
+  ...rep(3, 17, '......SS..............QQ'),
+  18: '......SSSSTJJTssTJJTQQQQ',
+  19: '..........TJJJTTJJJT',
+  ...rep(20, 25, '..........JJJJJJJJjj'),
+  26: '..........RPPPPPPPpR',
+  27: '..........RPPPPPPPpR',
+  28: '..........RPPP..PPpR',
+  29: '...........SS....ss',
+  30: '...........SS....ss',
+  31: '...........WW....WW',
+  32: '.........FFFf....FFFf',
+  33: '........oooooooooooooooo',
+});
+
+/** A hand up at his mouth: biting the medal (round 19, celebrations). */
+export const BITE = pose(30, 34, [9, 9], [11, 21], {
+  16: '..................qqq',
+  17: '.....................QQ',
+  18: '.....................QQ',
+  19: '........SSTJJTssTJJTQQQ',
+  20: '........SSTJJJTTJJJTQQ',
+  21: '........SSJJJJJJJJjj',
+  22: '........SSJJJJJJJJjj',
+  23: '........SSJJJJJJJJjj',
+  24: '........wwJJJJJJJJjj',
+  25: '........ssJJJJJJJJjj',
+  26: '........ssRPPPPPPPpR',
+  27: '..........RPPPPPPPpR',
+  28: '..........RPPP..PPpR',
+  29: '...........SS....ss',
+  30: '...........SS....ss',
+  31: '...........WW....WW',
+  32: '.........FFFf....FFFf',
+  33: '........oooooooooooooooo',
+});
+
 /** Head and shoulders, for portraits. */
 export const BUST = pose(20, 24, [4, 7], [6, 19], {
   17: '...SSTJJTssTJJTSS',

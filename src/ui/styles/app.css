@@ -1273,3 +1273,18 @@ td .art-team { display: inline-block; vertical-align: middle; margin: -3px 8px -
 .story-art { display: flex; align-items: center; justify-content: center; gap: 14px; padding: 8px; margin: -2px 0 4px; border-radius: 8px; background: linear-gradient(90deg, color-mix(in srgb, var(--team) 26%, var(--surface-2)), color-mix(in srgb, var(--team) 8%, var(--surface-2))); }
 .story-vs { display: grid; justify-items: center; font-family: var(--f-display); font-weight: 900; font-size: 15px; letter-spacing: 0.06em; color: var(--ink); }
 .story-lines li { display: flex; align-items: center; gap: 6px; }
+.banner.with-award { display: inline-flex; align-items: center; gap: 8px; }
+.art-award { image-rendering: pixelated; flex: none; }
+/* celebrations (round 19): the trophy held high, the medal bitten */
+.cel-bounce { animation: cel-bounce 0.7s ease-in-out infinite; }
+.cel-bob { animation: cel-bob 0.5s ease-in-out infinite; }
+.cel-wiggle { transform-box: fill-box; transform-origin: 50% 100%; animation: cel-wiggle 0.7s ease-in-out infinite alternate; }
+.cel-chomp { animation: cel-chomp 0.5s steps(2) infinite; }
+.cel-spark { animation: cel-spark 1s ease-in-out infinite; opacity: 0; }
+@keyframes cel-bounce { 0%, 100% { transform: translateY(0); } 45% { transform: translateY(-3px); } }
+@keyframes cel-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-1px); } }
+@keyframes cel-wiggle { from { transform: rotate(-7deg); } to { transform: rotate(7deg); } }
+@keyframes cel-chomp { 50% { transform: translateY(1px); } }
+@keyframes cel-spark { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
+.art-celebrate { display: block; width: 120px; height: auto; margin: 0 auto; image-rendering: pixelated; }
+@media (prefers-reduced-motion: reduce) { .cel-bounce, .cel-bob, .cel-wiggle, .cel-chomp, .cel-spark { animation: none; } .cel-spark { opacity: 1; } }

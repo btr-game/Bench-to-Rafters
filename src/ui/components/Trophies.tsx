@@ -11,7 +11,8 @@ import { Banners, Card, type BannerItem } from './bits';
 import { championships } from '../../engine/awards/legacy';
 import { NBA_TEAMS } from '../../content/teams';
 import { TEAM_STYLE } from '../../content/teamStyle';
-import { BannerArt, TrophyIcon, iconFor } from '../art/Trophy';
+import { BannerArt, TrophyIcon } from '../art/Trophy';
+import { AwardArt } from '../art/Award';
 
 /** Every honour once, with its count, the ones that matter most to the legacy first. */
 export function trophyItems(g: GameState): BannerItem[] {
@@ -25,8 +26,7 @@ export function trophyItems(g: GameState): BannerItem[] {
   return [...counts.entries()]
     .sort((a, b) => weight(b[1].key) - weight(a[1].key) || a[1].first - b[1].first)
     .map(([label, c]) => {
-      const { icon, metal } = iconFor(c.key, label);
-      return { label, count: c.n, gold: weight(c.key) >= 4 || /Champion|MVP|Player of the Year|champion/.test(label), icon: <TrophyIcon icon={icon} metal={metal} color={g.history[g.history.length - 1]?.teamColor} size={26} /> };
+      return { label, count: c.n, gold: weight(c.key) >= 4 || /Champion|MVP|Player of the Year|champion/.test(label), icon: <AwardArt akey={c.key} label={label} color={g.history[g.history.length - 1]?.teamColor} size={34} /> };
     });
 }
 

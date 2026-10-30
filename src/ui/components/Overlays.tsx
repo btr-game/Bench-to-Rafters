@@ -7,7 +7,8 @@ import { LEVELS } from '../../engine/balance';
 import { useStore, type Transition } from '../../store';
 import { ordinal } from '../format';
 import { stageLine } from '../selectors';
-import { StoryScene } from '../art/Scene';
+import { CelebrationArt, StoryScene } from '../art/Scene';
+import { AwardArt, awardKeyOf } from '../art/Award';
 
 const reducedMotion = () => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
@@ -230,6 +231,7 @@ function TitleGame({ m, g, onDone }: { m: Moment; g: GameState; onDone?: () => v
       </div>
       {done ? (
         <>
+          <CelebrationArt g={g} prize={m.title} />
           <div className="champ-banner">
             <span>Champions</span>
             <b>{m.title}</b>
@@ -260,7 +262,7 @@ const TAG_LABEL: Record<string, string> = {
 };
 
 /** Three quarters in a blink, then crunch time one play at a time. Skip shows the end. */
-export function FinalReel({ m, onDone }: { m: Moment; onDone?: () => void }) {
+export function FinalReel({ m, g, onDone }: { m: Moment; g?: GameState; onDone?: () => void }) {
   const d = m.drama!;
   const game = m.game!;
   const warm = 10;
@@ -321,10 +323,13 @@ export function FinalReel({ m, onDone }: { m: Moment; onDone?: () => void }) {
               <p className="on-dark lede-dark">{m.text}</p>
             </div>
           ) : (
-            <div className="champ-banner">
-              <span>Champions</span>
-              <b>{m.title}</b>
-            </div>
+            <>
+              {g && <CelebrationArt g={g} prize={m.title} mode={m.kind === 'tournament' ? 'bite' : 'cheer'} />}
+              <div className="champ-banner">
+                <span>Champions</span>
+                <b>{m.title}</b>
+              </div>
+            </>
           )}
           <Recap m={m} />
         </>
@@ -442,21 +447,22 @@ function MomentPage({ m, g }: { m: Moment; g: GameState }) {
       {m.mood && ended && <MoodFx key={m.id} mood={m.mood} color={m.color} />}
       <div className="overlay-inner" key={m.id}>
         {m.drama && m.game ? (
-          <FinalReel m={m} onDone={end} />
+          <FinalReel m={m} g={g} onDone={end} />
         ) : m.kind === 'title' && m.game ? (
           <TitleGame m={m} g={g} onDone={end} />
         ) : m.kind === 'draft' ? (
           <DraftReveal m={m} />
         ) : (
           <div className="stack reveal" style={{ gap: 12 }}>
-            <StoryScene g={g} title={m.title} kind={m.kind} />
+            <StoryScene g={g} title={m.title} kind={m.kind} prize={m.kind === 'awards' ? m.lines?.[0] : m.kind === 'title' ? m.title : m.kind === 'tournament' ? `${m.title}. ${m.text}` : undefined} />
             <div className="kicker on-dark">{KICKER[m.kind]}</div>
             <div className="moment-title">{m.title}</div>
             <p className="on-dark lede-dark prose">{m.text}</p>
             {m.kind === 'awards' ? (
               <div className="banners">
                 {m.lines?.map((x, i) => (
-                  <div key={i} className="banner gold drop" style={{ animationDelay: `${0.15 + i * 0.18}s` }}>
+                  <div key={i} className="banner gold drop with-award" style={{ animationDelay: `${0.15 + i * 0.18}s` }}>
+                    <AwardArt akey={awardKeyOf(x)} label={x} size={40} />
                     <span>{x}</span>
                   </div>
                 ))}

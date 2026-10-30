@@ -14,42 +14,6 @@ const METAL: Record<Metal, [string, string, string]> = {
 };
 
 const ICONS = {
-  trophy: [
-    '......bbbb......',
-    '.....bkbbkb.....',
-    '.....bbkkbb.....',
-    '......bbbb......',
-    '...OOOOOOOOOO...',
-    '..OYWYYYYYYyyO..',
-    '.OYOWYYYYYYyOyO.',
-    '.OYOWYYYYYYyOyO.',
-    '..OOYWYYYYyyOO..',
-    '....OYWYYyyO....',
-    '.....OYYyyO.....',
-    '......OYyO......',
-    '......OYyO......',
-    '....OOYYYyOO....',
-    '...OyyyyyyyyO...',
-    '...OOOOOOOOOO...',
-  ],
-  mvp: [
-    '.......OO.......',
-    '......OWYO......',
-    '..OO.OYWYyO.OO..',
-    '..OYOOYWYYOOyO..',
-    '...OYYYWYYYyO...',
-    '....OYYYYYyO....',
-    '...OYYO..OyyO...',
-    '...OO......OO...',
-    '......OYyO......',
-    '......OYyO......',
-    '......OYyO......',
-    '.....OYYyyO.....',
-    '....OYWYYyyO....',
-    '...OOOOOOOOOO...',
-    '...OSSSSSSSsO...',
-    '...OOOOOOOOOO...',
-  ],
   ring: [
     '.....OOOOOO.....',
     '....OGGWGGGO....',
@@ -68,113 +32,11 @@ const ICONS = {
     '....OOYYYYOO....',
     '......OOOO......',
   ],
-  medal: [
-    '..RRR.....RRR...',
-    '...RRR...RRR....',
-    '....RRR.RRR.....',
-    '.....RRRRR......',
-    '......OOO.......',
-    '.....OYYYO......',
-    '....OYWYYyO.....',
-    '...OYWYYYYyO....',
-    '...OYYYYYYyO....',
-    '...OYYYOYYyO....',
-    '...OYYYYYYyO....',
-    '....OYYYYyO.....',
-    '.....OyyyO......',
-    '......OOO.......',
-  ],
-  star: [
-    '.......OO.......',
-    '......OYYO......',
-    '......OWYO......',
-    '.....OYWYyO.....',
-    'OOOOOOYWYyOOOOOO',
-    'OYYYYYWYYYYYYyyO',
-    '.OYYYWYYYYYYyyO.',
-    '..OOYYYYYYYyOO..',
-    '...OYYYYYYyyO...',
-    '...OYYYOOYYyO...',
-    '..OYYYO..OYyyO..',
-    '..OYOO....OOyO..',
-    '..OO........OO..',
-  ],
-  shield: [
-    '.OOOOOOOOOOOOOO.',
-    '.OYWYYYYYYYYyyO.',
-    '.OYWGGGGGGGGyyO.',
-    '.OYWGGGGGGGGyyO.',
-    '.OYYYYYYYYYYyyO.',
-    '.OYYYOOOOOYYyyO.',
-    '..OYYYYYYYYyyO..',
-    '..OYYYOOOYYyyO..',
-    '...OYYYYYYyyO...',
-    '....OYYYYyyO....',
-    '.....OYYyyO.....',
-    '......OyyO......',
-    '.......OO.......',
-  ],
-  crown: [
-    '................',
-    '.O.....O.....O..',
-    'OYO...OYO...OYO.',
-    'OYYO..OYO..OYYO.',
-    'OYYYOOOYOOOYYYO.',
-    'OYWYYYYYYYYYyyO.',
-    'OYWYYYYYYYYyyyO.',
-    'OYGYYYYGYYYYGyO.',
-    'OYYYYYYYYYYYYyO.',
-    'OOOOOOOOOOOOOOO.',
-  ],
-  bust: [
-    '.....OOOOO......',
-    '....OSSSSSO.....',
-    '....OSWSSsO.....',
-    '....OSSSSsO.....',
-    '.....OSSsO......',
-    '...OOSSSSsOO....',
-    '..OSSWSSSSssO...',
-    '..OSSSSSSSSsO...',
-    '..OOOOOOOOOOO...',
-    '...OYYYYYYYO....',
-    '..OYWYYYYYyyO...',
-    '..OOOOOOOOOOO...',
-  ],
-  banner: [
-    'OOOOOOOOOOOOOO..',
-    'OGGGGGGGGGGGGO..',
-    'OGWWWWWWWWWWGO..',
-    'OGGGGGGGGGGGGO..',
-    'OGGGWWGGWWGGGO..',
-    'OGGGGWGGGWGGGO..',
-    'OGGGGWGGWWGGGO..',
-    'OGGGGWGGWGGGGO..',
-    'OGGGWWWGWWGGGO..',
-    'OGGGGGGGGGGGGO..',
-    'OGGGGGOOGGGGGO..',
-    'OGGGGO..OGGGGO..',
-    'OGGGO....OGGGO..',
-    'OOOO......OOOO..',
-  ],
 };
+
 type IconKind = keyof typeof ICONS;
 
 /** The icon for an award, by its key (engine/awards/tiers.ts) or, failing that, its name. */
-export function iconFor(key: string, label: string): { icon: IconKind; metal: Metal } {
-  if (key === 'HOF') return { icon: 'bust', metal: 'gold' };
-  if (key === 'RAFTERS') return { icon: 'banner', metal: 'gold' };
-  if (key === 'MVP' || key === 'EUMVP' || key === 'CUPMVP' || /MVP|Player of the Year/.test(label)) return { icon: 'mvp', metal: key === 'MVP' ? 'gold' : 'silver' };
-  if (key === 'FMVP') return { icon: 'mvp', metal: 'gold' };
-  if (/GOLD$/.test(key) || /gold/i.test(label)) return { icon: 'medal', metal: 'gold' };
-  if (/MEDAL$/.test(key) || /silver|bronze/i.test(label)) return { icon: 'medal', metal: /bronze/i.test(label) ? 'bronze' : 'silver' };
-  if (key === 'TITLE' || key === 'TITLEKEY') return { icon: 'ring', metal: 'gold' };
-  if (/TITLE$/.test(key) || key === 'NBACUP' || /champion|Cup/i.test(label)) return { icon: 'trophy', metal: key === 'NBACUP' ? 'silver' : 'gold' };
-  if (key === 'ALLSTAR' || /All-Star|All-American/.test(label)) return { icon: 'star', metal: 'gold' };
-  if (/LEAD$/.test(key) || key === 'SCORING' || /title|leader/i.test(label)) return { icon: 'crown', metal: 'gold' };
-  if (key === 'ROY' || key === 'SIXTH' || key === 'DPOY' || /of the Year/.test(label)) return { icon: 'trophy', metal: 'silver' };
-  return { icon: 'shield', metal: /First/.test(label) ? 'gold' : /Second/.test(label) ? 'silver' : 'bronze' };
-}
-
 export function TrophyIcon({ icon, metal = 'gold', color = '#C8102E', size = 32 }: { icon: IconKind; metal?: Metal; color?: string; size?: number }) {
   const paths = useMemo(() => {
     const [m, ms, mw] = METAL[metal];
