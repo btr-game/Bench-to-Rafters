@@ -1089,3 +1089,18 @@ Reached from the start page and from the bottom of Home (a career in progress is
   detailed instructions before they come back. The camera (`art/PlayCam.tsx`, last in commit
   fbea573) is removed from the finals reel, title games and playable games; the "Last shot" line
   in a playable game's recap stays, as text.
+- **A trophy for every award:** `art/Award.tsx` paints each award (about 60 keys, every level)
+  as its own object, metal, colours and an engraved plate: a tall trophy with a ball on top for
+  an NBA title, a player statue for MVPs (gold NBA, gold-orange EuroLeague, silver G League,
+  bronze abroad and Naismith), a ball on a pedestal for series MVPs, a blocking hand for DPOY, a
+  sneaker for ROY (Rookie of the Year already existed, with the All-Rookie Team), a big 6, a
+  rising arrow, crowns in five colours for the stat titles, a winged ball, a ball rack with a
+  money ball, a heart, a bust, a cut-down net on the NCAA trophy, shields numbered for All-NBA
+  and All-American, plaques for conference honours, a jersey for the high school All-American
+  game, a sports bottle for the national high school player of the year (no brand marks), and
+  medals on their competition's ribbon. Screens that only have an award's words find its key
+  with `awardKeyOf`.
+- **Celebrations:** award and title story pages show the player (the cute sprite, two new
+  poses) holding the trophy over his head, bouncing, the trophy wiggling, sparkles round it; a
+  medal story shows him biting the medal. Won title games and finals end on the same
+  celebration. All of it stops for reduced motion.
