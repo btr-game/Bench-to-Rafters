@@ -9,134 +9,114 @@ import { canChangeFocus, prompt } from '../../engine/flow';
 import { canRecruit } from '../../engine/career/recruit';
 import { canSetStyle, currentStyle } from '../../engine/career/identity';
 import type { GameState } from '../../engine/types';
+import { resetTour } from './GuideTour';
 
-// round 15: the manual is cards under big headers. Each card shows its name and a one-line
-// teaser; tap it for the details. `quick` marks the cards the Quick start lists.
-const SECTIONS: { title: string; where: string; items: [string, string][] }[] = [
+// round 15: the manual is cards under big headers; round 24 (owner: "the guide is too text heavy,
+// make them into bullet points, not too many examples"): each card is a few short bullets. The
+// first bullet shows on the card; tap it for the rest.
+const SECTIONS: { title: string; where: string; items: [string, string[]][] }[] = [
   {
     title: 'Getting around',
     where: 'The top bar',
     items: [
-      ['Tabs', 'Home, Season, Player, League and Records: along the top on a computer, at the bottom on a phone. A dot on a tab means something new is there (new games, a rating change, new records).'],
-      ['Next step', 'On any tab other than Home, the button by the tabs carries on the game. It plays the next step, or takes you back to the choice waiting at Home, so looking around never stops the game.'],
-      ['To do', 'The box at the top of Home shows what the game is waiting for now. It also lists anything worth a look (a focus change you unlocked, recruits for your starting five, a team style to set). Tap an item to jump to it.'],
-      ['Saving', 'Your career saves on this device after every move. Close the page any time: the start page offers to continue it. "New career" in Settings ends it (two taps).'],
-      ['Settings', 'Top right: theme, court (Classic, Hardwood or Streetball page background), Fast break, playable playoff games, Simple text, Guide mode, Master mode and a new career. Your difficulty is always shown next to the name of the game.'],
-      ['Fast break and Simple text', 'The two switches in the top bar. Fast break: quick seasons with one training group, no shop, no national team and simulated playoffs, while you still make every real call. Simple text: descriptions and flavour hidden, just the choices.'],
-      ['Guide mode', 'Turn it on here, in Settings or with G. The next thing to do glows on every screen, with a short note on how it works.'],
-      ['Master mode', 'For experienced players, in Settings or with M: no recommendations anywhere. No scouts’ calls, no fit tags, no suggested deals, no trade odds, no guide hints. You read the game yourself.'],
-      ['Keyboard', 'On a computer: Enter presses the main button (or leaves the shop). While a final plays out (league, NBA Cup or Olympic gold), Enter skips to the final buzzer first, so you never miss the result. 1 to 9, then 0, - and =, pick a choice (the small numbers on the buttons). H, S, P, L and R switch tabs, F toggles Fast break, G Guide mode and M Master mode.'],
+      ['Tabs', ['Home, Season, Player, League and Records.', 'Along the top on a computer, at the bottom on a phone.', 'A dot means something new is there.']],
+      ['Next step', ['On any other tab, this button carries the game on.', 'Looking around never stops the game.']],
+      ['To do', ['The top of Home: what the game is waiting for now.', 'Also lists anything new worth a look. Tap to jump to it.']],
+      ['Saving', ['Your career saves on this device after every move.', 'The start page offers to continue it.', 'Only "New career" (in Settings, two taps) ends it.']],
+      ['Settings', ['Theme and court background, then New career.', 'Switches: Fast break, playable playoff games, Simple text, Guide mode, Master mode.']],
+      ['Fast break and Simple text', ['Fast break: quick seasons, you still make every real call.', 'Simple text: just the choices, no descriptions.']],
+      ['Guide mode', ['Walks you through every button once, step by step.', 'New things get their step the first time they unlock.', 'Then it highlights the next thing to do. Turn it on here, in Settings or with G.']],
+      ['Master mode', ['No recommendations anywhere: no scouts’ calls, fit tags, suggested deals or hints.', 'In Settings, or press M.']],
+      ['Keyboard', ['Enter: the main button (skips a final to the buzzer first).', '1–9, 0, - and =: pick a choice.', 'H S P L R: tabs. F: Fast break. G: Guide mode. M: Master mode.']],
     ],
   },
   {
     title: 'Starting a career',
     where: 'The start page',
     items: [
-      ['Difficulty', 'Regular guy (the cap), Reality hits hard (the brick wall) or Shoot for the stars (the shooting star). It cannot change once the career starts, and it is always shown next to the name of the game.'],
-      ['Where you start', 'Pick a country for its road to the pros (academies, school leagues, college), or Surprise me for real-world odds. Your hometown and first school are revealed when the career begins.'],
-      ['Position, hand and archetype', 'Pick each yourself, or tap Random next to it: Random never repeats the last pick, and the dominant hand rolls real-world odds (about one player in eight is a lefty). Random at the top rolls everything at once. Each position and archetype card shows a player in action, as a dark silhouette until you pick it; the one you pick steps into colour. Every player is traced from a real game or studio photo: a low crossover for the point guard, a one-hand lay-up for the two guard, a jump shot for the wing, the ball at the hip for the four and a flying dunk for the five, and each of the 25 archetypes has an action of its own (a no-look pass, a skyhook, a chase-down contest, a box-out...).'],
-      ['Focus stats', 'Two ratings that grow about twice as fast. You can change them later only after a breakthrough season.'],
-      ['Continue', 'A career in progress is saved on this device: the start page offers to continue it.'],
+      ['Difficulty', ['Regular guy, Reality hits hard or Shoot for the stars.', 'Fixed for the whole career, and always shown by the game’s name.']],
+      ['Where you start', ['Pick a country for its road to the pros, or Surprise me.', 'Hometown and first school are revealed when the career starts.']],
+      ['Position, hand and archetype', ['Pick each yourself, or tap Random next to it.', 'Random at the top rolls everything at once.', 'Each archetype has its own traced action pose.']],
+      ['Focus stats', ['Two ratings that grow almost twice as fast.', 'Changing them later takes a breakthrough season.']],
+      ['Continue', ['A saved career shows at the top of the start page.', 'Starting a new one replaces it.']],
+      ['Career log', ['The career cards of your last 5 finished careers.', 'A warning at 4; when full, a new career replaces the oldest.', 'Show, download or delete any card.']],
     ],
   },
   {
     title: 'Every season',
     where: 'Home, the main card in the middle',
     items: [
-      ['Plans', 'Twelve plans, picked for each half. One plan alone works about 10% better than its listing; with two, the first is your main plan and the second adds a smaller boost. Plans shape growth, minutes and injury risk. Team first gives up shots to lift the whole team in your games, builds chemistry for the rest of the season, adds a little basketball IQ and keeps you healthier. Spotlight is the opposite and a gamble (High risk): fame, money and a roll on your shooting and finishing that can jump or slump, with less IQ growth, worse chemistry and more injuries. Speed and agility is the weight-loss plan.'],
-      ['Turning points', 'Events ask you to choose. The result is rolled each time, from a breakthrough to a backfire, with green and red chips for what changed. The risk tag shows how swingy a choice is. Choices rarely change just one thing: a night out can add a few pounds and some team chemistry, playing through a sore ankle wears the body down, betting on yourself in a contract year speeds up your development. Saying no is a choice too, with its own small payoff (a rested body, a better mood). Team chemistry shows on the result card when it moves.'],
-      ['New moments', 'Some turning points come from the newer parts of the game: the combine measuring your height, wingspan and weight; a growth spurt that leaves you all elbows; coming back from a long injury lighter; a veteran’s body; the team chef; what to do with long arms; teammates grumbling while you are on Spotlight; the coach noticing your Team first work; a young star asking a ring chaser for help. And a few only come if you have a certain teammate: late-night shootarounds, a last shot you both want, keeping a duo together when his contract runs out.'],
-      ['Storylines', 'Some turning points unfold over several seasons: a family illness, a rebuilt jumper, a nagging ankle, a veteran mentor, a documentary crew, a youth camp back home. Each summer brings the next chapter.'],
-      ['Around the league', 'In the side column; tap the header to unfold it. Each season has storylines (a superteam, an underdog, your rival, a dynasty, a tank job), and some seasons your own team is one, which really moves it. Before the second half, call how up to three stories end for reputation. Each kind of story has its mark (a crown for a dynasty, stars for a superteam, a rising arrow for an underdog, a bolt for your rival, a sinking arrow for a tank job), and a rivalry shows your crest against theirs.'],
-      ['Weight', 'Every player has a best playing weight for his height and age (the Player tab shows it next to yours). Heavier than that: stronger inside (rebounding, rim protection, finishing) but slower (athleticism, perimeter defense), and well over it wears the body down faster. Lighter: a little quicker at first, then just easier to push around. The Weight room plan puts pounds on, Speed and agility takes a lot off, Recovery adds a little, a long injury adds some, and every summer your body drifts back toward its natural frame (more so after 28). Turning points, the shop (meal plans, a chef, shakes, an air bike) and storylines move it too.'],
-      ['City and fans', 'Every NBA city has its own culture, and it works on you each half you play there: Denver’s altitude slows a weak athlete in his first season and then builds his athleticism; Golden State builds shooters, Detroit defenders, San Antonio keeps you young; the party cities each cost you in their own way (New York’s tabloids, Atlanta’s late nights, Miami’s fines, Hollywood’s gigs, New Orleans’ food). Its fans add a home-crowd edge, a playoff edge and their own reaction to winning and losing. The Season tab shows both with their icons, and every NBA offer names them.'],
-      ['Coach trust and reputation', 'Coach trust is part of team chemistry: a trusted player steadies the locker room (team strength up), a distrusted one splits it. Reputation pays: higher salaries, more offers and better odds when you ask for a trade.'],
-      ['MVP race', 'In the NBA, once you are at MVP level (OVR 92+) or in the top five, the race shows in the side column: the leaders, their numbers and team records, and how close you are.'],
-      ['Playoffs and finals', 'Playable postseason games ask for a tactic each quarter and the last possession in a close game (switch them off in Settings). Finals end play by play. After a close playable game, the recap says how your last shot went. Win it all and the confetti flies; lose a final and it stings.'],
-      ['National team', 'Called up for World Cups, the Olympics or the Asian Games? Gold is a celebration, silver and bronze hang a medal around your neck, and an early exit is a long flight home.'],
+      ['Plans', ['Pick one or two plans for each half. The first is the main plan.', 'One plan alone works a little better.', 'Plans shape growth, minutes, injuries, mood and fame.']],
+      ['Turning points', ['Events ask you to choose; the result is rolled each time.', 'Green and red chips show what changed.', 'The risk tag shows how swingy a choice is.']],
+      ['Storylines', ['Some events unfold over several seasons, one chapter each summer.']],
+      ['Around the league', ['The season’s storylines, in the side column.', 'Before the second half, call how up to three end, for reputation.']],
+      ['Weight', ['Every body has a best playing weight (Player tab).', 'Heavier: stronger inside, slower. Lighter: quicker, easier to push around.', 'Plans, injuries, the shop and summers move it.']],
+      ['City and fans', ['Every NBA city has a culture that helps or hurts you each half.', 'Its fans add a home and playoff edge and react to wins and losses.', 'Shown on the Season tab and on every NBA offer.']],
+      ['Coach trust and reputation', ['Trust steadies or splits the locker room (team strength).', 'Reputation brings better salaries, offers and trade odds.']],
+      ['MVP race', ['In the NBA, once you are near the top: the leaders and how close you are.']],
+      ['Playoffs and finals', ['Playable games: a tactic each quarter and the last shot of close games.', 'Finals end play by play on the action cam.', 'Switch playable games off in Settings.']],
+      ['National team', ['World Cups, the Olympics, the Asian Games: medals and reputation, at the cost of rest.']],
     ],
   },
   {
     title: 'Offseason moves',
-    where: 'Home, the "Offseason moves" panel between seasons (locked tiles say what they need)',
+    where: 'Home, between seasons (locked tiles say what they need)',
     items: [
-      ['Focus stats', 'Two ratings that grow about twice as fast. Changing them is earned: a breakthrough season (a big OVR or single-rating jump for your age) unlocks it for that offseason, and the tile glows.'],
-      ['Position', 'Move one spot a summer (two if your height fits). A size warning opens it for you.'],
-      ['Starting five', 'NBA only, once you are your team’s first option. The five shows one player per position next to you; recruit a starter for any spot, and the player there is swapped out. Every recruit has a hidden spark with you: about one in four really clicks, and after a season or two together you become a named duo (better efficiency and assists for you, chemistry for the team). A second recruit who clicks while the duo stands makes it a Big Three.'],
-      ['Team style', 'NBA, once you start for your team. Pick how the team plays: Run and gun, Defense first, Ball movement, Inside out, or Run it through you. Each moves the team differently in the season and the playoffs, and you fit some better than others. One change a summer.'],
-      ['Request a trade', 'NBA, under contract. Choose where: any better team, a contender, the champions, your rival or a team that needs you. The card then tells you straight away where you went, or that nobody bit and what it cost you.'],
-      ['Jersey number', 'Switch numbers between seasons. The number you retire in is the one that hangs.'],
-      ['Retire, or chase a ring', 'Hang it up between any two seasons. When your agent suggests retiring, a veteran who can still help a contender can become a veteran specialist first: pick one of three roles that suit you (floor spacer, defensive specialist, veteran playmaker, rebounding big, bench scorer, veteran leader). A former star qualifies a little below the usual bar. The calls come from good teams a step below the favourites, so a ring is never handed to you.'],
-      ['Shop and summer', 'Purchases and the summer program come up as choices in the offseason. The shop shows six things at random each summer, out of about 130. Each item has its own icon and colour.'],
+      ['Focus stats', ['A breakthrough season unlocks a change for that offseason; the tile glows.']],
+      ['Position', ['Move one spot a summer, two if your height fits.']],
+      ['Starting five', ['NBA, once you are your team’s first option.', 'Recruit a starter for any position.', 'About one recruit in four clicks: a duo, then a Big Three.']],
+      ['Team style', ['NBA starters: pick how the team plays, once a summer.', 'Each style suits some players better than others.']],
+      ['Request a trade', ['NBA, under contract: aim for a contender, the champions, your rival...', 'The card says at once where you went, or what it cost you.']],
+      ['Jersey number', ['Switch numbers between seasons. The one you retire in is the one that hangs.']],
+      ['Retire, or chase a ring', ['Retire between any two seasons.', 'A veteran can first become a specialist for a contender.']],
+      ['Shop and summer', ['Six items each summer, from about 130.', 'Then a summer program for next season.']],
     ],
   },
   {
     title: 'Mini-games',
     where: 'The Mini-games card on Home, or the start page',
     items: [
-      ['Unlocking them', 'From the start page every game is free. In a career, each opens when your player earns it: Three-point contest at shooting 85, Dunk contest at athleticism 85, Front Office at basketball IQ 85, Built in a lab at OVR 82, Legends showdown at OVR 90. Once open, it stays open.'],
-      ['Career bonus', 'A good result earns your player a real rating bonus, twice a season: the first in full, the second at half value. A top result is worth about 1.5 OVR (about 0.8 in Regular guy); ratings of 90+ get a little less. Back to career is the big button at the end of every game.'],
-      ['Front Office', 'Run an NBA franchise for three seasons: scout and draft, trade, sign players from abroad and set a game plan. Your front office recommends trades and signings (not in Master mode). Miss the playoffs in seasons two and three and you are fired. Every team carries its crest: on the franchise list, in trade offers, in the playoff series and the bracket. Each game plan has an icon.'],
-      ['Three-point contest', 'Five racks, 60 seconds. Stop the meter in the green; the bright middle is a swish. Money balls are worth 2, and one rack of your choice is all money balls. You shoot from behind the arc at every rack.'],
-      ['Dunk contest', 'Two dunks a round, three attempts a dunk, the top two go to the final. Build each dunk from a takeoff, moves and a prop; each part is one timing tap. 9s and 10s take a hard dunk timed cleanly.'],
-      ['Legends showdown', 'Every franchise’s all-time five, each with an identity (Showtime, Bad Boys, Grit and grind...). With a career, your own player takes a legend’s place; without, you build a rookie. Chemistry (how you fit the identity, a hole you fill, roles that overlap) moves the team rating. Then the season and four playoff rounds.'],
-      ['Built in a lab', 'Design a player and build him over ten seasons, one screen each: spend each summer’s credits on ratings, then watch the season play out. A grade at the end. Every rating has its icon, as in your career. He changes as his OVR climbs. In high school he is the cute big-headed sprite; every level after that is a different player photographed on media day, traced into pixels, and each level has more pixels than the last: 20 pixels tall at university (65), 28 in a lower league (70), 40 in the NBA (75), 56 as an All-Star (80) and the full 80 in a gold glow as an MVP (89). A track under him shows every level, and he flashes when he moves up. A Built in a lab career shows the same evolution on the Player tab.'],
-      ['3-on-3 streetball', 'King of the court at a city park: beat three crews in a row, by ones and twos, make it take it. Pick the play on offense (a drive asks for a timing tap: a perfect finish draws the and-one), read their crew on defense, and fire up the crowd for a better next play. Opens at finishing 82 and pays finishing.'],
-      ['Daily challenge', 'One prospect a day, the same for everyone. A whole career with fast break and simple text, scored by the legacy he leaves; the day’s best stays on this device. Only from the start page, when no career is in progress.'],
+      ['Unlocking them', ['Free from the start page.', 'In a career, each opens when a rating reaches its mark, and stays open.']],
+      ['Career bonus', ['A good result gives your player a real rating bonus.', 'Two a season: the second at half value.']],
+      ['Front Office', ['Run an NBA franchise for three seasons.', 'Miss the playoffs in seasons two and three and you are fired.']],
+      ['Three-point contest', ['Five racks, 60 seconds. Stop the meter in the green.']],
+      ['Dunk contest', ['Build each dunk, land it with timing taps, beat the judges.']],
+      ['Legends showdown', ['Every franchise’s all-time five. Mind the chemistry, survive the playoffs.']],
+      ['Built in a lab', ['Design a player and spend credits on his ratings, season by season.', 'His art evolves as his OVR climbs.']],
+      ['3-on-3 streetball', ['Beat three crews in a row. Pick plays, time your finishes.', 'Pays finishing.']],
+      ['Daily challenge', ['The same prospect for everyone, every day.', 'Only from the start page, with no career in progress.']],
     ],
   },
   {
     title: 'Tabs',
     where: 'Each opens with a banner of the numbers that matter',
     items: [
-      ['Season', 'Your team, record, streak and last ten games; your points game by game; the game log; standings; and the playoff bracket once the postseason starts.'],
-      ['Player', 'Your ratings as a shape (dashed: where the season started) and as bars, status and body wear, your profile (height, weight, wingspan), kits, scouting, and the body map: front and back, every muscle shaded by what your training built, every injury marked where it happened, and your height and weight by age.'],
-      ['League', 'Both conferences side by side, scoring leaders, last season’s award voting and the record book.'],
-      ['Records', 'Your career at a glance with the career timeline (OVR season by season with the big moments marked) and the journal under it (every turning point and how it turned out, filterable), season by season, the trophy cabinet (tap a banner for details), totals, career highs, tournaments and the legacy tier list.'],
-    ],
-  },
-  {
-    title: 'The look',
-    where: 'Everywhere: pixel art for your player, your teams and your story',
-    items: [
-      ['Your player', 'A pixel player with a big head, in your team’s kit. His look (skin, hair, a beard, a headband or an arm sleeve) comes with his name and stays all career; the pose shows his position: the point guard low on the dribble, the two guard bouncing it, the wing on a jumper, the four with the ball on his hip, the five flying in for a dunk.'],
-      ['Kits', 'Player tab: every team has a home, road and city jersey. NBA teams wear their own colours and wordmarks; every other team gets a kit in its colours. Tap a kit to dress your player in it.'],
-      ['Legends', 'Every legend is drawn with his real look: Iverson’s cornrows and headband, Kareem’s goggles, Dr. J’s afro, Bird’s mop, LeBron’s beard. You meet them in the Legends showdown and the contests.'],
-      ['Story scenes', 'Turning points, storyline chapters, draft night and story pages open with a picture of where it happens: the arena, the gym, the city at night, home, the agent’s office, the clinic, the press room, a street court, the locker room, the draft stage, a title night, an awards stage or a medal game.'],
-      ['Where you play', 'Each page opens with a banner of your venue: a high school gym, a college arena, a European hall or an NBA arena. Abroad it shows the country: the Eiffel Tower in France, the Sagrada Família in Spain, Mount Fuji and a pagoda in Japan, the Opera House in Sydney, and so on for every country and league region. In the NBA every team has its own arena: its real number of title banners in the rafters, its roof, its motif over centre court and its name on the stands.'],
-      ['Team touches', 'The banner carries your team’s colour along its top edge with its second colour under it, and the Home card shows your team’s crest as a faint watermark.'],
-      ['Court', 'In Settings: the page background as Classic, a Hardwood floor or Streetball asphalt, in light and dark.'],
-      ['Trophies', 'Every award has its own trophy, so you can tell them apart at a glance: a tall trophy with a ball on top for an NBA title, a player statue for an MVP, a blocking hand for Defensive Player of the Year, a sneaker for Rookie of the Year, a big 6 for the Sixth Man, a rising arrow for Most Improved, crowns for the stat titles, a net for the NCAA title, a sports bottle for the national high school player of the year, a medal on its country\u2019s ribbon for the national team, and an engraved plate on each. Win one and your player celebrates on the story page: the trophy over his head, or the medal between his teeth.'],
-      ['Crests, banners and rings', 'Teams carry crests in their colours. Records shows your championship banners and rings, the trophy cabinet has an icon for every honour, and a retired number hangs as a banner in the rafters.'],
-      ['Contests', 'The three-point and dunk contests play out in a full arena: the crowd, the LED ribbon, a scoreboard, the shot or the dunk animated, and the judges’ cards.'],
+      ['Season', ['Your team, record, game log, standings, city and fans, the bracket.']],
+      ['Player', ['Ratings (shape and bars), status, kits, scouting.', 'The body map: muscles training built, and every injury.']],
+      ['League', ['Both conferences, scoring leaders, award voting, the record book.']],
+      ['Records', ['The career timeline and journal, season by season, trophies, totals, highs.']],
     ],
   },
   {
     title: 'The goal',
     where: 'The end of your career',
     items: [
-      ['Difficulty', 'Regular guy: most careers peak in the 60s and 70s; stardom and titles are earned. Reality hits hard: most careers end short of the NBA. Shoot for the stars: every career reaches stardom.'],
-      ['OVR', 'Your overall rating weighs every part of the game for your position. Rebounding, playmaking and defense count as much as scoring, so an all-around player is not behind a pure scorer.'],
-      ['Legacy', 'Every honour is worth legacy points by tier: S (Hall of Fame, the rafters, MVP, Finals MVP) down to D. The Hall of Fame is hard to reach: it takes a long run of honours. See the tier list in Records.'],
-      ['The rafters', 'A team retires your number after 7+ seasons with a strong legacy, or 5+ seasons and a title won as a key player. It gets its own page.'],
-      ['Legendary seasons', 'A season that stacks the big honours (MVP and Defensive Player of the Year, MVP and Finals MVP, MVP and the title...) or the numbers (a triple-double average, thirty a night) gets a gold card on the end-of-career page.'],
-      ['Championships', 'Titles are won by teams, and they are hard: in the NBA playoffs every opponent raises its game. Your roster’s rank is in the season preview; chemistry, coach trust, a duo or Big Three, your team style and a loud home crowd all add to it. Winning as a key player counts for more than a ring off the bench.'],
-      ['All-time rank', 'Your legacy points are ranked against 100 real legends. Download your career card, in your team’s colours, to keep it.'],
+      ['OVR', ['Weighs every part of the game for your position.', 'Defense, rebounding and passing count as much as scoring.']],
+      ['Legacy', ['Every honour is worth points, by tier (S down to D).', 'The Hall of Fame takes a long run of honours.']],
+      ['The rafters', ['A team retires your number after a long, strong run there (or a title as a key player).']],
+      ['Legendary seasons', ['A season that stacks the big honours or numbers earns a gold card.']],
+      ['Championships', ['Titles are won by teams, and they are hard.', 'Chemistry, trust, a duo, team style and the crowd all help.']],
+      ['All-time rank', ['Your legacy against 100 real legends, on your career card.']],
     ],
   },
 ];
 
 const QUICK: [string, string][] = [
-  ['1', 'Pick a plan for each half (or press its number). Your plan, minutes and health decide how you grow.'],
-  ['2', 'Answer turning points. Risk tags show how swingy a choice is.'],
-  ['3', 'Between seasons, check the Offseason moves panel. Glowing tiles are worth a look.'],
-  ['4', 'Grow your ratings to unlock mini-games for a rating bonus.'],
+  ['1', 'Pick a plan for each half.'],
+  ['2', 'Answer turning points.'],
+  ['3', 'Between seasons, check Offseason moves.'],
+  ['4', 'Raise ratings to unlock mini-games.'],
 ];
-
-const teaser = (t: string) => {
-  const first = t.split(/(?<=\.)\s/)[0];
-  return first.length > 110 ? `${first.slice(0, 107)}…` : first;
-};
 
 const SEEN = 'btr-guide-seen';
 const seen = (): boolean => {
@@ -169,7 +149,7 @@ export function GuideButton() {
   };
   return (
     <>
-      <button className={`icon-btn${fresh ? ' guide-fresh' : ''}${guideOn ? ' guide-on' : ''}`} onClick={show} aria-haspopup="dialog">
+      <button data-tour="guide-btn" className={`icon-btn${fresh ? ' guide-fresh' : ''}${guideOn ? ' guide-on' : ''}`} onClick={show} aria-haspopup="dialog">
         {guideOn ? 'Guide: on' : 'Guide'}
       </button>
       {open && (
@@ -188,7 +168,10 @@ export function GuideButton() {
             <div className={`guide-mode${guideOn ? ' on' : ''}`}>
               <div>
                 <b>Guide mode</b>
-                <div className="small muted">Highlights the next thing to do on every screen, with a short note on how it works.</div>
+                <div className="small muted">Walks you through every button once, step by step, then highlights the next thing to do.</div>
+                <button className="link-btn" onClick={resetTour}>
+                  Start the tour again
+                </button>
               </div>
               <button className={`btn small${guideOn ? ' ghost' : ''}`} onClick={toggleGuide} aria-pressed={guideOn}>
                 {guideOn ? 'Turn off' : 'Turn on'}
@@ -210,16 +193,30 @@ export function GuideButton() {
                 <h3 className="guide-h">{sec.title}</h3>
                 <div className="guide-where">{sec.where}</div>
                 <div className="guide-cards">
-                  {sec.items.map(([k, v]) => (
-                    <details key={k} className="guide-card">
-                      <summary>
-                        <Icon name={GUIDE_ICON[k] ?? ''} size={30} />
-                        <b>{k}</b>
-                        <span>{teaser(v)}</span>
-                      </summary>
-                      <p>{v}</p>
-                    </details>
-                  ))}
+                  {sec.items.map(([k, [first, ...more]]) =>
+                    more.length ? (
+                      <details key={k} className="guide-card">
+                        <summary>
+                          <Icon name={GUIDE_ICON[k] ?? ''} size={30} />
+                          <b>{k}</b>
+                          <span>{first}</span>
+                        </summary>
+                        <ul>
+                          {more.map((x) => (
+                            <li key={x}>{x}</li>
+                          ))}
+                        </ul>
+                      </details>
+                    ) : (
+                      <div key={k} className="guide-card">
+                        <div className="guide-one">
+                          <Icon name={GUIDE_ICON[k] ?? ''} size={30} />
+                          <b>{k}</b>
+                          <span>{first}</span>
+                        </div>
+                      </div>
+                    ),
+                  )}
                 </div>
               </section>
             ))}
@@ -281,7 +278,7 @@ export function guideStep(g: GameState): { spot: GuideSpot; text: string } {
 
 /** Wraps a spot: with guide mode on and this spot next, it glows and shows the note. */
 export function GuideSpotWrap({ g, spot, children }: { g: GameState; spot: GuideSpot; children: React.ReactNode }) {
-  const on = useStore((s) => s.guide && !s.master);
+  const on = useStore((s) => s.guide && !s.master && !s.tour);
   if (!on) return <>{children}</>;
   const step = guideStep(g);
   if (step.spot !== spot) return <>{children}</>;

@@ -74,6 +74,8 @@ interface Store {
   setPage: (p: Page | null) => void;
   /** What logging the career that just ended did (for the note on the retirement page). */
   logged: LogResult | null;
+  /** Guide mode's tour has a step on screen (the plain next-step highlight waits for it). */
+  tour: boolean;
   /** Round 22: the daily challenge in progress, with the career and setting it stepped away from. */
   daily: { day: string; stash: GameState | null; simple: boolean } | null;
   startDaily: () => void;
@@ -197,6 +199,7 @@ export const useStore = create<Store>((set, get) => ({
     top();
   },
   logged: null,
+  tour: false,
   daily: null,
   startDaily: () => {
     const day = todayKey();

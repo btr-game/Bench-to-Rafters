@@ -1,5 +1,6 @@
 import type { AttrKey, GameState, SeasonRecord } from "../../engine/types";
 import { GuideSpotWrap } from "../components/Guide";
+import { tourKind } from "../components/GuideTour";
 import {
   canSetStyle,
   currentStyle,
@@ -634,6 +635,7 @@ function OffseasonMoves({ g }: { g: GameState }) {
           .map((x) => (
             <button
               key={x.id}
+              data-tour={`move-${x.id}`}
               className={`move-tile ${x.state}${open === x.id ? " on" : ""}`}
               disabled={x.state === "locked"}
               aria-expanded={open === x.id}
@@ -962,6 +964,7 @@ export function Home({ g }: { g: GameState }) {
           <GuideSpotWrap g={g} spot="main">
             <div
               className="stack fade-in"
+              data-tour={pr.type === "decision" ? tourKind(pr.decision.kind) : undefined}
               key={
                 pr.type === "decision" ? pr.decision.id : `${g.year}-${g.step}`
               }

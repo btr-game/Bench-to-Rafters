@@ -194,7 +194,7 @@ export function Retirement({ g }: { g: GameState }) {
         {hof && <div className="toast">{hof === 'first' ? 'Inducted into the Hall of Fame on the first ballot.' : 'Inducted into the Hall of Fame.'}</div>}
         <div className="row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
           <CardActions rec={rec} />
-          <button className="btn ghost" onClick={reset}>
+          <button className="btn ghost" data-tour="retire-new" onClick={reset}>
             {UI.newCareer}
           </button>
         </div>

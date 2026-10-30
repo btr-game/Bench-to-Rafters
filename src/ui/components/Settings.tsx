@@ -8,10 +8,10 @@ import { prompt } from '../../engine/flow';
 import { useStore, type Court, type Tab, type Theme } from '../../store';
 
 /** A switch row: label, short note, on/off button. */
-function Toggle({ label, note, on, onClick }: { label: string; note: string; on: boolean; onClick: () => void }) {
+function Toggle({ label, note, on, onClick, tour }: { label: string; note: string; on: boolean; onClick: () => void; tour: string }) {
   const icon = /fast/i.test(label) ? 'fast' : /simple/i.test(label) ? 'simple' : /guide/i.test(label) ? 'guide' : /master/i.test(label) ? 'master' : /playoff/i.test(label) ? 'bracket' : '';
   return (
-    <div className="set-row">
+    <div className="set-row" data-tour={tour}>
       <Icon name={icon} size={26} />
       <div>
         <b>{label}</b>
@@ -62,7 +62,7 @@ export function SettingsMenu({ g }: { g: GameState | null }) {
   const retired = g?.step === 'retired';
   return (
     <div className="set-wrap" ref={box}>
-      <button className="icon-btn" aria-expanded={open} aria-haspopup="true" onClick={() => setOpen(!open)}>
+      <button className="icon-btn" data-tour="settings-btn" aria-expanded={open} aria-haspopup="true" onClick={() => setOpen(!open)}>
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" aria-hidden="true">
           <path d="M4 7h10M18 7h2M4 17h4M12 17h8" />
           <circle cx="16" cy="7" r="2" />
@@ -72,7 +72,7 @@ export function SettingsMenu({ g }: { g: GameState | null }) {
       </button>
       {open && (
         <div className="set-menu" role="menu">
-          <div className="set-row">
+          <div className="set-row" data-tour="set-theme">
             <b>Theme</b>
             <div className="seg small-seg">
               {(['auto', 'light', 'dark'] as Theme[]).map((t) => (
@@ -82,7 +82,7 @@ export function SettingsMenu({ g }: { g: GameState | null }) {
               ))}
             </div>
           </div>
-          <div className="set-row">
+          <div className="set-row" data-tour="set-court">
             <b>Court</b>
             <div className="seg small-seg">
               {(['classic', 'hardwood', 'street'] as Court[]).map((c) => (
@@ -94,7 +94,7 @@ export function SettingsMenu({ g }: { g: GameState | null }) {
           </div>
           {/* round 24 (owner): New career sits right under the court, not at the bottom of the menu */}
           {g && (
-            <div className="set-row set-new">
+            <div className="set-row set-new" data-tour="set-new">
               <button className={`btn small block ${armed || retired ? 'danger' : 'ghost'}`} onClick={() => (armed || retired ? (reset(), setOpen(false)) : setArmed(true))}>
                 {armed ? 'Tap again: end this career' : 'New career'}
               </button>
@@ -102,13 +102,13 @@ export function SettingsMenu({ g }: { g: GameState | null }) {
           )}
           {g && !retired && (
             <>
-              <Toggle label="Fast break" note="Quick seasons; you still make every real call." on={!!g.flags.fast} onClick={toggleFast} />
-              <Toggle label="Playable playoff games" note="Off: postseason games are simulated." on={!g.flags.simPostseason} onClick={togglePlayoffs} />
+              <Toggle label="Fast break" note="Quick seasons; you still make every real call." on={!!g.flags.fast} onClick={toggleFast} tour="set-fast" />
+              <Toggle label="Playable playoff games" note="Off: postseason games are simulated." on={!g.flags.simPostseason} onClick={togglePlayoffs} tour="set-playoffs" />
             </>
           )}
-          <Toggle label="Simple text" note="Hide descriptions, keep the choices." on={simple} onClick={toggleSimple} />
-          <Toggle label="Guide mode" note={master ? 'Off while Master mode is on.' : 'Highlights the next thing to do.'} on={guide && !master} onClick={toggleGuide} />
-          <Toggle label="Master mode" note="No recommendations: no scouts' calls, fit tags, suggested deals or guide hints. You read the game yourself." on={master} onClick={toggleMaster} />
+          <Toggle label="Simple text" note="Hide descriptions, keep the choices." on={simple} onClick={toggleSimple} tour="set-simple" />
+          <Toggle label="Guide mode" note={master ? 'Off while Master mode is on.' : 'Highlights the next thing to do.'} on={guide && !master} onClick={toggleGuide} tour="set-guide" />
+          <Toggle label="Master mode" note="No recommendations: no scouts' calls, fit tags, suggested deals or guide hints. You read the game yourself." on={master} onClick={toggleMaster} tour="set-master" />
           <div className="set-keys hide-touch">
             <b>Keyboard</b>
             <span>

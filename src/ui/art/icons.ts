@@ -1277,6 +1277,7 @@ export const GUIDE_ICON: Record<string, string> = {
   'Where you start': 'globe',
   'Position, hand and archetype': 'person',
   'Focus stats': 'range',
+  'Career log': 'book',
   Continue: 'disk',
   Plans: 'grind',
   'Turning points': 'book',

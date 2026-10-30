@@ -150,7 +150,7 @@ export function MiniGamesCard() {
         Mini-games
       </div>
       <p className="small muted">Front Office, the three-point and dunk contests, 3-on-3 streetball, Built in a lab, the legends showdown and the daily challenge. With a career, each opens when your ratings reach it.</p>
-      <button className="btn ghost" onClick={() => setMini('hub')}>
+      <button className="btn ghost" data-tour="minis" onClick={() => setMini('hub')}>
         Play a mini-game
       </button>
     </section>

@@ -384,7 +384,7 @@ export function SeasonTab({ g }: { g: GameState }) {
         </Card>
       ) : (
         <div className="page-grid wide-side">
-          <Card title="Games" kicker={`${all.length} played`}>
+          <Card title="Games" kicker={`${all.length} played`} tour="season-games">
             <PointsChart games={all} />
             <GameLogTable g={g} />
           </Card>
@@ -678,7 +678,7 @@ function NbaHistoryCard({ g }: { g: GameState }) {
   // how many MVPs each fictional player has won up to that season
   const mvpCount = (year: number, n: string) => g.nbaHistory.filter((h) => h.year <= year && h.awards.some((a) => a.award === 'MVP' && a.name === n)).length;
   return (
-    <Card title="NBA record book" kicker="Champions and award winners">
+    <Card title="NBA record book" kicker="Champions and award winners" tour="record-book">
       <div className="stack" style={{ gap: 10 }}>
         {shown.map((h) => {
           const mvp = h.awards.find((a) => a.award === 'MVP');

@@ -14,6 +14,7 @@ import { edgeOf } from '../../engine/career/nationality';
 import { ht, seasonLabel } from '../format';
 import { MiniGamesCard } from '../mini/MiniGames';
 import { CareerLogCard } from './CareerLog';
+import { GuideButton } from '../components/Guide';
 import { FlagArt } from '../art/Flag';
 import { POS_STYLE, PositionCard } from '../art/PositionCard';
 import { HeroArt, archPose } from '../art/Hero';
@@ -137,9 +138,12 @@ export function Create() {
         <div className="brand">
           Bench to <span>Rafters</span>
         </div>
-        <button className="icon-btn" onClick={randomAll}>
-          {UI.create.random}
-        </button>
+        <div className="row" style={{ gap: 8 }}>
+          <GuideButton />
+          <button className="icon-btn" data-tour="random" onClick={randomAll}>
+            {UI.create.random}
+          </button>
+        </div>
       </header>
       <ResumeCard />
       <section className="hero with-lineup">
@@ -423,11 +427,11 @@ export function Create() {
           </button>
         )}
         {step < 4 ? (
-          <button className="btn" disabled={!canNext} onClick={() => setStep(step + 1)}>
+          <button className="btn" data-tour="create-next" disabled={!canNext} onClick={() => setStep(step + 1)}>
             {UI.create.next}
           </button>
         ) : (
-          <button className="btn" onClick={begin}>
+          <button className="btn" data-tour="create-start" onClick={begin}>
             {UI.create.start}
           </button>
         )}

@@ -27,7 +27,7 @@ export function CardActions({ rec }: { rec: CareerRecord }) {
   };
   return (
     <>
-      <button className="btn" disabled={busy} onClick={() => run(false)}>
+      <button className="btn" data-tour="card-download" disabled={busy} onClick={() => run(false)}>
         Download career card
       </button>
       {canShareFiles() && (
@@ -79,7 +79,7 @@ export function CareerLogCard() {
         Career log
       </div>
       <p className="small muted">The career cards of your last {LOG_MAX} finished careers, kept on this device. {n ? `${n} saved.` : 'Finish a career to start it.'}</p>
-      <button className="btn ghost" onClick={() => setPage('log')}>
+      <button className="btn ghost" data-tour="log" onClick={() => setPage('log')}>
         Open the career log
       </button>
     </section>

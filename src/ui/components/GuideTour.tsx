@@ -1,0 +1,256 @@
+// Guide mode's tour (round 24, owner: "go through almost every clickable button, but don't repeat;
+// everything in the guide, step by step; some things unlock over progress, the guide guides users
+// to it"). Each step points at one control (found by a selector) with a short note. A step is
+// shown once: "Got it", a click on the control, or a few seconds on screen before it goes away all
+// count as seen, and the seen steps are kept on this device. A step waits until its control is on
+// screen, so the ones for later features (the starting five, the MVP race, a mini-game) appear
+// the first time they unlock. With nothing new on screen, Guide mode's plain "next thing to do"
+// highlight (Guide.tsx) takes over.
+
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { useStore } from '../../store';
+
+interface Step {
+  id: string;
+  sel: string;
+  text: string;
+}
+
+const T = (id: string, sel: string, text: string): Step => ({ id, sel, text });
+const D = (id: string) => `[data-tour="${id}"]`;
+
+// in order: the start page, the top bar, Home, the decisions, the offseason, the tabs, the end
+const TOUR: Step[] = [
+  T('start-continue', '.resume-card .btn', 'Pick up your saved career where you left it.'),
+  T('guide-btn', D('guide-btn'), 'The manual: every feature in a few short points. Guide mode switches on and off there too.'),
+  T('random', D('random'), 'Random rolls every pick at once.'),
+  T('start-mode', '.modes', 'How hard the road is. It stays for the whole career.'),
+  T('minis', D('minis'), 'Mini-games. Free from the start page; in a career each one opens with your ratings and pays a rating bonus.'),
+  T('log', D('log'), 'The career log: the cards of your last five finished careers.'),
+  T('create-next', D('create-next'), 'Next: who you are, your archetype, your focus, then a last look.'),
+  T('start-name', '#f-name', 'Your name and number. The number can change between seasons.'),
+  T('start-nation', '.nation-grid', 'Your country sets your road to the pros.'),
+  T('start-pos', '.pos-cards', 'Your position. Each has its own heights and archetypes.'),
+  T('start-arch', '.arch-cards', 'Your archetype: the kind of player you start as.'),
+  T('start-focus', '.focus-grid', 'Two focus stats: they grow almost twice as fast.'),
+  T('create-start', D('create-start'), 'Start the career.'),
+  T('tab-home', D('tab-home'), 'Home: the choice waiting for you.'),
+  T('todo', '.todo-now', 'What the game is waiting for now. Tap to jump to it.'),
+  T('d-plan', D('d-plan'), 'Pick one or two plans for this half. The first one you tap is the main plan.'),
+  T('main-go', '.main-go', 'Plays the next step. Enter does the same.'),
+  T('d-event', D('d-event'), 'A turning point: pick how you respond. The result is rolled; the risk tag shows how swingy it is.'),
+  T('d-road', D('d-road'), 'Where you play next. Minutes matter most for growth.'),
+  T('d-arc', D('d-arc'), 'A storyline chapter. Your answer shapes the next one.'),
+  T('d-draft', D('d-draft'), 'A draft decision. The scouting report shows where you might go.'),
+  T('d-shop', D('d-shop'), 'The shop: six items this summer. Enter leaves it.'),
+  T('d-summer', D('d-summer'), 'Your summer program shapes next season.'),
+  T('d-national', D('d-national'), 'A national team call: medals and fame, at the cost of rest.'),
+  T('d-live', D('d-live'), 'A playable playoff game: a tactic each quarter, or simulate.'),
+  T('d-retire', D('d-retire'), 'Keep playing, retire, or chase a ring as a veteran specialist.'),
+  T('d-chaser', D('d-chaser'), 'Pick your role for the contender.'),
+  T('moment-go', '.moment-btn', 'A story page. Read it, then carry on (Enter).'),
+  T('skip-final', '[data-skip]', 'Skip to the final buzzer, or watch the last minutes play out.'),
+  T('next-step', '.next-step', 'From any other tab, this carries the game on.'),
+  T('chip-fast', D('chip-fast'), 'Fast break: quick seasons. You still make every real call.'),
+  T('chip-simple', D('chip-simple'), 'Simple text: just the choices.'),
+  T('settings-btn', D('settings-btn'), 'Settings: look, New career and the switches.'),
+  T('set-theme', D('set-theme'), 'Light, dark, or follow your device.'),
+  T('set-court', D('set-court'), 'The page background.'),
+  T('set-new', D('set-new'), 'Ends this career. Tap twice to be sure.'),
+  T('set-fast', D('set-fast'), 'Fast break, also here.'),
+  T('set-playoffs', D('set-playoffs'), 'Off: postseason games are simulated.'),
+  T('set-simple', D('set-simple'), 'Simple text, also here.'),
+  T('set-guide', D('set-guide'), 'Guide mode: this tour, then the next thing to do.'),
+  T('set-master', D('set-master'), 'Master mode: no hints or recommendations anywhere.'),
+  T('stories', '.fold-head', 'Around the league: this season’s storylines. Call how they end for reputation.'),
+  T('tab-season', D('tab-season'), 'Season: your team, games, standings and bracket.'),
+  T('season-city', '.city-card', 'Your city and its fans, and what they do to you.'),
+  T('season-games', D('season-games'), 'Every game you played.'),
+  T('bracket', '.bracket', 'The playoff bracket.'),
+  T('tab-player', D('tab-player'), 'Player: ratings, status, kits, scouting and your body.'),
+  T('kits', '.kits', 'Tap a kit to dress your player in it.'),
+  T('scout', '.scout-card', 'Where the scouts think you peak, and your odds.'),
+  T('bodymap', '.bm', 'What training built and where you got hurt. Hover a muscle.'),
+  T('tab-league', D('tab-league'), 'League: standings, leaders and award voting.'),
+  T('record-book', D('record-book'), 'Champions and award winners, year by year.'),
+  T('tab-records', D('tab-records'), 'Records: your whole career.'),
+  T('timeline', '.tl-chart', 'Your OVR season by season. Tap a season for its story.'),
+  T('trophies', D('trophies'), 'Your trophies. Tap a banner for details.'),
+  T('hub', '.hub-grid', 'Pick a game. Locked ones say what they need.'),
+  T('mvp', '.mvp-race', 'The MVP race: the leaders and how close you are.'),
+  T('duo', '.duo-card', 'Your duo or Big Three: chemistry with teammates.'),
+  T('move-focus', `${D('move-focus')}:not(:disabled)`, 'A breakthrough season: pick new focus stats.'),
+  T('move-position', `${D('move-position')}:not(:disabled)`, 'Move one spot on the floor.'),
+  T('move-roster', `${D('move-roster')}:not(:disabled)`, 'Your starting five: recruit a starter for any position.'),
+  T('move-style', `${D('move-style')}:not(:disabled)`, 'Set how your team plays.'),
+  T('move-trade', `${D('move-trade')}:not(:disabled)`, 'Ask for a trade, and aim it.'),
+  T('move-number', `${D('move-number')}:not(:disabled)`, 'Change your number.'),
+  T('move-retire', `${D('move-retire')}:not(:disabled)`, 'Retire, between any two seasons.'),
+  T('card-download', D('card-download'), 'Download your career card as an image.'),
+  T('retire-new', D('retire-new'), 'Start the next career. This one stays in your log.'),
+  T('log-entry', '.log-entry', 'Show, download or delete any card.'),
+];
+
+const ROAD = ['offers', 'commit', 'eu', 'int', 'gl', 'min', 'youth', 'prep', 'promote', 'culture', 'transfer', 'assign'];
+/** The tour step for a decision, by its kind. */
+export function tourKind(kind: string): string | undefined {
+  if (kind === 'info') return undefined;
+  if (kind === 'plan' || kind === 'shop' || kind === 'summer' || kind === 'live' || kind === 'national' || kind === 'arc') return `d-${kind}`;
+  if (kind === 'retirePrompt') return 'd-retire';
+  if (kind === 'chaserRole') return 'd-chaser';
+  if (ROAD.includes(kind)) return 'd-road';
+  if (kind === 'draft' || kind === 'declare' || kind === 'withdraw') return 'd-draft';
+  return 'd-event';
+}
+
+const KEY = 'btr-tour-seen';
+function loadSeen(): Set<string> {
+  try {
+    return new Set(JSON.parse(localStorage.getItem(KEY) ?? '[]') as string[]);
+  } catch {
+    return new Set();
+  }
+}
+function saveSeen(s: Set<string>): void {
+  try {
+    localStorage.setItem(KEY, JSON.stringify([...s]));
+  } catch {
+    // without storage the tour simply starts over next time
+  }
+}
+
+/** From the guide sheet: every step shows again. */
+export function resetTour(): void {
+  saveSeen(new Set());
+  window.dispatchEvent(new Event('btr-tour-reset'));
+}
+
+const shown = (el: HTMLElement) => {
+  const r = el.getBoundingClientRect();
+  return r.width > 0 && r.height > 0 && !(el as HTMLButtonElement).disabled;
+};
+
+export function GuideTour() {
+  const on = useStore((s) => s.guide && !s.master);
+  const [seen, setSeen] = useState(loadSeen);
+  const [cur, setCur] = useState<{ step: Step; el: HTMLElement } | null>(null);
+  const [box, setBox] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
+  const tip = useRef<HTMLDivElement>(null);
+  const [tipH, setTipH] = useState(140);
+
+  const done = useCallback((ids: string[]) => {
+    setSeen((s) => {
+      const n = new Set(s);
+      ids.forEach((id) => n.add(id));
+      saveSeen(n);
+      return n;
+    });
+  }, []);
+
+  useEffect(() => {
+    const reset = () => setSeen(new Set());
+    window.addEventListener('btr-tour-reset', reset);
+    return () => window.removeEventListener('btr-tour-reset', reset);
+  }, []);
+
+  // the first step not seen yet whose control is on screen (inside an open dialog, if there is one)
+  useEffect(() => {
+    if (!on) {
+      setCur(null);
+      return;
+    }
+    let raf = 0;
+    const find = () => {
+      raf = 0;
+      const modal = [...document.querySelectorAll('[aria-modal="true"]')].pop();
+      for (const step of TOUR) {
+        if (seen.has(step.id)) continue;
+        const el = [...document.querySelectorAll<HTMLElement>(step.sel)].find((e) => shown(e) && (!modal || modal.contains(e)));
+        if (el) {
+          setCur((c) => (c && c.step === step && c.el === el ? c : { step, el }));
+          return;
+        }
+      }
+      setCur(null);
+    };
+    const later = () => {
+      if (!raf) raf = requestAnimationFrame(find);
+    };
+    find();
+    const mo = new MutationObserver(later);
+    mo.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['disabled', 'aria-expanded', 'aria-modal'] });
+    window.addEventListener('resize', later);
+    return () => {
+      mo.disconnect();
+      cancelAnimationFrame(raf);
+      window.removeEventListener('resize', later);
+    };
+  }, [on, seen]);
+
+  // the plain next-step highlight waits while a step is up
+  useEffect(() => {
+    useStore.setState({ tour: !!cur });
+  }, [cur]);
+
+  // follow the control as the page moves; a click on it counts as seen, and so does a step that
+  // was on screen a few seconds before its control went away (the player moved on with a key)
+  useEffect(() => {
+    if (!cur) {
+      setBox(null);
+      return;
+    }
+    const at = Date.now();
+    cur.el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    let raf = 0;
+    const tick = () => {
+      const r = cur.el.getBoundingClientRect();
+      setBox((b) => (b && b.x === r.left && b.y === r.top && b.w === r.width && b.h === r.height ? b : { x: r.left, y: r.top, w: r.width, h: r.height }));
+      raf = requestAnimationFrame(tick);
+    };
+    tick();
+    const click = (e: MouseEvent) => {
+      if (cur.el.contains(e.target as Node)) done([cur.step.id]);
+    };
+    document.addEventListener('click', click, true);
+    return () => {
+      cancelAnimationFrame(raf);
+      document.removeEventListener('click', click, true);
+      if ((!cur.el.isConnected || !shown(cur.el)) && Date.now() - at > 2500) done([cur.step.id]);
+    };
+  }, [cur, done]);
+
+  useLayoutEffect(() => {
+    if (tip.current && tip.current.offsetHeight !== tipH) setTipH(tip.current.offsetHeight);
+  });
+
+  if (!cur || !box) return null;
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const w = Math.min(320, vw - 24);
+  const left = Math.max(12, Math.min(vw - w - 12, box.x + box.w / 2 - w / 2));
+  const below = box.y + box.h + 14;
+  const above = box.y - 14 - tipH;
+  const top = below + tipH < vh - 8 ? below : above > 8 ? above : Math.max(8, Math.min(vh - tipH - 8, box.y + 12));
+  const n = TOUR.filter((s) => seen.has(s.id)).length + 1;
+  return createPortal(
+    <>
+      <div className="tour-ring" style={{ left: box.x - 6, top: box.y - 6, width: box.w + 12, height: box.h + 12 }} aria-hidden="true" />
+      <div className="tour-tip" ref={tip} role="note" style={{ left, top, width: w }}>
+        <div className="kicker">
+          Guide · {n} of {TOUR.length}
+        </div>
+        <p>{cur.step.text}</p>
+        <div className="tour-row">
+          <button className="btn small" onClick={() => done([cur.step.id])}>
+            Got it
+          </button>
+          <button className="link-btn" onClick={() => done(TOUR.map((s) => s.id))}>
+            Skip the tour
+          </button>
+        </div>
+      </div>
+    </>,
+    document.body,
+  );
+}

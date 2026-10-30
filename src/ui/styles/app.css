@@ -1121,7 +1121,10 @@ button.todo-now { width: 100%; text-align: left; border: 0; font: inherit; color
 .guide-card[open] summary b::after { content: '−'; }
 .guide-card summary span { color: var(--muted); font-size: 15px; }
 .guide-card[open] summary span { display: none; }
-.guide-card p { margin: 0; padding: 0 14px 14px; font-size: 16px; }
+.guide-card ul { margin: 0; padding: 0 14px 14px 32px; font-size: 16px; display: grid; gap: 4px; }
+.guide-one { padding: 12px 14px; display: grid; gap: 2px; }
+.guide-one b { font-size: 17.5px; }
+.guide-one span { color: var(--muted); font-size: 15px; }
 .guide-card[open] { border-color: var(--accent); background: var(--surface); }
 .guide-quick { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 180px), 1fr)); }
 .guide-quick li { display: grid; gap: 6px; padding: 12px; border-radius: 10px; background: var(--accent-soft); font-size: 15.5px; }
@@ -1214,8 +1217,8 @@ td .art-team { display: inline-block; vertical-align: middle; margin: -3px 8px -
 .pix-icon { image-rendering: pixelated; flex: none; }
 .with-icon { display: inline-flex; align-items: center; gap: 8px; }
 .attr-name { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
-.guide-card summary { grid-template-columns: auto minmax(0, 1fr); column-gap: 12px; align-items: center; }
-.guide-card summary .pix-icon { grid-row: span 2; }
+.guide-card summary, .guide-one { grid-template-columns: auto minmax(0, 1fr); column-gap: 12px; align-items: center; }
+.guide-card summary .pix-icon, .guide-one .pix-icon { grid-row: span 2; }
 .set-row > div { flex: 1; }
 .attr-name { white-space: nowrap; }
 
@@ -1506,3 +1509,11 @@ td .art-team { display: inline-block; vertical-align: middle; margin: -3px 8px -
 .scout-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: start; }
 .scout-head .kicker { overflow-wrap: anywhere; }
 .set-new { padding-top: 2px; }
+
+/* guide mode's tour (round 24): a ring round one control and a note beside it */
+.tour-ring { position: fixed; z-index: 1000; pointer-events: none; border: 3px solid var(--accent); border-radius: 12px; box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 25%, transparent), 0 0 26px color-mix(in srgb, var(--accent) 55%, transparent); animation: tourPulse 1.6s ease-in-out infinite; }
+.tour-tip { position: fixed; z-index: 1001; background: var(--surface); color: var(--ink); border: 1px solid var(--accent); border-radius: 12px; padding: 12px 14px; box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25); display: grid; gap: 6px; animation: fadeIn 0.2s ease both; }
+.tour-tip p { margin: 0; font-size: 16px; line-height: 1.35; }
+.tour-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+@keyframes tourPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+@media (prefers-reduced-motion: reduce) { .tour-ring { animation: none; } }

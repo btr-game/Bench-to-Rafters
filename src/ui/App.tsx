@@ -37,7 +37,7 @@ function TabBar({ g, top = false }: { g: GameState; top?: boolean }) {
       {(Object.keys(UI.tabs) as Tab[]).map((t) => {
         const fresh = t !== tab && seen[t] !== undefined && seen[t] !== tabKey(g, t);
         return (
-          <button key={t} aria-current={tab === t ? 'page' : undefined} onClick={() => setTab(t)} title={`${UI.tabs[t]} (${t[0].toUpperCase()})`}>
+          <button key={t} data-tour={`tab-${t}`} aria-current={tab === t ? 'page' : undefined} onClick={() => setTab(t)} title={`${UI.tabs[t]} (${t[0].toUpperCase()})`}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               {ICONS[t]}
             </svg>
@@ -55,7 +55,7 @@ function SimpleChip() {
   const on = useStore((s) => s.simple);
   const toggle = useStore((s) => s.toggleSimple);
   return (
-    <button className={`fast-toggle${on ? ' on' : ''}`} aria-pressed={on} onClick={toggle} title="Simple text: hide descriptions and flavour, keep the choices">
+    <button data-tour="chip-simple" className={`fast-toggle${on ? ' on' : ''}`} aria-pressed={on} onClick={toggle} title="Simple text: hide descriptions and flavour, keep the choices">
       <span className="fast-dot" aria-hidden="true" />
       Simple<span className="hide-narrow"> text</span>
     </button>
@@ -83,7 +83,7 @@ function FastChip({ g }: { g: GameState }) {
   if (g.mode === 'lab' || g.step === 'retired') return null;
   const on = !!g.flags.fast;
   return (
-    <button className={`fast-toggle${on ? ' on' : ''}`} aria-pressed={on} onClick={toggle} title="Fast break: quick seasons, you still make every real call">
+    <button data-tour="chip-fast" className={`fast-toggle${on ? ' on' : ''}`} aria-pressed={on} onClick={toggle} title="Fast break: quick seasons, you still make every real call">
       <span className="fast-dot" aria-hidden="true" />
       Fast<span className="hide-narrow"> break</span>
     </button>

@@ -94,7 +94,7 @@ export function TrophyCabinet({ g, title = 'Trophy cabinet' }: { g: GameState; t
   const [sel, setSel] = useState<string | null>(null);
   const items = trophyItems(g);
   return (
-    <Card title={title} kicker={items.length ? 'Tap a banner for details' : undefined}>
+    <Card title={title} kicker={items.length ? 'Tap a banner for details' : undefined} tour="trophies">
       {items.length === 0 ? <p className="muted">Empty, for now.</p> : <Banners items={items} selected={sel} onSelect={(l) => setSel(sel === l ? null : l)} />}
       {sel && <Detail g={g} label={sel} onClose={() => setSel(null)} />}
     </Card>

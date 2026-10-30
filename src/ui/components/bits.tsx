@@ -138,9 +138,9 @@ export function ReactionCard({ r }: { r: Reaction }) {
   );
 }
 
-export function Card({ title, kicker, children, right }: { title?: string; kicker?: string; children: ReactNode; right?: ReactNode }) {
+export function Card({ title, kicker, children, right, tour }: { title?: string; kicker?: string; children: ReactNode; right?: ReactNode; tour?: string }) {
   return (
-    <section className="card stack">
+    <section className="card stack" data-tour={tour}>
       {(title || kicker || right) && (
         <div className="row">
           <div>
