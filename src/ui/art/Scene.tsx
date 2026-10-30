@@ -6,6 +6,7 @@ import { blankGrid, paintCrowd, paintFloor, paintRibbon } from './arena';
 import { mix } from './color';
 import { glyph, toPaths } from './pixel';
 import { kitFor, lookOf, styleLeague } from './Player';
+import { POS_STYLE } from './PositionCard';
 import { DRIBBLE, DUNK, JUMPER, LOWDRIBBLE, TRIPLE, noBall, paint } from './sprite';
 
 // Story scenes (round 17): a wide pixel picture at the top of every turning point, storyline
@@ -297,24 +298,17 @@ export function StoryScene({ g, title, kind }: { g: GameState; title: string; ki
   return <SceneArt kind={sceneFor(title, kind)} kit={kit} name={g.player.name} number={g.player.number} pos={g.player.pos} accent={t?.color ?? '#E8590C'} />;
 }
 
-const LINEUP: [Pos, string, number][] = [
-  ['PG', 'Andre Moss', 3],
-  ['SG', 'Theo Lindqvist', 11],
-  ['SF', 'Malik Oduya', 23],
-  ['PF', 'Diego Ferraz', 34],
-  ['C', 'Kofi Mensah', 50],
-];
-
 /** The start page: a street court at sunset and a starting five, one of each position. */
-export function LineupArt({ colors }: { colors: Record<Pos, string> }) {
+export function LineupArt() {
   const bg = useMemo(() => toPaths(paintScene('street', '#E8590C')), []);
   const five = useMemo(
     () =>
-      LINEUP.map(([pos, name, n]) => {
-        const kit: Kit = { base: colors[pos], ink: '#FFFFFF', trim: mix(colors[pos], '#000000', 0.45), word: '' };
-        return { pos, paths: toPaths(paint(POSES[pos], kit, lookOf(name, '#18141C'), n)) };
+      (Object.keys(POS_STYLE) as Pos[]).map((pos) => {
+        const { color, model, number } = POS_STYLE[pos];
+        const kit: Kit = { base: color, ink: '#FFFFFF', trim: mix(color, '#000000', 0.45), word: '' };
+        return { pos, paths: toPaths(paint(POSES[pos], kit, lookOf(model, '#18141C'), number)) };
       }),
-    [colors],
+    [],
   );
   const scale = 1.25;
   return (

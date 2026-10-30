@@ -26,6 +26,22 @@ const RACKS: [number, number][] = [
   [290, 88],
 ];
 
+/** Where the shooter stands at a rack: behind the arc (an ellipse round the rim, 130 by 82),
+ * a step outside it and a step to the side of the rack. */
+function spotFor(rx: number, ry: number): [number, number] {
+  const nx = (rx - 160) / 130;
+  const ny = (ry - 72) / 82;
+  const l = Math.hypot(nx, ny);
+  // toward the baseline on the wings and up top; down the sideline in the corners
+  const side = (nx > 0 ? -1 : 1) * (Math.abs(nx) > 0.9 ? -1 : 1);
+  const tx = (-ny / l) * 130 * side;
+  const ty = (nx / l) * 82 * side;
+  const tl = Math.hypot(tx, ty);
+  const x = 160 + (nx / l) * 130 * 1.14 + (tx / tl) * 15;
+  const y = 72 + (ny / l) * 82 * 1.14 + (ty / tl) * 15;
+  return [Math.round(Math.max(18, Math.min(SW - 18, x))), Math.round(Math.min(SH - 2, y))];
+}
+
 /** The arena, painted once: crowd, ad ribbon, glass, the floor and its lines. */
 function paintArena(accent: string): string[][] {
   const g = blankGrid(SW, SH);
@@ -105,8 +121,7 @@ export function ThreesCourt({ kit, name, accent, rack, balls, moneyRack, onFire,
   const [shooting, setShooting] = useState(false);
   const [rx, ry] = RACKS[Math.min(4, rack)];
   // the shooter stands on the outside of his rack
-  const sx = rx + (rx < 120 ? 14 : rx > 200 ? -14 : 16);
-  const sy = ry + 4;
+  const [sx, sy] = spotFor(rx, ry);
   // the ball leaves from over his head, where the jumper holds it
   const hand: [number, number] = [sx - JUMPER.w / 2 + 14, sy - JUMPER.h + 2];
   const body = shooting ? JUMPER : DRIBBLE;

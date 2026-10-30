@@ -290,3 +290,4 @@ export function paint(p: Pose, kit: Kit, look: Look, number: number): string[][]
       if ((!out[y][x] || out[y][x] === pal.o) && (solid(x - 1, y) || solid(x + 1, y) || solid(x, y - 1) || solid(x, y + 1))) out[y][x] = OUT;
   return out;
 }
+

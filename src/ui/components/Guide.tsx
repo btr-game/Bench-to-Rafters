@@ -32,9 +32,9 @@ const SECTIONS: { title: string; where: string; items: [string, string][] }[] = 
     title: 'Starting a career',
     where: 'The start page',
     items: [
-      ['Difficulty', 'Regular guy, Reality hits hard or Shoot for the stars. It cannot change once the career starts, and it is always shown next to the name of the game.'],
+      ['Difficulty', 'Regular guy (the cap), Reality hits hard (the brick wall) or Shoot for the stars (the shooting star). It cannot change once the career starts, and it is always shown next to the name of the game.'],
       ['Where you start', 'Pick a country for its road to the pros (academies, school leagues, college), or Surprise me for real-world odds. Your hometown and first school are revealed when the career begins.'],
-      ['Position, hand and archetype', 'Pick each yourself, or tap Random next to it: Random never repeats the last pick, and the dominant hand rolls real-world odds (about one player in eight is a lefty). Random at the top rolls everything at once.'],
+      ['Position, hand and archetype', 'Pick each yourself, or tap Random next to it: Random never repeats the last pick, and the dominant hand rolls real-world odds (about one player in eight is a lefty). Random at the top rolls everything at once. Each position and archetype card shows a hand-drawn player in action, as a dark silhouette until you pick it; the one you pick steps into colour.'],
       ['Focus stats', 'Two ratings that grow about twice as fast. You can change them later only after a breakthrough season.'],
       ['Continue', 'A career in progress is saved on this device: the start page offers to continue it.'],
     ],
@@ -64,7 +64,7 @@ const SECTIONS: { title: string; where: string; items: [string, string][] }[] = 
       ['Request a trade', 'NBA, under contract. Choose where: any better team, a contender, the champions, your rival or a team that needs you. The card then tells you straight away where you went, or that nobody bit and what it cost you.'],
       ['Jersey number', 'Switch numbers between seasons. The number you retire in is the one that hangs.'],
       ['Retire, or chase a ring', 'Hang it up between any two seasons. When your agent suggests retiring, a former NBA player can instead become a ring chaser: a specialist role (floor spacer, defensive specialist, veteran playmaker, rebounding big) on a contender. Your best skill sharpens, what the role does not need fades, and your archetype changes for good.'],
-      ['Shop and summer', 'Purchases and the summer program come up as choices in the offseason. The shop shows six things at random each summer, out of about 130.'],
+      ['Shop and summer', 'Purchases and the summer program come up as choices in the offseason. The shop shows six things at random each summer, out of about 130. Each item has its own icon and colour.'],
     ],
   },
   {
@@ -73,11 +73,11 @@ const SECTIONS: { title: string; where: string; items: [string, string][] }[] = 
     items: [
       ['Unlocking them', 'From the start page every game is free. In a career, each opens when your player earns it: Three-point contest at shooting 85, Dunk contest at athleticism 85, Front Office at basketball IQ 85, Built in a lab at OVR 82, Legends showdown at OVR 90. Once open, it stays open.'],
       ['Career bonus', 'A good result earns your player a real rating bonus, twice a season: the first in full, the second at half value. A top result is worth about 1.5 OVR (about 0.8 in Regular guy); ratings of 90+ get a little less. Back to career is the big button at the end of every game.'],
-      ['Front Office', 'Run an NBA franchise for three seasons: scout and draft, trade, sign players from abroad and set a game plan. Your front office recommends trades and signings (not in Master mode). Miss the playoffs in seasons two and three and you are fired.'],
-      ['Three-point contest', 'Five racks, 60 seconds. Stop the meter in the green; the bright middle is a swish. Money balls are worth 2, and one rack of your choice is all money balls.'],
+      ['Front Office', 'Run an NBA franchise for three seasons: scout and draft, trade, sign players from abroad and set a game plan. Your front office recommends trades and signings (not in Master mode). Miss the playoffs in seasons two and three and you are fired. Every team carries its crest: on the franchise list, in trade offers, in the playoff series and the bracket. Each game plan has an icon.'],
+      ['Three-point contest', 'Five racks, 60 seconds. Stop the meter in the green; the bright middle is a swish. Money balls are worth 2, and one rack of your choice is all money balls. You shoot from behind the arc at every rack.'],
       ['Dunk contest', 'Two dunks a round, three attempts a dunk, the top two go to the final. Build each dunk from a takeoff, moves and a prop; each part is one timing tap. 9s and 10s take a hard dunk timed cleanly.'],
       ['Legends showdown', 'Every franchise’s all-time five, each with an identity (Showtime, Bad Boys, Grit and grind...). With a career, your own player takes a legend’s place; without, you build a rookie. Chemistry (how you fit the identity, a hole you fill, roles that overlap) moves the team rating. Then the season and four playoff rounds.'],
-      ['Built in a lab', 'Design a player and build him over ten seasons, one screen each: spend each summer’s credits on ratings, then watch the season play out. A grade at the end.'],
+      ['Built in a lab', 'Design a player and build him over ten seasons, one screen each: spend each summer’s credits on ratings, then watch the season play out. A grade at the end. Every rating has its icon, as in your career.'],
     ],
   },
   {

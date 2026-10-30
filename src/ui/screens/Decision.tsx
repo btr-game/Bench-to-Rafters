@@ -2,7 +2,7 @@
 
 import { Icon } from '../art/Icon';
 import { StoryScene } from '../art/Scene';
-import { choiceIcon, shopIcon } from '../art/icons';
+import { SHIFT_COLOR, choiceIcon, shopIcon, shopShift } from '../art/icons';
 import { useState } from 'react';
 import type { Decision, GameState, Offer } from '../../engine/types';
 import type { LiveRequest } from '../../engine/career/live';
@@ -249,8 +249,10 @@ export function DecisionView({ g, d }: { g: GameState; d: Decision }) {
           {items.map((c) => {
             const [name, price] = c.label.split(' · ');
             return (
-              <button key={c.id} className="item" disabled={c.disabled} onClick={() => choose(c.id)}>
-                <Icon name={shopIcon(c.id, name)} size={40} />
+              <button key={c.id} className="item" disabled={c.disabled} onClick={() => choose(c.id)} style={{ ['--tile' as string]: SHIFT_COLOR[shopShift(c.id)] }}>
+                <span className="shop-tile">
+                  <Icon name={shopIcon(c.id, name)} shift={shopShift(c.id)} size={40} />
+                </span>
                 <span className="kicker">{c.tags?.[0]}</span>
                 <span className="name">{name}</span>
                 <span className="price">{price}</span>

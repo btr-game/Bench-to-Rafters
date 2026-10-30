@@ -1040,3 +1040,28 @@ Reached from the start page and from the bottom of Home (a career in progress is
   page background changes (planks or speckled asphalt, light and dark versions); cards keep
   their surfaces, so every text contrast stays as it was.
 - **Balance:** no engine change this round, so no harness run.
+
+## Round 18
+
+- **Position and archetype art:** the owner wanted the start page in the detailed style of the
+  hand-drawn references (real proportions, about 30 by 45 pixels, shaded by hand). The game's own
+  sprites stay cute, since they must be generated for any player in any kit; the start page only
+  needs a fixed set, so it has ten hand-drawn players (`art/Hero.tsx`), one letter per pixel with
+  four skin tones and four jersey tones: low dribble, drive, jumper, ball on the hip, dunk, pass,
+  defensive stance, rebound, block and hook. Each position card shows one, and each archetype the
+  action it is known for, never the same twice within a position. Cards show a dark silhouette
+  (a CSS brightness filter) until picked, then the player steps into colour.
+- **Numbers:** every position card used the player's own number (so all showed 24); each now has
+  its model player's number (PG 3, SG 11, SF 23, PF 34, C 50, the same five as the start-page
+  lineup), and archetypes a number from their name.
+- **Difficulty icons:** a cap for Regular guy, a cracked brick wall for Reality hits hard, a
+  shooting star for Shoot for the stars, on the cards and the difficulty badge.
+- **Front Office:** team crests on the franchise list, the header, trade offers, playoff series
+  and the bracket (the bracket is shared, so the career's bracket has them too); an icon for each
+  game plan (pace, defense, the star, depth as a substitution).
+- **Three-point contest:** the shooter stood on or inside the arc. He now stands outside it at
+  every rack: 14% beyond the arc's ellipse, a step to the side of the rack (toward the baseline on
+  the wings and up top, down the sideline in the corners).
+- **Built in a lab:** the rating icons on every stat.
+- **Shop:** items that share an icon looked the same. Each item has a colourway from its id (the
+  icon's colour families rotate round a ring of six) and a tile in that colour.

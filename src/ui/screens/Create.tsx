@@ -15,9 +15,9 @@ import { ht, seasonLabel } from '../format';
 import { MiniGamesCard } from '../mini/MiniGames';
 import { FlagArt } from '../art/Flag';
 import { POS_STYLE, PositionCard } from '../art/PositionCard';
+import { HeroArt, archPose } from '../art/Hero';
+import { hash } from '../art/color';
 import { LineupArt } from '../art/Scene';
-
-const LINEUP_COLORS = Object.fromEntries(Object.entries(POS_STYLE).map(([p, st]) => [p, st.color])) as Record<Pos, string>;
 
 const pick = <T,>(a: readonly T[]): T => a[Math.floor(Math.random() * a.length)];
 const uiRng = makeRng(Math.floor(Math.random() * 2 ** 31));
@@ -141,7 +141,7 @@ export function Create() {
       </header>
       <ResumeCard />
       <section className="hero with-lineup">
-        <LineupArt colors={LINEUP_COLORS} />
+        <LineupArt />
         <div className="kicker">A basketball career game</div>
         <h1>
           Bench<span>to Rafters</span>
@@ -166,7 +166,10 @@ export function Create() {
           <div className="modes">
             {DIFFICULTIES.map((m) => (
               <button key={m} className={`choice mode-card${mode === m ? ' selected' : ''}`} aria-pressed={mode === m} onClick={() => setMode(m)}>
-                <span className="label">{MODES[m].name}</span>
+                <span className="label with-icon">
+                  <Icon name={ICON_FOR[m]} size={32} />
+                  {MODES[m].name}
+                </span>
                 <small>{MODES[m].blurb}</small>
               </button>
             ))}
@@ -252,8 +255,6 @@ export function Create() {
                     name={p}
                     full={NAMES.pos[p]}
                     height={`${ht(HEIGHT_RANGE[p][0])}–${ht(HEIGHT_RANGE[p][1])}`}
-                    number={Number(number) || 0}
-                    playerName={name || 'Rookie'}
                     on={p === pos}
                     scale={1 + i * 0.07}
                     onPick={() => {
@@ -336,6 +337,11 @@ export function Create() {
                   setRolled((r) => ({ ...r, arch: false }));
                 }}
               >
+                <span className="arch-stage" style={{ ['--pos' as string]: POS_STYLE[pos].color }}>
+                  <span className="pos-player">
+                    <HeroArt pose={archPose(a.name, pos)} model={a.name} number={(hash(a.name) % 54) + 1} kit={{ base: POS_STYLE[pos].color, ink: '#FFFFFF', trim: '#F4F4F4', word: '' }} size={132} />
+                  </span>
+                </span>
                 <h3 className="with-icon">
                   <Icon name={archetypeIcon(a.name)} size={30} />
                   {a.name}

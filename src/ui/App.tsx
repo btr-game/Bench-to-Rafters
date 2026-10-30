@@ -12,6 +12,8 @@ import { LeagueTab, PlayerTab, RecordsTab, SeasonTab } from './screens/Tabs';
 import { Retirement } from './screens/Retirement';
 import { Overlays } from './components/Overlays';
 import { MiniGames } from './mini/MiniGames';
+import { Icon } from './art/Icon';
+import { ICON_FOR } from './art/icons';
 
 const HOST_THEME = typeof document !== 'undefined' ? document.documentElement.getAttribute('data-theme') : null;
 
@@ -65,6 +67,7 @@ function ModeBadge({ g }: { g: GameState }) {
   const master = useStore((s) => s.master);
   return (
     <span className={`mode-badge mode-${g.mode}`} title="Difficulty">
+      {ICON_FOR[g.mode] && <Icon name={ICON_FOR[g.mode]} size={14} />}
       <span className="long">{MODES[g.mode]?.name ?? g.mode}</span>
       <span className="short">{SHORT_MODE[g.mode] ?? g.mode}</span>
       {master && <b> · Master</b>}

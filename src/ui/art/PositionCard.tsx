@@ -3,18 +3,21 @@ import type { Pos } from '../../engine/types';
 import { paintFloor } from './arena';
 import { mix } from './color';
 import { toPaths } from './pixel';
-import { PlayerArt } from './Player';
+import { HeroArt, POS_POSE } from './Hero';
 
 // The position cards on the start page (round 17): one colour per position, the code big, what
-// the position does in a line, the player drawn to its height, and a little half-court showing
-// where that position lives on the floor.
+// the position does in a line, the player drawn to its height (hand-drawn in real proportions,
+// Hero.tsx; a dark silhouette until the position is picked), and a little half-court showing where that
+// position lives on the floor.
 
-export const POS_STYLE: Record<Pos, { color: string; role: string; spot: [number, number] }> = {
-  PG: { color: '#1C7ED6', role: 'Runs the offence: handles it, passes, calls the plays', spot: [24, 25] },
-  SG: { color: '#2F9E44', role: 'The scorer: shoots off screens, attacks closeouts', spot: [41, 19] },
-  SF: { color: '#E8590C', role: 'The wing who does a bit of everything', spot: [7, 15] },
-  PF: { color: '#7048E8', role: 'Muscle inside: rebounds, screens, steps out to shoot', spot: [33, 9] },
-  C: { color: '#C2255C', role: 'Protects the rim and owns the glass', spot: [24, 6] },
+/** Each position's colour, role, spot on the floor, and the model player drawn for it (his name
+ * sets his look) with his own number. The start page's lineup is the same five. */
+export const POS_STYLE: Record<Pos, { color: string; role: string; spot: [number, number]; model: string; number: number }> = {
+  PG: { color: '#1C7ED6', role: 'Runs the offence: handles it, passes, calls the plays', spot: [24, 25], model: 'Andre Moss', number: 3 },
+  SG: { color: '#2F9E44', role: 'The scorer: shoots off screens, attacks closeouts', spot: [41, 19], model: 'Theo Lindqvist', number: 11 },
+  SF: { color: '#E8590C', role: 'The wing who does a bit of everything', spot: [7, 15], model: 'Malik Oduya', number: 23 },
+  PF: { color: '#7048E8', role: 'Muscle inside: rebounds, screens, steps out to shoot', spot: [33, 9], model: 'Diego Ferraz', number: 34 },
+  C: { color: '#C2255C', role: 'Protects the rim and owns the glass', spot: [24, 6], model: 'Kofi Mensah', number: 50 },
 };
 
 const CW = 48;
@@ -46,7 +49,7 @@ function paintCourt(pos: Pos): string[][] {
   return g;
 }
 
-export function PositionCard({ pos, name, full, height, number, playerName, on, onPick, scale }: { pos: Pos; name: string; full: string; height: string; number: number; playerName: string; on: boolean; onPick: () => void; scale: number }) {
+export function PositionCard({ pos, name, full, height, on, onPick, scale }: { pos: Pos; name: string; full: string; height: string; on: boolean; onPick: () => void; scale: number }) {
   const court = useMemo(() => toPaths(paintCourt(pos)), [pos]);
   const st = POS_STYLE[pos];
   return (
@@ -61,7 +64,9 @@ export function PositionCard({ pos, name, full, height, number, playerName, on, 
             <path key={p.fill} d={p.d} fill={p.fill} />
           ))}
         </svg>
-        <PlayerArt name={playerName} number={number} pos={pos} kitData={{ base: st.color, ink: '#FFFFFF', trim: mix(st.color, '#000000', 0.45), word: name }} size={Math.round(118 * scale)} />
+        <span className="pos-player">
+          <HeroArt pose={POS_POSE[pos]} model={st.model} number={st.number} kit={{ base: st.color, ink: '#FFFFFF', trim: '#F4F4F4', word: name }} size={Math.round(150 * scale)} />
+        </span>
       </span>
       <span className="pos-role">{st.role}</span>
       <span className="pos-height">{height}</span>

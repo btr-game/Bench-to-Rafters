@@ -3,6 +3,7 @@
 // the centre, with seeds, team colours, series wins and a champions banner.
 
 import type { Bracket, League, SeriesResult } from '../../engine/types';
+import { TeamArt } from '../art/Crest';
 
 interface Props {
   bracket: Bracket;
@@ -16,6 +17,7 @@ function Side({ x, id, wins, seed, league, me }: { x: SeriesResult; id: string; 
   return (
     <div className={`nb-team${won ? ' won' : ' lost'}${me ? ' me' : ''}`} title={t?.name}>
       <span className="nb-seed">{seed ?? ''}</span>
+      {t && <TeamArt name={t.name} abbr={t.abbr} color={t.color} league="NBA" size={20} />}
       <span className="nb-mark" style={{ background: t?.color ?? '#555' }}>
         {t?.abbr ?? id.slice(0, 3)}
       </span>
@@ -86,6 +88,7 @@ export function NbaBracket(p: Props) {
             </span>
           </div>
           <div className="nb-champ" style={{ background: champ?.color ?? 'var(--accent)' }}>
+            {champ && <TeamArt name={champ.name} abbr={champ.abbr} color={champ.color} league="NBA" size={40} />}
             <small>Champions</small>
             <b>{champ?.name ?? p.bracket.champion}</b>
           </div>

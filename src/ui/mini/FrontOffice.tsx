@@ -11,6 +11,8 @@ import { ATTRS } from '../../engine/balance';
 import { NAMES } from '../../content/strings';
 import type { GenPlayer } from '../../engine/types';
 import { useStore } from '../../store';
+import { TeamArt } from '../art/Crest';
+import { Icon } from '../art/Icon';
 
 const PHASES: FoState['phase'][] = ['draft', 'market', 'tactic', 'results'];
 const last = (name: string) => name.split(' ').slice(-1)[0];
@@ -235,7 +237,10 @@ function Market({ fo, act }: { fo: FoState; act: (fn: (f: FoState) => void) => v
                     {tg.p.pos} {tg.p.name} <span className="muted">{Math.round(tg.p.ovr)}</span>
                   </b>
                   <div className="small muted">
-                    from {tg.team.abbr} for {d.ids.map((id) => `${last(name(id))} ${Math.round(mine.find((q) => q.id === id)?.ovr ?? 0)}`).join(' + ')}
+                    <span className="fo-from">
+                      from <Crest t={tg.team} size={18} /> {tg.team.abbr}
+                    </span>{' '}
+                    for {d.ids.map((id) => `${last(name(id))} ${Math.round(mine.find((q) => q.id === id)?.ovr ?? 0)}`).join(' + ')}
                   </div>
                   <div className="fo-gain up">
                     Your team: {ordinal(F.rankAt(fo, d.before))} → {ordinal(F.rankAt(fo, d.after))}
@@ -393,6 +398,11 @@ function Market({ fo, act }: { fo: FoState; act: (fn: (f: FoState) => void) => v
   );
 }
 
+const TACTIC_ICON: Record<Tactic, string> = { pace: 'pace', defense: 'perimeter', star: 'spotlight', depth: 'swap' };
+
+/** A team's crest, small, beside its name. */
+const Crest = ({ t, size = 22 }: { t: { id: string; name: string; color: string }; size?: number }) => <TeamArt name={t.name} abbr={t.id} color={t.color} league="NBA" size={size} />;
+
 /** The game plan (round 12b: the plans come first; the roster folds away underneath). */
 function Tactics({ fo, act }: { fo: FoState; act: (fn: (f: FoState) => void) => void }) {
   const [show, setShow] = useState(false);
@@ -409,7 +419,8 @@ function Tactics({ fo, act }: { fo: FoState; act: (fn: (f: FoState) => void) => 
             const w = F.fitWord(fit);
             return (
               <button key={t} className="choice" onClick={() => act((f) => F.playSeason(f, t))}>
-                <span className="label">
+                <span className="label with-icon">
+                  <Icon name={TACTIC_ICON[t]} size={26} />
                   {F.TACTIC_LABEL[t].name}
                   <span className={`scout-rec rec-${recOf(w)}`}>{w}</span>
                 </span>
@@ -479,6 +490,7 @@ function SeasonReel({ fo, onDone }: { fo: FoState; onDone: () => void }) {
   const w = played.filter((g) => g === 1).length;
   const l = played.length - w;
   const name = (id: string) => fo.world.nba?.teams.find((x) => x.id === id)?.short ?? id;
+  const opp = (id: string) => fo.world.nba?.teams.find((x) => x.id === id);
   return (
     <section className="card stack fo-reel" style={{ borderTop: `5px solid ${team.color}` }}>
       <div className="kicker">{i < path.length ? `Game ${played.length} of ${path.length}` : 'The postseason'}</div>
@@ -506,7 +518,8 @@ function SeasonReel({ fo, onDone }: { fo: FoState; onDone: () => void }) {
         return (
           <div key={round} className={`fo-series ${won ? 'won' : 'lost'}`}>
             <span className="kicker">{round}</span>
-            <b>
+            <b className="with-icon">
+              {opp(s.a === fo.mine ? s.b : s.a) && <Crest t={opp(s.a === fo.mine ? s.b : s.a)!} size={24} />}
               {won ? 'Beat' : 'Lost to'} the {name(s.a === fo.mine ? s.b : s.a)} {mine}–{theirs}
             </b>
           </div>
@@ -541,7 +554,8 @@ export function FrontOffice() {
         <p className="small muted">Three seasons. The first is a free pass; miss the playoffs in both of the next two and the owner fires you.</p>
         <div className="scout-list">
           {list.map((t) => (
-            <button key={t.id} className="scout-row target" style={{ borderLeft: `6px solid ${t.color}` }} onClick={() => setFo(F.newFrontOffice(seed, t.id))}>
+            <button key={t.id} className="scout-row target fo-pick" style={{ borderLeft: `6px solid ${t.color}` }} onClick={() => setFo(F.newFrontOffice(seed, t.id))}>
+              <Crest t={t} size={40} />
               <div className="scout-main">
                 <b>{t.name}</b>
                 <span className="small muted">{t.tier}</span>
@@ -556,7 +570,8 @@ export function FrontOffice() {
   const last = fo.history[fo.history.length - 1];
   return (
     <section className="stack">
-      <div className="row">
+      <div className="row fo-head">
+        <Crest t={team} size={60} />
         <div>
           <div className="kicker">
             Front Office · season {fo.season} of {F.FO.seasons}

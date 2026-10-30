@@ -1004,6 +1004,61 @@ export const ICONS: Record<string, string[]> = {
     '.....OYYYYO.....',
     '......OOOO......',
   ],
+  // ---- difficulties ----
+  regular: [
+    '................',
+    '.....OOOOOO.....',
+    '....OBBBBBBO....',
+    '...OBBBWBBBBO...',
+    '...OBBBBBBBBOOO.',
+    '...OOOOOOOOOBBO.',
+    '...OSSSSSSSOOO..',
+    '...OSSOSSOSSO...',
+    '...OSSOSSOSSO...',
+    '...OSSSSSSSSO...',
+    '...OSsSSSSsSO...',
+    '....OSsssSSO....',
+    '.....OSSSSO.....',
+    '....OOOOOOOO....',
+    '...OBBBBBBBBO...',
+    '...OOOOOOOOOO...',
+  ],
+  reality: [
+    'OOOOOOOOOOOOOOOO',
+    'ORRRRRwRRRRRRwRO',
+    'ORRRRRwRRORRRwRO',
+    'OwwwwwwwwOwwwwwO',
+    'ORRwRRRRROwRRRRO',
+    'ORRwRRRROORRRRRO',
+    'OwwwwwwwOwwwwwwO',
+    'ORRRRRwROORRRwRO',
+    'ORRRRRwRRORRRwRO',
+    'OwwwwwwwwOOwwwwO',
+    'ORRwRRRRRROwRRRO',
+    'ORRwRRRRRORwRRRO',
+    'OwwwwwwwwOwwwwwO',
+    'ORRRRRwRROwRRwRO',
+    'ORRRRRwRRRORRwRO',
+    'OOOOOOOOOOOOOOOO',
+  ],
+  stars: [
+    '..........O.....',
+    '.........OYO....',
+    '.........OYO....',
+    '.....OOOOYYYOOOO',
+    '.....OYYYYYYYYYO',
+    '......OYYYYYYYO.',
+    '.......OYYYYYO..',
+    '.......OYYOYYO..',
+    '......OYYO.OYYO.',
+    '......OYO...OYO.',
+    '......OO.....OO.',
+    '...YY...........',
+    '..YY..LL........',
+    '.YY..LL.........',
+    'YY..LL..........',
+    '...LL...........',
+  ],
   ovr: [
     'OOOOOOOOOOOOOOOO',
     'OKKKKKKKKKKKKKKO',
@@ -1060,6 +1115,10 @@ export const ICON_FOR: Record<string, string> = {
   scouts: 'scouts',
   bank: 'bank',
   range: 'range',
+  // difficulties
+  standard: 'regular',
+  reality: 'reality',
+  stars: 'stars',
 };
 
 export function archetypeIcon(name: string): string {
@@ -1134,6 +1193,15 @@ export const meterIcon = (label: string) =>
 export const choiceIcon = (id: string) => ICON_FOR[id] ?? ICON_FOR[id.split(/[:+\-_]/).pop() ?? ''] ?? '';
 
 /** A shop item's icon, from its id or name (content/shop.ts). */
+/** A shop item's colourway, from its id: items that share an icon still look different. */
+export const shopShift = (id: string): number => {
+  let h = 0;
+  for (const c of id) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return h % 6;
+};
+/** The tile colour behind a shop icon, one per colourway. */
+export const SHIFT_COLOR = ['#E03131', '#F76707', '#FCC419', '#2F9E44', '#1C7ED6', '#7048E8'];
+
 export function shopIcon(id: string, name: string): string {
   const t = `${id} ${name}`.toLowerCase();
   const rules: [RegExp, string][] = [

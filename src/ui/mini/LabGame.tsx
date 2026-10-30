@@ -5,6 +5,8 @@ import { keyRatings, LAB_GAME, labBuy, labGrade, labOvr, labPlaySeason, labSprea
 import { labCost } from '../../engine/career/lab';
 import { ATTRS, HEIGHT_RANGE } from '../../engine/balance';
 import { NAMES } from '../../content/strings';
+import { Icon } from '../art/Icon';
+import { ICON_FOR } from '../art/icons';
 import { FIRST_NAMES, LAST_NAMES } from '../../content/names';
 import type { Pos } from '../../engine/types';
 import { ht } from '../format';
@@ -140,7 +142,10 @@ export function LabGame() {
             const c = labCost(st.attrs[k]);
             return (
               <div key={k} className={`lab-attr${key.includes(k) ? ' key' : ''}`}>
-                <span>{NAMES.attr[k]}</span>
+                <span className="with-icon">
+                  <Icon name={ICON_FOR[k]} size={22} />
+                  {NAMES.attr[k]}
+                </span>
                 <b>{st.attrs[k]}</b>
                 <button className="icon-btn" disabled={st.credits + 1e-9 < c || st.attrs[k] >= 99} onClick={() => act((s) => void labBuy(s, k))} aria-label={`Add ${LAB_GAME.step} ${NAMES.attr[k]}`}>
                   {st.attrs[k] >= 99 ? (
