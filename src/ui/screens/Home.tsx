@@ -160,6 +160,11 @@ function SeasonHeader({ g }: { g: GameState }) {
   return (
     <div className="turn-head">
       {t && <TeamArt name={t.name} abbr={t.abbr || t.short} color={t.color} league={styleLeague(g.stage)} size={56} />}
+      {t && (
+        <div className="crest-mark" aria-hidden="true">
+          <TeamArt name={t.name} abbr={t.abbr || t.short} color={t.color} league={styleLeague(g.stage)} size={120} />
+        </div>
+      )}
       <div style={{ minWidth: 0, flex: 1 }}>
         <div className="kicker">
           {seasonLabel(g.year)} · {stepName}

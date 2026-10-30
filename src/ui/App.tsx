@@ -89,6 +89,7 @@ export function App() {
   const game = useStore((s) => s.game);
   const tab = useStore((s) => s.tab);
   const theme = useStore((s) => s.theme);
+  const court = useStore((s) => s.court);
   const mini = useStore((s) => s.mini);
   const simple = useStore((s) => s.simple);
   useEffect(() => {
@@ -103,6 +104,11 @@ export function App() {
       else root.removeAttribute('data-theme');
     } else root.setAttribute('data-theme', theme);
   }, [theme]);
+
+  useEffect(() => {
+    if (court === 'classic') document.documentElement.removeAttribute('data-court');
+    else document.documentElement.setAttribute('data-court', court);
+  }, [court]);
 
   useKeys(!mini && !!game);
 

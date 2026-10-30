@@ -1,5 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import type { GameState } from '../../engine/types';
+import { EURO_CLUBS } from '../../content/teams';
+import { intLeagueOf } from '../../engine/world/leagues';
+import { team as teamOf } from '../selectors';
+import { Landmarks, hasPlace } from './places';
 
 // Venues behind the page banners (round 17): the gym, the arena or the hall where he plays this
 // year, drawn in one colour (his team's) and faded toward the text. A high school gym with
@@ -14,6 +18,16 @@ export function venueOf(g: GameState): VenueKind {
   if (s === 'NCAA' || s === 'GL') return 'college';
   if (s === 'EU' || s === 'INT') return 'hall';
   return 'nba';
+}
+
+/** Where he plays when it is not the United States: his country at a youth academy, the club's
+ * country in Europe, the league's country (or region) abroad. */
+export function placeOf(g: GameState): string | null {
+  let place: string | null = null;
+  if (g.stage === 'HS') place = g.flags.usPrep ? null : g.flags.spain ? 'Spain' : g.player.country;
+  else if (g.stage === 'EU') place = EURO_CLUBS.find((c) => c.name === teamOf(g)?.name)?.country ?? 'Europe';
+  else if (g.stage === 'INT' && g.teamId) place = intLeagueOf(g.teamId).country;
+  return hasPlace(place) ? place : null;
 }
 
 /** Rows of fans as one path: a head and a pair of shoulders each, slightly uneven. */
@@ -44,6 +58,7 @@ const CROWD = {
   college: crowd(320, 1200, 120, 6, 16, 3.4, 5, [560, 880]),
   hall: crowd(340, 1200, 132, 5, 18, 3.5, 3),
   gym: crowd(420, 860, 168, 3, 34, 3.6, 9),
+  abroad: crowd(340, 1200, 172, 3, 18, 3.4, 13),
 };
 
 function Nba() {
@@ -151,7 +166,20 @@ function Gym() {
   );
 }
 
-const scene = (kind: VenueKind) => (kind === 'gym' ? <Gym /> : kind === 'college' ? <College /> : kind === 'hall' ? <Hall /> : <Nba />);
+/** Abroad: the city's skyline, then the stands and the floor of the gym or hall in front of it. */
+function Abroad({ place }: { place: string }) {
+  return (
+    <g>
+      <Landmarks place={place} />
+      <path d="M300 156 H1200" stroke="currentColor" strokeWidth="3" opacity=".45" />
+      <path d={CROWD.abroad} fill="currentColor" opacity=".42" />
+      <path d="M0 214 H1200" stroke="currentColor" strokeWidth="3" opacity=".6" />
+    </g>
+  );
+}
+
+const scene = (kind: VenueKind, place?: string | null) =>
+  place ? <Abroad place={place} /> : kind === 'gym' ? <Gym /> : kind === 'college' ? <College /> : kind === 'hall' ? <Hall /> : <Nba />;
 
 // The scene is drawn as a vector once, then sampled down to a coarse grid (4 units a pixel) and
 // redrawn as crisp blocks in a few strengths of the team colour: the pixel-art look of the
@@ -159,7 +187,7 @@ const scene = (kind: VenueKind) => (kind === 'gym' ? <Gym /> : kind === 'college
 const PW = 300;
 const PH = 60;
 const LEVELS = 5;
-const cache = new Map<VenueKind, string[]>();
+const cache = new Map<string, string[]>();
 
 async function pixelate(svg: string): Promise<string[]> {
   const img = new Image();
@@ -195,30 +223,32 @@ async function pixelate(svg: string): Promise<string[]> {
   return paths;
 }
 
-export function VenueArt({ kind }: { kind: VenueKind }) {
-  const [paths, setPaths] = useState(() => cache.get(kind) ?? null);
+export function VenueArt({ kind, place }: { kind: VenueKind; place?: string | null }) {
+  const key = place ? `${kind}:${place}` : kind;
+  const [paths, setPaths] = useState(() => cache.get(key) ?? null);
   const src = useRef<SVGSVGElement>(null);
   useEffect(() => {
-    if (cache.has(kind)) return setPaths(cache.get(kind)!);
+    if (cache.has(key)) return setPaths(cache.get(key)!);
+    setPaths(null);
     if (!src.current) return;
     let live = true;
     pixelate(src.current.outerHTML.replace(' visibility="hidden"', ''))
       .then((p) => {
-        cache.set(kind, p);
+        cache.set(key, p);
         if (live) setPaths(p);
       })
       .catch(() => {});
     return () => {
       live = false;
     };
-  }, [kind]);
+  }, [key, paths]);
   return (
-    <svg className="art art-venue" data-art="banner-venue" data-venue={kind} viewBox={`0 0 ${PW} ${PH}`} preserveAspectRatio="xMaxYMax meet" shapeRendering="crispEdges" aria-hidden="true">
+    <svg className="art art-venue" data-art="banner-venue" data-venue={kind} data-place={place ?? undefined} viewBox={`0 0 ${PW} ${PH}`} preserveAspectRatio="xMaxYMax meet" shapeRendering="crispEdges" aria-hidden="true">
       {paths?.map((d, l) => (d ? <path key={l} d={d} fill="currentColor" fillOpacity={l / LEVELS} /> : null))}
       {!paths && (
         // the vector drawing, kept out of sight: it is only read once to make the pixels
         <svg ref={src} xmlns="http://www.w3.org/2000/svg" width="1200" height="240" viewBox="0 0 1200 240" style={{ color: '#000' }} visibility="hidden">
-          {scene(kind)}
+          {scene(kind, place)}
         </svg>
       )}
     </svg>

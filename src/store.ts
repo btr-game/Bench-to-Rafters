@@ -13,6 +13,8 @@ import { tabKey } from './ui/selectors';
 
 export type Tab = 'home' | 'season' | 'player' | 'league' | 'records';
 export type Theme = 'auto' | 'light' | 'dark';
+/** The page background: plain, a hardwood floor or streetball asphalt (round 17). */
+export type Court = 'classic' | 'hardwood' | 'street';
 export type Mini = 'hub' | 'office' | 'threes' | 'legends' | 'lab' | 'dunk';
 
 /** A short interstitial between steps (not part of the saved game). */
@@ -48,6 +50,8 @@ interface Store {
   setMini: (m: Mini | null) => void;
   setTab: (t: Tab) => void;
   setTheme: (t: Theme) => void;
+  court: Court;
+  setCourt: (c: Court) => void;
   simple: boolean; // simple text: fewer words, just the choices (round 11)
   toggleSimple: () => void;
   guide: boolean; // guide mode: highlights what to do next (round 13)
@@ -114,6 +118,15 @@ const saveFlag = (key: string, on: boolean): void => {
   }
 };
 
+function loadCourt(): Court {
+  try {
+    const c = localStorage.getItem('btr-court');
+    return c === 'hardwood' || c === 'street' ? c : 'classic';
+  } catch {
+    return 'classic';
+  }
+}
+
 function loadTheme(): Theme {
   try {
     const t = localStorage.getItem('btr-theme');
@@ -136,6 +149,7 @@ export const useStore = create<Store>((set, get) => ({
   game: null,
   tab: 'home',
   theme: loadTheme(),
+  court: loadCourt(),
   simple: loadFlag('btr-simple'),
   toggleSimple: () => {
     const simple = !get().simple;
@@ -336,6 +350,15 @@ export const useStore = create<Store>((set, get) => ({
       /* storage can be unavailable; the theme still applies for this visit */
     }
     set({ theme });
+  },
+  setCourt: (court) => {
+    try {
+      if (court === 'classic') localStorage.removeItem('btr-court');
+      else localStorage.setItem('btr-court', court);
+    } catch {
+      /* storage can be unavailable; the court still applies for this visit */
+    }
+    set({ court });
   },
 }));
 

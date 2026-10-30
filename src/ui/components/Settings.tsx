@@ -5,7 +5,7 @@ import { Icon } from '../art/Icon';
 import { useEffect, useRef, useState } from 'react';
 import type { GameState } from '../../engine/types';
 import { prompt } from '../../engine/flow';
-import { useStore, type Tab, type Theme } from '../../store';
+import { useStore, type Court, type Tab, type Theme } from '../../store';
 
 /** A switch row: label, short note, on/off button. */
 function Toggle({ label, note, on, onClick }: { label: string; note: string; on: boolean; onClick: () => void }) {
@@ -30,6 +30,8 @@ export function SettingsMenu({ g }: { g: GameState | null }) {
   const box = useRef<HTMLDivElement>(null);
   const theme = useStore((s) => s.theme);
   const setTheme = useStore((s) => s.setTheme);
+  const court = useStore((s) => s.court);
+  const setCourt = useStore((s) => s.setCourt);
   const simple = useStore((s) => s.simple);
   const toggleSimple = useStore((s) => s.toggleSimple);
   const guide = useStore((s) => s.guide);
@@ -76,6 +78,16 @@ export function SettingsMenu({ g }: { g: GameState | null }) {
               {(['auto', 'light', 'dark'] as Theme[]).map((t) => (
                 <button key={t} aria-pressed={theme === t} onClick={() => setTheme(t)}>
                   {t === 'auto' ? 'Auto' : t === 'light' ? 'Light' : 'Dark'}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="set-row">
+            <b>Court</b>
+            <div className="seg small-seg">
+              {(['classic', 'hardwood', 'street'] as Court[]).map((c) => (
+                <button key={c} aria-pressed={court === c} onClick={() => setCourt(c)}>
+                  {c === 'classic' ? 'Classic' : c === 'hardwood' ? 'Hardwood' : 'Streetball'}
                 </button>
               ))}
             </div>

@@ -1026,6 +1026,17 @@ Reached from the start page and from the bottom of Home (a career in progress is
   throws a fist up.
 - **Contests:** scenes that animate the ball themselves use the pose with its ball taken out
   (`noBall`), so there is never a second ball in the player's hand.
-- **Not yet done:** team touches in the interface (stripes, crest watermarks), hardwood and
-  streetball textures, and country backdrops for high school abroad and overseas leagues.
+- **Country backgrounds:** outside the United States the page banner shows where he plays: his
+  country at a youth academy (Spain once he joins a Spanish academy, nothing once he moves to a
+  US prep school), the club's country in Europe, the league's country abroad, or a region for
+  the mixed leagues (an old town for the EuroCup, a savannah for the BAL, palms and mountains for
+  the Americas). 25 countries and 3 regions, each a landmark and a landscape in silhouette,
+  pixelated like the venues. It replaces the venue's roof and back wall but keeps the stands and
+  the floor, so it still reads as a game in that city.
+- **Team touches:** the banner's top edge has the team colour with the kit's trim colour under
+  it, and the Home card carries the team crest as a faint watermark (hidden on phones, where it
+  would sit under the text).
+- **Court setting:** Classic, Hardwood or Streetball, in Settings, saved on the device. Only the
+  page background changes (planks or speckled asphalt, light and dark versions); cards keep
+  their surfaces, so every text contrast stays as it was.
 - **Balance:** no engine change this round, so no harness run.
