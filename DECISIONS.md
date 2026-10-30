@@ -1157,3 +1157,16 @@ Reached from the start page and from the bottom of Home (a career in progress is
   away. The balance harness never recruits, so its numbers are untouched; with 80 simulated
   stars who recruit (Shoot for the stars), titles per career 3.05 with duos against 2.925
   without, MVPs 1.5625 against 1.375.
+- **Position art from real photos:** the owner sent a Word file of reference photos (42 images,
+  mostly agency and media-day pictures). The five position poses are traced from them at 80 rows
+  (the round 18 drawings were 38): a low crossover (point guard), a one-hand lay-up (two guard),
+  a studio jump shot (wing), the ball at the hip (four) and a flying one-hand dunk (five). The
+  photos are only a reference: the outline and each part (jersey, shorts, ball, socks, shoes,
+  hair) are traced over the photo, the light and shade come from it, and the kit, skin and hair
+  are painted in the game's colours, so nobody in them can be recognised. Colour clustering alone
+  worked on the two plain-background studio shots but not on game photos (white kits under warm
+  light match skin; dark kits melt into dark crowds), so those three were traced part by part.
+  The ball is shaded as a sphere with its seams, the jersey gets piping where it meets skin and a
+  waistband over the shorts, shoes get white soles, and the number sits on the chest wherever a
+  7×5 block of jersey fits. The five archetype-only actions (pass, defense, rebound, block, hook)
+  keep the round 18 drawings until the owner has checked these.
