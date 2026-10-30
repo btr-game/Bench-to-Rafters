@@ -1201,6 +1201,10 @@ Reached from the start page and from the bottom of Home (a career in progress is
   shrunk from the 80-row art (each pixel takes its block's most common colour; thin parts like
   arms survive at the small sizes) and outlined again, and the jersey number appears once a 7x5
   block of jersey fits. Owner's follow-up: he stands like on media day with the ball on his hip (the
-  traced media-day pose) at every level, in the mini-game and in a Built in a lab career (the
-  Player tab's banner and an Evolution card). A track shows
-  every level, the art flashes when he moves up.
+  traced media-day pose) at every level. Third take ("the first version can be the cute one,
+  don't use the same image five times"): high school is the cute sprite, and each later level is
+  a different media-day photo traced into pixels (`spin`, `carry`, `chest`, `hip`, `mediaday`;
+  three of them new, traced with their legs finished below the photo's edge), still with more
+  pixels each level. The same art shows in the mini-game and in a Built in a lab career (the
+  Player tab's banner and an Evolution card). A track shows every level, the art flashes when he
+  moves up.

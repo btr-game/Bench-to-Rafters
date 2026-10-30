@@ -442,7 +442,7 @@ export function PlayerTab({ g }: { g: GameState }) {
         stripe={trimOf(g)}
         art={
           g.mode === 'lab' ? (
-            <EvolutionArt ovr={now} pose="hip" name={p.name} number={p.number} kit={kitFor(t?.name ?? '', t?.abbr ?? '', t?.color ?? '#1C7ED6', kit, styleLeague(g.stage))} size={150} track={false} />
+            <EvolutionArt ovr={now} name={p.name} number={p.number} kit={kitFor(t?.name ?? '', t?.abbr ?? '', t?.color ?? '#1C7ED6', kit, styleLeague(g.stage))} size={150} track={false} />
           ) : (
             <PlayerArt name={p.name} number={p.number} pos={p.pos} color={t?.color} team={t?.name} abbr={t?.abbr} league={styleLeague(g.stage)} kit={kit} size={150} />
           )
@@ -522,7 +522,7 @@ export function PlayerTab({ g }: { g: GameState }) {
           </Card>
           {g.mode === 'lab' && (
             <Card title="Evolution">
-              <EvolutionArt ovr={now} pose="hip" name={p.name} number={p.number} kit={{ base: t?.color ?? '#1C7ED6', ink: '#FFFFFF', trim: '#F4F4F4', word: '' }} size={130} />
+              <EvolutionArt ovr={now} name={p.name} number={p.number} kit={{ base: t?.color ?? '#1C7ED6', ink: '#FFFFFF', trim: '#F4F4F4', word: '' }} size={130} />
             </Card>
           )}
           <Card title="Profile">

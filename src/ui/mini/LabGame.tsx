@@ -78,7 +78,7 @@ export function LabGame() {
         <div className="kicker">Built in a lab · results</div>
         <section className="card stack lab-end">
           <div className="lab-grade">{g.letter}</div>
-          <EvolutionArt ovr={st.peak} pose="hip" name={st.name} number={23} kit={LAB_KIT} size={170} />
+          <EvolutionArt ovr={st.peak} name={st.name} number={23} kit={LAB_KIT} size={170} />
           <h2 className="title">{st.name}</h2>
           <p className="small">
             Peak {Math.round(st.peak)} OVR · {g.text}
@@ -129,7 +129,7 @@ export function LabGame() {
             <span className="small muted">credits</span>
           </div>
         </div>
-        <EvolutionArt ovr={ovr} pose="hip" name={st.name} number={23} kit={LAB_KIT} size={170} />
+        <EvolutionArt ovr={ovr} name={st.name} number={23} kit={LAB_KIT} size={170} />
         {last && (
           <p className="small lab-last">
             Last season: {last.line} · {last.record}
