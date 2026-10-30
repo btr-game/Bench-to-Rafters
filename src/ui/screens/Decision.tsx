@@ -2,7 +2,6 @@
 
 import { Icon } from '../art/Icon';
 import { StoryScene } from '../art/Scene';
-import { PlayCam, playKind } from '../art/PlayCam';
 import { SHIFT_COLOR, choiceIcon, shopIcon, shopShift } from '../art/icons';
 import { useState } from 'react';
 import type { Decision, GameState, Offer } from '../../engine/types';
@@ -137,9 +136,6 @@ function LiveView({ g, d }: { g: GameState; d: Decision }) {
   const team = g.season ? (g.stage === 'NBA' ? g.nba : g.league)?.teams.find((t) => t.id === g.teamId) : null;
   const me = team?.short ?? 'You';
   const started = r.stage !== 'game';
-  // how his last possession of the last game went, replayed on the rim cam
-  const prev = r.recent[r.recent.length - 2];
-  const lastShot = r.stage === 'game' && prev?.startsWith('Last shot') ? prev : undefined;
   const l = r.line;
   return (
     <div className="stack live">
@@ -204,7 +200,6 @@ function LiveView({ g, d }: { g: GameState; d: Decision }) {
           )}
         </>
       )}
-      {lastShot && playKind(lastShot) && <PlayCam play={{ key: `${r.round}-${r.game}-${lastShot}`, kind: playKind(lastShot)! }} clock="0:00" accent={team?.color} />}
       <p>{brief(d.text, simple)}</p>
       {r.recent.length > 0 && (
         <div className="small muted">

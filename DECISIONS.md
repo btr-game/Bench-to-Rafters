@@ -1085,3 +1085,7 @@ Reached from the start page and from the bottom of Home (a career in progress is
 - **Last shot in playable games:** the clutch possession now leaves a line in the game's recent
   list ("Last shot: your drive is blocked at the rim!"), which the next screen replays on the rim
   cam. It is written from the outcome the engine already rolled, so no result changes.
+- **Rim cam taken out (for now):** the owner did not like the game animations and will give
+  detailed instructions before they come back. The camera (`art/PlayCam.tsx`, last in commit
+  fbea573) is removed from the finals reel, title games and playable games; the "Last shot" line
+  in a playable game's recap stays, as text.

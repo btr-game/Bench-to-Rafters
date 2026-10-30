@@ -8,7 +8,6 @@ import { useStore, type Transition } from '../../store';
 import { ordinal } from '../format';
 import { stageLine } from '../selectors';
 import { StoryScene } from '../art/Scene';
-import { PlayCam, playKind } from '../art/PlayCam';
 
 const reducedMotion = () => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
@@ -201,10 +200,6 @@ function TitleGame({ m, g, onDone }: { m: Moment; g: GameState; onDone?: () => v
   const left = Math.max(0, qLen * q - elapsed);
   const clock = `${Math.floor(left)}:${String(Math.floor((left % 1) * 60)).padStart(2, '0')}`;
   const feed = shown.slice(-4).reverse();
-  // the camera follows his own buckets (and the last play), one at a time
-  const camAt = shown.map((p, k) => ({ p, k })).filter(({ p, k }) => p.mine || k === n - 1).pop();
-  const camKind = camAt ? playKind(camAt.p.text, '', camAt.p.pts) : null;
-  const camPlay = camAt && camKind ? { key: String(camAt.k), kind: camKind } : null;
   return (
     <div className="stack" style={{ gap: 14 }}>
       <div className="kicker on-dark">{m.game!.post ?? 'Final'}</div>
@@ -225,7 +220,6 @@ function TitleGame({ m, g, onDone }: { m: Moment; g: GameState; onDone?: () => v
       <div className="on-dark small">
         {g.player.name}: {mine} pts
       </div>
-      <PlayCam play={camPlay} clock={done ? '0:00' : clock} accent={m.color} />
       <div className="sim-feed" aria-live="polite">
         {feed.map((p, k) => (
           <div key={`${i}-${k}`} className={`sim-row${p.mine ? ' mine' : ''}${k === 0 ? ' fresh' : ''}`}>
@@ -305,7 +299,6 @@ export function FinalReel({ m, onDone }: { m: Moment; onDone?: () => void }) {
         </div>
       </div>
       {i < warm && !done && <div className="on-dark small">Three quarters of a final…</div>}
-      <PlayCam play={cur && playKind(cur.text, cur.tag, cur.pts) ? { key: `${cur.clock}-${cur.text}`, kind: playKind(cur.text, cur.tag, cur.pts)! } : null} clock={cur?.clock ?? clock} accent={m.color} />
       <div className="drama-feed" aria-live="polite">
         {(done ? d.plays : shown)
           .slice()
