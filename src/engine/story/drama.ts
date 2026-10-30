@@ -32,8 +32,8 @@ export interface DramaCast {
   them: string;
 }
 
-const VERB2 = ['drives and scores', 'hits the turnaround', 'finishes through contact', 'throws it down', 'hits the floater', 'scores on the putback'];
-const VERB3 = ['drills a three', 'pulls up from deep', 'buries the corner three', 'hits a step-back three'];
+export const VERB2 = ['drives and scores', 'hits the turnaround', 'finishes through contact', 'throws it down', 'hits the floater', 'scores on the putback'];
+export const VERB3 = ['drills a three', 'pulls up from deep', 'buries the corner three', 'hits a step-back three'];
 const pickOf = <T>(r: Rng, a: T[]): T => a[Math.floor(next(r) * a.length)];
 const last = (n: string) => n.split(' ').slice(-1)[0];
 

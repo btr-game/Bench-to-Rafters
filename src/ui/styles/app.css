@@ -1542,3 +1542,14 @@ td .art-team { display: inline-block; vertical-align: middle; margin: -3px 8px -
 .badge-art { flex: none; image-rendering: pixelated; }
 @media (prefers-reduced-motion: reduce) { .ach-toast { animation: none; } }
 .plan-card { border-top: 3px solid color-mix(in srgb, var(--tile, var(--line)) 75%, transparent); }
+
+/* the playable last minutes (round 24) */
+.clutch-moves { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.clutch-panel { width: 100%; max-width: 720px; justify-self: center; display: grid; gap: 12px; padding: 16px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.18); background: rgba(255, 255, 255, 0.06); animation: fadeIn 0.2s ease both; }
+.clutch-meter { position: relative; height: 34px; border-radius: 8px; background: rgba(255, 255, 255, 0.12); overflow: hidden; cursor: pointer; touch-action: manipulation; }
+.cm-zone { position: absolute; top: 0; bottom: 0; background: color-mix(in srgb, #2F9E44 70%, transparent); }
+.cm-perfect { position: absolute; top: 0; bottom: 0; background: #8CE99A; }
+.cm-mark { position: absolute; top: -2px; bottom: -2px; width: 4px; margin-left: -2px; background: #fff; box-shadow: 0 0 10px rgba(255, 255, 255, 0.8); }
+.clutch-score { display: flex; align-items: baseline; gap: 12px; justify-content: center; color: var(--board-ink, #fff); }
+.clutch-score b { font-family: var(--f-display); font-weight: 900; font-size: 54px; line-height: 0.9; color: var(--led); }
+.clutch-score span { font-family: var(--f-mono); font-size: 14px; letter-spacing: 0.06em; text-transform: uppercase; }

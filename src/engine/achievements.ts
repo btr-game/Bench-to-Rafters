@@ -187,6 +187,9 @@ export const ACHIEVEMENTS: Achievement[] = [
   A('shop10', 'Shopaholic', 'rotation', 'Buy ten things in one career.', (f) => f.g.purchases.length >= 10),
   A('shop25', 'Platinum Card', 'starter', 'Buy 25 things in one career.', (f) => f.g.purchases.length >= 25),
   A('side', 'Side Quest', 'bench', 'Earn a mini-game bonus in a career.', (f) => !!f.g.flags.miniYear),
+  A('clutch1', 'Crunch Time', 'bench', 'Play the last minutes of a final yourself.', (f) => (f.g.flags.clutchPlayed ?? 0) > 0),
+  A('clutch90', 'Ice in the Veins', 'allstar', 'Earn a clutch rating of 90 in a final.', (f) => (f.g.flags.clutchBest ?? 0) >= 90),
+  A('clutch100', 'Perfect Timing', 'hof', 'Earn a perfect clutch rating in a final.', (f) => (f.g.flags.clutchBest ?? 0) >= 100),
 
   // ---- the team ----
   A('w50', 'Fifty Shades of Win', 'rotation', 'Be on a 50-win NBA team.', (f) => f.nba.some((h) => h.w >= 50)),

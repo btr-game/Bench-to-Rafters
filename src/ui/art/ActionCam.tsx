@@ -74,10 +74,25 @@ const BALL_ROWS = ['..OOO..', '.OuBBO.', 'OuBBBbO', 'OBLBBbO', 'OBBLbbO', '.Obbb
 const BALL_PAL: Record<string, string> = { O: '#1B1820', B: '#E8782A', u: '#F5A15F', b: '#C2571B', L: '#6A3416' };
 const BALL = toPaths(BALL_ROWS.map((r) => [...r].map((c) => BALL_PAL[c] ?? '')));
 
+// round 24: each kind of final has its own floor (owner: "for the Olympics and the largest
+// tournaments, just change the opponent's jersey and the court visuals")
+export type Venue = 'nba' | 'cup' | 'olympics' | 'fiba' | 'college' | 'euro' | 'school';
+const VENUES: Record<Venue, { floor: string; plank: string; paint: string; paintLine: string; ribbon: string[]; empty: number }> = {
+  nba: { floor: '#C98D52', plank: '#B37A45', paint: '#A4473A', paintLine: '#8E3A2E', ribbon: ['#3B4256'], empty: 0.12 },
+  cup: { floor: '#D9A066', plank: '#C48C55', paint: '#1098AD', paintLine: '#0B7285', ribbon: ['#E03131', '#F8F9FA'], empty: 0.1 },
+  olympics: { floor: '#D8A262', plank: '#C38E52', paint: '#1864AB', paintLine: '#134E8A', ribbon: ['#0081C8', '#FCB131', '#1B1820', '#00A651', '#EE334E'], empty: 0.08 },
+  fiba: { floor: '#CF9A5E', plank: '#BA864E', paint: '#E8590C', paintLine: '#C2410C', ribbon: ['#FAB005', '#1C7ED6'], empty: 0.1 },
+  college: { floor: '#C4874A', plank: '#AE743C', paint: '#862E2E', paintLine: '#6E2424', ribbon: ['#C92A2A', '#F1F3F5'], empty: 0.06 },
+  euro: { floor: '#B9773F', plank: '#A36633', paint: '#5F3DC4', paintLine: '#4C2FA0', ribbon: ['#F76707'], empty: 0.14 },
+  school: { floor: '#D2A06A', plank: '#BC8B58', paint: '#2B8A3E', paintLine: '#237032', ribbon: ['#868E96'], empty: 0.45 },
+};
+
 /** The arena behind the play: the crowd, the ribbon board, the floor and its lines. */
-let BACK: { fill: string; d: string }[] | null = null;
-function backdrop(): { fill: string; d: string }[] {
-  if (BACK) return BACK;
+const BACK = new Map<Venue, { fill: string; d: string }[]>();
+function backdrop(venue: Venue): { fill: string; d: string }[] {
+  const hit = BACK.get(venue);
+  if (hit) return hit;
+  const V = VENUES[venue];
   const g: string[][] = Array.from({ length: H }, () => Array<string>(W).fill(''));
   const put = (x: number, y: number, c: string) => {
     if (x >= 0 && x < W && y >= 0 && y < H) g[y][x] = c;
@@ -95,7 +110,7 @@ function backdrop(): { fill: string; d: string }[] {
     const y = 10 + row * 9;
     rect(0, y + 6, W, 1, '#1C1F28');
     for (let x = (row % 2) * 3; x < W; x += 6) {
-      if (rnd() < 0.12) continue;
+      if (rnd() < V.empty) continue;
       const shirt = shirts[Math.floor(rnd() * shirts.length)];
       rect(x + 1, y + 2, 4, 4, shirt);
       rect(x + 2, y, 2, 2, skins[Math.floor(rnd() * skins.length)]);
@@ -103,12 +118,12 @@ function backdrop(): { fill: string; d: string }[] {
   }
   // the ribbon board and the floor
   rect(0, 104, W, 8, '#0B0C10');
-  for (let x = 2; x < W; x += 4) rect(x, 107, 2, 2, '#3B4256');
-  for (let y = 112; y < H; y++) for (let x = 0; x < W; x++) put(x, y, (y - 112) % 6 === 0 ? '#B37A45' : (x + (Math.floor((y - 112) / 6) * 37)) % 53 === 0 ? '#B98048' : '#C98D52');
+  for (let x = 2, i = 0; x < W; x += 4, i++) rect(x, 107, 2, 2, V.ribbon[Math.floor(i / 3) % V.ribbon.length]);
+  for (let y = 112; y < H; y++) for (let x = 0; x < W; x++) put(x, y, (y - 112) % 6 === 0 || (x + Math.floor((y - 112) / 6) * 37) % 53 === 0 ? V.plank : V.floor);
   // the paint, the three-point line and the baseline, seen from the side
   for (let y = 112; y < H; y++) {
     const k = Math.round((y - 112) * 0.25);
-    for (let x = 300 - k; x < 392 - k; x++) put(x, y, (y - 112) % 6 === 0 ? '#8E3A2E' : '#A4473A');
+    for (let x = 300 - k; x < 392 - k; x++) put(x, y, (y - 112) % 6 === 0 ? V.paintLine : V.paint);
     rect(300 - k, y, 2, 1, '#F2EEE6');
     rect(170 - k, y, 2, 1, '#F2EEE6');
     rect(392 - k, y, 2, 1, '#F2EEE6');
@@ -118,8 +133,9 @@ function backdrop(): { fill: string; d: string }[] {
   rect(393, 18, 2, 136, '#454A56');
   rect(374, 20, 20, 3, '#30343E');
   rect(390, 112, 10, 42, '#1F4E9E');
-  BACK = toPaths(g);
-  return BACK;
+  const out = toPaths(g);
+  BACK.set(venue, out);
+  return out;
 }
 
 /** One player on the cam: placed by his feet, turned to face the right way. */
@@ -186,7 +202,7 @@ export interface CamSide {
  * One play on the action cam. Mount it with a new key for every play: it runs once, about 1.5 s.
  * `me` is the player himself (his name and number when the play is his).
  */
-export function ActionCam({ play, us, them, winner, me }: { play: DramaPlay | null; us: CamSide; them: CamSide; winner: 'us' | 'them'; me: { name: string; number: number } | null }) {
+export function ActionCam({ play, us, them, winner, me, venue = 'nba', note }: { play: DramaPlay | null; us: CamSide; them: CamSide; winner: 'us' | 'them'; me: { name: string; number: number } | null; venue?: Venue; note?: string }) {
   const sc = useMemo(() => (play ? scriptOf(play) : null), [play]);
   const [phase, setPhase] = useState(0); // 0 on the way, 1 the action, 2 the ball is gone, 3 the result
   const aMove = useRef<SVGGElement>(null);
@@ -302,13 +318,14 @@ export function ActionCam({ play, us, them, winner, me }: { play: DramaPlay | nu
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const back = useMemo(backdrop, []);
+  const back = useMemo(() => backdrop(venue), [venue]);
   const A = atkSide === 'us' ? us : them;
   const D = defSide === 'us' ? us : them;
   const kind = sc?.kind;
   const label =
     kind === 'block' ? 'Blocked!' : kind === 'steal' ? 'Stolen!' : kind === 'miss' ? 'No good' : kind === 'run' ? 'Here comes the run' : `+${play?.pts ?? 0}`;
-  const sub = play && (kind === 'make' || kind === 'dunk') ? LABEL[play.tag] : undefined;
+  // the clutch game's timing note ("Perfect timing") comes first, then the moment
+  const sub = note ?? (play && (kind === 'make' || kind === 'dunk') ? LABEL[play.tag] : undefined);
   const good = kind === 'miss' ? loser : kind === 'block' || kind === 'steal' ? defSide : atkSide;
   const ballGone = phase >= 2 && kind !== 'run';
   return (

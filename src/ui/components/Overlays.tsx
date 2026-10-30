@@ -9,7 +9,9 @@ import { LEVELS } from '../../engine/balance';
 import { useStore, type Transition } from '../../store';
 import { ordinal } from '../format';
 import { league, stageLine, team } from '../selectors';
-import { ActionCam, type CamSide } from '../art/ActionCam';
+import { ActionCam, type CamSide, type Venue } from '../art/ActionCam';
+import { ClutchPanel, GRADE_NOTE, GRADE_POINTS, calledPlay, clutchMoves, type ClutchMove, type Grade } from './Clutch';
+import { ORIGINS } from '../../content/origins';
 import { kitFor, styleLeague } from '../art/Player';
 import { genericKits } from '../../content/teamStyle';
 import { CelebrationArt, StoryScene } from '../art/Scene';
@@ -266,41 +268,95 @@ const TAG_LABEL: Record<string, string> = {
   STOP: 'Game over',
 };
 
-/** The two teams' kits on the action cam: his team at home, the other side in its road kit. */
-function camSides(usShort: string, oppShort: string, g?: GameState): { us: CamSide; them: CamSide } {
+/** A national final: the moment's title ends in "gold" (Olympics, World Cup, Asian Games). */
+const isNational = (m: Moment) => / gold$/.test(m.title);
+
+/** The two teams' kits on the action cam: his team at home, the other side in its road kit (a national final: both countries' colours). */
+function camSides(m: Moment, g?: GameState): { us: CamSide; them: CamSide } {
+  const game = m.game!;
+  if (isNational(m)) {
+    const oc = ORIGINS.find((o) => o.nation === game.opp)?.nationColor ?? '#C8102E';
+    return { us: { kit: genericKits(m.color, game.teamShort).home, color: m.color }, them: { kit: genericKits(oc, game.opp).road, color: oc } };
+  }
   const lv = styleLeague(g?.stage);
   const t = g && team(g);
-  const o = g && league(g)?.teams.find((x) => x.short === oppShort);
+  const o = g && league(g)?.teams.find((x) => x.short === game.opp);
   return {
-    us: t ? { kit: kitFor(t.name, t.abbr, t.color, 'home', lv), color: t.color } : { kit: genericKits('#1D428A', usShort).home, color: '#1D428A' },
-    them: o ? { kit: kitFor(o.name, o.abbr, o.color, 'road', lv), color: o.color } : { kit: genericKits('#C8102E', oppShort).road, color: '#C8102E' },
+    us: t ? { kit: kitFor(t.name, t.abbr, t.color, 'home', lv), color: t.color } : { kit: genericKits('#1D428A', game.teamShort).home, color: '#1D428A' },
+    them: o ? { kit: kitFor(o.name, o.abbr, o.color, 'road', lv), color: o.color } : { kit: genericKits('#C8102E', game.opp).road, color: '#C8102E' },
   };
 }
 
-/** Three quarters in a blink, then crunch time one play at a time. Skip shows the end. */
+/** Which floor the final is played on. */
+function venueOf(m: Moment): Venue {
+  if (/Olympic/.test(m.title)) return 'olympics';
+  if (isNational(m)) return 'fiba';
+  if (/NBA Cup/.test(m.title)) return 'cup';
+  const lv = m.game?.level;
+  return lv === 'NCAA' ? 'college' : lv === 'EU' || lv === 'INT' || lv === 'GL' ? 'euro' : lv === 'HSV' || lv === 'HSJV' ? 'school' : 'nba';
+}
+
+type ReelMode = 'ask' | 'play' | 'watch';
+type Call = { move: ClutchMove; grade: Grade };
+
+/**
+ * Three quarters in a blink, then crunch time one play at a time. Round 24: it starts with a
+ * choice: play the last minutes (his team's possessions wait for his call), watch them, or skip
+ * to the result.
+ */
 export function FinalReel({ m, g, onDone }: { m: Moment; g?: GameState; onDone?: () => void }) {
   const d = m.drama!;
   const game = m.game!;
+  const mutate = useStore((s) => s.mutate);
   const warm = 10;
   // one step past the last play, so the action cam can play it out before the buzzer
   const n = warm + d.plays.length + 1;
+  const winner = game.us > game.them ? 'us' : 'them';
+  const [mode, setMode] = useState<ReelMode>(reducedMotion() ? 'watch' : 'ask');
   const [i, setI] = useState(reducedMotion() ? n : 0);
+  const [calls, setCalls] = useState<Record<number, Call>>({});
+  const [asking, setAsking] = useState<number | null>(null);
+  const me = g?.player.name ?? 'You';
+  const plays = useMemo(() => d.plays.map((p, k) => (calls[k] ? calledPlay(p, calls[k].move, me, game.opp) : p)), [d.plays, calls, me, game.opp]);
   useEffect(() => {
-    if (i >= n) return;
-    const t = setTimeout(() => setI((x) => x + 1), i < warm ? 110 : 1700);
+    if (mode === 'ask' || i >= n || asking !== null) return;
+    const k = i - warm; // the next play to show
+    const needs = mode === 'play' && i >= warm && k < plays.length && !!clutchMoves(d.plays[k], winner) && !calls[k];
+    const t = setTimeout(() => (needs ? setAsking(k) : setI((x) => x + 1)), i < warm ? 110 : i === warm ? 250 : 1700);
     return () => clearTimeout(t);
-  }, [i, n]);
+  }, [i, n, mode, asking, calls, plays.length, d.plays, winner]);
   const done = i >= n;
   useEffect(() => {
     if (done) onDone?.();
   }, [done, onDone]);
-  const shown = d.plays.slice(0, Math.max(0, i - warm));
+  // the clutch rating, once, when a played final ends: a little fame and mood in a career
+  const graded = Object.values(calls);
+  const rating = graded.length ? Math.round((100 * graded.reduce((a, c) => a + GRADE_POINTS[c.grade], 0)) / (3 * graded.length)) : null;
+  const paid = useRef(false);
+  const reward = rating === null ? 0 : Math.floor(rating / 25);
+  useEffect(() => {
+    if (!done || rating === null || !g || paid.current) return;
+    paid.current = true;
+    mutate((x) => {
+      x.player.rep = Math.min(100, x.player.rep + reward);
+      if (rating >= 70) x.player.morale = Math.min(100, x.player.morale + 3);
+      x.flags.clutchPlayed = (x.flags.clutchPlayed ?? 0) + 1;
+      x.flags.clutchBest = Math.max(x.flags.clutchBest ?? 0, rating);
+    });
+  }, [done, rating, reward, g, mutate]);
+  const shown = plays.slice(0, Math.max(0, i - warm));
   const frac = Math.min(1, i / warm);
   const us = Math.round(d.start.us * frac) + shown.filter((p) => p.side === 'us').reduce((a, p) => a + p.pts, 0);
   const them = Math.round(d.start.them * frac) + shown.filter((p) => p.side === 'them').reduce((a, p) => a + p.pts, 0);
   const cur = shown[shown.length - 1];
-  const sides = useMemo(() => camSides(game.teamShort, game.opp, g), [game.teamShort, game.opp, g]);
+  const curCall = calls[shown.length - 1];
+  const sides = useMemo(() => camSides(m, g), [m, g]);
+  const venue = venueOf(m);
   const clock = i < warm ? `Q${Math.min(4, 1 + Math.floor(frac * 3.99))}` : cur ? `Q4 ${cur.clock}` : 'Q4';
+  const skip = () => {
+    setAsking(null);
+    setI(n);
+  };
   return (
     <div className="stack" style={{ gap: 14 }}>
       <div className="kicker on-dark">{game.post ?? 'Final'}</div>
@@ -318,24 +374,76 @@ export function FinalReel({ m, g, onDone }: { m: Moment; g?: GameState; onDone?:
           <div className={`v big${us > them || !done ? ' dim' : ''}`}>{done ? game.them : them}</div>
         </div>
       </div>
-      {!done && <ActionCam key={i < warm ? 'warm' : i} play={i < warm ? null : (cur ?? null)} us={sides.us} them={sides.them} winner={game.us > game.them ? 'us' : 'them'} me={g ? { name: g.player.name, number: g.player.number } : null} />}
-      {i < warm && !done && <div className="on-dark small">Three quarters of a final…</div>}
-      <div className="drama-feed" aria-live="polite">
-        {(done ? d.plays : shown)
-          .slice()
-          .reverse()
-          .slice(0, done ? 3 : 4)
-          .map((p, k) => (
-            <div key={`${p.clock}-${p.text}`} className={`drama-play${p.mine ? ' mine' : ''}${k === 0 && !done ? ' fresh' : ''}${p.side === 'them' ? ' them' : ''}`}>
-              {p.tag && <span className={`drama-tag tag-${p.tag.toLowerCase()}`}>{TAG_LABEL[p.tag]}</span>}
-              <span className="drama-clock">{p.clock}</span>
-              <span className="drama-text">{p.text}</span>
-              {p.pts > 0 && <b>+{p.pts}</b>}
-            </div>
-          ))}
-      </div>
+      {mode === 'ask' ? (
+        <div className="clutch-ask stack">
+          <ActionCam play={null} us={sides.us} them={sides.them} winner={winner} me={g ? { name: g.player.name, number: g.player.number } : null} venue={venue} />
+          <p className="on-dark lede-dark">The last minutes of the final. Take the big possessions yourself, watch them, or go straight to the result.</p>
+          <div className="clutch-moves">
+            <button className="btn" onClick={() => setMode('play')}>
+              Play the last minutes
+            </button>
+            <button className="btn ghost-dark" onClick={() => setMode('watch')}>
+              Watch them
+            </button>
+            <button className="btn ghost-dark" onClick={() => (setMode('watch'), skip())} data-skip="">
+              Skip to the result
+            </button>
+          </div>
+        </div>
+      ) : (
+        <>
+          {!done && asking === null && (
+            <ActionCam
+              key={i < warm ? 'warm' : i}
+              play={i < warm ? null : (cur ?? null)}
+              us={sides.us}
+              them={sides.them}
+              winner={winner}
+              me={g ? { name: g.player.name, number: g.player.number } : null}
+              venue={venue}
+              note={curCall ? GRADE_NOTE[curCall.grade] : undefined}
+            />
+          )}
+          {!done && asking !== null && (
+            <ClutchPanel
+              play={d.plays[asking]}
+              moves={clutchMoves(d.plays[asking], winner)!}
+              ratings={g?.player.attrs ?? {}}
+              onDone={(move, grade) => {
+                setCalls((c) => ({ ...c, [asking]: { move, grade } }));
+                setAsking(null);
+                setI((x) => x + 1);
+              }}
+            />
+          )}
+          {i < warm && !done && <div className="on-dark small">Three quarters of a final…</div>}
+          <div className="drama-feed" aria-live="polite">
+            {(done ? plays : shown)
+              .slice()
+              .reverse()
+              .slice(0, done ? 3 : 4)
+              .map((p, k) => (
+                <div key={`${p.clock}-${p.text}`} className={`drama-play${p.mine ? ' mine' : ''}${k === 0 && !done ? ' fresh' : ''}${p.side === 'them' ? ' them' : ''}`}>
+                  {p.tag && <span className={`drama-tag tag-${p.tag.toLowerCase()}`}>{TAG_LABEL[p.tag]}</span>}
+                  <span className="drama-clock">{p.clock}</span>
+                  <span className="drama-text">{p.text}</span>
+                  {p.pts > 0 && <b>+{p.pts}</b>}
+                </div>
+              ))}
+          </div>
+        </>
+      )}
       {done ? (
         <>
+          {rating !== null && (
+            <div className="clutch-score">
+              <b>{rating}</b>
+              <span>
+                Clutch rating · {graded.filter((c) => c.grade === 'perfect').length} perfect of {graded.length}
+                {g && reward ? ` · +${reward} reputation` : ''}
+              </span>
+            </div>
+          )}
           {m.lostFinal ? (
             <div className="stack" style={{ gap: 8 }}>
               <div className="moment-title">So close</div>
@@ -353,9 +461,11 @@ export function FinalReel({ m, g, onDone }: { m: Moment; g?: GameState; onDone?:
           <Recap m={m} />
         </>
       ) : (
-        <button className="btn ghost-dark" onClick={() => setI(n)} data-skip="">
-          Skip to the final buzzer
-        </button>
+        mode !== 'ask' && (
+          <button className="btn ghost-dark" onClick={skip} data-skip="">
+            Skip to the final buzzer
+          </button>
+        )
       )}
     </div>
   );

@@ -2,16 +2,13 @@
 
 Ideas the owner has asked to keep for later. Not started unless marked.
 
-## Action cam as a playable mini-game (owner, round 24)
+## Action cam
 
-- Turn the finals action cam (`src/ui/art/ActionCam.tsx`) into a mini-game the player takes part in,
-  not only watches.
-- Use it beyond the NBA Finals: the Olympics and the biggest tournaments in the game, with the
-  opponent's jersey and the court visuals changed for each event.
-- Always skippable, with two choices: skip it entirely, or skip playing and just watch the
-  animation.
-- The cam itself still needs an editing pass (owner, round 23: "it needs editing, but that can come
-  later").
+- Done in round 24: finals (league, NBA Cup, Olympic and World Cup golds) open with a choice to
+  play the last minutes, watch them or skip to the result, with each event's own floor and kits.
+- Still to come: an editing pass on the cam (owner, round 23: "it needs editing, but that can come
+  later"), and possibly letting the playable minutes change a final's result (it would mean
+  re-running the playoffs after the reel; today the result is settled by the season).
 
 ## Languages (owner, round 24)
 
