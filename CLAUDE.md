@@ -25,21 +25,24 @@ the owner when the work looks close to the end of the round**.
    auto-resolves it; simple text hides its descriptions).
 4. **Contrast and keyboard**: new UI readable in both themes and usable with the keyboard.
 5. **Achievements** for the new systems.
-6. **Harness**: `smartChoice` in `scripts/harness.ts` handles every new decision kind.
-7. **Dead code**: unused functions, exports, imports, CSS rules, leftovers of replaced features.
-8. **Tests** for new engine logic, then the full checks below (tsc, vitest, build).
-9. **Balance**: measure with the harness (casual mini-game play, smart policy) against the last
-   approved numbers (round 22: mean peak 74.4923, NBA 78.3%, All-Star 35.8%, MVP 11.9%,
-   Hall of Fame 11.2%, titles 29.2%) and report; the owner decides on any change.
-10. **Game guide**: the manual (`SECTIONS` and `QUICK` in `src/ui/components/Guide.tsx`) and
+6. **Events and pathways** that bring the new features into the story where it makes sense (as
+   events about weight did when weight came in): new random events, choices or career paths
+   that touch the new systems. Not required for every feature.
+7. **Harness**: `smartChoice` in `scripts/harness.ts` handles every new decision kind.
+8. **Dead code**: unused functions, exports, imports, CSS rules, leftovers of replaced features.
+9. **Tests** for new engine logic, then the full checks below (tsc, vitest, build).
+10. **Balance**: measure with the harness (casual mini-game play, smart policy) against the last
+    approved numbers (round 22: mean peak 74.4923, NBA 78.3%, All-Star 35.8%, MVP 11.9%,
+    Hall of Fame 11.2%, titles 29.2%) and report; the owner decides on any change.
+11. **Game guide**: the manual (`SECTIONS` and `QUICK` in `src/ui/components/Guide.tsx`) and
     Guide mode (the tour steps in `src/ui/components/GuideTour.tsx`), so both describe the game
     as it now is.
-11. **Dev deck**: a card for every new function or page (`src/dev/cards.ts`).
-12. **Project summary**: the generator's text and data for the new systems, regenerating both the
+12. **Dev deck**: a card for every new function or page (`src/dev/cards.ts`).
+13. **Project summary**: the generator's text and data for the new systems, regenerating both the
     dev deck's summary chapter (`src/dev/summary.json`) and the Word document
     (`docs/reports/*-project-summary.docx`, sent to the owner when asked).
-13. **DECISIONS.md** for the round (and ROADMAP.md for ideas kept for later).
-14. **Publish both**: the game and the dev deck artifacts (no owner email anywhere), then commit
+14. **DECISIONS.md** for the round (and ROADMAP.md for ideas kept for later).
+15. **Publish both**: the game and the dev deck artifacts (no owner email anywhere), then commit
     and push.
 
 Other preferences:
