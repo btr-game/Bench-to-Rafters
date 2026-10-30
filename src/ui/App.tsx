@@ -82,7 +82,7 @@ function ModeBadge({ g }: { g: GameState }) {
 /** Fast break, one tap from anywhere. */
 function FastChip({ g }: { g: GameState }) {
   const toggle = useStore((s) => s.toggleFast);
-  if (g.mode === 'lab' || g.step === 'retired') return null;
+  if (g.mode === 'lab' || g.step === 'retired' || g.flags.daily) return null;
   const on = !!g.flags.fast;
   return (
     <button data-tour="chip-fast" className={`fast-toggle${on ? ' on' : ''}`} aria-pressed={on} onClick={toggle} title="Fast break: quick seasons, you still make every real call">

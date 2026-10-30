@@ -143,16 +143,23 @@ export function MiniGames() {
 /** The entry button used on the start page and at the bottom of Home. */
 export function MiniGamesCard() {
   const setMini = useStore((s) => s.setMini);
+  const daily = useStore((s) => !!s.game?.flags.daily);
   return (
-    <section className="card stack">
+    <section className={`card stack${daily ? ' mini-locked' : ''}`}>
       <div className="sec-title with-icon">
-        <Icon name="controller" size={28} />
+        <Icon name={daily ? 'lock' : 'controller'} size={28} />
         Mini-games
       </div>
-      <p className="small muted">Front Office, the three-point and dunk contests, 3-on-3 streetball, Built in a lab, the legends showdown and the daily challenge. With a career, each opens when your ratings reach it.</p>
-      <button className="btn ghost" data-tour="minis" onClick={() => setMini('hub')}>
-        Play a mini-game
-      </button>
+      {daily ? (
+        <p className="small muted">Locked during the daily challenge, so a run stays quick. They open again when you go back to your career.</p>
+      ) : (
+        <>
+          <p className="small muted">Front Office, the three-point and dunk contests, 3-on-3 streetball, Built in a lab, the legends showdown and the daily challenge. With a career, each opens when your ratings reach it.</p>
+          <button className="btn ghost" data-tour="minis" onClick={() => setMini('hub')}>
+            Play a mini-game
+          </button>
+        </>
+      )}
     </section>
   );
 }

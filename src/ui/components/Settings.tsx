@@ -100,7 +100,7 @@ export function SettingsMenu({ g }: { g: GameState | null }) {
               </button>
             </div>
           )}
-          {g && !retired && (
+          {g && !retired && !g.flags.daily && (
             <>
               <Toggle label="Fast break" note="Quick seasons; you still make every real call." on={!!g.flags.fast} onClick={toggleFast} tour="set-fast" />
               <Toggle label="Playable playoff games" note="Off: postseason games are simulated." on={!g.flags.simPostseason} onClick={togglePlayoffs} tour="set-playoffs" />

@@ -317,6 +317,8 @@ export function FinalReel({ m, g, onDone }: { m: Moment; g?: GameState; onDone?:
   const [calls, setCalls] = useState<Record<number, Call>>({});
   const [asking, setAsking] = useState<number | null>(null);
   const me = g?.player.name ?? 'You';
+  // round 24 (owner): no mini-games in the daily challenge, so its finals are watched or skipped
+  const daily = !!g?.flags.daily;
   const plays = useMemo(() => d.plays.map((p, k) => (calls[k] ? calledPlay(p, calls[k].move, me, game.opp) : p)), [d.plays, calls, me, game.opp]);
   useEffect(() => {
     if (mode === 'ask' || i >= n || asking !== null) return;
@@ -377,12 +379,16 @@ export function FinalReel({ m, g, onDone }: { m: Moment; g?: GameState; onDone?:
       {mode === 'ask' ? (
         <div className="clutch-ask stack">
           <ActionCam play={null} us={sides.us} them={sides.them} winner={winner} me={g ? { name: g.player.name, number: g.player.number } : null} venue={venue} />
-          <p className="on-dark lede-dark">The last minutes of the final. Take the big possessions yourself, watch them, or go straight to the result.</p>
+          <p className="on-dark lede-dark">
+            {daily ? 'The last minutes of the final. Mini-games are off in the daily challenge: watch them, or go straight to the result.' : 'The last minutes of the final. Take the big possessions yourself, watch them, or go straight to the result.'}
+          </p>
           <div className="clutch-moves">
-            <button className="btn" onClick={() => setMode('play')}>
-              Play the last minutes
-            </button>
-            <button className="btn ghost-dark" onClick={() => setMode('watch')}>
+            {!daily && (
+              <button className="btn" onClick={() => setMode('play')}>
+                Play the last minutes
+              </button>
+            )}
+            <button className={`btn${daily ? '' : ' ghost-dark'}`} onClick={() => setMode('watch')}>
               Watch them
             </button>
             <button className="btn ghost-dark" onClick={() => (setMode('watch'), skip())} data-skip="">

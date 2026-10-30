@@ -333,14 +333,15 @@ export const useStore = create<Store>((set, get) => ({
   },
   toggleFast: () => {
     const g = get().game;
-    if (!g) return;
+    // round 24 (owner): a daily run stays quick, so fast break and simulated playoffs are fixed
+    if (!g || g.flags.daily) return;
     const next = structuredClone(g);
     setFast(next, !next.flags.fast);
     set({ game: next, transition: null });
   },
   togglePlayoffs: () => {
     const g = get().game;
-    if (!g) return;
+    if (!g || g.flags.daily) return;
     const next = structuredClone(g);
     next.flags.simPostseason = next.flags.simPostseason ? 0 : 1;
     set({ game: next });
@@ -384,6 +385,8 @@ export const useStore = create<Store>((set, get) => ({
     return text;
   },
   setMini: (mini) => {
+    // round 24 (owner): no mini-games during a daily challenge
+    if (mini && get().game?.flags.daily) return;
     set({ mini });
     top();
   },

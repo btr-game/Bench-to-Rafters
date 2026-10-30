@@ -224,12 +224,13 @@ export function ThreesGame() {
           </div>
         ) : (
           <>
-            <ThreesCourt kit={kitOf(me, game)} name={me.name} accent="#C8102E" rack={money} balls={Array(THREES.racks * THREES.balls).fill('todo')} moneyRack={money} onFire={false} shot={null} score={0} left={THREES.seconds} />
-            <p className="small muted">One rack is all money balls (2 points each). Most shooters put it last, where the corner is; tired arms say otherwise.</p>
+            {/* he always starts at rack 1, as in the real contest: the pick only moves the money balls (owner bug report, round 24) */}
+            <ThreesCourt kit={kitOf(me, game)} name={me.name} accent="#C8102E" rack={0} balls={Array(THREES.racks * THREES.balls).fill('todo')} moneyRack={money} onFire={false} shot={null} score={0} left={THREES.seconds} />
+            <p className="small muted">Every round starts at rack 1 and works round to rack 5. Pick the rack that is all money balls (2 points each): most shooters put it last, in the far corner; tired arms say otherwise.</p>
             <div className="seg">
               {[0, 1, 2, 3, 4].map((r) => (
                 <button key={r} aria-pressed={money === r} onClick={() => setMoney(r)}>
-                  Rack {r + 1}
+                  Money rack {r + 1}
                 </button>
               ))}
             </div>
