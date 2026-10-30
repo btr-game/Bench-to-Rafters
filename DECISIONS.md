@@ -1275,3 +1275,26 @@ Reached from the start page and from the bottom of Home (a career in progress is
   (fines), Los Angeles (paid gigs: missed reps), New Orleans (pounds). The daily challenge only
   opens without a career in progress. 1,600 careers: mean peak 74.5516 (74.4923), All-Star 37.0%
   (35.8%), MVP 12.2% (11.9%), Hall of Fame 11.6% (11.2%), titles 29.1% (29.2%), within the noise.
+
+## Round 23
+
+- **Action cam** (owner: "start working on the animations, look back at the photos"). In a final's
+  last minutes each play is acted out from the sideline by the photo-traced players
+  (`ui/art/ActionCam.tsx`): the man with the ball comes in and goes up, his defender slides over,
+  and the ball flies through the net, gets swatted, poked loose or rims out. The play's own words
+  pick the moves ("throws it down" is a dunk, "pulls up from deep" a pull-up three, "hits the
+  turnaround" a fadeaway). The scorer's team attacks the hoop in its kit; blocks and steals belong
+  to the winners. The buzzer-beater lights the backboard red. The reel now waits one more beat
+  after the last play so it can finish. It is the finals reel only for now, waiting on the owner's
+  verdict before it goes anywhere else.
+- **Casual colours** (owner: "the pixel players don't need too much gradation, use less colours").
+  On the cam each part of a player is one colour and one shade (`flat` in `Hero.tsx`); a player
+  drawn facing the other way has his number painted mirrored so it reads right. The start page and
+  the cards keep the full shading.
+- **A 99 in Reality hits hard** (owner: "a 99 OVR should be possible, no matter how hard"). It is
+  possible: 2 of 2,000 smart careers with casual mini-games peaked at 98.5634 and 98.9649, shown
+  as 99 (0.1%); Regular guy shows a 99 in 3 of 1,600 (about 0.19%). A shown 99 needs nearly every
+  rating at its 99 cap. Tested and dropped: Reality's potential capped at 103 instead of 99 (no
+  change), a wider potential spread (0.2%, but NBA 53.3% to 48.2%), and a 2% generational draw
+  (no more 99s, MVP 1.95% to 3.75%). Owner: the odds are fine; any later fix keeps them under 2%
+  for Regular guy and 0.5% for Reality. No change.

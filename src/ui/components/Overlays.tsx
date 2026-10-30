@@ -8,7 +8,10 @@ import type { GameState, Moment } from '../../engine/types';
 import { LEVELS } from '../../engine/balance';
 import { useStore, type Transition } from '../../store';
 import { ordinal } from '../format';
-import { stageLine } from '../selectors';
+import { league, stageLine, team } from '../selectors';
+import { ActionCam, type CamSide } from '../art/ActionCam';
+import { kitFor, styleLeague } from '../art/Player';
+import { genericKits } from '../../content/teamStyle';
 import { CelebrationArt, StoryScene } from '../art/Scene';
 import { AwardArt, awardKeyOf } from '../art/Award';
 
@@ -263,12 +266,24 @@ const TAG_LABEL: Record<string, string> = {
   STOP: 'Game over',
 };
 
+/** The two teams' kits on the action cam: his team at home, the other side in its road kit. */
+function camSides(usShort: string, oppShort: string, g?: GameState): { us: CamSide; them: CamSide } {
+  const lv = styleLeague(g?.stage);
+  const t = g && team(g);
+  const o = g && league(g)?.teams.find((x) => x.short === oppShort);
+  return {
+    us: t ? { kit: kitFor(t.name, t.abbr, t.color, 'home', lv), color: t.color } : { kit: genericKits('#1D428A', usShort).home, color: '#1D428A' },
+    them: o ? { kit: kitFor(o.name, o.abbr, o.color, 'road', lv), color: o.color } : { kit: genericKits('#C8102E', oppShort).road, color: '#C8102E' },
+  };
+}
+
 /** Three quarters in a blink, then crunch time one play at a time. Skip shows the end. */
 export function FinalReel({ m, g, onDone }: { m: Moment; g?: GameState; onDone?: () => void }) {
   const d = m.drama!;
   const game = m.game!;
   const warm = 10;
-  const n = warm + d.plays.length;
+  // one step past the last play, so the action cam can play it out before the buzzer
+  const n = warm + d.plays.length + 1;
   const [i, setI] = useState(reducedMotion() ? n : 0);
   useEffect(() => {
     if (i >= n) return;
@@ -284,6 +299,7 @@ export function FinalReel({ m, g, onDone }: { m: Moment; g?: GameState; onDone?:
   const us = Math.round(d.start.us * frac) + shown.filter((p) => p.side === 'us').reduce((a, p) => a + p.pts, 0);
   const them = Math.round(d.start.them * frac) + shown.filter((p) => p.side === 'them').reduce((a, p) => a + p.pts, 0);
   const cur = shown[shown.length - 1];
+  const sides = useMemo(() => camSides(game.teamShort, game.opp, g), [game.teamShort, game.opp, g]);
   const clock = i < warm ? `Q${Math.min(4, 1 + Math.floor(frac * 3.99))}` : cur ? `Q4 ${cur.clock}` : 'Q4';
   return (
     <div className="stack" style={{ gap: 14 }}>
@@ -302,6 +318,7 @@ export function FinalReel({ m, g, onDone }: { m: Moment; g?: GameState; onDone?:
           <div className={`v big${us > them || !done ? ' dim' : ''}`}>{done ? game.them : them}</div>
         </div>
       </div>
+      {!done && <ActionCam key={i < warm ? 'warm' : i} play={i < warm ? null : (cur ?? null)} us={sides.us} them={sides.them} winner={game.us > game.them ? 'us' : 'them'} me={g ? { name: g.player.name, number: g.player.number } : null} />}
       {i < warm && !done && <div className="on-dark small">Three quarters of a final…</div>}
       <div className="drama-feed" aria-live="polite">
         {(done ? d.plays : shown)

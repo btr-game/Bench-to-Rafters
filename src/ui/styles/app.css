@@ -1463,3 +1463,17 @@ td .art-team { display: inline-block; vertical-align: middle; margin: -3px 8px -
 .city-icon { display: inline-grid; place-items: center; width: 52px; height: 52px; border-radius: 12px; background: color-mix(in srgb, var(--team) 14%, var(--surface)); }
 .city-fans { display: flex; flex-direction: column; gap: 6px; padding-top: 10px; border-top: 1px dashed var(--line); }
 .city-fx .flat::before { content: '·'; color: var(--muted); }
+
+/* the action cam (round 23): a final's crunch-time plays acted out from the sideline */
+.cam { position: relative; width: 100%; max-width: 720px; justify-self: center; border-radius: 10px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.14); background: #14161d; }
+.cam svg { display: block; width: 100%; height: auto; }
+.cam-label { position: absolute; left: 0; right: 0; top: 12%; display: grid; justify-items: center; gap: 2px; pointer-events: none; animation: camPop 0.32s cubic-bezier(0.2, 1.6, 0.4, 1) both; }
+.cam-label b { font-family: var(--f-display); font-weight: 900; font-size: clamp(30px, 6vw, 52px); line-height: 0.9; text-transform: uppercase; color: #fff; text-shadow: 0 3px 0 rgba(0, 0, 0, 0.55); }
+.cam-label small { font-family: var(--f-mono); font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--led); text-shadow: 0 2px 0 rgba(0, 0, 0, 0.6); }
+.cam-label.them b { color: #ffd2d2; }
+.cam-flashes rect { opacity: 0; animation: camFlash 0.5s ease-out both; }
+.cam-ribbon { transition: opacity 0.25s ease; }
+.cam.buzz .cam-board { fill: #ff3b30; }
+.cam.buzz { box-shadow: 0 0 0 2px #ff3b30, 0 0 24px rgba(255, 59, 48, 0.5); }
+@keyframes camPop { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
+@keyframes camFlash { 0% { opacity: 0; } 20% { opacity: 1; } 100% { opacity: 0; } }

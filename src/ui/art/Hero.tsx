@@ -130,17 +130,53 @@ const ARCH_POSE: Record<string, HeroPose> = {
 };
 export const archPose = (name: string, pos: Pos): HeroPose => ARCH_POSE[name] ?? POS_POSE[pos];
 
-function paintHero(pos: HeroPose, kit: Kit, skin: string, hair: string, number: number, res?: number): string[][] {
-  const base = rowsOf(pos, res);
+const BALL = new Set(['B', 'u', 'b', 'L']);
+/** The pose with the ball taken out of his hands (round 23: the action cam throws it), outline and all. */
+function withoutBall(rows: string[]): string[] {
+  const g = rows.map((r) => r.split('').map((c) => (BALL.has(c) ? '.' : c)));
+  const body = (y: number, x: number) => {
+    const c = g[y]?.[x];
+    return !!c && c !== '.' && c !== 'O';
+  };
+  return g.map((r, y) => r.map((c, x) => (c === 'O' && ![-1, 0, 1].some((dy) => [-1, 0, 1].some((dx) => body(y + dy, x + dx))) ? '.' : c)).join(''));
+}
+
+/** Where the ball sits in a pose, as a fraction of its width and height. */
+export function ballSpot(pose: HeroPose): [number, number] {
+  const r = rowsOf(pose);
+  let sx = 0;
+  let sy = 0;
+  let n = 0;
+  r.forEach((row, y) => [...row].forEach((c, x) => {
+    if (!BALL.has(c)) return;
+    sx += x;
+    sy += y;
+    n++;
+  }));
+  return n ? [sx / n / r[0].length, sy / n / r.length] : [0.5, 0.2];
+}
+
+/** The size of a pose in pixels. */
+export const heroSize = (pose: HeroPose): [number, number] => [rowsOf(pose)[0].length, rowsOf(pose).length];
+
+// the casual look of the action cam (round 23): one colour and one shade for each part, no more
+const FLAT: Record<string, string> = { l: 'S', d: 's', h: 'H', i: 'J', k: 'j', u: 'B', L: 'b', w: 'W', f: 'F' };
+const flatten = (rows: string[]) => rows.map((r) => r.replace(/[ldhikuLwf]/g, (c) => FLAT[c]));
+
+function paintHero(pos: HeroPose, kit: Kit, skin: string, hair: string, number: number, res?: number, noBall = false, flat = false, mirror = false): string[][] {
+  const raw = noBall ? withoutBall(rowsOf(pos, res)) : rowsOf(pos, res);
+  const base = flat ? flatten(raw) : raw;
   const rows = base.map((r) => r.split(''));
   const digits = String(Math.min(99, Math.max(0, number)));
   const at = numberSpot(base);
   if (at) {
     const [nx, ny] = at;
     const x0 = nx + (digits.length === 1 ? 2 : 0);
-    [...digits].forEach((d, i) => {
+    // a player drawn turned around gets his number painted the other way, so it reads right
+    const ds = mirror ? [...digits].reverse() : [...digits];
+    ds.forEach((d, i) => {
       const bits = DIGITS[+d];
-      for (let k = 0; k < 15; k++) if (bits[k] === '1') rows[ny + Math.floor(k / 3)][x0 + i * 4 + (k % 3)] = 'N';
+      for (let k = 0; k < 15; k++) if (bits[k] === '1') rows[ny + Math.floor(k / 3)][x0 + i * 4 + (mirror ? 2 - (k % 3) : k % 3)] = 'N';
     });
   }
   const pal: Record<string, string> = {
@@ -171,6 +207,13 @@ function paintHero(pos: HeroPose, kit: Kit, skin: string, hair: string, number: 
     E: '#F4F4F4',
   };
   return rows.map((r) => r.map((c) => pal[c] ?? ''));
+}
+
+/** The paths of a traced player in a kit (for scenes that place him themselves). */
+export function useHeroPaths(pos: HeroPose, kit: Kit, model: string, number: number, opts: { noBall?: boolean; flat?: boolean; mirror?: boolean } = {}) {
+  const look = lookOf(model, '#2A2D34');
+  const { noBall = false, flat = false, mirror = false } = opts;
+  return useMemo(() => toPaths(paintHero(pos, kit, look.skin, look.hair, number, undefined, noBall, flat, mirror)), [pos, kit, look.skin, look.hair, number, noBall, flat, mirror]);
 }
 
 /** A traced player in a kit, with his number; `res` draws him with fewer pixels (rows tall). */
