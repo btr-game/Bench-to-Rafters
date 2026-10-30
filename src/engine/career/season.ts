@@ -207,7 +207,7 @@ export function pushPlanDecision(s: GameState, half: 1 | 2): void {
         : s.mode === 'lab'
           ? 'How hard do you work this season? Training pays out lab credits; spend them on any rating.'
           : 'Pick one plan for the season.',
-      choices: list.map((p) => ({ id: p.id, label: p.label, detail: p.detail, disabled: injured && p.id !== 'recovery', risk: p.id === 'spotlight' ? ('High' as const) : undefined })),
+      choices: list.map((p) => ({ id: p.id, label: p.label, detail: p.detail, disabled: injured && p.id !== 'recovery' })),
       data: { half, single: true },
     });
     return;
@@ -217,7 +217,7 @@ export function pushPlanDecision(s: GameState, half: 1 | 2): void {
     kind: 'plan',
     title: half === 1 ? 'First-half plan' : 'Second-half plan',
     text: injured ? 'You are injured. Recovery is the only plan available.' : 'Pick one or two plans for the next half. One plan alone works a little better than its listing (focused work); add a second and the first keeps most of its effect while the side plan adds a smaller boost.',
-    choices: plans.map((p) => ({ id: p.id, label: p.label, detail: p.detail, disabled: injured && p.id !== 'recovery', risk: p.id === 'spotlight' ? ('High' as const) : undefined })),
+    choices: plans.map((p) => ({ id: p.id, label: p.label, detail: p.detail, disabled: injured && p.id !== 'recovery' })),
     data: { half },
   });
 }

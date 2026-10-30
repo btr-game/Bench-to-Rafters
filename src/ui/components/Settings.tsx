@@ -92,6 +92,14 @@ export function SettingsMenu({ g }: { g: GameState | null }) {
               ))}
             </div>
           </div>
+          {/* round 24 (owner): New career sits right under the court, not at the bottom of the menu */}
+          {g && (
+            <div className="set-row set-new">
+              <button className={`btn small block ${armed || retired ? 'danger' : 'ghost'}`} onClick={() => (armed || retired ? (reset(), setOpen(false)) : setArmed(true))}>
+                {armed ? 'Tap again: end this career' : 'New career'}
+              </button>
+            </div>
+          )}
           {g && !retired && (
             <>
               <Toggle label="Fast break" note="Quick seasons; you still make every real call." on={!!g.flags.fast} onClick={toggleFast} />
@@ -109,11 +117,6 @@ export function SettingsMenu({ g }: { g: GameState | null }) {
           </div>
           <div className="set-foot">
             <small className="muted">{saving === 'ok' ? 'Saved on this device after every move.' : 'This browser is not letting the game save.'}</small>
-            {g && (
-              <button className={`btn small ${armed || retired ? 'danger' : 'ghost'}`} onClick={() => (armed || retired ? (reset(), setOpen(false)) : setArmed(true))}>
-                {armed ? 'Tap again: end this career' : 'New career'}
-              </button>
-            )}
           </div>
         </div>
       )}

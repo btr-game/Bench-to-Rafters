@@ -373,9 +373,10 @@ export function Create() {
           <div className="focus-grid">
             {ATTRS.map((k) => (
               <button key={k} className={`choice${focus.includes(k) ? ' selected' : ''}`} aria-pressed={focus.includes(k)} onClick={() => toggleFocus(k)}>
-                <span className="label with-icon">
+                <span className="label focus-label">
                   <Icon name={ICON_FOR[k]} size={26} />
-                  {NAMES.attr[k]} <span className="muted">{attrs[k]}</span>
+                  <span>{NAMES.attr[k]}</span>
+                  <b className="muted">{attrs[k]}</b>
                 </span>
                 <small>{NAMES.attrBlurb[k]}</small>
               </button>

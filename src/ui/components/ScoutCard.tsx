@@ -26,14 +26,13 @@ export function ScoutCard({
   const [odds, setOdds] = useState(!compact);
   return (
     <section className="card stack scout-card">
-      <div className="row">
+      <div className="scout-head">
         <div>
           <div className="kicker">
             Scouting report · {r.confidence} confidence
           </div>
           <h2 className="title">{r.tier}</h2>
         </div>
-        <div className="spacer" />
         <div className="ovr small-ovr">
           <b>{Math.round(r.ovr)}</b>
           <small>NOW</small>
