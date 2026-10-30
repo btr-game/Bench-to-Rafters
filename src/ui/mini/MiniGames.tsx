@@ -14,7 +14,7 @@ import { StreetballGame } from './Streetball';
 import { DailyGame } from './Daily';
 
 const GAMES: { id: MiniId | 'daily'; name: string; text: string; tag: string; color: string }[] = [
-  { id: 'daily' as const, tag: 'Every day', color: '#0B7285', name: 'Daily challenge', text: 'One prospect a day, the same for everyone. A whole career with fast break and simple text, scored by the legacy he leaves. Your own career waits.' },
+  { id: 'daily' as const, tag: 'Every day', color: '#0B7285', name: 'Daily challenge', text: 'One prospect a day, the same for everyone. A whole career with fast break and simple text, scored by the legacy he leaves. From the start page, when no career is in progress.' },
   { id: 'office' as const, tag: 'Strategy', color: '#1C7ED6', name: 'Front Office', text: 'Run an NBA franchise for three seasons. Scout the draft, trade, sign players from Europe and beyond, set the game plan, and win a title before the owner loses patience.' },
   { id: 'threes' as const, tag: 'Timing', color: '#E8590C', name: 'Three-point contest', text: 'Five racks, sixty seconds, a money-ball rack of your choice. Stop the meter in the green. Beat seven of the best shooters ever.' },
   { id: 'dunk' as const, tag: 'Timing', color: '#C2255C', name: 'Dunk contest', text: 'Design your dunks (takeoff, moves, props) and land them one timing tap at a time. Five judges, two rounds, three of the best dunkers ever.' },
@@ -45,18 +45,25 @@ function Hub() {
       <div className="hub-grid">
         {GAMES.map((x) => {
           const pr = career && x.id !== 'daily' ? miniProgress(career, x.id) : null;
-          const locked = !!pr && !pr.open;
+          // the daily challenge is its own career: only from the start page, not during one
+          const dailyShut = x.id === 'daily' && !!career;
+          const locked = (!!pr && !pr.open) || dailyShut;
           return (
             <button key={x.id} className={`hub-card${locked ? ' locked' : ''}`} style={{ ['--hub' as string]: x.color }} disabled={locked} onClick={() => setMini(x.id)}>
               <span className="hub-band">
                 <span>{x.tag}</span>
-                {pr && <span className={`hub-state${locked ? '' : ' open'}`}>{locked ? 'Locked' : 'Unlocked'}</span>}
+                {(pr || dailyShut) && <span className={`hub-state${locked ? '' : ' open'}`}>{locked ? 'Locked' : 'Unlocked'}</span>}
               </span>
               <b className="hub-name with-icon">
                 <Icon name={x.id === 'office' ? 'office' : x.id === 'lab' ? 'lab' : x.id === 'daily' ? 'calendar' : ICON_FOR[x.id] ?? ''} size={34} />
                 {x.name}
               </b>
               <small>{x.text}</small>
+              {dailyShut && (
+                <span className="hub-req">
+                  <span>Not during a career: play it from the start page, or once this career is over.</span>
+                </span>
+              )}
               {pr && (
                 <span className="hub-req">
                   <span>

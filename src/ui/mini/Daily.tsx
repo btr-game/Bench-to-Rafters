@@ -45,6 +45,7 @@ function recordRun(day: string, s: GameState): { before: Best | null; now: Best 
 /** The page in the mini-game hub: today's prospect, the rules, the best run so far. */
 export function DailyGame() {
   const start = useStore((s) => s.startDaily);
+  const busy = useStore((s) => !!s.game && s.game.step !== 'retired' && !s.daily);
   const day = todayKey();
   const input = useMemo(() => dailyInput(day), [day]);
   const best = loadBests()[day];
@@ -79,10 +80,14 @@ export function DailyGame() {
           <small>{best ? `legacy · peak ${best.peak} · ${best.runs} run${best.runs === 1 ? '' : 's'}` : 'no run yet'}</small>
         </div>
       </div>
-      <button className="btn sb-go" onClick={start}>
-        Start today’s run
-      </button>
-      <p className="small muted">Your own career is set aside, not touched: when the run ends you go straight back to it. {streak > 1 ? `You have played on ${streak} days.` : ''}</p>
+      {busy ? (
+        <p className="small">A career is in progress. The daily challenge opens from the start page, or once this career is over.</p>
+      ) : (
+        <button className="btn sb-go" onClick={start}>
+          Start today’s run
+        </button>
+      )}
+      {streak > 1 && <p className="small muted">You have played on {streak} days.</p>}
     </section>
   );
 }
@@ -102,7 +107,7 @@ export function DailyStrip({ g }: { g: GameState }) {
       </span>
       <span className="spacer" />
       <button className="btn ghost small" onClick={end}>
-        {d.stash ? 'Quit and back to your career' : 'Quit the run'}
+        Quit the run
       </button>
     </div>
   );
@@ -138,7 +143,7 @@ export function DailyResult({ g }: { g: GameState }) {
       </div>
       <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
         <button className="btn" onClick={end}>
-          {d.stash ? 'Back to your career' : 'Done'}
+          Done
         </button>
         <button className="btn ghost" onClick={start}>
           Run it again

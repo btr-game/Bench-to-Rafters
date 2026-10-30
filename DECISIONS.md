@@ -1267,3 +1267,11 @@ Reached from the start page and from the bottom of Home (a career in progress is
   nothing measurable, so they stay. 1,600 careers (casual mini-games, smart policy) against the
   round 21 numbers: mean peak 74.4923 (74.4785), NBA 78.3% (78.4%), All-Star 35.8% (34.6%), MVP
   11.9% (11.3%), Hall of Fame 11.2% (11.3%), titles 29.2% (36.1%). A grind of 1.5 gave 21.3%.
+- **City cultures, second pass** (owner: "are any other city cultures the same? be as unique as
+  possible"). The five party cities had shared one effect; several other cities shared costs
+  (slow fame in small markets, faster growth for the young, altitude, a better mood). Every city
+  now has its own main effect and its own cost, and the party cities each cost something
+  different: New York (tabloids: mood and trust), Atlanta (legs: wear and athleticism), Miami
+  (fines), Los Angeles (paid gigs: missed reps), New Orleans (pounds). The daily challenge only
+  opens without a career in progress. 1,600 careers: mean peak 74.5516 (74.4923), All-Star 37.0%
+  (35.8%), MVP 12.2% (11.9%), Hall of Fame 11.6% (11.2%), titles 29.1% (29.2%), within the noise.

@@ -1,8 +1,9 @@
 // Round 22: every NBA city has its own culture, and it rubs off on the players who live there.
 // Each half of a season with a team, its city does something to him: Denver's thin air slows a
-// weak athlete down at first and then builds his lungs; Atlanta's and New Orleans' nights can
-// pull him out of the gym; San Antonio's discipline keeps him young; Los Angeles makes him
-// famous and distracted at once. Every team is different, and most cities cut both ways.
+// weak athlete down at first and then builds his lungs; San Antonio's discipline keeps him young.
+// The party cities each cost him in their own way: New York's tabloids (mood and coach trust),
+// Atlanta's late nights (his legs), Miami's fines, Hollywood's paid gigs (missed reps) and New
+// Orleans' food (pounds). Every team is different, and most cities cut both ways.
 // The effects are small each half and add up over the years he stays.
 
 import { ATTR_MAX } from '../balance';
@@ -26,7 +27,6 @@ export interface CityCulture {
 interface Ctx {
   years: number; // seasons already played with the team
   winning: boolean; // the team is at .500 or better
-  young: boolean; // 24 or younger
 }
 
 const bump = (s: GameState, k: AttrKey, v: number) => (s.player.attrs[k] = clamp(s.player.attrs[k] + v, 15, ATTR_MAX));
@@ -37,21 +37,17 @@ const wear = (s: GameState, v: number) => (s.player.wear = clamp((s.player.wear 
 const chem = (s: GameState, v: number) => {
   if (s.season) s.season.teamBonus = Math.round(((s.season.teamBonus ?? 0) + v) * 100) / 100;
 };
-/** A night (or a week) out: fun, but the work suffers. */
-const distracted = (s: GameState, rng: GameState['rng'], p: number, where: string): string | void => {
-  if (!chance(rng, p * (s.player.morale > 70 ? 1.2 : 1))) return;
-  bump(s, pick(rng, s.player.focus.length ? s.player.focus : (['SHT'] as AttrKey[])), -0.5);
-  morale(s, 3);
-  return where;
-};
+/** Whether the city's nights get him this half (a happy player goes out more). */
+const night = (s: GameState, p: number): boolean => chance(s.rng, p * (s.player.morale > 70 ? 1.2 : 1));
+const focusKey = (s: GameState): AttrKey => pick(s.rng, s.player.focus.length ? s.player.focus : (['SHT'] as AttrKey[]));
 
 export const CITY_CULTURES: Record<string, CityCulture> = {
   BOS: {
     icon: 'dynasty',
     name: 'Banner standards',
-    text: 'Seventeen banners in the rafters and fans who know every one. Nothing but winning counts.',
-    good: 'Basketball IQ grows; winning seasons lift you',
-    bad: 'Losing seasons get loud',
+    text: 'Seventeen banners in the rafters and a city that measures every season against them.',
+    good: 'Basketball IQ grows; a winning season lifts your mood',
+    bad: 'A losing season weighs on your mood',
     half: (s, c) => {
       bump(s, 'IQ', 0.15);
       morale(s, c.winning ? 1 : -2);
@@ -59,36 +55,39 @@ export const CITY_CULTURES: Record<string, CityCulture> = {
   },
   BKN: {
     icon: 'house',
-    name: 'Brooklyn hustle',
-    text: 'A borough of strivers and a front office built on player development.',
-    good: 'Young players develop faster',
-    bad: 'Less of a spotlight than across the river',
-    half: (s, c) => {
-      if (c.young) s.player.growthMultNext *= 1.02;
-      rep(s, -0.2);
+    name: 'Brooklyn skills lab',
+    text: 'A borough of strivers and a staff of skills coaches who rebuild players from the ground up.',
+    good: 'Your weak hand improves, fastest for players 25 and under',
+    bad: 'Brooklyn rent eats into your bank account',
+    half: (s) => {
+      s.player.offhand = clamp(s.player.offhand + (s.player.age <= 25 ? 2 : 1.2), 0, 99);
+      s.player.bank = Math.max(0, s.player.bank - 0.03);
     },
   },
   NYK: {
     icon: 'camera',
     name: 'The Garden spotlight',
-    text: 'The Mecca. Every good night makes the back page, every bad one too, and the city never sleeps.',
-    good: 'Reputation grows fast',
-    bad: 'The nightlife and the tabloids can distract you',
-    half: (s, c) => {
+    text: 'The Mecca. Every good night makes the back page, and so does every night out.',
+    good: 'Your fame grows every half',
+    bad: 'Nights out become tabloid stories: your mood and the coach’s trust take the hit',
+    half: (s) => {
       rep(s, 1);
-      morale(s, c.winning ? 2 : -2);
-      return distracted(s, s.rng, 0.12, 'New York never sleeps, and neither did you this month.');
+      if (!night(s, 0.14)) return;
+      morale(s, -3);
+      trust(s, -2);
+      rep(s, 1);
+      return 'A night out ends up on the back page. The coach reads the Post too.';
     },
   },
   PHI: {
     icon: 'rival',
-    name: 'Trust the Process',
-    text: 'A patient front office and the toughest fans in sports. They booed Santa Claus.',
-    good: 'Young players develop a little faster',
-    bad: 'Losing gets you booed',
-    half: (s, c) => {
-      if (c.young) s.player.growthMultNext *= 1.02;
-      if (!c.winning) morale(s, -2);
+    name: 'Philly tough',
+    text: 'Cheesesteaks, the Rocky steps and a city that respects whoever plays through pain.',
+    good: 'The coach’s trust grows: toughness is noticed here',
+    bad: 'Playing through everything raises your injury risk',
+    half: (s) => {
+      trust(s, 1.5);
+      s.player.injuryMultNext *= 1.03;
     },
   },
   TOR: {
@@ -96,7 +95,7 @@ export const CITY_CULTURES: Record<string, CityCulture> = {
     name: 'We the North',
     text: 'A whole country behind one team, and the longest flights in the league.',
     good: 'Team chemistry: a nation pulling together',
-    bad: 'Cold winters and cross-border travel wear you down',
+    bad: 'Cross-border travel wears your body down',
     half: (s) => {
       chem(s, 0.25);
       wear(s, 0.6);
@@ -105,130 +104,136 @@ export const CITY_CULTURES: Record<string, CityCulture> = {
   CHI: {
     icon: 'grind',
     name: 'Windy City grind',
-    text: 'A blue-collar town that loves defenders and still measures everyone against the 90s.',
-    good: 'Perimeter defense and rebounding grow; the coach trusts grinders',
-    bad: 'Stars live under the shadow of the dynasty',
+    text: 'A blue-collar town that loves defenders and still measures every star against the 90s.',
+    good: 'Perimeter defense and rebounding grow',
+    bad: 'Once you are famous, the dynasty’s shadow weighs on your mood',
     half: (s) => {
       bump(s, 'PER', 0.1);
       bump(s, 'REB', 0.08);
-      trust(s, 1);
       if (s.player.rep >= 60) morale(s, -1);
     },
   },
   CLE: {
     icon: 'house',
     name: 'Rust Belt loyalty',
-    text: 'A small market that never forgets who stayed.',
-    good: 'Loyal fans keep your mood and the coach’s trust up',
-    bad: 'A small market grows your fame slowly',
+    text: 'A city that never forgets who stayed. The longer you stay, the more it gives back.',
+    good: 'Your mood and the coach’s trust grow more with every season you stay',
+    bad: 'Lake-effect winters: your body ages a little faster',
     half: (s, c) => {
-      morale(s, 1);
-      trust(s, c.years >= 2 ? 1 : 0);
-      rep(s, -0.3);
+      const k = Math.min(2, 0.5 + c.years * 0.5);
+      morale(s, k);
+      trust(s, k);
+      s.player.declineMultNext *= 1.01;
     },
   },
   DET: {
     icon: 'strength',
     name: 'Bad Boys',
-    text: 'Motor City toughness. Nobody gets an easy basket here.',
-    good: 'Interior defense, perimeter defense and rebounding grow',
-    bad: 'The physical practices wear the body down',
+    text: 'Motor City toughness. The practices are as physical as the games.',
+    good: 'Interior defense grows and you put on muscle',
+    bad: 'The physical practices wear your body down',
     half: (s) => {
-      bump(s, 'INT', 0.1);
-      bump(s, 'PER', 0.06);
-      bump(s, 'REB', 0.06);
+      bump(s, 'INT', 0.12);
+      addPounds(s.player, 1, 0.5);
       wear(s, 0.6);
     },
   },
   IND: {
     icon: 'shoot',
     name: 'Hoosier hoops',
-    text: 'Basketball is a religion in Indiana, and it is played the right way.',
-    good: 'Shooting and basketball IQ grow; the fans love you',
-    bad: 'Not much glamour to sell',
+    text: 'Basketball is a religion in Indiana, and it is played the right way: pass, cut, shoot.',
+    good: 'Shooting and playmaking grow',
+    bad: 'Ball-stoppers (playmaking under 60) lose the coach’s trust',
     half: (s) => {
-      bump(s, 'SHT', 0.08);
-      bump(s, 'IQ', 0.08);
-      morale(s, 1);
-      rep(s, -0.2);
+      bump(s, 'SHT', 0.1);
+      bump(s, 'PLY', 0.06);
+      if (s.player.attrs.PLY < 60) trust(s, -1);
     },
   },
   MIL: {
     icon: 'snow',
-    name: 'Small-town focus',
+    name: 'Cold-weather focus',
     text: 'Cold, quiet and friendly: nothing to do in winter but work.',
     good: 'Few distractions: you develop a little faster',
-    bad: 'A small market grows your fame slowly',
+    bad: 'Cold muscles: injury risk goes up a little',
     half: (s) => {
       s.player.growthMultNext *= 1.02;
-      rep(s, -0.3);
+      s.player.injuryMultNext *= 1.02;
     },
   },
   ATL: {
     icon: 'flame',
     name: 'Nightlife capital',
-    text: 'The music capital of the South, and the clubs are open until sunrise.',
-    good: 'Your name grows with the city’s music scene',
-    bad: 'Late nights can pull you out of the gym',
+    text: 'The music capital of the South: studio sessions and clubs until sunrise.',
+    good: 'Your fame grows with the city’s music scene',
+    bad: 'Late nights wear your legs down and cost you athleticism',
     half: (s) => {
       rep(s, 0.6);
-      return distracted(s, s.rng, 0.22, 'Atlanta nights: you were seen everywhere except the practice gym.');
+      if (!night(s, 0.22)) return;
+      wear(s, 2);
+      bump(s, 'ATH', -0.3);
+      rep(s, 1);
+      morale(s, 2);
+      return 'Atlanta nights: a studio session, a club, sunrise. Your legs feel it all week.';
     },
   },
   CHA: {
     icon: 'chef',
-    name: 'Buzz City ease',
-    text: 'Easygoing, warm and full of barbecue.',
-    good: 'Good mood all season',
-    bad: 'The food adds a few pounds',
+    name: 'Easy living',
+    text: 'Golf, lake houses and Sunday drives. Nobody is in a hurry in Charlotte.',
+    good: 'Your body recovers: body wear goes down',
+    bad: 'Too comfortable: you develop a little slower',
     half: (s) => {
-      morale(s, 1.5);
-      addPounds(s.player, 1);
+      wear(s, -0.8);
+      s.player.growthMultNext *= 0.99;
     },
   },
   MIA: {
     icon: 'palm',
     name: 'Heat Culture',
-    text: 'The hardest-working, best-conditioned team in the league, in a city built for parties.',
-    good: 'Body-fat tests: your weight moves toward its best, conditioning grows',
-    bad: 'South Beach is right there',
+    text: 'The best-conditioned team in the league, with body-fat tests, in a city built for parties.',
+    good: 'Your weight moves toward its best, and athleticism grows',
+    bad: 'South Beach nights bring a fine and a talk with the front office',
     half: (s) => {
       const u = weightUnits(s.player);
       if (Math.abs(u) > 0.3) addPounds(s.player, u > 0 ? -2 : 1);
       bump(s, 'ATH', 0.08);
-      wear(s, 0.4);
-      return distracted(s, s.rng, 0.1, 'South Beach got you this month.');
+      if (!night(s, 0.12)) return;
+      morale(s, 3);
+      trust(s, -3);
+      s.player.bank = Math.max(0, s.player.bank - 0.05);
+      return 'South Beach got you. Heat Culture does not forgive: a fine and a long talk with the front office.';
     },
   },
   ORL: {
     icon: 'palm',
     name: 'Sunshine State',
     text: 'Theme parks, sunshine and very little pressure.',
-    good: 'Good mood and a fresh body',
-    bad: 'Little pressure means little urgency',
+    good: 'A fresh body (lower injury risk) and a good mood',
+    bad: 'Little urgency: the coach pushes you less and trusts you a little less',
     half: (s) => {
+      s.player.injuryMultNext *= 0.97;
       morale(s, 1);
-      s.player.injuryMultNext *= 0.98;
-      s.player.growthMultNext *= 0.99;
+      trust(s, -0.5);
     },
   },
   WAS: {
     icon: 'news',
-    name: 'Capital pressure',
-    text: 'Power, politics and a media corps that covers everything.',
-    good: 'Fame grows',
-    bad: 'The pressure wears on your mood',
+    name: 'Capital politics',
+    text: 'Power, politics and a front office where the winds change every month.',
+    good: 'The national media spotlight grows your fame',
+    bad: 'Front-office politics: the coach’s trust swings up or down at random',
     half: (s) => {
       rep(s, 0.5);
-      morale(s, -1);
+      trust(s, pick(s.rng, [-2, -1, 1, 2]));
     },
   },
   DEN: {
     icon: 'athletic',
     name: 'Mile High',
     text: 'A mile above sea level. Visitors gasp for air in the fourth quarter, and so do newcomers.',
-    good: 'After a season of thin air, your stamina and athleticism grow, and so does your development',
-    bad: 'A weak athlete struggles at first',
+    good: 'After a first season of thin air, your athleticism and development grow (more for weak athletes); a home edge for the team',
+    bad: 'A weak athlete struggles in his first season',
     half: (s, c) => {
       chem(s, 0.2); // the altitude is a home edge
       if (c.years === 0) {
@@ -257,59 +262,63 @@ export const CITY_CULTURES: Record<string, CityCulture> = {
   OKC: {
     icon: 'underdog',
     name: 'Draft and develop',
-    text: 'A small market that builds through youth, patience and player development.',
-    good: 'Young players develop faster',
-    bad: 'A small market grows your fame slowly',
-    half: (s, c) => {
-      if (c.young) s.player.growthMultNext *= 1.03;
-      rep(s, -0.3);
+    text: 'A small market that builds through youth and patience.',
+    good: 'Players 23 and under develop faster and earn the coach’s trust',
+    bad: 'A youth movement: veterans (26 and over) lose the coach’s trust',
+    half: (s) => {
+      if (s.player.age <= 23) {
+        s.player.growthMultNext *= 1.03;
+        trust(s, 1);
+      } else if (s.player.age >= 26) trust(s, -1);
     },
   },
   POR: {
     icon: 'tent',
-    name: 'Rain city',
-    text: 'Rain, coffee, forests and bike paths: an easy city to love.',
-    good: 'A city you settle into: your mood stays up',
-    bad: 'The longest road trips in the league',
+    name: 'Shoe company town',
+    text: 'Rain, coffee and the world’s biggest sneaker company down the road.',
+    good: 'Sneaker money and fame',
+    bad: 'The longest road trips in the league wear you down',
     half: (s) => {
-      morale(s, 1.5);
+      s.player.bank += 0.03;
+      s.player.earnings += 0.03;
+      rep(s, 0.3);
       wear(s, 0.5);
     },
   },
   UTA: {
-    icon: 'athletic',
-    name: 'Quiet altitude',
-    text: 'Salt Lake City: four thousand feet up and early to bed.',
-    good: 'Few distractions; after a season the altitude builds your athleticism',
-    bad: 'A small market grows your fame slowly',
-    half: (s, c) => {
-      if (c.years >= 1) bump(s, 'ATH', 0.08);
-      s.player.growthMultNext *= 1.01;
-      rep(s, -0.3);
+    icon: 'post',
+    name: 'Pick-and-roll school',
+    text: 'The city that perfected the pick-and-roll still teaches it every day.',
+    good: 'Playmaking and interior defense grow',
+    bad: 'The system wants the roll, not the jumper: shooting slips a little',
+    half: (s) => {
+      bump(s, 'PLY', 0.12);
+      bump(s, 'INT', 0.06);
+      bump(s, 'SHT', -0.04);
     },
   },
   GSW: {
     icon: 'shoot',
     name: 'Splash culture',
-    text: 'The team that changed the game from deep, with tech money in every seat.',
+    text: 'The team that changed the game from deep, with tech money in every courtside seat.',
     good: 'Shooting and range grow',
-    bad: 'Expectations are sky high',
+    bad: 'Losing seasons cost you the coach’s trust',
     half: (s, c) => {
       bump(s, 'SHT', 0.15);
       s.player.range = clamp(s.player.range + 0.5, 0, 99);
-      if (!c.winning) morale(s, -2);
+      if (!c.winning) trust(s, -1);
     },
   },
   LAC: {
     icon: 'underdog',
     name: 'The other LA team',
     text: 'Overshadowed in their own city, and playing with a chip on the shoulder.',
-    good: 'The chip on your shoulder: the coach trusts you, you work harder',
-    bad: 'Less fame than down the hall',
+    good: 'The chip on your shoulder: coach trust and development go up',
+    bad: 'Second fiddle in a shared city: team chemistry dips a little',
     half: (s) => {
       trust(s, 1);
       s.player.growthMultNext *= 1.01;
-      rep(s, -0.2);
+      chem(s, -0.1);
     },
   },
   LAL: {
@@ -317,42 +326,48 @@ export const CITY_CULTURES: Record<string, CityCulture> = {
     name: 'Hollywood',
     text: 'The brightest lights in sports: celebrities courtside, premieres every night.',
     good: 'Fame grows fastest here',
-    bad: 'The glamour can distract you; losing is not allowed',
+    bad: 'Paid gigs eat practice time; losing seasons cost you fame',
     half: (s, c) => {
+      rep(s, c.winning ? 1.5 : -1);
+      if (!night(s, 0.18)) return;
+      s.player.bank += 0.08;
+      s.player.earnings += 0.08;
       rep(s, 1.5);
-      if (!c.winning) morale(s, -2);
-      return distracted(s, s.rng, 0.18, 'Hollywood called: a premiere, a commercial shoot, a party in the hills.');
+      bump(s, focusKey(s), -0.4);
+      return 'Hollywood called: a commercial shoot and a premiere. Good money, missed reps.';
     },
   },
   PHX: {
     icon: 'flame',
     name: 'Valley heat',
     text: 'Desert sunshine and summer days over 110 degrees.',
-    good: 'Conditioning in the heat builds athleticism; sunshine keeps you happy',
-    bad: 'The heat wears the body down',
+    good: 'You sweat off a pound a half, and the sunshine keeps you happy',
+    bad: 'Small-ball desert basketball: rebounding slips a little',
     half: (s) => {
-      bump(s, 'ATH', 0.06);
+      addPounds(s.player, -1);
       morale(s, 1);
-      wear(s, 0.4);
+      bump(s, 'REB', -0.04);
     },
   },
   SAC: {
     icon: 'teamfirst',
-    name: 'Small capital',
-    text: 'A government town with one team, and the whole city pulling for it.',
-    good: 'Team chemistry and a good mood',
-    bad: 'A small market grows your fame slowly',
-    half: (s) => {
-      chem(s, 0.2);
-      morale(s, 1);
-      rep(s, -0.3);
+    name: 'Light the beam',
+    text: 'A government town with one team, and a purple beam over the arena after every win.',
+    good: 'Winning seasons: a big lift to your mood and to team chemistry',
+    bad: 'A small market: your fame grows slowly',
+    half: (s, c) => {
+      if (c.winning) {
+        morale(s, 2);
+        chem(s, 0.15);
+      }
+      rep(s, -0.2);
     },
   },
   DAL: {
     icon: 'chef',
     name: 'Texas-size',
     text: 'Big money, big steaks, big expectations.',
-    good: 'Fame and money grow',
+    good: 'Your fame grows',
     bad: 'Brisket adds pounds',
     half: (s) => {
       rep(s, 0.5);
@@ -364,7 +379,7 @@ export const CITY_CULTURES: Record<string, CityCulture> = {
     name: 'Space City analytics',
     text: 'Threes, layups and spreadsheets: the numbers decide everything here.',
     good: 'Shooting range and basketball IQ grow',
-    bad: 'Mid-range shooters get benched',
+    bad: 'Mid-range players (range under 40) lose the coach’s trust',
     half: (s) => {
       s.player.range = clamp(s.player.range + 0.6, 0, 99);
       bump(s, 'IQ', 0.06);
@@ -376,24 +391,26 @@ export const CITY_CULTURES: Record<string, CityCulture> = {
     name: 'Grit and grind',
     text: 'Blues, barbecue and defense. Nothing comes easy in Memphis.',
     good: 'Defense grows and the coach trusts grinders',
-    bad: 'A small market grows your fame slowly',
+    bad: 'Defense first: your shooting range slips a little',
     half: (s) => {
-      bump(s, 'PER', 0.08);
-      bump(s, 'INT', 0.08);
+      bump(s, 'PER', 0.1);
+      bump(s, 'INT', 0.06);
       trust(s, 1);
-      rep(s, -0.3);
+      s.player.range = clamp(s.player.range - 0.3, 0, 99);
     },
   },
   NOP: {
     icon: 'boat',
     name: 'The Big Easy',
-    text: 'Jazz, gumbo and a party every night of the week.',
+    text: 'Jazz, gumbo and a festival every week of the year.',
     good: 'You have never been happier',
-    bad: 'The food adds pounds and the nights pull you out of the gym',
+    bad: 'Mardi Gras and crawfish boils add pounds',
     half: (s) => {
       morale(s, 2);
-      addPounds(s.player, 2);
-      return distracted(s, s.rng, 0.2, 'New Orleans: Bourbon Street won this month.');
+      if (!night(s, 0.2)) return;
+      addPounds(s.player, 4);
+      morale(s, 1);
+      return 'New Orleans: Mardi Gras, crawfish boils and beignets. Four pounds and no regrets.';
     },
   },
   SAS: {
@@ -401,11 +418,12 @@ export const CITY_CULTURES: Record<string, CityCulture> = {
     name: 'The Spurs Way',
     text: 'Fundamentals, discipline and the best sports science in the league. Players last longer here.',
     good: 'Basketball IQ grows and you age more slowly',
-    bad: 'Egos are not welcome: a smaller spotlight',
+    bad: 'Egos are not welcome: playing for the spotlight costs you the coach’s trust',
     half: (s) => {
       bump(s, 'IQ', 0.12);
       s.player.declineMultNext *= 0.98;
-      rep(s, -0.2);
+      const sp = s.season && (s.season.plan === 'spotlight' || s.season.plan2 === 'spotlight');
+      if (sp) trust(s, -2);
     },
   },
 };
@@ -428,7 +446,7 @@ export function cityHalf(s: GameState): string {
   const c = cityCultureOf(s);
   const t = teamById(s.nba, s.teamId);
   if (!c || !t || !s.season || s.mode === 'lab') return '';
-  const ctx: Ctx = { years: s.teamSeasons[t.id] ?? 0, winning: t.w >= t.l, young: s.player.age <= 24 };
+  const ctx: Ctx = { years: s.teamSeasons[t.id] ?? 0, winning: t.w >= t.l };
   const line = c.half(s, ctx);
   fanHalf(s);
   syncWeight(s.player);
