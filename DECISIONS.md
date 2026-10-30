@@ -1423,3 +1423,11 @@ Reached from the start page and from the bottom of Home (a career in progress is
   Over 1,000 harness careers: mean 40.1196, median 17.45, top 10% from 117.82; Hall of Famers
   average 169.468, careers that never reached the NBA 1.9242; correlation with legacy points
   0.991186. Records logged before this keep their legacy points as their score.
+- **The shop's top end** (the owner: salaries, negotiation and brand deals need more ways to spend):
+  22 new items from $1.2M to $400M: a film room, altitude camp, smart court, a medical team on
+  the payroll, a performance headquarters, a sports science institute, a foundation, a museum
+  wing, racehorses, a hometown film, an orbital flight, a media company, rebuilding the hometown
+  arena, a superyacht, a resort on the island, a minority stake in an NBA team and buying the
+  sneaker company. Their effects grow with the price but stay in the old range (morale, profile,
+  goodwill, health and aging, a little growth). The stock now favours things costing 1% of the
+  bank or more, so a rich player sees rich things. New pixel icons: horse, rocket, arena, heart.

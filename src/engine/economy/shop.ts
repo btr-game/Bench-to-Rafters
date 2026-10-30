@@ -43,14 +43,14 @@ export function describeItem(it: ShopItem): string {
 
 /**
  * About six things, different every summer (round 8): five he can afford, drawn at random
- * with things worth his money weighted up (a rich player rarely sees the $40 sleeve), and one
- * to save up for.
+ * with things worth his money weighted up (a rich player rarely sees the $40 sleeve; round 25: a
+ * thing costing 1% of his bank or more comes up most), and one to save up for.
  */
 function stock(s: GameState): string[] {
   const bank = s.player.bank;
   const bought = new Set(s.purchases);
   const affordable = SHOP_ITEMS.filter((i) => i.price <= bank);
-  const weight = (i: ShopItem) => (i.price >= bank * 0.002 ? 1 : 0.2) * (bought.has(i.id) ? 0.5 : 1);
+  const weight = (i: ShopItem) => (i.price >= bank * 0.01 ? 1.5 : i.price >= bank * 0.002 ? 1 : 0.2) * (bought.has(i.id) ? 0.5 : 1);
   const picks: ShopItem[] = [];
   const pool = [...affordable];
   while (picks.length < STOCK.afford && pool.length > 0) {

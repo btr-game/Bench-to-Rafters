@@ -696,6 +696,71 @@ export const ICONS: Record<string, string[]> = {
     '.OYYYYYYYYYYYYO.',
     'OCCCCCCCCCCCCCCO',
   ],
+  // round 25: the top end of the shop
+  horse: [
+    '..........OO....',
+    '.........OTTO...',
+    '........OTTTTO..',
+    '.......OTTtTTTO.',
+    '......OTTTTOOTTO',
+    '.....OTTTTO..OO.',
+    '.OOOOTTTTTO.....',
+    'OTTTTTTTTTO.....',
+    'OTTTTTTTTTO.....',
+    'OTTTTTTTTTO.....',
+    '.OTOOOOOOTO.....',
+    '.OTO....OTO.....',
+    '.OTO....OTO.....',
+    '.OKO....OKO.....',
+    '.OOO....OOO.....',
+  ],
+  rocket: [
+    '.......OO.......',
+    '......OWWO......',
+    '.....OWWWWO.....',
+    '.....OWBBWO.....',
+    '.....OWBBWO.....',
+    '.....OWWWWO.....',
+    '.....OWWWWO.....',
+    '....OOWWWWOO....',
+    '...ORROWWORRO...',
+    '...ORRWWWWRRO...',
+    '...OOOWWWWOOO...',
+    '......ONNO......',
+    '......ONYO......',
+    '.......OY.......',
+    '.......O........',
+  ],
+  arena: [
+    '.......OO.......',
+    '....OOOWWOOO....',
+    '..OOWWWWWWWWOO..',
+    '.OWWWWWWWWWWWWO.',
+    'OOOOOOOOOOOOOOOO',
+    'ORRRRRRRRRRRRRRO',
+    'OrrrrrrrrrrrrrrO',
+    'OwwOwwOwwOwwOwwO',
+    'OwwOwwOwwOwwOwwO',
+    'OwwOwwOwwOwwOwwO',
+    'OwwOwwOOOOwwOwwO',
+    'OwwOwwOKKOwwOwwO',
+    'OwwOwwOKKOwwOwwO',
+    'OOOOOOOOOOOOOOOO',
+  ],
+  heart: [
+    '................',
+    '...OOO....OOO...',
+    '..ORRRO..ORRRO..',
+    '.ORWRRRRORRRRRO.',
+    '.ORWRRRRRRRRRRO.',
+    '.ORRRRRRRRRRRrO.',
+    '..ORRRRRRRRRrO..',
+    '...ORRRRRRRrO...',
+    '....ORRRRRrO....',
+    '.....ORRRrO.....',
+    '......ORrO......',
+    '.......OO.......',
+  ],
   boat: [
     '.......O........',
     '.......OO.......',
@@ -1527,7 +1592,6 @@ export const meterIcon = (label: string) =>
 /** A choice's icon from its id ('balanced', 'style:pace', 'plan-shooting'...), if it has one. */
 export const choiceIcon = (id: string) => ICON_FOR[id] ?? ICON_FOR[id.split(/[:+\-_]/).pop() ?? ''] ?? '';
 
-/** A shop item's icon, from its id or name (content/shop.ts). */
 /** The icon for each kind of team story (Around the league). */
 export const STORY_ICON: Record<string, string> = { superteam: 'superteam', underdog: 'underdog', rival: 'rival', dynasty: 'dynasty', lastdance: 'lastdance', tank: 'tank', favorite: 'laurel', grit: 'grind', chip: 'flame', pace: 'pace', bond: 'teamfirst', showtime: 'spotlight' };
 
@@ -1540,10 +1604,21 @@ export const shopShift = (id: string): number => {
 /** The tile colour behind a shop icon, one per colourway. */
 export const SHIFT_COLOR = ['#E03131', '#F76707', '#FCC419', '#2F9E44', '#1C7ED6', '#7048E8'];
 
+/** A shop item's icon, from its id or name (content/shop.ts). */
 export function shopIcon(id: string, name: string): string {
   const t = `${id} ${name}`.toLowerCase();
   const rules: [RegExp, string][] = [
-    [/shoe|kicks|insole|low-top/, 'shoe'],
+    [/smart-court/, 'shoot'],
+    [/medical|regen/, 'health'],
+    [/legend/, 'laurel'],
+    [/horse/, 'horse'],
+    [/orbit/, 'rocket'],
+    [/foundation/, 'heart'],
+    [/arena|performance-hq/, 'arena'],
+    [/science/, 'lab'],
+    [/media/, 'news'],
+    [/hometown-film/, 'camera'],
+    [/shoe|kicks|insole|low-top|sneaker/, 'shoe'],
     [/goggle/, 'scouts'],
     [/sleeve|grip|off-hand|offhand|weak-hand/, 'offhand'],
     [/headband|lucky/, 'spotlight'],
