@@ -521,6 +521,7 @@ const KICKER: Record<Moment['kind'], string> = {
   injury: 'Injury',
   event: 'Turning point',
   tournament: 'Tournament',
+  fine: 'Fined',
 };
 
 const CONFETTI = ['#F5C542', '#FFFFFF', '#E8590C', '#2F9E44', '#1C7ED6', '#C2255C'];

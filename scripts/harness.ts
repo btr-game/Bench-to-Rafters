@@ -155,6 +155,7 @@ export interface CareerResult {
   index: { total: number; best: number; score: number }; // round 25: the leaderboards' career index
   nickname: string | null; // round 25: what the media called him (nickname id)
   brand: { kind: 'deal' | 'line'; earned: number; shoe: number } | null;
+  money: { hired: number; staffPaid: number; fines: number; finedFor: number; legacy: number }; // round 25: staff, fines, legacy projects
   peakOvr: number;
   potential: number;
   startOvr: number;
@@ -262,6 +263,13 @@ export function runCareer(seed: number, policy: Policy, mode: Mode = 'standard',
     legacy: legacyScore(s),
     index: careerIndex(s),
     nickname: s.player.nickname?.id ?? null,
+    money: {
+      hired: s.log.filter((x) => x.kind === 'staff' && x.text.startsWith('Hired')).length,
+      staffPaid: (s.player.staff ?? []).reduce((a, m) => a + m.paid, 0),
+      fines: s.log.filter((x) => x.kind === 'fine').length,
+      finedFor: s.log.filter((x) => x.kind === 'fine').reduce((a, x) => a + Number(/\$([0-9.]+)K/.exec(x.text)?.[1] ?? 0) / 1000, 0),
+      legacy: s.player.legacyBonus ?? 0,
+    },
     brand: s.player.brand ? { kind: s.player.brand.kind, earned: s.player.brand.earned, shoe: s.player.brand.shoe } : null,
     peakOvr: s.player.peakOvr,
     potential: s.player.potential,

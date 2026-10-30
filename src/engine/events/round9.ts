@@ -7,6 +7,7 @@ import type { AttrKey, GameState, Stage } from '../types';
 import { adjust } from '../career/common';
 import { pathOf } from '../career/origin';
 import type { EventDef } from './defs';
+import { canHire, hireStaff } from '../career/staff';
 
 const ALL: Stage[] = ['HS', 'NCAA', 'GL', 'EU', 'INT', 'NBA'];
 const PRO: Stage[] = ['GL', 'EU', 'INT', 'NBA'];
@@ -359,6 +360,7 @@ export const ROUND9_EVENTS: EventDef[] = [
             bump(s, 'ATH', range(rng, 0.8, 1.8));
             s.player.injuryMultNext *= 0.95;
             s.player.declineMultNext *= 0.97;
+            if (canHire(s, 'nutritionist')) hireStaff(s, 'nutritionist'); // round 25: onto his staff
             return ok('Lighter, quicker, and your knees thank you.', 'Overhauled his diet.');
           }
           bump(s, 'ATH', -0.6);

@@ -7,6 +7,7 @@ import { adjust, logDecision, pushMoment, rankOnRoster, userOvr } from '../caree
 import { marketValue, fmtMoney } from '../economy/salary';
 import type { EventChoice, EventDef } from './defs';
 import { pathOf } from '../career/origin';
+import { canHire, hireStaff } from '../career/staff';
 
 const ALL: Stage[] = ['HS', 'NCAA', 'GL', 'EU', 'INT', 'NBA'];
 const PRO: Stage[] = ['GL', 'EU', 'INT', 'NBA'];
@@ -197,8 +198,8 @@ export const MORE_EVENTS: EventDef[] = [
     id: 'family',
     stages: ALL,
     phase: 'mid',
-    weight: 0.7,
-    cooldownSeasons: 3,
+    weight: 1.1,
+    cooldownSeasons: 2,
     title: 'Family emergency',
     text: 'Your grandmother is in the hospital back home. The team has three games this week.',
     choices: [
@@ -569,6 +570,7 @@ export const MORE_EVENTS: EventDef[] = [
           money(s, -Math.min(s.player.bank, 0.003));
           morale(s, 12);
           if (s.season) s.season.rhythm = 1.04;
+          if (canHire(s, 'psychologist')) hireStaff(s, 'psychologist'); // round 25: onto his staff
           return ok('You stop thinking. The ball starts going in.');
         },
       },
@@ -690,6 +692,7 @@ export const MORE_EVENTS: EventDef[] = [
           bump(s, 'ATH', 2);
           s.player.injuryMultNext *= 0.9;
           morale(s, -4);
+          if (canHire(s, 'nutritionist')) hireStaff(s, 'nutritionist'); // round 25: onto his staff
           return ok('No more fries. You feel lighter by October.');
         },
       },
@@ -797,8 +800,8 @@ export const MORE_EVENTS: EventDef[] = [
     stages: PAID,
     phase: 'off',
     when: (s) => s.player.bank >= 0.05,
-    weight: 0.8,
-    cooldownSeasons: 3,
+    weight: 1.2,
+    cooldownSeasons: 2,
     title: 'Investment pitch',
     text: (s) => `A friend wants ${fmtMoney(s.player.bank * 0.3)} for a startup. "Can't miss."`,
     choices: [

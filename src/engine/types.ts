@@ -142,6 +142,8 @@ export interface UserPlayer {
   nickname?: Nickname; // round 25: what the media calls him (career/nickname.ts)
   brand?: BrandDeal; // round 25: his own logo on a brand's products
   visits?: Record<string, number>; // round 25: shop id -> the season he last went (content/visits.ts)
+  staff?: StaffMember[]; // round 25: people he pays (career/staff.ts)
+  legacyBonus?: number; // round 25: legacy points from the legacy projects he funded
   wardrobe?: { owned: string[]; on: Partial<Record<import('../content/shop').WearSlot, string>> }; // round 25: accessories (shop ids); 'none' takes a slot off
 }
 
@@ -151,6 +153,16 @@ export interface Nickname {
   why: string;
   reasons: string[]; // what the picker saw in him
   year: number;
+}
+
+export interface StaffMember {
+  id: number;
+  role: import('../content/staff').StaffRole;
+  name: string;
+  level: number; // 1-3: a raise moves him up
+  since: number;
+  talked?: number; // the season he last stopped by
+  paid: number; // $M so far
 }
 
 export interface BrandDeal {
@@ -354,6 +366,7 @@ export interface Offer {
 
 export interface SeasonState {
   year: number;
+  fines?: number; // round 25: fines this season (career/fines.ts)
   level: LevelKey;
   half: 0 | 1 | 2; // halves completed
   plan: HalfPlan;
@@ -433,7 +446,7 @@ export interface EventResult {
 
 export interface Moment {
   id: number;
-  kind: 'intro' | 'commit' | 'draft' | 'title' | 'awards' | 'camp' | 'injury' | 'event' | 'tournament';
+  kind: 'intro' | 'commit' | 'draft' | 'title' | 'awards' | 'camp' | 'injury' | 'event' | 'tournament' | 'fine';
   title: string;
   text: string;
   color: string;

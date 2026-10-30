@@ -19,6 +19,7 @@ import { BodyMap } from '../components/BodyMap';
 import { RosterCard } from '../components/TeamRoster';
 import { NameCard } from '../components/NameCard';
 import { WardrobeCard } from '../components/Wardrobe';
+import { StaffCard } from '../components/StaffCard';
 import { CollectionCard } from '../components/Collection';
 import { AchievementsCard } from './Achievements';
 import { FlagArt } from '../art/Flag';
@@ -586,6 +587,7 @@ export function PlayerTab({ g }: { g: GameState }) {
             )}
           </Card>
           <NameCard g={g} />
+          <StaffCard g={g} />
           <WardrobeCard g={g} />
           <CollectionCard g={g} />
           {g.mode === 'lab' && (

@@ -61,6 +61,7 @@ export function legacyScore(s: GameState): number {
   let pts = 0;
   for (const a of s.awards) pts += awardPoints(a.key);
   pts += nbaCareerPoints(s) / LEGACY.pointsPer;
+  pts += s.player.legacyBonus ?? 0; // round 25: legacy projects
   return Math.round(pts * 10) / 10;
 }
 

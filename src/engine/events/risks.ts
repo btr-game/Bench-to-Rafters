@@ -10,6 +10,7 @@ import type { EventDef } from './defs';
 import { positionOptions, setPosition } from '../career/position';
 import { ovrOf } from '../player/ovr';
 import { NAMES } from '../../content/strings';
+import { canHire, hireStaff } from '../career/staff';
 
 /** The adjacent spot a coach would move him to: one that fits and does not cost much OVR. */
 function coachSpot(s: GameState) {
@@ -324,6 +325,8 @@ export const RISK_EVENTS: EventDef[] = [
         resolve: (s) => {
           spend(s, Math.min(s.player.bank, 0.02 + s.player.bank * 0.01));
           morale(s, 12);
+          // round 25: in a pro league she joins his staff
+          if (canHire(s, 'psychologist')) hireStaff(s, 'psychologist');
           return ok('Breathing drills, routines, and the shaking stops.', 'Started working with a sports psychologist.');
         },
       },
@@ -382,7 +385,7 @@ export const RISK_EVENTS: EventDef[] = [
     stages: PRO,
     phase: 'off',
     when: (s) => s.player.bank >= 3,
-    weight: 0.6,
+    weight: 0.9,
     cooldownSeasons: 99,
     oncePerCareer: true,
     title: 'Give back',

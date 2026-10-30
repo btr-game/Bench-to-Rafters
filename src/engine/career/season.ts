@@ -65,7 +65,7 @@ import { buildCandidates, nbaAwards, simpleAwards, type AwardOutcome } from '../
 import { playoffMvps, postseasonRecap, recordNbaYear } from '../awards/playoffs';
 import { pathOf } from './origin';
 import { NeedLive, gameRequest, nextPick, playLiveGame } from './live';
-import { adjust, conferenceRank, milestone, pushDecision, pushMoment, rankOnRoster, roleWithTrust, teamById, userOvr } from './common';
+import { adjust, conferenceRank, milestone, note, pushDecision, pushMoment, rankOnRoster, roleWithTrust, teamById, userOvr } from './common';
 import { queueMidseasonEvents } from '../events/resolver';
 import { allStarWeekend, conferenceTournament, hsNationals, mcdonaldsGame, nbaCup, nbaPreseason } from '../sim/tournaments';
 import { quickNbaSeason, warmUpNba } from './nbaYear';
@@ -77,6 +77,8 @@ import { cityHalf } from './cityCulture';
 import { duoEffect, growBonds } from './duo';
 import { NAMES } from '../../content/strings';
 import { awardNickname, payBrand } from './nickname';
+import { rollFine } from './fines';
+import { payStaff } from './staff';
 
 /** What he adds to winning beyond his OVR, scaled by his share of the game (career/team.ts). */
 const edgeFor = (a: Attrs, ovr: number, share: number, post: boolean): number => {
@@ -320,6 +322,7 @@ function makeHook(s: GameState, league: League, level: LevelKey, acc: HalfAcc, s
         addLine(acc.line, line);
         const inj = rollInjury(rng, p, plan, minutes);
         if (inj) recordInjury(p, inj, s.year);
+        rollFine(s, season, rng, opp.short);
         if (inj && (inj.key === 'major' || inj.key === 'season')) {
           pushMoment(s, {
             kind: 'injury',
@@ -804,10 +807,11 @@ function finishSeason(s: GameState): void {
   const endorse = s.stage === 'NBA' ? Math.pow(p.rep / 100, 3) * 20 : s.stage === 'NCAA' ? 0.003 + (p.rep / 100) * 0.15 : s.stage === 'EU' || s.stage === 'GL' ? (p.rep / 100) * 0.05 : 0;
   p.bank += endorse;
   p.earnings += endorse;
-  // round 25: his own deal with a brand
+  // round 25: his own deal with a brand, and his staff's pay
   const brand = payBrand(s);
   p.bank += brand;
   p.earnings += brand;
+  for (const n of payStaff(s)) note(s, n);
 
   const ovrEnd = userOvr(s);
   p.peakOvr = Math.max(p.peakOvr, ovrEnd);

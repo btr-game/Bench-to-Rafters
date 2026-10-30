@@ -1801,3 +1801,19 @@ td .art-team { display: inline-block; vertical-align: middle; margin: -3px 8px -
   .save-row { grid-template-columns: 1fr; }
   .save-actions { justify-content: flex-start; }
 }
+
+/* round 25: his staff (Player tab) */
+.staff-list { display: grid; gap: 10px; }
+.staff-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-left: 6px solid var(--accent);
+  border-radius: 8px;
+}
+.staff-who { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.staff-who b { font-family: var(--f-display); font-weight: 800; font-size: 22px; letter-spacing: 0.02em; }
+.staff-said { font-style: italic; margin-top: 4px; }
+.staff-actions { gap: 8px; flex-wrap: wrap; }

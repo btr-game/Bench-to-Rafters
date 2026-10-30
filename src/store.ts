@@ -2,7 +2,7 @@
 // on a structured clone and swaps it in; React sees a new object each time.
 
 import { dailyInput, dailySeed, todayKey } from './engine/mini/daily';
-import { fastForward, setFast } from './engine/fast';
+import { fastForward, setFast, setSim } from './engine/fast';
 import { requestTrade } from './engine/career/team';
 import { recruitPlayer, takePayCut } from './engine/career/recruit';
 import { canClaimMini, claimMini, type MiniResult } from './engine/career/miniBonus';
@@ -13,6 +13,7 @@ import { seasonLabel } from './ui/format';
 import { tabKey } from './ui/selectors';
 import { weightOf } from './engine/player/weight';
 import { visitItem, wearItem } from './engine/economy/shop';
+import { letGo, raiseStaff, talkStaff } from './engine/career/staff';
 import type { WearSlot } from './content/shop';
 import { careerRecord } from './engine/career/record';
 import { logCareer, type LogResult } from './ui/careerLog';
@@ -46,12 +47,14 @@ interface Store {
   changePosition: (pos: Pos) => void;
   togglePlayoffs: () => void;
   toggleFast: () => void;
+  toggleSim: () => void;
   requestTrade: (aim?: import('./engine/career/team').TradeAim) => void;
   /** Runs an engine change on a copy of the game (round 13: one action instead of one per feature). */
   mutate: (fn: (g: GameState) => void) => void;
   changeNumber: (n: number) => void;
   wear: (slot: WearSlot, id: string | null) => void;
   visit: (id: string) => string | null;
+  staffAct: (id: number, act: 'talk' | 'raise' | 'go') => string | null;
   changeFocus: (keys: AttrKey[]) => void;
   labSpend: (k: AttrKey, points: number) => void;
   recruit: (id: number) => void;
@@ -317,6 +320,14 @@ export const useStore = create<Store>((set, get) => ({
     if (text) set({ game: next });
     return text;
   },
+  staffAct: (id, act) => {
+    const g = get().game;
+    if (!g) return null;
+    const next = structuredClone(g);
+    const text = act === 'talk' ? talkStaff(next, id) : act === 'raise' ? (raiseStaff(next, id) ? 'raised' : null) : (letGo(next, id), 'gone');
+    if (text) set({ game: next });
+    return text;
+  },
   requestTrade: (aim) => {
     const g = get().game;
     if (!g) return;
@@ -337,6 +348,13 @@ export const useStore = create<Store>((set, get) => ({
     if (!g || g.flags.daily) return;
     const next = structuredClone(g);
     setFast(next, !next.flags.fast);
+    set({ game: next, transition: null });
+  },
+  toggleSim: () => {
+    const g = get().game;
+    if (!g || g.flags.daily || g.mode === 'lab') return;
+    const next = structuredClone(g);
+    setSim(next, !next.flags.sim);
     set({ game: next, transition: null });
   },
   togglePlayoffs: () => {

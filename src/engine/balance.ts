@@ -535,6 +535,15 @@ export const CAREER_INDEX = { stretch: 5, ovrFloor: 60, ovrPer: 10 };
 export const NICKNAME = { rep: 55, noise: 0.2 };
 // round 25: a visit to something he owns (content/visits.ts), once a season each
 export const VISIT = { morale: 2 };
+// round 25: personal staff (career/staff.ts). Pay and benefit by level (a raise moves him up one);
+// benefits a season at level 1, times `effect[level - 1]`; a talk once a season lifts morale.
+// round 25: a legacy project funded in an event (events/round25.ts) adds legacy points
+export const LEGACY_PROJECT = { points: 3 };
+export const STAFF_PAY = { pay: [1, 1.7, 2.6], effect: [1, 1.5, 2], talk: 1, afford: 4, max: 6 };
+// round 25: fines, rolled like injuries, game by game in a pro league. `perGame` is the chance a
+// game; low morale and a big name make it likelier; at most `maxSeason` a season. Amounts in $M
+// for the NBA (times `abroad` in the other leagues).
+export const FINES = { perGame: 0.0022, lowMorale: 1.8, star: 1.4, maxSeason: 2, abroad: 0.15 };
 export const BRAND = { brandRep: 70, renewRep: 60, shoeRep: 85, deal: { years: 4, share: 0.04 }, line: { years: 6, base: 0.015, royalty: 0.06 }, rep: 1, morale: 2 };
 
 // round 15: a veteran can become a ring chaser (career/ringChase.ts) instead of retiring

@@ -1478,3 +1478,28 @@ Reached from the start page and from the bottom of Home (a career in progress is
   oldest, and the page says which. Code shows the whole career as text (copied to the clipboard
   where the browser allows), and the import box on any other browser turns it back into a
   career in a new slot. The old single save moves into a slot the first time the page opens.
+- **Staff** (the owner: when a hire comes up in an event and he says yes, the person joins a
+  staff group on the Player tab, gets paid every season for very small benefits, can be talked to
+  and given a raise). Nine roles (content/staff.ts): personal chef, nutritionist, strength
+  trainer, physiotherapist, shooting coach, skills coach, sports psychologist, video analyst and
+  sleep coach, from $80K to $300K a season at level 1. New hire events offer each one in a pro
+  league (at most six on the staff, and a bank that can pay four seasons); the old events with a
+  nutritionist or a sports psychologist now add them too. Each season, everyone is paid from the
+  bank (whoever cannot be paid leaves) and does his small part: +0.3 to a rating, a little range
+  or weak hand, a nudge toward the playing weight, a little less injury or aging, a little morale.
+  A raise moves him up a level (pay x1.7 and x2.6, help x1.5 and x2). Stopping by once a season
+  gets a line from him and +1 morale. Over 400 harness careers: 1.695 hires a career, 82.75% of
+  careers hire someone.
+- **Fines** (the owner: like an injury, a page saying how much). In a pro league each game he
+  plays can bring one (0.22% a game, x1.8 with low morale, x1.4 for a star; at most two a
+  season): a technical, a flagrant, criticising the referees, a missed media session, a late bus,
+  a uniform violation, the ball into the stands. NBA amounts from $2K to $100K, 15% of that
+  abroad. The money comes out of the bank and a "Fined" page shows. Over 400 careers: 2.2625
+  fines a career, $51.80K in all on average.
+- **Money events, more often** (the owner: family requests, investments and legacy projects,
+  more prevalent). The old family emergency, investment pitch and foundation events come up more
+  (weights 0.7 to 1.1, 0.8 to 1.2, 0.6 to 0.9; their storylines 0.45 to 0.65). New: a sister's
+  tuition, a cousin's car wash, retiring the parents, a loan for an old friend; an apartment
+  building, a restaurant chain, a sneaker startup (shown odds); and three legacy projects for a
+  big bank (a practice facility for the old school, the national team, a Hall of Fame wing), each
+  +3 legacy points, reputation and morale. 22.25% of careers fund one.
