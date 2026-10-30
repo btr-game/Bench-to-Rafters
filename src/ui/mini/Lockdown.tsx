@@ -558,7 +558,7 @@ export function LockdownGame() {
           </p>
         </div>
         <div className="ld-intro-row">
-          {me && <PlayerArt name={me.name} number={me.number} pos="PG" size={96} noBall />}
+          {me && <PlayerArt name={me.name} number={me.number} pos="PG" size={96} noBall wear={me.wardrobe?.on} />}
           <div className="ld-keys">
             <span>
               <span className="kbd">A</span> Block

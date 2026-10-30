@@ -216,7 +216,7 @@ export function ThreesGame() {
           <div className="plans">
             {pool.map((s) => (
               <button key={s.name} className="choice shooter-choice" onClick={() => start(s)}>
-                {s.me && game ? <PlayerArt name={s.name} number={game.player.number} pos="SF" kitData={kitOf(s, game)} size={84} /> : <LegendBust name={s.name} team={s.team} kit="road" size={84} />}
+                {s.me && game ? <PlayerArt name={s.name} number={game.player.number} pos="SF" kitData={kitOf(s, game)} size={84} wear={game.player.wardrobe?.on} /> : <LegendBust name={s.name} team={s.team} kit="road" size={84} />}
                 <span className="label">{s.me ? `${s.name} (your player)` : s.name}</span>
                 <small>{s.skill >= 95 ? 'Elite stroke: a wide green zone' : s.skill >= 90 ? 'Pure shooter' : s.skill >= 80 ? 'Good shooter' : 'Streaky: a narrow green zone'}</small>
               </button>

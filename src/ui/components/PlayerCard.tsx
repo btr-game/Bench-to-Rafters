@@ -47,7 +47,7 @@ export function PlayerCard({ g, compact = false }: { g: GameState; compact?: boo
   return (
     <section className="card pc">
       <div className="pc-head">
-        <PlayerArt name={p.name} number={p.number} pos={p.pos} color={t?.color} team={t?.name} abbr={t?.abbr} league={styleLeague(g.stage)} kit="road" size={92} />
+        <PlayerArt name={p.name} number={p.number} pos={p.pos} color={t?.color} team={t?.name} abbr={t?.abbr} league={styleLeague(g.stage)} kit="road" size={92} wear={p.wardrobe?.on} />
         <div className="ovr" aria-label={`Overall ${Math.round(ovr(g))}`}>
           <b>{Math.round(ovr(g))}</b>
           <small>OVR</small>

@@ -10,6 +10,7 @@
 
 import type { Kit } from '../../content/teamStyle';
 import type { Face, Hair } from '../../content/legendLooks';
+import type { WearSlot } from '../../content/shop';
 import { mix } from './color';
 import { DIGITS, dark, light, type Pt } from './pixel';
 
@@ -28,6 +29,7 @@ export interface Look {
   face: Face;
   gear: string[]; // headband, goggles, sleeve, unibrow, wristband
   shoe: string;
+  colors?: Partial<Record<WearSlot, string>>; // round 25: bought accessories in their colours (legs: the socks)
 }
 
 const OUT = '#1B1820';
@@ -287,7 +289,7 @@ export function paint(p: Pose, kit: Kit, look: Look, number: number): string[][]
   const white = (c: string) => c.toUpperCase() === '#FFFFFF' || c.toUpperCase() === '#F4F4F4';
   const shadeOf = (c: string) => (white(c) ? '#D5DAE3' : dark(c, 0.16));
   const skin = look.skin;
-  const sleeve = white(kit.base) ? '#2A2D34' : '#F4F4F4';
+  const sleeve = look.colors?.arm ?? (white(kit.base) ? '#2A2D34' : '#F4F4F4');
   const hasSleeve = look.gear.includes('sleeve');
   const sole = white(look.shoe) ? '#9AA2B0' : '#F4F4F4';
   const pal: Record<string, string> = {
@@ -306,7 +308,7 @@ export function paint(p: Pose, kit: Kit, look: Look, number: number): string[][]
     P: kit.base,
     p: shadeOf(kit.base),
     R: kit.trim,
-    W: '#F4F4F4',
+    W: look.colors?.legs ?? '#F4F4F4',
     F: look.shoe,
     f: sole,
     B: '#E8782A',
@@ -314,8 +316,8 @@ export function paint(p: Pose, kit: Kit, look: Look, number: number): string[][]
     L: '#6A3416',
     Q: hasSleeve ? sleeve : skin,
     q: hasSleeve ? shadeOf(sleeve) : dark(skin, 0.16),
-    w: look.gear.includes('wristband') ? '#F4F4F4' : skin,
-    A: white(kit.base) ? kit.ink : '#F4F4F4',
+    w: look.gear.includes('wristband') ? (look.colors?.wrist ?? '#F4F4F4') : skin,
+    A: look.colors?.head ?? (white(kit.base) ? kit.ink : '#F4F4F4'),
     G: '#2A2D34',
     g: '#BFE3F0',
     o: 'rgba(0,0,0,0.16)',

@@ -5,6 +5,7 @@ import { toPaths } from './pixel';
 import type { Pos } from '../../engine/types';
 import type { LegendLook } from '../../content/legendLooks';
 import { lookTraits } from '../../content/looks';
+import { SHOP_ITEMS, type WearSlot } from '../../content/shop';
 import { DRIBBLE, DUNK, JUMPER, LOWDRIBBLE, TRIPLE, noBall as withoutBall, paint, type Look, type Pose } from './sprite';
 
 // The player, as a pixel-art sprite in his team's kit (round 17). His look (skin, hair, a
@@ -26,9 +27,30 @@ const POSES = { PG: LOWDRIBBLE, SG: DRIBBLE, SF: JUMPER, PF: TRIPLE, C: DUNK };
 const poseFor = (pos?: Pos): Pose => POSES[pos ?? 'SG'];
 
 /** How a player looks: a legend as he really did (content/legendLooks.ts), anyone else from his name. */
-export function lookOf(name: string, shoe: string): Look {
+export function lookOf(name: string, shoe: string, wear?: Wear): Look {
   const t = lookTraits(name);
-  return { skin: SKINS[t.skin], hair: HAIRS[t.hair], style: t.style, face: t.face, gear: t.gear, shoe };
+  return withWear({ skin: SKINS[t.skin], hair: HAIRS[t.hair], style: t.style, face: t.face, gear: t.gear, shoe }, wear);
+}
+
+/** What he has on from the wardrobe (round 25): slot -> shop id, or 'none' to take it off. */
+export type Wear = Partial<Record<WearSlot, string>>;
+const GEAR_OF: Record<WearSlot, string | null> = { head: 'headband', arm: 'sleeve', wrist: 'wristband', legs: null };
+
+/** His own look with the wardrobe on top: bought accessories in their colours, or slots taken off. */
+function withWear(look: Look, wear?: Wear): Look {
+  if (!wear) return look;
+  const gear = new Set(look.gear);
+  const colors: Look['colors'] = {};
+  for (const slot of Object.keys(wear) as WearSlot[]) {
+    const g = GEAR_OF[slot];
+    const it = SHOP_ITEMS.find((i) => i.id === wear[slot])?.wear;
+    if (g) {
+      if (it) gear.add(g);
+      else gear.delete(g);
+    }
+    if (it) colors[slot] = it.color;
+  }
+  return { ...look, gear: [...gear], colors };
 }
 
 /** The kit a team wears: its own for NBA clubs, one built from its colour for everyone else. */
@@ -39,14 +61,14 @@ export function kitFor(teamName: string, abbr: string, color: string, which: Kit
   return leagueKits(league, color, teamName, parent && TEAM_STYLE[parent.abbr])[which];
 }
 
-export function PlayerArt({ name, number, pos, color = '#2A2F36', team = '', abbr = '', kit = 'home', league, kitData, size = 96, noBall = false }: { name: string; number: number; pos?: Pos; color?: string; team?: string; abbr?: string; kit?: KitName; league?: KitLeague; kitData?: Kit; size?: number; noBall?: boolean }) {
+export function PlayerArt({ name, number, pos, color = '#2A2F36', team = '', abbr = '', kit = 'home', league, kitData, size = 96, noBall = false, wear }: { name: string; number: number; pos?: Pos; color?: string; team?: string; abbr?: string; kit?: KitName; league?: KitLeague; kitData?: Kit; size?: number; noBall?: boolean; wear?: Wear }) {
   // round 24: streetball draws one ball of its own, so its players hold none
   const pose = useMemo(() => (noBall ? withoutBall(poseFor(pos)) : poseFor(pos)), [pos, noBall]);
   const paths = useMemo(() => {
     const k = kitData ?? kitFor(team, abbr, color, kit, league);
     const shoe = kit === 'home' ? '#F2F2F2' === k.base ? k.ink : k.trim : k.base === '#FFFFFF' ? k.ink : k.base;
-    return toPaths(paint(pose, k, lookOf(name, shoe), number));
-  }, [pose, name, number, color, team, abbr, kit, league, kitData]);
+    return toPaths(paint(pose, k, lookOf(name, shoe, wear), number));
+  }, [pose, name, number, color, team, abbr, kit, league, kitData, wear]);
   return (
     <svg xmlns="http://www.w3.org/2000/svg" className="art art-player" data-art="player-sprite" width={(size * pose.w) / pose.h} height={size} viewBox={`0 0 ${pose.w} ${pose.h}`} shapeRendering="crispEdges" role="img" aria-label={`${name}, number ${number}`}>
       {paths.map((p) => (

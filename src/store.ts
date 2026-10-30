@@ -12,6 +12,8 @@ import { advance as engineAdvance, changeFocus, changeNumber, changePosition, ch
 import { seasonLabel } from './ui/format';
 import { tabKey } from './ui/selectors';
 import { weightOf } from './engine/player/weight';
+import { wearItem } from './engine/economy/shop';
+import type { WearSlot } from './content/shop';
 import { careerRecord } from './engine/career/record';
 import { logCareer, type LogResult } from './ui/careerLog';
 import { checkAch, countCareer } from './ui/achievements';
@@ -47,6 +49,7 @@ interface Store {
   /** Runs an engine change on a copy of the game (round 13: one action instead of one per feature). */
   mutate: (fn: (g: GameState) => void) => void;
   changeNumber: (n: number) => void;
+  wear: (slot: WearSlot, id: string | null) => void;
   changeFocus: (keys: AttrKey[]) => void;
   labSpend: (k: AttrKey, points: number) => void;
   recruit: (id: number) => void;
@@ -315,6 +318,13 @@ export const useStore = create<Store>((set, get) => ({
     if (!g) return;
     const next = structuredClone(g);
     changeNumber(next, n);
+    set({ game: next });
+  },
+  wear: (slot, id) => {
+    const g = get().game;
+    if (!g) return;
+    const next = structuredClone(g);
+    wearItem(next, slot, id);
     set({ game: next });
   },
   requestTrade: (aim) => {

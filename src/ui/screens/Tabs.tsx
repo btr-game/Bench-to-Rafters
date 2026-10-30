@@ -18,6 +18,7 @@ import { fanCultureOf } from '../../engine/career/fanCulture';
 import { BodyMap } from '../components/BodyMap';
 import { RosterCard } from '../components/TeamRoster';
 import { NameCard } from '../components/NameCard';
+import { WardrobeCard } from '../components/Wardrobe';
 import { AchievementsCard } from './Achievements';
 import { FlagArt } from '../art/Flag';
 import type { GameLog, GameState, League, SeasonRecord, SeriesResult, StatLine, Team } from '../../engine/types';
@@ -507,7 +508,7 @@ export function PlayerTab({ g }: { g: GameState }) {
           g.mode === 'lab' ? (
             <EvolutionArt ovr={now} name={p.name} number={p.number} kit={kitFor(t?.name ?? '', t?.abbr ?? '', t?.color ?? '#1C7ED6', kit, styleLeague(g.stage))} size={150} track={false} />
           ) : (
-            <PlayerArt name={p.name} number={p.number} pos={p.pos} color={t?.color} team={t?.name} abbr={t?.abbr} league={styleLeague(g.stage)} kit={kit} size={150} />
+            <PlayerArt name={p.name} number={p.number} pos={p.pos} color={t?.color} team={t?.name} abbr={t?.abbr} league={styleLeague(g.stage)} kit={kit} size={150} wear={p.wardrobe?.on} />
           )
         }
         color={t?.color}
@@ -584,6 +585,7 @@ export function PlayerTab({ g }: { g: GameState }) {
             )}
           </Card>
           <NameCard g={g} />
+          <WardrobeCard g={g} />
           {g.mode === 'lab' && (
             <Card title="Evolution">
               <EvolutionArt ovr={now} name={p.name} number={p.number} kit={{ base: t?.color ?? '#1C7ED6', ink: '#FFFFFF', trim: '#F4F4F4', word: '' }} size={130} />
@@ -908,7 +910,7 @@ export function RecordsTab({ g }: { g: GameState }) {
         arena={arenaOf(g)}
         place={placeOf(g)}
         stripe={trimOf(g)}
-        art={<PlayerArt name={g.player.name} number={g.player.number} pos={g.player.pos} color={t?.color} team={t?.name} abbr={t?.abbr} league={styleLeague(g.stage)} size={120} />}
+        art={<PlayerArt name={g.player.name} number={g.player.number} pos={g.player.pos} color={t?.color} team={t?.name} abbr={t?.abbr} league={styleLeague(g.stage)} size={120} wear={g.player.wardrobe?.on} />}
         color={t?.color}
         kicker={`${g.history.length} season${g.history.length === 1 ? '' : 's'} · legacy score ${legacyScore(g)}`}
         title={`${g.player.name}: the career`}

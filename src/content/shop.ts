@@ -3,7 +3,10 @@
 
 import type { AttrKey } from '../engine/types';
 
-export type ShopCategory = 'Shoes' | 'Gear' | 'Training' | 'Recovery' | 'Lifestyle';
+export type ShopCategory = 'Shoes' | 'Gear' | 'Training' | 'Recovery' | 'Lifestyle' | 'Accessories';
+
+/** Where an accessory goes on the player (round 25: drawn on his sprite, changed in the wardrobe). */
+export type WearSlot = 'head' | 'arm' | 'wrist' | 'legs';
 
 export interface ShopItem {
   id: string;
@@ -23,9 +26,44 @@ export interface ShopItem {
   trust?: number;
   weight?: number; // lb on (or off)
   toIdeal?: number; // share of the way to his best playing weight
+  wear?: { slot: WearSlot; color: string }; // an accessory: he wears it
 }
 
 const K = 0.001; // $1K in $M
+
+// round 25: accessories (the owner: headbands, shooting sleeves, leg warmers in many colours,
+// with very little effect, worn on the avatar). Every slot comes in ten colours.
+const WEAR_COLORS: [string, string][] = [
+  ['Red', '#E03131'],
+  ['Royal blue', '#1C7ED6'],
+  ['Black', '#2A2D34'],
+  ['White', '#F4F4F4'],
+  ['Gold', '#FCC419'],
+  ['Green', '#2F9E44'],
+  ['Purple', '#7048E8'],
+  ['Pink', '#F06595'],
+  ['Orange', '#F76707'],
+  ['Teal', '#12B886'],
+];
+const WEAR_KINDS: { slot: WearSlot; name: string; price: number; blurb: string; fx: Partial<ShopItem> }[] = [
+  { slot: 'head', name: 'headband', price: 0.025 * K, blurb: 'Keeps the sweat out of your eyes, and looks the part.', fx: { morale: 1 } },
+  { slot: 'arm', name: 'shooting sleeve', price: 0.04 * K, blurb: 'Warm elbow, same release every time.', fx: { attrs: { SHT: 0.2 } } },
+  { slot: 'wrist', name: 'wristbands', price: 0.015 * K, blurb: 'Dry hands on the ball.', fx: { attrs: { PLY: 0.2 } } },
+  { slot: 'legs', name: 'leg sleeves', price: 0.06 * K, blurb: 'Warm calves, a little less strain.', fx: { injuryMult: 0.995 } },
+];
+function accessories(): ShopItem[] {
+  return WEAR_KINDS.flatMap((k) =>
+    WEAR_COLORS.map(([cname, color]) => ({
+      id: `wear-${k.slot}-${cname.toLowerCase().replace(/ /g, '-')}`,
+      name: `${cname} ${k.name}`,
+      category: 'Accessories' as const,
+      price: k.price,
+      blurb: k.blurb,
+      ...k.fx,
+      wear: { slot: k.slot, color },
+    })),
+  );
+}
 
 export const SHOP_ITEMS: ShopItem[] = [
   // shoes
@@ -195,4 +233,5 @@ export const SHOP_ITEMS: ShopItem[] = [
   { id: 'island-resort', name: 'A resort on your own island', category: 'Lifestyle', price: 200000 * K, blurb: 'The whole team spends the summer there. Chemistry follows.', morale: 15, rep: 6, trust: 4 },
   { id: 'nba-stake', name: 'Minority stake in an NBA team', category: 'Lifestyle', price: 300000 * K, blurb: 'A seat in the owners\u2019 meetings while you still play.', rep: 15, morale: 6 },
   { id: 'sneaker-buyout', name: 'Buy your sneaker company', category: 'Lifestyle', price: 400000 * K, blurb: 'The logo, the factories, the lot.', rep: 18, morale: 8 },
+  ...accessories(),
 ];

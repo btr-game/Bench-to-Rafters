@@ -3,7 +3,7 @@
 import { ATTR_MAX, ATTRS, LONGEVITY, WEAR } from '../balance';
 import { clamp, shuffle, weightedIndex } from '../rng';
 import type { Decision, GameState } from '../types';
-import { SHOP_ITEMS, type ShopItem } from '../../content/shop';
+import { SHOP_ITEMS, type ShopItem, type WearSlot } from '../../content/shop';
 import { logDecision, pushDecision } from '../career/common';
 import { fmtMoney } from './salary';
 import { changeWeight, idealWeight, weightOf } from '../player/weight';
@@ -44,20 +44,26 @@ export function describeItem(it: ShopItem): string {
 /**
  * About six things, different every summer (round 8): five he can afford, drawn at random
  * with things worth his money weighted up (a rich player rarely sees the $40 sleeve; round 25: a
- * thing costing 1% of his bank or more comes up most), and one to save up for.
+ * thing costing 1% of his bank or more comes up most), and one to save up for; one from each
+ * shelf at most (round 25).
  */
 function stock(s: GameState): string[] {
   const bank = s.player.bank;
   const bought = new Set(s.purchases);
-  const affordable = SHOP_ITEMS.filter((i) => i.price <= bank);
+  // an accessory is kept in the wardrobe, so it is never sold twice
+  const owned = new Set(s.player.wardrobe?.owned ?? []);
+  const forSale = SHOP_ITEMS.filter((i) => !(i.wear && owned.has(i.id)));
   const weight = (i: ShopItem) => (i.price >= bank * 0.01 ? 1.5 : i.price >= bank * 0.002 ? 1 : 0.2) * (bought.has(i.id) ? 0.5 : 1);
+  // round 25 (the owner): never two things from the same shelf in one visit
   const picks: ShopItem[] = [];
-  const pool = [...affordable];
+  let pool = forSale.filter((i) => i.price <= bank);
   while (picks.length < STOCK.afford && pool.length > 0) {
-    const i = weightedIndex(s.rng, pool.map(weight));
-    picks.push(pool.splice(i, 1)[0]);
+    const it = pool[weightedIndex(s.rng, pool.map(weight))];
+    picks.push(it);
+    pool = pool.filter((x) => x.category !== it.category);
   }
-  const dream = shuffle(s.rng, SHOP_ITEMS.filter((i) => i.price > bank && i.price < Math.max(0.002, bank * 40)));
+  const shelves = new Set(picks.map((i) => i.category));
+  const dream = shuffle(s.rng, forSale.filter((i) => i.price > bank && i.price < Math.max(0.002, bank * 40) && !shelves.has(i.category)));
   return [...picks, ...dream].slice(0, STOCK.size).sort((a, b) => a.price - b.price).map((i) => i.id);
 }
 
@@ -104,6 +110,19 @@ export function applyItem(s: GameState, it: ShopItem): void {
   if (it.weight) changeWeight(p, it.weight, 0.3);
   if (it.toIdeal) changeWeight(p, (idealWeight(p.height, p.age) - weightOf(p)) * it.toIdeal, 0.25);
   if (!s.purchases.includes(it.id)) s.purchases.push(it.id);
+  // an accessory goes into the wardrobe and on, right away
+  if (it.wear) {
+    const w = (p.wardrobe ??= { owned: [], on: {} });
+    if (!w.owned.includes(it.id)) w.owned.push(it.id);
+    w.on[it.wear.slot] = it.id;
+  }
+}
+
+/** Put on an accessory he owns, or take a slot off ('none'), or go back to his own look (null). */
+export function wearItem(s: GameState, slot: WearSlot, id: string | null): void {
+  const w = (s.player.wardrobe ??= { owned: [], on: {} });
+  if (id === null) delete w.on[slot];
+  else if (id === 'none' || w.owned.includes(id)) w.on[slot] = id;
 }
 
 /** Returns the outcome text. */

@@ -1453,3 +1453,12 @@ Reached from the start page and from the bottom of Home (a career in progress is
   mountain, cloud, drop, feather, key, knight, hook, lighthouse, bolt, hammer, owl, snake, shark,
   comet, anchor, wolf, crown). The look traits moved from the sprite code to content/looks.ts so
   the engine can read them.
+- **Accessories and the wardrobe** (the owner: headbands, shooting sleeves, leg warmers in many
+  colours, very little effect, drawn on the avatar, a wardrobe to switch or take them off, and
+  never two things from one shelf in a shop). A new Accessories shelf: headbands (+1 morale),
+  shooting sleeves (+0.2 shooting), wristbands (+0.2 playmaking) and leg sleeves (0.5% fewer
+  injuries next season), each in ten colours, from $15 to $60. A bought accessory goes into the
+  wardrobe and on at once and is never offered again. The Player tab's wardrobe shows him
+  dressed, with a swatch per accessory he owns, "None" to take a slot off and "Own look" to go
+  back to the look his name gives him. His sprite wears them everywhere he appears. Every shop
+  visit now shows at most one item per shelf (six shelves, six items).
