@@ -59,6 +59,18 @@ export function activeDuo(s: GameState): Bond | null {
   return (s.bonds ?? []).find((b) => b.formed !== undefined && t.roster.some((x) => x.id === b.id)) ?? null;
 }
 
+/**
+ * A moment that pulls him closer to (or away from) the teammates he recruited who have not become
+ * a duo yet. Returns the closest one, for the event's text; the bond itself stays hidden.
+ */
+export function nudgeBonds(s: GameState, v: number): Bond | null {
+  const t = teamById(s.nba, s.teamId);
+  if (s.stage !== 'NBA' || !t) return null;
+  const open = (s.bonds ?? []).filter((b) => b.formed === undefined && t.roster.some((x) => x.id === b.id));
+  for (const b of open) b.bond = clamp(b.bond + v, 0, 99);
+  return open.sort((a, b) => b.bond - a.bond)[0] ?? null;
+}
+
 /** How far along a duo is: 0.6 the season it forms, 1 three seasons later. */
 export const duoLevel = (s: GameState, b: Bond): number => clamp(DUO.start + (s.year - (b.formed ?? s.year)) * DUO.perSeason, DUO.start, 1);
 

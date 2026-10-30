@@ -27,6 +27,7 @@ interface Snap {
   injuryDays: number;
   suspend: number;
   wear: number;
+  chem: number;
 }
 
 export function snap(s: GameState): Snap {
@@ -48,6 +49,7 @@ export function snap(s: GameState): Snap {
     injuryDays: p.injury?.daysOut ?? 0,
     suspend: s.flags.suspendGames ?? 0,
     wear: p.wear ?? 0,
+    chem: s.season?.teamBonus ?? 0,
   };
 }
 
@@ -71,6 +73,7 @@ export function vary(s: GameState, before: Snap, good?: number, bad?: number): n
   p.range = scale(before.range, p.range, 0, 99);
   p.offhand = scale(before.offhand, p.offhand, 0, 99);
   p.wear = scale(before.wear, p.wear ?? 0, 0, 100, false);
+  if (s.season && (s.season.teamBonus ?? 0) !== before.chem) s.season.teamBonus = Math.round(scale(before.chem, s.season.teamBonus ?? 0, -20, 20) * 10) / 10;
   // pounds toward his best playing weight are the good kind
   const w = weightOf(p);
   if (w !== before.weight) {
@@ -111,6 +114,7 @@ export function changes(s: GameState, before: Snap): EventResult['changes'] {
   num('Range', p.range - before.range);
   num('Weak hand', p.offhand - before.offhand);
   num('Body wear', (p.wear ?? 0) - before.wear, false);
+  num('Team chemistry', (s.season?.teamBonus ?? 0) - before.chem, true, 1);
   const lb = weightOf(p) - before.weight;
   if (lb !== 0) {
     const ideal = idealWeight(p.height, p.age);

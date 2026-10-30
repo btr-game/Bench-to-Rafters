@@ -1208,3 +1208,23 @@ Reached from the start page and from the bottom of Home (a career in progress is
   pixels each level. The same art shows in the mini-game and in a Built in a lab career (the
   Player tab's banner and an Evolution card). A track shows every level, the art flashes when he
   moves up.
+
+## Round 21: the event renovation
+
+- **Audit first.** Every choice of all 129 events was played on sampled careers and the changes
+  counted. About 35 events outside the multi-step storylines moved one or two numbers, and many
+  "no" choices did nothing. Two pairs of events shared an id (`mentor`, `grades`), so the second
+  of each always resolved as the first; they are now `legendCalls` and `classGrades`, and a test
+  keeps ids unique.
+- **Ripples** (`events/ripples.ts`). Instead of rewriting each event, a table adds what else a
+  choice sets in motion, by event id and choice label: weight, body wear, injury risk, team
+  chemistry, development next season, money, and quietly the bond with recruited teammates
+  (`nudgeBonds` in `career/duo.ts`, capped below a duo so only seasons together form one). The
+  resolver runs the ripple straight after the choice, so the roll for how it turned out scales
+  both. "No" choices got a small upside (rest, mood). Team chemistry now shows on the result card
+  and is scaled by the roll like everything else.
+- **New events** (`events/round21.ts`, 12): the combine weigh-in, a growth spurt, coming back
+  lighter after a long injury, a veteran's body, the team chef, long arms, a late-night
+  shootaround with a recruited teammate, the duo's last shot, keeping the duo together at
+  contract time, grumbling while on Spotlight, the coach noticing Team first, and a young star
+  asking a ring chaser for help.

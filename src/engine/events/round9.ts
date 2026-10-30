@@ -217,7 +217,7 @@ export const ROUND9_EVENTS: EventDef[] = [
     ],
   },
   {
-    id: 'grades',
+    id: 'classGrades',
     stages: YOUNG,
     phase: 'mid',
     weight: 0.9,

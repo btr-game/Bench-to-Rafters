@@ -12,12 +12,14 @@ import { ROUND9_EVENTS } from './round9';
 import { ROUND13_EVENTS } from './round13';
 import { ROUND15_EVENTS } from './round15';
 import { WEIGHT_EVENTS } from './weightEvents';
+import { ROUND21_EVENTS } from './round21';
+import { ripple } from './ripples';
 import { fitOf, needs } from './director';
 import { syncWeight } from '../player/weight';
 import { changes, snap, vary } from './outcome';
 import { rollTier, tierFactors, tierLine, TIERS, twists, type Tier } from './twists';
 
-const EVENTS: EventDef[] = [...BASE_EVENTS, ...MORE_EVENTS, ...RISK_EVENTS, ...GROWTH_EVENTS, ...SKILL_EVENTS, ...ARC_EVENTS, ...ROUND9_EVENTS, ...ROUND13_EVENTS, ...ROUND15_EVENTS, ...WEIGHT_EVENTS];
+const EVENTS: EventDef[] = [...BASE_EVENTS, ...MORE_EVENTS, ...RISK_EVENTS, ...GROWTH_EVENTS, ...SKILL_EVENTS, ...ARC_EVENTS, ...ROUND9_EVENTS, ...ROUND13_EVENTS, ...ROUND15_EVENTS, ...WEIGHT_EVENTS, ...ROUND21_EVENTS];
 
 function eligible(s: GameState, phase: 'mid' | 'off'): EventDef[] {
   return EVENTS.filter((e) => {
@@ -87,6 +89,9 @@ export function resolveEvent(s: GameState, d: Decision, choiceId: string): strin
   if (!c) return '';
   const before = snap(s);
   const res = c.resolve(s, s.rng);
+  // what else the choice sets in motion (events/ripples.ts)
+  const more = ripple(s, s.rng, e.id, c.label);
+  if (more) res.outcome = `${res.outcome} ${more}`;
   // how it turns out is rolled every time: from a breakthrough to a backfire, often with a twist
   const first = changes(s, before);
   const did = first.length > 0;

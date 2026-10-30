@@ -291,7 +291,7 @@ describe('round 6 mechanics', () => {
     for (let i = 0; i < 12; i++) {
       const s = newGame(300 + i, { name: 'X', number: 1, pos: 'SG', archetype: 0, focus: ['SHT', 'IQ'] });
       const before = s.player.morale;
-      s.pending.unshift({ id: 'e', kind: 'event', title: 'Captaincy offer', text: '', choices: [{ id: '0', label: 'x' }], data: { eventId: 'mentor' } });
+      s.pending.unshift({ id: 'e', kind: 'event', title: 'Captaincy offer', text: '', choices: [{ id: '0', label: 'x' }], data: { eventId: 'legendCalls' } });
       s.pending[0].choices = [{ id: '0', label: 'Spend the summer learning from him' }];
       choose(s, '0');
       sizes.add((s.player.morale - before).toFixed(0) + '/' + s.player.growthRate.toFixed(3));

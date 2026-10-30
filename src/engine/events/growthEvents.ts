@@ -19,7 +19,7 @@ const ok = (outcome: string, log?: string) => ({ outcome, log });
 
 export const GROWTH_EVENTS: EventDef[] = [
   {
-    id: 'mentor',
+    id: 'legendCalls',
     stages: ALL,
     phase: 'off',
     weight: 0.6,
