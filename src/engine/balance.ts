@@ -701,7 +701,7 @@ export const STARTERS_RECRUIT = { capShare: 1, match: 1.25, moves: 2, asks: 3, c
 // noise); at 100 they are a duo. A duo starts at `start` strength and adds `perSeason` a
 // season up to 1: team strength + team, his efficiency x(1 + perf), assists x(1 + ast) and
 // shots x(1 + usage), all times that strength.
-export const DUO = { realChance: 0.25, real: [0.65, 1] as [number, number], plain: [0.05, 0.3] as [number, number], fit: 0.1, grow: 55, winW: 30, trustW: 0.2, sd: 8, start: 0.6, perSeason: 0.15, team: 1.2, perf: 0.035, ast: 0.12, usage: 0.04, stay: 3 };
+export const DUO = { realChance: 0.25, real: [0.65, 1] as [number, number], plain: [0.05, 0.3] as [number, number], fit: 0.1, grow: 55, winW: 30, trustW: 0.2, sd: 8, start: 0.6, perSeason: 0.15, team: 1.2, perf: 0.035, ast: 0.12, usage: 0.04, stay: 3, trio: { team: 1.0, perf: 0.02, ast: 0.06, usage: -0.03 } };
 
 /** A mode's dial (round 14): 1 unless the mode sets it. */
 export const modeDial = (mode: Mode, k: 'mini' | 'teamFx' | 'ringChase'): number => MODES[mode]?.[k] ?? 1;

@@ -6,6 +6,9 @@
 // - his game: a little more efficient and more assists (DUO.perf, DUO.ast), a few more shots;
 // - the team: a chemistry bonus to team strength (DUO.team).
 // Both grow as the duo matures. It ends when either of them leaves the team.
+// Round 22: a Big Three. When a second recruit's bond fills while the duo stands, he joins them:
+// the team gets another chemistry bonus, his game a little more efficiency and more assists, and
+// a few fewer shots (three stars share the ball). It breaks back into a duo if one of them leaves.
 // Nothing about the spark is shown; the only clues are the lines in the summer notes.
 
 import { DUO } from '../balance';
@@ -22,6 +25,7 @@ export interface Bond {
   seasons: number; // seasons played together
   formed?: number; // year the duo formed
   nick?: string;
+  trio?: boolean; // round 22: the third member of a Big Three
 }
 
 const GROUP: Record<Pos, 'G' | 'W' | 'B'> = { PG: 'G', SG: 'G', SF: 'W', PF: 'B', C: 'B' };
@@ -56,7 +60,17 @@ export function activeDuo(s: GameState): Bond | null {
   if (s.stage !== 'NBA') return null;
   const t = teamById(s.nba, s.teamId);
   if (!t) return null;
-  return (s.bonds ?? []).find((b) => b.formed !== undefined && t.roster.some((x) => x.id === b.id)) ?? null;
+  const here = (s.bonds ?? []).filter((b) => b.formed !== undefined && t.roster.some((x) => x.id === b.id));
+  // if the duo partner left, the third man of a Big Three is his duo now
+  return here.find((b) => !b.trio) ?? here[0] ?? null;
+}
+
+/** The third member of his Big Three, when all three are still together. */
+export function activeTrio(s: GameState): Bond | null {
+  const d = activeDuo(s);
+  const t = teamById(s.nba, s.teamId);
+  if (!d || !t) return null;
+  return (s.bonds ?? []).find((b) => b !== d && b.formed !== undefined && t.roster.some((x) => x.id === b.id)) ?? null;
 }
 
 /**
@@ -75,11 +89,21 @@ export function nudgeBonds(s: GameState, v: number): Bond | null {
 export const duoLevel = (s: GameState, b: Bond): number => clamp(DUO.start + (s.year - (b.formed ?? s.year)) * DUO.perSeason, DUO.start, 1);
 
 /** What the duo adds this season: team strength, and multipliers on his own game. */
-export function duoEffect(s: GameState): { team: number; perf: number; ast: number; usage: number; b: Bond } | null {
+export function duoEffect(s: GameState): { team: number; perf: number; ast: number; usage: number; b: Bond; third: Bond | null } | null {
   const b = activeDuo(s);
   if (!b) return null;
   const k = duoLevel(s, b);
-  return { team: Math.round(DUO.team * k * 10) / 10, perf: 1 + DUO.perf * k, ast: 1 + DUO.ast * k, usage: 1 + DUO.usage * k, b };
+  const third = activeTrio(s);
+  const k3 = third ? duoLevel(s, third) : 0;
+  const T = DUO.trio;
+  return {
+    team: Math.round((DUO.team * k + T.team * k3) * 10) / 10,
+    perf: 1 + DUO.perf * k + T.perf * k3,
+    ast: 1 + DUO.ast * k + T.ast * k3,
+    usage: 1 + DUO.usage * k + T.usage * k3,
+    b,
+    third,
+  };
 }
 
 /**
@@ -119,10 +143,36 @@ export function growBonds(s: GameState, last: SeasonRecord | null): void {
   }
 }
 
+const TRIO_NAMES = ['The Big Three', 'Three Kings', 'The Trifecta', 'The Triangle', 'The Three Amigos', 'Hat Trick'];
+
+function formTrio(s: GameState, b: Bond, duo: Bond): void {
+  b.formed = s.year;
+  b.trio = true;
+  b.nick = pick(s.rng, TRIO_NAMES);
+  const t = teamById(s.nba, s.teamId);
+  const mate = t?.roster.find((x) => x.id === b.id);
+  if (mate) mate.contractYears = Math.max(mate.contractYears, DUO.stay);
+  logDecision(s, 'duo', `Formed a Big Three with ${duo.name} and ${b.name}: "${b.nick}".`, t?.id);
+  pushMoment(s, {
+    kind: 'event',
+    title: `A Big Three: ${b.nick}`,
+    duo: true,
+    teamName: t?.name,
+    color: t?.color ?? '#7048E8',
+    text: `${duo.nick} was not enough for ${b.name}. Seasons of reading each other later, there are three of you, and the league has started calling it ${b.nick}.`,
+    lines: ['The team: another big chemistry bonus', 'Your game: more efficient, more assists, a few fewer shots', `${b.name} signs on to stay`, 'If one of you leaves, it is a duo again'],
+  });
+}
+
 function formDuo(s: GameState, b: Bond): void {
-  // one duo at a time: a second spark keeps growing and takes over if the first one ends
-  if (activeDuo(s)) {
-    b.bond = 99;
+  // a duo already stands: he joins it as the third man of a Big Three (one at a time)
+  const duo = activeDuo(s);
+  if (duo) {
+    if (activeTrio(s)) {
+      b.bond = 99;
+      return;
+    }
+    formTrio(s, b, duo);
     return;
   }
   b.formed = s.year;

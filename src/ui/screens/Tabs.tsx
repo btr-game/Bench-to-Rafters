@@ -12,6 +12,7 @@ import { PlayerArt, kitFor, styleLeague, type KitName } from '../art/Player';
 import { JerseyArt } from '../art/Jersey';
 import { EvolutionArt } from '../art/Evolution';
 import { CareerTimeline } from '../components/Timeline';
+import { cityCultureOf } from '../../engine/career/cityCulture';
 import { BodyMap } from '../components/BodyMap';
 import { FlagArt } from '../art/Flag';
 import type { GameLog, GameState, League, SeasonRecord, SeriesResult, StatLine, Team } from '../../engine/types';
@@ -385,12 +386,32 @@ export function SeasonTab({ g }: { g: GameState }) {
             <PointsChart games={all} />
             <GameLogTable g={g} />
           </Card>
-          <Card title="Standings">
-            <ConfStandings g={g} />
-          </Card>
+          <div className="stack">
+            <CityCard g={g} />
+            <Card title="Standings">
+              <ConfStandings g={g} />
+            </Card>
+          </div>
         </div>
       )}
     </div>
+  );
+}
+
+/** Round 22: what his NBA city is like, and what it does to him. */
+function CityCard({ g }: { g: GameState }) {
+  const c = cityCultureOf(g);
+  if (!c) return null;
+  const t = teamOf(g);
+  const years = t ? (g.teamSeasons[t.id] ?? 0) : 0;
+  return (
+    <Card title={c.name} kicker={`City culture · ${t?.name ?? ''}${years ? ` · season ${years + 1} here` : ' · first season here'}`}>
+      <p className="small prose">{c.text}</p>
+      <ul className="city-fx small">
+        <li className="good">{c.good}</li>
+        <li className="bad">{c.bad}</li>
+      </ul>
+    </Card>
   );
 }
 

@@ -187,16 +187,22 @@ export function DuoCard({ g }: { g: GameState }) {
   const years = g.year - (b.formed ?? g.year);
   return (
     <section className="card stack duo-card">
-      <div className="kicker">Your duo</div>
-      <DuoArt g={g} b={b} size={112} />
+      <div className="kicker">{fx.third ? 'Your Big Three' : 'Your duo'}</div>
+      <DuoArt g={g} b={b} third={fx.third} size={112} />
       <p className="small prose">
         You and <b>{b.name}</b> ({b.pos}) · {b.seasons} season{b.seasons === 1 ? '' : 's'} together{years > 0 ? `, a duo for ${years} season${years === 1 ? '' : 's'}` : ', a duo since this summer'}.
+        {fx.third && (
+          <>
+            {' '}
+            With <b>{fx.third.name}</b> ({fx.third.pos}) it is a Big Three.
+          </>
+        )}
       </p>
       <div className="duo-meter" aria-label={`Duo strength ${Math.round(level * 100)}%`}>
         <span style={{ width: `${Math.round(level * 100)}%` }} />
       </div>
       <p className="small muted">
-        {level >= 1 ? 'At full strength' : 'Still growing'}: team strength +{fx.team.toFixed(1)}, and your shooting, assists and touches are up. It ends if either of you leaves.
+        {level >= 1 ? 'At full strength' : 'Still growing'}: team strength +{fx.team.toFixed(1)}, and your shooting and assists are up. {fx.third ? 'If one of the three leaves, it is a duo again.' : 'It ends if either of you leaves.'}
       </p>
     </section>
   );

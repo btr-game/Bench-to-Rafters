@@ -1,4 +1,4 @@
-// Round 22: duo art. The two of them side by side in the team's kit, under the name the league
+// Round 22: duo art. The two of them (three, with a Big Three) side by side in the team's kit, under the name the league
 // gave them: his archetype's pose next to a pose that fits his partner's position. Shown on the
 // page where the duo forms and on the duo card.
 
@@ -23,7 +23,7 @@ function partnerPose(b: Bond, mine: HeroPose): HeroPose {
   return list[b.id % list.length];
 }
 
-export function DuoArt({ g, b, size = 150 }: { g: GameState; b: Bond; size?: number }) {
+export function DuoArt({ g, b, third, size = 150 }: { g: GameState; b: Bond; third?: Bond | null; size?: number }) {
   const p = g.player;
   const t = teamOf(g);
   const kit = kitFor(t?.name ?? '', t?.abbr ?? '', t?.color ?? '#7048E8', 'home', styleLeague(g.stage));
@@ -35,12 +35,14 @@ export function DuoArt({ g, b, size = 150 }: { g: GameState; b: Bond; size?: num
           <HeroArt pose={mine} kit={kit} model={p.name} number={p.number} size={size} />
           <span>{p.name}</span>
         </div>
-        <div className="duo-one">
-          <HeroArt pose={partnerPose(b, mine)} kit={kit} model={b.name} number={(b.id % 54) + 1} size={size} />
-          <span>{b.name}</span>
-        </div>
+        {[b, ...(third ? [third] : [])].map((x) => (
+          <div key={x.id} className="duo-one">
+            <HeroArt pose={partnerPose(x, mine)} kit={kit} model={x.name} number={(x.id % 54) + 1} size={third ? Math.round(size * 0.9) : size} />
+            <span>{x.name}</span>
+          </div>
+        ))}
       </div>
-      {b.nick && <figcaption className="duo-nick">{b.nick}</figcaption>}
+      {(third?.nick ?? b.nick) && <figcaption className="duo-nick">{third?.nick ?? b.nick}</figcaption>}
     </figure>
   );
 }

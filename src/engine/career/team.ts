@@ -73,7 +73,7 @@ export function startTeamFactors(s: GameState, team: Team): { bonus: number; not
   const duo = s.teamId === team.id ? duoEffect(s) : null;
   if (duo) {
     bonus += duo.team;
-    notes.push(`${duo.b.nick}: you and ${duo.b.name} (+${duo.team.toFixed(1)})`);
+    notes.push(duo.third ? `${duo.third.nick}: you, ${duo.b.name} and ${duo.third.name} (+${duo.team.toFixed(1)})` : `${duo.b.nick}: you and ${duo.b.name} (+${duo.team.toFixed(1)})`);
   }
   return { bonus: Math.round(bonus * 10) / 10, notes, post: Math.round(post * 10) / 10, fx };
 }

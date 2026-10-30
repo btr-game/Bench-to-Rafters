@@ -72,6 +72,7 @@ import { reactionsForSeason } from '../story/reactions';
 import { finishStories, startStories, updateStories } from '../world/stories';
 import { changeWeight, halfPlanWeight, weightWear } from '../player/weight';
 import { recordInjury, trainMuscles } from '../player/body';
+import { cityHalf } from './cityCulture';
 import { duoEffect, growBonds } from './duo';
 import { NAMES } from '../../content/strings';
 
@@ -531,6 +532,8 @@ function growthAfterHalf(s: GameState, acc: HalfAcc, level: LevelKey, ovr: numbe
     });
     swingText = ` In the spotlight: ${parts.join(', ')}.`;
   }
+  // round 22: what his NBA city did to him this half
+  swingText += cityHalf(s);
   const gain = ovrOf(p.attrs, p.pos) - before;
   const text =
     outcome.key === 'setback'
