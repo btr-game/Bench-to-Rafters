@@ -413,7 +413,7 @@ function CityCard({ g }: { g: GameState }) {
       <div className="city-head">
         <TeamArt name={t.name} abbr={t.abbr} color={t.color} league="NBA" size={56} />
         <span className="city-icon">
-          <Icon name={c.icon} size={40} />
+          <Icon name={`city${t.abbr}`} size={40} />
         </span>
         <div>
           <div className="kicker">
@@ -431,7 +431,7 @@ function CityCard({ g }: { g: GameState }) {
         <div className="city-fans">
           <div className="city-head">
             <span className="city-icon">
-              <Icon name="reputation" size={34} />
+              <Icon name={`fan${t.abbr}`} size={34} />
             </span>
             <div>
               <div className="kicker">The fans</div>

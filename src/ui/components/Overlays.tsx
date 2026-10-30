@@ -446,7 +446,7 @@ function MomentPage({ m, g }: { m: Moment; g: GameState }) {
   const end = useCallback(() => setEnded(true), []);
   return (
     <div className={`overlay moment ${m.kind}${m.mood && ended ? ` mood-${m.mood}` : ''}`} style={{ ['--team' as string]: m.color }} role="dialog" aria-modal="true" aria-label={m.title}>
-      {m.mood && ended && <MoodFx key={m.id} mood={m.mood} color={m.color} />}
+      {m.mood && ended && <MoodFx key={`fx-${m.id}`} mood={m.mood} color={m.color} />}
       <div className="overlay-inner" key={m.id}>
         {m.drama && m.game ? (
           <FinalReel m={m} g={g} onDone={end} />

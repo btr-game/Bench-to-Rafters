@@ -48,6 +48,8 @@ function nickname(rng: Rng, me: Pos, him: Pos): string {
 
 /** A recruit comes with a hidden spark (career/recruit.ts calls this when he says yes). */
 export function meetRecruit(s: GameState, p: GenPlayer): void {
+  // a player he recruits a second time keeps the bond he already has
+  if ((s.bonds ?? []).some((b) => b.id === p.id)) return;
   const real = chance(s.rng, DUO.realChance);
   let spark = real ? range(s.rng, DUO.real[0], DUO.real[1]) : range(s.rng, DUO.plain[0], DUO.plain[1]);
   // a guard and a big have more ways to find each other than two players at one spot
@@ -70,7 +72,7 @@ export function activeTrio(s: GameState): Bond | null {
   const d = activeDuo(s);
   const t = teamById(s.nba, s.teamId);
   if (!d || !t) return null;
-  return (s.bonds ?? []).find((b) => b !== d && b.formed !== undefined && t.roster.some((x) => x.id === b.id)) ?? null;
+  return (s.bonds ?? []).find((b) => b.id !== d.id && b.formed !== undefined && t.roster.some((x) => x.id === b.id)) ?? null;
 }
 
 /**
@@ -113,6 +115,8 @@ export function duoEffect(s: GameState): { team: number; perf: number; ast: numb
  */
 export function growBonds(s: GameState, last: SeasonRecord | null): void {
   if (!s.bonds?.length) return;
+  // careers saved before round 22 can hold two bonds with the same teammate: keep the further one
+  s.bonds = s.bonds.filter((b, i, all) => !all.some((o, j) => o.id === b.id && j !== i && (o.formed !== undefined && b.formed === undefined ? true : o.bond > b.bond || (o.bond === b.bond && j < i))));
   const t = teamById(s.nba, s.teamId);
   const here = (b: Bond) => s.stage === 'NBA' && !!t && t.roster.some((x) => x.id === b.id);
   for (const b of [...s.bonds]) {
