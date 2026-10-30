@@ -1180,3 +1180,16 @@ Reached from the start page and from the bottom of Home (a career in progress is
   (74.3362 before), NBA 77.1% (77.2%), All-Star 35.2% (35.3%), MVP 10.8% (10.8%), Hall of Fame
   11.4% (11.4%), titles 34.8% (33.3%). The first try at +0.25 chemistry a half gave titles 35.8%,
   more than "a little", so it was cut to 0.15.
+- **An action for every archetype** (owner: "one detailed art for each archetype"): all 25
+  archetypes now have their own pose traced from the reference photos, none shared (the five
+  position poses are among them). Photos cut off at the knees or crowded by other players were
+  swapped for full-length ones. Where a photo stops at the shins, the legs, socks and shoes are
+  finished below it. Overlapping skin (an arm across the face) gets a thin shadow line so it
+  reads. The art lives in `art/heroRows.ts`, run-length encoded (about 55 KB for 31 poses); the
+  round 18 hand drawings are gone.
+- **Ring chaser role cards:** choosing to chase a ring now opens role cards: the three of six
+  roles that suit his ratings best, each with the player in the role's own action. Two roles are
+  new and are not among the 25 archetypes: Bench scorer (shooting +3, finishing +4; perimeter
+  defense −3, rebounding −2, rim protection −2) and Veteran leader (basketball IQ +7, playmaking
+  +2; athleticism −3, finishing −2, rebounding −2). The balance harness never chases a ring, so
+  its numbers are unchanged.

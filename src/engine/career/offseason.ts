@@ -38,7 +38,7 @@ import type { Prospect } from '../world/draft';
 import { NBA_TEAMS } from '../../content/teams';
 import { originOffers, pathOf, pushYouthCrossroads } from './origin';
 import { heightMismatch } from './position';
-import { becomeRingChaser, canChaseRing, ringChaseChoice } from './ringChase';
+import { becomeRingChaser, canChaseRing, chaserRoleDecision, ringChaseChoice, type ChaserKey } from './ringChase';
 import { rollSwings } from './swings';
 import { NAMES } from '../../content/strings';
 import { buildWord, driftWeight, idealWeight, weightOf } from '../player/weight';
@@ -529,7 +529,7 @@ function pushLastChance(s: GameState, why: string): void {
   offers.push(...homeLeagueOffers(s).filter((x) => !offers.some((y) => y.teamName === x.teamName)));
   if (ovr >= 56 && chance(s.rng, FA_INTEREST.minorAgeFade(s.player.age))) offers.push(glOffer(s, ovr));
   const choices = offers.map(offerChoice);
-  if (canChaseRing(s)) choices.push(ringChaseChoice(s));
+  if (canChaseRing(s)) choices.push(ringChaseChoice());
   choices.push({ id: 'retire', label: 'Retire', detail: 'Hang them up.' });
   pushDecision(s, {
     kind: 'offers',
@@ -557,7 +557,7 @@ function retireCheck(s: GameState, lastShare: number, share: number, role: RoleK
       text: `You are ${Math.round(p.peakOvr - ovr)} points off your peak and the minutes have dried up. Your agent thinks it might be time.`,
       choices: [
         { id: 'go', label: 'Find a last chance', detail: 'Keep playing wherever someone will have you.' },
-        ...(canChaseRing(s) ? [ringChaseChoice(s)] : []),
+        ...(canChaseRing(s) ? [ringChaseChoice()] : []),
         { id: 'retire', label: 'Retire', detail: 'Go out on your own terms.' },
       ],
       data: { share, role },
@@ -676,8 +676,11 @@ export function resolveOffseasonDecision(s: GameState, d: Decision, id: string):
         });
       }
       return true;
+    case 'chaserRole':
+      pushDecisionFront(s, becomeRingChaser(s, id as ChaserKey));
+      return true;
     case 'retirePrompt':
-      if (id === 'ringchase') pushDecisionFront(s, becomeRingChaser(s));
+      if (id === 'ringchase') pushDecisionFront(s, chaserRoleDecision(s));
       else if (id === 'retire') retireNow(s, 'Went out on his own terms.');
       else {
         logDecision(s, 'lastchance', 'Ignored the advice to retire and kept playing.');
@@ -694,7 +697,7 @@ export function resolveOffseasonDecision(s: GameState, d: Decision, id: string):
         return true;
       }
       if (id === 'ringchase') {
-        pushDecisionFront(s, becomeRingChaser(s));
+        pushDecisionFront(s, chaserRoleDecision(s));
         return true;
       }
       if (id === 'prep') {

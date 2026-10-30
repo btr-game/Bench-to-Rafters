@@ -6,7 +6,7 @@ import { ATTRS, OVR_WEIGHTS, POSITIONS } from '../src/engine/balance';
 import { newGame } from '../src/engine/flow';
 import { miniProgress, syncMiniUnlocks } from '../src/engine/career/miniBonus';
 import { chemistryOf, legendTeams, newLegendsCareer } from '../src/engine/mini/legends';
-import { becomeRingChaser, CHASER_ROLES, chaserRoleFor } from '../src/engine/career/ringChase';
+import { becomeRingChaser, CHASER_ROLES, chaserRoleDecision, chaserRoleFor } from '../src/engine/career/ringChase';
 import { labBestSpend, labPlaySeason, newLabGame } from '../src/engine/mini/labGame';
 import { reclassify } from '../src/engine/player/classify';
 
@@ -57,6 +57,19 @@ describe('round 15', () => {
     expect(d.kind).toBe('offers');
     expect(reclassify(s.player)).toBe('');
     expect(s.player.archetype).toBe('Defensive specialist');
+  });
+
+  it('round 20: the ring chaser picks his role from the three cards that suit him best', () => {
+    const s = game(12);
+    s.player.attrs.IQ = 95;
+    const d = chaserRoleDecision(s);
+    expect(d.kind).toBe('chaserRole');
+    expect(d.choices).toHaveLength(3);
+    expect(d.choices[0].label).toBe('Veteran leader');
+    s.nba = { teams: [] } as never;
+    becomeRingChaser(s, 'scorer');
+    expect(s.player.archetype).toBe(CHASER_ROLES.scorer.name);
+    expect(s.player.ringChaser).toBe('Bench scorer');
   });
 
   it('Built in a lab: best-value play reaches the high 80s', () => {

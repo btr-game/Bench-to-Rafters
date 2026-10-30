@@ -51,7 +51,7 @@ export function youthGrowthMult(s: GameState): number {
 const EXEMPT_KEYS = ['OLYGOLD', 'OLYMEDAL', 'ASIANGOLD'];
 const DEADLINE = 28;
 const FROM_AGE = 23;
-const CONTRACT_KINDS = ['offers', 'declare', 'withdraw', 'transfer', 'draft', 'retirePrompt'];
+const CONTRACT_KINDS = ['offers', 'declare', 'withdraw', 'transfer', 'draft', 'retirePrompt', 'chaserRole'];
 
 /**
  * South Korea: once he is 23, every offseason in which his contract is up asks whether to

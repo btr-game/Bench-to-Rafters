@@ -1,6 +1,8 @@
 // Renders whatever decision is at the front of the queue.
 
 import { Icon } from '../art/Icon';
+import { HeroArt, archPose } from '../art/Hero';
+import { team as teamOf } from '../selectors';
 import { StoryScene } from '../art/Scene';
 import { SHIFT_COLOR, choiceIcon, shopIcon, shopShift } from '../art/icons';
 import { useState } from 'react';
@@ -235,6 +237,30 @@ export function DecisionView({ g, d }: { g: GameState; d: Decision }) {
   if (d.kind === 'live') return <LiveView g={g} d={d} />;
 
   if (d.kind === 'plan') return <PlanPicker d={d} />;
+
+  // round 20: the late-career specialist roles, as cards with the player in each role's action
+  if (d.kind === 'chaserRole') {
+    const color = teamOf(g)?.color ?? '#1F5FBF';
+    return (
+      <div className="stack">
+        <div className="sec-title">{d.title}</div>
+        {!simple && <p className="muted small prose">{d.text}</p>}
+        <div className="arch-cards">
+          {d.choices.map((c) => (
+            <button key={c.id} className="arch role-card" onClick={() => choose(c.id)}>
+              <span className="arch-stage" style={{ ['--pos' as string]: color }}>
+                <span className="pos-player">
+                  <HeroArt pose={archPose(c.label, g.player.pos)} model={g.player.name} number={g.player.number} kit={{ base: color, ink: '#FFFFFF', trim: '#F4F4F4', word: '' }} size={132} />
+                </span>
+              </span>
+              <h3>{c.label}</h3>
+              <div className="muted small">{c.detail}</div>
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   if (d.kind === 'shop') {
     const items = d.choices.filter((c) => c.id !== 'leave');

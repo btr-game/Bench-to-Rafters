@@ -1255,6 +1255,7 @@ td .art-team { display: inline-block; vertical-align: middle; margin: -3px 8px -
 
 /* position cards: a silhouette until picked, then the player in colour */
 .pos-player { position: relative; display: block; line-height: 0; filter: brightness(0) opacity(0.88); transition: filter 0.45s ease; }
+.arch.role-card .pos-player, .arch.role-card:hover .pos-player { filter: none; } /* round 20: the late-career role cards show the player in colour */
 .pos-card:hover .pos-player, .arch:hover .pos-player { filter: brightness(0.3); }
 .pos-card[aria-pressed='true'] .pos-player, .arch[aria-pressed='true'] .pos-player { filter: none; animation: pos-reveal 0.5s ease; }
 @keyframes pos-reveal { from { transform: translateY(6px) scale(0.96); } to { transform: none; } }
