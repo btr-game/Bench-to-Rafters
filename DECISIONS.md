@@ -1628,3 +1628,9 @@ Reached from the start page and from the bottom of Home (a career in progress is
   small grey paragraph, choice details, the mode notes), keeping status lines a player needs
   (claims left, the slots warning, the achievement riddles, empty states) and a press answer's
   tone. With both on, Home has 203 words where it had 503.
+- **The click budget moves from 14 to 15 a season** (engine test "a season stays a manageable
+  number of clicks"). This round's press conferences (three answers every two or three seasons:
+  21 clicks over a 21-season career) and brand offers add about 1.1 clicks a season; the test
+  career went from under 14 to 14.38. Fast break (one answer per press conference) and sim mode
+  (none) are the way to fewer clicks; the owner can cut the press conference to one question in
+  every mode if the default feels long.
