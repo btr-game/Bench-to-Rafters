@@ -279,7 +279,7 @@ function Feedback({ c }: { c: Api }) {
         <input maxLength={200} value={contact} onChange={(e) => setContact(e.target.value)} placeholder="Only if you want an answer" />
       </label>
       <div className="row" style={{ gap: 10, alignItems: 'center' }}>
-        <button className="btn with-icon" disabled={!text.trim() || state === 'sending'} onClick={send}>
+        <button className="btn with-icon" data-tour="feedback-send" disabled={!text.trim() || state === 'sending'} onClick={send}>
           <Icon name="envelope" size={22} />
           Send feedback
         </button>
@@ -359,7 +359,7 @@ export function CommunityPage() {
           {c?.kind === 'local' && <p className="small muted">This copy of the game is not connected, so the boards and the plaza only hold careers from this device.</p>}
         </div>
         <LiveStrip />
-        <div className="seg">
+        <div className="seg" data-tour="comm-tabs">
           {tabs.map(([k, l, icon]) => (
             <button key={k} className="with-icon" aria-pressed={tab === k} onClick={() => setTab(k)}>
               <Icon name={icon} size={20} />
@@ -405,7 +405,7 @@ export function CommunityNote({ rec }: { rec: CareerRecord }) {
         {built === 'ok' ? ' Your statue stands in the plaza.' : built === 'full' ? ' The plaza is full (100 statues).' : built === 'denied' ? ' Raising a statue needs an invitation to post here.' : built === 'error' ? ' The statue could not be raised. Try again.' : ''}
       </span>
       {statueOk(rec) && built !== 'ok' && (
-        <button className="btn small" disabled={built === 'busy'} onClick={build}>
+        <button className="btn small" data-tour="statue-raise" disabled={built === 'busy'} onClick={build}>
           Raise a statue
         </button>
       )}

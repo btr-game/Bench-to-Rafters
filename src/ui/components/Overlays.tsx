@@ -385,7 +385,7 @@ export function FinalReel({ m, g, onDone }: { m: Moment; g?: GameState; onDone?:
           </p>
           <div className="clutch-moves">
             {!daily && (
-              <button className="btn with-icon" onClick={() => setMode('play')}>
+              <button className="btn with-icon" data-tour="clutch-play" onClick={() => setMode('play')}>
                 <Icon name="clutch" size={22} />
                 Play the last minutes
               </button>

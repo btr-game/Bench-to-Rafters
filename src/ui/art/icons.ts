@@ -1448,6 +1448,20 @@ export const GUIDE_ICON: Record<string, string> = {
   'The rafters': 'jersey',
   Championships: 'podium',
   'All-time rank': 'podium',
+  // round 24
+  Weight: 'weight',
+  'City and fans': 'crowd',
+  'The last minutes': 'clutch',
+  'Roster and fit': 'roster',
+  '3-on-3 streetball': 'post',
+  'Daily challenge': 'calendar',
+  'Legendary seasons': 'stars',
+  'Long careers': 'health',
+  Achievements: 'laurel',
+  Leaderboards: 'podium',
+  'Reality 99 hall': 'hall',
+  'Statue plaza': 'statue',
+  'Send feedback': 'envelope',
 };
 
 /** The meters, by their label. */
