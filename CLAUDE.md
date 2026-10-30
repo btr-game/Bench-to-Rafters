@@ -11,6 +11,9 @@ Setup commands are in `SETUP.md`. Ideas kept for later are in `ROADMAP.md`.
 After each request, **clear dead code**: unused functions, exports, imports, CSS rules and
 leftovers of replaced features.
 
+After a long task, **make graphics for the newly added functions** (pixel art in the game's style:
+icons, art for new cards and pages), as part of the same task (owner, round 24).
+
 Deferred to the end steps (owner's call, round 21): no project summary or report at the end of
 each request any more, and balance checks and guide updates wait too. Keep a running list of
 what they will need (systems changed since the last balance run, guide sections that are out of
