@@ -1512,3 +1512,12 @@ Reached from the start page and from the bottom of Home (a career in progress is
   break off ends it. A "How you play" card above Around the league holds Sim, Fast break, Simple
   text, Guide, Master and Play playoffs as chips, with a line on what each active one does; the
   Fast and Simple chips left the top bar (the settings menu keeps its switches).
+- **Explaining results: the team strength breakdown** (the owner: yes to a breakdown of what
+  makes the team good). career/breakdown.ts lays out the numbers the season simulation adds for
+  every game: his teammates against an average team in the league, what he adds (his OVR over the
+  player he replaces, at his role's minutes, times the impact factor), what a winning player adds
+  beyond the box score, and every team factor of the season (chemistry, coach trust, star
+  gravity, team style, fans, roster fit, duo, storylines and midseason swings), now kept as
+  numbers (season.teamFx) as well as notes. The total puts his team in a rank among the league's
+  teams. It shows as a bar chart on the Season tab and as "Why it went this way" on the season
+  summary.

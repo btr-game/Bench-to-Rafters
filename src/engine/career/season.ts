@@ -149,7 +149,7 @@ export function beginSeason(s: GameState): void {
     ...(() => {
       const f = startTeamFactors(s, team, league);
       const d = duoEffect(s);
-      return { teamBonus: f.bonus, teamNotes: f.notes, postBonus: f.post, styleFx: f.fx, duoFx: d ? { perf: d.perf, ast: d.ast, usage: d.usage } : undefined };
+      return { teamBonus: f.bonus, teamNotes: f.notes, teamFx: f.items, postBonus: f.post, styleFx: f.fx, duoFx: d ? { perf: d.perf, ast: d.ast, usage: d.usage } : undefined };
     })(),
     halfLines: [],
     injuredGames: 0,

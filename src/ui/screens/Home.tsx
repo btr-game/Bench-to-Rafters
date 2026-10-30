@@ -56,6 +56,7 @@ import { ovrOf } from "../../engine/player/ovr";
 import { perGame } from "../../engine/sim/statModel";
 import { weightOf } from "../../engine/player/weight";
 import { ModesCard } from '../components/ModesCard';
+import { StrengthCard } from '../components/StrengthCard';
 
 export function SeasonSummary({ rec }: { rec: SeasonRecord }) {
   const delta = rec.ovrEnd - rec.ovrStart;
@@ -363,6 +364,7 @@ function Context({ g }: { g: GameState }) {
       <div className="stack">
         <SeasonSummary rec={s.summary} />
         <PlanOutcomes g={g} />
+        <StrengthCard g={g} title="Why it went this way" />
       </div>
     );
   if (g.step === "offseason") {

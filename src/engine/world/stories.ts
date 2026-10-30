@@ -160,6 +160,7 @@ function mineStory(s: GameState, lg: League, mine: string): LeagueStory | null {
   s.season.teamBonus = Math.round(((s.season.teamBonus ?? 0) + m.regular) * 10) / 10;
   s.season.postBonus = Math.round(((s.season.postBonus ?? 0) + m.playoff - m.regular) * 10) / 10;
   s.season.teamNotes = [...(s.season.teamNotes ?? []), `${m.title(t.short)} (${m.regular >= 0 ? '+' : ''}${m.regular}, playoffs ${m.playoff >= 0 ? '+' : ''}${m.playoff})`];
+  s.season.teamFx = [...(s.season.teamFx ?? []), { label: m.title(t.short), value: m.regular, playoff: m.playoff }];
   if (kind === 'chip') s.player.morale = Math.min(100, s.player.morale + 4);
   return { kind, teamId: t.id, title: m.title(t.short), text: m.text(t.name), mine: { regular: m.regular, playoff: m.playoff } };
 }

@@ -1840,3 +1840,25 @@ td .art-team { display: inline-block; vertical-align: middle; margin: -3px 8px -
 .mode-chip.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 .mode-chip:disabled { opacity: 0.45; cursor: default; }
 .mode-notes { margin: 0; padding-left: 18px; }
+
+/* round 25: the team strength breakdown */
+.strength-bars { display: grid; gap: 6px; }
+.sb-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(80px, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  font-size: 15px;
+}
+.sb-label { min-width: 0; }
+.sb-track { position: relative; height: 12px; background: var(--surface-2); border-radius: 6px; }
+.sb-track::after { content: ''; position: absolute; left: 50%; top: -2px; bottom: -2px; width: 1px; background: var(--line); }
+.sb-fill { position: absolute; top: 0; bottom: 0; border-radius: 6px; }
+.sb-fill.up { background: var(--good); }
+.sb-fill.down { background: var(--bad); }
+.sb-val { font-family: var(--f-mono); font-size: 14px; white-space: nowrap; text-align: right; }
+.sb-row.k-you .sb-label { font-weight: 700; }
+@media (max-width: 640px) {
+  .sb-row { grid-template-columns: minmax(0, 1fr) auto; }
+  .sb-track { grid-column: 1 / -1; order: 3; }
+}

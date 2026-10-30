@@ -397,6 +397,7 @@ export interface SeasonState {
   styleFx?: { perf: number; usage: number }; // his fit with the team's style (career/identity.ts)
   duoFx?: { perf: number; ast: number; usage: number }; // round 20: his duo (career/duo.ts)
   teamNotes?: string[];
+  teamFx?: { label: string; value: number; playoff?: number }[]; // round 25: the same factors as numbers (career/breakdown.ts)
   outcomes?: { half: number; plan: HalfPlan; plan2?: HalfPlan | null; outcome: string; text: string; ovrGain: number }[];
 }
 

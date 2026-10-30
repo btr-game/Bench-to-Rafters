@@ -37,14 +37,17 @@ function streakWith(s: GameState, teamId: string): number {
 }
 
 /** The team bonus at the start of a season, with lines for the season preview. */
-export function startTeamFactors(s: GameState, team: Team, league?: League): { bonus: number; notes: string[]; post: number; fx?: { perf: number; usage: number } } {
+export function startTeamFactors(s: GameState, team: Team, league?: League): { bonus: number; notes: string[]; items: { label: string; value: number; playoff?: number }[]; post: number; fx?: { perf: number; usage: number } } {
   const notes: string[] = [];
+  // round 25: the same factors as numbers, for the strength breakdown (career/breakdown.ts)
+  const items: { label: string; value: number; playoff?: number }[] = [];
   let bonus = 0;
   const d = modeDial(s.mode, 'teamFx');
   const streak = streakWith(s, team.id);
   if (streak >= 1) {
     const c = Math.min(T.chemistryMax, streak * T.chemistryPer) * d;
     bonus += c;
+    items.push({ label: 'Chemistry (seasons together)', value: c });
     if (streak >= 2) notes.push(`Chemistry: your ${streak + 1}th season together (+${c.toFixed(1)})`);
   }
   // round 15: coach trust is part of chemistry. A trusted player steadies the locker room; a
@@ -52,12 +55,14 @@ export function startTeamFactors(s: GameState, team: Team, league?: League): { b
   const tr = Math.round(Math.max(T.trustMin, Math.min(T.trustMax, (s.player.trust - T.trustFrom) * T.trustPer)) * Math.max(0.5, d) * 10) / 10;
   if (tr !== 0) {
     bonus += tr;
+    items.push({ label: 'Coach trust', value: tr });
     notes.push(tr > 0 ? `Coach trust: the locker room follows your lead (+${tr.toFixed(1)})` : `Coach trust: the coach and you are not on the same page (${tr.toFixed(1)})`);
   }
   const ovr = userOvr(s);
   if (s.stage === 'NBA' && ovr >= T.starFrom) {
     const g = Math.min(T.starMax, (ovr - T.starFrom) * T.starPer) * d;
     bonus += g;
+    items.push({ label: 'Star gravity', value: g });
     notes.push(`Star gravity: good players want to play with you (+${g.toFixed(1)})`);
   }
   // round 13: the team style he set (career/identity.ts)
@@ -69,6 +74,7 @@ export function startTeamFactors(s: GameState, team: Team, league?: League): { b
     bonus += e.regular;
     post = e.playoff - e.regular;
     fx = { perf: e.perf, usage: e.usage };
+    items.push({ label: `Team style: ${TEAM_STYLES[style].name}`, value: e.regular, playoff: e.playoff });
     notes.push(`${TEAM_STYLES[style].name}: ${fitLabel(styleFit(s, style)).toLowerCase()} (${e.regular >= 0 ? '+' : ''}${e.regular}, playoffs ${e.playoff >= 0 ? '+' : ''}${e.playoff})`);
   }
   // round 22: the home crowd, and how it rises in the playoffs (career/fanCulture.ts)
@@ -76,6 +82,7 @@ export function startTeamFactors(s: GameState, team: Team, league?: League): { b
   if (fans && (fans.crowd || fans.playoff)) {
     bonus += fans.crowd;
     post += fans.playoff;
+    items.push({ label: `Fans (${fans.name})`, value: fans.crowd, playoff: fans.crowd + fans.playoff });
     notes.push(`Fans, ${fans.name}: ${fans.crowd ? `+${fans.crowd.toFixed(2)}` : 'no edge'} at home, ${fans.playoff ? `+${fans.playoff.toFixed(2)} more in the playoffs` : 'nothing extra in the playoffs'}`);
   }
   // round 24: how the roster around him fits together (career/roster.ts)
@@ -83,6 +90,7 @@ export function startTeamFactors(s: GameState, team: Team, league?: League): { b
     const f = rosterFit(s, team, league);
     if (f.bonus !== 0) {
       bonus += f.bonus;
+      items.push({ label: 'Roster fit', value: f.bonus });
       const why = [f.balance >= f.identity ? (f.balance >= 0 ? 'a balanced five' : 'a lopsided five') : `built for ${TEAM_STYLES[f.system].name.toLowerCase()}`, f.depth >= 0.3 ? 'a deep bench' : f.depth <= -0.3 ? 'a thin bench' : ''].filter(Boolean).join(', ');
       notes.push(`Roster fit: ${why} (${f.bonus > 0 ? '+' : ''}${f.bonus.toFixed(1)})`);
     }
@@ -91,9 +99,10 @@ export function startTeamFactors(s: GameState, team: Team, league?: League): { b
   const duo = s.teamId === team.id ? duoEffect(s) : null;
   if (duo) {
     bonus += duo.team;
+    items.push({ label: (duo.third ? duo.third.nick : duo.b.nick) ?? 'Your duo', value: duo.team });
     notes.push(duo.third ? `${duo.third.nick}: you, ${duo.b.name} and ${duo.third.name} (+${duo.team.toFixed(1)})` : `${duo.b.nick}: you and ${duo.b.name} (+${duo.team.toFixed(1)})`);
   }
-  return { bonus: Math.round(bonus * 10) / 10, notes, post: Math.round(post * 10) / 10, fx };
+  return { bonus: Math.round(bonus * 10) / 10, notes, items, post: Math.round(post * 10) / 10, fx };
 }
 
 const DEADLINE_NAMES = ['a veteran sharpshooter', 'an All-Star forward', 'a rim-protecting center', 'a two-way wing', 'a former Sixth Man of the Year'];
@@ -148,6 +157,7 @@ export function midseasonSwing(s: GameState, league: League): void {
   delta = Math.round(delta * T.swingScale * 10) / 10;
   season.teamBonus = Math.round(((season.teamBonus ?? 0) + delta) * 10) / 10;
   season.teamNotes = [...(season.teamNotes ?? []), `${title} (${delta > 0 ? '+' : ''}${delta})`];
+  season.teamFx = [...(season.teamFx ?? []), { label: title, value: delta }];
   if (delta < 0) s.player.morale = adjust(s.player.morale, -3);
   logDecision(s, 'team', `${title}: ${text.split('.')[0].toLowerCase()}.`, team.id);
   pushMoment(s, { kind: 'event', title, color: team.color, teamName: team.name, text, lines: [`Team strength ${delta > 0 ? '+' : ''}${delta} for the rest of the season`] });

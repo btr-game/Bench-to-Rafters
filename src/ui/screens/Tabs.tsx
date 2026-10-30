@@ -20,6 +20,7 @@ import { RosterCard } from '../components/TeamRoster';
 import { NameCard } from '../components/NameCard';
 import { WardrobeCard } from '../components/Wardrobe';
 import { StaffCard } from '../components/StaffCard';
+import { StrengthCard } from '../components/StrengthCard';
 import { CollectionCard } from '../components/Collection';
 import { AchievementsCard } from './Achievements';
 import { FlagArt } from '../art/Flag';
@@ -395,6 +396,7 @@ export function SeasonTab({ g }: { g: GameState }) {
             <GameLogTable g={g} />
           </Card>
           <div className="stack">
+            <StrengthCard g={g} />
             <CityCard g={g} />
             <Card title="Standings">
               <ConfStandings g={g} />
