@@ -1065,3 +1065,23 @@ Reached from the start page and from the bottom of Home (a career in progress is
 - **Built in a lab:** the rating icons on every stat.
 - **Shop:** items that share an icon looked the same. Each item has a colourway from its id (the
   icon's colour families rotate round a ring of six) and a tile in that colour.
+
+## Round 19
+
+- **Team stories:** each kind of story has a pixel mark (a crown for a dynasty, stars for a
+  superteam, a rising arrow for an underdog, a bolt for a rival, a sinking arrow for a tank job,
+  a sunset for a last dance, laurels for the favourite; your own team's stories reuse the plan
+  and style icons). Folded, the mark leads each line; unfolded, each story opens with a banner of
+  the team's crest and the mark, and a rivalry puts your crest against theirs.
+- **Rim cam:** the owner asked for the ball, not the player: a buzzer beater with the clock
+  behind, the rim and the glass, the ball swishing in. `art/PlayCam.tsx` is a close shot of the
+  glass (game clock in LED digits above it, the crowd dimmed behind) where the ball does what
+  the play-by-play says, read from its tag and words: a three arcing in, a jumper, a layup off
+  the glass, a dunk that shakes the rim and whips the net, a free throw, a rim-out, a block
+  swatted away by a hand, a steal poked loose, and on a buzzer beater the clock running out to
+  0.0 as the ball drops while the glass's LED strip flashes red. It plays in the finals' crunch
+  time (one play at a time) and in title games (his own buckets; plays that come faster than the
+  animation wait, and only the latest is shown).
+- **Last shot in playable games:** the clutch possession now leaves a line in the game's recent
+  list ("Last shot: your drive is blocked at the rim!"), which the next screen replays on the rim
+  cam. It is written from the outcome the engine already rolled, so no result changes.

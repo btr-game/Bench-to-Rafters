@@ -109,7 +109,7 @@ export interface LiveGameArgs {
 }
 
 /** Plays one postseason game quarter by quarter with the player's calls. */
-export function playLiveGame(s: GameState, a: LiveGameArgs): { line: StatLine; us: number; them: number; win: boolean } {
+export function playLiveGame(s: GameState, a: LiveGameArgs): { line: StatLine; us: number; them: number; win: boolean; lastShot?: string } {
   const rng = s.rng;
   const p = s.player;
   const lv = LEVELS[a.level].avg;
@@ -130,6 +130,7 @@ export function playLiveGame(s: GameState, a: LiveGameArgs): { line: StatLine; u
   let us = 0;
   let them = 0;
   const qs: [number, number][] = [];
+  let lastShot: string | undefined; // how his last possession went, for the play-by-play
   const sr = a.series;
   const head = {
     round: a.round,
@@ -197,7 +198,20 @@ export function playLiveGame(s: GameState, a: LiveGameArgs): { line: StatLine; u
     });
     const pts = call === 'drive' ? 2 : three ? 3 : 2;
     const prob = call === 'pull' ? pull : call === 'drive' ? drive : pass;
-    if (chance(rng, prob)) {
+    const made = chance(rng, prob);
+    lastShot =
+      call === 'pull'
+        ? made
+          ? `Last shot: you pull up ${three ? 'from three' : 'from the elbow'} and it is good!`
+          : `Last shot: your pull-up ${three ? 'three ' : ''}rims out`
+        : call === 'drive'
+          ? made
+            ? 'Last shot: you attack the rim and finish the layup!'
+            : 'Last shot: your drive is blocked at the rim!'
+          : made
+            ? `Last shot: you draw two and kick it out; your teammate ${three ? 'drills the three' : 'hits the jumper'}!`
+            : 'Last shot: you find the open man, and his shot misses';
+    if (made) {
       us += pts;
       if (call !== 'pass') {
         line.pts += pts;
@@ -235,7 +249,7 @@ export function playLiveGame(s: GameState, a: LiveGameArgs): { line: StatLine; u
     ot.gs = 0;
     addLine(line, ot);
   }
-  return { line, us, them, win: us > them };
+  return { line, us, them, win: us > them, lastShot };
 }
 
 /** The pick before each game: play it, simulate it, or simulate more. */

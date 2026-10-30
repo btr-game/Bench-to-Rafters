@@ -255,7 +255,7 @@ function makeHook(s: GameState, league: League, level: LevelKey, acc: HalfAcc, s
     let minutes = 0;
     // a playable postseason game? (only inside a postseason replay, and only if he can play)
     let live = false;
-    let liveResult: { us: number; them: number; win: boolean } | null = null;
+    let liveResult: { us: number; them: number; win: boolean; lastShot?: string } | null = null;
     if (post && s.live && !(p.injury && p.injury.key !== 'dtd')) {
       const key = `${post}|${opp.id}`;
       if (!s.live.simAll && s.live.simSeries !== key) {
@@ -344,6 +344,7 @@ function makeHook(s: GameState, league: League, level: LevelKey, acc: HalfAcc, s
     }
     if (post && s.live) {
       const tag = series && series.bestOf > 1 ? `${post} G${series.game}` : post;
+      if (liveResult?.lastShot) s.live.recent.push(liveResult.lastShot);
       s.live.recent.push(`${tag}: ${win ? 'W' : 'L'} ${us}–${them} vs ${opp.short}${line ? ` (you: ${line.pts} pts)` : ''}`);
     }
     const log: GameLog = { n: (post ? season.postGames : season.games).length + 1, opp: opp.short, home, res: win ? 'W' : 'L', us, them, line, post };

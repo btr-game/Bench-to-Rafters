@@ -9,6 +9,36 @@ import { callQuestion, callsLeft, makeCall, STORY_LABEL } from '../../engine/wor
 import { ovrOf } from '../../engine/player/ovr';
 import { fmtMoney } from '../../engine/economy/salary';
 import { useStore } from '../../store';
+import { Icon } from '../art/Icon';
+import { STORY_ICON } from '../art/icons';
+import { TeamArt } from '../art/Crest';
+import { styleLeague } from '../art/Player';
+import type { Team } from '../../engine/types';
+import type { LeagueStory } from '../../engine/world/stories';
+
+/** A story's banner: the team's crest and the story's mark; a rivalry puts your crest against theirs. */
+function StoryArt({ x, t, me, league }: { x: LeagueStory; t?: Team; me?: Team; league?: string }) {
+  const crest = (tm: Team, size: number) => <TeamArt name={tm.name} abbr={tm.abbr || tm.short} color={tm.color} league={styleLeague(league)} size={size} />;
+  return (
+    <div className={`story-art story-art-${x.kind}`} aria-hidden="true">
+      {x.kind === 'rival' && me && t ? (
+        <>
+          {crest(me, 44)}
+          <span className="story-vs">
+            <Icon name="rival" size={30} />
+            <b>VS</b>
+          </span>
+          {crest(t, 44)}
+        </>
+      ) : (
+        <>
+          {t && crest(t, 44)}
+          <Icon name={STORY_ICON[x.kind] ?? 'news'} size={38} />
+        </>
+      )}
+    </div>
+  );
+}
 
 export function RecruitCard({ g }: { g: GameState }) {
   const recruit = useStore((s) => s.recruit);
@@ -180,6 +210,7 @@ export function StoriesCard({ g }: { g: GameState }) {
         <ul className="story-lines">
           {order.map(({ x }) => (
             <li key={x.kind + x.teamId} className={x.mine ? 'mine' : ''}>
+              <Icon name={STORY_ICON[x.kind] ?? 'news'} size={16} />
               <span className="story-tag">{STORY_LABEL[x.kind]}</span> {x.title}
             </li>
           ))}
@@ -192,6 +223,7 @@ export function StoriesCard({ g }: { g: GameState }) {
           const q = callQuestion(x);
           return (
             <div key={x.kind + x.teamId} className={`story story-${x.kind}${x.mine ? ' story-mine' : ''}`} style={{ ['--team' as string]: t?.color ?? 'var(--line)' }}>
+              <StoryArt x={x} t={t} me={lg?.teams.find((y) => y.id === g.teamId)} league={lg?.level} />
               <div className="row" style={{ gap: 6 }}>
                 <span className="story-tag">{STORY_LABEL[x.kind]}</span>
                 <b>{x.title}</b>
