@@ -122,6 +122,7 @@ const MINI: DevCard[] = (
     ['threes', 'Three-point contest', 'range', 'Five racks, a money rack, a timing meter.'],
     ['dunk', 'Dunk contest', 'flame', 'Design dunks; each move once a contest.'],
     ['street', '3-on-3 streetball', 'post', 'One game to 11, action cam on timing shots.'],
+    ['rhythm', 'Lockdown', 'lockdown', 'Rhythm defense: A blocks, S steals, new sets each run.'],
     ['lab', 'Built in a lab (mini-game)', 'lab', 'Spend credits on a prospect.'],
     ['legends', 'Legends showdown', 'laurel', 'A legends bracket with your player.'],
   ] as const

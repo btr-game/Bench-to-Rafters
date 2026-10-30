@@ -89,6 +89,7 @@ const TOUR: Step[] = [
   T('hub', '.hub-grid', 'Pick a game. Locked ones say what they need.'),
   T('dunk-moves', '.dunk-chips', 'Build the dunk part by part. Each move can be shown once a contest.'),
   T('sb-moves', '.sb-moves', 'Pick the play. Drives and pull-ups go to the timing meter and the action cam.'),
+  T('ld-keys', '.ld-keys', 'A blocks, S steals. Press as a note crosses the line, and hold the long ones.'),
   T('mvp', '.mvp-race', 'The MVP race: the leaders and how close you are.'),
   T('duo', '.duo-card', 'Your duo or Big Three: chemistry with teammates.'),
   T('move-focus', `${D('move-focus')}:not(:disabled)`, 'A breakthrough season: pick new focus stats.'),

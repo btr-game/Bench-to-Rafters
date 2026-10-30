@@ -1396,3 +1396,12 @@ Reached from the start page and from the bottom of Home (a career in progress is
   the 99 hall, the live strip, paying respects ("press F"), the inbox, the community, the timing
   meter and the roster; medals for every achievement tier; bronze and gold statues; a floor per
   kind of final; the park for streetball.
+- **Lockdown, the rhythm mini-game** (the owner: two buttons, block on A and steal on S, at least
+  ten patterns dealt at random, 30 seconds to a minute, a press at least every 3 seconds, long
+  notes allowed, pays defense). Each run deals four-beat sets from 14 named plays, easier ones
+  early, never the same twice in a row, often mirrored, and adds a note wherever 2.8 seconds would
+  pass without one; runs last 38 to 52 seconds. The beat is a small drum machine in the Web Audio
+  API, started by the Start button. The game clock is the sound reaching the speakers (the output
+  timestamp, carried forward with the page clock), so presses line up with what the player hears;
+  a scripted player pressing on the beat scores 100%. Grades S to D pay perimeter and interior
+  defense; it opens in a career when either defense reaches 82.

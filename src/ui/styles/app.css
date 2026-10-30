@@ -1631,3 +1631,18 @@ td .art-team { display: inline-block; vertical-align: middle; margin: -3px 8px -
 .roster-tops { font-family: var(--f-mono); color: var(--muted); white-space: nowrap; }
 .roster-ovr { font-family: var(--f-display); font-size: 24px; text-align: right; font-variant-numeric: tabular-nums; }
 @media (max-width: 640px) { .roster-tops { display: none; } .roster-row { grid-template-columns: 38px 34px minmax(0, 1fr) 40px; } }
+
+/* ---- round 24: Lockdown, the rhythm game ---- */
+.ld-intro-row { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.ld-keys { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; font-weight: 600; }
+.ld-stage { display: grid; justify-items: center; gap: 10px; }
+.ld-canvas { width: min(100%, 420px); height: auto; border-radius: 12px; border: 3px solid #1b1820; box-shadow: 0 10px 26px rgba(0, 0, 0, 0.25); image-rendering: pixelated; touch-action: none; }
+.ld-pads { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: min(100%, 420px); }
+.ld-pad { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 64px; border-radius: 10px; border: 2px solid var(--lane); background: color-mix(in srgb, var(--lane) 14%, var(--surface)); color: var(--ink); font-family: var(--f-display); font-size: 22px; font-weight: 800; text-transform: uppercase; cursor: pointer; touch-action: none; user-select: none; }
+.ld-pad:active { background: var(--lane); color: #15171d; }
+.ld-result { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+.ld-grade { display: grid; place-items: center; width: 110px; height: 110px; border-radius: 16px; border: 3px solid #1b1820; font-family: var(--f-display); font-size: 80px; font-weight: 900; line-height: 1; color: #15171d; background: #ced4da; }
+.ld-grade.g-S { background: #FFD43B; }
+.ld-grade.g-A { background: #69DB7C; }
+.ld-grade.g-B { background: #74C0FC; }
+.ld-grade.g-C { background: #FFA94D; }

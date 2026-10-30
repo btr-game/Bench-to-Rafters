@@ -11,6 +11,7 @@ import { ThreesGame } from './Threes';
 import { LabGame } from './LabGame';
 import { DunkGame } from './Dunk';
 import { StreetballGame } from './Streetball';
+import { LockdownGame } from './Lockdown';
 import { DailyGame } from './Daily';
 
 const GAMES: { id: MiniId | 'daily'; name: string; text: string; tag: string; color: string }[] = [
@@ -20,6 +21,7 @@ const GAMES: { id: MiniId | 'daily'; name: string; text: string; tag: string; co
   { id: 'dunk' as const, tag: 'Timing', color: '#C2255C', name: 'Dunk contest', text: 'Design your dunks (takeoff, moves, props) and land them one timing tap at a time. Five judges, two rounds, three of the best dunkers ever.' },
   { id: 'lab' as const, tag: 'Building', color: '#2F9E44', name: 'Built in a lab', text: 'Design a player and build him over ten seasons: spend each summer\'s credits on ratings, then watch the season play out. Two minutes a run.' },
   { id: 'street' as const, tag: 'Action', color: '#2B8A3E', name: '3-on-3 streetball', text: 'One game to 11 at a city park against the crew that holds the court, by ones and twos, make it take it. Pick the play, time your drives and pull-ups on the action cam, read their defense.' },
+  { id: 'rhythm' as const, tag: 'Rhythm', color: '#5F3DC4', name: 'Lockdown', text: 'A rhythm game of defense: the offense runs its sets to the beat, you block (A) and steal (S) on time and hold the long notes. Fourteen sets in a random order, under a minute a run. Pays perimeter and interior defense.' },
   { id: 'legends' as const, tag: 'Strategy', color: '#B08900', name: 'Legends showdown', text: 'Every franchise plays with its all-time starting five. Join one (with a career: your own player), mind the chemistry, survive the season, then beat the powerhouses in four playoff rounds.' },
 ];
 
@@ -55,7 +57,7 @@ function Hub() {
                 {(pr || dailyShut) && <span className={`hub-state${locked ? '' : ' open'}`}>{locked ? 'Locked' : 'Unlocked'}</span>}
               </span>
               <b className="hub-name with-icon">
-                <Icon name={x.id === 'office' ? 'office' : x.id === 'lab' ? 'lab' : x.id === 'daily' ? 'calendar' : ICON_FOR[x.id] ?? ''} size={34} />
+                <Icon name={x.id === 'office' ? 'office' : x.id === 'lab' ? 'lab' : x.id === 'daily' ? 'calendar' : x.id === 'rhythm' ? 'lockdown' : ICON_FOR[x.id] ?? ''} size={34} />
                 {x.name}
               </b>
               <small>{x.text}</small>
@@ -135,6 +137,7 @@ export function MiniGames() {
       {mini === 'dunk' && <DunkGame />}
       {mini === 'lab' && <LabGame />}
       {mini === 'street' && <StreetballGame />}
+      {mini === 'rhythm' && <LockdownGame />}
       {mini === 'daily' && <DailyGame />}
     </div>
   );
@@ -154,7 +157,7 @@ export function MiniGamesCard() {
         <p className="small muted">Locked during the daily challenge, so a run stays quick. They open again when you go back to your career.</p>
       ) : (
         <>
-          <p className="small muted">Front Office, the three-point and dunk contests, 3-on-3 streetball, Built in a lab, the legends showdown and the daily challenge. With a career, each opens when your ratings reach it.</p>
+          <p className="small muted">Front Office, the three-point and dunk contests, 3-on-3 streetball, Lockdown, Built in a lab, the legends showdown and the daily challenge. With a career, each opens when your ratings reach it.</p>
           <button className="btn ghost" data-tour="minis" onClick={() => setMini('hub')}>
             Play a mini-game
           </button>

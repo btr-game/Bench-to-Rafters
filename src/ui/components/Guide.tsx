@@ -85,6 +85,7 @@ const SECTIONS: { title: string; where: string; items: [string, string[]][] }[] 
       ['Legends showdown', ['Every franchise’s all-time five. Mind the chemistry, survive the playoffs.']],
       ['Built in a lab', ['Design a player and spend credits on his ratings, season by season.', 'His art evolves as his OVR climbs.']],
       ['3-on-3 streetball', ['One game to 11 against the crew that holds the court.', 'Drives and pull-ups ask for a timing tap and play out on the action cam.', 'Pays finishing.']],
+      ['Lockdown', ['A rhythm game on defense: A blocks, S steals, on the beat.', 'Every run deals 30 to 60 seconds of their sets in a new order; hold the long notes.', 'Pays perimeter and interior defense.']],
       ['Daily challenge', ['The same prospect for everyone, every day.', 'Fast break and simple text stay on, and mini-games are locked, so a run stays quick.']],
     ],
   },

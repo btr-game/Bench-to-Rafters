@@ -16,7 +16,7 @@ import { NAMES } from '../../content/strings';
 import { addCredits, isLab } from './lab';
 import { logDecision, userOvr } from './common';
 
-export type MiniId = 'threes' | 'legends' | 'office' | 'dunk' | 'lab' | 'street';
+export type MiniId = 'threes' | 'legends' | 'office' | 'dunk' | 'lab' | 'street' | 'rhythm';
 
 export const MINI_CLAIMS = { perSeason: 2, share: [1, 0.5] };
 
@@ -25,20 +25,22 @@ export const MINI_CLAIMS = { perSeason: 2, share: [1, 0.5] };
  * that (aging does not lock it again). From the start page every game is free to play.
  * Rewards are larger (x1.6) to match.
  */
-export const MINI_UNLOCK: Record<MiniId, { key: AttrKey | 'OVR'; at: number; label: string }> = {
+export const MINI_UNLOCK: Record<MiniId, { key: AttrKey | 'OVR' | 'DEF'; at: number; label: string }> = {
   threes: { key: 'SHT', at: 85, label: 'Shooting' },
   dunk: { key: 'ATH', at: 85, label: 'Athleticism' },
   office: { key: 'IQ', at: 85, label: 'Basketball IQ' },
   lab: { key: 'OVR', at: 82, label: 'OVR' },
   legends: { key: 'OVR', at: 90, label: 'OVR' },
   street: { key: 'FIN', at: 82, label: 'Finishing' },
+  // round 24: Lockdown opens for a good defender, on the perimeter or inside
+  rhythm: { key: 'DEF', at: 82, label: 'Perimeter or interior D' },
 };
 export const MINI_REWARD_MULT = 1.6;
 
 /** His value toward a game's unlock, and whether it is open. */
 export function miniProgress(s: GameState, id: MiniId): { value: number; at: number; label: string; open: boolean } {
   const u = MINI_UNLOCK[id];
-  const value = u.key === 'OVR' ? userOvr(s) : s.player.attrs[u.key];
+  const value = u.key === 'OVR' ? userOvr(s) : u.key === 'DEF' ? Math.max(s.player.attrs.PER, s.player.attrs.INT) : s.player.attrs[u.key];
   return { value, at: u.at, label: u.label, open: (s.miniOpen ?? []).includes(id) || value >= u.at };
 }
 
@@ -56,7 +58,7 @@ export function syncMiniUnlocks(s: GameState): string[] {
   return fresh;
 }
 
-export const MINI_NAMES: Record<MiniId, string> = { threes: 'Three-point contest', dunk: 'Dunk contest', office: 'Front Office', lab: 'Built in a lab', legends: 'Legends showdown', street: '3-on-3 streetball' };
+export const MINI_NAMES: Record<MiniId, string> = { threes: 'Three-point contest', dunk: 'Dunk contest', office: 'Front Office', lab: 'Built in a lab', legends: 'Legends showdown', street: '3-on-3 streetball', rhythm: 'Lockdown' };
 
 export type MiniResult =
   | { game: 'threes'; score: number; won: boolean; own: boolean }
@@ -64,7 +66,8 @@ export type MiniResult =
   | { game: 'office'; titles: number; playoffs: number; seasons: number; fired: boolean }
   | { game: 'dunk'; best: number; won: boolean }
   | { game: 'lab'; peak: number }
-  | { game: 'street'; reached: 'rout' | 'win' | 'close' | 'out' };
+  | { game: 'street'; reached: 'rout' | 'win' | 'close' | 'out' }
+  | { game: 'rhythm'; grade: 'S' | 'A' | 'B' | 'C' | 'D' };
 
 /** Claims already made this season. */
 export function claimsUsed(s: GameState): number {
@@ -112,6 +115,11 @@ export function miniReward(r: MiniResult): { attrs: Partial<Record<AttrKey, numb
       const v = r.reached === 'rout' ? 4 : r.reached === 'win' ? 2.5 : r.reached === 'close' ? 1.2 : 0;
       return { attrs: v ? { FIN: v, ATH: v / 4 } : {}, rep: r.reached === 'rout' ? 3 : 0 };
     }
+    case 'rhythm': {
+      // round 24: Lockdown is a defense workout, perimeter and interior alike
+      const v = r.grade === 'S' ? 4 : r.grade === 'A' ? 2.5 : r.grade === 'B' ? 1.2 : r.grade === 'C' ? 0.5 : 0;
+      return { attrs: v ? { PER: v * 0.6, INT: v * 0.6 } : {}, rep: r.grade === 'S' ? 2 : 0 };
+    }
   }
 }
 
@@ -130,7 +138,8 @@ export function scaledReward(s: GameState, r: MiniResult): ReturnType<typeof min
   const attrs: Partial<Record<AttrKey, number>> = {};
   // bigs turn the playmaking and perimeter part into what counts for them
   const big = s.player.pos === 'PF' || s.player.pos === 'C';
-  const to = (a: AttrKey): AttrKey => (big && a === 'PLY' ? 'INT' : big && a === 'PER' ? 'REB' : a);
+  // (Lockdown's perimeter defense stays perimeter defense: it is a defense game for everyone)
+  const to = (a: AttrKey): AttrKey => (r.game === 'rhythm' ? a : big && a === 'PLY' ? 'INT' : big && a === 'PER' ? 'REB' : a);
   for (const [a0, v] of Object.entries(w.attrs) as [AttrKey, number][]) {
     const a = to(a0);
     if (v) attrs[a] = Math.round(((attrs[a] ?? 0) + v * k * (isLab(s) ? 1 : taperAt(s.player.attrs[a]))) * 10) / 10;

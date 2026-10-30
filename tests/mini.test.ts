@@ -9,6 +9,7 @@ import { contestRng, simRound, shotResult, zoneWidth } from '../src/engine/mini/
 import { canClaimMini, claimMini, claimsUsed, MINI_CLAIMS, MINI_REWARD_MULT, miniReward, taperAt } from '../src/engine/career/miniBonus';
 import { labBestSpend, labBuy, labPlaySeason, labSpreadSpend, LAB_GAME, newLabGame } from '../src/engine/mini/labGame';
 import { newStreet, runDefense, runOffense, STREET, streetResult } from '../src/engine/mini/streetball';
+import { accuracy, gradeOf, judgeAt, makeChart, PATTERNS } from '../src/engine/mini/rhythm';
 import { bailOut, contestRng as dunkRng, DUNKERS, dunkDifficulty, dunkTaps, judge, MOVES, movesLeft, simDunks, tapQuality, type DunkDesign } from '../src/engine/mini/dunk';
 import { newGame } from '../src/engine/flow';
 import { modeDial } from '../src/engine/balance';
@@ -180,5 +181,32 @@ describe('round 12 mini-games', () => {
       simDunks(r, d, 2, used);
       expect(new Set(used).size).toBe(used.length);
     }
+  });
+
+  it('Lockdown deals 30 to 60 seconds of varied sets, a press at least every 3 s, and pays defense (round 24)', () => {
+    expect(PATTERNS.length).toBeGreaterThanOrEqual(10);
+    const seen = new Set<string>();
+    for (let i = 0; i < 300; i++) {
+      const c = makeChart(500 + i * 7919);
+      expect(c.length).toBeGreaterThanOrEqual(30);
+      expect(c.length).toBeLessThanOrEqual(60);
+      let prev = 0;
+      for (const n of c.notes) {
+        expect(n.t - prev).toBeLessThanOrEqual(3);
+        prev = Math.max(prev, n.t + n.len);
+      }
+      c.sets.forEach((x) => seen.add(x.name));
+      for (let k = 1; k < c.sets.length; k++) expect(c.sets[k].name).not.toBe(c.sets[k - 1].name);
+    }
+    expect(seen.size).toBe(PATTERNS.length);
+    expect(judgeAt(0.02)).toBe('perfect');
+    expect(judgeAt(-0.1)).toBe('good');
+    expect(judgeAt(-0.18)).toBe('miss');
+    expect(judgeAt(0.3)).toBeNull();
+    expect(gradeOf(accuracy({ perfect: 40, good: 0, miss: 0, held: 4, dropped: 0, maxCombo: 44 }))).toBe('S');
+    expect(gradeOf(accuracy({ perfect: 0, good: 0, miss: 40, held: 0, dropped: 4, maxCombo: 0 }))).toBe('D');
+    const r = miniReward({ game: 'rhythm', grade: 'S' });
+    expect((r.attrs.PER ?? 0) + (r.attrs.INT ?? 0)).toBeGreaterThan(0);
+    expect(r.attrs.FIN ?? 0).toBe(0);
   });
 });
