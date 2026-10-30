@@ -709,6 +709,8 @@ button.scout-row { text-align: left; background: var(--surface); color: inherit;
 .dunk-chip.on { border-color: var(--accent); background: var(--accent); color: var(--accent-ink); }
 .dunk-chip.on small { color: var(--accent-ink); }
 .dunk-chip.used:not(.on) { opacity: 0.6; }
+.dunk-chip.gone { opacity: 0.45; cursor: not-allowed; text-decoration: line-through; }
+.dunk-chip.gone small { color: var(--muted); letter-spacing: 0; text-decoration: none; }
 .dunk-recipe { display: grid; gap: 6px; }
 .dunk-recipe span { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 8px; align-items: baseline; font-weight: 600; }
 .dunk-recipe i { font-style: normal; font-family: var(--f-mono); font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }

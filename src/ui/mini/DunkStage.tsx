@@ -142,7 +142,7 @@ export function DunkStage({ kit, name, design, phase, progress = 0, made = true,
     ball = [RIM[0] - 4, RIM[1] + u * 30];
   } else if (t < 0.72 && !(design.prop === 'lob' && t <= 0.6)) {
     // windmill and friends swing the ball round the body
-    const swing = design.moves.some((m) => m === 'windmill' || m === 'legs' || m === 'back') && p.air ? Math.sin(t * 40) * 9 : 0;
+    const swing = design.moves.some((m) => ['windmill', 'legs', 'back', 'cradle', 'scorpion', 'pump'].includes(m)) && p.air ? Math.sin(t * 40) * 9 : 0;
     ball = p.air ? [p.x - 10 + swing, p.y - 50 + Math.abs(swing)] : [p.x - 14, p.y - 18 + Math.abs(Math.sin(t * 50)) * 6];
   }
   const shake = slam ? (Math.floor(t * 100) % 2 ? 1 : -1) : 0;

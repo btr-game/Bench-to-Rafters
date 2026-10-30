@@ -8,7 +8,7 @@ import * as F from '../src/engine/mini/frontOffice';
 import { contestRng, simRound, shotResult, zoneWidth } from '../src/engine/mini/threes';
 import { canClaimMini, claimMini, claimsUsed, MINI_CLAIMS, MINI_REWARD_MULT, miniReward, taperAt } from '../src/engine/career/miniBonus';
 import { labBestSpend, labBuy, labPlaySeason, labSpreadSpend, LAB_GAME, newLabGame } from '../src/engine/mini/labGame';
-import { bailOut, contestRng as dunkRng, dunkDifficulty, dunkTaps, judge, tapQuality, type DunkDesign } from '../src/engine/mini/dunk';
+import { bailOut, contestRng as dunkRng, DUNKERS, dunkDifficulty, dunkTaps, judge, MOVES, movesLeft, simDunks, tapQuality, type DunkDesign } from '../src/engine/mini/dunk';
 import { newGame } from '../src/engine/flow';
 import { modeDial } from '../src/engine/balance';
 
@@ -147,5 +147,19 @@ describe('round 12 mini-games', () => {
     expect(h / 30).toBeGreaterThan(e / 30 + 8);
     expect(judge(r, hard, [1, 1, 1, 1, 1], 1, []).total).toBeLessThanOrEqual(50);
     expect(bailOut(r).total).toBeLessThan(e / 30);
+  });
+
+  it('a dunk move is shown once a contest, by him and by the others (round 24)', () => {
+    expect(movesLeft(['legs', '360']).map((m) => m.id)).not.toContain('legs');
+    expect(movesLeft([]).length).toBe(MOVES.length);
+    // four dunks of two moves each still leave a choice
+    expect(MOVES.length).toBeGreaterThanOrEqual(10);
+    const r = dunkRng(9);
+    for (const d of DUNKERS) {
+      const used: string[] = [];
+      simDunks(r, d, 2, used);
+      simDunks(r, d, 2, used);
+      expect(new Set(used).size).toBe(used.length);
+    }
   });
 });

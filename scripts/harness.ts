@@ -31,7 +31,7 @@ function randomInput(r: Rng, policy: Policy) {
 
 const enabled = (d: Decision): Choice[] => d.choices.filter((c) => !c.disabled);
 
-function smartChoice(s: GameState, d: Decision, r: Rng): string {
+export function smartChoice(s: GameState, d: Decision, r: Rng): string {
   const ch = enabled(d);
   const byId = (id: string) => ch.find((c) => c.id === id)?.id;
   switch (d.kind) {

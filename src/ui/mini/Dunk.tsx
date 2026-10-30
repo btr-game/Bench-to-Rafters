@@ -1,7 +1,7 @@
 // The dunk contest (engine/mini/dunk.ts): design a dunk, then land it one timing tap at a time.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { bailOut, contestRng, DUNK, DUNKERS, dunkDifficulty, difficultyLabel, dunkName, dunkParts, dunkTaps, freshParts, judge, MOVES, PROPS, simDunk, sweepFor, TAKEOFFS, tapQuality, type DunkDesign, type Dunker, type DunkPart, type DunkScore, type DunkTap } from '../../engine/mini/dunk';
+import { bailOut, contestRng, DUNK, DUNKERS, dunkDifficulty, difficultyLabel, dunkName, dunkParts, dunkTaps, freshParts, judge, MOVES, PROPS, simDunks, sweepFor, TAKEOFFS, tapQuality, type DunkDesign, type Dunker, type DunkPart, type DunkScore, type DunkTap } from '../../engine/mini/dunk';
 import { shuffle } from '../../engine/rng';
 import { useStore } from '../../store';
 import { MiniBonus } from './MiniBonus';
@@ -11,15 +11,16 @@ import { DUNKER_TEAMS } from '../../content/legendNumbers';
 import { kitFor, styleLeague } from '../art/Player';
 import { team as teamOf } from '../selectors';
 
-/** One part of a dunk to pick: its name and difficulty dots; a check mark when chosen. */
-function PartChip({ part, on, used, onClick }: { part: DunkPart; on: boolean; used: boolean; onClick: () => void }) {
+/** One part of a dunk to pick: its name and difficulty dots; a check mark when chosen. A move he
+ * has already landed in this contest is gone (round 24), so its chip is crossed out. */
+function PartChip({ part, on, used, gone = false, onClick }: { part: DunkPart; on: boolean; used: boolean; gone?: boolean; onClick: () => void }) {
   return (
-    <button className={`dunk-chip${on ? ' on' : ''}${used && part.diff > 0 ? ' used' : ''}`} aria-pressed={on} onClick={onClick}>
+    <button className={`dunk-chip${on ? ' on' : ''}${used && part.diff > 0 ? ' used' : ''}${gone ? ' gone' : ''}`} aria-pressed={on} disabled={gone} onClick={onClick} title={gone ? 'Already shown in this contest' : undefined}>
       <span>
         {on ? '✓ ' : ''}
         {part.name}
       </span>
-      <small>{part.diff ? '●'.repeat(part.diff) : '–'}</small>
+      <small>{gone ? 'shown' : part.diff ? '●'.repeat(part.diff) : '–'}</small>
     </button>
   );
 }
@@ -201,6 +202,8 @@ export function DunkGame() {
   const [design, setDesign] = useState<DunkDesign>({ takeoff: 'run', moves: ['windmill'], prop: 'none' });
   const [attempt, setAttempt] = useState(1);
   const [used, setUsed] = useState<string[]>([]);
+  // the others don't repeat a move either, from the first round into the final
+  const rivalUsed = useRef<Record<string, string[]>>({});
   const [missed, setMissed] = useState<string | null>(null);
   const [taps, setTaps] = useState<DunkTap[]>([]);
   const [tryKey, setTryKey] = useState(0);
@@ -215,7 +218,8 @@ export function DunkGame() {
   };
   const land = (s: DunkScore) => {
     setMine((m) => m.map((r, k) => (k === round - 1 ? [...r, s] : r)));
-    setUsed((u) => [...u, ...dunkParts(design).map((p) => p.id)]);
+    // only a dunk he landed shows its parts; its moves are gone for the rest of the contest
+    if (s.made) setUsed((u) => [...u, ...dunkParts(design).map((p) => p.id)]);
     setAttempt(1);
     setMissed(null);
     setStage('scored');
@@ -227,10 +231,14 @@ export function DunkGame() {
     setMissed(taps[missedAt].label);
     setStage('build');
   };
+  const nextDunk = () => {
+    setDesign((d) => ({ ...d, moves: d.moves.filter((m) => !used.includes(m)) }));
+    setStage('build');
+  };
   const myEntry = (r: number): Entry => ({ d: me, scores: mine[r] });
   const closeRound = () => {
     const rivals = round === 1 ? field : [ranked(0).find((e) => !e.d.me)!.d];
-    const sims = rivals.map((d) => ({ d, scores: [simDunk(rng, d), simDunk(rng, d)] }));
+    const sims = rivals.map((d) => ({ d, scores: simDunks(rng, d, 2, (rivalUsed.current[d.name] ??= [])) }));
     setOthers((o) => o.map((x, k) => (k === round - 1 ? sims : x)));
     setStage(round === 1 ? 'board' : 'done');
   };
@@ -259,7 +267,7 @@ export function DunkGame() {
           <p className="small">
             Four dunkers, two dunks each. The top two go to the final for two more. Design every dunk: a takeoff, one or two moves and maybe a prop. Each part is one timing tap; miss one and the attempt fails. Three attempts a dunk.
           </p>
-          <p className="small">Five judges score 6 to 10 each. Landing a dunk is the easy part; 9s and 10s take a hard dunk with clean timing (hit the bright middle of each green). Moves you haven't shown yet score a little extra, and a dunk landed on a later try loses a little.</p>
+          <p className="small">Five judges score 6 to 10 each. 9s and 10s take a hard dunk with clean timing (hit the bright middle of each green), and the greens are narrow. Every move can be shown once a contest, so save some for the final. A takeoff or prop you haven't used yet scores a little extra, and a dunk landed on a later try loses a little.</p>
           <p className="small muted">
             {me.name}'s bounce: Athleticism {ath}
             {game ? '' : ' (start a career to dunk as your own player)'}. More athleticism means a wider green.
@@ -326,10 +334,10 @@ export function DunkGame() {
               <PartChip key={t.id} part={t} on={design.takeoff === t.id} used={used.includes(t.id)} onClick={() => setDesign({ ...design, takeoff: t.id })} />
             ))}
           </div>
-          <div className="sec-title">Moves (one or two)</div>
+          <div className="sec-title">Moves (one or two, each once a contest)</div>
           <div className="dunk-chips">
             {MOVES.map((m) => (
-              <PartChip key={m.id} part={m} on={design.moves.includes(m.id)} used={used.includes(m.id)} onClick={() => toggle(m.id)} />
+              <PartChip key={m.id} part={m} on={design.moves.includes(m.id)} used={false} gone={used.includes(m.id)} onClick={() => toggle(m.id)} />
             ))}
           </div>
           <div className="sec-title">Prop</div>
@@ -376,7 +384,7 @@ export function DunkGame() {
           <div className="sec-title">{last.made ? (last.total >= 50 ? 'Fifty! The building erupts' : last.total >= 45 ? 'The crowd is up' : 'The judges have it') : 'Three misses'}</div>
           <Cards s={last} />
         </section>
-        <button className="btn" onClick={roundDone ? closeRound : () => setStage('build')}>
+        <button className="btn" onClick={roundDone ? closeRound : nextDunk}>
           {roundDone ? 'See how the others did' : 'Next dunk'}
         </button>
       </section>
@@ -404,7 +412,7 @@ export function DunkGame() {
             className="btn"
             onClick={() => {
               setRound(2);
-              setStage('build');
+              nextDunk();
             }}
           >
             On to the final
@@ -441,6 +449,7 @@ export function DunkGame() {
           setMine([[], []]);
           setOthers([[], []]);
           setUsed([]);
+          rivalUsed.current = {};
           setAttempt(1);
         }}
       >

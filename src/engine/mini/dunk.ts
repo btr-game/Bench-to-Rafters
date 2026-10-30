@@ -8,6 +8,9 @@
 // attempt fails; three attempts a dunk, and a dunk made on a later try scores a little less.
 // Five judges score 6-10 each (50 is perfect): difficulty, clean timing and creativity (parts
 // you haven't used yet in the contest).
+// Round 24 (owner: "too easy", and "let's try not to get overlaps in moves"): narrower greens, a
+// faster sweep and stricter cards, and a move he has landed once is gone for the rest of the
+// contest (takeoffs and props can repeat). Three more moves keep four dunks' worth of choice.
 // The other three dunkers are simulated from their skill.
 
 import { clamp, makeRng, next, normal, pick, shuffle, type Rng } from '../rng';
@@ -28,9 +31,12 @@ export const MOVES: DunkPart[] = [
   { id: 'tomahawk', name: 'Tomahawk', diff: 1 },
   { id: 'reverse', name: 'Reverse', diff: 2 },
   { id: 'windmill', name: 'Windmill', diff: 2 },
+  { id: 'pump', name: 'Double pump', diff: 2 },
   { id: '360', name: '360', diff: 3 },
+  { id: 'cradle', name: 'Rock the cradle', diff: 3 },
   { id: 'legs', name: 'Between the legs', diff: 4 },
   { id: 'back', name: 'Behind the back', diff: 4 },
+  { id: 'scorpion', name: 'Scorpion', diff: 5 },
 ];
 export const PROPS: DunkPart[] = [
   { id: 'none', name: 'No prop', diff: 0 },
@@ -42,24 +48,29 @@ export const PROPS: DunkPart[] = [
 export const DUNK = {
   attempts: 3,
   maxMoves: 2,
-  zoneBase: 0.38,
-  zoneAth: 0.006, // per point of athleticism above 80
-  zoneDiff: 0.03, // per point of the part's difficulty
-  zoneMin: 0.16,
-  sweepMs: 1300,
-  sweepDiff: 30, // faster per point of the dunk's difficulty
+  zoneBase: 0.31,
+  zoneAth: 0.005, // per point of athleticism above 80
+  zoneDiff: 0.032, // per point of the part's difficulty
+  zoneMin: 0.11,
+  sweepMs: 1150,
+  sweepDiff: 34, // faster per point of the dunk's difficulty
+  sweepMin: 520,
   base: 30,
   perDiff: 1.2,
-  clean: 10, // for perfect timing on every tap
-  fresh: 0.6, // for each part not used yet in the contest
-  freshMax: 2,
+  clean: 12, // for perfect timing on every tap
+  fresh: 0.6, // for each takeoff or prop not used yet in the contest (moves are always new now)
+  freshMax: 1.2,
   retry: 2.5, // off for each failed attempt before it
   bail: 28, // three misses: a safe dunk, booed
   // round 12b ("easier to land, but make the boundaries high for a 9 and 10"): each judge's card
-  // comes from the dunk's raw score plus his own taste; 7 from 34, 8 from 40, 9 from 46, 10 from 52
-  cards: [34, 40, 46, 52],
+  // comes from the dunk's raw score plus his own taste; round 24 raised every step by one:
+  // 7 from 35, 8 from 41, 9 from 47, 10 from 53
+  cards: [35, 41, 47, 53],
   taste: 1.6,
 };
+
+/** The moves still his to show: one he has landed in this contest is gone. */
+export const movesLeft = (used: string[]): DunkPart[] => MOVES.filter((m) => !used.includes(m.id));
 
 export interface DunkDesign {
   takeoff: string;
@@ -106,7 +117,7 @@ export function dunkTaps(r: Rng, d: DunkDesign, ath: number): DunkTap[] {
   return taps;
 }
 
-export const sweepFor = (d: DunkDesign): number => Math.max(550, DUNK.sweepMs - dunkDifficulty(d) * DUNK.sweepDiff);
+export const sweepFor = (d: DunkDesign): number => Math.max(DUNK.sweepMin, DUNK.sweepMs - dunkDifficulty(d) * DUNK.sweepDiff);
 
 /** How clean a tap was: 1 dead centre, 0 at the edge of the green, null outside it. */
 export function tapQuality(pos: number, tap: DunkTap): number | null {
@@ -121,9 +132,9 @@ export interface DunkScore {
   made: boolean;
 }
 
-/** Parts used in earlier dunks don't wow the judges twice. */
+/** A takeoff or prop used in an earlier dunk doesn't wow the judges twice (moves never repeat). */
 export function freshParts(d: DunkDesign, used: string[]): number {
-  return dunkParts(d).filter((p) => p.diff > 0 && !used.includes(p.id)).length;
+  return [part(TAKEOFFS, d.takeoff), part(PROPS, d.prop)].filter((p) => p.diff > 0 && !used.includes(p.id)).length;
 }
 
 export function judge(r: Rng, d: DunkDesign, quality: number[], attempt: number, used: string[]): DunkScore {
@@ -146,31 +157,35 @@ function panel(r: Rng, raw: number, name: string, made: boolean): DunkScore {
 
 export interface Dunker {
   name: string;
-  skill: number; // a typical dunk's raw score (the judges' cards come from it)
+  skill: number; // a typical dunk's raw score (the judges' cards come from it); round 24: two points up
   me?: boolean;
 }
 
 export const DUNKERS: Dunker[] = [
-  { name: 'Vince Carter', skill: 49.5 },
-  { name: 'Zach LaVine', skill: 49 },
-  { name: 'Aaron Gordon', skill: 48.5 },
-  { name: 'Michael Jordan', skill: 48.5 },
-  { name: 'Dominique Wilkins', skill: 48 },
-  { name: 'Mac McClung', skill: 47.5 },
-  { name: 'Jason Richardson', skill: 47 },
-  { name: 'Julius Erving', skill: 46.5 },
-  { name: 'Spud Webb', skill: 46 },
-  { name: 'Nate Robinson', skill: 46 },
-  { name: 'Blake Griffin', skill: 45.5 },
-  { name: 'Dwight Howard', skill: 45 },
+  { name: 'Vince Carter', skill: 51.5 },
+  { name: 'Zach LaVine', skill: 51 },
+  { name: 'Aaron Gordon', skill: 50.5 },
+  { name: 'Michael Jordan', skill: 50.5 },
+  { name: 'Dominique Wilkins', skill: 50 },
+  { name: 'Mac McClung', skill: 49.5 },
+  { name: 'Jason Richardson', skill: 49 },
+  { name: 'Julius Erving', skill: 48.5 },
+  { name: 'Spud Webb', skill: 48 },
+  { name: 'Nate Robinson', skill: 48 },
+  { name: 'Blake Griffin', skill: 47.5 },
+  { name: 'Dwight Howard', skill: 47 },
 ];
 
-/** A simulated dunk for one of the others: a design that fits his skill, and the judges' cards. */
-export function simDunk(r: Rng, d: Dunker): DunkScore {
-  const moves = shuffle(r, MOVES.filter((m) => m.diff >= (d.skill >= 46 ? 2 : 1))).slice(0, next(r) < 0.5 ? 2 : 1).map((m) => m.id);
-  const design: DunkDesign = { takeoff: pick(r, TAKEOFFS).id, moves, prop: pick(r, PROPS).id };
-  if (next(r) < 0.06) return bailOut(r);
-  return panel(r, normal(r, d.skill, 2.6), dunkName(design), true);
+/** A round of simulated dunks for one of the others: designs that fit his skill, never the same move twice. */
+export function simDunks(r: Rng, d: Dunker, n: number, used: string[] = []): DunkScore[] {
+  return Array.from({ length: n }, () => {
+    const pool = movesLeft(used).filter((m) => m.diff >= (d.skill >= 46 ? 2 : 1));
+    const moves = shuffle(r, pool.length ? pool : movesLeft(used)).slice(0, next(r) < 0.5 ? 2 : 1).map((m) => m.id);
+    used.push(...moves);
+    const design: DunkDesign = { takeoff: pick(r, TAKEOFFS).id, moves, prop: pick(r, PROPS).id };
+    if (next(r) < 0.06) return bailOut(r);
+    return panel(r, normal(r, d.skill, 2.6), dunkName(design), true);
+  });
 }
 
 export const contestRng = (seed: number): Rng => makeRng(seed);
