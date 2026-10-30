@@ -11,6 +11,7 @@ import { TeamArt } from '../art/Crest';
 import { PlayerArt, kitFor, styleLeague, type KitName } from '../art/Player';
 import { JerseyArt } from '../art/Jersey';
 import { EvolutionArt } from '../art/Evolution';
+import { archPose } from '../art/Hero';
 import { FlagArt } from '../art/Flag';
 import type { GameLog, GameState, League, SeasonRecord, SeriesResult, StatLine, Team } from '../../engine/types';
 import { ATTRS, LEVELS } from '../../engine/balance';
@@ -442,7 +443,7 @@ export function PlayerTab({ g }: { g: GameState }) {
         stripe={trimOf(g)}
         art={
           g.mode === 'lab' ? (
-            <EvolutionArt ovr={now} pos={p.pos} name={p.name} number={p.number} kit={kitFor(t?.name ?? '', t?.abbr ?? '', t?.color ?? '#1C7ED6', kit, styleLeague(g.stage))} size={150} track={false} />
+            <EvolutionArt ovr={now} pose={archPose(p.archetype, p.pos)} name={p.name} number={p.number} kit={kitFor(t?.name ?? '', t?.abbr ?? '', t?.color ?? '#1C7ED6', kit, styleLeague(g.stage))} size={150} track={false} />
           ) : (
             <PlayerArt name={p.name} number={p.number} pos={p.pos} color={t?.color} team={t?.name} abbr={t?.abbr} league={styleLeague(g.stage)} kit={kit} size={150} />
           )
@@ -522,7 +523,7 @@ export function PlayerTab({ g }: { g: GameState }) {
           </Card>
           {g.mode === 'lab' && (
             <Card title="Evolution">
-              <EvolutionArt ovr={now} pos={p.pos} name={p.name} number={p.number} kit={{ base: t?.color ?? '#1C7ED6', ink: '#FFFFFF', trim: '#F4F4F4', word: '' }} size={130} />
+              <EvolutionArt ovr={now} pose={archPose(p.archetype, p.pos)} name={p.name} number={p.number} kit={{ base: t?.color ?? '#1C7ED6', ink: '#FFFFFF', trim: '#F4F4F4', word: '' }} size={130} />
             </Card>
           )}
           <Card title="Profile">

@@ -1305,7 +1305,7 @@ td .art-team { display: inline-block; vertical-align: middle; margin: -3px 8px -
 .evo-flash { animation: evo-flash 1.4s ease-out; }
 @keyframes evo-flash { 0% { filter: brightness(3) saturate(0); } 25% { filter: brightness(2.2); } 100% { filter: none; } }
 .evo-tag { position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); background: #FCC419; color: #18141C; font-weight: 800; font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; white-space: nowrap; }
-.evo-track { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; width: 100%; }
+.evo-track { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; width: 100%; }
 .evo-track li { display: grid; justify-items: center; gap: 2px; font-size: 11px; text-align: center; }
 .evo-mini { display: grid; place-items: end center; height: 52px; }
 .evo-mini .art { height: 48px; width: auto; image-rendering: pixelated; }

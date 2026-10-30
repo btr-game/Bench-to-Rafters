@@ -1193,11 +1193,13 @@ Reached from the start page and from the bottom of Home (a career in progress is
   defense −3, rebounding −2, rim protection −2) and Veteran leader (basketball IQ +7, playmaking
   +2; athleticism −3, finishing −2, rebounding −2). The balance harness never chases a ring, so
   its numbers are unchanged.
-- **Built in a lab: the player evolves** (`art/Evolution.tsx`): five stages by OVR. Raw
-  prospect (under 66) is the cute sprite, small; Rising (66+) the cute sprite, bigger; Starter
-  (75+) the detailed traced player standing with the ball; All-Star (85+) the detailed player in
-  his position's action; MVP (92+) a signature move (PG no-look pass, SG fadeaway, SF two-hand
-  dunk, PF post move, C skyhook) in a gold glow. A track shows all five, with the stages ahead
-  as silhouettes, and the art flashes with an "Evolved" tag when he moves up. It shows in the
-  mini-game (during the build and on the results) and, in a Built in a lab career, in the Player
-  tab's banner and an Evolution card.
+- **Built in a lab: the player evolves** (`art/Evolution.tsx`). First take: five stages from the
+  cute sprite to the detailed art; the owner did not like it. Second take ("increase the amount
+  of pixels every time"): the same traced player at every level, drawn the same size, with more
+  pixels each level: high school 14 rows tall, university 20 (OVR 65+), a lower league 28 (70+),
+  NBA 40 (75+), All-Star 56 (80+), MVP the full 80 in a gold glow (89+). The small versions are
+  shrunk from the 80-row art (each pixel takes its block's most common colour; thin parts like
+  arms survive at the small sizes) and outlined again, and the jersey number appears once a 7x5
+  block of jersey fits. The mini-game shows the player's position pose; a Built in a lab career
+  shows his archetype's pose, in the Player tab's banner and an Evolution card. A track shows
+  every level, the art flashes when he moves up.
