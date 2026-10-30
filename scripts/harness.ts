@@ -157,7 +157,7 @@ export interface CareerResult {
   index: { total: number; best: number; score: number }; // round 25: the leaderboards' career index
   nickname: string | null; // round 25: what the media called him (nickname id)
   brand: { kind: 'deal' | 'line'; earned: number; shoe: number } | null;
-  money: { hired: number; staffPaid: number; fines: number; finedFor: number; legacy: number; pressers: number; seasons: number }; // round 25: staff, fines, legacy projects, press conferences
+  money: { hired: number; staffPaid: number; fines: number; finedFor: number; legacy: number; pressers: number; seasons: number; rival: string | null; h2h: [number, number] }; // round 25: staff, fines, legacy projects, press conferences
   peakOvr: number;
   potential: number;
   startOvr: number;
@@ -273,6 +273,8 @@ export function runCareer(seed: number, policy: Policy, mode: Mode = 'standard',
       legacy: s.player.legacyBonus ?? 0,
       pressers: s.log.filter((x) => x.kind === 'press').length / 3,
       seasons: s.history.length,
+      rival: s.rivalry ? `${s.rivalry.level}${s.rivalry.ended ? ' (ended)' : ''}` : null,
+      h2h: [s.rivalry?.w ?? 0, s.rivalry?.l ?? 0],
     },
     brand: s.player.brand ? { kind: s.player.brand.kind, earned: s.player.brand.earned, shoe: s.player.brand.shoe } : null,
     peakOvr: s.player.peakOvr,

@@ -57,6 +57,7 @@ import { perGame } from "../../engine/sim/statModel";
 import { weightOf } from "../../engine/player/weight";
 import { ModesCard } from '../components/ModesCard';
 import { StrengthCard } from '../components/StrengthCard';
+import { RivalCard } from '../components/RivalCard';
 
 export function SeasonSummary({ rec }: { rec: SeasonRecord }) {
   const delta = rec.ovrEnd - rec.ovrStart;
@@ -1012,6 +1013,7 @@ export function Home({ g }: { g: GameState }) {
       <div className="stack home-side">
         <MvpRace g={g} />
         <DuoCard g={g} />
+        <RivalCard g={g} />
         <ModesCard g={g} />
         <StoriesCard g={g} />
         <MiniGamesCard />

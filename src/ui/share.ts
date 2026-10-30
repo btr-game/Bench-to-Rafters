@@ -104,7 +104,9 @@ export async function drawCareerCard(rec: CareerRecord): Promise<HTMLCanvasEleme
   ctx.font = `400 26px ${BODY}`;
   // round 25: what the media called him, under his name
   const nick = rec.nickname ? `\u201c${rec.nickname.name}\u201d · ` : '';
-  ctx.fillText(`${nick}${rec.country} · retired at ${rec.retiredAt}${team ? ` · ${team.name}` : ''}`, 262, Math.min(420, nameBottom + 6));
+  const rival = rec.rival ? ` · rival ${rec.rival.name} (${rec.rival.w}–${rec.rival.l})` : '';
+  // round 25: the nickname and the rival can make it long: it wraps
+  wrap(ctx, `${nick}${rec.country} · retired at ${rec.retiredAt}${team ? ` · ${team.name}` : ''}${rival}`, 262, Math.min(400, nameBottom + 6), 500, 30);
   if (rec.ringChaser) {
     ctx.fillStyle = '#ffd76a';
     ctx.font = `600 22px ${MONO}`;

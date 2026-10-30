@@ -424,6 +424,20 @@ export interface DraftPick {
   from: string;
 }
 
+export interface Rivalry {
+  level: 'draft' | 'starter' | 'mvp'; // it only ever goes up
+  pid: number; // the rival, a generated NBA player
+  name: string;
+  pos: Pos;
+  since: number;
+  team: string; // where he plays now
+  w: number; // head to head, his team against yours
+  l: number;
+  seasons: { year: number; me: number; him: number }[]; // OVR, season by season
+  notes: string[]; // what happened between them, newest last
+  ended?: string; // why it ended (he retired)
+}
+
 export interface DraftResult {
   year: number;
   picks: DraftPick[];
@@ -504,6 +518,7 @@ export interface GameState {
   recruitRank: number | null;
   teamSeasons: Record<string, number>; // NBA team id -> seasons
   rivals: Record<string, number>; // generated player name -> times they beat you for an award
+  rivalry?: Rivalry; // round 25: the one rival (career/rivalry.ts)
   feed: Reaction[];
   milestones: string[];
   retiredAt: number | null;

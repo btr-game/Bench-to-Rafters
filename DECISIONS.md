@@ -1551,3 +1551,15 @@ Reached from the start page and from the bottom of Home (a career in progress is
   two or three seasons later. Over 200 harness careers: 5.595 a career, one every 3.685 seasons
   (high school included); 99% of careers have at least one. The press-conference effect shows in
   the team strength breakdown.
+- **Rivals, in levels** (the owner: not necessarily the same draft class, like Bird and Magic;
+  levels: the draft for Rookie of the Year and growth, a starter on a rival team at the same
+  position, and at All-NBA to MVP level whoever he competes with in MVP races). One rival at a
+  time (career/rivalry.ts), and the rivalry only grows: in his first NBA season, the best rookie
+  in his position group; once he starts, the closest player at his position, a real NBA rival
+  team first; once he is top five in an MVP race and someone has beaten him for big awards twice,
+  that player. Each NBA season adds the head-to-head games between their teams (playoffs too),
+  both OVRs and a line on what happened (who won Rookie of the Year, the season's record against
+  him); if the rival leaves the league, the rivalry ends. A rival card sits on the Home side
+  column, and the career card names him with the head to head. Over 200 harness careers, all 157
+  that reached the NBA had a rival: 43 at the draft level, 91 head to head, 23 MVP rivals; 13.22
+  games against him on average, 55.35% won.

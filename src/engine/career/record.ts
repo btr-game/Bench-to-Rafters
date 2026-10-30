@@ -27,6 +27,7 @@ export interface CareerRecord {
   legacy: number; // legacy points
   index?: { total: number; best: number; score: number }; // round 25: the career index (older records have none)
   nickname?: { id: string; name: string }; // round 25: what the media called him
+  rival?: { name: string; level: string; w: number; l: number }; // round 25: his rival, and the head to head
   rank: number; // all-time legacy rank (101 = outside the top 100)
   rankBehind: string | null;
   hof: 'first' | 'hof' | null;
@@ -109,6 +110,7 @@ export function careerRecord(g: GameState, now = new Date()): CareerRecord {
     legacy: Math.round(r.pts),
     index: careerIndex(g),
     nickname: p.nickname ? { id: p.nickname.id, name: p.nickname.name } : undefined,
+    rival: g.rivalry ? { name: g.rivalry.name, level: g.rivalry.level, w: g.rivalry.w, l: g.rivalry.l } : undefined,
     rank: r.rank,
     rankBehind: r.rank <= 100 && r.above ? r.above.name : null,
     hof,

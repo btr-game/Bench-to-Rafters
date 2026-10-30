@@ -1867,3 +1867,11 @@ td .art-team { display: inline-block; vertical-align: middle; margin: -3px 8px -
 .offer-wrap { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .talks { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .talk-said { font-weight: 600; }
+
+/* round 25: his rival */
+.rival-card { border-top: 4px solid var(--bad); }
+.rival-card.lvl-mvp { border-top-color: var(--gold); }
+.rival-race { display: flex; gap: 3px; }
+.rival-race span { width: 14px; height: 14px; border-radius: 3px; background: var(--line); }
+.rival-race span.up { background: var(--good); }
+.rival-race span.down { background: var(--bad); }
