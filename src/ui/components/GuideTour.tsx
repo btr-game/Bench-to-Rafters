@@ -22,7 +22,7 @@ const D = (id: string) => `[data-tour="${id}"]`;
 
 // in order: the start page, the top bar, Home, the decisions, the offseason, the tabs, the end
 const TOUR: Step[] = [
-  T('start-continue', '.resume-card .btn', 'Pick up your saved career where you left it.'),
+  T('start-continue', '.saves-card .btn', 'Your careers on this device: pick one up where you left it, or copy its code to play it somewhere else.'),
   T('guide-btn', D('guide-btn'), 'The manual: every feature in a few short points. Guide mode switches on and off there too.'),
   T('random', D('random'), 'Random rolls every pick at once.'),
   T('start-mode', '.modes', 'How hard the road is. It stays for the whole career.'),

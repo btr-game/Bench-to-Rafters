@@ -8,7 +8,8 @@ import { ATTRS, DIFFICULTIES, HEIGHT_RANGE, MODES, POSITIONS, type Mode } from '
 import type { AttrKey, Attrs, Pos } from '../../engine/types';
 import { NAMES, UI } from '../../content/strings';
 import { FIRST_NAMES, LAST_NAMES } from '../../content/names';
-import { savedCareer, useStore } from '../../store';
+import { useStore } from '../../store';
+import { MAX_SLOTS, deleteSlot, exportCode, listSlots, readSlot } from '../saves';
 import { ORIGINS } from '../../content/origins';
 import { edgeOf } from '../../engine/career/nationality';
 import { ht, seasonLabel } from '../format';
@@ -37,27 +38,81 @@ function cards(pos: Pos): Attrs[] {
 }
 
 /** The new-career page. */
-/** A career saved on this device: one tap picks it up (round 14). */
-function ResumeCard() {
+/** The careers saved on this device (round 14; round 25: ten slots, with codes to move one). */
+function SavesCard() {
   const resume = useStore((s) => s.resume);
-  const [save] = useState(savedCareer);
-  const [failed, setFailed] = useState(false);
-  if (!save) return null;
+  const importCareer = useStore((s) => s.importCareer);
+  const [slots, setSlots] = useState(listSlots);
+  const [failed, setFailed] = useState<string | null>(null);
+  const [sure, setSure] = useState<string | null>(null);
+  const [code, setCode] = useState<{ id: string; text: string } | null>(null);
+  const [paste, setPaste] = useState('');
+  const [bad, setBad] = useState(false);
+  const share = async (id: string) => {
+    const g = await readSlot(id);
+    if (!g) return setFailed(id);
+    const text = await exportCode(g);
+    setCode({ id, text });
+    navigator.clipboard?.writeText(text).catch(() => undefined);
+  };
+  const remove = (id: string) => {
+    deleteSlot(id);
+    setSlots(listSlots());
+    setSure(null);
+  };
   return (
-    <section className="card resume-card">
-      <div style={{ minWidth: 0 }}>
-        <div className="kicker">{save.retired ? 'Finished career' : 'Career in progress'}</div>
-        <b className="resume-name">{save.name}</b>
-        <div className="muted small">
-          {seasonLabel(save.year)}
-          {save.ovr ? ` · peak OVR ${save.ovr}` : ''}
+    <section className="card stack saves-card" data-tour="saves">
+      <div className="row">
+        <div>
+          <div className="kicker">Saved on this device · {slots.length} of {MAX_SLOTS}</div>
+          <h2 className="title">Your careers</h2>
         </div>
-        {!save.retired && !failed && <div className="muted small">Starting a new career below replaces this one.</div>}
-        {failed && <div className="small" style={{ color: 'var(--bad)' }}>That save could not be read. Start a new career below.</div>}
       </div>
-      <button className="btn" onClick={() => setFailed(!resume())}>
-        {save.retired ? 'Look back' : 'Continue'}
-      </button>
+      {slots.length === 0 && <p className="small muted">No careers saved yet. Every career is saved here after each move.</p>}
+      {slots.map((x) => (
+        <div key={x.id} className="save-row">
+          <div style={{ minWidth: 0 }}>
+            <b className="resume-name">{x.name}</b>
+            <div className="muted small">
+              {x.retired ? 'Finished' : 'In progress'} · {seasonLabel(x.year)}
+              {x.ovr ? ` · peak OVR ${x.ovr}` : ''} · {MODES[x.mode as Mode]?.name ?? x.mode}
+            </div>
+            {failed === x.id && <div className="small" style={{ color: 'var(--bad)' }}>That save could not be read.</div>}
+          </div>
+          <div className="row save-actions">
+            <button className="btn" onClick={() => void resume(x.id).then((ok) => !ok && setFailed(x.id))}>
+              {x.retired ? 'Look back' : 'Continue'}
+            </button>
+            <button className="btn ghost small" onClick={() => void share(x.id)}>
+              Code
+            </button>
+            {sure === x.id ? (
+              <button className="btn ghost small danger" onClick={() => remove(x.id)}>
+                Delete for good
+              </button>
+            ) : (
+              <button className="btn ghost small" onClick={() => setSure(x.id)}>
+                Delete
+              </button>
+            )}
+          </div>
+          {code?.id === x.id && (
+            <div className="stack" style={{ gap: 4, gridColumn: '1 / -1' }}>
+              <span className="small muted">This code is the whole career. Copied if your browser allows it; otherwise select it and copy. Paste it into another browser's import box below.</span>
+              <textarea className="save-code" readOnly value={code.text} rows={3} onFocus={(e) => e.currentTarget.select()} />
+            </div>
+          )}
+        </div>
+      ))}
+      {slots.length >= MAX_SLOTS && <p className="small muted">All {MAX_SLOTS} slots are in use: a new career replaces the oldest ({slots[slots.length - 1].name}).</p>}
+      <details className="save-import">
+        <summary>Import a career from a code</summary>
+        <textarea className="save-code" rows={3} value={paste} placeholder="BTR1..." onChange={(e) => (setPaste(e.target.value), setBad(false))} />
+        <button className="btn small" disabled={!paste.trim()} onClick={() => void importCareer(paste).then((ok) => setBad(!ok))}>
+          Import and play
+        </button>
+        {bad && <span className="small" style={{ color: 'var(--bad)' }}>That code could not be read. Check that it was copied whole.</span>}
+      </details>
     </section>
   );
 }
@@ -148,7 +203,7 @@ export function Create() {
         </div>
       </header>
       <LiveStrip />
-      <ResumeCard />
+      <SavesCard />
       <section className="hero with-lineup">
         <LineupArt />
         <div className="kicker">A basketball career game</div>

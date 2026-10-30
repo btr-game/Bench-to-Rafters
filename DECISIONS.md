@@ -1470,3 +1470,11 @@ Reached from the start page and from the bottom of Home (a career in progress is
   the city or the night) with one of its lines, +2 morale, and +1 reputation for the public ones
   (the foundation, the restaurant, the arena...). Experiences that are over once bought (a
   vacation, a dinner) have no visit.
+- **Ten save slots and career codes** (the owner: ten slots, and an export/import code). Every
+  career in progress gets a slot on this device (ui/saves.ts), saved after each move; the start
+  page lists them newest first with Continue (or Look back), Code and Delete (a second press
+  confirms). Slots are stored compressed (gzip, then base64: a 260 KB career becomes about
+  64 KB), so ten long careers fit in the browser's storage; an eleventh career replaces the
+  oldest, and the page says which. Code shows the whole career as text (copied to the clipboard
+  where the browser allows), and the import box on any other browser turns it back into a
+  career in a new slot. The old single save moves into a slot the first time the page opens.

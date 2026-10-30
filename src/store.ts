@@ -18,6 +18,7 @@ import { careerRecord } from './engine/career/record';
 import { logCareer, type LogResult } from './ui/careerLog';
 import { checkAch, countCareer } from './ui/achievements';
 import { community } from './ui/community';
+import { deleteSlot, importCode, newSlotId, readSlot, writeSlot } from './ui/saves';
 import type { AchTier } from './engine/achievements';
 
 export type Tab = 'home' | 'season' | 'player' | 'league' | 'records';
@@ -73,7 +74,10 @@ interface Store {
   /** The tab keys last seen (round 14): a tab whose key moved on shows a "new" dot. */
   seen: Partial<Record<Tab, string>>;
   /** Picks up the career saved on this device; false if there is none or it cannot be read. */
-  resume: () => boolean;
+  /** Round 25: the save slot of the career on screen (null until it is first saved). */
+  slot: string | null;
+  resume: (id: string) => Promise<boolean>;
+  importCareer: (code: string) => Promise<boolean>;
   /** Whether the autosave works here ('off' when the browser blocks storage or the save is too big). */
   saving: 'ok' | 'off';
   /** Round 24: a page of its own (the career log, the community pages), over the start page or a career. */
@@ -92,35 +96,9 @@ interface Store {
   endDaily: () => void;
 }
 
-// ---------- autosave (round 14) ----------
-// One career, saved on this device after every change, so closing the tab loses nothing.
-
-const SAVE_KEY = 'btr-save-v1';
-
-export function savedCareer(): { name: string; year: number; ovr?: number; retired: boolean } | null {
-  try {
-    const raw = localStorage.getItem(SAVE_KEY);
-    if (!raw) return null;
-    const head = JSON.parse(raw) as { meta?: { name: string; year: number; ovr?: number; retired: boolean } };
-    return head.meta ?? null;
-  } catch {
-    return null;
-  }
-}
-
-function writeSave(g: GameState | null): boolean {
-  try {
-    if (!g) {
-      localStorage.removeItem(SAVE_KEY);
-      return true;
-    }
-    const meta = { name: g.player.name, year: g.year, ovr: Math.round(g.player.peakOvr), retired: g.step === 'retired' };
-    localStorage.setItem(SAVE_KEY, JSON.stringify({ meta, game: g }));
-    return true;
-  } catch {
-    return false;
-  }
-}
+// ---------- autosave (round 14; round 25: ten slots, ui/saves.ts) ----------
+// Every career in progress has a slot on this device, saved after every change, so closing the
+// tab loses nothing.
 
 const allSeen = (g: GameState): Partial<Record<Tab, string>> => ({
   season: tabKey(g, 'season'),
@@ -199,7 +177,7 @@ export const useStore = create<Store>((set, get) => ({
     const s = seed ?? Math.floor(Math.random() * 2 ** 31);
     const game = newGame(s, input);
     fastForward(game);
-    set({ game, tab: 'home', transition: null, mini: null, seen: allSeen(game) });
+    set({ game, slot: newSlotId(), tab: 'home', transition: null, mini: null, seen: allSeen(game) });
   },
   seen: {},
   saving: 'ok',
@@ -228,18 +206,21 @@ export const useStore = create<Store>((set, get) => ({
     set({ daily: null, game: d.stash, simple: d.simple, tab: 'home', transition: null, mini: null, seen: d.stash ? allSeen(d.stash) : {} });
     top();
   },
-  resume: () => {
-    try {
-      const raw = localStorage.getItem(SAVE_KEY);
-      if (!raw) return false;
-      const game = (JSON.parse(raw) as { game: GameState }).game;
-      if (!game?.player || !game.step) return false;
-      weightOf(game.player); // careers saved before round 20 get a weight
-      set({ game, tab: 'home', transition: null, mini: null, seen: allSeen(game) });
-      return true;
-    } catch {
-      return false;
-    }
+  slot: null,
+  resume: async (id) => {
+    const game = await readSlot(id);
+    if (!game) return false;
+    weightOf(game.player); // careers saved before round 20 get a weight
+    set({ game, slot: id, tab: 'home', transition: null, mini: null, seen: allSeen(game), daily: null });
+    return true;
+  },
+  importCareer: async (code) => {
+    const game = await importCode(code);
+    if (!game) return false;
+    weightOf(game.player);
+    const slot = newSlotId();
+    set({ game, slot, tab: 'home', transition: null, mini: null, seen: allSeen(game), daily: null });
+    return true;
   },
   choose: (choiceId) => {
     const g = get().game;
@@ -391,8 +372,9 @@ export const useStore = create<Store>((set, get) => ({
   endTransition: () => set({ transition: null }),
   // ending a career is the only thing that clears the save (round 24)
   reset: () => {
-    writeSave(null);
-    set({ game: null, tab: 'home', transition: null });
+    const slot = get().slot;
+    if (slot) deleteSlot(slot);
+    set({ game: null, slot: null, tab: 'home', transition: null });
   },
   mini: null,
   claimMini: (r) => {
@@ -445,8 +427,14 @@ function flushSave() {
   saveTimer = null;
   const st = useStore.getState();
   if (!st.game || st.daily) return;
-  const ok = writeSave(st.game);
-  if ((ok ? 'ok' : 'off') !== st.saving) useStore.setState({ saving: ok ? 'ok' : 'off' });
+  let slot = st.slot;
+  if (!slot) {
+    slot = newSlotId();
+    useStore.setState({ slot });
+  }
+  void writeSlot(slot, st.game).then((ok) => {
+    if ((ok ? 'ok' : 'off') !== useStore.getState().saving) useStore.setState({ saving: ok ? 'ok' : 'off' });
+  });
 }
 useStore.subscribe((now, before) => {
   if (now.game === before.game) return;
