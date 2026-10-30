@@ -122,7 +122,8 @@ export function ClutchPanel({ play, moves, ratings, onDone }: { play: DramaPlay;
   const stop = moves[0].verb === 'BLOCK' || moves[0].verb === 'STEAL';
   return (
     <div className="clutch-panel" role="group" aria-label="Your call">
-      <div className="kicker on-dark">
+      <div className="kicker on-dark with-icon">
+        <Icon name="clutch" size={22} />
         Q4 {play.clock} · {stop ? 'Their ball: get a stop' : `Your ball: ${play.pts} points on the line`}
       </div>
       {!move ? (

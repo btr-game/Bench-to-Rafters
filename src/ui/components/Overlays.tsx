@@ -11,6 +11,7 @@ import { ordinal } from '../format';
 import { league, stageLine, team } from '../selectors';
 import { ActionCam, type CamSide, type Venue } from '../art/ActionCam';
 import { ClutchPanel, GRADE_NOTE, GRADE_POINTS, calledPlay, clutchMoves, type ClutchMove, type Grade } from './Clutch';
+import { Icon } from '../art/Icon';
 import { ORIGINS } from '../../content/origins';
 import { kitFor, styleLeague } from '../art/Player';
 import { genericKits } from '../../content/teamStyle';
@@ -384,7 +385,8 @@ export function FinalReel({ m, g, onDone }: { m: Moment; g?: GameState; onDone?:
           </p>
           <div className="clutch-moves">
             {!daily && (
-              <button className="btn" onClick={() => setMode('play')}>
+              <button className="btn with-icon" onClick={() => setMode('play')}>
+                <Icon name="clutch" size={22} />
                 Play the last minutes
               </button>
             )}

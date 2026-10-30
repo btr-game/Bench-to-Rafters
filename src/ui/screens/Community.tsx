@@ -60,6 +60,7 @@ export function LiveStrip() {
   return (
     <section className="live-strip" aria-live="polite">
       <div className="live-nums">
+        <Icon name="live" size={40} />
         <div>
           <b>{n}</b>
           <small>{n === 1 ? 'player on the court right now' : 'players on the court right now'}</small>
@@ -89,7 +90,7 @@ export function CommunityCard() {
   return (
     <section className="card stack">
       <div className="sec-title with-icon">
-        <Icon name="podium" size={28} />
+        <Icon name="crowd" size={28} />
         Community
       </div>
       <p className="small muted">Leaderboards for every difficulty, the Reality 99 hall, the statue plaza and a line to the game’s maker.</p>
@@ -187,7 +188,10 @@ function Hall({ c }: { c: Api }) {
       {rows === null ? (
         <p className="muted">Loading…</p>
       ) : rows.length === 0 ? (
-        <p className="muted">The hall is empty. About one Reality career in a thousand gets there.</p>
+        <p className="muted with-icon">
+          <Icon name="hall" size={34} />
+          The hall is empty. About one Reality career in a thousand gets there.
+        </p>
       ) : (
         <div className="hall-grid">
           {rows.map((r) => (
@@ -226,7 +230,12 @@ function Plaza({ c }: { c: Api }) {
         today. Tap a statue for its career card, and pay your respects.
       </p>
       {msg && <p className="small" style={{ color: 'var(--bad)' }}>{msg}</p>}
-      {rows && rows.length === 0 && <p className="muted">No statues yet. The first one is waiting for a great career.</p>}
+      {rows && rows.length === 0 && (
+        <p className="muted with-icon">
+          <Icon name="statue" size={34} />
+          No statues yet. The first one is waiting for a great career.
+        </p>
+      )}
       <div className="plaza">
         {rows?.map((s) => (
           <div key={s.id} className="plaza-spot">
@@ -236,7 +245,8 @@ function Plaza({ c }: { c: Api }) {
             <small>
               {s.rec.legacy} legacy · {s.respects} respect{s.respects === 1 ? '' : 's'}
             </small>
-            <button className="btn small ghost" disabled={s.paid} onClick={() => pay(s.id)}>
+            <button className="btn small ghost with-icon" disabled={s.paid} onClick={() => pay(s.id)}>
+              <Icon name="respect" size={18} />
               {s.paid ? 'Respects paid' : 'Pay respects'}
             </button>
             {open === s.id && <CardImage rec={s.rec} />}
@@ -269,7 +279,8 @@ function Feedback({ c }: { c: Api }) {
         <input maxLength={200} value={contact} onChange={(e) => setContact(e.target.value)} placeholder="Only if you want an answer" />
       </label>
       <div className="row" style={{ gap: 10, alignItems: 'center' }}>
-        <button className="btn" disabled={!text.trim() || state === 'sending'} onClick={send}>
+        <button className="btn with-icon" disabled={!text.trim() || state === 'sending'} onClick={send}>
+          <Icon name="envelope" size={22} />
           Send feedback
         </button>
         {state === 'ok' && <span className="small">Sent. Thank you!</span>}
@@ -289,7 +300,14 @@ function Inbox({ c }: { c: Api }) {
   return (
     <div className="stack">
       <p className="small muted">Only you can see this.</p>
-      {rows === null ? <p className="muted">Loading…</p> : rows.length === 0 ? <p className="muted">No messages yet.</p> : null}
+      {rows === null ? (
+        <p className="muted">Loading…</p>
+      ) : rows.length === 0 ? (
+        <p className="muted with-icon">
+          <Icon name="inbox" size={34} />
+          No messages yet.
+        </p>
+      ) : null}
       {rows?.map((r, i) => (
         <article key={i} className="card stack inbox-msg">
           <div className="kicker">
@@ -312,12 +330,12 @@ export function CommunityPage() {
   const setPage = useStore((s) => s.setPage);
   const c = useCommunity();
   const [tab, setTab] = useState<Tab>('boards');
-  const tabs: [Tab, string][] = [
-    ['boards', 'Leaderboards'],
-    ['hall', 'Reality 99 hall'],
-    ['plaza', 'Statue plaza'],
-    ['feedback', 'Send feedback'],
-    ...(c?.isOwner && c.kind === 'shared' ? ([['inbox', 'Inbox']] as [Tab, string][]) : []),
+  const tabs: [Tab, string, string][] = [
+    ['boards', 'Leaderboards', 'podium'],
+    ['hall', 'Reality 99 hall', 'hall'],
+    ['plaza', 'Statue plaza', 'statue'],
+    ['feedback', 'Send feedback', 'envelope'],
+    ...(c?.isOwner && c.kind === 'shared' ? ([['inbox', 'Inbox', 'inbox']] as [Tab, string, string][]) : []),
   ];
   return (
     <div className="wrap">
@@ -333,7 +351,7 @@ export function CommunityPage() {
         <div>
           <div className="kicker">{c?.kind === 'shared' ? 'Shared with everyone on this page' : 'Offline: this device only'}</div>
           <h1 className="hub-title with-icon">
-            <Icon name="podium" size={40} />
+            <Icon name="crowd" size={40} />
             Community
           </h1>
           {c && c.kind === 'shared' && !c.canWrite && <p className="small muted">You can look around. Posting scores, statues and feedback needs an invitation to the game as a Contributor.</p>}
@@ -341,8 +359,9 @@ export function CommunityPage() {
         </div>
         <LiveStrip />
         <div className="seg">
-          {tabs.map(([k, l]) => (
-            <button key={k} aria-pressed={tab === k} onClick={() => setTab(k)}>
+          {tabs.map(([k, l, icon]) => (
+            <button key={k} className="with-icon" aria-pressed={tab === k} onClick={() => setTab(k)}>
+              <Icon name={icon} size={20} />
               {l}
             </button>
           ))}

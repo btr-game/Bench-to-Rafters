@@ -57,7 +57,7 @@ export function LoggedNote() {
   const warn = fullness(cards.length, cards[cards.length - 1]);
   return (
     <div className="log-note">
-      <Icon name="book" size={22} />
+      <Icon name="cards" size={22} />
       <span>
         Career card saved to your log{logged.dropped ? `, replacing the oldest (${logged.dropped.name})` : ''}. {warn && !logged.dropped ? warn : ''}
       </span>
@@ -75,7 +75,7 @@ export function CareerLogCard() {
   return (
     <section className="card stack">
       <div className="sec-title with-icon">
-        <Icon name="book" size={28} />
+        <Icon name="cards" size={28} />
         Career log
       </div>
       <p className="small muted">The career cards of your last {LOG_MAX} finished careers, kept on this device. {n ? `${n} saved.` : 'Finish a career to start it.'}</p>
@@ -162,7 +162,7 @@ export function CareerLog() {
             {cards.length} of {LOG_MAX} cards · on this device
           </div>
           <h1 className="hub-title with-icon">
-            <Icon name="book" size={40} />
+            <Icon name="cards" size={40} />
             Career log
           </h1>
           <p className="prose">Every career you finish leaves its card here. The log keeps {LOG_MAX}: when it is full, a new career replaces the oldest card. Delete any card you don’t want to keep.</p>
