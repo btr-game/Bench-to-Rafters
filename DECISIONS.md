@@ -1170,3 +1170,13 @@ Reached from the start page and from the bottom of Home (a career in progress is
   waistband over the shorts, shoes get white soles, and the number sits on the chest wherever a
   7×5 block of jersey fits. The five archetype-only actions (pass, defense, rebound, block, hook)
   keep the round 18 drawings until the owner has checked these.
+- **Plans** (owner's request): Team first now cuts injury risk (×0.85, was ×1.0), grows
+  basketball IQ a little faster (×1.4 on IQ) and adds +0.15 team strength (chemistry) for the
+  rest of the season after each half. Spotlight is roughly the opposite: injury risk ×1.2 (was
+  ×1.05), IQ grows at ×0.6, −0.15 chemistry a half, and it gambles on shooting and finishing:
+  each half both roll normal(+0.6, sd 1.3) points, so about a third of rolls lose points. It
+  carries a High risk tag, and the half's result says what the gamble did. Speed and agility is
+  the weight-loss plan: −5 lb a half (was −1.5). Balance, same 1,600 careers: mean peak 74.3719
+  (74.3362 before), NBA 77.1% (77.2%), All-Star 35.2% (35.3%), MVP 10.8% (10.8%), Hall of Fame
+  11.4% (11.4%), titles 34.8% (33.3%). The first try at +0.25 chemistry a half gave titles 35.8%,
+  more than "a little", so it was cut to 0.15.

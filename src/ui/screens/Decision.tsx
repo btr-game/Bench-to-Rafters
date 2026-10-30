@@ -92,6 +92,7 @@ function PlanPicker({ d }: { d: Decision }) {
               <span className="label with-icon">
                 <Icon name={choiceIcon(c.id)} size={26} />
                 {c.label}
+                {c.risk && <span className={`risk risk-${c.risk.toLowerCase()}`}>{c.risk} risk</span>}
               </span>
               <small>{c.detail}</small>
             </button>
@@ -116,6 +117,7 @@ function PlanPicker({ d }: { d: Decision }) {
                 <Icon name={choiceIcon(c.id)} size={26} />
                 {on && <span className={`plan-tag ${picked.indexOf(c.id) === 0 ? 'main' : 'side'}`}>{picked.indexOf(c.id) === 0 ? 'Main' : 'Side'}</span>}
                 {c.label}
+                {c.risk && <span className={`risk risk-${c.risk.toLowerCase()}`}>{c.risk} risk</span>}
               </span>
               <small>{c.detail}</small>
             </button>

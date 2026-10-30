@@ -76,7 +76,7 @@ export const WEIGHT = {
   maxUnits: 4,
   wearFrom: 1.5, // units over the ideal where the extra weight starts to wear the body
   wear: 0.08, // extra body wear per unit beyond wearFrom
-  plan: { strength: 2.5, speed: -1.5, recovery: 1 } as Partial<Record<string, number>>, // lb per half
+  plan: { strength: 2.5, speed: -5, recovery: 1 } as Partial<Record<string, number>>, // lb per half (Speed and agility is the weight-loss plan)
   injuredHalf: 3, // lb gained in a half spent mostly injured
 };
 // How far ahead of or behind his card a 14-year-old really is (in OVR points, roughly).
@@ -228,6 +228,8 @@ export interface PlanDef {
   other?: number;
   rangeGain?: number;
   offhandGain?: number;
+  chem?: number; // round 20: team chemistry (team strength) added for the rest of the season
+  swing?: { attrs: AttrKey[]; mean: number; sd: number }; // round 20: a gamble on these ratings each half
 }
 // Two plans can run in the same half (playtest round 6); each counts at this share of its
 // full effect, so two plans do more than one but less than both at full strength.
@@ -266,6 +268,8 @@ export function blendPlans(a: HalfPlan, b?: HalfPlan | null): PlanDef {
       other: A.other !== undefined ? m(A.other) : undefined,
       rangeGain: A.rangeGain ? A.rangeGain * k : undefined,
       offhandGain: A.offhandGain ? A.offhandGain * k : undefined,
+      chem: A.chem ? A.chem * k : undefined,
+      swing: A.swing ? { ...A.swing, mean: A.swing.mean * k, sd: A.swing.sd * k } : undefined,
     };
   }
   const B = HALF_PLANS[b];
@@ -290,6 +294,8 @@ export function blendPlans(a: HalfPlan, b?: HalfPlan | null): PlanDef {
     other: keys.size ? mult(otherA, otherB) : undefined,
     rangeGain: add(A.rangeGain ?? 0, B.rangeGain ?? 0) || undefined,
     offhandGain: add(A.offhandGain ?? 0, B.offhandGain ?? 0) || undefined,
+    chem: add(A.chem ?? 0, B.chem ?? 0) || undefined,
+    swing: A.swing ? { ...A.swing, mean: A.swing.mean * main, sd: A.swing.sd * main } : B.swing ? { ...B.swing, mean: B.swing.mean * side, sd: B.swing.sd * side } : undefined,
   };
 }
 
@@ -297,8 +303,11 @@ export const HALF_PLANS: Record<HalfPlan, PlanDef> = {
   balanced: { growth: 1.0, injury: 1.0, morale: 0, trust: 0, rep: [0, 0], usage: 1, teamBoost: 0 },
   grind: { growth: 1.3, injury: 1.7, morale: -4, trust: 1, rep: [0, 0], usage: 1, teamBoost: 0 },
   recovery: { growth: 0.75, injury: 0.5, morale: 4, trust: 0, rep: [0, 0], usage: 0.95, teamBoost: 0 },
-  spotlight: { growth: 0.85, injury: 1.05, morale: 2, trust: -3, rep: [3, 8], usage: 1.15, teamBoost: -0.3 },
-  teamfirst: { growth: 0.95, injury: 1.0, morale: 2, trust: 6, rep: [0, 1], usage: 0.88, teamBoost: 0.7 }, // round 15: a bigger lift to the team (was 0.6)
+  // round 20: Spotlight gambles on shooting and finishing (a roll each half that can also lose
+  // points), costs basketball IQ growth and team chemistry, and raises injury risk; Team first is
+  // the opposite: safer, a little IQ, a little chemistry for the rest of the season
+  spotlight: { growth: 0.85, injury: 1.2, morale: 2, trust: -3, rep: [3, 8], usage: 1.15, teamBoost: -0.3, attrs: { IQ: 0.6 }, other: 1, chem: -0.15, swing: { attrs: ['SHT', 'FIN'], mean: 0.6, sd: 1.3 } },
+  teamfirst: { growth: 0.95, injury: 0.85, morale: 2, trust: 6, rep: [0, 1], usage: 0.88, teamBoost: 0.7, attrs: { IQ: 1.4 }, other: 1, chem: 0.15 }, // round 15: a bigger lift to the team (was 0.6)
   shooting: { growth: 1.0, injury: 0.95, morale: 0, trust: 0, rep: [0, 0], usage: 1.03, teamBoost: 0, attrs: { SHT: 2.05 }, other: 0.6, rangeGain: 2 },
   strength: { growth: 1.0, injury: 1.2, morale: -1, trust: 0, rep: [0, 0], usage: 1, teamBoost: 0, attrs: { FIN: 2.1, REB: 2.15, ATH: 1.9, INT: 1.6 }, other: 0.55 },
   playmaking: { growth: 1.0, injury: 1.0, morale: 0, trust: 2, rep: [0, 0], usage: 0.97, teamBoost: 0.2, attrs: { PLY: 2.3, IQ: 1.5 }, other: 0.6 },

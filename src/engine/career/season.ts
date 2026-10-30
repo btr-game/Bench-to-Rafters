@@ -7,6 +7,7 @@ import { edgeOf, youthGrowthMult } from './nationality';
 import {
   WEAR,
   WEIGHT,
+  ATTR_MAX,
   HEIGHT_LIMITS,
   GAME_POINTS,
   GROWTH_RATE,
@@ -71,6 +72,7 @@ import { reactionsForSeason } from '../story/reactions';
 import { finishStories, startStories, updateStories } from '../world/stories';
 import { changeWeight, halfPlanWeight, weightWear } from '../player/weight';
 import { duoEffect, growBonds } from './duo';
+import { NAMES } from '../../content/strings';
 
 /** What he adds to winning beyond his OVR, scaled by his share of the game (career/team.ts). */
 const edgeFor = (a: Attrs, ovr: number, share: number, post: boolean): number => {
@@ -160,14 +162,14 @@ const PLAN_TEXT: Record<HalfPlan, PlanText> = {
   balanced: { id: 'balanced', label: 'Balanced', detail: 'Steady work, normal risk.' },
   grind: { id: 'grind', label: 'Grind', detail: 'Work harder than anyone. Faster development, much more wear on your body, burnout possible.' },
   recovery: { id: 'recovery', label: 'Recovery', detail: 'Ease off. Slower development, far fewer injuries, heal faster, feel better.' },
-  spotlight: { id: 'spotlight', label: 'Spotlight', detail: 'Hunt shots and attention. More fame and money; coaches and teammates notice.' },
-  teamfirst: { id: 'teamfirst', label: 'Team first', detail: 'Make the right play. Fewer shots for you, but the whole team plays better in your games (team strength up), and the coach loves it.' },
+  spotlight: { id: 'spotlight', label: 'Spotlight', detail: 'Hunt shots and attention. Fame and money, and your shooting and finishing can jump, or slump. Less feel for the game, a more selfish locker room, more injury risk; coaches and teammates notice.' },
+  teamfirst: { id: 'teamfirst', label: 'Team first', detail: 'Make the right play. Fewer shots for you, but the team plays better in your games and the chemistry lasts all season. A little more feel for the game, fewer injuries, and the coach loves it.' },
   shooting: { id: 'shooting', label: 'Shooting lab', detail: 'Live in the gym with a shooting coach. Your jumper and range get the reps; the rest waits.' },
   strength: { id: 'strength', label: 'Weight room', detail: 'Get stronger and more explosive inside. A bit more injury risk.' },
   playmaking: { id: 'playmaking', label: 'Film and reads', detail: 'Study the game. Passing and feel improve; coaches trust you more.' },
   defense: { id: 'defense', label: 'Lockdown', detail: 'Make defense your identity. Coaches notice.' },
   offhand: { id: 'offhand', label: 'Off-hand work', detail: 'Drill your weak hand every day. Finishing with both hands; little else grows.' },
-  speed: { id: 'speed', label: 'Speed and agility', detail: 'Sprints, footwork and first-step work: athleticism, perimeter defense and finishing. Slightly more injury risk.' },
+  speed: { id: 'speed', label: 'Speed and agility', detail: 'Sprints, footwork and conditioning: athleticism, perimeter defense and finishing, and you drop a lot of weight. Slightly more injury risk.' },
   mentor: { id: 'mentor', label: 'Learn from a vet', detail: 'Shadow a veteran: basketball IQ, defensive habits and a cleaner jumper. Easy on the body; the coach likes it.' },
 };
 const PLAN_IDS = Object.keys(PLAN_TEXT) as HalfPlan[];
@@ -184,8 +186,8 @@ const LAB_PLANS: PlanText[] = [
   { id: 'balanced', label: 'Steady', detail: 'Normal credits, normal risk.' },
   { id: 'grind', label: 'Grind', detail: 'More credits, much more wear on your body, burnout possible.' },
   { id: 'recovery', label: 'Recovery', detail: 'Fewer credits, far fewer injuries, heal faster, feel better.' },
-  { id: 'spotlight', label: 'Spotlight', detail: 'Hunt shots and attention. More fame and money; fewer credits.' },
-  { id: 'teamfirst', label: 'Team first', detail: 'Make the right play. Fewer shots, the team plays better in your games, the coach loves it.' },
+  { id: 'spotlight', label: 'Spotlight', detail: 'Hunt shots and attention. More fame and money; fewer credits, more injury risk, a more selfish locker room.' },
+  { id: 'teamfirst', label: 'Team first', detail: 'Make the right play. Fewer shots, the team plays better all season, fewer injuries, the coach loves it.' },
 ];
 
 export function pushPlanDecision(s: GameState, half: 1 | 2): void {
@@ -203,7 +205,7 @@ export function pushPlanDecision(s: GameState, half: 1 | 2): void {
         : s.mode === 'lab'
           ? 'How hard do you work this season? Training pays out lab credits; spend them on any rating.'
           : 'Pick one plan for the season.',
-      choices: list.map((p) => ({ id: p.id, label: p.label, detail: p.detail, disabled: injured && p.id !== 'recovery' })),
+      choices: list.map((p) => ({ id: p.id, label: p.label, detail: p.detail, disabled: injured && p.id !== 'recovery', risk: p.id === 'spotlight' ? ('High' as const) : undefined })),
       data: { half, single: true },
     });
     return;
@@ -213,7 +215,7 @@ export function pushPlanDecision(s: GameState, half: 1 | 2): void {
     kind: 'plan',
     title: half === 1 ? 'First-half plan' : 'Second-half plan',
     text: injured ? 'You are injured. Recovery is the only plan available.' : 'Pick one or two plans for the next half. One plan alone works a little better than its listing (focused work); add a second and the first keeps most of its effect while the side plan adds a smaller boost.',
-    choices: plans.map((p) => ({ id: p.id, label: p.label, detail: p.detail, disabled: injured && p.id !== 'recovery' })),
+    choices: plans.map((p) => ({ id: p.id, label: p.label, detail: p.detail, disabled: injured && p.id !== 'recovery', risk: p.id === 'spotlight' ? ('High' as const) : undefined })),
     data: { half },
   });
 }
@@ -512,6 +514,18 @@ function growthAfterHalf(s: GameState, acc: HalfAcc, level: LevelKey, ovr: numbe
   if (plan.rangeGain) p.range = clamp(p.range + plan.rangeGain * outcome.growth, 0, 99);
   if (plan.offhandGain) p.offhand = clamp(p.offhand + plan.offhandGain * outcome.growth, 0, 99);
   if (outcome.injury) p.injuryMultNext *= outcome.injury;
+  // round 20: chemistry built (or burned) for the rest of the season
+  if (plan.chem) season.teamBonus = Math.round(((season.teamBonus ?? 0) + plan.chem) * 100) / 100;
+  // round 20: Spotlight's gamble on shooting and finishing, which can also cost points
+  let swingText = '';
+  if (plan.swing && s.mode !== 'lab') {
+    const parts = plan.swing.attrs.map((k) => {
+      const d = normal(s.rng, plan.swing!.mean, plan.swing!.sd);
+      p.attrs[k] = clamp(p.attrs[k] + d, 15, ATTR_MAX);
+      return `${NAMES.attr[k].toLowerCase()} ${d >= 0 ? '+' : '−'}${Math.abs(d).toFixed(1)}`;
+    });
+    swingText = ` In the spotlight: ${parts.join(', ')}.`;
+  }
   const gain = ovrOf(p.attrs, p.pos) - before;
   const text =
     outcome.key === 'setback'
@@ -523,7 +537,7 @@ function growthAfterHalf(s: GameState, acc: HalfAcc, level: LevelKey, ovr: numbe
         : outcome.key === 'plateau'
           ? 'The work did not show up in games yet.'
           : 'The plan did what it said.';
-  (season.outcomes ??= []).push({ half: season.half + 1, plan: season.plan, plan2: season.plan2 ?? null, outcome: outcome.label, text, ovrGain: gain });
+  (season.outcomes ??= []).push({ half: season.half + 1, plan: season.plan, plan2: season.plan2 ?? null, outcome: outcome.label, text: text + swingText, ovrGain: gain });
   p.morale = adjust(p.morale, plan.morale + outcome.morale + (season.role === 'deep' ? -4 : season.role === 'key' ? 3 : 0) + (perf - 1) * 30);
   p.trust = adjust(p.trust, plan.trust + outcome.trust + (perf - 1) * 30 + (p.attrs.IQ - L.avg) * 0.04);
   const repGain = plan.rep[1] > 0 ? range(s.rng, plan.rep[0], plan.rep[1]) : 0;
