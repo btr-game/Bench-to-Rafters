@@ -1530,3 +1530,12 @@ Reached from the start page and from the bottom of Home (a career in progress is
   happened. A test of 40 careers timing every last shot perfectly against 40 timing them late:
   899 against 769 last possessions (winning more series means more close games), 27 against 29
   titles (one shot rarely swings a series; it decides the game it is in).
+- **Contract talks** (the owner: negotiation, kept concise). Under every pro offer that is not on
+  a fixed scale (rookie deals, minimums and camp deals are not), three buttons: More money (+15%,
+  never above the max), One more year (up to five) or A bigger role (one step). Two asks an offer
+  at most; the answer comes at once on the same screen. The team's hidden patience is 0.35, plus
+  reputation / 220, plus his OVR above the league average / 45, less 0.2 for each ask before; a
+  yes gives the whole ask, a meet-halfway half of it (money only; years and role stay), and an
+  out-of-patience team pulls the offer. With an average OVR, a first ask for money is accepted
+  33.95% of the time at reputation 30 (35.20% pulled), 47.15% at 60 (27.95% pulled) and 62.05%
+  at 90 (20.55% pulled), over 2,000 tries each.

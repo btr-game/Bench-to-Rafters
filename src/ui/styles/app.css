@@ -1862,3 +1862,8 @@ td .art-team { display: inline-block; vertical-align: middle; margin: -3px 8px -
   .sb-row { grid-template-columns: minmax(0, 1fr) auto; }
   .sb-track { grid-column: 1 / -1; order: 3; }
 }
+
+/* round 25: contract talks under an offer */
+.offer-wrap { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.talks { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.talk-said { font-weight: 600; }

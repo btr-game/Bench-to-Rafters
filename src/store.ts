@@ -14,6 +14,7 @@ import { tabKey } from './ui/selectors';
 import { weightOf } from './engine/player/weight';
 import { visitItem, wearItem } from './engine/economy/shop';
 import { letGo, raiseStaff, talkStaff } from './engine/career/staff';
+import { negotiate, type Ask } from './engine/career/negotiate';
 import type { WearSlot } from './content/shop';
 import { careerRecord } from './engine/career/record';
 import { logCareer, type LogResult } from './ui/careerLog';
@@ -55,6 +56,7 @@ interface Store {
   wear: (slot: WearSlot, id: string | null) => void;
   visit: (id: string) => string | null;
   staffAct: (id: number, act: 'talk' | 'raise' | 'go') => string | null;
+  negotiate: (offerId: string, ask: Ask) => string | null;
   changeFocus: (keys: AttrKey[]) => void;
   labSpend: (k: AttrKey, points: number) => void;
   recruit: (id: number) => void;
@@ -317,6 +319,14 @@ export const useStore = create<Store>((set, get) => ({
     if (!g) return null;
     const next = structuredClone(g);
     const text = visitItem(next, id);
+    if (text) set({ game: next });
+    return text;
+  },
+  negotiate: (offerId, ask) => {
+    const g = get().game;
+    if (!g) return null;
+    const next = structuredClone(g);
+    const text = negotiate(next, offerId, ask);
     if (text) set({ game: next });
     return text;
   },

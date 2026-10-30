@@ -14,6 +14,7 @@ import { useStore } from '../../store';
 import { brief, fmtMoney, ordinal } from '../format';
 import { NBA_TEAMS } from '../../content/teams';
 import { TimingMeter } from '../components/TimingMeter';
+import { negotiable, type Ask } from '../../engine/career/negotiate';
 
 const TIER: Record<string, string> = { blue: 'Blue blood', power: 'Power program', major: 'Major conference', mid: 'Mid-major' };
 
@@ -37,6 +38,21 @@ function OfferCard({ o, onPick }: { o: Offer; onPick: () => void }) {
       </dl>
       {o.note && <div className="muted small">{o.note}</div>}
     </button>
+  );
+}
+
+/** Contract talks (round 25): ask for one thing at a time, twice at most; the answer comes at once. */
+function Talks({ o, onSaid }: { o: Offer; onSaid: (text: string | null) => void }) {
+  const talk = useStore((s) => s.negotiate);
+  if (!negotiable(o)) return o.asked ? <div className="small muted talk-done">Talks are over: sign it or leave it.</div> : null;
+  const ask = (a: Ask) => onSaid(talk(o.id, a));
+  return (
+    <div className="talks" data-tour="talks">
+      <span className="kicker">Ask for{o.asked ? ' one more thing' : ''}</span>
+      <button className="btn small ghost" onClick={() => ask('money')}>More money</button>
+      <button className="btn small ghost" onClick={() => ask('years')}>One more year</button>
+      <button className="btn small ghost" onClick={() => ask('role')}>A bigger role</button>
+    </div>
   );
 }
 
@@ -260,6 +276,8 @@ export function DecisionView({ g, d }: { g: GameState; d: Decision }) {
   const master = useStore((s) => s.master);
   const offers = (d.data?.offers as Offer[] | undefined) ?? [];
   const offerIds = new Set(offers.map((o) => o.id));
+  const [talk, setTalk] = useState<{ id: string; text: string } | null>(null);
+  const said = talk?.id === d.id ? talk.text : null;
   const extra = d.choices.filter((c) => !offerIds.has(c.id));
 
   if (d.kind === 'live') return <LiveView g={g} d={d} />;
@@ -352,10 +370,14 @@ export function DecisionView({ g, d }: { g: GameState; d: Decision }) {
       {offers.length > 0 && (
         <div className="offers">
           {offers.map((o) => (
-            <OfferCard key={o.id} o={o} onPick={() => choose(o.id)} />
+            <div key={o.id} className="offer-wrap">
+              <OfferCard o={o} onPick={() => choose(o.id)} />
+              <Talks o={o} onSaid={(text) => setTalk(text ? { id: d.id, text } : null)} />
+            </div>
           ))}
         </div>
       )}
+      {said && <p className="small talk-said" role="status">{said}</p>}
       {extra.length > 0 && !isDraftNight && (
         <div className="choices">
           {extra.map((c, i) => (
