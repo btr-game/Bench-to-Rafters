@@ -7,22 +7,23 @@ import { glyph, toPaths } from './pixel';
 // each kind of play from its own camera (round 19b). A three from the baseline, side on, the ball
 // trailing on its long arc; a jumper from above the rim, the ball growing as it rises toward the
 // camera and dropping into the ring; a layup at a three-quarter angle, a hand rolling it off the
-// glass; a dunk from under the rim looking up, a full arm slamming it through; a free throw from
-// behind the shooter, the ball shrinking toward a far rim; a block side on in mid-air, the
-// defender's arm swatting it away; a steal at floor level, a hand poking the dribble loose; a
-// rim-out and a buzzer beater head on, the clock running out to 0.0 as the glass lights red.
+// glass; a free throw from
+// behind the shooter, the ball shrinking toward a far rim; a steal at floor level, a hand poking
+// the dribble loose; a rim-out and a buzzer beater head on, the clock running out to 0.0 as the
+// glass lights red. Dunks and blocks are close on the rim (round 19c): a huge hand surges up from
+// below and hammers it through, or swats it away.
 
-type PlayKind = 'three' | 'jumper' | 'layup' | 'dunk' | 'ft' | 'miss' | 'block' | 'steal' | 'buzzer';
+type PlayKind = 'three' | 'jumper' | 'layup' | 'dunk' | 'ft' | 'miss' | 'block' | 'steal' | 'buzzer' | 'buzzer3';
 
 const W = 160;
 const H = 90;
-const DUR: Record<PlayKind, number> = { three: 1700, jumper: 1500, layup: 1400, dunk: 1300, ft: 1500, miss: 1600, block: 1400, steal: 1300, buzzer: 2200 };
-const LABEL: Record<PlayKind, string> = { three: 'Splash', jumper: 'Bucket', layup: 'Off the glass', dunk: 'Slam!', ft: 'Free throw', miss: 'No good', block: 'Rejected!', steal: 'Stolen!', buzzer: 'At the buzzer!' };
+const DUR: Record<PlayKind, number> = { three: 1700, jumper: 1500, layup: 1400, dunk: 1300, ft: 1500, miss: 1600, block: 1400, steal: 1300, buzzer: 3400, buzzer3: 3600 };
+const LABEL: Record<PlayKind, string> = { three: 'Splash', jumper: 'Bucket', layup: 'Off the glass', dunk: 'Slam!', ft: 'Free throw', miss: 'No good', block: 'Rejected!', steal: 'Stolen!', buzzer: 'At the buzzer!', buzzer3: 'At the buzzer!' };
 
 /** What a line of play-by-play shows, from its tag and its words; null for plays with no shot. */
 export function playKind(text: string, tag = '', pts = 0): PlayKind | null {
   const t = text.toLowerCase();
-  if (tag === 'BUZZER' || /buzzer|at the horn/.test(t)) return /rims out|no good|misses/.test(t) ? 'miss' : 'buzzer';
+  if (tag === 'BUZZER' || /buzzer|at the horn/.test(t)) return /rims out|no good|misses/.test(t) ? 'miss' : pts === 3 || /three|deep/.test(t) ? 'buzzer3' : 'buzzer';
   if (tag === 'BLOCK' || /block|swat|reject/.test(t)) return 'block';
   if (tag === 'STEAL' || /steal|passing lane|strip/.test(t)) return 'steal';
   if (tag === 'MISS' || /rims out|no good|misses|off the rim/.test(t)) return 'miss';
@@ -56,12 +57,15 @@ const BALL = (() => {
   return toPaths(rows.map((r) => [...r].map((c) => pal[c] ?? '')));
 })();
 
-/** The ball at (x, y), s times its size, with a fading trail behind it if given. */
-function Ball({ x, y, s = 1, trail = [], o = 1 }: { x: number; y: number; s?: number; trail?: [number, number, number][]; o?: number }) {
+const BALL_K = 1.5; // every camera's ball, half as big again (round 19c)
+
+/** The ball at (x, y), s times its size (times BALL_K), with a fading trail behind it if given. */
+function Ball({ x, y, s: s0 = 1, trail = [], o = 1 }: { x: number; y: number; s?: number; trail?: [number, number, number][]; o?: number }) {
+  const s = s0 * BALL_K;
   return (
     <>
       {trail.map(([tx, ty, ts], i) => (
-        <circle key={i} cx={R(tx)} cy={R(ty)} r={4 * ts} fill="#F5A15F" opacity={0.12 + i * 0.07} />
+        <circle key={i} cx={R(tx)} cy={R(ty)} r={4 * ts * BALL_K} fill="#F5A15F" opacity={0.12 + i * 0.07} />
       ))}
       <g transform={`translate(${R(x - 4.5 * s)} ${R(y - 4.5 * s)}) scale(${s})`} opacity={o}>
         {BALL.map((p) => (
@@ -187,17 +191,9 @@ function paintBack(kind: PlayKind, accent: string): string[][] {
       }
       return g;
     }
-    case 'dunk': {
-      // under the rim looking up: the dark roof, the light rig
-      const g = blankGrid(W, H);
-      for (let y = 0; y < H; y++)
-        for (let x = 0; x < W; x++) {
-          const d = Math.hypot(x - 80, (y - 4) * 1.4);
-          g[y][x] = mix('#262B36', '#0B0D12', Math.min(1, d / 110));
-          if ((x % 12 === 0 && y % 14 === 3) || (x % 12 === 6 && y % 14 === 10)) g[y][x] = '#FFF3BF';
-        }
-      return g;
-    }
+    case 'dunk':
+    case 'block':
+      return dimCrowd(H, accent, [80, 40, 60]);
     case 'ft': {
       // behind the shooter: the crowd beyond the basket, the floor and the lane in perspective
       const g = dimCrowd(44, accent, [80, 26, 40]);
@@ -218,25 +214,33 @@ function paintBack(kind: PlayKind, accent: string): string[][] {
       return g;
     }
     case 'steal': {
-      // floor level: a low crowd line, the floor running away from the camera
-      const g = dimCrowd(30, accent, null);
-      for (let y = 30; y < H; y++) {
-        const t = (y - 30) / (H - 30);
-        for (let x = 0; x < W; x++) {
-          const u = ((x - 80) / lerp(20, 200, t)) * 10 + 40;
-          let c = WOODS[Math.floor(u) % 4];
-          if (Math.abs(u - Math.round(u)) < 0.04) c = '#B98048';
-          g[y][x] = c;
-        }
-      }
-      for (let x = 0; x < W; x++) g[30][x] = '#F4F1EA';
+      // close on the dribble: the floor fills the frame, a slice of crowd above it
+      const g = dimCrowd(22, accent, null);
+      const f = blankGrid(W, H - 22);
+      paintFloor(f, 0);
+      for (let y = 22; y < H; y++) g[y] = f[y - 22];
+      for (let x = 0; x < W; x++) g[22][x] = '#F4F1EA';
+      return g;
+    }
+    case 'buzzer':
+    case 'buzzer3': {
+      // the wide shot: the crowd, the floor, and for a deep three the logo at centre court
+      const g = dimCrowd(62, accent, [80, 30, 70]);
+      const f = blankGrid(W, H - 62);
+      paintFloor(f, 0);
+      for (let y = 62; y < H; y++) g[y] = f[y - 62];
+      for (let x = 0; x < W; x++) g[62][x] = '#F4F1EA';
+      if (kind === 'buzzer3')
+        for (let y = 63; y < H; y++)
+          for (let x = 0; x < 60; x++) {
+            const d = ((x - 26) / 22) ** 2 + ((y - 76) / 8) ** 2;
+            if (d < 1) g[y][x] = mix(g[y][x], accent, d > 0.75 ? 0.9 : 0.35);
+          }
       return g;
     }
     case 'layup':
-    case 'block':
-      return dimCrowd(H, accent, kind === 'block' ? [132, 36, 50] : [96, 36, 50]);
-    case 'miss':
-    case 'buzzer': {
+      return dimCrowd(H, accent, [96, 36, 50]);
+    case 'miss': {
       const g = dimCrowd(H, accent, [80, 44, 46]);
       for (let y = 0; y < 28; y++) for (let x = 77; x < 83; x++) g[y][x] = mix(accent, '#000000', 0.35);
       return g;
@@ -246,7 +250,7 @@ function paintBack(kind: PlayKind, accent: string): string[][] {
 
 // ---------- the cameras ----------
 
-type Scene = (u: number, p: { clock: string; red: boolean }) => { node: ReactNode; shake?: number; flash?: number; flashColor?: string };
+type Scene = (u: number, p: { clock: string }) => { node: ReactNode; shake?: number; flash?: number; flashColor?: string; red?: boolean };
 
 /** The head-on shot of the glass and rim (rim-outs and buzzer beaters). */
 function Front({ clock, red, shake, swish, bigClock, children }: { clock: string; red: boolean; shake: number; swish: number; bigClock?: boolean; children: ReactNode }) {
@@ -264,6 +268,126 @@ function Front({ clock, red, shake, swish, bigClock, children }: { clock: string
         <Net cx={80} top={62} rw={24} len={14} bw={14} swish={swish} />
         <path d="M66 61h28v2h-28z" fill={RIMC} />
       </g>
+    </>
+  );
+}
+
+/** The rim filling the screen: the glass behind, a wide net, the iron in two halves (the back
+ * drawn before the ball, the front after) so the ball goes through it. */
+function CloseRim({ shake, swish, bend, front }: { shake: number; swish: number; bend: number; front: boolean }) {
+  const t = `translate(${R(shake)} ${R(bend)})`;
+  if (!front)
+    return (
+      <g transform={`translate(${R(shake)} 0)`}>
+        <rect x="6" y="-6" width="148" height="62" fill="#BFD9EA" fillOpacity="0.22" stroke="#E8ECF2" strokeWidth="3" />
+        <rect x="50" y="16" width="60" height="36" fill="none" stroke="#F4F6FA" strokeWidth="2.4" />
+        <g transform={t}>
+          <path d="M34 60a46 9 0 0 1 92 0" fill="none" stroke={RIMD} strokeWidth="3" />
+        </g>
+      </g>
+    );
+  return (
+    <g transform={t}>
+      {[...Array(11)].map((_, i) => {
+        const a = Math.PI * (i / 10);
+        const tx = 80 - Math.cos(a) * 46;
+        const ty = 60 + Math.sin(a) * 9;
+        const bx = 80 - Math.cos(a) * (26 + swish * 12);
+        return <path key={i} d={`M${R(tx)} ${R(ty)}L${R(bx)} ${R(96 + swish * 6)}`} stroke={NET} strokeWidth="1.6" opacity="0.9" />;
+      })}
+      <path d="M40 76H120M48 88H112" stroke={NET} strokeWidth="1.2" opacity="0.7" />
+      <path d="M34 60a46 9 0 0 0 92 0" fill="none" stroke={RIMC} strokeWidth="4" />
+    </g>
+  );
+}
+
+/** A huge hand, palm to the camera, fingers spread, its forearm running down out of the frame;
+ * (x, y) is the middle of the palm. */
+function BigHand({ x, y, s = 2.4, band = '#F4F4F4', tilt = 0 }: { x: number; y: number; s?: number; band?: string; tilt?: number }) {
+  return (
+    <g transform={`translate(${R(x)} ${R(y)}) rotate(${R(tilt)}) scale(${s})`}>
+      <path d="M-7 13h14v60h-14z" fill={SKIN} stroke={OUT} strokeWidth="0.6" />
+      <path d="M3 13h4v60h-4z" fill={SKIN_D} />
+      <path d="M-8 11h16v6h-16z" fill={band} stroke={OUT} strokeWidth="0.5" />
+      <path d="M-10 -4h20v12q0 5 -5 5h-10q-5 0 -5 -5z" fill={SKIN} stroke={OUT} strokeWidth="0.6" />
+      <path d="M-17 -5l3 -3l7 7l-3 9z" fill={SKIN} stroke={OUT} strokeWidth="0.6" />
+      {[
+        [-10, -19],
+        [-5, -23],
+        [0, -21],
+        [5, -16],
+      ].map(([fx, top]) => (
+        <g key={fx}>
+          <path d={`M${fx} -3V${top + 1}q0 -1 1 -1h2q1 0 1 1V-3z`} fill={SKIN} stroke={OUT} strokeWidth="0.5" />
+          <path d={`M${fx + 3} -3V${top + 1}h1V-3z`} fill={SKIN_D} />
+          <path d={`M${fx + 1} ${top + 1}h2v2h-2z`} fill={SKIN_L} />
+          <path d={`M${fx} ${R((top - 3) / 2)}h4v0.6h-4z`} fill={SKIN_D} />
+        </g>
+      ))}
+      <path d="M-8 4h12v1h-12zM-6 8h9v0.8h-9z" fill={SKIN_D} />
+      <path d="M-9 -3h3v8h-3z" fill={SKIN_L} opacity="0.6" />
+    </g>
+  );
+}
+
+type SilPose = 'rise' | 'release' | 'lunge' | 'contest' | 'pump' | 'pump2' | 'wave' | 'down';
+type Pt2 = [number, number];
+// side-on silhouettes, facing right, feet at (0, 0): limbs as polylines [width, ...points]
+const POSES: Record<SilPose, { head: Pt2; limbs: [number, ...Pt2[]][] }> = {
+  rise: { head: [1, -41], limbs: [[9, [0, -35], [1, -20]], [4, [2, -34], [6, -42], [4, -48]], [4, [-1, -34], [3, -43], [2, -48]], [5, [0, -21], [5, -12], [1, -3]], [5, [1, -21], [-3, -12], [-7, -5]]] },
+  release: { head: [1, -41], limbs: [[9, [0, -35], [1, -20]], [4, [2, -34], [7, -44], [8, -53]], [4, [-1, -34], [3, -44], [5, -50]], [5, [0, -21], [5, -12], [1, -3]], [5, [1, -21], [-3, -12], [-7, -5]]] },
+  lunge: { head: [16, -24], limbs: [[9, [12, -22], [-4, -14]], [4, [13, -24], [24, -38]], [4, [10, -20], [18, -12]], [5, [-4, -14], [-14, -8], [-20, -2]], [5, [-4, -14], [-10, -4], [-16, 0]]] },
+  contest: { head: [0, -41], limbs: [[9, [0, -35], [0, -20]], [4, [-1, -34], [-5, -46], [-7, -55]], [4, [1, -33], [4, -26], [6, -20]], [5, [0, -21], [-2, -10], [-2, 0]], [5, [0, -21], [3, -10], [4, 0]]] },
+  pump: { head: [0, -42], limbs: [[9, [0, -36], [0, -21]], [4, [2, -34], [9, -38], [9, -48]], [4, [-1, -34], [-6, -28], [-9, -22]], [5, [0, -22], [5, -13], [2, -3]], [5, [0, -22], [-4, -13], [-3, -4]]] },
+  pump2: { head: [0, -42], limbs: [[9, [0, -36], [0, -21]], [4, [2, -34], [9, -30], [14, -26]], [4, [-1, -34], [-6, -28], [-9, -22]], [5, [0, -22], [5, -13], [2, -3]], [5, [0, -22], [-4, -13], [-3, -4]]] },
+  wave: { head: [0, -41], limbs: [[9, [0, -35], [0, -20]], [4, [2, -34], [7, -42], [8, -51]], [4, [-1, -34], [-3, -26], [-3, -19]], [5, [0, -21], [-2, -10], [-3, 0]], [5, [0, -21], [3, -10], [4, 0]]] },
+  down: { head: [8, -10], limbs: [[9, [6, -9], [-6, -5]], [4, [4, -8], [12, -2]], [5, [-6, -5], [-14, -2], [-20, 0]], [5, [-6, -5], [-10, 0], [-16, 0]]] },
+};
+
+/** A player in silhouette with a rim of light: the famous shots are their shapes, not faces. */
+function Sil({ x, y, pose, wave = 0 }: { x: number; y: number; pose: SilPose; wave?: number }) {
+  const p = POSES[pose];
+  const limbs = p.limbs.map(([w, ...pts], i) => {
+    const pts2 = pose === 'wave' && i === 1 ? pts.map(([px, py], k) => [px + (k === 2 ? wave * 4 : 0), py] as Pt2) : pts;
+    return { w, d: 'M' + pts2.map(([px, py]) => `${R(px)} ${R(py)}`).join('L') };
+  });
+  const body = (dx: number, dy: number, fill: string) => (
+    <g transform={`translate(${R(x + dx)} ${R(y + dy)})`}>
+      {limbs.map((l, i) => (
+        <path key={i} d={l.d} stroke={fill} strokeWidth={l.w} strokeLinecap="square" strokeLinejoin="round" fill="none" />
+      ))}
+      <circle cx={p.head[0]} cy={p.head[1]} r="4.5" fill={fill} />
+    </g>
+  );
+  return (
+    <>
+      {body(-1, -1, '#8A93A6')}
+      {body(0, 0, '#07080B')}
+    </>
+  );
+}
+
+/** The basket side on, small, at the far end of a wide shot. */
+function SideRim({ x = 146 }: { x?: number }) {
+  return (
+    <>
+      <rect x={x} y="16" width="3" height="28" fill="#E8ECF2" />
+      <path d={`M${x + 3} 26h8v2h-8z`} fill="#9AA2B0" />
+      <path d={`M${x - 14} 40h14v2h-14z`} fill={RIMC} />
+      <path d={`M${x - 13} 42l2 8M${x - 8} 42l1 9M${x - 3} 42l-1 8`} stroke={NET} strokeWidth="1" />
+    </>
+  );
+}
+
+/** Camera flashes popping all over the crowd. */
+function Bulbs({ u }: { u: number }) {
+  const k = Math.floor(u * 30);
+  return (
+    <>
+      {[...Array(14)].map((_, i) => {
+        const h = (i * 7919 + k * 104729) % 9973;
+        return <path key={i} d={`M${h % W} ${(h >> 3) % 58}h2v2h-2z`} fill="#FFFFFF" opacity={0.9} />;
+      })}
     </>
   );
 }
@@ -295,7 +419,7 @@ const SCENES: Record<PlayKind, Scene> = {
     const drop = u >= 0.72;
     const x = lerp(64, 80, v);
     const y = lerp(96, 20, v);
-    const s = drop ? lerp(1.2, 0.6, seg(u, 0.72, 0.9)) : 1.2 + 1.5 * Math.sin(Math.PI * v);
+    const s = drop ? lerp(0.9, 0.45, seg(u, 0.72, 0.9)) : 0.9 + 1.1 * Math.sin(Math.PI * v);
     const ring = drop ? 1 + seg(u, 0.72, 0.9) * 0.35 : 1;
     const sh = drop ? 0.6 : 1.4 - Math.sin(Math.PI * v) * 0.8;
     return {
@@ -333,36 +457,33 @@ const SCENES: Record<PlayKind, Scene> = {
       ),
     };
   },
-  // under the rim, looking up: a full arm brings it up and hammers it through
+  // the rim, close: a huge arm rises from below with the ball and hammers it through
   dunk: (u, { clock }) => {
-    const up = seg(u, 0, 0.38);
-    const down = seg(u, 0.38, 0.6);
-    const x = u < 0.38 ? quad(128, 116, 84, up) : lerp(84, 80, down);
-    const y = u < 0.38 ? quad(110, 30, 6, up) : lerp(6, 64, down * down);
-    const after = seg(u, 0.6, 1);
-    const shake = u > 0.5 ? Math.sin(u * 90) * 3 * (1 - after) : 0;
-    const swish = u > 0.5 ? 1 - after : 0;
+    const rise = seg(u, 0, 0.36);
+    const slam = seg(u, 0.36, 0.5);
+    const out = seg(u, 0.5, 0.8);
+    // the ball rides the hand up above the rim, then goes through toward the camera
+    const bx = u < 0.36 ? lerp(118, 82, rise) : 80;
+    const by = u < 0.36 ? quad(118, 30, 10, rise) : lerp(10, 92, slam * slam + out * 0.4);
+    const bs = u < 0.36 ? 2 : lerp(2, 3.2, slam);
+    const hx = u < 0.5 ? bx + 2 : lerp(84, 96, out);
+    const hy = u < 0.36 ? by + 14 : u < 0.5 ? lerp(24, 70, slam) : lerp(70, 150, out);
+    const hit = seg(u, 0.44, 0.78);
+    const shake = u > 0.44 ? Math.sin(u * 95) * 4 * (1 - hit) : 0;
+    const swish = u > 0.44 ? 1 - hit : 0;
+    const through = u >= 0.42;
     return {
       shake,
-      flash: u > 0.5 ? 1 - after : 0,
+      flash: u > 0.44 ? 1 - hit : 0,
       node: (
         <>
-          <path d="M14 0h132v8H14z" fill="#E8ECF2" stroke={OUT} strokeWidth="0.6" />
-          <path d="M60 0h40v6H60z" fill="none" stroke="#F4F6FA" strokeWidth="1" />
-          <g transform={`translate(${R(shake)} 0)`}>
-            <ellipse cx="80" cy="26" rx="34" ry="9" fill="none" stroke={RIMD} strokeWidth="3" />
-          </g>
-          {u < 0.62 && <Ball x={x} y={y} s={2.4} />}
-          {u < 0.62 && <Arm x0={150} y0={118} x1={x + 8} y1={y - 4} w0={22} w1={12} />}
-          <g transform={`translate(${R(shake)} 0)`}>
-            {[...Array(9)].map((_, i) => {
-              const a = Math.PI * (0.1 + (i / 8) * 0.8);
-              return <path key={i} d={`M${R(80 + Math.cos(a) * 34)} ${R(26 + Math.sin(a) * 9)}L${R(80 + Math.cos(a) * (46 + swish * 10))} ${R(70 + swish * 8)}`} stroke={NET} strokeWidth="1.4" opacity="0.9" />;
-            })}
-            <path d="M46 26a34 9 0 0 0 68 0" fill="none" stroke={RIMC} strokeWidth="3" />
-          </g>
-          {u >= 0.62 && <Ball x={80} y={lerp(64, 120, after)} s={2.8} />}
-          <Clock text={clock} x={130} y={78} />
+          <CloseRim shake={shake} swish={swish} bend={u > 0.44 ? (1 - hit) * 4 : 0} front={false} />
+          {through && <Ball x={bx} y={by} s={bs} />}
+          {through && hy < 140 && <BigHand x={hx} y={hy} s={2.3} />}
+          <CloseRim shake={shake} swish={swish} bend={u > 0.44 ? (1 - hit) * 4 : 0} front />
+          {!through && <BigHand x={hx} y={hy} s={2.3} />}
+          {!through && <Ball x={bx} y={by} s={bs} />}
+          <Clock text={clock} x={4} y={4} />
         </>
       ),
     };
@@ -409,63 +530,160 @@ const SCENES: Record<PlayKind, Scene> = {
       ),
     };
   },
-  // side on in mid-air: the shot goes up, the defender's arm comes down on it
+  // the rim, close: the shot floats in, a huge hand surges up from below and swats it away
   block: (u, { clock }) => {
-    const path = (w: number): [number, number] => (w < 0.42 ? [lerp(40, 88, seg(w, 0, 0.42)), quad(52, 22, 30, seg(w, 0, 0.42))] : [lerp(88, -24, seg(w, 0.42, 1)), quad(30, 14, 84, seg(w, 0.42, 1))]);
+    const path = (w: number): [number, number] => (w < 0.45 ? [quad(-14, 30, 74, seg(w, 0, 0.45)), quad(70, 0, 22, seg(w, 0, 0.45))] : [lerp(74, -30, seg(w, 0.45, 0.9)), quad(22, -6, 40, seg(w, 0.45, 0.9))]);
     const [x, y] = path(u);
-    const swing = seg(u, 0.22, 0.44);
-    const hx = lerp(176, 92, swing);
-    const hy = lerp(-30, 24, swing);
-    const shooter = u < 0.36 ? 1 - seg(u, 0.18, 0.36) : 0;
-    const trail = u > 0.42 ? [0.08, 0.05, 0.02].map((d): [number, number, number] => [...path(Math.max(0.42, u - d)), 1.4]) : [];
+    const up = seg(u, 0.28, 0.45);
+    const down = seg(u, 0.62, 0.95);
+    const hx = lerp(150, 86, up) + down * 10;
+    const hy = lerp(150, 44, up) + down * 110;
+    const hit = u > 0.45 ? 1 - seg(u, 0.45, 0.7) : 0;
+    const trail = u > 0.45 ? [0.09, 0.06, 0.03].map((d): [number, number, number] => [...path(Math.max(0.45, u - d)), 2]) : [];
     return {
-      flash: u > 0.42 ? 1 - seg(u, 0.42, 0.7) : 0,
+      shake: Math.sin(u * 90) * 3 * hit,
+      flash: hit,
       flashColor: '#1C7ED6',
       node: (
         <>
-          <rect x="146" y="16" width="4" height="34" fill="#E8ECF2" stroke={OUT} strokeWidth="0.6" />
-          <path d="M124 46h22v2h-22z" fill={RIMC} />
-          <Net cx={135} top={48} rw={22} len={14} bw={13} />
-          {shooter > 0 && <Arm x0={-10} y0={110} x1={lerp(20, 38, shooter)} y1={lerp(80, 58, shooter)} w0={18} w1={10} hand="palm" />}
-          <Ball x={x} y={y} s={1.4} trail={trail} />
-          {u > 0.2 && u < 0.85 && <Arm x0={hx + 60} y0={hy - 70} x1={hx} y1={hy} w0={20} w1={11} band="#18141C" hand="open" />}
-          <Clock text={clock} x={6} y={4} />
+          <CloseRim shake={0} swish={0} bend={0} front={false} />
+          <CloseRim shake={0} swish={0} bend={0} front />
+          <Ball x={x} y={y} s={2} trail={trail} />
+          {u > 0.26 && hy < 150 && <BigHand x={hx} y={hy} s={2.5} band="#18141C" tilt={-14 + up * 14} />}
+          <Clock text={clock} x={4} y={4} />
         </>
       ),
     };
   },
-  // floor level: the dribble, a hand from the side pokes it away
+  // close on the dribble: the ball pounds the floor under his hand, a hand flies in and smacks it away
   steal: (u, { clock }) => {
     const v = seg(u, 0, 0.5);
-    const bounce = Math.abs(Math.sin(v * Math.PI * 2.5));
-    const [x, y] = u < 0.5 ? [lerp(36, 74, v), 76 - bounce * 30] : [lerp(74, -20, seg(u, 0.5, 1)), quad(74, 56, 80, seg(u, 0.5, 1))];
-    const poke = seg(u, 0.36, 0.52);
+    const bounce = Math.abs(Math.sin(v * Math.PI * 3));
+    const free = seg(u, 0.5, 1);
+    const [x, y] = u < 0.5 ? [lerp(70, 84, v), 80 - bounce * 34] : [lerp(84, -40, free), quad(62, 36, 84, free)];
+    const swipe = seg(u, 0.36, 0.5);
+    const gone = seg(u, 0.58, 0.9);
     return {
+      shake: u > 0.5 ? Math.sin(u * 90) * 3 * (1 - seg(u, 0.5, 0.7)) : 0,
       flash: u > 0.5 ? 1 - seg(u, 0.5, 0.75) : 0,
       flashColor: '#1C7ED6',
       node: (
         <>
-          <ellipse cx={R(x)} cy="84" rx={R(Math.max(3, 10 - (84 - y) * 0.12))} ry="2" fill="#000" opacity="0.28" />
-          {u < 0.55 && <Arm x0={x - 30} y0={-14} x1={x - 2} y1={Math.min(y - 12, 50)} w0={18} w1={10} hand="palm" />}
-          <Ball x={x} y={y} s={2} />
-          {u > 0.3 && u < 0.8 && <Arm x0={180} y0={96} x1={lerp(150, 84, poke)} y1={lerp(86, 74, poke)} w0={20} w1={11} band="#18141C" hand="open" />}
-          <Clock text={clock} x={6} y={4} />
+          <ellipse cx={R(x)} cy="86" rx={R(Math.max(5, 16 - (86 - y) * 0.2))} ry="3" fill="#000" opacity="0.3" />
+          <Ball x={x} y={y} s={2.4} trail={u > 0.5 ? [0.08, 0.05, 0.02].map((d): [number, number, number] => [lerp(84, -40, seg(u - d, 0.5, 1)), quad(62, 36, 84, seg(u - d, 0.5, 1)), 2.4]) : []} />
+          {u < 0.5 && <BigHand x={x - 26} y={Math.min(y, 70) - 22} s={1.7} tilt={90} />}
+          {u > 0.3 && gone < 1 && <BigHand x={lerp(200, 104, swipe) + gone * 90} y={62} s={2.1} band="#18141C" tilt={-90} />}
+          <Clock text={clock} x={4} y={4} />
         </>
       ),
     };
   },
-  // head on, the big clock behind: it runs out as the ball drops, the glass goes red
-  buzzer: (u, { red }) => {
-    const [x, y] = u < 0.68 ? [quad(-8, 46, 80, u / 0.68), quad(86, -14, 58, u / 0.68)] : [80, lerp(58, 100, seg(u, 0.68, 1) ** 2)];
-    const t = u >= 0.68 ? '0.0' : (3 * (1 - u / 0.68)).toFixed(1);
-    const swish = u > 0.68 && u < 0.84 ? 1 - seg(u, 0.68, 0.84) : 0;
+  // the game-winning jumper, after the most famous one (Jordan, 1989): he hangs in the air as
+  // the defender flies past underneath, the clock runs out with the ball in the air, the cut to
+  // the rim for the swish at 0.0, then the leaping fist pumps
+  buzzer: (u) => {
+    const hang = Math.sin(Math.PI * seg(u, 0.02, 0.5));
+    const left = Math.max(0, 1.2 * (1 - u / 0.5));
+    const t = left.toFixed(1);
+    const red = u >= 0.5;
+    if (u < 0.42) {
+      const fly = u >= 0.28;
+      const v = seg(u, 0.28, 0.42);
+      const [bx, by] = fly ? [lerp(66, 140, v), quad(20 - hang * 14, -10, 34, v)] : [66, 21 - hang * 14];
+      return {
+        node: (
+          <>
+            <SideRim />
+            <Sil x={lerp(14, 104, seg(u, 0.04, 0.36))} y={74} pose="lunge" />
+            <Sil x={62} y={74 - hang * 14} pose={fly ? 'release' : 'rise'} />
+            <Ball x={bx} y={by} s={1} />
+            <Clock text={t} x={4} y={2} k={2} red={false} />
+          </>
+        ),
+      };
+    }
+    if (u < 0.7) {
+      const v = seg(u, 0.42, 0.7);
+      const swish = v > 0.4 && v < 0.8 ? 1 - seg(v, 0.4, 0.8) : 0;
+      return {
+        red,
+        flash: red ? 0.5 : 0,
+        flashColor: '#FF3B3B',
+        node: (
+          <>
+            <rect x="0" y="0" width={W} height={H} fill="#10131A" />
+            <Front clock={t} red={red} shake={0} swish={swish} bigClock>
+              <Ball x={lerp(50, 80, seg(v, 0, 0.4))} y={v < 0.4 ? quad(20, 30, 58, v / 0.4) : lerp(58, 100, seg(v, 0.4, 1) ** 2)} />
+            </Front>
+          </>
+        ),
+      };
+    }
+    const k = Math.floor(u * 22) % 2;
     return {
-      flash: red ? 0.6 : 0,
-      flashColor: '#FF3B3B',
+      red: true,
+      flash: 0.25,
+      flashColor: '#FFFFFF',
       node: (
-        <Front clock={t} red={red} shake={0} swish={swish} bigClock>
-          <Ball x={x} y={y} />
-        </Front>
+        <>
+          <Bulbs u={u} />
+          <Sil x={66} y={74 - Math.abs(Math.sin(u * 20)) * 8} pose={k ? 'pump' : 'pump2'} />
+          <Sil x={104} y={74} pose="down" />
+          <Clock text="0.0" x={4} y={2} k={2} red />
+        </>
+      ),
+    };
+  },
+  // the game-winning three, after the deep ones (Lillard, 2019): a pull-up from the logo over a
+  // long contest, the long arc, the cut to the rim for the swish, then the wave goodbye
+  buzzer3: (u) => {
+    const left = Math.max(0, 1.5 * (1 - u / 0.52));
+    const t = left.toFixed(1);
+    const red = u >= 0.52;
+    const rise = Math.sin(Math.PI * seg(u, 0.05, 0.3));
+    if (u < 0.46) {
+      const fly = u >= 0.2;
+      const v = seg(u, 0.2, 0.46);
+      const [bx, by] = fly ? [lerp(30, 146, v), quad(26 - rise * 10, -40, 34, v)] : [30, 27 - rise * 10];
+      return {
+        node: (
+          <>
+            <SideRim x={146} />
+            <Sil x={26} y={74 - rise * 10} pose={fly ? 'release' : 'rise'} />
+            <Sil x={40} y={74 - rise * 6} pose="contest" />
+            <Ball x={bx} y={by} s={0.9} trail={fly ? [0.06, 0.04, 0.02].map((d): [number, number, number] => [lerp(30, 146, seg(u - d, 0.2, 0.46)), quad(26, -40, 34, seg(u - d, 0.2, 0.46)), 0.9]) : []} />
+            <Clock text={t} x={96} y={2} k={2} red={false} />
+          </>
+        ),
+      };
+    }
+    if (u < 0.72) {
+      const v = seg(u, 0.46, 0.72);
+      const swish = v > 0.4 && v < 0.8 ? 1 - seg(v, 0.4, 0.8) : 0;
+      return {
+        red,
+        flash: red ? 0.5 : 0,
+        flashColor: '#FF3B3B',
+        node: (
+          <>
+            <rect x="0" y="0" width={W} height={H} fill="#10131A" />
+            <Front clock={t} red={red} shake={0} swish={swish} bigClock>
+              <Ball x={lerp(40, 80, seg(v, 0, 0.4))} y={v < 0.4 ? quad(10, 20, 58, v / 0.4) : lerp(58, 100, seg(v, 0.4, 1) ** 2)} />
+            </Front>
+          </>
+        ),
+      };
+    }
+    return {
+      red: true,
+      flash: 0.2,
+      flashColor: '#FFFFFF',
+      node: (
+        <>
+          <Bulbs u={u} />
+          <Sil x={70} y={74} pose="wave" wave={Math.sin(u * 40)} />
+          <Clock text="0.0" x={4} y={2} k={2} red />
+        </>
       ),
     };
   },
@@ -517,8 +735,8 @@ export function PlayCam({ play, clock, accent = '#E8590C', label = true }: { pla
   }, [play?.key]);
   useEffect(() => () => cancelAnimationFrame(raf.current), []);
 
-  const red = kind === 'buzzer' && u >= 0.68;
-  const scene = cur ? SCENES[cur.kind](u, { clock: clock ?? '', red }) : null;
+  const scene = cur ? SCENES[cur.kind](u, { clock: clock ?? '' }) : null;
+  const red = !!scene?.red;
   return (
     <div className={`play-cam${red ? ' buzz' : ''}`} data-play={cur?.kind ?? 'idle'}>
       <svg viewBox={`0 0 ${W} ${H}`} shapeRendering="crispEdges" role="img" aria-label={cur ? LABEL[cur.kind] : 'The rim'}>
