@@ -137,6 +137,7 @@ export interface UserPlayer {
   growthMultNext: number;
   growthRate: number; // hidden: how fast he improves (see GROWTH_RATE)
   wear: number; // body wear 0-100 (see WEAR)
+  longevity?: number; // round 24: hidden, built by looking after the body (see LONGEVITY)
   lab?: { credits: number; earned: number; spent: Partial<Record<AttrKey, number>> }; // built in a lab
 }
 

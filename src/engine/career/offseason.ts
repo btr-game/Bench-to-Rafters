@@ -6,7 +6,7 @@ import { playShowcase } from './culture';
 import { processArcs } from '../events/arcs';
 import { reclassify } from '../player/classify';
 import { pushMilitary } from './nationality';
-import { ATTR_MAX, GROWTH_RATE_AGE, MODES, POSITIONS, WEAR, FA_INTEREST, OVERSEAS_FA, TEAM_FACTORS, OFFSEASON_DAYS, REP, RETIRE, ATTRS, TEAM_OPTION } from '../balance';
+import { ATTR_MAX, GROWTH_RATE_AGE, MODES, POSITIONS, WEAR, FA_INTEREST, OVERSEAS_FA, TEAM_FACTORS, OFFSEASON_DAYS, REP, RETIRE, ATTRS, TEAM_OPTION, LONGEVITY } from '../balance';
 import { chance, clamp, int, logistic, range, shuffle } from '../rng';
 import type { Contract, Decision, GameState, Offer, RoleKey } from '../types';
 import { applyAging, growHeight, updateHeightProjection } from '../player/growth';
@@ -79,6 +79,8 @@ export function beginOffseason(s: GameState): void {
   // his weight settles toward his natural frame, and the extra (or missing) pounds show in his ratings
   const lb = driftWeight(s.rng, p, lastIdeal);
   if (Math.abs(lb) >= 8) note(s, `${lb > 0 ? 'Up' : 'Down'} ${Math.abs(lb)} lb this year: ${weightOf(p)} lb now (${buildWord(p)} for your size).`);
+  // round 24: a body kept fresh through a season builds longevity
+  if ((p.wear ?? 0) < LONGEVITY.lowWearBelow) p.longevity = (p.longevity ?? 0) + LONGEVITY.lowWear;
   const aging = applyAging(s.rng, p);
   // the body recovers a little every summer, and less as he gets older
   p.wear = clamp((p.wear ?? 0) - WEAR.summerRest + Math.max(0, p.age - 25) * WEAR.agePerYear, 0, 100);
@@ -214,6 +216,7 @@ function resolveSummer(s: GameState, id: string): void {
     p.morale = adjust(p.morale, 8);
     p.injuryMultNext = 0.9;
     p.wear = Math.max(0, (p.wear ?? 0) - WEAR.restProgram);
+    p.longevity = (p.longevity ?? 0) + LONGEVITY.restSummer;
     healDays(p, 30);
   }
 }
@@ -547,7 +550,7 @@ function retireCheck(s: GameState, lastShare: number, share: number, role: RoleK
   const p = s.player;
   const ovr = userOvr(s);
   if (p.age >= RETIRE.forcedAge) {
-    retireNow(s, 'At 42, the body has the final say.');
+    retireNow(s, `At ${RETIRE.forcedAge}, the body has the final say.`);
     return true;
   }
   const declining = ovr <= p.peakOvr - RETIRE.ovrBelowPeak && lastShare < 0.3;

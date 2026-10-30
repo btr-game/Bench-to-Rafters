@@ -24,6 +24,7 @@ import {
   RECRUIT,
   ROLE_MINUTES,
   TEAM_FACTORS,
+  LONGEVITY,
 } from '../balance';
 import { chance, clamp, int, normal, range, weightedIndex, type Rng } from '../rng';
 import type { Attrs, GameLog, GameState, HalfPlan, League, LevelKey, RoleKey, SeasonRecord, SeasonState, StatLine, Team } from '../types';
@@ -513,6 +514,9 @@ function growthAfterHalf(s: GameState, acc: HalfAcc, level: LevelKey, ovr: numbe
   // body wear from this half: minutes played and how hard the plan pushed the body
   const tallWear = (1 + Math.max(0, p.fullHeight - HEIGHT_LIMITS.bandHi) * HEIGHT_LIMITS.tallWear) * weightWear(p);
   p.wear = clamp((p.wear ?? 0) + (share * WEAR.minutes + (plan.injury - 1) * WEAR.plan) * tallWear, 0, 100);
+  // round 24: a half spent on recovery builds longevity (a side plan, half as much)
+  if (season.plan === 'recovery') p.longevity = (p.longevity ?? 0) + LONGEVITY.recoveryHalf;
+  else if (season.plan2 === 'recovery') p.longevity = (p.longevity ?? 0) + LONGEVITY.recoveryHalf / 2;
   // the weight room puts pounds on, sprints take them off, a half on the injury list adds a few
   const lb = halfPlanWeight(season.plan, season.plan2) + (acc.injuredGames > acc.games / 2 ? WEIGHT.injuredHalf : 0);
   if (lb) changeWeight(p, lb, 0.3);

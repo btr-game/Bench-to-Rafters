@@ -544,7 +544,32 @@ export const MARKET_CURVE: [number, number][] = [
 export const MARKET_AGE_DROP = (age: number): number => (age <= 29 ? 1 : Math.max(0.35, 1 - (age - 29) * 0.12));
 // Retirement is recommended at 11+ below peak with few minutes, or for veterans past
 // `vetAge` who are `vetBelowPeak` below their peak.
-export const RETIRE = { ovrBelowPeak: 11, forcedAge: 42, vetAge: 32, vetBelowPeak: 5 };
+// round 24 (owner): 50 is the hard limit (it was 42)
+export const RETIRE = { ovrBelowPeak: 11, forcedAge: 50, vetAge: 32, vetBelowPeak: 5 };
+/**
+ * Longevity (round 24, owner: "if the user invests in health and aging enough, the player should
+ * be able to play well until 40, not at a 99 level, maybe 85"). A hidden number built by looking
+ * after the body: Recovery halves, health and longevity purchases, rest summers and offseasons
+ * with little wear. From `from` on it slows aging (by `per` a point, at most `max` (a 70% slower decline)) and makes a
+ * sudden decline rarer. Past `ceilingFrom` ratings also meet an age ceiling: 85 at 40, 50 at 50;
+ * whatever sits above it fades by `over` of the gap each year.
+ */
+export const LONGEVITY = {
+  recoveryHalf: 1, // main plan (half for a side plan)
+  healthItem: 2,
+  restSummer: 1.5,
+  lowWear: 1, // an offseason that starts under `lowWearBelow`
+  lowWearBelow: 20,
+  from: 32,
+  per: 0.015,
+  max: 0.7,
+  suddenPer: 0.015,
+  suddenMax: 0.6,
+  ceilingFrom: 37,
+  ceilingAt40: 85,
+  ceilingPerYear: 3.5,
+  over: 0.5,
+};
 // NBA interest in a free agent. Teams only call when he would rank within `maxRank` on
 // their roster; veterans and little-used players get fewer calls.
 /** Team factors (career/team.ts). Strength points, added to the team in his games. */
