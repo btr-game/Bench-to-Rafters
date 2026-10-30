@@ -1575,3 +1575,10 @@ Reached from the start page and from the bottom of Home (a career in progress is
   his summer), a power ranking (the top five by record, plus his team), and under each story
   about another team a line on what it means for him (in his way, a likely final opponent, games
   he should win, a seeding fight).
+- **Sound** (the owner: chiptune sound effects and music would be great). ui/sound.ts makes
+  everything with the Web Audio API, no files: a soft click on every button; sounds for a title
+  (a fanfare), a lost final, an award or draft night, an injury, a fine, a nickname, a purchase
+  (coins) and an achievement; and a soft four-bar loop (triangle bass, square lead, a little
+  noise) while a career is on screen, off in mini-games (they have their own) and on the pages.
+  The audio wakes on the first click, as browsers require. The settings menu has a Sound effects
+  switch (on by default) and a Music switch (off by default), kept on this device.

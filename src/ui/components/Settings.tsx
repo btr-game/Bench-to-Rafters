@@ -6,10 +6,11 @@ import { useEffect, useRef, useState } from 'react';
 import type { GameState } from '../../engine/types';
 import { prompt } from '../../engine/flow';
 import { useStore, type Court, type Tab, type Theme } from '../../store';
+import { setMusic, setSfx, soundSettings } from '../sound';
 
 /** A switch row: label, short note, on/off button. */
 function Toggle({ label, note, on, onClick, tour }: { label: string; note: string; on: boolean; onClick: () => void; tour: string }) {
-  const icon = /fast/i.test(label) ? 'fast' : /simple/i.test(label) ? 'simple' : /guide/i.test(label) ? 'guide' : /master/i.test(label) ? 'master' : /playoff/i.test(label) ? 'bracket' : '';
+  const icon = /fast/i.test(label) ? 'fast' : /simple/i.test(label) ? 'simple' : /guide/i.test(label) ? 'guide' : /master/i.test(label) ? 'master' : /playoff/i.test(label) ? 'bracket' : /sound|music/i.test(label) ? 'live' : '';
   return (
     <div className="set-row" data-tour={tour}>
       <Icon name={icon} size={26} />
@@ -27,6 +28,7 @@ function Toggle({ label, note, on, onClick, tour }: { label: string; note: strin
 export function SettingsMenu({ g }: { g: GameState | null }) {
   const [open, setOpen] = useState(false);
   const [armed, setArmed] = useState(false);
+  const [snd, setSnd] = useState(soundSettings);
   const box = useRef<HTMLDivElement>(null);
   const theme = useStore((s) => s.theme);
   const setTheme = useStore((s) => s.setTheme);
@@ -106,6 +108,8 @@ export function SettingsMenu({ g }: { g: GameState | null }) {
               <Toggle label="Playable playoff games" note="Off: postseason games are simulated." on={!g.flags.simPostseason} onClick={togglePlayoffs} tour="set-playoffs" />
             </>
           )}
+          <Toggle label="Sound effects" note="Chiptune sounds for clicks, wins, titles and the rest." on={snd.sfx} onClick={() => (setSfx(!snd.sfx), setSnd(soundSettings()))} tour="set-sfx" />
+          <Toggle label="Music" note="A soft loop while you play a career." on={snd.music} onClick={() => (setMusic(!snd.music, !!g), setSnd(soundSettings()))} tour="set-music" />
           <Toggle label="Simple text" note="Hide descriptions, keep the choices." on={simple} onClick={toggleSimple} tour="set-simple" />
           <Toggle label="Guide mode" note={master ? 'Off while Master mode is on.' : 'Highlights the next thing to do.'} on={guide && !master} onClick={toggleGuide} tour="set-guide" />
           <Toggle label="Master mode" note="No recommendations: no scouts' calls, fit tags, suggested deals or guide hints. You read the game yourself." on={master} onClick={toggleMaster} tour="set-master" />

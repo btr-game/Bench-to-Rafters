@@ -18,6 +18,7 @@ import { CareerLog } from './screens/CareerLog';
 import { AchievementBook } from './screens/Achievements';
 import { CommunityPage } from './screens/Community';
 import { ICON_FOR } from './art/icons';
+import { music, sfx, wakeOnClick } from './sound';
 
 const HOST_THEME = typeof document !== 'undefined' ? document.documentElement.getAttribute('data-theme') : null;
 
@@ -94,6 +95,30 @@ export function App() {
   }, [court]);
 
   useKeys(!mini && !!game);
+  // round 25: sound. The first click wakes the audio; music plays with a career on screen (a
+  // mini-game has its own); what happens in the game has its own sounds
+  useEffect(() => wakeOnClick(), []);
+  useEffect(() => music(!!game && !mini && !page), [game, mini, page]);
+  useEffect(
+    () =>
+      useStore.subscribe((now, before) => {
+        if (now.toasts.length > before.toasts.length) sfx('achievement');
+        const g = now.game;
+        const b = before.game;
+        if (!g || !b || g === b) return;
+        if (g.purchases.length > b.purchases.length) sfx('coins');
+        const seen = new Set(b.moments.map((m) => m.id));
+        const fresh = g.moments.find((m) => !seen.has(m.id));
+        if (!fresh) return;
+        if (fresh.logo) sfx('nickname');
+        else if (fresh.kind === 'title') sfx(fresh.mood === 'champion' ? 'title' : 'lose');
+        else if (fresh.lostFinal) sfx('lose');
+        else if (fresh.kind === 'awards' || fresh.kind === 'draft') sfx('award');
+        else if (fresh.kind === 'injury') sfx('injury');
+        else if (fresh.kind === 'fine') sfx('fine');
+      }),
+    [],
+  );
 
   if (page === 'log') return <CareerLog />;
   if (page === 'achievements') return <AchievementBook />;
