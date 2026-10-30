@@ -76,7 +76,7 @@ const BALL = toPaths(BALL_ROWS.map((r) => [...r].map((c) => BALL_PAL[c] ?? '')))
 
 // round 24: each kind of final has its own floor (owner: "for the Olympics and the largest
 // tournaments, just change the opponent's jersey and the court visuals")
-export type Venue = 'nba' | 'cup' | 'olympics' | 'fiba' | 'college' | 'euro' | 'school';
+export type Venue = 'nba' | 'cup' | 'olympics' | 'fiba' | 'college' | 'euro' | 'school' | 'park';
 const VENUES: Record<Venue, { floor: string; plank: string; paint: string; paintLine: string; ribbon: string[]; empty: number }> = {
   nba: { floor: '#C98D52', plank: '#B37A45', paint: '#A4473A', paintLine: '#8E3A2E', ribbon: ['#3B4256'], empty: 0.12 },
   cup: { floor: '#D9A066', plank: '#C48C55', paint: '#1098AD', paintLine: '#0B7285', ribbon: ['#E03131', '#F8F9FA'], empty: 0.1 },
@@ -85,6 +85,8 @@ const VENUES: Record<Venue, { floor: string; plank: string; paint: string; paint
   college: { floor: '#C4874A', plank: '#AE743C', paint: '#862E2E', paintLine: '#6E2424', ribbon: ['#C92A2A', '#F1F3F5'], empty: 0.06 },
   euro: { floor: '#B9773F', plank: '#A36633', paint: '#5F3DC4', paintLine: '#4C2FA0', ribbon: ['#F76707'], empty: 0.14 },
   school: { floor: '#D2A06A', plank: '#BC8B58', paint: '#2B8A3E', paintLine: '#237032', ribbon: ['#868E96'], empty: 0.45 },
+  // round 24: streetball's blue park court, under the sky behind a chain-link fence
+  park: { floor: '#3D6F9E', plank: '#36658F', paint: '#B4531E', paintLine: '#9A4418', ribbon: ['#6B7079'], empty: 0 },
 };
 
 /** The arena behind the play: the crowd, the ribbon board, the floor and its lines. */
@@ -103,10 +105,25 @@ function backdrop(venue: Venue): { fill: string; d: string }[] {
   rect(0, 0, W, 112, '#14161D');
   let seed = 7;
   const rnd = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
-  // a dim crowd, so the eye stays on the floor
+  if (venue === 'park') {
+    // sky, a row of buildings, and the fence in front of them
+    for (let y = 0; y < 112; y++) rect(0, y, W, 1, y < 40 ? '#8FB4D9' : y < 70 ? '#A5C3E1' : '#B9CFE3');
+    for (let x = 0; x < W; ) {
+      const w = 22 + Math.floor(rnd() * 26);
+      const top = 34 + Math.floor(rnd() * 40);
+      const tone = ['#6F7B8C', '#7F8A99', '#66707F'][Math.floor(rnd() * 3)];
+      rect(x, top, w - 2, 112 - top, tone);
+      for (let wy = top + 4; wy < 100; wy += 7) for (let wx = x + 3; wx < x + w - 5; wx += 6) if (rnd() < 0.7) rect(wx, wy, 2, 3, '#C9D6E3');
+      x += w;
+    }
+    for (let y = 18; y < 104; y++) for (let x = 0; x < W; x++) if ((x + y) % 8 === 0 || (x - y + 800) % 8 === 0) put(x, y, '#A8AEB6');
+    rect(0, 16, W, 2, '#6B7079');
+    for (let x = 0; x < W; x += 50) rect(x, 16, 2, 88, '#5C616A');
+  }
+  // a dim crowd, so the eye stays on the floor (none at the park)
   const shirts = ['#262A34', '#2C2F3A', '#33292C', '#263038', '#2E2B38', '#35322A', '#3C2429'];
   const skins = ['#4A3A33', '#5A463C', '#64503F', '#3C2C25', '#6E5A48'];
-  for (let row = 0; row < 11; row++) {
+  for (let row = 0; venue !== 'park' && row < 11; row++) {
     const y = 10 + row * 9;
     rect(0, y + 6, W, 1, '#1C1F28');
     for (let x = (row % 2) * 3; x < W; x += 6) {

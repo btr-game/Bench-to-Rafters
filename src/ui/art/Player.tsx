@@ -5,7 +5,7 @@ import { hash } from './color';
 import { toPaths } from './pixel';
 import type { Pos } from '../../engine/types';
 import { legendLook, type LegendLook } from '../../content/legendLooks';
-import { DRIBBLE, DUNK, JUMPER, LOWDRIBBLE, TRIPLE, paint, type Look, type Pose } from './sprite';
+import { DRIBBLE, DUNK, JUMPER, LOWDRIBBLE, TRIPLE, noBall as withoutBall, paint, type Look, type Pose } from './sprite';
 
 // The player, as a pixel-art sprite in his team's kit (round 17). His look (skin, hair, a
 // headband or an arm sleeve) comes from his name, so he looks the same all career; the kit
@@ -46,8 +46,9 @@ export function kitFor(teamName: string, abbr: string, color: string, which: Kit
   return leagueKits(league, color, teamName, parent && TEAM_STYLE[parent.abbr])[which];
 }
 
-export function PlayerArt({ name, number, pos, color = '#2A2F36', team = '', abbr = '', kit = 'home', league, kitData, size = 96 }: { name: string; number: number; pos?: Pos; color?: string; team?: string; abbr?: string; kit?: KitName; league?: KitLeague; kitData?: Kit; size?: number }) {
-  const pose = poseFor(pos);
+export function PlayerArt({ name, number, pos, color = '#2A2F36', team = '', abbr = '', kit = 'home', league, kitData, size = 96, noBall = false }: { name: string; number: number; pos?: Pos; color?: string; team?: string; abbr?: string; kit?: KitName; league?: KitLeague; kitData?: Kit; size?: number; noBall?: boolean }) {
+  // round 24: streetball draws one ball of its own, so its players hold none
+  const pose = useMemo(() => (noBall ? withoutBall(poseFor(pos)) : poseFor(pos)), [pos, noBall]);
   const paths = useMemo(() => {
     const k = kitData ?? kitFor(team, abbr, color, kit, league);
     const shoe = kit === 'home' ? '#F2F2F2' === k.base ? k.ink : k.trim : k.base === '#FFFFFF' ? k.ink : k.base;

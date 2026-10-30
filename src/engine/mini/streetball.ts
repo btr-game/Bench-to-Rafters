@@ -1,9 +1,9 @@
-// Round 22: 3-on-3 streetball. King of the court at a city park: three crews to beat, the
-// first two games to 7 and the final to 11, by ones and twos (a basket inside the arc is 1,
-// outside it 2), and make it take it: whoever scores keeps the ball.
-// On offense he picks the play: drive and finish (a timing tap decides how clean it is, a
-// perfect one draws the foul for an and-one), a pull-up two, a post-up, a give-and-go, a kick
-// to a teammate for two, or a lob. On defense he reads the other crew: lock up the ball, sit at
+// Round 22: 3-on-3 streetball at a city park, by ones and twos (a basket inside the arc is 1,
+// outside it 2), and make it take it: whoever scores keeps the ball. Round 24 (owner: "reduce it
+// to one game"): one game to 11 against the crew that holds the court today.
+// On offense he picks the play: drive and finish or a pull-up two (a timing tap decides how
+// clean it is; a perfect drive draws the foul for an and-one, and both play out on the action
+// cam), a post-up, a give-and-go, a kick to a teammate for two, or a lob. On defense he reads the other crew: lock up the ball, sit at
 // the rim, or jump the passing lane. Every crew has a style, so the right read pays.
 // Highlights fire up the crowd; a full hype meter makes his next play better.
 // Ratings come from the career player (or a park regular in free play), so finishing,
@@ -12,7 +12,9 @@
 import { chance, clamp, makeRng, next, pick, weightedIndex, type Rng } from '../rng';
 
 export const STREET = {
-  rounds: [7, 7, 11],
+  to: 11,
+  close: 3, // a loss by this many or fewer is still a good run
+  rout: 4, // a win by this many or more owns the park
   hypeMax: 5,
   hypeBoost: 0.12,
   slope: 0.0065, // make chance per rating point of edge
@@ -48,9 +50,12 @@ export type Move = 'drive' | 'pullup' | 'post' | 'givego' | 'kick' | 'lob';
 export type Guard = 'ball' | 'rim' | 'lane';
 export type Timing = 'perfect' | 'good' | 'late';
 
+/** The plays that ask for a timing tap (and play out on the action cam). */
+export const TIMED: Move[] = ['drive', 'pullup'];
+
 export const MOVES: { key: Move; name: string; text: string; pts: 1 | 2 }[] = [
   { key: 'drive', name: 'Drive and finish', text: 'Attack the rim. Tap the finish meter: a perfect finish draws the and-one.', pts: 1 },
-  { key: 'pullup', name: 'Pull-up two', text: 'Step back behind the arc and let it fly.', pts: 2 },
+  { key: 'pullup', name: 'Pull-up two', text: 'Step back behind the arc and let it fly. Tap the release meter.', pts: 2 },
   { key: 'post', name: 'Post up', text: 'Back him down and finish over him.', pts: 1 },
   { key: 'givego', name: 'Give and go', text: 'Hit a teammate and cut for the return pass. Safe, unless they read it.', pts: 1 },
   { key: 'kick', name: 'Kick out for two', text: 'Draw the help, then find the open shooter.', pts: 2 },
@@ -104,33 +109,37 @@ export interface Play {
   made: boolean;
   highlight?: string; // AND ONE!, POSTER!, ...
   steal?: boolean;
+  // round 24: who it went through, for the ball on the court and the action cam
+  handler: string; // who had the ball when the play started
+  def: string; // the man on him (on a steal, the one who took it)
+  timing?: Timing;
+  blocked?: boolean;
+  dunk?: boolean;
 }
 
 export interface StreetState {
   rng: Rng;
   me: Baller;
   mates: Baller[];
-  crews: Crew[];
-  round: number; // 0-2
+  crew: Crew;
   us: number;
   them: number;
   ourBall: boolean;
   hype: number;
   plays: Play[];
-  wins: number;
-  over: boolean; // the run is over (lost a game, or won the final)
-  gameOver: boolean; // this game is over
+  over: boolean;
 }
 
 export function newStreet(seed: number, me: Baller, level: number): StreetState {
   const r = makeRng(seed);
-  const crews = CREWS.map((c, i) => ({ name: c.name, court: c.court, style: c.style, players: c.names.map((n) => baller(r, n, level - 3 + i * 3, c.style)) }));
+  // the crew that holds the court today, a little better than him
+  const c = pick(r, CREWS);
+  const crew = { name: c.name, court: c.court, style: c.style, players: c.names.map((n) => baller(r, n, level + 1, c.style)) };
   const names = [...MATES].sort(() => next(r) - 0.5);
   const mates = [baller(r, names[0], level - 4, 'mate'), baller(r, names[1], level - 4, 'mate')];
-  return { rng: r, me: { ...me, me: true }, mates, crews, round: 0, us: 0, them: 0, ourBall: chance(r, 0.5), hype: 0, plays: [], wins: 0, over: false, gameOver: false };
+  return { rng: r, me: { ...me, me: true }, mates, crew, us: 0, them: 0, ourBall: chance(r, 0.5), hype: 0, plays: [], over: false };
 }
 
-export const target = (st: StreetState): number => STREET.rounds[st.round];
 const avg = (xs: Baller[], k: keyof Omit<Baller, 'name' | 'me'>) => xs.reduce((t, x) => t + x[k], 0) / xs.length;
 const p = (base: number, edge: number) => clamp(base + edge * STREET.slope, 0.08, 0.92);
 
@@ -139,30 +148,23 @@ function score(st: StreetState, side: 'us' | 'them', pts: number): void {
   else st.them += pts;
   // make it take it
   st.ourBall = side === 'us';
-  const t = target(st);
-  if (st.us >= t || st.them >= t) {
-    st.gameOver = true;
-    if (st.us >= t) {
-      st.wins++;
-      if (st.round === STREET.rounds.length - 1) st.over = true;
-    } else st.over = true;
-  }
+  if (st.us >= STREET.to || st.them >= STREET.to) st.over = true;
 }
 
 /** A miss: who gets the board. */
 function rebound(st: StreetState, shooting: 'us' | 'them'): string {
   const ours = avg([st.me, ...st.mates], 'REB');
-  const theirs = avg(st.crews[st.round].players, 'REB');
+  const theirs = avg(st.crew.players, 'REB');
   const edge = shooting === 'us' ? ours - theirs : theirs - ours;
   const keep = chance(st.rng, clamp(STREET.oreb + edge * 0.006, 0.1, 0.55));
   st.ourBall = shooting === 'us' ? keep : !keep;
   return keep ? ' Offensive board, ball stays.' : '';
 }
 
-/** His play on offense. `timing` is the finish tap for a drive. */
+/** His play on offense. `timing` is the tap for a drive or a pull-up. */
 export function runOffense(st: StreetState, move: Move, timing?: Timing): Play {
   const r = st.rng;
-  const crew = st.crews[st.round].players;
+  const crew = st.crew.players;
   const def = pick(r, crew);
   const mate = pick(r, st.mates);
   const me = st.me;
@@ -177,7 +179,7 @@ export function runOffense(st: StreetState, move: Move, timing?: Timing): Play {
       chanceMake = p(0.42, me.FIN * 0.6 + me.ATH * 0.4 - (def.PER * 0.5 + def.INT * 0.5)) + STREET.timing[timing ?? 'good'];
       break;
     case 'pullup':
-      chanceMake = p(0.33, me.SHT - def.PER);
+      chanceMake = p(0.33, me.SHT - def.PER) + STREET.timing[timing ?? 'good'];
       break;
     case 'post':
       chanceMake = p(0.44, (me.FIN + me.INT) / 2 - def.INT);
@@ -199,18 +201,22 @@ export function runOffense(st: StreetState, move: Move, timing?: Timing): Play {
   }
   chanceMake = clamp(chanceMake + fire, 0.05, 0.95);
   let play: Play;
+  const base = { side: 'us' as const, move, shooter, handler: me.name, def: def.name, timing };
   if (chance(r, turnover)) {
     st.ourBall = false;
-    play = { side: 'us', move, shooter, pts: 0, made: false, steal: true, text: `${def.name} reads it and picks it off.` };
+    play = { ...base, pts: 0, made: false, steal: true, text: `${def.name} reads it and picks it off.` };
   } else if (chance(r, chanceMake)) {
     const andOne = move === 'drive' && timing === 'perfect' && chance(r, STREET.andOne);
     if (andOne) pts += 1;
-    const highlight = andOne ? 'AND ONE!' : move === 'lob' ? 'ALLEY-OOP!' : move === 'drive' && me.ATH >= 75 && chance(r, 0.4) ? `POSTER ON ${def.name.split(' ').pop()!.toUpperCase()}!` : move === 'pullup' && chance(r, 0.25) ? 'CASH!' : undefined;
+    const dunk = move === 'drive' && me.ATH >= 75 && chance(r, 0.4);
+    const highlight = andOne ? 'AND ONE!' : move === 'lob' ? 'ALLEY-OOP!' : dunk ? `POSTER ON ${def.name.split(' ').pop()!.toUpperCase()}!` : move === 'pullup' && timing === 'perfect' ? 'CASH!' : undefined;
     st.hype = Math.min(STREET.hypeMax, st.hype + (highlight ? 2 : 1));
-    play = { side: 'us', move, shooter, pts, made: true, highlight, text: TEXT_MAKE[move](shooter, def.name) + (fire ? ' The park is going crazy.' : '') };
+    const text = dunk ? `${shooter} rises up and throws it down on ${def.name}.` : TEXT_MAKE[move](shooter, def.name);
+    play = { ...base, pts, made: true, highlight, dunk, text: text + (andOne ? ' And one!' : '') + (fire ? ' The park is going crazy.' : '') };
     score(st, 'us', pts);
   } else {
-    play = { side: 'us', move, shooter, pts: 0, made: false, text: TEXT_MISS[move](shooter, def.name) };
+    const blocked = move === 'drive' && chance(r, 0.5);
+    play = { ...base, pts: 0, made: false, blocked, text: blocked ? `${shooter} drives and ${def.name} swats it away.` : TEXT_MISS[move](shooter, def.name) };
     play.text += rebound(st, 'us');
   }
   st.plays.push(play);
@@ -220,7 +226,7 @@ export function runOffense(st: StreetState, move: Move, timing?: Timing): Play {
 /** Their possession: he picks how to guard it. */
 export function runDefense(st: StreetState, guard: Guard): Play {
   const r = st.rng;
-  const crew = st.crews[st.round];
+  const crew = st.crew;
   const mix = MIX[crew.style];
   const moves = Object.keys(mix) as Move[];
   const move = moves[weightedIndex(r, moves.map((m) => mix[m]!))];
@@ -228,22 +234,25 @@ export function runDefense(st: StreetState, guard: Guard): Play {
   const us = [st.me, ...st.mates];
   const read = READ[guard].includes(move);
   const adj = read ? -STREET.read : STREET.wrong;
+  // the ball starts with their handler; a pass goes to the man who shoots it
+  const handler = move === 'kick' || move === 'lob' || move === 'givego' ? (crew.players.find((x) => x !== att) ?? att).name : att.name;
+  const base = { side: 'them' as const, move, shooter: att.name, handler, def: st.me.name };
   let play: Play;
   if (guard === 'lane' && read && chance(r, STREET.laneSteal + (st.me.PER - 60) * 0.004)) {
     st.ourBall = true;
     st.hype = Math.min(STREET.hypeMax, st.hype + 1);
-    play = { side: 'them', move, shooter: att.name, pts: 0, made: false, steal: true, highlight: 'PICKED!', text: `You jump the lane and take it the other way. ${att.name} never saw you.` };
+    play = { ...base, pts: 0, made: false, steal: true, highlight: 'PICKED!', text: `You jump the lane and take it the other way. ${att.name} never saw you.` };
   } else {
     const defense = move === 'pullup' || move === 'kick' ? avg(us, 'PER') : move === 'post' || move === 'lob' ? avg(us, 'INT') : avg(us, 'PER') * 0.5 + avg(us, 'INT') * 0.5;
     const off = move === 'pullup' || move === 'kick' ? att.SHT : move === 'post' ? (att.FIN + att.INT) / 2 : move === 'givego' ? (att.PLY + att.FIN) / 2 : att.FIN * 0.6 + att.ATH * 0.4;
-    const base = move === 'pullup' || move === 'kick' ? 0.33 : move === 'givego' ? 0.52 : 0.44;
-    const made = chance(r, clamp(p(base, off - defense) + adj, 0.05, 0.92));
+    const odds = move === 'pullup' || move === 'kick' ? 0.33 : move === 'givego' ? 0.52 : 0.44;
+    const made = chance(r, clamp(p(odds, off - defense) + adj, 0.05, 0.92));
     const pts = MOVES.find((m) => m.key === move)!.pts;
     if (made) {
-      play = { side: 'them', move, shooter: att.name, pts, made: true, text: TEXT_MAKE[move](att.name, 'you') };
+      play = { ...base, pts, made: true, text: TEXT_MAKE[move](att.name, 'you') };
       score(st, 'them', pts);
     } else {
-      play = { side: 'them', move, shooter: att.name, pts: 0, made: false, text: read ? `You read it. ${TEXT_MISS[move](att.name, 'you')}` : TEXT_MISS[move](att.name, 'you') };
+      play = { ...base, pts: 0, made: false, text: read ? `You read it. ${TEXT_MISS[move](att.name, 'you')}` : TEXT_MISS[move](att.name, 'you') };
       play.text += rebound(st, 'them');
     }
   }
@@ -251,19 +260,9 @@ export function runDefense(st: StreetState, guard: Guard): Play {
   return play;
 }
 
-/** On to the next crew. */
-export function nextGame(st: StreetState): void {
-  st.round++;
-  st.us = 0;
-  st.them = 0;
-  st.hype = 0;
-  st.gameOver = false;
-  st.ourBall = chance(st.rng, 0.5);
-}
-
 const TEXT_MAKE: Record<Move, (a: string, d: string) => string> = {
   drive: (a, d) => `${a} gets past ${d} and finishes at the rim.`,
-  pullup: (a, d) => `${a} steps back over ${d}. Two.`,
+  pullup: (a, d) => `${a} pulls up over ${d}. Two.`,
   post: (a, d) => `${a} backs ${d} down and drops it in.`,
   givego: (a) => `Give, go, and ${a} lays it in.`,
   kick: (a) => `${a} catches it in rhythm. Two.`,
@@ -278,5 +277,8 @@ const TEXT_MISS: Record<Move, (a: string, d: string) => string> = {
   lob: (a) => `The lob to ${a} sails long.`,
 };
 
-/** What the run is worth, for the career bonus. */
-export const streetResult = (st: StreetState): 'king' | 'final' | 'won' | 'out' => (st.wins >= STREET.rounds.length ? 'king' : st.wins === 2 ? 'final' : st.wins === 1 ? 'won' : 'out');
+/** What the game is worth, for the career bonus: a rout, a win, a close loss or a beating. */
+export const streetResult = (st: StreetState): 'rout' | 'win' | 'close' | 'out' => {
+  const m = st.us - st.them;
+  return m >= STREET.rout ? 'rout' : m > 0 ? 'win' : -m <= STREET.close ? 'close' : 'out';
+};

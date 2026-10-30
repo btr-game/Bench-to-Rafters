@@ -8,6 +8,7 @@ import * as F from '../src/engine/mini/frontOffice';
 import { contestRng, simRound, shotResult, zoneWidth } from '../src/engine/mini/threes';
 import { canClaimMini, claimMini, claimsUsed, MINI_CLAIMS, MINI_REWARD_MULT, miniReward, taperAt } from '../src/engine/career/miniBonus';
 import { labBestSpend, labBuy, labPlaySeason, labSpreadSpend, LAB_GAME, newLabGame } from '../src/engine/mini/labGame';
+import { newStreet, runDefense, runOffense, STREET, streetResult } from '../src/engine/mini/streetball';
 import { bailOut, contestRng as dunkRng, DUNKERS, dunkDifficulty, dunkTaps, judge, MOVES, movesLeft, simDunks, tapQuality, type DunkDesign } from '../src/engine/mini/dunk';
 import { newGame } from '../src/engine/flow';
 import { modeDial } from '../src/engine/balance';
@@ -147,6 +148,24 @@ describe('round 12 mini-games', () => {
     expect(h / 30).toBeGreaterThan(e / 30 + 8);
     expect(judge(r, hard, [1, 1, 1, 1, 1], 1, []).total).toBeLessThanOrEqual(50);
     expect(bailOut(r).total).toBeLessThan(e / 30);
+  });
+
+  it('streetball is one game to 11, and every play says who had the ball (round 24)', () => {
+    const me = { name: 'Ace Walker', FIN: 72, SHT: 70, PLY: 70, ATH: 72, PER: 68, INT: 64, REB: 66 };
+    for (let seed = 1; seed <= 40; seed++) {
+      const st = newStreet(seed, me, 70);
+      let n = 0;
+      while (!st.over && n++ < 500) {
+        const p = st.ourBall ? runOffense(st, n % 2 ? 'drive' : 'pullup', 'good') : runDefense(st, 'rim');
+        expect(p.handler).toBeTruthy();
+        expect(p.def).toBeTruthy();
+        if (p.side === 'us' && !p.steal) expect(p.handler).toBe(me.name);
+      }
+      expect(st.over).toBe(true);
+      expect(Math.max(st.us, st.them)).toBeGreaterThanOrEqual(STREET.to);
+      const r = streetResult(st);
+      expect(st.us > st.them ? ['rout', 'win'] : ['close', 'out']).toContain(r);
+    }
   });
 
   it('a dunk move is shown once a contest, by him and by the others (round 24)', () => {

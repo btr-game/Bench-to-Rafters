@@ -64,7 +64,7 @@ export type MiniResult =
   | { game: 'office'; titles: number; playoffs: number; seasons: number; fired: boolean }
   | { game: 'dunk'; best: number; won: boolean }
   | { game: 'lab'; peak: number }
-  | { game: 'street'; reached: 'king' | 'final' | 'won' | 'out' };
+  | { game: 'street'; reached: 'rout' | 'win' | 'close' | 'out' };
 
 /** Claims already made this season. */
 export function claimsUsed(s: GameState): number {
@@ -108,9 +108,9 @@ export function miniReward(r: MiniResult): { attrs: Partial<Record<AttrKey, numb
       return { attrs: { IQ: v, PER: v / 2 } };
     }
     case 'street': {
-      // round 22: king of the court is mostly a finishing workout
-      const v = r.reached === 'king' ? 4 : r.reached === 'final' ? 2.5 : r.reached === 'won' ? 1.2 : 0;
-      return { attrs: v ? { FIN: v, ATH: v / 4 } : {}, rep: r.reached === 'king' ? 3 : 0 };
+      // round 22: streetball is mostly a finishing workout (round 24: one game, same rewards)
+      const v = r.reached === 'rout' ? 4 : r.reached === 'win' ? 2.5 : r.reached === 'close' ? 1.2 : 0;
+      return { attrs: v ? { FIN: v, ATH: v / 4 } : {}, rep: r.reached === 'rout' ? 3 : 0 };
     }
   }
 }
