@@ -224,7 +224,7 @@ export function DevDeck() {
       ) : (
       <>
       <div className="dk-suits">
-        <button className="dk-suit" aria-pressed={group === 'all'} onClick={() => (setGroup('all'), setAt(0))}>
+        <button className="dk-suit all" aria-pressed={group === 'all'} onClick={() => (setGroup('all'), setAt(0))}>
           All <small>{CARDS.length}</small>
         </button>
         {GROUPS.map((g) => (

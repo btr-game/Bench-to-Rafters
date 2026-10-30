@@ -9,6 +9,9 @@
 .dk-suit small { font-family: var(--f-mono); color: var(--muted); }
 .dk-suit[aria-pressed='true'] { background: var(--suit, var(--ink)); border-color: var(--suit, var(--ink)); color: #fff; }
 .dk-suit[aria-pressed='true'] small { color: rgba(255, 255, 255, 0.8); }
+/* "All" has no suit colour: pressed, it takes the ink colour, so its text takes the page's */
+.dk-suit.all[aria-pressed='true'] { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+.dk-suit.all[aria-pressed='true'] small { color: var(--bg); opacity: 0.75; }
 .dk-miss { margin: 0; padding: 10px 14px; border-radius: 8px; background: color-mix(in srgb, var(--bad) 10%, var(--surface)); color: var(--bad); }
 
 /* a card face */

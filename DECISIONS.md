@@ -1379,6 +1379,19 @@ Reached from the start page and from the bottom of Home (a career in progress is
   It surfaced three fixes: the five builder's names were cut to two letters, career records kept
   legacy points unrounded, and the harness read `process.env` (not there in a browser).
 - **Graphic-less version removed** (owner's call): its artifact was deleted.
+- **Team style graphics** (owner): each style is a coach's chalkboard play in pixel art (the
+  three lanes of Run and gun, the shell of Defense first, the passing ring of Ball movement, the
+  post feed and kick-outs of Inside out, the clear-out of Run it through you), in the style
+  picker and on the roster card.
+- **Leaderboards** (owner: "whoever has the highest score; list the top 100"). The shared page
+  ranks players, each once at their best career, top 100. The metric stays provisional; hosting
+  is left for later.
+- **The summary in the dev deck** (owner): a chapter-by-chapter page from the same source as the
+  Word file (its generator writes `src/dev/summary.json`), and one search box over the cards and
+  the summary, whatever suit is picked.
+- **Small fixes**: the body map's time out no longer wraps and counts days under two weeks; the
+  scouting report always shows its odds; the dev deck's pressed "All" chip was light text on a
+  light chip in dark mode.
 - **Graphics** (the owner's new standing rule): pixel icons for the career log, feedback, statues,
   the 99 hall, the live strip, paying respects ("press F"), the inbox, the community, the timing
   meter and the roster; medals for every achievement tier; bronze and gold statues; a floor per
