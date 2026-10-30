@@ -27,7 +27,7 @@ const SECTIONS: { title: string; where: string; items: [string, string[]][] }[] 
       ['Fast break and Simple text', ['Fast break: quick seasons, you still make every real call.', 'Simple text: just the choices, no descriptions.']],
       ['Guide mode', ['Walks you through every button once, step by step.', 'New things get their step the first time they unlock.', 'Then it highlights the next thing to do. Turn it on here, in Settings or with G.']],
       ['Master mode', ['No recommendations anywhere: no scouts’ calls, fit tags, suggested deals or hints.', 'In Settings, or press M.']],
-      ['Keyboard', ['Enter: the main button (skips a final to the buzzer first).', '1–9, 0, - and =: pick a choice.', 'H S P L R: tabs. F: Fast break. G: Guide mode. M: Master mode.']],
+      ['Keyboard', ['Enter: the main button (skips a final to the buzzer first).', '1–9, 0, - and =: pick a choice.', 'H S P L R: tabs.']],
     ],
   },
   {

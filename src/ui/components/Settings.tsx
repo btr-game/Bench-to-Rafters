@@ -112,7 +112,7 @@ export function SettingsMenu({ g }: { g: GameState | null }) {
           <div className="set-keys hide-touch">
             <b>Keyboard</b>
             <span>
-              <kbd>Enter</kbd> continue, leave the shop or skip a final to the buzzer · <kbd>1</kbd>–<kbd>9</kbd> <kbd>0</kbd> <kbd>-</kbd> <kbd>=</kbd> pick a choice · <kbd>H</kbd> <kbd>S</kbd> <kbd>P</kbd> <kbd>L</kbd> <kbd>R</kbd> tabs · <kbd>F</kbd> fast break · <kbd>G</kbd> guide mode · <kbd>M</kbd> master mode
+              <kbd>Enter</kbd> continue, leave the shop or skip a final to the buzzer · <kbd>1</kbd>–<kbd>9</kbd> <kbd>0</kbd> <kbd>-</kbd> <kbd>=</kbd> pick a choice · <kbd>H</kbd> <kbd>S</kbd> <kbd>P</kbd> <kbd>L</kbd> <kbd>R</kbd> tabs
             </span>
           </div>
           <div className="set-foot">
@@ -157,9 +157,6 @@ export function useKeys(active: boolean) {
   const tab = useStore((s) => s.tab);
   const setTab = useStore((s) => s.setTab);
   const game = useStore((s) => s.game);
-  const toggleFast = useStore((s) => s.toggleFast);
-  const toggleGuide = useStore((s) => s.toggleGuide);
-  const toggleMaster = useStore((s) => s.toggleMaster);
 
   // number the choices in the main card
   useEffect(() => {
@@ -207,16 +204,12 @@ export function useKeys(active: boolean) {
         }
         return;
       }
-      const k = e.key.toLowerCase();
-      if (k === 'f' && game && game.mode !== 'lab' && game.step !== 'retired') return toggleFast();
-      if (k === 'g') return toggleGuide();
-      if (k === 'm') return toggleMaster();
-      const to = TAB_KEYS[k];
+      const to = TAB_KEYS[e.key.toLowerCase()];
       if (to && game) setTab(to);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [active, tab, setTab, game, toggleFast, toggleGuide, toggleMaster]);
+  }, [active, tab, setTab, game]);
 }
 
 function choices(): HTMLElement[] {

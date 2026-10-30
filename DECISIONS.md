@@ -1405,3 +1405,8 @@ Reached from the start page and from the bottom of Home (a career in progress is
   timestamp, carried forward with the page clock), so presses line up with what the player hears;
   a scripted player pressing on the beat scores 100%. Grades S to D pay perimeter and interior
   defense; it opens in a career when either defense reaches 82.
+
+## Round 25
+
+- **Keyboard shortcuts**: F (fast break), G (guide mode) and M (master mode) are gone (the owner);
+  those switches stay in the settings menu. Enter, the number row and the tab letters remain.
