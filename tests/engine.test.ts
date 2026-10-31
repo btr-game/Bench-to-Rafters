@@ -98,9 +98,7 @@ describe('flow', () => {
   it('a season stays a manageable number of clicks', () => {
     const r = runCareer(3, 'smart');
     const seasons = r.paths.length > 0 ? r.retireAge - 14 : 1;
-    // round 25: press conferences (three answers every two or three seasons) and brand offers add
-    // about one click a season (14.38 for this career); fast break and sim mode cut them back
-    expect(r.steps / seasons).toBeLessThan(15);
+    expect(r.steps / seasons).toBeLessThan(14);
   });
 });
 

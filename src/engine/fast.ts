@@ -5,7 +5,7 @@
 // - no national team (round 8);
 // - at most one turning point at a time, and notices with a single button close themselves;
 // - the postseason is simulated and the shop is skipped;
-// - a press conference is one answer: its tone carries through all three questions (round 25);
+// - a press conference is one answer: its tone carries through a second question (round 25);
 // - "next" screens advance by themselves, and the offseason only stops when there is a move
 //   worth making (an unlocked focus change, the starting five to build, a size problem, or
 //   retirement age);
@@ -30,7 +30,7 @@ function isBig(m: Moment): boolean {
 /** A decision fast break makes for the player, or null when it is the player's call. */
 function autoChoice(s: GameState, d: Decision): string | null {
   if (d.kind === 'shop') return d.choices.find((c) => c.id === 'leave')?.id ?? null;
-  // a press conference: the first answer's tone carries through the other two questions
+  // a press conference: the first answer's tone carries through a second question
   if (d.kind === 'press' && typeof d.data?.last === 'string') return d.data.last;
   // a notice with a single button
   const open = d.choices.filter((c) => !c.disabled);

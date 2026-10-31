@@ -39,6 +39,8 @@ const tot = (f: Facts25, k: K) => f.nba.reduce((a, h) => a + h.line[k] + h.post[
 const won = (f: Facts25, k: string) => f.g.awards.filter((a) => a.key === k).length;
 const has = (f: Facts25, ids: string[]) => ids.some((id) => f.g.purchases.includes(id));
 const logs = (f: Facts25, kind: string, re?: RegExp) => f.g.log.filter((x) => x.kind === kind && (!re || re.test(x.text))).length;
+/** Press conferences (by year) with an answer matching the pattern. */
+const pressers = (f: Facts25, re?: RegExp) => new Set(f.g.log.filter((x) => x.kind === 'press' && (!re || re.test(x.text))).map((x) => x.year)).size;
 const nickIn = (f: Facts25, ids: string[]) => !!f.g.player.nickname && ids.includes(f.g.player.nickname.id);
 const yearWith = (f: Facts25, ...keys: string[]) => [...f.awardsByYear.values()].some((s) => keys.every((k) => s.has(k)));
 const hi = (f: Facts25, k: 'pts' | 'reb' | 'ast' | 'stl' | 'blk') => f.g.highs?.nba?.[k];
@@ -94,10 +96,10 @@ export const ACHIEVEMENTS_25: Ach25[] = [
   // ---- press conferences ----
   A('press1', 'Mic Check', 'bench', 'Face the press.', (f) => logs(f, 'press') >= 1),
   A('press-fiery', 'Mic Drop', 'rotation', 'Give a fiery answer at a press conference.', (f) => logs(f, 'press', /fiery/) >= 1),
-  A('press-humble', 'Humble Pie', 'rotation', 'Give nine humble answers.', (f) => logs(f, 'press', /humble/) >= 9),
-  A('press-conf', 'Confidence Man', 'rotation', 'Give nine confident answers.', (f) => logs(f, 'press', /confident/) >= 9),
-  A('press-fire9', 'Bulletin Board Material', 'starter', 'Give nine fiery answers.', (f) => logs(f, 'press', /fiery/) >= 9),
-  A('press18', 'Quote Machine', 'starter', 'Answer eighteen questions at press conferences.', (f) => logs(f, 'press') >= 18),
+  A('press-humble', 'Humble Pie', 'rotation', 'Answer humbly at five press conferences.', (f) => pressers(f, /humble/) >= 5),
+  A('press-conf', 'Confidence Man', 'rotation', 'Answer confidently at five press conferences.', (f) => pressers(f, /confident/) >= 5),
+  A('press-fire5', 'Bulletin Board Material', 'starter', 'Give a fiery answer at five press conferences.', (f) => pressers(f, /fiery/) >= 5),
+  A('press8', 'Quote Machine', 'starter', 'Face the press eight times.', (f) => pressers(f) >= 8),
 
   // ---- rivals ----
   A('rival', 'Frenemies', 'bench', 'Have a rival.', (f) => !!f.g.rivalry),

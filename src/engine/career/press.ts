@@ -1,7 +1,7 @@
 // Press conferences (round 25, the owner: not one or two a season, one every two or three). After
 // a season with a story (a title, a lost final, a big award, a bad injury, a slump, a move, a
-// contract year), the summer brings the microphones: three questions, each answered humble,
-// confident or fiery. Humble earns the coach's trust and a little chemistry; confident, fame and
+// contract year), the summer brings the microphones: two questions after the biggest stories, one
+// after the rest (the owner: fewer clicks), each answered humble, confident or fiery. Humble earns the coach's trust and a little chemistry; confident, fame and
 // mood; fiery, the most fame, a risk of a fine, and a locker room that either catches fire or
 // splits next season. The home crowd has a taste too: a demanding one loves fire, a friendly one
 // loves humility.
@@ -108,60 +108,64 @@ export function pushPress(s: GameState): void {
   const topic = TOPICS.find((t) => t.happened(s, last));
   if (!topic) return;
   p.press = { next: s.year + PRESS.gap + int(s.rng, 0, 1), fx: p.press?.fx ?? 0 };
-  askPress(s, topic.id, 0);
+  askPress(s, topic.id, 0, PRESS.big.includes(topic.id) ? PRESS.bigQuestions : PRESS.questions);
 }
 
-function askPress(s: GameState, topic: string, q: number, last?: Tone): void {
+function askPress(s: GameState, topic: string, q: number, n: number, last?: Tone): void {
   const t = TOPICS.find((x) => x.id === topic)!;
   const [question, answers] = t.questions[q];
-  // fast break: one answer sets the tone, and the other two questions get the same (fast.ts)
+  // fast break: the first answer sets the tone, and a second question gets the same (fast.ts)
   const fast = !!s.flags.fast;
   const d: Omit<Decision, 'id'> = {
     kind: 'press',
-    title: fast ? `Press conference · ${t.title}` : `Press conference · ${t.title} (${q + 1} of 3)`,
-    text: fast && q === 0 ? `"${question}" Your answer sets the tone for the whole press conference.` : `"${question}"`,
+    title: n > 1 && !fast ? `Press conference · ${t.title} (${q + 1} of ${n})` : `Press conference · ${t.title}`,
+    text: fast && n > 1 && q === 0 ? `"${question}" Your answer sets the tone for the whole press conference.` : `"${question}"`,
     choices: answers.map((a, i) => ({ id: TONES[i], label: a, detail: TONES[i] === 'humble' ? 'Humble' : TONES[i] === 'confident' ? 'Confident' : 'Fiery', tags: [TONES[i]] })),
-    data: { topic, q, last },
+    data: { topic, q, n, last },
   };
   pushDecision(s, d);
 }
 
-/** One answer: its effects now, the next question to the front of the line. */
+/** One answer: its effects now, and a second question (after a big story) to the front of the
+ * line. Each answer weighs 3 / questions, so a one-question press conference moves things as much
+ * as three answers used to. */
 export function resolvePress(s: GameState, d: Decision, tone: string): string | null {
   const p = s.player;
   const t = tone as Tone;
   if (!TONES.includes(t)) return null;
+  const n = (d.data?.n as number) ?? PRESS.questions;
+  const w = 3 / n;
   const notes: string[] = [];
   if (t === 'humble') {
-    p.trust = adjust(p.trust, PRESS.humble.trust);
-    p.rep = clamp(p.rep + PRESS.humble.rep, 0, 100);
-    p.press!.fx += PRESS.humble.chem;
+    p.trust = adjust(p.trust, PRESS.humble.trust * w);
+    p.rep = clamp(p.rep + PRESS.humble.rep * w, 0, 100);
+    p.press!.fx += PRESS.humble.chem * w;
     notes.push('The coach nods along.');
   } else if (t === 'confident') {
-    p.rep = clamp(p.rep + PRESS.confident.rep, 0, 100);
-    p.morale = adjust(p.morale, PRESS.confident.morale);
+    p.rep = clamp(p.rep + PRESS.confident.rep * w, 0, 100);
+    p.morale = adjust(p.morale, PRESS.confident.morale * w);
     notes.push('The quote leads the evening news.');
   } else {
-    p.rep = clamp(p.rep + PRESS.fiery.rep, 0, 100);
-    p.trust = adjust(p.trust, PRESS.fiery.trust);
+    p.rep = clamp(p.rep + PRESS.fiery.rep * w, 0, 100);
+    p.trust = adjust(p.trust, PRESS.fiery.trust * w);
     // the room catches fire, or splits
-    p.press!.fx += chance(s.rng, 0.5) ? PRESS.fiery.fire : -PRESS.fiery.fire;
+    p.press!.fx += (chance(s.rng, 0.5) ? PRESS.fiery.fire : -PRESS.fiery.fire) * w;
     notes.push(pick(s.rng, ['Every sports show plays it on a loop.', 'Your phone does not stop buzzing.', 'A rival tweets a single emoji.']));
-    if (chance(s.rng, PRESS.fineChance)) notes.push(`The league fines you ${pressFine(s, s.rng)}.`);
+    if (chance(s.rng, 1 - Math.pow(1 - PRESS.fineChance, w))) notes.push(`The league fines you ${pressFine(s, s.rng)}.`);
   }
   // the home crowd's taste (NBA fan cultures): demanding crowds love fire, friendly ones humility
   const abbr = s.stage === 'NBA' ? s.nba?.teams.find((x) => x.id === s.teamId)?.abbr : undefined;
   const fans = abbr ? FAN_CULTURES[abbr] : undefined;
   const taste: Tone | null = fans ? (fans.lose <= -3 ? 'fiery' : fans.lose >= 0 ? 'humble' : 'confident') : null;
   if (taste === t) {
-    p.rep = clamp(p.rep + PRESS.fans, 0, 100);
-    p.morale = adjust(p.morale, PRESS.fans);
+    p.rep = clamp(p.rep + PRESS.fans * w, 0, 100);
+    p.morale = adjust(p.morale, PRESS.fans * w);
     notes.push(`${fans!.name} love it.`);
   }
   const q = (d.data?.q as number) ?? 0;
   logDecision(s, 'press', `Press conference: answered ${t}.`);
-  if (q < 2) {
-    askPress(s, d.data?.topic as string, q + 1, t);
+  if (q < n - 1) {
+    askPress(s, d.data?.topic as string, q + 1, n, t);
     s.pending.unshift(s.pending.pop()!);
   }
   return notes.join(' ');

@@ -1623,14 +1623,20 @@ Reached from the start page and from the bottom of Home (a career in progress is
   tournaments and the tier list) behind one "Show everything" button at the bottom of the tab.
   With the test career, the five tabs go from 41 cards and 6,214 words to 15 cards and 1,366
   words; the Player tab from 7,465 pixels tall to 1,216. A press conference in fast break is one
-  answer whose tone carries through all three questions, and sim mode answers humbly on its own.
+  answer whose tone carries through any second question, and sim mode answers humbly on its own.
   Simple text now hides explanations on every tab and in every dialog, not only on Home (every
   small grey paragraph, choice details, the mode notes), keeping status lines a player needs
   (claims left, the slots warning, the achievement riddles, empty states) and a press answer's
   tone. With both on, Home has 203 words where it had 503.
-- **The click budget moves from 14 to 15 a season** (engine test "a season stays a manageable
-  number of clicks"). This round's press conferences (three answers every two or three seasons:
-  21 clicks over a 21-season career) and brand offers add about 1.1 clicks a season; the test
-  career went from under 14 to 14.38. Fast break (one answer per press conference) and sim mode
-  (none) are the way to fewer clicks; the owner can cut the press conference to one question in
-  every mode if the default feels long.
+- **Fewer clicks: press conferences ask one or two questions** (the owner: bring the clicks this
+  round adds down to about 0.5 to 0.7 a season). Measured over the same 160 smart careers against
+  the end of round 24: round 24 took 12.818879 clicks a season, this round's first version
+  13.893398 (+1.074519: press conferences +0.8464, more shop visits with more to buy +0.1583,
+  brand offers +0.0528, contract offers +0.0222). Press conferences now ask two questions after
+  the biggest stories (a title, a lost final, a major award) and one after the rest, and each
+  answer weighs 3 / questions, so a press conference moves trust, reputation, mood, the locker
+  room and the fine risk as much as three answers did. Now 13.368080 clicks a season: this round
+  adds 0.549201 (press conferences 0.3448). The engine test's budget stays at 14 a season (the
+  test career: 13.59). The press achievements count press conferences, not answers (five humble,
+  five confident, five fiery; face the press eight times). Fast break still makes it one answer;
+  sim mode answers on its own.

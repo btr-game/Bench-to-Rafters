@@ -548,7 +548,10 @@ export const NEGOTIATE = { asks: 2, base: 0.35, repPer: 220, ovrPer: 45, perAsk:
 // round 25: press conferences (career/press.ts), one every `gap` or `gap + 1` seasons after a big
 // moment. What each tone does, per answer; a fiery answer may be fined (`fineChance`), and fires
 // the team up or splits it next season (+/- `fire` team strength); the crowd's taste adds `fans`.
-export const PRESS = { gap: 2, humble: { trust: 2, rep: 0.5, chem: 0.1 }, confident: { rep: 1.5, morale: 2 }, fiery: { rep: 2.5, trust: -2, fire: 0.15 }, fineChance: 0.2, fans: 1 };
+// round 25 (the owner: fewer clicks): two questions after the biggest stories (a title, a lost
+// final, a major award), one after the rest; each answer weighs 3 / questions, so a press
+// conference moves things as much as the first version's three answers did
+export const PRESS = { gap: 2, questions: 1, bigQuestions: 2, big: ['title', 'lost-final', 'award'], humble: { trust: 2, rep: 0.5, chem: 0.1 }, confident: { rep: 1.5, morale: 2 }, fiery: { rep: 2.5, trust: -2, fire: 0.15 }, fineChance: 0.2, fans: 1 };
 // round 25: a legacy project funded in an event (events/round25.ts) adds legacy points
 export const LEGACY_PROJECT = { points: 3 };
 export const STAFF_PAY = { pay: [1, 1.7, 2.6], effect: [1, 1.5, 2], talk: 1, afford: 4, max: 6 };
