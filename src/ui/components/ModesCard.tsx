@@ -31,7 +31,7 @@ export function ModesCard({ g }: { g: GameState }) {
     <section className="card stack modes-card" data-tour="modes">
       <div className="kicker">How you play</div>
       <div className="mode-chips">
-        <Chip icon="fast" label="Sim" on={on.sim} onClick={st.toggleSim} tour="chip-sim" disabled={locked} />
+        <Chip icon="sim" label="Sim" on={on.sim} onClick={st.toggleSim} tour="chip-sim" disabled={locked} />
         <Chip icon="fast" label="Fast break" on={on.fast} onClick={st.toggleFast} tour="chip-fast" disabled={locked} />
         <Chip icon="simple" label="Simple text" on={on.simple} onClick={st.toggleSimple} tour="chip-simple" />
         <Chip icon="guide" label="Guide" on={on.guide} onClick={st.toggleGuide} tour="chip-guide" disabled={st.master} />

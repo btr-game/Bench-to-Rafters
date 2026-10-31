@@ -5,10 +5,12 @@ import { staffPay } from '../../engine/career/staff';
 import { fmtMoney } from '../../engine/economy/salary';
 import type { GameState } from '../../engine/types';
 import { useStore } from '../../store';
+import { StaffScene } from '../art/Scene';
 import { Card } from './bits';
 
 // His staff (round 25, the owner): the people hired in events, each paid every season for a very
-// small benefit. Stop by once a season, give a raise (more pay, more help), or let him go.
+// small benefit. Stop by once a season, give a raise (more pay, more help), or let him go. Each
+// is drawn at work, in the role's uniform (art/Scene.tsx).
 
 export function StaffCard({ g }: { g: GameState }) {
   const act = useStore((s) => s.staffAct);
@@ -24,7 +26,8 @@ export function StaffCard({ g }: { g: GameState }) {
           const d = STAFF[m.role];
           const talked = m.talked === g.year;
           return (
-            <div key={m.id} className={`staff-row staff-at-${d.place.replace(/ /g, '-')}`}>
+            <div key={m.id} className="staff-row">
+              <StaffScene name={m.name} role={m.role} place={d.place} title={d.title} />
               <div className="staff-who">
                 <span className="kicker">{d.title} · level {m.level}</span>
                 <b>{m.name}</b>

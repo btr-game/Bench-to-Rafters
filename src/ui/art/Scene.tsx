@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
-import type { GameState, Pos } from '../../engine/types';
+import type { GameState, Pos, Rivalry } from '../../engine/types';
+import type { StaffRole } from '../../content/staff';
 import { team as teamOf } from '../selectors';
 import type { Kit } from '../../content/teamStyle';
 import { blankGrid, paintCrowd, paintFloor, paintRibbon } from './arena';
@@ -16,7 +17,9 @@ import { awardKeyOf, awardPaths } from './Award';
 // room) and four big nights (draft night, a title, an award, a medal), with the player standing
 // in it in his team's colours.
 
-type SceneKind = 'arena' | 'gym' | 'night' | 'home' | 'office' | 'clinic' | 'press' | 'street' | 'locker' | 'draft' | 'title' | 'award' | 'medal';
+type SceneKind = 'arena' | 'gym' | 'night' | 'home' | 'office' | 'clinic' | 'press' | 'street' | 'locker' | 'draft' | 'title' | 'award' | 'medal'
+  // round 25: where his staff work, the league's fine letter and a brand's billboard
+  | 'kitchen' | 'club' | 'court' | 'study' | 'film' | 'bedroom' | 'fine' | 'billboard';
 
 const W = 192;
 const H = 72;
@@ -25,7 +28,9 @@ const H = 72;
 function sceneFor(title: string, kind?: string): SceneKind {
   const t = title.toLowerCase();
   if (kind === 'intro') return 'street';
-  if (kind === 'commit') return 'press';
+  if (kind === 'commit' || kind === 'press') return 'press';
+  if (kind === 'fine') return 'fine';
+  if (kind === 'brand') return 'billboard';
   if (kind === 'draft' || /draft/.test(t)) return 'draft';
   if (kind === 'title' || /champion|title|finals week/.test(t)) return 'title';
   if (kind === 'awards' || /mvp|award|of the year|all-star|all-nba/.test(t)) return 'award';
@@ -188,6 +193,187 @@ function paintScene(kind: SceneKind, accent: string): string[][] {
       for (let y = 11; y < 28; y++) rect(g, 74 + Math.round(Math.sin(y / 3) * 2), y, 4, 1, '#DCE6EC');
       break;
     }
+    // ---- round 25 ----
+    case 'kitchen': {
+      rect(g, 0, 0, W, 52, '#F1EDE4');
+      for (let y = 0; y < 52; y += 6) rect(g, 0, y, W, 1, '#E2DCCF');
+      for (let x = 0; x < W; x += 6) rect(g, x, 0, 1, 40, '#E2DCCF');
+      rect(g, 150, 6, 32, 20, '#9FC6DE');
+      rect(g, 165, 6, 2, 20, '#FFFFFF');
+      rect(g, 150, 15, 32, 2, '#FFFFFF');
+      // pans on a rail, the counter, the stove and a pot, a board with greens and carrots
+      rect(g, 84, 8, 50, 1, '#5A5F6A');
+      for (const x of [88, 104, 120]) {
+        rect(g, x + 3, 9, 1, 4, '#5A5F6A');
+        rect(g, x, 13, 8, 6, '#3A3D46');
+      }
+      rect(g, 70, 40, 122, 3, '#8B5A2B');
+      rect(g, 70, 43, 122, 9, '#5E3A1C');
+      rect(g, 0, 52, W, 20, '#C9B79C');
+      for (let y = 52; y < H; y += 5) for (let x = (y / 5) % 2 ? 0 : 5; x < W; x += 10) rect(g, x, y, 5, 5, '#B9A688');
+      rect(g, 70, 52, 122, 16, '#6B4A2E');
+      for (const x of [86, 116, 146, 176]) rect(g, x, 58, 6, 1, '#C9CFDA');
+      rect(g, 110, 34, 20, 6, '#3A3D46');
+      rect(g, 108, 34, 24, 1, '#5A5F6A');
+      for (let k = 0; k < 10; k++) g[22 + Math.floor(r() * 10)][112 + Math.floor(r() * 16)] = '#FFFFFF';
+      rect(g, 140, 37, 22, 3, '#D9A066');
+      for (const [x, c] of [[143, '#2F9E44'], [148, '#2F9E44'], [153, '#F76707'], [157, '#E03131']] as [number, string][]) rect(g, x, 35, 3, 2, c);
+      break;
+    }
+    case 'club': {
+      rect(g, 0, 0, W, 52, '#E7EEF5');
+      rect(g, 0, 4, W, 26, '#BFE3F0');
+      for (let x = 0; x < W; x += 32) rect(g, x, 4, 2, 26, '#FFFFFF');
+      for (let k = 0; k < 6; k++) rect(g, 10 + k * 32, 18, 14, 12, '#A5D8E6');
+      rect(g, 0, 30, W, 2, '#FFFFFF');
+      rect(g, 0, 52, W, 20, '#2E323B');
+      for (let x = 0; x < W; x += 12) rect(g, x, 52, 1, 20, '#383D47');
+      // a treadmill, a dumbbell rack, kettlebells, a plant
+      rect(g, 104, 46, 44, 6, '#3A3D46');
+      rect(g, 104, 46, 44, 1, '#5A5F6A');
+      rect(g, 144, 30, 3, 16, '#9AA2B0');
+      rect(g, 138, 27, 14, 5, '#22B8CF');
+      rect(g, 70, 42, 26, 2, '#9AA2B0');
+      for (let k = 0; k < 4; k++) rect(g, 72 + k * 6, 38, 4, 4, '#18141C');
+      for (const x of [158, 168]) {
+        rect(g, x, 46, 7, 6, '#E03131');
+        rect(g, x + 2, 43, 3, 3, '#18141C');
+      }
+      rect(g, 180, 40, 8, 12, '#8B5A2B');
+      for (let k = 0; k < 16; k++) g[28 + Math.floor(r() * 12)][176 + Math.floor(r() * 16)] = '#2F9E44';
+      break;
+    }
+    case 'court': {
+      gradient(g, '#3A4250', '#2B313C', 0, 50);
+      for (let x = 0; x < W; x += 24) rect(g, x, 0, 1, 50, '#455063');
+      text(g, 'PRACTICE', 14, 10, '#F5C542');
+      paintFloor(g, 50);
+      // the hoop, a ball rack, cones
+      rect(g, 140, 8, 28, 18, '#FFFFFF');
+      rect(g, 140, 8, 28, 1, '#18141C');
+      rect(g, 140, 25, 28, 1, '#18141C');
+      rect(g, 149, 15, 10, 8, '#E8590C');
+      rect(g, 150, 16, 8, 6, '#FFFFFF');
+      rect(g, 148, 26, 12, 2, '#E8590C');
+      for (let y = 28; y < 34; y++) for (let x = 149 + (y % 2); x < 159; x += 2) g[y][x] = '#F4F1EA';
+      rect(g, 166, 26, 3, 24, '#9AA2B0');
+      rect(g, 92, 40, 30, 2, '#9AA2B0');
+      rect(g, 92, 48, 30, 2, '#9AA2B0');
+      for (const x of [92, 121]) rect(g, x, 40, 1, 12, '#9AA2B0');
+      for (let k = 0; k < 4; k++) {
+        rect(g, 94 + k * 7, 36, 5, 4, '#E8782A');
+        rect(g, 94 + k * 7, 44, 5, 4, '#E8782A');
+      }
+      for (const x of [70, 78]) {
+        rect(g, x + 1, 50, 2, 2, '#F76707');
+        rect(g, x, 52, 4, 3, '#F76707');
+      }
+      break;
+    }
+    case 'study': {
+      rect(g, 0, 0, W, 54, '#E9E1D3');
+      rect(g, 0, 54, W, 18, '#8B5A2B');
+      for (let x = 0; x < W; x += 16) rect(g, x, 54, 1, 18, '#7A4E24');
+      // a bookshelf, a couch, a lamp, a rug, a plant
+      rect(g, 126, 8, 52, 46, '#5E3A1C');
+      for (const y of [8, 22, 36]) {
+        rect(g, 128, y + 2, 48, 11, '#3A2416');
+        let x = 129;
+        while (x < 174) {
+          const bw = 2 + Math.floor(r() * 3);
+          rect(g, x, y + 3 + Math.floor(r() * 3), bw, 10 - Math.floor(r() * 3), ['#C92A2A', '#1C7ED6', '#2F9E44', '#F5C542', '#7048E8', '#F4F1EA'][Math.floor(r() * 6)]);
+          x += bw + 1;
+        }
+      }
+      rect(g, 72, 40, 46, 12, '#2B8A8A');
+      rect(g, 72, 34, 46, 7, '#237373');
+      rect(g, 70, 36, 4, 16, '#237373');
+      rect(g, 116, 36, 4, 16, '#237373');
+      rect(g, 60, 56, 70, 6, '#C2410C');
+      rect(g, 60, 58, 70, 1, '#F5C542');
+      rect(g, 104, 14, 2, 26, '#5A5F6A');
+      rect(g, 99, 10, 12, 6, '#FFE8A3');
+      rect(g, 182, 42, 8, 12, '#8B5A2B');
+      for (let k = 0; k < 14; k++) g[30 + Math.floor(r() * 12)][179 + Math.floor(r() * 13)] = '#2F9E44';
+      break;
+    }
+    case 'film': {
+      rect(g, 0, 0, W, 54, '#1B2430');
+      rect(g, 0, 54, W, 18, '#14181F');
+      // three screens of game film and a play diagram, a desk, a glowing keyboard
+      for (const x0 of [70, 112, 154]) {
+        rect(g, x0, 8, 36, 24, '#0E1520');
+        rect(g, x0 + 2, 10, 32, 20, '#2F7A4A');
+        rect(g, x0 + 17, 10, 1, 20, '#F4F1EA');
+        for (let k = 0; k < 5; k++) rect(g, x0 + 4 + Math.floor(r() * 26), 12 + Math.floor(r() * 15), 2, 2, k % 2 ? '#E03131' : '#FFFFFF');
+      }
+      rect(g, 64, 40, 128, 4, '#3A3D46');
+      rect(g, 64, 44, 128, 2, '#22252B');
+      rect(g, 110, 37, 30, 3, '#22B8CF');
+      for (let y = 0; y < 40; y++) for (let x = 64; x < W; x++) if ((x + y) % 3 === 0 && y > 30) g[y][x] = mix(g[y][x], '#22B8CF', 0.12);
+      break;
+    }
+    case 'bedroom': {
+      gradient(g, '#2E3A5C', '#3B4A72', 0, 54);
+      rect(g, 20, 8, 36, 24, '#0B0D2A');
+      for (let k = 0; k < 10; k++) g[10 + Math.floor(r() * 20)][22 + Math.floor(r() * 32)] = '#FFFFFF';
+      for (let y = 12; y < 20; y++) for (let x = 42; x < 50; x++) if ((x - 46) ** 2 + (y - 16) ** 2 < 13) g[y][x] = '#F4F1D0';
+      rect(g, 37, 8, 2, 24, '#5A5F6A');
+      rect(g, 20, 19, 36, 2, '#5A5F6A');
+      rect(g, 0, 54, W, 18, '#4A3B5C');
+      // the bed, a pillow, the blanket, a nightstand and its lamp
+      rect(g, 104, 30, 6, 26, '#5E3A1C');
+      rect(g, 110, 40, 76, 8, '#F4F1EA');
+      rect(g, 112, 36, 18, 6, '#FFFFFF');
+      rect(g, 126, 40, 60, 10, accent);
+      rect(g, 126, 40, 60, 1, mix(accent, '#FFFFFF', 0.3));
+      rect(g, 110, 48, 76, 8, '#5E3A1C');
+      rect(g, 84, 42, 14, 14, '#6B4A2E');
+      rect(g, 89, 34, 4, 8, '#9AA2B0');
+      rect(g, 86, 30, 10, 5, '#FFE8A3');
+      for (let y = 22; y < 46; y++) for (let x = 76; x < 106; x++) if ((x - 91) ** 2 + (y - 32) ** 2 < 120 && (x + y) % 2 === 0) g[y][x] = mix(g[y][x], '#FFE8A3', 0.18);
+      break;
+    }
+    case 'fine': {
+      rect(g, 0, 0, W, 54, '#E5E7EB');
+      for (let y = 0; y < 54; y += 9) rect(g, 0, y, W, 1, '#D6D9DF');
+      text(g, 'LEAGUE OFFICE', 70, 4, '#5A5F6A');
+      rect(g, 0, 54, W, 18, '#6B4A2E');
+      // the desk and a letter with a red stamp, a whistle, a pen
+      rect(g, 70, 44, 120, 6, '#5E3A1C');
+      rect(g, 76, 50, 4, 16, '#3A2416');
+      rect(g, 180, 50, 4, 16, '#3A2416');
+      rect(g, 108, 12, 46, 32, '#FFFFFF');
+      rect(g, 108, 12, 46, 1, '#C9CFDA');
+      for (let k = 0; k < 6; k++) rect(g, 112, 16 + k * 3, k === 5 ? 20 : 38, 1, '#9AA2B0');
+      rect(g, 126, 32, 24, 9, '#E03131');
+      rect(g, 127, 33, 22, 7, '#FFFFFF');
+      text(g, 'FINED', 128, 34, '#E03131');
+      rect(g, 164, 40, 10, 4, '#C9CFDA');
+      rect(g, 172, 38, 4, 3, '#9AA2B0');
+      rect(g, 84, 42, 16, 2, '#1C7ED6');
+      break;
+    }
+    case 'billboard': {
+      gradient(g, '#F59F6E', '#7B5EA7', 0, 50);
+      let x = 0;
+      while (x < W) {
+        const bw = 12 + Math.floor(r() * 16);
+        const bh = 10 + Math.floor(r() * 20);
+        rect(g, x, 50 - bh, bw - 2, bh, '#3B2E57');
+        for (let yy = 52 - bh; yy < 48; yy += 4) for (let xx = x + 2; xx < x + bw - 4; xx += 4) if (r() < 0.35) rect(g, xx, yy, 2, 2, '#FFD8A8');
+        x += bw;
+      }
+      // the billboard: his colour, a white swoosh, NEW
+      for (const sx of [104, 170]) rect(g, sx, 36, 3, 16, '#3A3D46');
+      rect(g, 86, 6, 102, 32, '#18141C');
+      rect(g, 88, 8, 98, 28, accent);
+      for (let k = 0; k < 40; k++) rect(g, 100 + k * 2, 26 - Math.round(Math.sin(k / 12) * 10), 3, 2, '#FFFFFF');
+      text(g, 'NEW', 160, 12, '#FFFFFF');
+      rect(g, 0, 50, W, 22, '#2B2D33');
+      for (let x2 = 0; x2 < W; x2 += 14) rect(g, x2, 60, 7, 1, '#F5C542');
+      break;
+    }
     case 'press':
     case 'award': {
       rect(g, 0, 0, W, 50, kind === 'award' ? '#14161C' : '#F4F6FA');
@@ -339,7 +525,7 @@ function SceneArt({ kind, kit, name, number, pos, accent, prize }: { kind: Scene
   const pose = kind === 'title' || kind === 'medal' ? FIST_UP : kind === 'gym' ? DUNK : COURT.includes(kind) ? POSES[pos ?? 'SG'] : STANDING;
   const sprite = useMemo(() => toPaths(paint(pose, kit, lookOf(name, kit.base === '#FFFFFF' ? kit.ink : kit.base), number)), [pose, kit, name, number]);
   const scale = 1.5;
-  const at = kind === 'office' || kind === 'press' ? 46 : kind === 'clinic' ? 140 : kind === 'draft' ? 92 : 96;
+  const at = kind === 'office' || kind === 'press' || kind === 'fine' || kind === 'billboard' ? 46 : kind === 'clinic' ? 140 : kind === 'draft' ? 92 : 96;
   const x = at - (pose.w * scale) / 2;
   const y = H - 1 - pose.h * scale;
   return (
@@ -366,6 +552,90 @@ export function StoryScene({ g, title, kind, prize }: { g: GameState; title: str
   const t = teamOf(g);
   const kit = useMemo(() => kitFor(t?.name ?? '', t?.abbr ?? '', t?.color ?? '#2A2F36', 'home', styleLeague(g.stage)), [t?.name, t?.abbr, t?.color, g.stage]);
   return <SceneArt kind={sceneFor(title, kind)} kit={kit} name={g.player.name} number={g.player.number} pos={g.player.pos} accent={t?.color ?? '#E8590C'} prize={prize} />;
+}
+
+// ---- round 25: his staff at work, and his rival across the floor ----
+
+const STAFF_PLACE: Record<string, SceneKind> = { kitchen: 'kitchen', gym: 'club', clinic: 'clinic', court: 'court', office: 'study', 'film room': 'film', bedroom: 'bedroom' };
+const UNIFORM: Record<StaffRole, { base: string; trim: string; glasses?: boolean; hat?: boolean }> = {
+  chef: { base: '#FFFFFF', trim: '#C9CFDA', hat: true },
+  nutritionist: { base: '#2F9E44', trim: '#FFFFFF' },
+  trainer: { base: '#18141C', trim: '#E03131' },
+  physio: { base: '#22B8CF', trim: '#1864AB' },
+  shooting: { base: '#1C7ED6', trim: '#FCC419' },
+  skills: { base: '#F76707', trim: '#18141C' },
+  psychologist: { base: '#8B5A2B', trim: '#FFF3BF', glasses: true },
+  analyst: { base: '#495057', trim: '#22B8CF', glasses: true },
+  sleep: { base: '#3B4A8A', trim: '#C9CFDA' },
+};
+
+/** A member of his staff at work: the place the role works, the person in its uniform (a chef's
+ * whites and hat, a physio's scrubs, the analyst's glasses). */
+export function StaffScene({ name, role, place, title }: { name: string; role: StaffRole; place: string; title: string }) {
+  const kind = STAFF_PLACE[place] ?? 'study';
+  const u = UNIFORM[role];
+  const bg = useMemo(() => toPaths(paintScene(kind, u.base === '#FFFFFF' ? '#1C7ED6' : u.base)), [kind, u.base]);
+  const sprite = useMemo(() => {
+    const look = lookOf(name, '#18141C');
+    const gear = look.gear.filter((x) => x === 'unibrow');
+    return toPaths(paint(STANDING, { base: u.base, ink: u.trim, trim: u.trim, word: '' }, { ...look, gear: u.glasses ? [...gear, 'goggles'] : gear }, -1));
+  }, [name, u]);
+  const scale = 1.5;
+  const x = 36 - (STANDING.w * scale) / 2;
+  const y = H - 1 - STANDING.h * scale;
+  const [hx, hy] = STANDING.head;
+  return (
+    <svg className="art art-scene staff-scene" data-scene={kind} viewBox={`0 0 ${W} ${H}`} shapeRendering="crispEdges" role="img" aria-label={`${title} ${name} at work`}>
+      {bg.map((p) => (
+        <path key={p.fill} d={p.d} fill={p.fill} />
+      ))}
+      <g transform={`translate(${Math.round(x)} ${Math.round(y)}) scale(${scale})`}>
+        {sprite.map((p) => (
+          <path key={p.fill} d={p.d} fill={p.fill} />
+        ))}
+        {u.hat && (
+          <>
+            <path d={`M${hx} ${hy - 6}h14v8h-14z`} fill="#1B1820" />
+            <path d={`M${hx + 1} ${hy - 5}h12v6h-12z`} fill="#FFFFFF" />
+            <path d={`M${hx + 1} ${hy}h12v1h-12z`} fill="#D5DAE3" />
+          </>
+        )}
+      </g>
+    </svg>
+  );
+}
+
+/** Him and his rival on the same floor, each in his own team's kit, facing each other. */
+export function RivalScene({ g, r }: { g: GameState; r: Rivalry }) {
+  const me = teamOf(g);
+  const him = g.nba?.teams.find((t) => t.name === r.team);
+  const lg = styleLeague(g.stage);
+  const myKit = useMemo(() => kitFor(me?.name ?? '', me?.abbr ?? '', me?.color ?? '#2A2F36', 'home', lg), [me?.name, me?.abbr, me?.color, lg]);
+  const hisKit = useMemo(() => kitFor(him?.name ?? r.team, him?.abbr ?? '', him?.color ?? '#5A5F6A', 'road', 'NBA'), [him?.name, him?.abbr, him?.color, r.team]);
+  const bg = useMemo(() => toPaths(paintScene('arena', me?.color ?? '#E8590C')), [me?.color]);
+  const mine = useMemo(() => toPaths(paint(POSES[g.player.pos], myKit, lookOf(g.player.name, myKit.base === '#FFFFFF' ? myKit.ink : myKit.base, g.player.wardrobe?.on), g.player.number)), [g.player.pos, g.player.name, g.player.number, g.player.wardrobe?.on, myKit]);
+  const his = useMemo(() => toPaths(paint(noBall(POSES[r.pos]), hisKit, lookOf(r.name, hisKit.base === '#FFFFFF' ? hisKit.ink : hisKit.base), r.pid % 100)), [r.pos, r.name, r.pid, hisKit]);
+  const scale = 1.5;
+  const at = (cx: number, w: number) => Math.round(cx - (w * scale) / 2);
+  const pMine = POSES[g.player.pos];
+  const pHis = POSES[r.pos];
+  return (
+    <svg className="art art-scene rival-scene" viewBox={`0 0 ${W} ${H}`} shapeRendering="crispEdges" role="img" aria-label={`You against ${r.name}`}>
+      {bg.map((p) => (
+        <path key={p.fill} d={p.d} fill={p.fill} />
+      ))}
+      <g transform={`translate(${at(62, pMine.w)} ${Math.round(H - 1 - pMine.h * scale)}) scale(${scale})`}>
+        {mine.map((p) => (
+          <path key={p.fill} d={p.d} fill={p.fill} />
+        ))}
+      </g>
+      <g transform={`translate(${at(130, pHis.w) + Math.round(pHis.w * scale)} ${Math.round(H - 1 - pHis.h * scale)}) scale(${-scale} ${scale})`}>
+        {his.map((p) => (
+          <path key={p.fill} d={p.d} fill={p.fill} />
+        ))}
+      </g>
+    </svg>
+  );
 }
 
 /** The start page: a street court at sunset and a starting five, one of each position. */

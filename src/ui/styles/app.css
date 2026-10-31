@@ -1815,6 +1815,7 @@ td .art-team { display: inline-block; vertical-align: middle; margin: -3px 8px -
 .staff-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
+  align-items: start;
   gap: 8px;
   padding: 12px;
   border: 1px solid var(--line);

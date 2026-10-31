@@ -348,7 +348,7 @@ export function DecisionView({ g, d }: { g: GameState; d: Decision }) {
   const isDraftNight = d.kind === 'info' && !!d.data?.draft;
   return (
     <div className="stack">
-      {(d.kind === 'event' || isDraftNight) && <StoryScene g={g} title={d.title} kind={isDraftNight ? 'draft' : undefined} />}
+      {(d.kind === 'event' || d.kind === 'press' || d.kind === 'brand' || isDraftNight) && <StoryScene g={g} title={d.title} kind={isDraftNight ? 'draft' : d.kind === 'event' ? undefined : d.kind} />}
       <div>
         <div className="kicker">{kickerFor(d)}</div>
         <h2 className="title" style={{ fontFamily: 'var(--f-display)', fontSize: 28, textTransform: 'uppercase', lineHeight: 1 }}>
@@ -412,6 +412,10 @@ function kickerFor(d: Decision): string {
       return 'Midseason';
     case 'national':
       return 'National team';
+    case 'press':
+      return 'Media day';
+    case 'brand':
+      return 'Endorsements';
     default:
       return 'Update';
   }

@@ -1,4 +1,5 @@
 import type { GameState } from '../../engine/types';
+import { RivalScene } from '../art/Scene';
 
 // His rival (round 25): who, at which level, the head to head and the race season by season.
 
@@ -10,6 +11,7 @@ export function RivalCard({ g }: { g: GameState }) {
   const now = r.seasons[r.seasons.length - 1];
   return (
     <section className={`card stack rival-card lvl-${r.level}`} data-tour="rival">
+      <RivalScene g={g} r={r} />
       <div>
         <div className="kicker">{LEVEL[r.level]} · since {r.since}</div>
         <h2 className="title">{r.name}</h2>
