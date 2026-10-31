@@ -125,7 +125,7 @@ function DevGate() {
   const [pw, setPw] = useState('');
   const [wrong, setWrong] = useState(false);
   return (
-    <details className="dev-gate">
+    <details className="dev-gate" open={location.hash === '#inbox' || undefined}>
       <summary>Developer</summary>
       <form
         className="row"

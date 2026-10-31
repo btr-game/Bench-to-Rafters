@@ -10,13 +10,12 @@ import { ARCHETYPES } from '../../engine/player/archetypes';
 import { dailyInput, todayKey } from '../../engine/mini/daily';
 import { NAMES } from '../../content/strings';
 import { useStore } from '../../store';
-import { SCORE_NOTE, BOARD_SIZE, STATUE, canComment, community, openCommentBox, hall99Ok, scoreOf, statueOk, type Community as Api, type FeedItem, type FeedbackRow, type ScoreRow, type StatueRow, type WriteResult } from '../community';
+import { SCORE_NOTE, BOARD_SIZE, STATUE, canComment, community, openCommentBox, hall99Ok, scoreOf, statueOk, type Community as Api, type FeedItem, type ScoreRow, type StatueRow, type WriteResult } from '../community';
 import { drawCareerCard } from '../share';
 import { StatueArt } from '../art/Statue';
 import { PlayerArt } from '../art/Player';
 import { Icon } from '../art/Icon';
 import { Badge } from '../art/Badge';
-import { DEV } from '../../dev/mode';
 import { OathMark } from '../components/OathMark';
 
 const OPENED = Date.now();
@@ -266,7 +265,7 @@ function Plaza({ c }: { c: Api }) {
 }
 
 /** `where` (the in-game sender) tags the message with the tab and the point in the career. Three
- * roads (round 25): the maker's inbox on the shared page for those who may post there, the page's
+ * roads (round 25): the maker's inbox (read in the dev deck) for those who may post there, the page's
  * comment box for everyone else on claude.ai, and this device only for a copy opened from a file. */
 function Feedback({ c, where }: { c: Api; where?: string }) {
   const g = useStore((s) => s.game);
@@ -350,54 +349,18 @@ export function FeedbackFoot({ where }: { where: string }) {
   );
 }
 
-function Inbox({ c }: { c: Api }) {
-  const [rows, setRows] = useState<FeedbackRow[] | null>(null);
-  useEffect(() => {
-    void c.inbox().then(setRows, () => setRows([]));
-  }, [c]);
-  return (
-    <div className="stack">
-      <p className="small muted">Only you can see this.</p>
-      {rows === null ? (
-        <p className="muted">Loading…</p>
-      ) : rows.length === 0 ? (
-        <p className="muted with-icon">
-          <Icon name="inbox" size={34} />
-          No messages yet.
-        </p>
-      ) : null}
-      {rows?.map((r, i) => (
-        <article key={i} className="card stack inbox-msg">
-          <div className="kicker">
-            {new Date(r.at).toLocaleString()}
-            {r.player ? ` · playing ${r.player}` : ''}
-          </div>
-          <p className="prose" style={{ whiteSpace: 'pre-wrap' }}>
-            {r.text}
-          </p>
-          {r.contact && <p className="small">Reply to: {r.contact}</p>}
-        </article>
-      ))}
-    </div>
-  );
-}
-
-type Tab = 'boards' | 'hall' | 'plaza' | 'feedback' | 'inbox';
+type Tab = 'boards' | 'hall' | 'plaza' | 'feedback';
 
 export function CommunityPage() {
   const setPage = useStore((s) => s.setPage);
   const c = useCommunity();
-  const [tab, setTab] = useState<Tab>(() => (location.hash === '#inbox' ? 'inbox' : 'boards'));
+  const [tab, setTab] = useState<Tab>('boards');
   const tabs: [Tab, string, string][] = [
     ['boards', 'Leaderboards', 'podium'],
     ['hall', 'Reality 99 hall', 'hall'],
     ['plaza', 'Statue plaza', 'statue'],
     ['feedback', 'Send feedback', 'envelope'],
-    // the inbox is the maker's, on the shared page (and in the dev deck, on local notes)
-    ...(c?.isOwner && (c.kind === 'shared' || DEV) ? ([['inbox', 'Inbox', 'inbox']] as [Tab, string, string][]) : []),
   ];
-  // a tab this viewer does not have (the inbox, from a link) shows the boards
-  const shown: Tab = tabs.some(([k]) => k === tab) ? tab : 'boards';
   return (
     <div className="wrap">
       <header className="top">
@@ -421,7 +384,7 @@ export function CommunityPage() {
         <LiveStrip />
         <div className="seg" data-tour="comm-tabs">
           {tabs.map(([k, l, icon]) => (
-            <button key={k} className="with-icon" aria-pressed={shown === k} onClick={() => setTab(k)}>
+            <button key={k} className="with-icon" aria-pressed={tab === k} onClick={() => setTab(k)}>
               <Icon name={icon} size={20} />
               {l}
             </button>
@@ -429,16 +392,14 @@ export function CommunityPage() {
         </div>
         {!c ? (
           <p className="muted">Connecting…</p>
-        ) : shown === 'boards' ? (
+        ) : tab === 'boards' ? (
           <Board c={c} />
-        ) : shown === 'hall' ? (
+        ) : tab === 'hall' ? (
           <Hall c={c} />
-        ) : shown === 'plaza' ? (
+        ) : tab === 'plaza' ? (
           <Plaza c={c} />
-        ) : shown === 'feedback' ? (
-          <Feedback c={c} />
         ) : (
-          <Inbox c={c} />
+          <Feedback c={c} />
         )}
       </section>
     </div>

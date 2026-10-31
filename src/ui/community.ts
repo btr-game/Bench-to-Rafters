@@ -9,6 +9,7 @@
 
 import type { CareerRecord } from '../engine/career/record';
 import { DEV } from '../dev/mode';
+import { readReal } from '../dev/storage';
 import type { Mode } from '../engine/balance';
 import { todayKey } from '../engine/mini/daily';
 
@@ -73,7 +74,6 @@ export type WriteResult = 'ok' | 'denied' | 'full' | 'error';
 export interface Community {
   kind: 'shared' | 'local';
   canWrite: boolean;
-  isOwner: boolean;
   postCareer(r: CareerRecord): Promise<void>;
   scores(mode: Mode, scope: 'day' | 'all'): Promise<ScoreRow[]>;
   hall(): Promise<ScoreRow[]>;
@@ -81,7 +81,6 @@ export interface Community {
   buildStatue(r: CareerRecord): Promise<WriteResult>;
   respect(id: string): Promise<WriteResult>;
   sendFeedback(text: string, contact: string, player: string): Promise<WriteResult>;
-  inbox(): Promise<FeedbackRow[]>;
   feed(cb: (items: FeedItem[]) => void): () => void;
   presence(cb: (n: number) => void): () => void;
 }
@@ -125,7 +124,6 @@ function localCommunity(): Community {
   return {
     kind: 'local',
     canWrite: true,
-    isOwner: true,
     async postCareer(r) {
       const d = lload();
       d.scores.push({ id: rid(), mode: r.mode, day: todayKey(), score: scoreOf(r), rec: r, mine: true });
@@ -168,9 +166,6 @@ function localCommunity(): Community {
       lsave(d);
       return 'ok';
     },
-    async inbox() {
-      return lload().feedback.slice().reverse();
-    },
     feed(cb) {
       cb(lload().feed);
       return () => {};
@@ -208,7 +203,6 @@ interface Db {
 }
 interface UserApi {
   id(): Promise<string | null>;
-  isOwner(): Promise<boolean>;
   can(c: string): Promise<boolean | null>;
 }
 interface RoomApi {
@@ -220,7 +214,7 @@ type ClaudeHost = { use(name: string): Promise<unknown> };
 
 const denied = (e: unknown): WriteResult => ((e as DbErr)?.code === 'invalid_argument' ? 'denied' : (e as DbErr)?.code === 'quota_exceeded' ? 'full' : 'error');
 
-function sharedCommunity(db: Db, uid: string | null, owner: boolean, canWrite: boolean, room: RoomApi | null): Community {
+function sharedCommunity(db: Db, uid: string | null, canWrite: boolean, room: RoomApi | null): Community {
   const me = uid ?? 'anon';
   const row = (s: Snap): ScoreRow | null => {
     const d = s.data();
@@ -235,7 +229,6 @@ function sharedCommunity(db: Db, uid: string | null, owner: boolean, canWrite: b
   return {
     kind: 'shared',
     canWrite,
-    isOwner: owner,
     async postCareer(r) {
       if (!canWrite) return;
       try {
@@ -304,13 +297,6 @@ function sharedCommunity(db: Db, uid: string | null, owner: boolean, canWrite: b
         return denied(e);
       }
     },
-    async inbox() {
-      if (!owner) return [];
-      const snap = await db.collection('feedback').get();
-      return snap.docs
-        .flatMap((s) => (s.data()?.msgs as FeedbackRow[] | undefined) ?? [])
-        .sort((a, b) => (a.at < b.at ? 1 : -1));
-    },
     feed(cb) {
       return db.doc('feed/live').onSnapshot(
         (s) => cb((s.data()?.items as FeedItem[] | undefined) ?? []),
@@ -368,6 +354,30 @@ export async function openCommentBox(el: Element): Promise<boolean> {
   }
 }
 
+/** Round 26 (owner: the inbox belongs to the devs, in the dev deck, not on the Community page).
+ * Read-only, so the deck may call it in dev mode. On the claude.ai page it reads the shared
+ * feedback, whose rules let only the page's owner and editors read other people's messages; in a
+ * copy opened from a file it reads the notes kept on this device. */
+export async function readInbox(): Promise<{ rows: FeedbackRow[]; where: 'shared' | 'device' }> {
+  const host = (window as unknown as { claude?: ClaudeHost }).claude;
+  try {
+    const db = host?.use ? ((await host.use('db')) as Db | null) : null;
+    if (db) {
+      const snap = await db.collection('feedback').get();
+      const rows = snap.docs.flatMap((s) => (s.data()?.msgs as FeedbackRow[] | undefined) ?? []);
+      return { rows: rows.sort((a, b) => (a.at < b.at ? 1 : -1)), where: 'shared' };
+    }
+  } catch {
+    // not readable here: this device's notes instead
+  }
+  try {
+    const d = JSON.parse(readReal(LKEY) ?? 'null') as LocalData | null;
+    return { rows: (d?.feedback ?? []).slice().reverse(), where: 'device' };
+  } catch {
+    return { rows: [], where: 'device' };
+  }
+}
+
 let picked: Promise<Community> | null = null;
 /** The community this page can reach: shared on claude.ai, this device elsewhere. */
 export function community(): Promise<Community> {
@@ -379,8 +389,8 @@ export function community(): Promise<Community> {
     try {
       const [db, user, room] = (await Promise.all([host.use('db'), host.use('user'), host.use('room')])) as [Db | null, UserApi | null, RoomApi | null];
       if (!db) return localCommunity();
-      const [uid, owner, can] = await Promise.all([user?.id() ?? null, user?.isOwner() ?? false, user?.can('data.write') ?? null]);
-      return sharedCommunity(db, uid, owner, can !== false, room);
+      const [uid, can] = await Promise.all([user?.id() ?? null, user?.can('data.write') ?? null]);
+      return sharedCommunity(db, uid, can !== false, room);
     } catch {
       return localCommunity();
     }

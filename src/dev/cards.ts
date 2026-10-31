@@ -114,13 +114,9 @@ function seedCommunity(): void {
   const legend = vary(rs[0], 40, { mode: 'reality', peak: 99, legacy: 260 });
   scores.push({ id: 'hall', mode: 'reality', day, score: 299, rec: legend, mine: false });
   const statues = rs.slice(0, 3).map((r, i) => ({ id: `st${i}`, rec: vary(r, 50 + i, { mode: 'standard', legacy: i === 0 ? 240 : 160 + i * 20 }), metal: i === 0 ? 'gold' : 'bronze', paid: i === 2, respects: 12 - i * 4 }));
-  const feedback = [
-    { text: 'The dunk contest is way harder now. Love it.', contact: '', at: new Date().toISOString(), player: rs[0].name },
-    { text: 'Could the roster card show contracts too?', contact: 'a classmate', at: new Date(Date.now() - 3600e3).toISOString(), player: '' },
-  ];
   const feed = rs.map((r, i) => ({ t: `${r.name} retired with ${Math.round(r.legacy)} legacy points.`, at: Date.now() - (i + 1) * 600e3 }));
   try {
-    localStorage.setItem('btr-community-local', JSON.stringify({ scores, statues, feedback, feed }));
+    localStorage.setItem('btr-community-local', JSON.stringify({ scores, statues, feedback: [], feed }));
   } catch {
     // storage blocked: the community cards open empty
   }
@@ -322,5 +318,4 @@ export const CARDS: DevCard[] = [
   { id: 'c-hall', title: 'Reality 99 hall', group: 'Records & community', icon: 'hall', blurb: 'Every Reality career that reached 99.', open: () => (seedCommunity(), useStore.setState({ game: null, mini: null, page: 'community' })), press: 'text=Reality 99 hall' },
   { id: 'c-plaza', title: 'Statue plaza', group: 'Records & community', icon: 'statue', blurb: 'Bronze and gold, pay your respects.', open: () => (seedCommunity(), useStore.setState({ game: null, mini: null, page: 'community' })), press: 'text=Statue plaza' },
   { id: 'c-feedback', title: 'Send feedback', group: 'Records & community', icon: 'envelope', blurb: 'A note to the maker.', open: () => (seedCommunity(), useStore.setState({ game: null, mini: null, page: 'community' })), press: 'text=Send feedback' },
-  { id: 'c-inbox', title: 'Feedback inbox', group: 'Records & community', icon: 'inbox', blurb: "The maker's view of the notes.", open: () => (seedCommunity(), useStore.setState({ game: null, mini: null, page: 'community' })), press: 'text=Inbox' },
 ];

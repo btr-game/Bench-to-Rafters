@@ -1712,8 +1712,8 @@ Reached from the start page and from the bottom of Home (a career in progress is
   switches). The career carries the mark in the top bar, on the leaderboards, the Reality 99 hall,
   the career log and the retirement page, with six achievements of its own (522 in all).
 - **Feedback**: a sender folded at the foot of every tab in a career, tagged with the tab, the
-  difficulty and the age. It goes to the maker's inbox (Community, Inbox tab) when the viewer may
-  write to the page's shared data (the owner and invited contributors); everyone else on claude.ai
+  difficulty and the age. It goes to the maker's inbox when the viewer may write to the page's
+  shared data (the owner and invited contributors); everyone else on claude.ai
   gets the page's own comment box (comments, composer only: no permission asked), which the owner
   sees in the page's comments. A copy opened from a file says plainly that its notes stay on the
   device.
@@ -1733,3 +1733,10 @@ Reached from the start page and from the bottom of Home (a career in progress is
   static icon link landed in the body), and dev mode shows the deck's own icon.
 - **Distribution report**: docs/reports/2026-10-31-peak-ovr-by-difficulty-and-mode.docx, 18,000
   careers (2,000 per difficulty and policy, plus 1,000 seeds each in fast break and sim mode).
+- **The inbox moved into the dev deck** (owner: only the devs should see it). It was only ever
+  shown to the page's owner, and the page's rules let only the owner and editors read other
+  people's messages, but it now lives in the deck (Inbox, beside Catalog), not on the Community
+  page. It reads the shared feedback on the claude.ai page, or the notes kept on this device in a
+  copy opened from a file (past the deck's own storage prefix, read-only). `…#community` opens the
+  Community page; `…#inbox` opens the dev door on the start page, and the password lands on the
+  deck's Inbox.

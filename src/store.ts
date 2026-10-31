@@ -154,10 +154,10 @@ function teamOf(g: GameState) {
   return lg?.teams.find((t) => t.id === g.teamId) ?? null;
 }
 
-/** The page a link names: …#community, or …#inbox for the maker's inbox (the Community page's last tab). */
+/** The page a link names: …#community. (…#inbox opens the dev door on the start page, then the deck's inbox.) */
 function linkedPage(): Page | null {
   try {
-    return /^#(community|inbox)$/.test(location.hash) ? 'community' : null;
+    return location.hash === '#community' ? 'community' : null;
   } catch {
     return null;
   }
@@ -203,7 +203,7 @@ export const useStore = create<Store>((set, get) => ({
   },
   seen: {},
   saving: 'ok',
-  // round 26 (owner: "just give me the link to the community page"): #community and #inbox open it
+  // round 26 (owner: "just give me the link to the community page"): #community opens it
   page: linkedPage(),
   setPage: (page) => {
     set({ page });

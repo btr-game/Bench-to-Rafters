@@ -7,13 +7,23 @@ import { DEV } from './mode';
 
 const PREFIX = 'btr-dev:';
 const own = (k: string) => (k.startsWith(PREFIX) ? k : PREFIX + k);
+const realGet = typeof Storage === 'undefined' ? null : Storage.prototype.getItem;
 
-if (DEV) {
+/** Reads the game's own key, past the prefix (the deck's inbox reads the notes kept on this device). */
+export function readReal(key: string): string | null {
   try {
-    const { getItem, setItem, removeItem } = Storage.prototype;
+    return realGet ? realGet.call(localStorage, key) : null;
+  } catch {
+    return null;
+  }
+}
+
+if (DEV && realGet) {
+  try {
+    const { setItem, removeItem } = Storage.prototype;
     // only localStorage: the dev-mode mark itself lives in sessionStorage
     Storage.prototype.getItem = function (this: Storage, k: string) {
-      return getItem.call(this, this === localStorage ? own(k) : k);
+      return realGet.call(this, this === localStorage ? own(k) : k);
     };
     Storage.prototype.setItem = function (this: Storage, k: string, v: string) {
       setItem.call(this, this === localStorage ? own(k) : k, v);

@@ -13,6 +13,7 @@ import { CARDS, GROUPS, setAchievements, type DevCard, type Group } from './card
 import { Marked, SUMMARY, SummaryPage, searchCards, searchSummary, snippet } from './Summary';
 import { leaveDev } from './mode';
 import { Catalog } from './Catalog';
+import { Inbox } from './Inbox';
 import './dev.css';
 
 const groupOf = (g: Group) => GROUPS.find((x) => x.key === g)!;
@@ -69,7 +70,7 @@ export function DevDeck() {
   const [group, setGroup] = useState<Group | 'all'>('all');
   const [q, setQ] = useState('');
   const [results, setResults] = useState(false);
-  const [section, setSection] = useState<'cards' | 'catalog' | 'summary'>('cards');
+  const [section, setSection] = useState<'cards' | 'catalog' | 'summary' | 'inbox'>(() => (location.hash === '#inbox' ? 'inbox' : 'cards'));
   const [chapter, setChapter] = useState(0);
   const [focus, setFocus] = useState<number | null>(null);
   const [view, setView] = useState<'deck' | 'grid'>('deck');
@@ -185,6 +186,9 @@ export function DevDeck() {
             <button aria-pressed={section === 'summary' && !results} onClick={() => openChapter(chapter)}>
               Project summary
             </button>
+            <button aria-pressed={section === 'inbox' && !results} onClick={() => (setSection('inbox'), setResults(false))}>
+              Inbox
+            </button>
           </div>
           <div className="dk-searchbox">
             <input
@@ -250,6 +254,8 @@ export function DevDeck() {
         </section>
       ) : section === 'catalog' ? (
         <Catalog />
+      ) : section === 'inbox' ? (
+        <Inbox />
       ) : section === 'summary' ? (
         <SummaryPage chapter={chapter} setChapter={(n) => (setChapter(n), setFocus(null))} focus={focus} q={q} />
       ) : (
