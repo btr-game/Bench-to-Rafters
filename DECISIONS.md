@@ -2085,6 +2085,8 @@ multiple times."
     group's end, crunch time).
   - Harness: `smartChoice` answers a crunch-time pick with the first call (the harness simulates
     the postseason, so it never meets one); the dev deck's crunch card plays to a final itself.
+  - A duo that ends no longer re-forms with the one who stayed in the same season (found by the
+    dev deck card): he starts over at a bond of 60 and grows from next season.
   - Dead code: 109 exports used only in their own file lost `export`; `.vote-list` CSS (the old
     award list) went.
   - Tests: tests/round28.test.ts (15 tests: age edges, staff and visits, Big Three breaks, the logo,

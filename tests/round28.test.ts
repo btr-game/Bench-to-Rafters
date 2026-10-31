@@ -117,10 +117,14 @@ describe('duos and Big Threes', () => {
     expect(activeDuo(s)).toBeNull(); // not a duo any more: the group is over
     expect(activeTrio(s)).toBeNull();
     s.moments = [];
-    growBonds(s, null);
+    // a full season just played with him: the one who stayed still starts over, not a new duo at once
+    const last = { ...s.history[s.history.length - 1], teamId: s.teamId!, w: 60, l: 22 };
+    last.line = { ...last.line, gp: Math.max(1, last.line.gp) };
+    growBonds(s, last);
     expect(s.moments.some((m) => /the end/.test(m.title))).toBe(true);
     const left = s.bonds!.find((x) => x.id === a.id)!;
     expect(left.formed).toBeUndefined(); // the teammate who stayed starts over
+    expect(left.bond).toBeLessThanOrEqual(60);
     expect(s.bonds!.some((x) => x.id === b.id)).toBe(false);
   });
 

@@ -318,7 +318,7 @@ export const CARDS: DevCard[] = [
       const [a, b] = [five[0].p, five[1].p];
       g.bonds = [
         { id: a.id, name: a.name, pos: a.pos, spark: 0.9, bond: 100, seasons: 2, formed: g.year - 1, nick: 'The Splash Pair' },
-        { id: b.id, name: b.name, pos: b.pos, spark: 0.9, bond: 100, seasons: 1, formed: g.year, trio: true },
+        { id: b.id, name: b.name, pos: b.pos, spark: 0.9, bond: 100, seasons: 1, formed: g.year, trio: true, nick: 'The Big Three' },
       ];
       t.roster = t.roster.filter((x) => x.id !== b.id);
       other.roster.push(b);

@@ -80,10 +80,10 @@ export function activeTrio(s: GameState): Bond | null {
 
 /** Someone in his duo or Big Three has gone (or he has): the group ends, all of it, with one page.
  * Called after each season, and the moment he is traded (round 28). */
-export function breakGroup(s: GameState): void {
+export function breakGroup(s: GameState): Bond[] {
   const formed = formedOf(s);
   const gone = formed.filter((b) => !onTeam(s, b));
-  if (!formed.length || !gone.length) return;
+  if (!formed.length || !gone.length) return [];
   const stay = formed.filter((b) => onTeam(s, b));
   const name = formed.find((b) => b.trio)?.nick ?? formed[0].nick ?? 'The duo';
   const seasons = Math.max(...formed.map((b) => b.seasons));
@@ -110,6 +110,7 @@ export function breakGroup(s: GameState): void {
     b.bond = Math.min(b.bond, DUO.restart);
   }
   s.bonds = (s.bonds ?? []).filter((b) => !gone.includes(b));
+  return stay;
 }
 
 /**
@@ -154,7 +155,8 @@ export function growBonds(s: GameState, last: SeasonRecord | null): void {
   if (!s.bonds?.length) return;
   // careers saved before round 22 can hold two bonds with the same teammate: keep the further one
   s.bonds = s.bonds.filter((b, i, all) => !all.some((o, j) => o.id === b.id && j !== i && (o.formed !== undefined && b.formed === undefined ? true : o.bond > b.bond || (o.bond === b.bond && j < i))));
-  breakGroup(s);
+  // whoever stays after a group ends starts over from next season, not in this same pass
+  const restart = breakGroup(s);
   for (const b of [...s.bonds]) {
     if (!onTeam(s, b)) {
       s.bonds = s.bonds.filter((x) => x !== b);
@@ -162,7 +164,7 @@ export function growBonds(s: GameState, last: SeasonRecord | null): void {
     }
     if (!last || last.teamId !== s.teamId || last.line.gp === 0) continue;
     b.seasons++;
-    if (b.formed !== undefined) continue;
+    if (b.formed !== undefined || restart.includes(b)) continue;
     const win = last.w + last.l > 0 ? last.w / (last.w + last.l) : 0.5;
     b.bond = clamp(b.bond + b.spark * DUO.grow + (win - 0.5) * DUO.winW + (s.player.trust - 50) * DUO.trustW + normal(s.rng, 0, DUO.sd), 0, 100);
     if (b.bond >= 100) formDuo(s, b);

@@ -579,6 +579,8 @@ button.banner { border: 0; font: inherit; text-align: left; }
 .five { display: grid; gap: 2px; font-size: 15.5px; }
 .five-row { display: grid; grid-template-columns: 40px minmax(0, 1fr) 40px 80px; gap: 8px; padding: 5px 8px; border-radius: 6px; background: var(--surface-2); align-items: center; }
 .five-row b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* round 28: on a phone a long name wraps to a second line instead of losing its surname */
+@media (max-width: 560px) { .five-row b { white-space: normal; overflow-wrap: anywhere; line-height: 1.2; } }
 .five-row > span:nth-child(3), .five-row > span:nth-child(4) { text-align: right; font-family: var(--f-mono); }
 .five-row.mine { box-shadow: inset 3px 0 0 var(--accent); }
 .five-row.weakest { box-shadow: inset 3px 0 0 var(--muted); }
@@ -2310,6 +2312,9 @@ input[type='range'] { width: 100%; min-height: 32px; accent-color: var(--accent)
 .share-foot { display: flex; align-items: center; gap: 8px; margin: 0; padding-block: 12px; min-height: 61px; /* the closed feedback bar beside it */ font: inherit; font-weight: 600; color: var(--ink); text-align: left; cursor: pointer; }
 .share-foot:hover { border-color: var(--accent); }
 .th-go { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 12px; }
+/* the thank-you page is dark in both themes: its Share button reads light on it */
+.th-go .share-big { color: #f4f1ea; border-color: rgba(244, 241, 234, 0.7); background: transparent; }
+.th-go .share-big:hover, .th-go .share-big:focus-visible { background: rgba(244, 241, 234, 0.14); }
 @media (prefers-reduced-motion: reduce) { .share-card { animation: none; } }
 
 
