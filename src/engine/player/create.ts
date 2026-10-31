@@ -44,7 +44,8 @@ export interface CreateInput {
   country?: string; // assigned by the game when omitted
   highSchool?: string;
   fast?: boolean; // fast break: the speed mode (engine/fast.ts)
-  oath?: boolean; // round 25: No Shortcuts (Reality only): master mode, no fast break, simple text or sim
+  oath?: boolean; // round 25: No Shortcuts (Reality only): master mode, no fast break or sim (round 27: simple text allowed, a random player)
+  look?: import('../../content/looks').ChosenLook; // round 27: the look he picked (from his name if not)
 }
 
 /** "See other candidates": each stat ±3, then re-normalized to exactly 320. */
@@ -150,6 +151,7 @@ function buildPlayer(rng: Rng, input: CreateInput): UserPlayer {
     peakOvr: 0,
     scoutGrade: null,
     scoutRange: null,
+    ...(input.look ? { look: input.look } : {}),
     programs: [],
     captain: false,
     injuryMultNext: 1,

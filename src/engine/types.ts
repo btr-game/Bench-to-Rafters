@@ -140,6 +140,7 @@ export interface UserPlayer {
   longevity?: number; // round 24: hidden, built by looking after the body (see LONGEVITY)
   lab?: { credits: number; earned: number; spent: Partial<Record<AttrKey, number>> }; // built in a lab
   nickname?: Nickname; // round 25: what the media calls him (career/nickname.ts)
+  look?: import('../content/looks').ChosenLook; // round 27: the look he picked at the start
   brand?: BrandDeal; // round 25: his own logo on a brand's products
   visits?: Record<string, number>; // round 25: shop id -> the season he last went (content/visits.ts)
   staff?: StaffMember[]; // round 25: people he pays (career/staff.ts)
@@ -550,5 +551,7 @@ export interface GameState {
   teamStyle?: { key: import('./career/identity').TeamStyle; teamId: string }; // the style he set for his team
   highs?: { nba: Partial<Record<HighKey, CareerHigh>>; all: Partial<Record<HighKey, CareerHigh>> };
   flags: Record<string, number>; // small story switches (powerhouse school, power agent...)
+  /** Round 27: every mini-game bonus claimed, with the OVR (and range) it added. */
+  miniLog?: { game: import('./career/miniBonus').MiniId; year: number; gain: number; range?: number }[];
   schoolColor: string;
 }

@@ -21,8 +21,35 @@ interface LookTraits {
   gear: string[]; // headband, sleeve, wristband (legends: also goggles, unibrow)
 }
 
-/** A legend as he really looked (content/legendLooks.ts), anyone else from his name. */
+/** The parts a player picks for his own look at the start (round 27). */
+export interface ChosenLook {
+  skin: number; // 0-6, light to deep
+  hair: LegendLook['color'];
+  style: Hair;
+  face: Face;
+}
+export const LOOK_STYLES: Hair[] = ['short', 'buzz', 'flattop', 'afro', 'bigafro', 'cornrows', 'twists', 'curly', 'parted', 'long', 'mop', 'mullet', 'bald'];
+export const LOOK_FACES: Face[] = ['none', 'stubble', 'mustache', 'goatee', 'beard', 'bigbeard', 'sideburns'];
+export const LOOK_HAIRS: LegendLook['color'][] = ['k', 'b', 'l', 'r', 'g'];
+
+// round 27 (owner: "let the user choose the appearance of the player at the start ... the avatar
+// shouldn't have any accessories to start with"): the user's player looks as chosen, everywhere
+// his name is drawn, with only the accessories he buys (the wardrobe adds those)
+const CHOSEN = new Map<string, ChosenLook>();
+export function chooseLook(name: string, look: ChosenLook | undefined): void {
+  if (look) CHOSEN.set(name, look);
+}
+
+/** A starting look from a name (the parts only, no accessories): the creation page's first pick. */
+export function lookFromName(name: string): ChosenLook {
+  const t = lookTraits(name);
+  return { skin: t.skin, hair: t.hair, style: t.style, face: t.face };
+}
+
+/** A legend as he really looked (content/legendLooks.ts), the user's player as he chose, anyone else from his name. */
 export function lookTraits(name: string): LookTraits {
+  const c = CHOSEN.get(name);
+  if (c) return { ...c, gear: [] };
   const l = legendLook(name);
   if (l) return { skin: Math.max(0, Math.min(6, l.skin - 1)), hair: l.color, style: l.hair, face: l.face, gear: l.gear };
   const h = hash(name);

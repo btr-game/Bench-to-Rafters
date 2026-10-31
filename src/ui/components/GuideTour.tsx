@@ -26,7 +26,7 @@ const TOUR: Step[] = [
   T('guide-btn', D('guide-btn'), 'The manual: every feature in a few short points. Guide mode switches on and off there too.'),
   T('random', D('random'), 'Random rolls every pick at once.'),
   T('start-mode', '.modes', 'How hard the road is. It stays for the whole career.'),
-  T('oath', '.oath-card', 'With Reality hits hard: No Shortcuts, the hardest way to play. Master mode, no Fast break, Simple text or Sim, for the whole career, and a mark of honour for it.'),
+  T('oath', '.oath-card', 'With Reality hits hard: No Shortcuts, the hardest way to play. The road picks your player at random, then master mode with no Fast break or Sim, for the whole career, and a mark of honour for it.'),
   T('minis', D('minis'), 'Mini-games. Free from the start page; in a career each one opens with your ratings and pays a rating bonus.'),
   T('log', D('log'), 'The career log: the cards of your last five finished careers.'),
   T('ach', D('ach'), 'The achievement book: every milestone you reach, kept for good. Unearned ones are riddles.'),
@@ -166,7 +166,7 @@ const shown = (el: HTMLElement) => {
 };
 
 export function GuideTour() {
-  const on = useStore((s) => s.guide && !s.master);
+  const on = useStore((s) => s.guide && !s.master && !s.intro && !s.thanks); // round 27: not over the intro page
   const [seen, setSeen] = useState(loadSeen);
   const [cur, setCur] = useState<{ step: Step; el: HTMLElement } | null>(null);
   const [box, setBox] = useState<{ x: number; y: number; w: number; h: number } | null>(null);

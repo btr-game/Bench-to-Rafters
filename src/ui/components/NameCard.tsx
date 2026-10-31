@@ -1,5 +1,6 @@
 import { BRAND, NICKNAME } from '../../engine/balance';
 import { brandPay } from '../../engine/career/nickname';
+import { BrandLogo } from '../art/careerArt';
 import { fmtMoney } from '../../engine/economy/salary';
 import type { GameState } from '../../engine/types';
 import { NickLogo } from '../art/NickLogo';
@@ -31,8 +32,10 @@ export function NameCard({ g }: { g: GameState }) {
           <div>
             <dt>{d.kind === 'deal' ? 'Brand deal' : 'Signature line'}</dt>
             <dd>
-              <i className="brand-dot" style={{ background: d.color }} />
-              {d.brand}
+              <span className="with-icon">
+                <BrandLogo name={d.brand} color={d.color} size={26} />
+                {d.brand}
+              </span>
             </dd>
           </div>
           <div>

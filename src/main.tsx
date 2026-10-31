@@ -5,6 +5,8 @@ import ReactDOM from 'react-dom/client';
 import { App } from './ui/App';
 import { GuideTour } from './ui/components/GuideTour';
 import { AchToasts } from './ui/screens/Achievements';
+import { Loading } from './ui/components/Loading';
+import { Look } from './ui/components/Look';
 import './ui/styles/app.css';
 import { DECK_LOGO, GAME_LOGO, setFavicon } from './ui/art/favicon';
 import { DEV } from './dev/mode';
@@ -24,5 +26,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <AchToasts />
       </>
     )}
+    <Loading />
+    <Look />
   </React.StrictMode>,
 );

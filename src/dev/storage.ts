@@ -8,6 +8,7 @@ import { DEV } from './mode';
 const PREFIX = 'btr-dev:';
 const own = (k: string) => (k.startsWith(PREFIX) ? k : PREFIX + k);
 const realGet = typeof Storage === 'undefined' ? null : Storage.prototype.getItem;
+const realSet = typeof Storage === 'undefined' ? null : Storage.prototype.setItem;
 
 /** Reads the game's own key, past the prefix (the deck's inbox reads the notes kept on this device). */
 export function readReal(key: string): string | null {
@@ -15,6 +16,17 @@ export function readReal(key: string): string | null {
     return realGet ? realGet.call(localStorage, key) : null;
   } catch {
     return null;
+  }
+}
+
+/** Writes the game's own key, past the prefix: only for the deck's Reset achievements (round 27). */
+export function writeReal(key: string, value: string): boolean {
+  try {
+    if (!realSet) return false;
+    realSet.call(localStorage, key, value);
+    return true;
+  } catch {
+    return false;
   }
 }
 

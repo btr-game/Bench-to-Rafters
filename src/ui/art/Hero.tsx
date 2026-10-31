@@ -156,8 +156,6 @@ export function ballSpot(pose: HeroPose): [number, number] {
   return n ? [sx / n / r[0].length, sy / n / r.length] : [0.5, 0.2];
 }
 
-/** The size of a pose in pixels. */
-export const heroSize = (pose: HeroPose): [number, number] => [rowsOf(pose)[0].length, rowsOf(pose).length];
 
 // the casual look of the action cam (round 23): one colour and one shade for each part, no more
 const FLAT: Record<string, string> = { l: 'S', d: 's', h: 'H', i: 'J', k: 'j', u: 'B', L: 'b', w: 'W', f: 'F' };
@@ -209,13 +207,8 @@ function paintHero(pos: HeroPose, kit: Kit, skin: string, hair: string, number: 
   return rows.map((r) => r.map((c) => pal[c] ?? ''));
 }
 
-// round 24: statues. The same traced pose cast in metal: every part keeps its light and shade, in
-// five tones of bronze or gold (no number on the jersey).
-const TONE: Record<string, number> = { O: 0, d: 1, k: 1, L: 1, s: 2, j: 2, p: 2, b: 2, w: 2, f: 2, H: 2, S: 3, J: 3, P: 3, B: 3, W: 3, F: 3, T: 3, R: 3, E: 3, l: 4, i: 4, u: 4, h: 4 };
-const METAL = { bronze: ['#3B2410', '#6E4520', '#94622F', '#B98142', '#E0AE6E'], gold: ['#4A3305', '#8A6410', '#B8891C', '#E2B33C', '#FFE38A'] };
-export function useStatuePaths(pose: HeroPose, metal: 'bronze' | 'gold') {
-  return useMemo(() => toPaths(rowsOf(pose).map((r) => [...r].map((c) => (TONE[c] === undefined ? '' : METAL[metal][TONE[c]])))), [pose, metal]);
-}
+/** The size of a pose in pixels. */
+export const heroSize = (pose: HeroPose): [number, number] => [rowsOf(pose)[0].length, rowsOf(pose).length];
 
 /** A traced player's pixels in the action cam's flat colours, for scenes drawn on a canvas (round 25: Lockdown). */
 export function heroGrid(pos: HeroPose, kit: Kit, model: string, number: number, noBall: boolean, mirror: boolean): string[][] {

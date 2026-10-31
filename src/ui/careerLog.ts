@@ -2,6 +2,7 @@
 // Five at most: at four the page warns, and a sixth pushes out the oldest. Deleting a card here
 // never touches anything posted elsewhere (a leaderboard keeps its own copy).
 
+import { chooseLook } from '../content/looks';
 import type { CareerRecord } from '../engine/career/record';
 
 const KEY = 'btr-log-v1';
@@ -34,7 +35,11 @@ function save(d: LogData): boolean {
 }
 
 /** The cards, newest first. */
-export const logCards = (): CareerRecord[] => load().cards.slice().reverse();
+export const logCards = (): CareerRecord[] => {
+  const cards = load().cards.slice().reverse();
+  for (const c of cards) chooseLook(c.name, c.look); // round 27: each in the look he chose
+  return cards;
+};
 
 export interface LogResult {
   added: boolean;

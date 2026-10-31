@@ -15,6 +15,8 @@ import { edgeOf } from '../../engine/career/nationality';
 import { ht, seasonLabel } from '../format';
 import { MiniGamesCard } from '../mini/MiniGames';
 import { CareerLogCard } from './CareerLog';
+import { SettingsMenu } from '../components/Settings';
+import { WhatsNewCard } from '../components/WhatsNew';
 import { GuideButton } from '../components/Guide';
 import { AchievementsCard } from './Achievements';
 import { CommunityCard, LiveStrip } from './Community';
@@ -23,10 +25,10 @@ import { POS_STYLE, PositionCard } from '../art/PositionCard';
 import { HeroArt, archPose } from '../art/Hero';
 import { hash } from '../art/color';
 import { LineupArt } from '../art/Scene';
-import { JerseyArt } from '../art/Jersey';
+import { LookPicker, LookPreview, randomLook, type Jersey } from '../components/LookPicker';
+import type { ChosenLook } from '../../content/looks';
 import { enterDev } from '../../dev/mode';
 import { sfx } from '../sound';
-import type { Kit } from '../../content/teamStyle';
 
 const pick = <T,>(a: readonly T[]): T => a[Math.floor(Math.random() * a.length)];
 const uiRng = makeRng(Math.floor(Math.random() * 2 ** 31));
@@ -151,11 +153,10 @@ function DevGate() {
   );
 }
 
-// the jersey on the name card: the game's own colours, his surname across the back
-const ID_KIT: Kit = { base: '#1F5FAD', ink: '#FFFFFF', trim: '#F5C542', word: '' };
 
 export function Create() {
   const start = useStore((s) => s.start);
+  const showIntro = useStore((s) => s.showIntro);
   const [step, setStep] = useState(0);
   const [name, setName] = useState(`${pick(FIRST_NAMES)} ${pick(LAST_NAMES)}`);
   const [number, setNumber] = useState(String(Math.floor(Math.random() * 35)));
@@ -167,6 +168,9 @@ export function Create() {
   const [mode, setMode] = useState<Mode>('standard');
   const [country, setCountry] = useState(''); // '' = the game decides, by real-world odds
   const [oath, setOath] = useState(false); // round 25: No Shortcuts, offered with Reality
+  // round 27: his look (the parts every avatar is built from) and a plain practice jersey
+  const [look, setLook] = useState<ChosenLook>(() => randomLook());
+  const [jersey, setJersey] = useState<Jersey>('white');
 
   // round 16: random picks, shown as picked (the same one never comes up twice in a row)
   const [rolled, setRolled] = useState<{ pos?: boolean; hand?: boolean; arch?: boolean }>({});
@@ -204,6 +208,17 @@ export function Create() {
     setRolled({ pos: true, hand: true, arch: true });
     const shuffled = [...ATTRS].sort(() => Math.random() - 0.5);
     setFocus(shuffled.slice(0, 2));
+    setLook(randomLook());
+  };
+  // round 27 (owner: "for harder road of reality, make the position, country, archetype, focus
+  // stats, basically the whole intro random"): No Shortcuts skips the picking. The road rolls the
+  // player, country by real-world odds, and shows him on the last step, with no reroll.
+  const road = mode === 'reality' && oath;
+  const rollRoad = () => {
+    randomAll();
+    let x = Math.random() * ORIGINS.reduce((t, o) => t + o.weight, 0);
+    setCountry((ORIGINS.find((o) => (x -= o.weight) <= 0) ?? ORIGINS[0]).country);
+    setStep(4);
   };
   const toggleFocus = (k: AttrKey) =>
     setFocus((f) => (f.includes(k) ? f.filter((x) => x !== k) : f.length >= 2 ? [f[1], k] : [...f, k]));
@@ -226,6 +241,7 @@ export function Create() {
       mode,
       country: country || undefined,
       oath: mode === 'reality' && oath,
+      look,
     });
 
   return (
@@ -235,8 +251,14 @@ export function Create() {
           Bench to <span>Rafters</span>
         </div>
         <div className="row" style={{ gap: 8 }}>
+          {/* round 27 (owner: "the homepage itself doesn't allow settings. put it in"; the intro "should
+              be accessible to players if they want") */}
+          <button className="icon-btn" data-tour="intro-btn" onClick={showIntro}>
+            Intro
+          </button>
+          <SettingsMenu g={null} />
           <GuideButton />
-          <button className="icon-btn" data-tour="random" onClick={randomAll}>
+          <button className="icon-btn" data-tour="random" onClick={randomAll} disabled={road && step === 4} title={road && step === 4 ? 'No Shortcuts: no rerolls' : undefined}>
             {UI.create.random}
           </button>
         </div>
@@ -281,7 +303,7 @@ export function Create() {
               <Icon name="oath" size={48} />
               <div className="stack" style={{ gap: 6 }}>
                 <div className="sec-title">Take the harder road? No Shortcuts</div>
-                <p className="small muted">Master mode, with no recommendations anywhere, and no Fast break, Simple text or Sim mode, locked for the whole career. Take it and the career carries the No Shortcuts mark on its card, the leaderboards and the career log, with achievements of its own.</p>
+                <p className="small muted">The road picks your player at random: position, archetype, focus, country, hand and name, with no reroll. Then master mode, with no recommendations anywhere, and no Fast break or Sim mode, locked for the whole career (Simple text is allowed). Take it and the career carries the No Shortcuts mark on its card, the leaderboards and the career log, with achievements of its own.</p>
                 <div className="row" style={{ gap: 8 }}>
                   <button className={`btn small${oath ? '' : ' ghost'}`} aria-pressed={oath} onClick={() => (oath || sfx('oath'), setOath(true))}>
                     {oath ? 'Challenge accepted' : 'Accept the challenge'}
@@ -295,6 +317,7 @@ export function Create() {
           )}
           <p className="muted small">The league is the same at every difficulty. What changes is your potential, how fast you grow and how often you get hurt. Want it quicker? Flip the Fast break switch inside the game, any time.</p>
           <div className="start-cards">
+            <WhatsNewCard />
             <MiniGamesCard />
             <CareerLogCard />
             <AchievementsCard />
@@ -307,7 +330,10 @@ export function Create() {
         <section className="stack identity">
           {/* round 25 (owner: too much empty space): a compact card, with the jersey he will wear */}
           <div className="card id-card">
-            <JerseyArt kit={{ ...ID_KIT, word: (name.trim().split(/\s+/).pop() ?? '').toUpperCase() }} number={Number(number) || 0} size={104} label={`Jersey: ${name}, number ${number}`} />
+            {/* round 27 (owner): the player himself, in a plain jersey with his number, as he looks */}
+            <span className="id-avatar">
+              <LookPreview name={name.trim() || 'Rookie'} number={Number(number) || 0} look={look} jersey={jersey} size={132} />
+            </span>
             <div className="stack id-fields">
               <div className="sec-title">Who are you?</div>
               <div className="id-row">
@@ -324,6 +350,7 @@ export function Create() {
                 </button>
               </div>
             </div>
+            <LookPicker look={look} setLook={setLook} jersey={jersey} setJersey={setJersey} />
           </div>
 
           <div className="card stack nation-card">
@@ -536,6 +563,12 @@ export function Create() {
             ))}
           </div>
           <p className="muted small">
+            {road && (
+              <span className="oath-rolled with-icon">
+                <Icon name="oath" size={18} />
+                No Shortcuts: the road picked all of this for you. No rerolls.{' '}
+              </span>
+            )}
             Focus: {focus.map((k) => NAMES.attr[k]).join(' and ')}. Height: still growing, most end up {ht(hMin + (archetype.height ?? 0))}–{ht(hMax + (archetype.height ?? 0))}, some well outside it. This card is a typical {archetype.name.toLowerCase()}; your real starting level is set at tryouts. {UI.create.assignedText}
           </p>
         </section>
@@ -544,12 +577,12 @@ export function Create() {
       <div style={{ height: 14 }} />
       <div className="row-end">
         {step > 0 && (
-          <button className="btn ghost" onClick={() => setStep(step - 1)}>
+          <button className="btn ghost" onClick={() => setStep(road && step === 4 ? 0 : step - 1)}>
             {UI.create.back}
           </button>
         )}
         {step < 4 ? (
-          <button className="btn" data-tour="create-next" disabled={!canNext} onClick={() => setStep(step + 1)}>
+          <button className="btn" data-tour="create-next" disabled={!canNext} onClick={() => (step === 0 && road ? rollRoad() : setStep(step + 1))}>
             {UI.create.next}
           </button>
         ) : (

@@ -4,6 +4,7 @@
 // game itself takes over with that function on screen; the bar at the bottom brings you back.
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Dribbler, MOVES } from '../ui/components/Loading';
 import { App } from '../ui/App';
 import { GuideTour } from '../ui/components/GuideTour';
 import { AchToasts } from '../ui/screens/Achievements';
@@ -12,6 +13,10 @@ import { useStore } from '../store';
 import { CARDS, GROUPS, setAchievements, type DevCard, type Group } from './cards';
 import { Marked, SUMMARY, SummaryPage, searchCards, searchSummary, snippet } from './Summary';
 import { leaveDev } from './mode';
+import { SettingsMenu } from '../ui/components/Settings';
+import { writeReal } from './storage';
+import { ACH_KEY, emptyAch } from '../ui/achievements';
+import { todayKey } from '../engine/mini/daily';
 import { Catalog } from './Catalog';
 import { Inbox } from './Inbox';
 import { SoundBoard } from './SoundBoard';
@@ -33,7 +38,7 @@ export function devSetup(): void {
 
 /** Back to a clean slate between cards: no game, no page, no switches left on. */
 function clean(): void {
-  useStore.setState({ game: null, page: null, mini: null, transition: null, daily: null, tab: 'home', toasts: [], guide: false, master: false, simple: false });
+  useStore.setState({ game: null, page: null, mini: null, transition: null, daily: null, tab: 'home', toasts: [], guide: false, master: false, simple: false, intro: false, thanks: null });
   setAchievements(true);
 }
 
@@ -65,6 +70,43 @@ function press(sel: string): void {
   if (!el) return;
   el.scrollIntoView({ block: 'center' });
   if (el.tagName === 'BUTTON' || el.tagName === 'SUMMARY') el.click();
+}
+
+/**
+ * Round 27 (owner: "for devs, can you add reset achievements? totally resets the achievements so
+ * that i can start over"). Wipes the game's own book on this device (not the deck's, which always
+ * shows everything): every achievement and the totals behind them; daily challenges played before
+ * today stop counting. Asked twice, since it cannot be undone. Guide mode comes back on with it.
+ */
+/** The reset itself, on the game's own keys: an empty book, and the guide on from its first step
+ * (round 27, owner: "when i go into dev deck and reset, can you activate the guide automatically"). */
+function resetGame(): boolean {
+  return writeReal(ACH_KEY, JSON.stringify(emptyAch(todayKey()))) && writeReal('btr-guide-mode', '1') && writeReal('btr-tour-seen', '[]');
+}
+
+function ResetAch() {
+  const [step, setStep] = useState<'idle' | 'sure' | 'done' | 'failed'>('idle');
+  if (step === 'sure')
+    return (
+      <span className="dk-reset" role="group" aria-label="Reset achievements">
+        <small>Wipe every achievement in the game on this device?</small>
+        <button className="btn small danger" onClick={() => setStep(resetGame() ? 'done' : 'failed')} autoFocus>
+          Wipe them
+        </button>
+        <button className="btn small ghost" onClick={() => setStep('idle')}>
+          Keep them
+        </button>
+      </span>
+    );
+  return (
+    <span className="dk-reset">
+      {step === 'done' && <small role="status">Done: the book is empty and counts again from today; Guide mode is on, its tour from the first step.</small>}
+      {step === 'failed' && <small role="status">This browser blocked the reset (no storage).</small>}
+      <button className="btn small ghost" onClick={() => setStep('sure')}>
+        Reset achievements
+      </button>
+    </span>
+  );
 }
 
 export function DevDeck() {
@@ -179,9 +221,14 @@ export function DevDeck() {
         <div>
           <div className="dk-top">
             <div className="kicker">Bench to Rafters · dev mode</div>
-            <button className="btn small ghost" onClick={leaveDev}>
-              Back to the game
-            </button>
+            <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+              <ResetAch />
+              {/* round 27 (owner): the deck's own theme and court, and the rest of the settings */}
+              <SettingsMenu g={null} />
+              <button className="btn small ghost" onClick={leaveDev}>
+                Back to the game
+              </button>
+            </div>
           </div>
           <h1 className="hub-title">The dev deck</h1>
           <p className="prose">
@@ -348,7 +395,7 @@ export function DevDeck() {
       {busy && (
         <div className="dk-dealing" role="status">
           <div className="dk-dealing-card" style={{ ['--suit' as string]: groupOf(busy.group).color }}>
-            <Icon name={busy.icon} size={64} />
+            <Dribbler move={MOVES[CARDS.indexOf(busy) % MOVES.length]} />
             <b>Dealing {busy.title}</b>
             <small>Playing a career to get there…</small>
           </div>

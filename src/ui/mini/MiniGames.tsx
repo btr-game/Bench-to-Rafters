@@ -1,6 +1,7 @@
 // Mini-games (rounds 10-12): Front Office, the three-point and dunk contests, Built in a lab and the legends showdown.
 // They sit beside the career: opening one never touches the career in progress.
 
+import { FootBar } from '../components/FootBar';
 import { Icon } from '../art/Icon';
 import { ICON_FOR } from '../art/icons';
 import { useStore } from '../../store';
@@ -140,6 +141,7 @@ export function MiniGames() {
       {mini === 'street' && <StreetballGame />}
       {mini === 'rhythm' && <LockdownGame />}
       {mini === 'daily' && <DailyGame />}
+      <FootBar where={`mini-games, ${mini === 'hub' || !mini ? 'hub' : MINI_NAME[mini] ?? mini}${hasCareer ? ', with a career' : ''}`} />
     </div>
   );
 }

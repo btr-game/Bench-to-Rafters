@@ -2077,6 +2077,8 @@ export const GUIDE_ICON: Record<string, string> = {
   Difficulty: 'dial',
   'Where you start': 'globe',
   'Position, hand and archetype': 'person',
+  'Your look': 'jersey',
+  'Intro and What’s new': 'news',
   'Focus stats': 'range',
   'Career log': 'cards',
   Continue: 'disk',

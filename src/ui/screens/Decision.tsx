@@ -4,6 +4,7 @@ import { Icon } from '../art/Icon';
 import { HeroArt, archPose } from '../art/Hero';
 import { team as teamOf } from '../selectors';
 import { StoryScene } from '../art/Scene';
+import { BrandLogo, eventIcon } from '../art/careerArt';
 import { SHIFT_COLOR, choiceIcon, shopIcon, shopShift } from '../art/icons';
 import { useState } from 'react';
 import type { Decision, GameState, Offer } from '../../engine/types';
@@ -349,11 +350,15 @@ export function DecisionView({ g, d }: { g: GameState; d: Decision }) {
   return (
     <div className="stack">
       {(d.kind === 'event' || d.kind === 'press' || d.kind === 'brand' || isDraftNight) && <StoryScene g={g} title={d.title} kind={isDraftNight ? 'draft' : d.kind === 'event' ? undefined : d.kind} />}
-      <div>
-        <div className="kicker">{kickerFor(d)}</div>
-        <h2 className="title" style={{ fontFamily: 'var(--f-display)', fontSize: 28, textTransform: 'uppercase', lineHeight: 1 }}>
-          {d.title}
-        </h2>
+      <div className={typeof d.data?.eventId === 'string' ? 'title-with-icon' : undefined}>
+        {/* round 27: every event has a pixel icon of its own */}
+        {typeof d.data?.eventId === 'string' && <Icon name={eventIcon(d.data.eventId)} size={48} />}
+        <div>
+          <div className="kicker">{kickerFor(d)}</div>
+          <h2 className="title" style={{ fontFamily: 'var(--f-display)', fontSize: 28, textTransform: 'uppercase', lineHeight: 1 }}>
+            {d.title}
+          </h2>
+        </div>
       </div>
       {!master && typeof d.data?.fit === 'string' && <span className="fit-tag">Fits your game · {d.data.fit as string}</span>}
       <p>{brief(d.text, simple)}</p>
@@ -382,7 +387,8 @@ export function DecisionView({ g, d }: { g: GameState; d: Decision }) {
         <div className="choices">
           {extra.map((c, i) => (
             <button key={c.id} className={`choice${extra.length > 1 && i === 0 && d.kind !== 'event' ? ' primary' : ''}`} disabled={c.disabled} onClick={() => choose(c.id)}>
-              <span className="label">
+              <span className={`label${d.kind === 'brand' && c.id.includes(':') ? ' with-icon' : ''}`}>
+                {d.kind === 'brand' && c.id.includes(':') && <BrandLogo name={c.id.split(':')[1]} color={(d.data?.colors as Record<string, string> | undefined)?.[c.id.split(':')[1]] ?? '#343A40'} size={30} />}
                 {c.label} {c.risk && <span className={`risk risk-${c.risk.toLowerCase()}`}>{c.risk} risk</span>}
               </span>
               {/* a press answer's tone is the point, so simple text keeps it */}

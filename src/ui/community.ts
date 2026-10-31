@@ -39,6 +39,7 @@ export interface ScoreRow {
   rec: CareerRecord;
   mine: boolean;
   by?: string; // who posted it (the shared page only)
+  house?: boolean; // round 27: one of the game's own house players (house.ts)
 }
 
 /** Each player once, at their best career, best first. */
@@ -58,6 +59,7 @@ export interface StatueRow {
   respects: number;
   paid: boolean; // this viewer has paid respects
   mine: boolean;
+  house?: boolean; // round 27: a house player's statue (house.ts)
 }
 export interface FeedbackRow {
   text: string;

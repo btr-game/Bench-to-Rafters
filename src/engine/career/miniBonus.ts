@@ -151,6 +151,7 @@ export function scaledReward(s: GameState, r: MiniResult): ReturnType<typeof min
 export function claimMini(s: GameState, r: MiniResult): string {
   if (!canClaimMini(s, r.game)) return '';
   const w = scaledReward(s, r);
+  const before = userOvr(s);
   s.flags.miniClaims = claimsUsed(s) + 1;
   s.flags.miniYear = s.year;
   const p = s.player;
@@ -172,6 +173,8 @@ export function claimMini(s: GameState, r: MiniResult): string {
     parts.push(`Reputation +${w.rep}`);
   }
   if (parts.length === 0) return 'No bonus this time. Do better and try again next season.';
+  // round 27: what it did for the career, for the mini-game achievements
+  (s.miniLog ??= []).push({ game: r.game, year: s.year, gain: Math.round((userOvr(s) - before) * 100) / 100, ...(w.range ? { range: w.range } : {}) });
   const text = `${p.name}${isLab(s) ? ' (as lab credits)' : ''}: ${parts.join(', ')}.`;
   logDecision(s, 'minigame', `Mini-game bonus: ${parts.join(', ')}.`);
   s.toast = `Mini-game bonus. ${text}`;

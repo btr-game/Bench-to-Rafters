@@ -1,7 +1,7 @@
 import { SHOP_ITEMS, type WearSlot } from '../../content/shop';
 import type { GameState } from '../../engine/types';
 import { useStore } from '../../store';
-import { PlayerArt, styleLeague } from '../art/Player';
+import { PlayerArt, styleLeague, type KitName } from '../art/Player';
 import { team as teamOf } from '../selectors';
 import { Card } from './bits';
 
@@ -15,7 +15,7 @@ const SLOTS: { slot: WearSlot; label: string }[] = [
   { slot: 'legs', label: 'Leg sleeves' },
 ];
 
-export function WardrobeCard({ g }: { g: GameState }) {
+export function WardrobeCard({ g, kit = 'home' }: { g: GameState; kit?: KitName }) {
   const wear = useStore((s) => s.wear);
   const w = g.player.wardrobe;
   if (!w || w.owned.length === 0) return null;
@@ -23,7 +23,7 @@ export function WardrobeCard({ g }: { g: GameState }) {
   return (
     <Card title="Wardrobe" kicker={`${w.owned.length} accessor${w.owned.length === 1 ? 'y' : 'ies'}`} tour="wardrobe">
       <div className="wardrobe">
-        <PlayerArt name={g.player.name} number={g.player.number} pos={g.player.pos} color={t?.color} team={t?.name} abbr={t?.abbr} league={styleLeague(g.stage)} size={150} wear={w.on} />
+        <PlayerArt name={g.player.name} number={g.player.number} pos={g.player.pos} color={t?.color} team={t?.name} abbr={t?.abbr} league={styleLeague(g.stage)} kit={kit} size={150} wear={w.on} />
         <div className="stack" style={{ gap: 10, minWidth: 0 }}>
           {SLOTS.map(({ slot, label }) => {
             const mine = SHOP_ITEMS.filter((i) => i.wear?.slot === slot && w.owned.includes(i.id));

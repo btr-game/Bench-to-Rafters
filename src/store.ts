@@ -20,7 +20,9 @@ import { careerRecord } from './engine/career/record';
 import { logCareer, type LogResult } from './ui/careerLog';
 import { checkAch, countCareer } from './ui/achievements';
 import { community } from './ui/community';
-import { deleteSlot, importCode, newSlotId, readSlot, writeSlot } from './ui/saves';
+import { importCode, newSlotId, readSlot, writeSlot } from './ui/saves';
+import { DEV } from './dev/mode';
+import { chooseLook } from './content/looks';
 import type { AchTier } from './engine/achievements';
 
 export type Tab = 'home' | 'season' | 'player' | 'league' | 'records';
@@ -40,6 +42,15 @@ interface Store {
   tab: Tab;
   theme: Theme;
   transition: Transition | null;
+  /** The intro page is up (round 27): a first visit, until Start. */
+  intro: boolean;
+  endIntro: () => void;
+  showIntro: () => void;
+  /** The career just left, for the thank-you page (round 27): the first time only. */
+  thanks: GameState | null;
+  endThanks: () => void;
+  /** Set while a heavy step waits its turn (round 27): the loading pop-out shows if it runs long. */
+  loading: number | null;
   start: (input: CreateInput, seed?: number) => void;
   choose: (choiceId: string) => void;
   advance: () => void;
@@ -127,6 +138,44 @@ const saveFlag = (key: string, on: boolean): void => {
   }
 };
 
+/**
+ * Round 27 (owner: "for a user that has never played before (no record) ... activate the guide
+ * automatically"): Guide mode starts on for someone with nothing on this device yet: no saved
+ * career, no career log, no achievement, no daily challenge, and no say on the switch so far.
+ * Not in the dev deck, whose cards would all open under the tour.
+ */
+function noRecord(): boolean {
+  if (DEV) return false;
+  try {
+    const has = (k: string) => {
+      const v = localStorage.getItem(k);
+      if (!v) return false;
+      const d = JSON.parse(v) as unknown;
+      return Array.isArray(d) ? d.length > 0 : typeof d === 'object' && d !== null && Object.keys((d as { got?: object }).got ?? d).length > 0;
+    };
+    return !['btr-saves-v2', 'btr-save-v1', 'btr-log-v1', 'btr-achv-v1', 'btr-daily'].some(has);
+  } catch {
+    return false;
+  }
+}
+function newcomer(): boolean {
+  try {
+    if (localStorage.getItem('btr-guide-mode') !== null || !noRecord()) return false;
+  } catch {
+    return false;
+  }
+  saveFlag('btr-guide-mode', true);
+  return true;
+}
+/** Round 27 (owner: "for first starters, an intro page"): once, before anything is on the device. */
+function firstIntro(): boolean {
+  try {
+    return localStorage.getItem('btr-intro-seen') === null && noRecord();
+  } catch {
+    return false;
+  }
+}
+
 function loadCourt(): Court {
   try {
     const c = localStorage.getItem('btr-court');
@@ -163,10 +212,41 @@ function linkedPage(): Page | null {
   }
 }
 
-/** A No Shortcuts career (round 25) plays in master mode with the full text, whatever the switches
- * said before it opened; the switches stay put until it closes. */
-function oathLock(g: GameState): Partial<Pick<Store, 'master' | 'simple'>> {
-  return g.flags.oath ? { master: true, simple: false } : {};
+/** A No Shortcuts career (round 25) plays in master mode, whatever the switch said before it opened;
+ * the switch stays put until it closes. (Round 27, owner: "simple text could be allowed in harder
+ * road reality": Simple text is free now.) */
+function oathLock(g: GameState): Partial<Pick<Store, 'master'>> {
+  return g.flags.oath ? { master: true } : {};
+}
+
+// Round 27 (owner: "there's small lags here and there; when pages lag, add a small loading pop
+// out"). The steps that run the engine or swap a whole page wait one frame, so the pop-out is on
+// screen before the work blocks the page. Its animations run on the compositor, so it keeps
+// dribbling while the work runs, and it only fades in if the work takes more than a moment
+// (components/Loading.tsx). Steps called in a row run in the same order, together.
+let queued: (() => void)[] = [];
+export function later(fn: () => void): void {
+  if (typeof window === 'undefined' || typeof requestAnimationFrame === 'undefined') return fn();
+  queued.push(fn);
+  if (queued.length > 1) return;
+  useStore.setState({ loading: Math.floor(Math.random() * 2 ** 30) });
+  let went = false;
+  const go = () => {
+    if (went) return;
+    went = true;
+    // after the frame that shows the pop-out has painted
+    setTimeout(() => {
+      const run = queued;
+      queued = [];
+      try {
+        for (const f of run) f();
+      } finally {
+        useStore.setState({ loading: null });
+      }
+    }, 0);
+  };
+  requestAnimationFrame(go);
+  setTimeout(go, 80); // a hidden tab paints no frames
 }
 
 export const useStore = create<Store>((set, get) => ({
@@ -176,7 +256,6 @@ export const useStore = create<Store>((set, get) => ({
   court: loadCourt(),
   simple: loadFlag('btr-simple'),
   toggleSimple: () => {
-    if (get().game?.flags.oath) return; // No Shortcuts (round 25): full text for the whole career
     const simple = !get().simple;
     saveFlag('btr-simple', simple);
     set({ simple });
@@ -188,47 +267,63 @@ export const useStore = create<Store>((set, get) => ({
     saveFlag('btr-master', master);
     set({ master });
   },
-  guide: loadFlag('btr-guide-mode'),
+  guide: loadFlag('btr-guide-mode') || newcomer(),
   toggleGuide: () => {
     const guide = !get().guide;
     saveFlag('btr-guide-mode', guide);
     set({ guide });
   },
   transition: null,
-  start: (input, seed) => {
-    const s = seed ?? Math.floor(Math.random() * 2 ** 31);
-    const game = newGame(s, input);
-    fastForward(game);
-    set({ game, slot: newSlotId(), tab: 'home', transition: null, mini: null, seen: allSeen(game), ...oathLock(game) });
+  intro: firstIntro(),
+  endIntro: () => {
+    saveFlag('btr-intro-seen', true);
+    set({ intro: false });
   },
+  showIntro: () => set({ intro: true }),
+  thanks: null,
+  endThanks: () => {
+    saveFlag('btr-thanks-seen', true);
+    set({ thanks: null });
+  },
+  loading: null,
+  start: (input, seed) =>
+    later(() => {
+      const s = seed ?? Math.floor(Math.random() * 2 ** 31);
+      const game = newGame(s, input);
+      fastForward(game);
+      set({ game, slot: newSlotId(), tab: 'home', transition: null, mini: null, seen: allSeen(game), ...oathLock(game) });
+    }),
   seen: {},
   saving: 'ok',
   // round 26 (owner: "just give me the link to the community page"): #community opens it
   page: linkedPage(),
-  setPage: (page) => {
-    set({ page });
-    top();
-  },
+  setPage: (page) =>
+    later(() => {
+      set({ page });
+      top();
+    }),
   logged: null,
   tour: false,
   toasts: [],
   dismissToast: (id) => set({ toasts: get().toasts.filter((x) => x.id !== id) }),
   daily: null,
-  startDaily: () => {
-    const day = todayKey();
-    const game = newGame(dailySeed(day), dailyInput(day));
-    game.flags.daily = 1;
-    fastForward(game);
-    const st = get();
-    set({ daily: { day, stash: st.daily?.stash ?? st.game, simple: st.daily?.simple ?? st.simple }, game, simple: true, tab: 'home', transition: null, mini: null, seen: allSeen(game) });
-    top();
-  },
-  endDaily: () => {
-    const d = get().daily;
-    if (!d) return;
-    set({ daily: null, game: d.stash, simple: d.simple, tab: 'home', transition: null, mini: null, seen: d.stash ? allSeen(d.stash) : {} });
-    top();
-  },
+  startDaily: () =>
+    later(() => {
+      const day = todayKey();
+      const game = newGame(dailySeed(day), dailyInput(day));
+      game.flags.daily = 1;
+      fastForward(game);
+      const st = get();
+      set({ daily: { day, stash: st.daily?.stash ?? st.game, simple: st.daily?.simple ?? st.simple }, game, simple: true, tab: 'home', transition: null, mini: null, seen: allSeen(game) });
+      top();
+    }),
+  endDaily: () =>
+    later(() => {
+      const d = get().daily;
+      if (!d) return;
+      set({ daily: null, game: d.stash, simple: d.simple, tab: 'home', transition: null, mini: null, seen: d.stash ? allSeen(d.stash) : {} });
+      top();
+    }),
   slot: null,
   resume: async (id) => {
     const game = await readSlot(id);
@@ -245,51 +340,53 @@ export const useStore = create<Store>((set, get) => ({
     set({ game, slot, tab: 'home', transition: null, mini: null, seen: allSeen(game), daily: null, ...oathLock(game) });
     return true;
   },
-  choose: (choiceId) => {
-    const g = get().game;
-    if (!g) return;
-    const next = structuredClone(g);
-    engineChoose(next, choiceId);
-    const before = next.step;
-    fastForward(next);
-    set({ game: next });
-    if (next.flags.fast && next.step !== before) top();
-  },
-  advance: () => {
-    const g = get().game;
-    if (!g) return;
-    const before = { step: g.step, games: g.season?.games.length ?? 0, post: g.season?.postGames.length ?? 0 };
-    const t0 = teamOf(g);
-    const rec = { w: t0?.w ?? 0, l: t0?.l ?? 0 };
-    const next = structuredClone(g);
-    engineAdvance(next);
-    let transition: Transition | null = null;
-    if ((before.step === 'preseason' || before.step === 'midseason') && next.season) {
-      const t = teamOf(next);
-      const pre = before.step === 'preseason' ? (next.season.preGames ?? []) : [];
-      const cup = before.step === 'preseason' ? (next.season.cupGames ?? []) : [];
-      const games = [...pre, ...next.season.games.slice(before.games), ...cup, ...next.season.postGames.slice(before.post)];
-      transition = {
-        kind: 'half',
-        label: before.step === 'preseason' ? 'First half' : 'Second half and postseason',
-        teamName: t?.name ?? '',
-        color: t?.color ?? '#2A2F36',
-        games,
-        w: rec.w,
-        l: rec.l,
-      };
-    } else if (before.step === 'offseason' && next.step === 'preseason') {
-      const t = teamOf(next);
-      transition = { kind: 'season', label: seasonLabel(next.year), sub: t ? t.name : '', color: t?.color ?? '#2A2F36' };
-    }
-    if (next.flags.fast) {
-      // fast break: no transition screens, straight on to the next real choice
+  choose: (choiceId) =>
+    later(() => {
+      const g = get().game;
+      if (!g) return;
+      const next = structuredClone(g);
+      engineChoose(next, choiceId);
+      const before = next.step;
       fastForward(next);
-      transition = null;
-    }
-    set({ game: next, tab: 'home', transition });
-    top();
-  },
+      set({ game: next });
+      if (next.flags.fast && next.step !== before) top();
+    }),
+  advance: () =>
+    later(() => {
+      const g = get().game;
+      if (!g) return;
+      const before = { step: g.step, games: g.season?.games.length ?? 0, post: g.season?.postGames.length ?? 0 };
+      const t0 = teamOf(g);
+      const rec = { w: t0?.w ?? 0, l: t0?.l ?? 0 };
+      const next = structuredClone(g);
+      engineAdvance(next);
+      let transition: Transition | null = null;
+      if ((before.step === 'preseason' || before.step === 'midseason') && next.season) {
+        const t = teamOf(next);
+        const pre = before.step === 'preseason' ? (next.season.preGames ?? []) : [];
+        const cup = before.step === 'preseason' ? (next.season.cupGames ?? []) : [];
+        const games = [...pre, ...next.season.games.slice(before.games), ...cup, ...next.season.postGames.slice(before.post)];
+        transition = {
+          kind: 'half',
+          label: before.step === 'preseason' ? 'First half' : 'Second half and postseason',
+          teamName: t?.name ?? '',
+          color: t?.color ?? '#2A2F36',
+          games,
+          w: rec.w,
+          l: rec.l,
+        };
+      } else if (before.step === 'offseason' && next.step === 'preseason') {
+        const t = teamOf(next);
+        transition = { kind: 'season', label: seasonLabel(next.year), sub: t ? t.name : '', color: t?.color ?? '#2A2F36' };
+      }
+      if (next.flags.fast) {
+        // fast break: no transition screens, straight on to the next real choice
+        fastForward(next);
+        transition = null;
+      }
+      set({ game: next, tab: 'home', transition });
+      top();
+    }),
   changeFocus: (keys) => {
     const g = get().game;
     if (!g) return;
@@ -399,14 +496,15 @@ export const useStore = create<Store>((set, get) => ({
     changePosition(next, pos);
     set({ game: next });
   },
-  retire: () => {
-    const g = get().game;
-    if (!g) return;
-    const next = structuredClone(g);
-    retireByChoice(next);
-    set({ game: next, tab: 'home', transition: null });
-    top();
-  },
+  retire: () =>
+    later(() => {
+      const g = get().game;
+      if (!g) return;
+      const next = structuredClone(g);
+      retireByChoice(next);
+      set({ game: next, tab: 'home', transition: null });
+      top();
+    }),
   dismissMoment: () => {
     const g = get().game;
     if (!g) return;
@@ -416,11 +514,15 @@ export const useStore = create<Store>((set, get) => ({
     top();
   },
   endTransition: () => set({ transition: null }),
-  // ending a career is the only thing that clears the save (round 24)
+  // round 27 (owner: "for end career, instead of discarding that game totally, make the user be
+  // able to pick it up again from Your careers"): leaving a career keeps its save; only Delete in
+  // Your careers removes one
   reset: () => {
-    const slot = get().slot;
-    if (slot) deleteSlot(slot);
-    set({ game: null, slot: null, tab: 'home', transition: null });
+    flushSave();
+    // round 27 (owner): the first time someone moves on to a new career, a thank-you page first
+    const g = get().game;
+    const thanks = g && !g.flags.daily && g.mode !== 'lab' && !loadFlag('btr-thanks-seen') ? g : null;
+    set({ game: null, slot: null, tab: 'home', transition: null, thanks });
   },
   mini: null,
   claimMini: (r) => {
@@ -431,19 +533,21 @@ export const useStore = create<Store>((set, get) => ({
     set({ game: next });
     return text;
   },
-  setMini: (mini) => {
-    // round 24 (owner): no mini-games during a daily challenge
-    if (mini && get().game?.flags.daily) return;
-    set({ mini });
-    top();
-  },
-  setTab: (tab) => {
-    const g = get().game;
-    // leaving a tab and opening one both count as having seen them
-    const seen = g ? { ...get().seen, [get().tab]: tabKey(g, get().tab), [tab]: tabKey(g, tab) } : get().seen;
-    set({ tab, seen });
-    top();
-  },
+  setMini: (mini) =>
+    later(() => {
+      // round 24 (owner): no mini-games during a daily challenge
+      if (mini && get().game?.flags.daily) return;
+      set({ mini });
+      top();
+    }),
+  setTab: (tab) =>
+    later(() => {
+      const g = get().game;
+      // leaving a tab and opening one both count as having seen them
+      const seen = g ? { ...get().seen, [get().tab]: tabKey(g, get().tab), [tab]: tabKey(g, tab) } : get().seen;
+      set({ tab, seen });
+      top();
+    }),
   setTheme: (theme) => {
     try {
       if (theme === 'auto') localStorage.removeItem('btr-theme');
@@ -463,6 +567,12 @@ export const useStore = create<Store>((set, get) => ({
     set({ court });
   },
 }));
+
+// round 27: the career's chosen look applies wherever his name is drawn (content/looks.ts)
+useStore.subscribe((now) => {
+  const g = now.game ?? now.thanks;
+  if (g?.player.look) chooseLook(g.player.name, g.player.look);
+});
 
 // save a moment after each change (a whole career is a few hundred KB of JSON). Round 24: the
 // autosave only ever writes a career, never clears one: going back to the start page, or ending a
@@ -507,15 +617,18 @@ useStore.subscribe((now, before) => {
   const g = now.game;
   if (g && before.game && g !== before.game && g.step === 'retired' && before.game.step !== 'retired' && g.mode !== 'lab') countCareer(g, now.master);
   if (achTimer) clearTimeout(achTimer);
-  achTimer = setTimeout(() => {
-    const fresh = checkAch(useStore.getState().game);
-    if (!fresh.length) return;
-    // a flood (an old save, a long career at once) shows three and a count of the rest
-    const shown: Store['toasts'] = fresh.slice(0, 3).map((a) => ({ id: a.id, name: a.name, tier: a.tier }));
-    if (fresh.length > 3) shown[2] = { ...shown[2], more: fresh.length - 3 };
-    useStore.setState({ toasts: [...useStore.getState().toasts, ...shown].slice(-4) });
-  }, 400);
+  achTimer = setTimeout(achievementsNow, 400);
 });
+
+/** Checks the book now and raises a toast for anything new (also after a mini-game run, round 27). */
+export function achievementsNow(): void {
+  const fresh = checkAch(useStore.getState().game);
+  if (!fresh.length) return;
+  // a flood (an old save, a long career at once) shows three and a count of the rest
+  const shown: Store['toasts'] = fresh.slice(0, 3).map((a) => ({ id: a.id, name: a.name, tier: a.tier }));
+  if (fresh.length > 3) shown[2] = { ...shown[2], more: fresh.length - 3 };
+  useStore.setState({ toasts: [...useStore.getState().toasts, ...shown].slice(-4) });
+}
 
 // closing the tab inside the half second still keeps the last move
 if (typeof window !== 'undefined') window.addEventListener('pagehide', () => saveTimer && flushSave());

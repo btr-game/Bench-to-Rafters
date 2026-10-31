@@ -7,6 +7,7 @@ import { LEVELS } from '../../engine/balance';
 import { HeroArt, archPose } from '../art/Hero';
 import { kitFor, styleLeague } from '../art/Player';
 import { seasonLabel } from '../format';
+import { ink } from '../art/color';
 import { Card } from './bits';
 
 export function LegendarySeasons({ g }: { g: GameState }) {
@@ -20,7 +21,7 @@ export function LegendarySeasons({ g }: { g: GameState }) {
           const h = x.season;
           const kit = kitFor(h.teamName, '', h.teamColor, 'home', styleLeague(h.stage));
           return (
-            <article key={h.year} className={`legend-card rank-${Math.min(x.rank, 6)}`} style={{ ['--team' as string]: h.teamColor }}>
+            <article key={h.year} className={`legend-card rank-${Math.min(x.rank, 6)}`} style={{ ['--team' as string]: h.teamColor, ['--team-ink' as string]: ink(h.teamColor) }}>
               <div className="legend-band">
                 <span className="num">{seasonLabel(h.year)}</span>
                 <span>Age {h.age}</span>

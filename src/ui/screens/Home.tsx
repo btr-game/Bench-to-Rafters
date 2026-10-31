@@ -51,6 +51,9 @@ import { fmtMoney, ht, ordinal, pg, seasonLabel, signed } from "../format";
 import { team } from "../selectors";
 import { TeamArt } from "../art/Crest";
 import { styleLeague } from "../art/Player";
+import { Icon } from "../art/Icon";
+import { leagueIcon, levelIcon } from "../art/careerArt";
+import { intLeagueOf } from "../../engine/world/leagues";
 import { breakthroughBar } from "../../engine/career/breakthrough";
 import { rosterRank, winningEdge } from "../../engine/career/team";
 import { ovrOf } from "../../engine/player/ovr";
@@ -191,7 +194,16 @@ function SeasonHeader({ g }: { g: GameState }) {
           </div>
         ) : (
           s && (
-            <div className="muted small">
+            <div className="muted small lvl-line">
+              {/* round 27: the level (or the overseas league) has an icon of its own */}
+              <Icon
+                name={
+                  s.level === "INT" && g.teamId
+                    ? leagueIcon(intLeagueOf(g.teamId).key)
+                    : levelIcon(s.level)
+                }
+                size={18}
+              />
               {g.league?.label ?? LEVELS[s.level].name}
             </div>
           )

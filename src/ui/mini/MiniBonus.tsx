@@ -1,8 +1,9 @@
 // Career bonus panel shown when a mini-game ends (engine/career/miniBonus.ts).
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { MiniEnd } from './MiniGames';
-import { useStore } from '../../store';
+import { achievementsNow, useStore } from '../../store';
+import { recordMini } from '../achievements';
 import { canClaimMini, claimsUsed, MINI_CLAIMS, scaledReward, type MiniResult } from '../../engine/career/miniBonus';
 import { NAMES } from '../../content/strings';
 import type { AttrKey } from '../../engine/types';
@@ -12,6 +13,14 @@ export function MiniBonus({ result }: { result: MiniResult }) {
   const game = useStore((s) => s.game);
   const claim = useStore((s) => s.claimMini);
   const [text, setText] = useState('');
+  // round 27: every finished run counts for the arcade achievements, once (career or not)
+  const counted = useRef(false);
+  useEffect(() => {
+    if (counted.current) return;
+    counted.current = true;
+    recordMini(result);
+    achievementsNow();
+  }, [result]);
   if (!game || game.step === 'retired') return <MiniEnd />;
   const reward = scaledReward(game, result);
   const left = MINI_CLAIMS.perSeason - claimsUsed(game);

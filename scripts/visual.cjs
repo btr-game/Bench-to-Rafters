@@ -291,7 +291,11 @@ async function runConfig(browser, cfg) {
     for (const e of errors) found.push({ kind: 'error', el: '', detail: e });
     report[id] = missed ? [{ kind: 'skipped', el: '', detail: await missed.innerText() }] : found;
     await page.screenshot({ path: path.join(dir, `${id}.png`), fullPage: true }).catch(() => {});
-    await page.evaluate(() => window.__deck.back());
+    // round 27: a card that reloads the page is a bug of its own, not the end of the run
+    await page.evaluate(() => window.__deck.back()).catch(async (e) => {
+      report[id] = [...(report[id] ?? []), { kind: 'error', el: '', detail: `the page navigated away (${String(e.message).split('\n')[0]})` }];
+      await page.waitForFunction(() => window.__deck, null, { timeout: 30000 }).catch(() => {});
+    });
     await page.waitForTimeout(150);
   }
   fs.writeFileSync(path.join(dir, 'report.json'), JSON.stringify(report, null, 1));

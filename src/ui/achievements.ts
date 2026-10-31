@@ -6,13 +6,21 @@ import { ACHIEVEMENTS, NO_TOTALS, earnedNow, type Achievement, type CareerTotals
 import type { GameState } from '../engine/types';
 import { DEV } from '../dev/mode';
 import { count, nbaTitles } from '../engine/awards/legacy';
+import { addMiniResult } from '../engine/achievementsMini';
+import type { MiniResult } from '../engine/career/miniBonus';
 
 const KEY = 'btr-achv-v1';
 
 export interface AchSaved {
   got: Record<string, { at: string; who: string }>;
   totals: CareerTotals;
+  /** The day of a reset (round 27, the dev deck): daily challenges before it no longer count. */
+  since?: string;
 }
+
+/** A book with nothing in it, counting from today: what the dev deck's Reset achievements writes. */
+export const emptyAch = (today: string): AchSaved => ({ got: {}, totals: { ...NO_TOTALS }, since: today });
+export const ACH_KEY = KEY;
 
 export function loadAch(): AchSaved {
   try {
@@ -20,7 +28,7 @@ export function loadAch(): AchSaved {
     // round 25: the old dev deck page, opened from a file, could write its "everything earned" book
     // into the game's storage; those entries are not the player's and are dropped
     if (d?.got && !DEV) for (const id of Object.keys(d.got)) if (d.got[id].who === 'Dev deck') delete d.got[id];
-    if (d?.got) return { got: d.got, totals: { ...NO_TOTALS, ...d.totals } };
+    if (d?.got) return { got: d.got, totals: { ...NO_TOTALS, ...d.totals }, since: d.since };
   } catch {
     // a blocked or broken store reads as nothing earned yet
   }
@@ -35,10 +43,10 @@ function saveAch(d: AchSaved): void {
   }
 }
 
-/** Days with a daily challenge run on this device (Daily.tsx keeps one entry a day). */
-function dailyDays(): number {
+/** Days with a daily challenge run on this device (Daily.tsx keeps one entry a day), since a reset. */
+function dailyDays(since?: string): number {
   try {
-    return Object.keys(JSON.parse(localStorage.getItem('btr-daily') ?? '{}') as object).length;
+    return Object.keys(JSON.parse(localStorage.getItem('btr-daily') ?? '{}') as object).filter((day) => !since || day >= since).length;
   } catch {
     return 0;
   }
@@ -58,10 +66,17 @@ export function countCareer(g: GameState, master: boolean): void {
   saveAch(d);
 }
 
+/** A mini-game run just ended (round 27): count it for the arcade achievements. */
+export function recordMini(r: MiniResult): void {
+  const d = loadAch();
+  d.totals.mini = addMiniResult(d.totals.mini, r);
+  saveAch(d);
+}
+
 /** Checks everything against the career on screen; returns what is new (and keeps it). */
 export function checkAch(g: GameState | null): Achievement[] {
   const d = loadAch();
-  d.totals.daily = Math.max(d.totals.daily, dailyDays());
+  d.totals.daily = Math.max(d.totals.daily, dailyDays(d.since));
   const fresh = earnedNow(g, d.totals).filter((id) => !d.got[id]);
   if (!fresh.length) return [];
   const at = new Date().toISOString();

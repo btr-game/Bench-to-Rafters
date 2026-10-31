@@ -25,6 +25,15 @@ function Toggle({ label, note, on, onClick, tour, locked }: { label: string; not
   );
 }
 
+/** Round 27: the menu opens under its button; where that would leave the screen (the start page's
+ * button sits at the left on a phone), it slides back in, 16px from the edge. */
+const keepOnScreen = (el: HTMLDivElement | null) => {
+  if (!el) return;
+  const r = el.getBoundingClientRect();
+  const over = r.left < 16 ? 16 - r.left : r.right > innerWidth - 16 ? innerWidth - 16 - r.right : 0;
+  if (over) el.style.transform = `translateX(${over}px)`;
+};
+
 export function SettingsMenu({ g }: { g: GameState | null }) {
   const [open, setOpen] = useState(false);
   const [armed, setArmed] = useState(false);
@@ -48,6 +57,9 @@ export function SettingsMenu({ g }: { g: GameState | null }) {
   useEffect(() => {
     if (!open) return;
     const close = (e: MouseEvent | KeyboardEvent) => {
+      // round 27 (owner: "in guide mode i click Got it but the settings bar closes"): the guide's
+      // tip over the menu is part of it, not a click outside
+      if (!(e instanceof KeyboardEvent) && (e.target as Element | null)?.closest?.('.tour-tip, .tour-ring, .guide-tip')) return;
       if (e instanceof KeyboardEvent ? e.key === 'Escape' : !box.current?.contains(e.target as Node)) {
         setOpen(false);
         setArmed(false);
@@ -73,7 +85,7 @@ export function SettingsMenu({ g }: { g: GameState | null }) {
         <span className="hide-narrow">Settings</span>
       </button>
       {open && (
-        <div className="set-menu" role="menu">
+        <div className="set-menu" role="menu" ref={keepOnScreen}>
           <div className="set-row" data-tour="set-theme">
             <b>Theme</b>
             <div className="seg small-seg">
@@ -101,11 +113,11 @@ export function SettingsMenu({ g }: { g: GameState | null }) {
             <div className="set-new" data-tour="set-new">
               {armed && !retired ? (
                 <div className="set-confirm" role="group" aria-label="Start a new career?">
-                  <b>End this career and start a new one?</b>
-                  <small>Its save is deleted. This cannot be undone.</small>
+                  <b>Leave this career and start a new one?</b>
+                  <small>It stays in Your careers on the start page: pick it up again any time.</small>
                   <div className="set-confirm-row">
-                    <button className="btn danger" onClick={() => (reset(), setOpen(false), setArmed(false))} autoFocus>
-                      Yes, start over
+                    <button className="btn" onClick={() => (reset(), setOpen(false), setArmed(false))} autoFocus>
+                      Yes, new career
                     </button>
                     <button className="btn ghost" onClick={() => setArmed(false)}>
                       Keep playing
@@ -128,7 +140,7 @@ export function SettingsMenu({ g }: { g: GameState | null }) {
           )}
           <Toggle label="Sound effects" note="Chiptune sounds for clicks, wins, titles and the rest." on={snd.sfx} onClick={() => (setSfx(!snd.sfx), setSnd(soundSettings()))} tour="set-sfx" />
           <Toggle label="Music" note="A soft loop while you play a career." on={snd.music} onClick={() => (setMusic(!snd.music, !!g), setSnd(soundSettings()))} tour="set-music" />
-          <Toggle label="Simple text" note="Hide descriptions, keep the choices." on={simple} onClick={toggleSimple} tour="set-simple" locked={!!g?.flags.oath} />
+          <Toggle label="Simple text" note="Hide descriptions, keep the choices." on={simple} onClick={toggleSimple} tour="set-simple" />
           <Toggle label="Guide mode" note={master ? 'Off while Master mode is on.' : 'Highlights the next thing to do.'} on={guide && !master} onClick={toggleGuide} tour="set-guide" />
           <Toggle label="Master mode" note="No recommendations: no scouts' calls, fit tags, suggested deals or guide hints. You read the game yourself." on={master} onClick={toggleMaster} tour="set-master" locked={!!g?.flags.oath} />
           <div className="set-keys hide-touch">

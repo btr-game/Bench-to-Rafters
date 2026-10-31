@@ -1,8 +1,10 @@
 // The achievement book (round 24) and the banners that announce a new one. Earned ones show how
 // they were earned, when and by whom; the rest show only their name, as a riddle.
 
+import { FootBar } from '../components/FootBar';
 import { useEffect, useMemo, useState } from 'react';
 import { ACHIEVEMENTS, ACH_TIERS, type AchTier } from '../../engine/achievements';
+import { MINI_TOTALS_ONLY } from '../../engine/achievementsMini';
 import { useStore } from '../../store';
 import { PageTop } from '../components/PageTop';
 import { loadAch } from '../achievements';
@@ -61,7 +63,11 @@ export function AchievementsCard() {
   );
 }
 
-type Filter = 'all' | 'got' | 'open' | AchTier;
+type Filter = 'all' | 'got' | 'open' | 'arcade' | 'minicareer' | AchTier;
+
+// round 27: the mini-game achievements, in the arcade and in a career (engine/achievementsMini.ts)
+const ARCADE = new Set(MINI_TOTALS_ONLY);
+const isMini = (id: string) => id.startsWith('mg-') || id === 'side';
 
 /** The book: every achievement by tier; the ones not earned yet keep their secret. */
 export function AchievementBook() {
@@ -70,7 +76,10 @@ export function AchievementBook() {
   const [filter, setFilter] = useState<Filter>('all');
   const got = saved.got;
   const list = useMemo(
-    () => ACHIEVEMENTS.filter((a) => (filter === 'all' ? true : filter === 'got' ? !!got[a.id] : filter === 'open' ? !got[a.id] : a.tier === filter)),
+    () =>
+      ACHIEVEMENTS.filter((a) =>
+        filter === 'all' ? true : filter === 'got' ? !!got[a.id] : filter === 'open' ? !got[a.id] : filter === 'arcade' ? ARCADE.has(a.id) : filter === 'minicareer' ? isMini(a.id) && !ARCADE.has(a.id) : a.tier === filter,
+      ),
     [filter, got],
   );
   const total = Object.keys(got).length;
@@ -112,6 +121,8 @@ export function AchievementBook() {
               ['all', 'All'],
               ['got', 'Earned'],
               ['open', 'Still a riddle'],
+              ['arcade', 'Mini-games'],
+              ['minicareer', 'Mini-games in a career'],
             ] as [Filter, string][]
           ).map(([k, l]) => (
             <button key={k} aria-pressed={filter === k} onClick={() => setFilter(k)}>
@@ -146,6 +157,7 @@ export function AchievementBook() {
           })}
         </div>
       </section>
+      <FootBar where="achievement book" />
     </div>
   );
 }

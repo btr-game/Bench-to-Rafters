@@ -1,5 +1,6 @@
 // The career log (round 24): the career cards of the last five finished careers, on this device.
 
+import { FootBar } from '../components/FootBar';
 import { useEffect, useState } from 'react';
 import type { CareerRecord } from '../../engine/career/record';
 import { MODES } from '../../engine/balance';
@@ -176,6 +177,7 @@ export function CareerLog() {
           />
         ))}
       </section>
+      <FootBar where="career log page" />
     </div>
   );
 }

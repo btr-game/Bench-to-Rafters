@@ -41,6 +41,8 @@ export const RHYTHM = {
     ['C', 0.5],
   ] as [Grade, number][],
 };
+/** Every tempo a run can play the beat at (the dev deck's sound board lists them too). */
+export const TEMPOS = [100, 104, 108, 112, 116, 120, 124].filter((b) => b >= RHYTHM.bpm[0] && b <= RHYTHM.bpm[1]);
 type Grade = 'S' | 'A' | 'B' | 'C' | 'D';
 
 export const PATTERNS: Pattern[] = [
@@ -87,7 +89,7 @@ export interface Chart {
 /** A run: sets in random order to the beat, mirrored at random, never quiet for 3 seconds. */
 export function makeChart(seed: number): Chart {
   const r = makeRng(seed);
-  const bpm = pick(r, [100, 104, 108, 112, 116, 120, 124].filter((b) => b >= RHYTHM.bpm[0] && b <= RHYTHM.bpm[1]));
+  const bpm = pick(r, TEMPOS);
   const beat = 60 / bpm;
   const length = RHYTHM.seconds[0] + next(r) * (RHYTHM.seconds[1] - RHYTHM.seconds[0]);
   const notes: Note[] = [];

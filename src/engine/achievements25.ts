@@ -390,7 +390,7 @@ export const ACHIEVEMENTS_25: Ach25[] = [
   A('w-900', 'Win Machine', 'hof', 'Win 900 NBA regular-season games.', (f) => f.nba.reduce((a, h) => a + h.w, 0) >= 900),
   A('w-finals5', 'June Is Busy', 'hof', 'Reach the NBA Finals five times.', (f) => f.nba.filter((h) => /Champion|Finals/i.test(h.result)).length >= 5),
   // ---- No Shortcuts (round 25, owner: honour the players who take Reality the hardest way) ----
-  A('ns-season', 'No Shortcuts', 'starter', 'Finish a season of a No Shortcuts career: Reality hits hard, master mode, no fast break, simple text or sim.', (f) => !!f.g.flags.oath && f.g.history.length > 0),
+  A('ns-season', 'No Shortcuts', 'starter', 'Finish a season of a No Shortcuts career: Reality hits hard, a random player, master mode, no fast break or sim.', (f) => !!f.g.flags.oath && f.g.history.length > 0),
   A('ns-nba', 'The Hard Way', 'allstar', 'Reach the NBA in a No Shortcuts career.', (f) => !!f.g.flags.oath && f.nba.length > 0),
   A('ns-allstar', 'Earned, Not Given', 'hof', 'Make an All-Star team in a No Shortcuts career.', (f) => !!f.g.flags.oath && won(f, 'ALLSTAR') > 0),
   A('ns-ring', 'Iron Crown', 'hof', 'Win an NBA title in a No Shortcuts career.', (f) => !!f.g.flags.oath && f.nbaTitlesYears.length > 0),

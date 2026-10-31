@@ -50,7 +50,20 @@ export interface ScoutReport {
   confidence: 'low' | 'medium' | 'high';
   odds: Record<keyof typeof ODDS_CURVES, number>;
   notes: string[];
+  /** Before college or a pro career (round 27): a rough read, shown in broad strokes. */
+  early: boolean;
+  /** The tiers the range spans, low to high ("NBA rotation player to All-Star level"). */
+  peakSpan: string;
 }
+
+/**
+ * Round 27 (owner: "i still dont like the projected peak system, especially on the earlier
+ * career. it either overestimates or kind of spoils the potential of the player. moderate it,
+ * especially before college or proper career"). In high school and youth academies the scouts
+ * mostly go on what they see on the court: their read of his ceiling counts for half, and the
+ * range never gets narrower than this many points either side.
+ */
+export const EARLY_SCOUT = { seenWeight: 0.5, minSd: 8 };
 
 // Gauss-Hermite style weights for integrating over the ceiling's uncertainty
 const NODES = [-2, -1, 0, 1, 2];
@@ -62,15 +75,20 @@ export function scoutReport(s: GameState): ScoutReport {
   // the visible estimate: the scouts' range when there is one, otherwise a broad guess
   let mid: number;
   let sd: number;
+  // what he shows on the court: how far ahead of the curve he is (fitted to the harness)
+  const f = MODES[s.mode ?? 'standard'].scout;
+  const seen = f.mid + (ovr - expectedOvrAt(f.mid, p.age)) * f.slope;
+  const early = s.stage === 'HS';
   if (p.scoutRange) {
     mid = (p.scoutRange[0] + p.scoutRange[1]) / 2;
     sd = scoutSd(p.age) + 1;
+    if (early) mid = (1 - EARLY_SCOUT.seenWeight) * mid + EARLY_SCOUT.seenWeight * seen;
   } else {
-    // freshman year: project from how far ahead of the curve he is (fitted to the harness)
-    const f = MODES[s.mode ?? 'standard'].scout;
-    mid = f.mid + (ovr - expectedOvrAt(f.mid, p.age)) * f.slope;
+    // freshman year: only what he shows
+    mid = seen;
     sd = f.sd;
   }
+  if (early) sd = Math.max(sd, EARLY_SCOUT.minSd);
   // he can't peak below where he is now or above 99; older players are close to their ceiling
   const room = p.age >= 27 ? 1 : p.age >= 24 ? 3 : 99;
   mid = clamp(mid, ovr, Math.min(99, ovr + room));
@@ -96,6 +114,7 @@ export function scoutReport(s: GameState): ScoutReport {
   const strengths = Object.entries(p.attrs).sort((a, b) => b[1] - a[1]).slice(0, 2).map(([k]) => NAMES.attr[k as AttrKey].toLowerCase());
   const weak = NAMES.attr[Object.entries(p.attrs).sort((a, b) => a[1] - b[1])[0][0] as AttrKey].toLowerCase();
   notes.push(`Best tools: ${strengths.join(' and ')}. Biggest hole: ${weak}.`);
+  if (early) notes.push('It is early: projections before college or a pro contract move a lot, both ways.');
   if (p.injury) notes.push('Currently injured; scouts are watching how he comes back.');
   if (p.morale < 35) notes.push('Body language has been poor. Confidence is a concern.');
   if (p.morale > 80) notes.push('Plays with real swagger right now.');
@@ -112,5 +131,7 @@ export function scoutReport(s: GameState): ScoutReport {
     confidence: sd <= 3 ? 'high' : sd <= 5 ? 'medium' : 'low',
     odds,
     notes,
+    early,
+    peakSpan: tierFor(peakLo) === tierFor(peakHi) ? tierFor(peakHi) : `${tierFor(peakLo).replace(/ level$/, '')} to ${tierFor(peakHi)}`,
   };
 }

@@ -3,9 +3,9 @@
 // visualized"). Every list the game draws from, read straight from the content and engine modules,
 // one searchable grid per category, each entry with the game's own art where it has some.
 
-import { useMemo, useState, type ReactNode } from 'react';
+import { Fragment, useMemo, useState, type CSSProperties, type ReactNode } from 'react';
 import './catalog.css';
-import { HALF_PLANS, INJURY_SEVERITY, INJURY_TOLL, BASE_INJURY, LEVELS, LEAGUE_STRENGTH, MODES, WEAR, type Mode } from '../engine/balance';
+import { DIFFICULTIES, HALF_PLANS, INJURY_SEVERITY, INJURY_TOLL, BASE_INJURY, LEVELS, LEAGUE_STRENGTH, MODES, WEAR } from '../engine/balance';
 import type { AttrKey, GameState, HalfPlan, LevelKey, Pos } from '../engine/types';
 import { newGame } from '../engine/flow';
 import { INJURY_NAMES } from '../engine/player/injury';
@@ -29,7 +29,8 @@ import { WEIGHT_EVENTS } from '../engine/events/weightEvents';
 import { ROUND21_EVENTS } from '../engine/events/round21';
 import { ROUND25_EVENTS } from '../engine/events/round25';
 import { SHOP_ITEMS, type ShopItem } from '../content/shop';
-import { NBA_TEAMS, COLLEGES, EURO_CLUBS, INT_LEAGUES, RIVALS } from '../content/teams';
+import { NBA_TEAMS, COLLEGES, EURO_CLUBS, INT_LEAGUES, RIVALS, HOMETOWN_SCHOOLS, HS_SCHOOL_NAMES, HS_COLORS } from '../content/teams';
+import { EVENT_THEMES, themeOf } from './eventThemes';
 import { TEAM_STYLE } from '../content/teamStyle';
 import { ORIGINS } from '../content/origins';
 import { AWARD_CATS, AWARD_KEYS, awardLook } from '../content/awards';
@@ -41,6 +42,7 @@ import { VISITS } from '../content/visits';
 import { NAMES } from '../content/strings';
 import { fmtMoney, signed } from '../ui/format';
 import { Icon } from '../ui/art/Icon';
+import { BrandLogo, SEV_COLOR, SEV_NAME, eventIcon, injuryIcon, leagueIcon, levelIcon } from '../ui/art/careerArt';
 import { ICON_FOR, SHIFT_COLOR, shopIcon, shopShift } from '../ui/art/icons';
 import { TeamArt } from '../ui/art/Crest';
 import { JerseyArt } from '../ui/art/Jersey';
@@ -64,6 +66,10 @@ interface Entry {
   art?: () => ReactNode;
   facts?: [string, string][];
   lines?: string[];
+  /** A colour for the card's edge (round 27: an injury's severity). */
+  edge?: string;
+  /** The group it is listed under inside its list (round 27, owner: "can you group them a bit?"). */
+  group?: string;
 }
 
 interface Category {
@@ -165,9 +171,10 @@ function eventEntry(set: string, e: EventDef): Entry {
   return {
     key: `${set}-${e.id}`,
     title: e.title,
+    group: themeOf(e.id),
     sub: `${set} · ${e.phase === 'mid' ? 'midseason' : e.phase === 'off' ? 'offseason' : 'any time'}`,
     text,
-    art: () => <Icon name="news" size={40} />,
+    art: () => <Icon name={eventIcon(e.id)} size={48} />,
     facts: [
       ['Levels', e.stages.join(', ')],
       ['Weight', String(e.weight)],
@@ -179,8 +186,6 @@ function eventEntry(set: string, e: EventDef): Entry {
   };
 }
 
-const SEVERITY: Record<string, string> = { dtd: 'Day-to-day', minor: 'Minor', major: 'Major', season: 'Season-ending' };
-const SEV_SHIFT: Record<string, number> = { dtd: 3, minor: 2, major: 1, season: 0 };
 
 function tollText(key: string): string {
   const t = INJURY_TOLL[key as keyof typeof INJURY_TOLL];
@@ -206,6 +211,7 @@ const CATEGORIES: Category[] = [
       SHOP_ITEMS.map((i) => ({
         key: i.id,
         title: i.name,
+        group: i.category,
         sub: `${i.category} · ${fmtMoney(i.price)}`,
         text: i.blurb,
         art: () => (
@@ -228,6 +234,7 @@ const CATEGORIES: Category[] = [
         return {
           key: `nba-${t.abbr}`,
           title: name,
+          group: 'NBA',
           sub: `NBA · ${t.conf} · ${t.div}`,
           art: teamArt(name, t.abbr, t.color, 'NBA', true),
           facts: [
@@ -241,20 +248,49 @@ const CATEGORIES: Category[] = [
       ...COLLEGES.map((c) => ({
         key: `ncaa-${c.name}`,
         title: c.name,
+        group: 'College (NCAA)',
         sub: `NCAA · ${c.tier} · ${c.conf}`,
         art: teamArt(c.name, initials(c.name), c.color, 'NCAA'),
       })),
       ...EURO_CLUBS.map((c) => ({
         key: `eu-${c.name}`,
         title: c.name,
+        group: 'EuroLeague',
         sub: `EuroLeague · ${c.country}`,
         art: teamArt(c.name, c.short, c.color, 'EU'),
         facts: [['Strength', String(c.strength)]] as [string, string][],
       })),
+      // round 27 (owner: "teams can be grouped to highschools, nba, euroleague"): the schools and academies too
+      ...HOMETOWN_SCHOOLS.flatMap((h) =>
+        h.schools.map((name, i) => ({
+          key: `hs-${name}`,
+          title: name,
+          group: 'High schools (by hometown)',
+          sub: h.town,
+          art: teamArt(name, initials(name), h.colors[i % h.colors.length], 'HS'),
+        })),
+      ),
+      ...HS_SCHOOL_NAMES.map((name, i) => ({
+        key: `hsopp-${name}`,
+        title: `${name} High`,
+        group: 'High schools (opponents)',
+        sub: 'High school league',
+        art: teamArt(`${name} High`, initials(name), HS_COLORS[i % HS_COLORS.length], 'HS'),
+      })),
+      ...ORIGINS.flatMap((o) =>
+        o.youth.map((y) => ({
+          key: `youth-${o.country}-${y.name}`,
+          title: y.name,
+          group: 'Youth academies',
+          sub: o.country,
+          art: teamArt(y.name, initials(y.name), y.color, 'HS'),
+        })),
+      ),
       ...INT_LEAGUES.flatMap((l) =>
         l.teams.map(([name, color]) => ({
           key: `int-${l.key}-${name}`,
           title: name,
+          group: `${l.name} (${l.country})`,
           sub: `${l.name} · ${l.country}`,
           art: teamArt(name, initials(name), color, 'INT'),
           facts: [['League strength', String(l.strength)]] as [string, string][],
@@ -272,8 +308,11 @@ const CATEGORIES: Category[] = [
         INJURY_NAMES[sev.key].map((name) => ({
           key: `${sev.key}-${name}`,
           title: name,
-          sub: SEVERITY[sev.key],
-          art: () => <Icon name="health" shift={SEV_SHIFT[sev.key]} size={44} />,
+          sub: SEV_NAME[sev.key],
+          group: SEV_NAME[sev.key],
+          // round 27 (owner): each injury its own icon, the severity on the card's edge
+          art: () => <Icon name={injuryIcon(name)} size={48} />,
+          edge: SEV_COLOR[sev.key],
           facts: [
             ['Out', `${sev.days[0]}–${sev.days[1]} days`],
             ['Share', `${pct(sev.share / INJURY_NAMES[sev.key].length)} of injuries`],
@@ -288,7 +327,12 @@ const CATEGORIES: Category[] = [
     name: 'Events',
     icon: 'news',
     blurb: 'Every turning point, risk, story arc and offer, with its choices (shown for a sample career).',
-    entries: () => EVENT_SETS.flatMap(([set, list]) => list.map((e) => eventEntry(set, e))),
+    // round 27: grouped by what they are about, in the summary's order
+    entries: () => {
+      const all = EVENT_SETS.flatMap(([set, list]) => list.map((e) => eventEntry(set, e)));
+      const order = [...EVENT_THEMES.map(([t]) => t), 'Other'];
+      return all.sort((a, b) => order.indexOf(a.group!) - order.indexOf(b.group!));
+    },
   },
   {
     key: 'archetypes',
@@ -301,6 +345,7 @@ const CATEGORIES: Category[] = [
           key: `${pos}-${a.name}`,
           title: a.name,
           sub: NAMES.pos[pos],
+          group: NAMES.pos[pos],
           text: a.blurb,
           art: () => <HeroArt pose={archPose(a.name, pos)} model={a.name} number={(hash(a.name) % 54) + 1} kit={{ base: POS_STYLE[pos].color, ink: '#FFFFFF', trim: '#F4F4F4', word: '' }} size={96} />,
           facts: [
@@ -323,6 +368,7 @@ const CATEGORIES: Category[] = [
           key: o.country,
           title: o.country,
           sub: PATH[o.path] ?? o.path,
+          group: PATH[o.path] ?? o.path,
           art: () => <FlagArt country={o.country} size={56} />,
           facts: [
             ['Share', pct(o.weight)],
@@ -351,8 +397,9 @@ const CATEGORIES: Category[] = [
         return {
           key: `level-${k}`,
           title: l.name,
+          group: 'Levels',
           sub: l.short,
-          art: () => <Icon name="arena" size={44} />,
+          art: () => <Icon name={levelIcon(k)} size={48} />,
           facts: [
             ['Rotation OVR', String(l.avg)],
             ...(strength ? ([['Team strength', String(strength)]] as [string, string][]) : []),
@@ -366,8 +413,9 @@ const CATEGORIES: Category[] = [
       ...INT_LEAGUES.map((l) => ({
         key: `league-${l.key}`,
         title: l.name,
+        group: 'Overseas leagues',
         sub: `${l.country}${l.amateur ? ' · university' : ''}`,
-        art: () => <FlagArt country={l.country} size={44} />,
+        art: () => <Icon name={leagueIcon(l.key)} size={48} />,
         facts: [
           ['Strength', String(l.strength)],
           ['Salary', l.amateur ? 'none' : `${fmtMoney(l.salary[0])}–${fmtMoney(l.salary[1])}`],
@@ -389,6 +437,7 @@ const CATEGORIES: Category[] = [
           key: k,
           title: look.desc,
           sub: `${AWARD_CATS[look.cat].name} · ${k}`,
+          group: AWARD_CATS[look.cat].name,
           art: () => <AwardArt akey={k} label={k} color={look.color} size={48} />,
         };
       }),
@@ -429,9 +478,11 @@ const CATEGORIES: Category[] = [
     key: 'modes',
     name: 'Difficulties',
     icon: 'dial',
-    blurb: 'The difficulty modes and the dials each one sets.',
+    // the three a career starts at (round 27, owner: Fast break is a switch and Built in a lab a
+    // mini-game, so neither is a difficulty)
+    blurb: 'The three difficulties a career can start at, and the dials each one sets.',
     entries: () =>
-      (Object.keys(MODES) as Mode[]).map((k) => {
+      DIFFICULTIES.map((k) => {
         const m = MODES[k];
         return {
           key: k,
@@ -530,11 +581,7 @@ const CATEGORIES: Category[] = [
         key: b.name,
         title: b.name,
         sub: b.color,
-        art: () => (
-          <span className="cat-swatch" style={{ background: b.color }}>
-            {initials(b.name)}
-          </span>
-        ),
+        art: () => <BrandLogo name={b.name} color={b.color} size={64} />,
       })),
   },
   {
@@ -562,6 +609,7 @@ const CATEGORIES: Category[] = [
         key: l.name,
         title: `${l.rank}. ${l.name}`,
         sub: `${NAMES.pos[l.pos]} · ${l.seasons} seasons`,
+        group: NAMES.pos[l.pos],
         art: () => <LegendBust name={l.name} team={LEGEND_TEAM[l.name] ?? ''} size={64} />,
         facts: [
           ['PPG', l.ppg.toFixed(1)],
@@ -590,9 +638,15 @@ const CATEGORIES: Category[] = [
   },
 ];
 
+/** Each group together, in the order the groups first appear (a stable sort). */
+function byGroup(list: Entry[]): Entry[] {
+  const order = [...new Set(list.map((e) => e.group ?? ''))];
+  return list.map((e, i) => [e, i] as const).sort(([a, i], [b, j]) => order.indexOf(a.group ?? '') - order.indexOf(b.group ?? '') || i - j).map(([e]) => e);
+}
+
 function Card({ e, label }: { e: Entry; label?: string }) {
   return (
-    <article className="cat-item">
+    <article className={`cat-item${e.edge ? ' edged' : ''}`} style={e.edge ? ({ ['--edge' as string]: e.edge } as CSSProperties) : undefined}>
       {e.art && <div className="cat-art">{e.art()}</div>}
       <div className="cat-body">
         {(label || e.sub) && <div className="cat-sub">{[label, e.sub].filter(Boolean).join(' · ')}</div>}
@@ -638,9 +692,7 @@ export function Catalog() {
   const current = CATEGORIES.find((c) => c.key === cat);
   // one category, or (with words to look for) every category at once
   const list: { e: Entry; label?: string }[] = current
-    ? entriesOf(current)
-        .filter((e) => matches(e, words))
-        .map((e) => ({ e }))
+    ? byGroup(entriesOf(current).filter((e) => matches(e, words))).map((e) => ({ e }))
     : words.length
       ? CATEGORIES.flatMap((c) =>
           entriesOf(c)
@@ -694,8 +746,16 @@ export function Catalog() {
         <>
           {!current && <p className="cat-blurb">{list.length} matches across every list.</p>}
           <div className="cat-grid">
-            {list.slice(0, shown).map(({ e, label }) => (
-              <Card key={`${label ?? ''}-${e.key}`} e={e} label={label} />
+            {list.slice(0, shown).map(({ e, label }, i, all) => (
+              <Fragment key={`${label ?? ''}-${e.key}`}>
+                {/* round 27: a heading where a new group starts (only inside one list) */}
+                {current && e.group && e.group !== all[i - 1]?.e.group && (
+                  <h3 className="cat-group">
+                    {e.group} <small>{list.filter((x) => x.e.group === e.group).length}</small>
+                  </h3>
+                )}
+                <Card e={e} label={label} />
+              </Fragment>
             ))}
           </div>
           {list.length > shown && (

@@ -1785,3 +1785,106 @@ multiple times."
   card; Guide mode has 102 steps (three new: the offer, the way back, the feedback bar). The dev deck
   has four new cards (the offer, a No Shortcuts career, its banner, the feedback bar) and a chapter
   16 in its summary. Skipped at the owner's word: achievements, events and the balance run.
+
+## After round 27: the owner's batch (fixes and additions, no balance change)
+
+- **Lockdown beat** ("the beat loops and I can't stop it; are there multiple beats?"): there is one
+  beat (four sticks to count in, kick on 1 and 3, snare on 2 and 4, hats on the half beats) at seven
+  tempos, 100 to 124 bpm in steps of 4 (`TEMPOS`, rhythm.ts); the fourteen sets are notes on top of
+  it and make no sound. The sound board loops one tempo at a time, each tap-to-stop, with Stop
+  everything; leaving the board stops it.
+- **Catalog difficulties**: only the three a career starts at (Fast break is a switch, Built in a
+  lab a mini-game).
+- **Loading pop-out** ("small lags here and there"): the steps that run the engine or swap a page
+  wait one frame (`later`, store.ts) so the pop-out is up first; it fades in after 0.2 s and keeps
+  moving while the page is busy (transform and opacity only, run off the main thread). Your own
+  player in your kit, nine moves (dribble, crossover, through the legs, behind the back, finger spin,
+  two-ball drill, pound dribble, around the world, free-throw routine). Dev deck card "Loading
+  pop-out" shows all nine and can make the page lag on purpose.
+- **The dev deck keeps out of the game's achievements**: checked by dealing every card and comparing
+  the game's own storage before and after (`scripts/dev-apart.cjs`). The deck's **Reset
+  achievements** empties the game's real book on purpose (asked twice), counts daily challenges
+  again from today and turns Guide mode back on with its tour from the first step.
+- **Ending a career keeps it**: New career leaves it in Your careers to pick up again; only Delete
+  removes a save.
+- **An icon of its own** (owner: "injuries, events, and some of levels and leagues have the exact
+  same icon"): 213 new pixel icons, one per event (167), injury (17), level (7), overseas league
+  (14) and brand (8 logos); a test keeps every one present and no two alike. In the catalog an
+  injury card's edge is its severity (green, yellow, orange, red). In the game: an event's icon by
+  its title, the injury on the body map's list and on a big injury's page (severity on the edge),
+  the level or league by the season line on Home, the brand's logo on the name card and on its
+  offer.
+- **Mini-game achievements**, two kinds (26): the arcade (results kept on this device, any run,
+  career or not: firsts, scores, wins, every game, 25 and 100 runs, top marks in all) and the career
+  (what claimed bonuses did: three games or all seven in one career, ten claims, 2 OVR gained, range
+  from the contest, five straight summers, a title in a bonus season). `GameState.miniLog` records
+  each claim. The book filters both.
+- **Community**: house players (36 small careers the game played itself, career index 1 to 15,
+  peaks in the 60s, always marked "house") sit at the foot of the boards and in the plaza as bronze
+  statues, never posted. Statues are the cute sprite cast in bronze or gold. The **Reality 99 hall**
+  is a pixel hall (stone, columns, banners, a 99 banner, a carpet) with benches of seated
+  silhouettes, five a bench (three on a phone), a new bench once the one above is full; a tap lights
+  a seat and pops up the player's card.
+- **3-on-3**: a pixel court (dither, chain-link fence, stepped arc, pixel rim and net), the court
+  about a quarter bigger, and the play-by-play under it in a few words (+2 Novak · pull-up two),
+  the last play big.
+- **More sound** (14 new effects, 33 in all): tabs, pages, event results good and bad, tip-off,
+  new season, a new team, OVR up, retirement, 3-on-3 swish, rim and block, the hall's reveal, paying
+  respects.
+- **Body map**: hovering a red spot shows its injuries (icon, severity, age, time out).
+- **No Shortcuts**: the road picks the player (position, archetype, focus, hand, country by real
+  odds, name) with no reroll; Simple text is allowed now.
+- **Projected peak before college** (owner: "it either overestimates or spoils the potential"): in
+  high school and youth academies the scouts' read of his ceiling counts for half and what he shows
+  on the court for the other half, the range is never narrower than 8 points either side, it shows
+  in fives with the tiers it spans, and the odds are words (long shot, possible, real chance,
+  likely). Measured on 150 smart careers at ages 16 to 18: the old range was 9 to 11 points wide yet
+  held the real peak only 48 to 57% of the time (mean miss 5.3 to 5.9); the new one is about 15 to
+  16 wide, holds it 80 to 84% of the time and misses by 4.5 to 5.0 on average, with no bias (within
+  0.8 of the real peak). Ages 14 and 15 are unchanged (no scout read yet). Display only: no career
+  plays differently.
+- **Guide mode** starts on for a first-time player (nothing saved, logged or earned on the device,
+  no say on the switch yet), not in the dev deck. Its tip over the settings menu no longer closes
+  the menu.
+- **Settings** on the start page and in the dev deck; the theme and court now apply to the deck's
+  own pages too (`components/Look.tsx`).
+- **The project summary goes by function** (owner: "dont go by rounds, but in functions ... bug
+  fixes dont have to be in the project summary"): 17 chapters, each about one part of the game; the
+  round-by-round chapters were split into them, no heading or line names a round, the events are
+  grouped by theme (all 167, rebuilt from the game's own data) and new features go into their
+  chapter. New changes for players are listed in **What's new** (a card on the start page,
+  `content/whatsNew.ts`).
+- **Catalog groups**: each list in groups with a heading (shop by type, teams by league with high
+  schools and youth academies added, events by theme, injuries by severity, and so on).
+- **The intro** (owner, after the first try: "the title card is large and pixelated ... the pickup
+  game with pixel art, but the players can be large ... go from high school, college, streetball
+  (easter egg), other league, nba"): the title in a 5 by 7 pixel font on a plate, over a one-on-one
+  with players about a quarter of the screen tall, the court changing every five seconds through a
+  career. Once for a first visit, and from the Intro button. Then (owner: "the rims should be
+  sideways and align with the orientation, and the avatars should have motion ... 2~3 frames per
+  action"): side-on pixel hoops, and each player a stack of frames shown one at a time in steps
+  (two running frames, a jump shot, a block, a low reach for a steal, a stand), the two always
+  facing each other over two trips of 14 s; a player drawn facing left gets his number painted
+  back to front so it still reads (`mirror` on the sprite). The ball (owner: "make the ball even
+  larger ... the lines are too thin to match the avatar's vibes") is drawn on the players' own
+  pixel grid, 11 of their pixels across (about nine tenths of a head), with their dark outline and
+  seams a whole pixel thick.
+- **Legendary seasons**: the band's text takes dark or white ink from the team colour (white on a
+  light orange band was 2.56:1).
+- **Thank you for playing**: the first time someone leaves a career for a new one; the player with
+  the trophy under one spotlight, three dim rows of pixel fans (owner: "a little overwhelming" on
+  the first pass, so the crowd is darker, only the front row waves, the confetti is sparse and the
+  lights are still). Then (owner: "make the player much larger ... if the user had completed the
+  game, or had broken any records (mvp, mip, ...) make those icons appear in the background"): the
+  player about half the screen tall, and the career's honours as icons either side of the title.
+- **Every graphic is pixel art** (owner): now a standing rule in CLAUDE.md.
+- **Your look**: skin, hair, hair colour and facial hair at the start, the same parts every avatar
+  is built from (`content/looks.ts`), in a plain white or black jersey with the number, with no
+  accessories until bought; kept with the career and its card.
+- **The foot of every page**: the feedback bar now also in every mini-game, the career log and the
+  achievement book, with the Developer fold beside it on every page.
+- **Player tab**: staff, wardrobe and collection sit side by side under the three columns (they
+  used to stack in the middle column with the sides empty); the wardrobe shows the kit picked on
+  the Kits card; long visit buttons in the collection wrap instead of spilling (the luxury car's).
+- **The dev deck's theme**: the theme and court are applied at the root (`components/Look.tsx`), so
+  the deck keeps its own instead of keeping whatever the last card had set.

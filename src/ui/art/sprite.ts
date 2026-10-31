@@ -170,6 +170,40 @@ export const CHEER = pose(30, 34, [9, 9], [11, 21], {
   33: '........oooooooooooooooo',
 });
 
+// Round 27 (owner: the intro's avatars "should have motion (running animation, shots, blocks,
+// steals...), very simple, in 2~3 frames per action"): two running frames, drawn like the two
+// guard's stance (no ball: the intro bounces one of its own beside him).
+const RUN_TOP = {
+  19: '........SSTJJTssTJJTQQ',
+  20: '........SSTJJJTTJJJTQQ',
+  21: '........SSJJJJJJJJjjQQ',
+  22: '........SSJJJJJJJJjjQQ',
+  23: '........SSJJJJJJJJjjqQ',
+  24: '........wwJJJJJJJJjj.QQ',
+  25: '........ssJJJJJJJJjj..Qw',
+  26: '........ssRPPPPPPPpR',
+  27: '..........RPPPPPPPpR',
+  28: '..........RPPP..PPpR',
+};
+/** Running, mid-stride: the front leg reaching, the back leg pushing off. */
+export const RUN_A = pose(30, 34, [9, 9], [11, 21], {
+  ...RUN_TOP,
+  29: '.........SS.......ss',
+  30: '........SS.........ss',
+  31: '.......WW...........WW',
+  32: '.....FFFf............FFFf',
+  33: '....oooooooooooooooooooooo',
+});
+/** Running, the passing frame: one foot down under him, the other knee coming through. */
+export const RUN_B = pose(30, 34, [9, 9], [11, 21], {
+  ...RUN_TOP,
+  29: '...........SS...sss',
+  30: '...........SS..sss',
+  31: '...........WW.FFFf',
+  32: '.........FFFf',
+  33: '........oooooooooooo',
+});
+
 /** A hand up at his mouth: biting the medal (round 19, celebrations). */
 export const BITE = pose(30, 34, [9, 9], [11, 21], {
   16: '..................qqq',
@@ -252,7 +286,7 @@ function stamp(g: string[], x0: number, y0: number, rows: string[]) {
 }
 
 /** Paint a pose in a kit with a look: a grid of colours, '' where empty, outlined. */
-export function paint(p: Pose, kit: Kit, look: Look, number: number): string[][] {
+export function paint(p: Pose, kit: Kit, look: Look, number: number, mirror = false): string[][] {
   const w = p.w - 2;
   const h = p.h - 2;
   const g = Array.from({ length: h }, () => '.'.repeat(w));
@@ -275,13 +309,13 @@ export function paint(p: Pose, kit: Kit, look: Look, number: number): string[][]
   // the body over it
   for (let y = 0; y < h; y++) stamp(g, 0, y, [p.rows[y]]);
 
-  // the number
+  // the number (painted back to front for a player drawn turned around, so it still reads right)
   if (number >= 0 && p.num) {
     const digits = String(Math.min(99, number));
     const x0 = p.num[0] + (digits.length === 1 ? 2 : 0);
-    [...digits].forEach((d, i) => {
+    (mirror ? [...digits].reverse() : [...digits]).forEach((d, i) => {
       const bits = DIGITS[+d];
-      for (let k = 0; k < 15; k++) if (bits[k] === '1') stamp(g, x0 + i * 4 + (k % 3), p.num![1] + Math.floor(k / 3), ['N']);
+      for (let k = 0; k < 15; k++) if (bits[k] === '1') stamp(g, x0 + i * 4 + (mirror ? 2 - (k % 3) : k % 3), p.num![1] + Math.floor(k / 3), ['N']);
     });
   }
 

@@ -51,6 +51,11 @@ the owner when the work looks close to the end of the round**.
 
 Other preferences:
 
+- **Every graphic is pixel art** (owner, after round 27: "for every graphic you make, make them
+  pixelated. this includes the intro and thank you page"): drawn on a pixel grid with square pixels
+  (`shapeRendering="crispEdges"`, hard colour stops), never smooth gradients, curves or blurs for
+  the art itself; animations move in steps where it helps the look.
+
 - The owner is an IB DP student. Documents for people (reports, summaries) are Word files
   unless asked otherwise.
 - Give calculations to at least 6 or 7 significant figures before rounding.
@@ -78,3 +83,6 @@ It flags sideways scrolling, content off screen, clipped or spilling text, overl
 contrast below WCAG AA, tap targets under 32px on a phone, script errors, a buried main card and
 content left under the bars fixed to a phone's foot. Run it before and after, look at the diff, and
 add a check whenever a new kind of visual bug turns up.
+
+After any change to the dev deck or to what the game stores, `node scripts/dev-apart.cjs` deals every
+card and checks the game's own storage (achievements, saves, the log) is exactly as it was.

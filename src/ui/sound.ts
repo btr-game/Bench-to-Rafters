@@ -26,6 +26,21 @@ export const SFX = [
   // round 27: No Shortcuts and feedback
   ['oath', 'Taking the No Shortcuts challenge'],
   ['sent', 'Feedback sent (or kept)'],
+  // round 27 (owner: "can you add more sound to the game?")
+  ['tab', 'Switching tabs'],
+  ['page', 'Opening a page: the community, the career log, the achievement book, the mini-games'],
+  ['good', 'An event that went better than hoped'],
+  ['bad', 'An event that backfired or went half wrong'],
+  ['whistle', 'Tip-off: a half of the season starts'],
+  ['season', 'A new season'],
+  ['trade', 'A new team: a trade, a signing, a move'],
+  ['rise', 'Your OVR goes up'],
+  ['retire', 'The career ends'],
+  ['swish', '3-on-3: a basket'],
+  ['rim', '3-on-3: a miss off the rim'],
+  ['block', '3-on-3: a block or a steal'],
+  ['reveal', 'Reality 99 hall: a player steps into the light'],
+  ['respect', 'Paying respects at a statue'],
 ] as const;
 type Sfx = (typeof SFX)[number][0];
 
@@ -163,6 +178,78 @@ export function sfx(name: Sfx, always = false): void {
       break;
     case 'sent': // a paper plane: up and away
       seq([19, 24, 31], 0.05, 'triangle', 0.6);
+      break;
+    // ---- round 27 ----
+    case 'tab': // a light page turn
+      tone(N(19), t, 0.04, 'triangle', 0.35);
+      tone(N(26), t + 0.035, 0.05, 'triangle', 0.25);
+      break;
+    case 'page': // a door: a low knock, a lift
+      tone(N(7), t, 0.06, 'triangle', 0.6);
+      seq([14, 21], 0.05, 'triangle', 0.4);
+      break;
+    case 'good':
+      seq([16, 19, 23, 28], 0.06, 'square', 0.45);
+      break;
+    case 'bad':
+      seq([10, 6, 3], 0.1, 'triangle', 0.85);
+      break;
+    case 'whistle': { // two short referee blasts, a little warble in each
+      const c = ctx!;
+      for (const at of [t, t + 0.2]) {
+        const o = c.createOscillator();
+        const lfo = c.createOscillator();
+        const depth = c.createGain();
+        const g = c.createGain();
+        o.type = 'sine';
+        o.frequency.setValueAtTime(2700, at);
+        lfo.frequency.setValueAtTime(38, at);
+        depth.gain.setValueAtTime(120, at);
+        lfo.connect(depth).connect(o.frequency);
+        g.gain.setValueAtTime(0.0001, at);
+        g.gain.exponentialRampToValueAtTime(0.35, at + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.001, at + 0.14);
+        o.connect(g).connect(master!);
+        o.start(at);
+        lfo.start(at);
+        o.stop(at + 0.16);
+        lfo.stop(at + 0.16);
+      }
+      break;
+    }
+    case 'season': // a short fanfare for the new year
+      seq([12, 12, 19, 24], 0.09, 'square', 0.5);
+      tone(N(0), t, 0.4, 'triangle', 0.6);
+      break;
+    case 'trade': // a swoosh to somewhere new
+      noise(t, 0.18, 0.25);
+      seq([7, 14, 19], 0.05, 'triangle', 0.5);
+      break;
+    case 'rise':
+      seq([19, 26], 0.05, 'square', 0.35);
+      break;
+    case 'retire': // slow and warm: the jersey goes up
+      seq([12, 16, 19, 24], 0.22, 'triangle', 0.9);
+      tone(N(0), t, 1.1, 'triangle', 0.5);
+      break;
+    case 'swish':
+      noise(t, 0.12, 0.35);
+      tone(N(31), t + 0.02, 0.05, 'triangle', 0.25);
+      break;
+    case 'rim': // the clang
+      tone(N(14), t, 0.18, 'square', 0.45);
+      tone(N(15), t, 0.18, 'square', 0.3);
+      break;
+    case 'block': // the slap
+      noise(t, 0.05, 0.7);
+      tone(N(-5), t, 0.08, 'square', 0.5);
+      break;
+    case 'reveal': // a sparkle as the light comes on
+      seq([24, 31, 36, 40, 43], 0.04, 'triangle', 0.55);
+      break;
+    case 'respect': // a small bell
+      tone(N(31), t, 0.5, 'triangle', 0.6);
+      tone(N(38), t + 0.01, 0.4, 'triangle', 0.25);
       break;
   }
 }

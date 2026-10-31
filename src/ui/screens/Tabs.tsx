@@ -597,9 +597,6 @@ export function PlayerTab({ g }: { g: GameState }) {
           </Card>
           <Extra>
             <NameCard g={g} />
-            <StaffCard g={g} />
-            <WardrobeCard g={g} />
-            <CollectionCard g={g} />
           </Extra>
           {g.mode === 'lab' && (
             <Card title="Evolution">
@@ -690,6 +687,15 @@ export function PlayerTab({ g }: { g: GameState }) {
           </Extra>
         </div>
       </div>
+      {/* round 27 (owner: "staff, wardrobe, collection are all stacked in one row ... the sides are
+          completely empty"): their own full-width row, side by side */}
+      <Extra>
+        <div className="player-extras">
+          <StaffCard g={g} />
+          <WardrobeCard g={g} kit={kit} />
+          <CollectionCard g={g} />
+        </div>
+      </Extra>
       <Extra>
         <RosterCard g={g} />
       </Extra>

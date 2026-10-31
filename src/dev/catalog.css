@@ -17,6 +17,7 @@
 .cat-tile small { color: var(--muted); font-size: 14.5px; line-height: 1.35; }
 
 .cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; align-items: start; }
+.cat-item.edged { border: 3px solid var(--edge); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--edge) 35%, transparent); }
 .cat-item { display: grid; gap: 10px; padding: 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); min-width: 0; }
 .cat-art { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; min-height: 72px; padding: 8px; border-radius: 8px; background: var(--surface-2); overflow: hidden; }
 .cat-art .art-scene, .cat-art svg { max-width: 100%; height: auto; }
@@ -29,10 +30,11 @@
 .cat-facts dt { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
 .cat-facts dd { margin: 0; font-weight: 600; font-size: 14.5px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .cat-lines { margin: 0; padding-left: 18px; display: grid; gap: 2px; font-size: 14px; color: var(--muted); }
-.cat-swatch { display: grid; place-items: center; width: 64px; height: 64px; border-radius: 12px; color: #fff; font-family: var(--f-display); font-size: 22px; text-shadow: 0 1px 0 rgba(0, 0, 0, 0.45); box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.2); }
 .cat-more { justify-self: center; }
 
 @media (max-width: 560px) {
   .cat-grid, .cat-overview { grid-template-columns: minmax(0, 1fr); }
   .cat-search { max-width: none; }
 }
+.cat-group { grid-column: 1 / -1; margin: 10px 0 0; padding-bottom: 4px; border-bottom: 2px solid var(--line); font-family: var(--f-display); font-size: 22px; text-transform: uppercase; letter-spacing: 0.03em; }
+.cat-group small { font-family: var(--f-mono); font-size: 13px; color: var(--muted); letter-spacing: 0; }

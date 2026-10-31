@@ -147,7 +147,7 @@ export function SummaryPage({ chapter, setChapter, focus, q }: { chapter: number
   return (
     <div className="sm">
       <nav className="sm-toc" aria-label="Chapters">
-        <div className="kicker">{SUMMARY.date} · after round 24</div>
+        <div className="kicker">{SUMMARY.date} · by function</div>
         <b className="sm-doc">{SUMMARY.title}</b>
         <ol>
           {SUMMARY.chapters.map((x, i) => (

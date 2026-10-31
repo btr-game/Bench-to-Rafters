@@ -207,7 +207,9 @@ interface Live extends Note {
 
 // ---------- the beat ----------
 
-function drums(ctx: AudioContext, out: AudioNode, chart: Chart, start: number): void {
+/** The drum kit: one beat of the count-in, or one beat of the groove (kick on 1 and 3, snare on 2
+ * and 4, hats on every half beat). Round 27: shared by the game and the dev deck's sound board. */
+function kit(ctx: AudioContext, out: AudioNode) {
   const noise = ctx.createBuffer(1, ctx.sampleRate * 0.2, ctx.sampleRate);
   const d = noise.getChannelData(0);
   for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
@@ -235,33 +237,59 @@ function drums(ctx: AudioContext, out: AudioNode, chart: Chart, start: number): 
     s.start(t);
     s.stop(t + len + 0.01);
   };
+  return {
+    /** The count-in: sticks, the last one louder. */
+    stick: (t: number, last: boolean) => hiss(t, 0.05, 6000, last ? 0.5 : 0.3, 'highpass'),
+    /** One beat of the groove; `inBar` is 0 to 3. */
+    groove: (t: number, inBar: number, beat: number) => {
+      if (inBar === 0 || inBar === 2) kick(t);
+      else hiss(t, 0.12, 1800, 0.45, 'bandpass'); // snare on 2 and 4
+      hiss(t, 0.03, 8000, 0.12, 'highpass');
+      hiss(t + beat / 2, 0.03, 8000, 0.08, 'highpass');
+    },
+  };
+}
+
+function drums(ctx: AudioContext, out: AudioNode, chart: Chart, start: number): void {
+  const k = kit(ctx, out);
   const beats = Math.ceil((RHYTHM.countIn * chart.beat + chart.length) / chart.beat) + 2;
-  for (let k = 0; k < beats; k++) {
-    const t = start + k * chart.beat;
-    if (k < RHYTHM.countIn) {
-      hiss(t, 0.05, 6000, k === RHYTHM.countIn - 1 ? 0.5 : 0.3, 'highpass'); // the count-in: sticks
-      continue;
-    }
-    const inBar = (k - RHYTHM.countIn) % 4;
-    if (inBar === 0 || inBar === 2) kick(t);
-    else hiss(t, 0.12, 1800, 0.45, 'bandpass'); // snare on 2 and 4
-    hiss(t, 0.03, 8000, 0.12, 'highpass');
-    hiss(t + chart.beat / 2, 0.03, 8000, 0.08, 'highpass');
+  for (let n = 0; n < beats; n++) {
+    const t = start + n * chart.beat;
+    if (n < RHYTHM.countIn) k.stick(t, n === RHYTHM.countIn - 1);
+    else k.groove(t, (n - RHYTHM.countIn) % 4, chart.beat);
   }
 }
 
-/** The dev deck's sound board (round 26): the count-in and two bars of the Lockdown beat. */
-export function previewBeat(): void {
+/** The dev deck's sound board (round 27): the beat at one tempo, count-in first, looping until the
+ * returned function stops it. Beats are scheduled a second ahead, a quarter-second at a time. */
+export function beatLoop(bpm: number): () => void {
+  let ctx: AudioContext;
   try {
-    const ctx = new AudioContext();
-    const out = ctx.createGain();
-    out.gain.value = 0.7;
-    out.connect(ctx.destination);
-    drums(ctx, out, { beat: 0.5, length: 4 } as Chart, ctx.currentTime + 0.05);
-    window.setTimeout(() => void ctx.close(), 9000);
+    ctx = new AudioContext();
   } catch {
-    // no audio here
+    return () => {};
   }
+  const out = ctx.createGain();
+  out.gain.value = 0.7;
+  out.connect(ctx.destination);
+  const k = kit(ctx, out);
+  const beat = 60 / bpm;
+  const start = ctx.currentTime + 0.05;
+  let n = 0;
+  const ahead = () => {
+    while (start + n * beat < ctx.currentTime + 1) {
+      const t = start + n * beat;
+      if (n < RHYTHM.countIn) k.stick(t, n === RHYTHM.countIn - 1);
+      else k.groove(t, (n - RHYTHM.countIn) % 4, beat);
+      n++;
+    }
+  };
+  ahead();
+  const timer = window.setInterval(ahead, 250);
+  return () => {
+    window.clearInterval(timer);
+    void ctx.close();
+  };
 }
 
 // The point of the song coming out of the speakers right now (players press on what they hear):
@@ -548,9 +576,8 @@ const HOOP = [
 ];
 const HOOP_PAL: Record<string, string> = { w: '#F4F1EA', K: '#3A3D46', R: '#E03131', N: '#F76707' };
 
-/** Round 25 (owner: "the Lockdown page is too blank"): a little court behind the intro where the
- * pixel players run a set: one dribbles, one shuffles on defense, one pulls up, one jumps the lane. */
-function LockdownCourt() {
+/** The pixel hoop (backboard, rim and net), seen from the front. */
+function HoopArt({ className }: { className: string }) {
   const hoop = useMemo(
     () =>
       HOOP.flatMap((row, y) =>
@@ -559,15 +586,23 @@ function LockdownCourt() {
     [],
   );
   return (
+    <svg className={className} viewBox="0 0 14 12" shapeRendering="crispEdges" aria-hidden="true">
+      {hoop}
+    </svg>
+  );
+}
+
+/** Round 25 (owner: "the Lockdown page is too blank"): a little court behind the intro where the
+ * pixel players run a set: one dribbles, one shuffles on defense, one pulls up, one jumps the lane. */
+function LockdownCourt() {
+  return (
     <div className="ld-court" aria-hidden="true">
       <div className="ld-notes">
         {[0, 1, 2, 3, 4, 5].map((i) => (
           <i key={i} className={i % 2 ? 'steal' : 'block'} style={{ left: `${8 + i * 15}%`, animationDelay: `${i * 0.7}s` }} />
         ))}
       </div>
-      <svg className="ld-hoop" viewBox="0 0 14 12" shapeRendering="crispEdges">
-        {hoop}
-      </svg>
+      <HoopArt className="ld-hoop" />
       <div className="ld-p ld-dribble">
         <PlayerArt name="Kai Moreno" number={3} pos="PG" color="#E8590C" size={92} noBall />
         <span className="ld-ball bounce">

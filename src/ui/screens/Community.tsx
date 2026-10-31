@@ -3,7 +3,9 @@
 // reference: people playing right now, careers since you opened the page, the latest news, today's
 // theme). Data comes from ui/community.ts: shared on the claude.ai page, this device elsewhere.
 
-import { useEffect, useRef, useState } from 'react';
+import { chooseLook } from '../../content/looks';
+import { DevDoor } from '../components/FootBar';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { CareerRecord } from '../../engine/career/record';
 import { MODES, type Mode } from '../../engine/balance';
 import { ARCHETYPES } from '../../engine/player/archetypes';
@@ -16,9 +18,9 @@ import { drawCareerCard } from '../share';
 import { StatueArt } from '../art/Statue';
 import { PlayerArt } from '../art/Player';
 import { Icon } from '../art/Icon';
-import { Badge } from '../art/Badge';
 import { OathMark } from '../components/OathMark';
 import { sfx } from '../sound';
+import { houseScores, houseStatues } from '../house';
 
 const OPENED = Date.now();
 
@@ -124,10 +126,13 @@ function Board({ c }: { c: Api }) {
   const [mode, setMode] = useState<Mode>('standard');
   const [scope, setScope] = useState<'day' | 'all'>('day');
   const [rows, setRows] = useState<ScoreRow[] | null>(null);
+  rows?.forEach((r) => chooseLook(r.rec.name, r.rec.look)); // round 27: each career in the look he chose
   const [open, setOpen] = useState<string | null>(null);
   useEffect(() => {
     setRows(null);
-    void c.scores(mode, scope).then(setRows, () => setRows([]));
+    // round 27: the house players keep the boards from looking empty; real careers rank among them
+    const withHouse = (real: ScoreRow[]) => setRows([...real, ...houseScores(mode, scope)].sort((a, b) => b.score - a.score).slice(0, BOARD_SIZE));
+    void c.scores(mode, scope).then(withHouse, () => withHouse([]));
   }, [c, mode, scope]);
   return (
     <div className="stack">
@@ -151,6 +156,7 @@ function Board({ c }: { c: Api }) {
       <p className="small muted">
         {c.kind === 'shared' ? `The top ${BOARD_SIZE} players, each at their best career.` : 'Offline: your own best careers on this device.'} {SCORE_NOTE}
       </p>
+      <p className="small muted">House players (marked) are careers the game played itself, here to keep the boards warm until real ones push them down.</p>
       {rows === null ? (
         <p className="muted">Loading…</p>
       ) : rows.length === 0 ? (
@@ -166,6 +172,7 @@ function Board({ c }: { c: Api }) {
                   <b>
                     {r.rec.name}
                     {r.mine ? <span className="you"> you</span> : null}
+                    {r.house ? <HouseTag /> : null}
                     {r.rec.oath ? <OathMark size={16} /> : null}
                   </b>
                   <small>
@@ -183,38 +190,186 @@ function Board({ c }: { c: Api }) {
   );
 }
 
+/** Marks one of the game's own careers (house.ts). */
+function HouseTag() {
+  return (
+    <span className="house-tag" title="A house player: a career the game played itself">
+      house
+    </span>
+  );
+}
+
+/** Seats on a bench: five, three on a phone. */
+function usePerBench(): number {
+  const q = typeof matchMedia === 'undefined' ? null : matchMedia('(max-width: 640px)');
+  const [narrow, setNarrow] = useState(!!q?.matches);
+  useEffect(() => {
+    if (!q) return;
+    const on = () => setNarrow(q.matches);
+    q.addEventListener('change', on);
+    return () => q.removeEventListener('change', on);
+  }, [q]);
+  return narrow ? 3 : 5;
+}
+
+/**
+ * The hall itself, in pixels: a stone wall with columns, purple banners between them and a carpet
+ * down the middle (round 27, owner: "make the background like an
+ * actual hall").
+ */
+function HallBackdrop() {
+  const px = useMemo(() => {
+    const out: [number, number, number, number, string][] = [];
+    const r = (x: number, y: number, w: number, h: number, c: string) => out.push([x, y, w, h, c]);
+    // the wall, in blocks
+    r(0, 0, 160, 64, '#2b1f46');
+    for (let y = 8; y < 62; y += 6) {
+      r(0, y, 160, 1, '#221836');
+      for (let x = (y / 6) % 2 ? 0 : 8; x < 160; x += 16) r(x, y + 1, 1, 5, '#221836');
+    }
+    // the ceiling and its gold rail
+    r(0, 0, 160, 7, '#1a1229');
+    r(0, 7, 160, 1, '#c9a227');
+    // banners between the columns, a gold star on each
+    for (const x of [21, 53, 99, 131]) {
+      r(x, 10, 10, 20, '#6a3fd0');
+      r(x, 10, 1, 20, '#4c2aa6');
+      r(x, 10, 10, 1, '#c9a227');
+      for (let k = 0; k < 4; k++) r(x + k, 30 + k, 10 - 2 * k, 1, '#6a3fd0');
+      r(x + 4, 16, 2, 6, '#f2c94c');
+      r(x + 2, 18, 6, 2, '#f2c94c');
+      r(x + 3, 23, 4, 1, '#f2c94c');
+    }
+    // the big banner in the middle: 99
+    r(68, 9, 24, 30, '#7a4ae6');
+    r(68, 9, 24, 1, '#c9a227');
+    r(68, 38, 24, 1, '#c9a227');
+    const digit = (x0: number) => {
+      r(x0, 15, 6, 2, '#ffe08a');
+      r(x0, 15, 2, 9, '#ffe08a');
+      r(x0 + 4, 15, 2, 18, '#ffe08a');
+      r(x0, 22, 6, 2, '#ffe08a');
+      r(x0, 31, 6, 2, '#ffe08a');
+    };
+    digit(72);
+    digit(82);
+    // the columns
+    for (const x of [6, 38, 114, 146]) {
+      r(x - 2, 8, 12, 3, '#d9d1e6');
+      r(x, 11, 8, 50, '#b9b0c9');
+      r(x, 11, 2, 50, '#9a90ad');
+      r(x + 6, 11, 1, 50, '#e2dbee');
+      r(x + 3, 11, 1, 50, '#a79dba');
+      r(x - 2, 61, 12, 3, '#d9d1e6');
+    }
+    // the floor, the carpet and the lamps' pools of light
+    r(0, 64, 160, 26, '#3a2b57');
+    for (let y = 68; y < 90; y += 5) r(0, y, 160, 1, '#33264d');
+    r(60, 64, 40, 26, '#5b2a86');
+    r(60, 64, 1, 26, '#c9a227');
+    r(99, 64, 1, 26, '#c9a227');
+    return out;
+  }, []);
+  return (
+    <svg className="hall-back" viewBox="0 0 160 90" preserveAspectRatio="xMidYMid slice" shapeRendering="crispEdges" aria-hidden="true">
+      {px.map(([x, y, w, h, c], i) => (
+        <rect key={i} x={x} y={y} width={w} height={h} fill={c} />
+      ))}
+    </svg>
+  );
+}
+
+/**
+ * The Reality 99 hall (round 27, owner: "rows of benches, and the cute avatar of the user is sitting
+ * on it, 3~5 per row. they are shadowed, silhouetted. similar to the choose position page, when the
+ * user clicks it, they are highlighted, and their story (player card) appears ... fill the first row
+ * with shadows that are locked (rows should be added when the upper row is filled)", then "make the
+ * background like an actual hall ... the benches and players are too small. they should be
+ * dominating the scene ... i want the cards to pop up").
+ */
 function Hall({ c }: { c: Api }) {
   const [rows, setRows] = useState<ScoreRow[] | null>(null);
+  rows?.forEach((r) => chooseLook(r.rec.name, r.rec.look)); // round 27: each career in the look he chose
+  const [pick, setPick] = useState<string | null>(null);
+  const per = usePerBench();
   useEffect(() => {
     void c.hall().then(setRows, () => setRows([]));
   }, [c]);
+  useEffect(() => {
+    if (!pick) return;
+    const key = (e: KeyboardEvent) => e.key === 'Escape' && setPick(null);
+    window.addEventListener('keydown', key);
+    return () => window.removeEventListener('keydown', key);
+  }, [pick]);
+  const seated = rows ?? [];
+  // every full bench, and one more with its empty seats locked
+  const benches = Array.from({ length: Math.floor(seated.length / per) + 1 }, (_, b) => Array.from({ length: per }, (_, i) => seated[b * per + i] ?? null));
+  const picked = seated.find((r) => r.id === pick) ?? null;
   return (
     <div className="stack">
-      <p className="prose">Reality hits hard is built so almost nobody gets there. Every career that reaches a 99 there is enshrined here, for good.</p>
+      <p className="prose">
+        Reality hits hard is built so almost nobody gets there. Every career that reaches a 99 there takes a seat in this hall, for good. {seated.length ? 'Tap a silhouette to see who it is.' : 'Nobody has made it yet: about one Reality career in a thousand does.'}
+      </p>
       {rows === null ? (
         <p className="muted">Loading…</p>
-      ) : rows.length === 0 ? (
-        <p className="muted with-icon">
-          <Icon name="hall" size={34} />
-          The hall is empty. About one Reality career in a thousand gets there.
-        </p>
       ) : (
-        <div className="hall-grid">
-          {rows.map((r) => (
-            <div key={r.id} className="hall-card">
-              <Badge tier="hof" size={40} />
-              <div>
-                <b>
-                  {r.rec.name}
-                  {r.rec.oath ? <OathMark size={16} /> : null}
-                </b>
-                <small>
-                  {r.rec.country} · {NAMES.pos[r.rec.pos]} · {r.rec.tier}
-                </small>
+        <div className="hall-room">
+          <HallBackdrop />
+          <div className="hall-sign">
+            <Icon name="hall" size={30} />
+            Reality 99 hall · {seated.length} seated
+          </div>
+          {benches.map((bench, b) => (
+            <div key={b} className="hall-bench">
+              <div className="hall-seats">
+                {bench.map((r, i) =>
+                  r ? (
+                    <button key={r.id} className={`hall-seat${pick === r.id ? ' on' : ''}`} aria-pressed={pick === r.id} aria-label={`Seat ${b * per + i + 1}: who is it?`} onClick={() => (sfx('reveal'), setPick(r.id))}>
+                      <span className="hall-sit">
+                        <PlayerArt name={r.rec.name} number={r.rec.number} pos="SG" color={r.rec.team?.color} team={r.rec.team?.name ?? ''} size={200} noBall />
+                      </span>
+                    </button>
+                  ) : (
+                    <span key={`empty-${i}`} className="hall-seat locked" role="img" aria-label="An empty seat, locked">
+                      <span className="hall-sit">
+                        <PlayerArt name={['Empty Seat', 'Open Chair', 'Waiting Spot', 'Vacant Place', 'Free Bench'][i % 5]} number={0} pos="SG" size={200} noBall />
+                      </span>
+                      <span className="hall-lock">
+                        <Icon name="lock" size={30} />
+                      </span>
+                    </span>
+                  ),
+                )}
               </div>
-              <span className="hall-99">99</span>
+              <div className="hall-plank" aria-hidden="true" />
             </div>
           ))}
+        </div>
+      )}
+      {picked && (
+        <div className="hall-pop" role="dialog" aria-modal="true" aria-label={`${picked.rec.name}, Reality 99 hall`} onClick={(e) => e.target === e.currentTarget && setPick(null)}>
+          <div className="hall-pop-card">
+            <div className="hall-pop-head">
+              <span className="hall-pop-art">
+                <PlayerArt name={picked.rec.name} number={picked.rec.number} pos={picked.rec.pos} color={picked.rec.team?.color} team={picked.rec.team?.name ?? ''} size={150} />
+              </span>
+              <div style={{ minWidth: 0 }}>
+                <span className="hall-99">99</span>
+                <b className="hall-story-name">
+                  {picked.rec.name}
+                  {picked.rec.oath ? <OathMark size={16} /> : null}
+                </b>
+                <div className="small muted">
+                  {picked.rec.country} · {NAMES.pos[picked.rec.pos]} · {picked.rec.tier}
+                  {picked.rec.nickname ? ` · “${picked.rec.nickname.name}”` : ''}
+                </div>
+              </div>
+              <button className="btn small ghost hall-pop-x" onClick={() => setPick(null)} autoFocus>
+                Close
+              </button>
+            </div>
+            <CardImage rec={picked.rec} />
+          </div>
         </div>
       )}
     </div>
@@ -223,12 +378,15 @@ function Hall({ c }: { c: Api }) {
 
 function Plaza({ c }: { c: Api }) {
   const [rows, setRows] = useState<StatueRow[] | null>(null);
+  rows?.forEach((r) => chooseLook(r.rec.name, r.rec.look)); // round 27: each career in the look he chose
   const [open, setOpen] = useState<string | null>(null);
   const [msg, setMsg] = useState('');
-  const load = () => void c.statues().then(setRows, () => setRows([]));
+  // round 27: house statues stand behind the real ones
+  const load = () => void c.statues().then((real) => setRows([...real, ...houseStatues()]), () => setRows(houseStatues()));
   useEffect(load, [c]);
   const pay = async (id: string) => {
     const r = await c.respect(id);
+    if (r === 'ok') sfx('respect');
     setMsg(r === 'ok' ? '' : 'Paying respects needs an invitation to post here.');
     load();
   };
@@ -254,10 +412,14 @@ function Plaza({ c }: { c: Api }) {
             <small>
               {s.rec.legacy} legacy · {s.respects} respect{s.respects === 1 ? '' : 's'}
             </small>
-            <button className="btn small ghost with-icon" disabled={s.paid} onClick={() => pay(s.id)}>
-              <Icon name="respect" size={18} />
-              {s.paid ? 'Respects paid' : 'Pay respects'}
-            </button>
+            {s.house ? (
+              <HouseTag />
+            ) : (
+              <button className="btn small ghost with-icon" disabled={s.paid} onClick={() => pay(s.id)}>
+                <Icon name="respect" size={18} />
+                {s.paid ? 'Respects paid' : 'Pay respects'}
+              </button>
+            )}
             {open === s.id && <CardImage rec={s.rec} />}
           </div>
         ))}
@@ -399,6 +561,8 @@ export function CommunityPage() {
           <Feedback c={c} />
         )}
       </section>
+      {/* round 27: the Developer door at the foot of every page (feedback has its own tab here) */}
+      <DevDoor />
     </div>
   );
 }

@@ -14,6 +14,7 @@ import { activeDuo, activeTrio } from './career/duo';
 import { ovrOf } from './player/ovr';
 import { weightOf } from './player/weight';
 import { ACHIEVEMENTS_25 } from './achievements25';
+import { ACHIEVEMENTS_MINI, MINI_TOTALS_ONLY, type MiniTotals } from './achievementsMini';
 
 export type AchTier = 'bench' | 'rotation' | 'starter' | 'allstar' | 'hof';
 export const ACH_TIERS: { key: AchTier; name: string; color: string }[] = [
@@ -33,6 +34,7 @@ export interface CareerTotals {
   fast: number; // careers finished on Fast break
   master: number; // careers finished in Master mode
   daily: number; // days the daily challenge was played
+  mini?: MiniTotals; // round 27: every mini-game run on this device (achievementsMini.ts)
 }
 export const NO_TOTALS: CareerTotals = { finished: 0, byMode: {}, titles: 0, mvps: 0, fast: 0, master: 0, daily: 0 };
 
@@ -361,10 +363,12 @@ export const ACHIEVEMENTS: Achievement[] = [
   A('daily30', 'Month of Sundays', 'allstar', 'Play the daily challenge on thirty days.', (f) => f.t.daily >= 30),
   // round 25: the book past 500 (achievements25.ts)
   ...ACHIEVEMENTS_25,
+  // round 27: the mini-games, in the arcade and in a career (achievementsMini.ts)
+  ...ACHIEVEMENTS_MINI,
 ];
 
 // the ones that only read the totals kept across careers (they can be checked with no career open)
-const TOTALS_ONLY = new Set(['c1', 'c3', 'c5', 'c10', 'c25', 'c50', 'c100', 'allmodes', 'fastdone', 'masterdone', 'titles10', 'mvp10', 'daily1', 'daily7', 'daily30']);
+const TOTALS_ONLY = new Set(['c1', 'c3', 'c5', 'c10', 'c25', 'c50', 'c100', 'allmodes', 'fastdone', 'masterdone', 'titles10', 'mvp10', 'daily1', 'daily7', 'daily30', ...MINI_TOTALS_ONLY]);
 
 /** The achievements this career (and the totals) have earned, by id. */
 export function earnedNow(g: GameState | null, t: CareerTotals): string[] {

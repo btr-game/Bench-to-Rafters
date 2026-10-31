@@ -29,6 +29,7 @@ export interface CareerRecord {
   nickname?: { id: string; name: string }; // round 25: what the media called him
   rival?: { name: string; level: string; w: number; l: number }; // round 25: his rival, and the head to head
   oath?: boolean; // round 25: played No Shortcuts (Reality, master mode, nothing simplified)
+  look?: import('../../content/looks').ChosenLook; // round 27: the look he picked
   rank: number; // all-time legacy rank (101 = outside the top 100)
   rankBehind: string | null;
   hof: 'first' | 'hof' | null;
@@ -97,6 +98,7 @@ export function careerRecord(g: GameState, now = new Date()): CareerRecord {
     savedAt: now.toISOString(),
     mode: g.mode ?? 'standard',
     ...(g.flags.oath ? { oath: true } : {}),
+    ...(g.player.look ? { look: g.player.look } : {}),
     name: p.name,
     number: p.number,
     pos: p.pos,

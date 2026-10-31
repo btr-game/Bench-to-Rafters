@@ -9,6 +9,9 @@ import { MUSCLES, injuryPart, type BodyPart, type Muscle } from '../../engine/pl
 import { idealWeight, weightOf } from '../../engine/player/weight';
 import { ht } from '../format';
 import { Card } from './bits';
+import { InjuryBadge, SEV_NAME } from '../art/careerArt';
+
+const WORST = ['season', 'major', 'minor', 'dtd'] as const;
 
 type Shape = { m: Muscle | null; el: 'e' | 'r' | 'c'; x: number; y: number; a: number; b?: number };
 
@@ -167,6 +170,8 @@ const timeOut = (days: number): string => (days < 14 ? `${days} day${days === 1 
 export function BodyMap({ g, narrow = false }: { g: GameState; narrow?: boolean }) {
   const p = g.player;
   const [hover, setHover] = useState<Muscle | null>(null);
+  // round 27 (owner: "show the injuries on it when i hover my mouse on the red spots")
+  const [spot, setSpot] = useState<BodyPart | null>(null);
   const muscles = p.muscles ?? {};
   const top = Math.max(20, ...Object.values(muscles).map((v) => v ?? 0));
   const injuries = p.injuries ?? [];
@@ -178,8 +183,9 @@ export function BodyMap({ g, narrow = false }: { g: GameState; narrow?: boolean 
   const growth = [...new Map(rows.map((h) => [h.age, { age: h.age, height: h.height!, weight: h.weight }])).values()];
   const first = growth[0];
   return (
-    <Card title="Body map" kicker="What training built, and where it hurt. Hover a muscle for its number.">
+    <Card title="Body map" kicker="What training built, and where it hurt. Hover a muscle for its number, a red spot for its injuries.">
       <div className={`bm${narrow ? ' narrow' : ''}`}>
+        <div className="bm-figure">
         <svg viewBox="0 0 410 428" className="bm-svg" role="img" aria-label="Body map, front and back">
           <text x={100} y={422} textAnchor="middle" className="bm-cap">
             Front
@@ -195,16 +201,44 @@ export function BodyMap({ g, narrow = false }: { g: GameState; narrow?: boolean 
               const [x, y] = SPOT[part as Exclude<BodyPart, 'whole'>];
               const bad = list.some((i) => i.key === 'major' || i.key === 'season');
               return (
-                <g key={part} className="bm-hurt" shapeRendering="crispEdges">
+                <g
+                  key={part}
+                  className={`bm-hurt${spot === part ? ' on' : ''}`}
+                  shapeRendering="crispEdges"
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`${PART_NAME[part]}: ${list.length} injur${list.length === 1 ? 'y' : 'ies'}`}
+                  onMouseEnter={() => setSpot(part)}
+                  onMouseLeave={() => setSpot(null)}
+                  onFocus={() => setSpot(part)}
+                  onBlur={() => setSpot(null)}
+                  onClick={() => setSpot(spot === part ? null : part)}
+                >
                   <rect x={Math.round(x / PX) * PX - (bad ? 12 : 9)} y={Math.round(y / PX) * PX - (bad ? 12 : 9)} width={bad ? 24 : 18} height={bad ? 24 : 18} className={bad ? 'major' : ''} />
                   <text x={Math.round(x / PX) * PX} y={Math.round(y / PX) * PX + 4} textAnchor="middle">
                     {list.length > 1 ? list.length : '+'}
                   </text>
-                  <title>{`${PART_NAME[part]}: ${list.map((i) => `${i.name} (age ${i.age})`).join(', ')}`}</title>
                 </g>
               );
             })}
         </svg>
+        {spot && spot !== 'whole' && byPart.get(spot) && (
+          <div className={`bm-tip${SPOT[spot][1] < 120 ? ' below' : ''}${SPOT[spot][0] < 110 ? ' at-left' : SPOT[spot][0] > 300 ? ' at-right' : ''}`} style={{ left: `${(SPOT[spot][0] / 410) * 100}%`, top: `${(SPOT[spot][1] / 428) * 100}%` }} role="tooltip">
+            <b>{PART_NAME[spot]}</b>
+            {byPart.get(spot)!.map((i, k) => (
+              <div key={k} className="bm-tip-row">
+                <InjuryBadge name={i.name} sev={i.key} size={30} />
+                <span>
+                  {i.name}
+                  <small>
+                    {SEV_NAME[i.key]} · age {i.age} · out {timeOut(i.days)}
+                  </small>
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+        </div>
         <div className="bm-side stack">
           <dl className="facts">
             <div>
@@ -264,7 +298,11 @@ export function BodyMap({ g, narrow = false }: { g: GameState; narrow?: boolean 
             <ul className="bm-list">
               {[...byPart.entries()].map(([part, list]) => (
                 <li key={part}>
-                  <i className="hurt" />
+                  {/* round 27: the worst injury there, its edge the severity */}
+                  {(() => {
+                    const w = [...list].sort((a, b) => WORST.indexOf(a.key) - WORST.indexOf(b.key))[0];
+                    return <InjuryBadge name={w.name} sev={w.key} size={24} />;
+                  })()}
                   <span>
                     {PART_NAME[part]} <span className="muted small">· {list.map((i) => `${i.name}, ${i.age}`).join('; ')}</span>
                   </span>

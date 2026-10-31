@@ -2,6 +2,7 @@ import { GuideButton } from './components/Guide';
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import type { GameState } from '../engine/types';
 import { MODES } from '../engine/balance';
+import { ovrOf } from '../engine/player/ovr';
 import { NextStep, SettingsMenu, useKeys } from './components/Settings';
 import { tabKey } from './selectors';
 import { useStore, type Tab } from '../store';
@@ -16,11 +17,13 @@ import { MiniGames } from './mini/MiniGames';
 import { Icon } from './art/Icon';
 import { CareerLog } from './screens/CareerLog';
 import { AchievementBook } from './screens/Achievements';
-import { CommunityPage, FeedbackFoot } from './screens/Community';
+import { CommunityPage } from './screens/Community';
+import { FootBar } from './components/FootBar';
+import { Intro } from './screens/Intro';
+import { Thanks } from './screens/Thanks';
 import { ICON_FOR } from './art/icons';
 import { music, sfx, wakeOnClick } from './sound';
 
-const HOST_THEME = typeof document !== 'undefined' ? document.documentElement.getAttribute('data-theme') : null;
 
 const ICONS: Record<Tab, ReactNode> = {
   home: <path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" />,
@@ -101,10 +104,10 @@ function TabView({ fast, children }: { fast: boolean; children: ReactNode }) {
 export function App() {
   const game = useStore((s) => s.game);
   const tab = useStore((s) => s.tab);
-  const theme = useStore((s) => s.theme);
-  const court = useStore((s) => s.court);
   const mini = useStore((s) => s.mini);
   const page = useStore((s) => s.page);
+  const intro = useStore((s) => s.intro);
+  const thanks = useStore((s) => s.thanks);
   const simple = useStore((s) => s.simple);
   useEffect(() => {
     document.documentElement.classList.toggle('simple', simple);
@@ -120,19 +123,6 @@ export function App() {
   }, [tab, page, mini, game]);
   const fast = !!game?.flags.fast && game.step !== 'retired';
 
-  useEffect(() => {
-    const root = document.documentElement;
-    // "Auto" goes back to whatever the host page set (or the OS setting if nothing)
-    if (theme === 'auto') {
-      if (HOST_THEME) root.setAttribute('data-theme', HOST_THEME);
-      else root.removeAttribute('data-theme');
-    } else root.setAttribute('data-theme', theme);
-  }, [theme]);
-
-  useEffect(() => {
-    if (court === 'classic') document.documentElement.removeAttribute('data-court');
-    else document.documentElement.setAttribute('data-court', court);
-  }, [court]);
 
   useKeys(!mini && !!game);
   // round 25: sound. The first click wakes the audio; music plays with a career on screen (a
@@ -143,9 +133,17 @@ export function App() {
     () =>
       useStore.subscribe((now, before) => {
         if (now.toasts.length > before.toasts.length) sfx('achievement');
+        // round 27 (owner: "can you add more sound"): moving around, and how the season goes
+        if (now.tab !== before.tab && now.game) sfx('tab');
+        if ((now.page && now.page !== before.page) || (now.mini && now.mini !== before.mini)) sfx('page');
+        if (now.transition && now.transition !== before.transition) sfx(now.transition.kind === 'half' ? 'whistle' : 'season');
         const g = now.game;
         const b = before.game;
         if (!g || !b || g === b) return;
+        if (g.result && g.result !== b.result && g.result.tierKey) sfx(g.result.tierKey === 'backfired' || g.result.tierKey === 'mixed' ? 'bad' : g.result.tierKey === 'expected' ? 'confirm' : 'good');
+        if (b.teamId && g.teamId && g.teamId !== b.teamId && g.step !== 'retired') sfx('trade');
+        if (g.step === 'retired' && b.step !== 'retired') sfx('retire');
+        else if (Math.round(ovrOf(g.player.attrs, g.player.pos)) > Math.round(ovrOf(b.player.attrs, b.player.pos))) sfx('rise');
         if (g.purchases.length > b.purchases.length) sfx('coins');
         // round 25: what the new systems did, read off the career log and the player
         for (const l of g.log.slice(b.log.length)) {
@@ -169,6 +167,8 @@ export function App() {
     [],
   );
 
+  if (thanks && !game) return <Thanks g={thanks} />;
+  if (intro && !game) return <Intro />;
   if (page === 'log') return <CareerLog />;
   if (page === 'achievements') return <AchievementBook />;
   if (page === 'community') return <CommunityPage />;
@@ -201,7 +201,7 @@ export function App() {
           {tab === 'league' && <LeagueTab g={game} />}
           {tab === 'records' && <RecordsTab g={game} />}
         </TabView>
-        <FeedbackFoot where={`${tab} tab, ${MODES[game.mode]?.name ?? game.mode}, age ${game.player.age}`} />
+        <FootBar where={`${tab} tab, ${MODES[game.mode]?.name ?? game.mode}, age ${game.player.age}`} />
       </div>
       <Overlays g={game} />
       <TabBar g={game} />

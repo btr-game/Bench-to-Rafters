@@ -1,6 +1,10 @@
 import { useMemo } from 'react';
 import { ICONS, PAL } from './icons';
 import { CULTURE_ICONS } from './cultureIcons';
+import { EVENT_ICONS_A } from './eventIconsA';
+import { EVENT_ICONS_B } from './eventIconsB';
+import { EVENT_ICONS_C } from './eventIconsC';
+import { CAREER_ICONS } from './careerIcons';
 import { toPaths } from './pixel';
 
 // The colour families of the palette, base and shade: a `shift` moves every family along this
@@ -11,7 +15,8 @@ const recolour = (ch: string, shift: number) => {
   return i < 0 ? ch : RING[(i + shift) % RING.length][RING[i].indexOf(ch)];
 };
 
-const rowsOf = (name: string): string[] | undefined => ICONS[name] ?? CULTURE_ICONS[name];
+// round 27: an icon of its own for every event, injury, level, league and brand (careerArt.tsx)
+const rowsOf = (name: string): string[] | undefined => ICONS[name] ?? CULTURE_ICONS[name] ?? EVENT_ICONS_A[name] ?? EVENT_ICONS_B[name] ?? EVENT_ICONS_C[name] ?? CAREER_ICONS[name];
 
 /** A 16x16 pixel icon from the set in icons.ts (or the culture icons), drawn crisp at any size; `shift` recolours it. */
 export function Icon({ name, size = 20, title, shift = 0 }: { name: string; size?: number; title?: string; shift?: number }) {

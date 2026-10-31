@@ -34,7 +34,7 @@ export function ModesCard({ g }: { g: GameState }) {
       <div className="mode-chips">
         <Chip icon="sim" label="Sim" on={on.sim} onClick={st.toggleSim} tour="chip-sim" disabled={locked} />
         <Chip icon="fast" label="Fast break" on={on.fast} onClick={st.toggleFast} tour="chip-fast" disabled={locked} />
-        <Chip icon="simple" label="Simple text" on={on.simple} onClick={st.toggleSimple} tour="chip-simple" disabled={oath} />
+        <Chip icon="simple" label="Simple text" on={on.simple} onClick={st.toggleSimple} tour="chip-simple" />
         <Chip icon="guide" label="Guide" on={on.guide} onClick={st.toggleGuide} tour="chip-guide" disabled={st.master} />
         <Chip icon="master" label="Master" on={on.master} onClick={st.toggleMaster} tour="chip-master" disabled={oath} />
         {g.mode !== 'lab' && <Chip icon="bracket" label="Play playoffs" on={!g.flags.simPostseason} onClick={st.togglePlayoffs} tour="chip-playoffs" disabled={!!g.flags.daily || !!g.flags.fast} />}
@@ -42,7 +42,7 @@ export function ModesCard({ g }: { g: GameState }) {
       {oath && (
         <p className="small oath-note with-icon">
           <Icon name="oath" size={20} />
-          No Shortcuts: master mode, the full text and every season played, for the whole career.
+          No Shortcuts: a player the road picked, master mode and every season played, for the whole career.
         </p>
       )}
       {notes.length > 0 && (

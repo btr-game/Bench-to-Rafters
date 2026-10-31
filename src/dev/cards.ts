@@ -20,6 +20,7 @@ import { logCareer } from '../ui/careerLog';
 import { resetTour } from '../ui/components/GuideTour';
 import { decision, moment, onlyMoment, play, type PlayOpts } from './stage';
 import { CamLab } from './CamLab';
+import { LoadingLab } from './LoadingLab';
 
 export type Group = 'Start' | 'Career hub' | 'Decisions' | 'Big moments' | 'Modes' | 'Mini-games' | 'Records & community';
 export const GROUPS: { key: Group; color: string; icon: string }[] = [
@@ -116,8 +117,11 @@ function seedCommunity(): void {
       return { id: `s${i}${k}`, mode, day: k === 1 ? '2026-01-01' : day, score: rec.legacy + Math.max(0, Math.round(rec.peak) - 60), rec, mine: i === 0 };
     }),
   );
-  const legend = vary(rs[0], 40, { mode: 'reality', peak: 99, legacy: 260 });
-  scores.push({ id: 'hall', mode: 'reality', day, score: 299, rec: legend, mine: false });
+  // round 27: six in the hall, so the benches show a full row and the next one opening
+  for (let i = 0; i < 6; i++) {
+    const legend = vary(rs[i % rs.length], 40 + i, { mode: 'reality', peak: 99, legacy: 260 - i * 7, pos: (['PG', 'SG', 'SF', 'PF', 'C'] as const)[i % 5] });
+    scores.push({ id: `hall${i}`, mode: 'reality', day, score: 299 - i, rec: legend, mine: false });
+  }
   const statues = rs.slice(0, 3).map((r, i) => ({ id: `st${i}`, rec: vary(r, 50 + i, { mode: 'standard', legacy: i === 0 ? 240 : 160 + i * 20 }), metal: i === 0 ? 'gold' : 'bronze', paid: i === 2, respects: 12 - i * 4 }));
   const feed = rs.map((r, i) => ({ t: `${r.name} retired with ${Math.round(r.legacy)} legacy points.`, at: Date.now() - (i + 1) * 600e3 }));
   try {
@@ -247,6 +251,13 @@ export const CARDS: DevCard[] = [
 
   // big moments
   { id: 'cam-lab', title: 'Action cam lab', group: 'Big moments', icon: 'camera', blurb: 'Any play on the finals cam, slowed right down, any two teams.', open: () => true, page: CamLab },
+  { id: 'intro', title: 'Intro page', group: 'Start', icon: 'ball', blurb: 'The title over a side-on one-on-one: runs, steals, blocks and jumpers in pixel frames, the venue changing every five seconds. First visit only, or the Intro button on the start page.', open: () => void useStore.setState({ game: null, page: null, mini: null, intro: true }) },
+  { id: 'thanks', title: 'Thank you for playing', group: 'Start', icon: 'laurel', blurb: 'The first time someone leaves a career for a new one: the crowd, the confetti, the trophy held high.', open: () => {
+    const g = nbaStar();
+    if (!g) return false;
+    useStore.setState({ game: null, page: null, mini: null, thanks: g });
+  } },
+  { id: 'loading', title: 'Loading pop-out', group: 'Start', icon: 'ball', blurb: 'The pixel player who dribbles while a slow step runs: all nine moves, and a button to make the page lag.', open: () => true, page: LoadingLab },
   { id: 'm-intro', title: 'Intro moment', group: 'Big moments', icon: 'door', blurb: 'The career begins.', open: () => withMoment('m-intro', (m) => m.kind === 'intro', { mode: 'standard' }) },
   { id: 'm-commit', title: 'College commitment', group: 'Big moments', icon: 'jersey', blurb: 'Signing day.', open: () => withMoment('m-commit', (m) => m.kind === 'commit', { mode: 'standard' }) },
   { id: 'm-draft', title: 'Draft night', group: 'Big moments', icon: 'jersey', blurb: 'The pick, the cap, the handshake.', open: () => withMoment('m-draft', (m) => m.kind === 'draft') },
@@ -287,7 +298,7 @@ export const CARDS: DevCard[] = [
   // modes
   // round 26-27: No Shortcuts, from the offer to the banner
   { id: 'oath-offer', title: 'No Shortcuts: the offer', group: 'Modes', icon: 'oath', blurb: 'Picking Reality asks once: take the hardest way to play?', open: () => void useStore.setState({ game: null, page: null, mini: null }), press: '.modes .mode-card:nth-child(2)' },
-  { id: 'oath-career', title: 'No Shortcuts career', group: 'Modes', icon: 'oath', blurb: 'Master mode on, Fast break, Simple text and Sim locked off; the mark in the top bar.', open: () => oath(hsStart('reality')) },
+  { id: 'oath-career', title: 'No Shortcuts career', group: 'Modes', icon: 'oath', blurb: 'Master mode on, Fast break and Sim locked off; the mark in the top bar.', open: () => oath(hsStart('reality')) },
   { id: 'oath-retired', title: 'No Shortcuts, kept to the end', group: 'Modes', icon: 'oath', blurb: 'Its own banner on the retirement page.', open: () => oath(retired(3)), press: 'text=See the whole career' },
   { id: 'mode-reality', title: 'Reality hits hard', group: 'Modes', icon: 'reality', blurb: 'Most careers end short of the NBA.', open: () => show(hsStart('reality')) },
   { id: 'mode-stars', title: 'Shoot for the stars', group: 'Modes', icon: 'stars', blurb: 'Every career reaches stardom.', open: () => show(hsStart('stars')) },
