@@ -210,11 +210,19 @@ function playMinis(s: GameState, how: MiniPlay): void {
   else for (const id of open.slice(0, 2)) claimMini(s, top[id]);
 }
 
-export function runCareer(seed: number, policy: Policy, mode: Mode = 'standard', minis: MiniPlay = 'none'): CareerResult {
+/** How the career is played: fast break or sim mode on from the start (round 25). */
+export interface PlayModes {
+  fast?: boolean;
+  sim?: boolean;
+}
+
+export function runCareer(seed: number, policy: Policy, mode: Mode = 'standard', minis: MiniPlay = 'none', play: PlayModes = {}): CareerResult {
   const r = makeRng(seed ^ 0x9e3779b9);
   const s = newGame(seed, { ...randomInput(r, policy), ...simIdentity(seed), mode });
   // the harness simulates every postseason (the playable replay would only slow it down)
   s.flags.simPostseason = 1;
+  if (play.fast || play.sim) s.flags.fast = 1;
+  if (play.sim) s.flags.sim = 1;
   const snapshots: CareerResult['snapshots'] = [];
   let steps = 0;
   let lastSnapYear = -1;
