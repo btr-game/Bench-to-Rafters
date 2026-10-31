@@ -1640,3 +1640,44 @@ Reached from the start page and from the bottom of Home (a career in progress is
   test career: 13.59). The press achievements count press conferences, not answers (five humble,
   five confident, five fiery; face the press eight times). Fast break still makes it one answer;
   sim mode answers on its own.
+- **End of round 25: the checklist** (the owner's order; nothing on it was done feature by feature).
+  - Graphics: staff are drawn at work in their roles' uniforms (a kitchen, a health club, the
+    clinic, a practice court, a study, a film room, a bedroom; the chef wears a hat, the
+    psychologist and analyst glasses); the fine page shows a league-office letter stamped FINED;
+    press conference questions show the press room and brand offers a city billboard; the rival
+    card puts the two of them face to face in their teams' kits; 14 new pixel icons (13 for shop
+    items that had fallen back to a bag, one for Sim mode).
+  - Sound: cameras at a press answer, a deal or a pulled offer in contract talks, a hire, a raise
+    or a goodbye on the staff, a chat, a visit, a brand jingle and a perfect release on the timing
+    meter, read off the career log and the player.
+  - Fast break and simple text: the nickname page now shows in fast break (once a career); fine
+    pages stay hidden there (the money still goes, and the log keeps it).
+  - Contrast and keyboard: the scan is still clean in both themes with the new art.
+  - Events: seven that bring the new systems into the story: a nickname you never asked for,
+    your brand in the news, your shoe sells out, your rival on a podcast, someone wants your staff,
+    your quote on a T-shirt, a magazine wants a tour. Over 120 careers they come up in 6% to 24%
+    of careers (the tour needs a mansion, a penthouse, an island or a yacht, which the harness
+    never buys).
+  - Harness: press and brand decisions were already handled; `live` only appears in played
+    playoffs, which the harness simulates.
+  - Dead code: 13 exports only used in their own file lost `export`; the old fast chip's dot
+    styles went; hiring now refuses a seventh staff member by itself, not only through the events.
+  - Tests: tests/round25.test.ts (17 tests: the book past 500, nicknames and brands, staff,
+    fines, press conferences, contract talks, rivals, the news, the strength breakdown, the
+    shop's shelves, the wardrobe, save codes). The round 21 events test samples 30 careers instead
+    of 12: with this round's events in the pool, 12 careers met 3 of its 12 events (30 meet 5).
+  - Balance (1,600 careers, smart player, casual mini-games, against round 22's approved numbers):
+    mean peak 73.5644 (74.4923, -2.28 standard errors), NBA 76.1875% (78.3%), All-Star
+    32.8125% (35.8%), MVP 11.0625% (11.9%), Hall of Fame 12.9375% (11.2%), titles 32.4375%
+    (29.2%). Titles have been near 32-33% since round 24. A paired run on 800 of the same
+    careers with round 24's shop stock shows the one-per-shelf shop costs 0.2552 peak OVR
+    (+/-0.1776) and 2.8750 All-Star points (+/-1.1888). Left as it is for the owner to decide.
+  - Guide: the manual covers ten save slots and codes, sound, How you play, sim, the strength
+    breakdown, the rival, the nickname, staff, fines, the news, the last shot's timing, press
+    conferences, contract talks, brands, accessories and the collection, 500+ achievements and the
+    career index; Guide mode's tour has 99 steps (21 new).
+  - Dev deck: 74 cards (15 new, one retired: the single-save Continue card).
+  - Project summary: a new chapter 15 for this round, the balance check after round 25, the last
+    shot of a playable game, ten save slots; docs/reports/2026-10-31-project-summary.docx and the
+    dev deck's summary chapter.
+

@@ -33,7 +33,7 @@ function inShape(shape: LogoShape, x: number, y: number): boolean {
 const INK = /[OKtrbgynpsm]/; // the outline and the shades: what a one-colour print keeps
 
 /** The logo's pixels: badge, rim, motif and initials, in two colours. */
-export function logoGrid(id: string, initials: string): string[][] {
+function logoGrid(id: string, initials: string): string[][] {
   const nick = NICKNAMES.find((n) => n.id === id) ?? NICKNAMES[0];
   const [paper, ink] = LOGO_PALETTES[nick.logo.palette];
   const [ground, line] = nick.logo.reverse ? [ink, paper] : [paper, ink];
@@ -71,7 +71,7 @@ export function logoGrid(id: string, initials: string): string[][] {
 }
 
 /** Initials from a name: first and last. */
-export const initialsOf = (name: string): string => {
+const initialsOf = (name: string): string => {
   const parts = name.trim().split(/\s+/);
   return `${parts[0]?.[0] ?? ''}${parts.length > 1 ? parts[parts.length - 1][0] : ''}`;
 };

@@ -3,7 +3,7 @@
 // the public ones raise his profile too. Experiences that are over once bought (a vacation, a
 // dinner) are not here.
 
-export type Place = 'road' | 'sky' | 'sea' | 'home' | 'court' | 'field' | 'city' | 'night';
+type Place = 'road' | 'sky' | 'sea' | 'home' | 'court' | 'field' | 'city' | 'night';
 
 export interface Visit {
   verb: string; // the button

@@ -13,7 +13,7 @@ export function hash(s: string): number {
   return h >>> 0;
 }
 
-export interface LookTraits {
+interface LookTraits {
   skin: number; // 0-6, light to deep
   hair: LegendLook['color'];
   style: Hair;

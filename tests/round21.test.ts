@@ -53,7 +53,8 @@ describe('round 21 events', () => {
 
   it('the new events come up in careers', () => {
     const seen = new Set<string>();
-    for (let i = 0; i < 12; i++) {
+    // round 25 added many events to the pool, so the sample is 30 careers (it was 12)
+    for (let i = 0; i < 30; i++) {
       const s = game(2100 + i);
       s.flags.simPostseason = 1;
       for (let k = 0; k < 3000; k++) {

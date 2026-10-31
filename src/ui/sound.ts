@@ -3,7 +3,10 @@
 // audio starts on the first click (browsers keep pages quiet until then); the settings menu has a
 // switch for the effects and one for the music, kept on this device.
 
-type Sfx = 'click' | 'confirm' | 'win' | 'lose' | 'title' | 'award' | 'achievement' | 'injury' | 'fine' | 'coins' | 'nickname';
+type Sfx =
+  | 'click' | 'confirm' | 'win' | 'lose' | 'title' | 'award' | 'achievement' | 'injury' | 'fine' | 'coins' | 'nickname'
+  // round 25 end of round: press answers, contract talks, staff, visits, brands, the timing meter
+  | 'shutter' | 'deal' | 'nope' | 'chime' | 'visit' | 'brand' | 'perfect';
 
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
@@ -110,6 +113,29 @@ export function sfx(name: Sfx): void {
       break;
     case 'nickname':
       seq([12, 19, 24, 28, 31], 0.07, 'triangle', 0.9);
+      break;
+    case 'shutter': // cameras at a press conference
+      noise(t, 0.04, 0.5);
+      tone(N(36), t, 0.02, 'square', 0.3);
+      noise(t + 0.09, 0.03, 0.35);
+      break;
+    case 'deal':
+      seq([12, 16, 19, 24, 28], 0.06, 'square', 0.55);
+      break;
+    case 'nope':
+      seq([7, 1], 0.1, 'triangle', 0.8);
+      break;
+    case 'chime':
+      seq([24, 31], 0.08, 'triangle', 0.6);
+      break;
+    case 'visit':
+      seq([19, 23, 26, 31], 0.09, 'triangle', 0.7);
+      break;
+    case 'brand':
+      seq([12, 19, 24, 28, 31, 36], 0.07, 'square', 0.55);
+      break;
+    case 'perfect':
+      seq([24, 28, 31, 36, 40], 0.04, 'square', 0.45);
       break;
   }
 }

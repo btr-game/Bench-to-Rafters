@@ -10,7 +10,7 @@ const INDEX = 'btr-saves-v2';
 const DATA = (id: string) => `btr-slot-${id}`;
 const OLD = 'btr-save-v1'; // the single save before round 25
 
-export interface SlotMeta {
+interface SlotMeta {
   id: string;
   name: string;
   year: number;

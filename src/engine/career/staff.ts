@@ -15,14 +15,14 @@ import type { AttrKey, GameState, StaffMember } from '../types';
 /** What he costs a season at his level ($M). */
 export const staffPay = (m: Pick<StaffMember, 'role' | 'level'>): number => STAFF[m.role].salary * STAFF_PAY.pay[m.level - 1];
 
-export const hasStaff = (s: GameState, role: StaffRole): boolean => !!s.player.staff?.some((m) => m.role === role);
+const hasStaff = (s: GameState, role: StaffRole): boolean => !!s.player.staff?.some((m) => m.role === role);
 
 /** Can he take on one more? (a pro league, room on the staff, and a bank that can pay a few seasons) */
 export const canHire = (s: GameState, role: StaffRole): boolean =>
   ['GL', 'EU', 'INT', 'NBA'].includes(s.stage) && !hasStaff(s, role) && (s.player.staff?.length ?? 0) < STAFF_PAY.max && s.player.bank >= STAFF[role].salary * STAFF_PAY.afford;
 
 export function hireStaff(s: GameState, role: StaffRole): StaffMember | null {
-  if (hasStaff(s, role)) return null;
+  if (hasStaff(s, role) || (s.player.staff?.length ?? 0) >= STAFF_PAY.max) return null;
   const m: StaffMember = { id: s.nextId++, role, name: `${pick(s.rng, FIRST_NAMES)} ${pick(s.rng, LAST_NAMES)}`, level: 1, since: s.year, paid: 0 };
   (s.player.staff ??= []).push(m);
   logDecision(s, 'staff', `Hired ${m.name} as ${STAFF[role].title.toLowerCase()}.`);

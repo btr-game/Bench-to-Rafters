@@ -9,14 +9,14 @@ import { userOvr } from './common';
 import { winningEdge } from './team';
 import type { GameState } from '../types';
 
-export interface StrengthItem {
+interface StrengthItem {
   label: string;
   value: number; // points of team strength a game
   playoff?: number; // a different value in the playoffs
   kind: 'team' | 'you' | 'factor';
 }
 
-export interface Breakdown {
+interface Breakdown {
   items: StrengthItem[];
   total: number; // over an average team in his league
   rank: number; // where that total puts his team among the teams of the league

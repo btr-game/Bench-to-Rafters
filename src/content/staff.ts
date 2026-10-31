@@ -5,7 +5,7 @@
 
 export type StaffRole = 'chef' | 'nutritionist' | 'trainer' | 'physio' | 'shooting' | 'skills' | 'psychologist' | 'analyst' | 'sleep';
 
-export interface StaffDef {
+interface StaffDef {
   role: StaffRole;
   title: string; // "Personal chef"
   salary: number; // $M a season at level 1

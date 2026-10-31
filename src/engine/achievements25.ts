@@ -11,7 +11,7 @@ import { careerIndex } from './awards/legacy';
 import { NICKNAMES } from '../content/nicknames';
 
 /** What the round 25 checks read: the career, its NBA seasons and the awards by year. */
-export interface Facts25 {
+interface Facts25 {
   g: GameState;
   nba: SeasonRecord[];
   awardsByYear: Map<number, Set<string>>;

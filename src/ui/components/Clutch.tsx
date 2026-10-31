@@ -3,7 +3,9 @@
 // possessions waits for him: pick the move, then stop the meter. The final's result was settled
 // by the season (the title, the awards and the bracket all depend on it), so the score of each
 // play stays as it was told; what the timing earns is a clutch rating, worth a little
-// reputation and mood, and a few achievements.
+// reputation and mood, and a few achievements. (Round 25: with playable playoffs on, the last
+// possession of a close game is played before the result, and there the timing decides the shot:
+// career/live.ts and the timing meter in Decision.tsx.)
 
 import { useEffect, useRef, useState } from 'react';
 import type { DramaPlay } from '../../engine/story/drama';

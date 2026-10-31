@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import type { Timing } from '../../engine/mini/streetball';
 import { clamp } from '../../engine/rng';
+import { sfx } from '../sound';
 
 // The timing meter (round 24, streetball; round 25: shared with the last possession of a playable
 // playoff game, where the timing decides the shot).
@@ -18,7 +19,9 @@ export function TimingMeter({ skill, label, onTap }: { skill: number; label: str
     if (done.current) return;
     done.current = true;
     const d = Math.abs(pos.current - centre);
-    onTap(d <= zone * 0.18 ? 'perfect' : d <= zone / 2 ? 'good' : 'late');
+    const t: Timing = d <= zone * 0.18 ? 'perfect' : d <= zone / 2 ? 'good' : 'late';
+    sfx(t === 'perfect' ? 'perfect' : t === 'good' ? 'confirm' : 'nope');
+    onTap(t);
   }, [centre, zone, onTap]);
   useEffect(() => {
     let raf = 0;

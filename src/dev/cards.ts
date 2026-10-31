@@ -8,7 +8,12 @@ import { careerRecord, type CareerRecord } from '../engine/career/record';
 import { canSetStyle } from '../engine/career/identity';
 import { canRecruit, startingFive } from '../engine/career/recruit';
 import { growBonds } from '../engine/career/duo';
-import { setFast } from '../engine/fast';
+import { setFast, setSim } from '../engine/fast';
+import { awardNickname } from '../engine/career/nickname';
+import { hireStaff } from '../engine/career/staff';
+import { applyItem } from '../engine/economy/shop';
+import { SHOP_ITEMS } from '../content/shop';
+import { newSlotId, writeSlot } from '../ui/saves';
 import { todayKey } from '../engine/mini/daily';
 import { ATTRS } from '../engine/balance';
 import { logCareer } from '../ui/careerLog';
@@ -51,6 +56,25 @@ const nbaStar = () => fixture('nba', () => play((s, p) => s.stage === 'NBA' && s
 const hsStart = (mode: PlayOpts['mode'] = 'standard') => fixture(`hs-${mode}`, () => play((_, p) => p.type === 'decision' && p.decision.kind === 'plan', { mode }));
 const retired = (seed: number) => fixture(`retired-${seed}`, () => play((s) => s.step === 'retired', { mode: 'stars', seed, fast: true }));
 const at = (key: string, until: Parameters<typeof play>[0], o: PlayOpts = {}) => fixture(key, () => play(until, { mode: 'stars', ...o }));
+
+/** An NBA star with round 25's systems on: a nickname and a brand, staff, accessories and things
+ * to visit. */
+function loaded(): GameState | null {
+  const g = nbaStar();
+  if (!g) return null;
+  g.player.bank += 500;
+  g.player.rep = Math.max(g.player.rep, 90);
+  if (!g.player.nickname) awardNickname(g, '#1C7ED6', 'Team');
+  for (const role of ['chef', 'trainer', 'psychologist', 'analyst', 'sleep'] as const) hireStaff(g, role);
+  for (const id of ['car', 'jet', 'mansion', 'yacht']) {
+    const it = SHOP_ITEMS.find((x) => x.id === id);
+    if (it && !g.purchases.includes(id)) applyItem(g, it);
+  }
+  for (const it of SHOP_ITEMS.filter((x) => x.wear).filter((_, i) => i % 5 === 0)) applyItem(g, it);
+  g.player.brand ??= { brand: 'Courtline', color: '#1D3557', kind: 'line', years: 6, left: 4, perYear: 3, since: g.year - 2, earned: 22, shoe: 2 };
+  return g;
+}
+const PRO = ['NBA', 'EU', 'INT', 'GL'];
 
 /** Puts a game on screen, with nothing else in the way (a card that wants a moment keeps it). */
 function show(g: GameState | null, tab: Tab = 'home', extra: Partial<ReturnType<typeof useStore.getState>> = {}, keepMoments = false): boolean {
@@ -132,20 +156,15 @@ export const CARDS: DevCard[] = [
   // start
   { id: 'start', title: 'Start page and player creation', group: 'Start', icon: 'person', blurb: 'Name, position, archetype, focus, country, difficulty.', open: () => void useStore.setState({ game: null, page: null, mini: null }) },
   {
-    id: 'continue',
-    title: 'Continue a saved career',
+    id: 'saves',
+    title: 'Ten save slots and career codes',
     group: 'Start',
     icon: 'disk',
-    blurb: 'The resume card for a career saved on this device.',
+    blurb: 'Every career on this device, newest first: continue, copy its code, delete. Paste a code to import.',
     open: () => {
-      const g = nbaStar();
+      const g = loaded();
       if (!g) return false;
-      try {
-        localStorage.setItem('btr-save-v1', JSON.stringify({ meta: { name: g.player.name, year: g.year, ovr: Math.round(g.player.peakOvr), retired: false }, game: g }));
-      } catch {
-        return false; // no storage here: nothing to continue
-      }
-      useStore.setState({ game: null, page: null, mini: null });
+      void writeSlot(newSlotId(), g).then(() => useStore.setState({ game: null, page: null, mini: null }));
     },
   },
   { id: 'daily', title: 'Daily challenge', group: 'Start', icon: 'calendar', blurb: "Today's prospect, the same for everyone. Mini-games locked.", open: () => void (useStore.setState({ game: null, mini: null, page: null }), useStore.getState().startDaily()) },
@@ -159,7 +178,7 @@ export const CARDS: DevCard[] = [
   { id: 'bodymap', title: 'Body map with an injury', group: 'Career hub', icon: 'health', blurb: 'The pixel body map, hurt.', open: () => show(at('injured', (s) => !!s.player.injury && s.stage === 'NBA'), 'player') },
   { id: 'league', title: 'League tab and bracket', group: 'Career hub', icon: 'bracket', blurb: 'Standings, the playoff bracket, the record book.', open: () => show(at('bracket', (s) => s.stage === 'NBA' && s.step === 'summary' && !!s.nba?.bracket), 'league') },
   { id: 'records', title: 'Records tab', group: 'Career hub', icon: 'chart', blurb: 'Trophies, banners, career highs, timeline.', open: () => show(at('late', (s) => s.stage === 'NBA' && s.player.age >= 31 && s.step === 'summary'), 'records') },
-  { id: 'settings', title: 'Settings menu', group: 'Career hub', icon: 'dial', blurb: 'Theme, court, new career, switches.', open: () => show(nbaStar()), press: '[data-tour="settings-btn"]' },
+  { id: 'settings', title: 'Settings menu', group: 'Career hub', icon: 'dial', blurb: 'Theme, court, sound and music, new career, switches.', open: () => show(nbaStar()), press: '[data-tour="settings-btn"]' },
   { id: 'guide', title: 'The game guide', group: 'Career hub', icon: 'guide', blurb: 'The manual: big headers, expandable cards.', open: () => show(nbaStar()), press: '[data-tour="guide-btn"]' },
   { id: 'tour', title: 'Guide mode tour', group: 'Career hub', icon: 'arrow', blurb: 'Every control, highlighted once.', open: () => (resetTour(), show(hsStart(), 'home', { guide: true, master: false })) },
   { id: 'master', title: 'Master mode', group: 'Career hub', icon: 'master', blurb: 'No recommendations anywhere.', open: () => show(nbaStar(), 'home', { master: true }) },
@@ -168,14 +187,33 @@ export const CARDS: DevCard[] = [
     title: 'Fast break',
     group: 'Career hub',
     icon: 'fast',
-    blurb: 'Quick seasons; you still make every real call.',
+    blurb: 'Quick seasons, one-tap press conferences, every tab folded to its essentials.',
     open: () => {
       const g = nbaStar();
       if (g) setFast(g, true);
       return show(g);
     },
   },
-  { id: 'simple', title: 'Simple text', group: 'Career hub', icon: 'simple', blurb: 'Fewer words, just the choices.', open: () => show(nbaStar(), 'home', { simple: true }) },
+  { id: 'simple', title: 'Simple text', group: 'Career hub', icon: 'simple', blurb: 'Explanations hidden on every tab, just the choices.', open: () => show(nbaStar(), 'home', { simple: true }) },
+  {
+    id: 'sim',
+    title: 'Sim mode',
+    group: 'Career hub',
+    icon: 'sim',
+    blurb: 'Routine calls made for you; it stops only for the big ones.',
+    open: () => {
+      const g = nbaStar();
+      if (g) setSim(g, true);
+      return show(g);
+    },
+  },
+  { id: 'modes', title: 'How you play', group: 'Career hub', icon: 'dial', blurb: 'Every mode as a switch, above Around the league.', open: () => show(loaded()), press: '[data-tour="modes"]' },
+  { id: 'strength', title: 'Why it went this way', group: 'Career hub', icon: 'chart', blurb: 'Team strength, factor by factor.', open: () => show(nbaStar(), 'season') },
+  { id: 'rival', title: 'Rival', group: 'Career hub', icon: 'rival', blurb: 'Draft class, head to head, MVP race: you and him on one floor.', open: () => show(loaded()) },
+  { id: 'name-card', title: 'Nickname and brand', group: 'Career hub', icon: 'crown', blurb: 'His nickname, its two-colour logo, the brand deal.', open: () => show(loaded(), 'player') },
+  { id: 'staff', title: 'Staff', group: 'Career hub', icon: 'chef', blurb: 'Each at work in the role’s uniform: stop by, raise, let go.', open: () => show(loaded(), 'player') },
+  { id: 'wardrobe', title: 'Wardrobe', group: 'Career hub', icon: 'hanger', blurb: 'Accessories on the avatar; swap or take them off.', open: () => show(loaded(), 'player') },
+  { id: 'collection', title: 'Collection and visits', group: 'Career hub', icon: 'car', blurb: 'Everything bought; visit the car, the jet, the house.', open: () => show(loaded(), 'player') },
 
   // decisions
   { id: 'd-plan', title: 'Training plan', group: 'Decisions', icon: 'grind', blurb: 'Plans with colour strips, two at half strength.', open: () => atDecision('plan', { mode: 'standard' }) },
@@ -185,7 +223,10 @@ export const CARDS: DevCard[] = [
   { id: 'd-shop', title: 'Shop', group: 'Decisions', icon: 'bag', blurb: 'Spend the bank on gear and health.', open: () => atDecision('shop') },
   { id: 'd-summer', title: 'Summer', group: 'Decisions', icon: 'palm', blurb: 'How he spends the offseason.', open: () => atDecision('summer') },
   { id: 'd-national', title: 'National team', group: 'Decisions', icon: 'globe', blurb: 'The call-up and the summer tournament.', open: () => atDecision('national') },
-  { id: 'd-live', title: 'Playable playoff game', group: 'Decisions', icon: 'clutch', blurb: 'A tactic each quarter, or simulate.', open: () => atDecision('live', { live: true }) },
+  { id: 'd-press', title: 'Press conference', group: 'Decisions', icon: 'mic', blurb: 'One or two questions: humble, confident or fiery.', open: () => atDecision('press') },
+  { id: 'd-brand', title: 'Brand offers', group: 'Decisions', icon: 'shoe', blurb: 'A fixed deal or a signature line under his logo.', open: () => show(at('d-brand', decision('brand'))) },
+  { id: 'd-talks', title: 'Contract talks', group: 'Decisions', icon: 'office', blurb: 'More money, a year or a bigger role, under each pro offer.', open: () => show(at('d-talks', (s, p) => p.type === 'decision' && p.decision.kind === 'offers' && PRO.includes(s.stage))) },
+  { id: 'd-live', title: 'Playable playoff game', group: 'Decisions', icon: 'clutch', blurb: 'A tactic each quarter; the last shot of a close game goes to the timing meter.', open: () => atDecision('live', { live: true }) },
   { id: 'd-assign', title: 'Midseason assignment', group: 'Decisions', icon: 'swap', blurb: 'A G League stint or a move.', open: () => atDecision('assign', { mode: 'standard' }) },
   { id: 'd-retire', title: 'Retirement prompt', group: 'Decisions', icon: 'lastdance', blurb: 'Retire, one more year, or chase a ring.', open: () => atDecision('retirePrompt') },
   {
@@ -206,6 +247,8 @@ export const CARDS: DevCard[] = [
   { id: 'm-awards', title: 'Awards night', group: 'Big moments', icon: 'laurel', blurb: 'MVP, All-NBA, the trophies.', open: () => withMoment('m-awards', (m) => m.kind === 'awards') },
   { id: 'm-finals', title: 'NBA Finals (playable)', group: 'Big moments', icon: 'clutch', blurb: 'Play, watch or skip the last minutes.', open: () => withMoment('m-finals', (m) => m.kind === 'title' && !!m.drama && m.mood === 'champion' && m.game?.level === 'NBA') },
   { id: 'm-gold', title: 'Olympic or World Cup final', group: 'Big moments', icon: 'globe', blurb: 'National colours on a FIBA floor.', open: () => withMoment('m-gold', (m) => m.kind === 'tournament' && !!m.drama) },
+  { id: 'm-fine', title: 'Fined', group: 'Big moments', icon: 'envelope', blurb: 'A letter from the league office, and the amount.', open: () => withMoment('m-fine', (m) => m.kind === 'fine') },
+  { id: 'm-nickname', title: 'A nickname', group: 'Big moments', icon: 'crown', blurb: 'The day the media names him, with its logo.', open: () => withMoment('m-nickname', (m) => !!m.logo) },
   { id: 'm-injury', title: 'Injury', group: 'Big moments', icon: 'health', blurb: 'The bad news and the timeline.', open: () => withMoment('m-injury', (m) => m.kind === 'injury') },
   {
     id: 'm-duo',
@@ -271,7 +314,7 @@ export const CARDS: DevCard[] = [
       useStore.setState({ toasts: ACH_TIERS.slice(0, 3).map((t, i) => ({ id: `dev-${t.key}`, name: ACHIEVEMENTS.find((a) => a.tier === t.key)!.name, tier: t.key, more: i === 2 ? 9 : undefined })) });
     },
   },
-  { id: 'c-boards', title: 'Leaderboards', group: 'Records & community', icon: 'podium', blurb: 'Daily and all-time, every difficulty.', open: () => (seedCommunity(), useStore.setState({ game: null, mini: null, page: 'community' })) },
+  { id: 'c-boards', title: 'Leaderboards', group: 'Records & community', icon: 'podium', blurb: 'Daily and all-time, every difficulty, ranked by career index.', open: () => (seedCommunity(), useStore.setState({ game: null, mini: null, page: 'community' })) },
   { id: 'c-hall', title: 'Reality 99 hall', group: 'Records & community', icon: 'hall', blurb: 'Every Reality career that reached 99.', open: () => (seedCommunity(), useStore.setState({ game: null, mini: null, page: 'community' })), press: 'text=Reality 99 hall' },
   { id: 'c-plaza', title: 'Statue plaza', group: 'Records & community', icon: 'statue', blurb: 'Bronze and gold, pay your respects.', open: () => (seedCommunity(), useStore.setState({ game: null, mini: null, page: 'community' })), press: 'text=Statue plaza' },
   { id: 'c-feedback', title: 'Send feedback', group: 'Records & community', icon: 'envelope', blurb: 'A note to the maker.', open: () => (seedCommunity(), useStore.setState({ game: null, mini: null, page: 'community' })), press: 'text=Send feedback' },

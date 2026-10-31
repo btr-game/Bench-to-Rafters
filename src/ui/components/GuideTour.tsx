@@ -53,6 +53,10 @@ const TOUR: Step[] = [
   T('d-summer', D('d-summer'), 'Your summer program shapes next season.'),
   T('d-national', D('d-national'), 'A national team call: medals and fame, at the cost of rest.'),
   T('d-live', D('d-live'), 'A playable playoff game: a tactic each quarter, or simulate.'),
+  T('live-meter', D('live-meter'), 'The last shot of a close game: stop the meter in the green. A perfect release makes it much likelier to drop.'),
+  T('d-press', D('d-press'), 'A press conference: answer humble, confident or fiery. Each tone does something different.'),
+  T('d-brand', D('d-brand'), 'Brands want your logo: a fixed deal, your own signature line, or not yet.'),
+  T('talks', D('talks'), 'Talk terms: ask for more money, a year or a bigger role. Two asks; push too hard and they pull the offer.'),
   T('d-retire', D('d-retire'), 'Keep playing, retire, or chase a ring as a veteran specialist.'),
   T('d-chaser', D('d-chaser'), 'Pick your role for the contender.'),
   T('moment-go', '.moment-btn', 'A story page. Read it, then carry on (Enter).'),
@@ -60,8 +64,15 @@ const TOUR: Step[] = [
   T('clutch-meter', '.clutch-meter', 'Stop the marker in the green: Space, Enter or a tap. The bright middle is perfect.'),
   T('skip-final', '[data-skip]', 'Or skip straight to the result.'),
   T('next-step', '.next-step', 'From any other tab, this carries the game on.'),
-  T('chip-fast', D('chip-fast'), 'Fast break: quick seasons. You still make every real call.'),
-  T('chip-simple', D('chip-simple'), 'Simple text: just the choices.'),
+  T('modes', D('modes'), 'How you play: every mode in one place.'),
+  T('chip-sim', D('chip-sim'), 'Sim: the routine calls are made for you; it stops only for the big ones.'),
+  T('chip-fast', D('chip-fast'), 'Fast break: quick seasons, and each tab folds its extra cards. You still make every real call.'),
+  T('chip-simple', D('chip-simple'), 'Simple text: the explanations go, on every tab.'),
+  T('chip-guide', D('chip-guide'), 'Guide mode: this tour.'),
+  T('chip-master', D('chip-master'), 'Master mode: no hints or recommendations anywhere.'),
+  T('chip-playoffs', D('chip-playoffs'), 'Play playoff games yourself, or let them be simulated.'),
+  T('fold', '.fold-toggle', 'Fast break folded some cards away. This brings them back for a look.'),
+  T('rival', D('rival'), 'Your rival: who, the head to head, and the race season by season.'),
   T('settings-btn', D('settings-btn'), 'Settings: look, New career and the switches.'),
   T('set-theme', D('set-theme'), 'Light, dark, or follow your device.'),
   T('set-court', D('set-court'), 'The page background.'),
@@ -71,15 +82,22 @@ const TOUR: Step[] = [
   T('set-simple', D('set-simple'), 'Simple text, also here.'),
   T('set-guide', D('set-guide'), 'Guide mode: this tour, then the next thing to do.'),
   T('set-master', D('set-master'), 'Master mode: no hints or recommendations anywhere.'),
+  T('set-sfx', D('set-sfx'), 'Sound effects on or off.'),
+  T('set-music', D('set-music'), 'A soft chiptune loop while you play.'),
   T('stories', '.fold-head', 'Around the league: this season’s storylines. Call how they end for reputation.'),
   T('tab-season', D('tab-season'), 'Season: your team, games, standings and bracket.'),
   T('season-city', '.city-card', 'Your city and its fans, and what they do to you.'),
   T('season-games', D('season-games'), 'Every game you played.'),
+  T('strength', D('strength'), 'Why your team is as good as it is: teammates, you, and every team factor.'),
   T('bracket', '.bracket', 'The playoff bracket.'),
   T('tab-player', D('tab-player'), 'Player: ratings, status, kits, scouting and your body.'),
   T('kits', '.kits', 'Tap a kit to dress your player in it.'),
   T('scout', '.scout-card', 'Where the scouts think you peak, and your odds.'),
   T('bodymap', '.bm', 'What training built and where you got hurt. Hover a muscle.'),
+  T('name-card', D('name-card'), 'Your nickname and its logo, and your brand deal.'),
+  T('staff', D('staff'), 'Your staff: stop by once a season, give a raise, or let them go.'),
+  T('wardrobe', D('wardrobe'), 'Your accessories: tap a colour to wear it, or None to take it off.'),
+  T('collection', D('collection'), 'Everything you bought. Visit the car, the jet, the house once a season.'),
   T('roster', D('roster'), 'Your roster: the five, the bench, the team’s system, and how well it all fits (team chemistry).'),
   T('tab-league', D('tab-league'), 'League: standings, leaders and award voting.'),
   T('record-book', D('record-book'), 'Champions and award winners, year by year.'),
@@ -109,7 +127,7 @@ const ROAD = ['offers', 'commit', 'eu', 'int', 'gl', 'min', 'youth', 'prep', 'pr
 /** The tour step for a decision, by its kind. */
 export function tourKind(kind: string): string | undefined {
   if (kind === 'info') return undefined;
-  if (kind === 'plan' || kind === 'shop' || kind === 'summer' || kind === 'live' || kind === 'national' || kind === 'arc') return `d-${kind}`;
+  if (kind === 'plan' || kind === 'shop' || kind === 'summer' || kind === 'live' || kind === 'national' || kind === 'arc' || kind === 'press' || kind === 'brand') return `d-${kind}`;
   if (kind === 'retirePrompt') return 'd-retire';
   if (kind === 'chaserRole') return 'd-chaser';
   if (ROAD.includes(kind)) return 'd-road';

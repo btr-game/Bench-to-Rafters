@@ -17,7 +17,7 @@ import type { BrandDeal, Decision, GameState, Nickname } from '../types';
 const c01 = (x: number) => clamp(x, 0, 1);
 
 /** Every trait the picker can see, from 0 to 1. */
-export function traitsOf(s: GameState): Partial<Record<Trait, number>> {
+function traitsOf(s: GameState): Partial<Record<Trait, number>> {
   const p = s.player;
   const t: Partial<Record<Trait, number>> = {};
   // how he looks
@@ -119,7 +119,7 @@ export function fitOf(nick: NickDef, t: Partial<Record<Trait, number>>): number 
 }
 
 /** A nickname filled in for this player. */
-export function nameFor(nick: NickDef, s: GameState): { name: string; why: string } {
+function nameFor(nick: NickDef, s: GameState): { name: string; why: string } {
   const p = s.player;
   const [first, ...rest] = p.name.split(' ');
   const last = rest.join(' ') || first;
@@ -129,7 +129,7 @@ export function nameFor(nick: NickDef, s: GameState): { name: string; why: strin
 }
 
 /** The media's pick: the best fit, with a little luck, and why. */
-export function pickNickname(s: GameState): Nickname {
+function pickNickname(s: GameState): Nickname {
   const t = traitsOf(s);
   let best = NICKNAMES[0];
   let top = -1;

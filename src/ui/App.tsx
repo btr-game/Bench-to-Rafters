@@ -130,6 +130,15 @@ export function App() {
         const b = before.game;
         if (!g || !b || g === b) return;
         if (g.purchases.length > b.purchases.length) sfx('coins');
+        // round 25: what the new systems did, read off the career log and the player
+        for (const l of g.log.slice(b.log.length)) {
+          if (l.kind === 'press') sfx('shutter');
+          else if (l.kind === 'talks') sfx(/pull the offer/.test(l.text) ? 'nope' : /They agree/.test(l.text) ? 'deal' : 'confirm');
+          else if (l.kind === 'staff') sfx(/^Let /.test(l.text) ? 'nope' : /raise/.test(l.text) ? 'coins' : 'confirm');
+        }
+        if (g.player.brand && g.player.brand.since !== b.player.brand?.since) sfx('brand');
+        if (Object.keys(g.player.visits ?? {}).some((k) => g.player.visits![k] !== b.player.visits?.[k])) sfx('visit');
+        if ((g.player.staff ?? []).some((m) => m.talked !== b.player.staff?.find((x) => x.id === m.id)?.talked)) sfx('chime');
         const seen = new Set(b.moments.map((m) => m.id));
         const fresh = g.moments.find((m) => !seen.has(m.id));
         if (!fresh) return;
