@@ -20,3 +20,6 @@ coverage
 
 # local art preview page (round 17), not part of the game
 preview/
+
+# Netlify links a local folder with this (never committed)
+.netlify

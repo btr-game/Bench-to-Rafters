@@ -1,0 +1,9 @@
+# The game's website on Netlify (bench-to-rafters.netlify.app), owner: "let's go with netlify".
+# Netlify builds the repository on every push to main: the online build, which carries the
+# community database's public address (.env.itch, Supabase), published from dist-itch.
+[build]
+  command = "npm run build:itch"
+  publish = "dist-itch"
+
+[build.environment]
+  NODE_VERSION = "22"

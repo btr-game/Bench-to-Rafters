@@ -1969,4 +1969,9 @@ multiple times."
   `scripts/class-contrast.cjs` now draws every button, tag and chip class combination in the code in
   both themes: it also found the Main and Side plan tags (2.8 and 2.6:1 in the dark theme) and the
   red danger button's white letters in the dark theme (3.0:1), all fixed (`--bad-ink`).
+- **The website: Netlify** (owner: "are there other ways to make game domains other than itch.io? i
+  dont like it", then "let's go with netlify"): bench-to-rafters.netlify.app, made public through the
+  connector (new Netlify sites start behind a team login). It builds from the GitHub repository on
+  every push (`netlify.toml`), so updates need no uploads. The sandbox cannot reach Netlify, so the
+  repository is linked from Netlify's own dashboard.
 
