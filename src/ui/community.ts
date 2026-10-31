@@ -1,8 +1,8 @@
 // The online community (round 24): leaderboards, the Reality 99 hall, the statue plaza, feedback
-// and the live strip. One interface, two homes: the claude.ai page's shared database (the `db`,
-// `user` and `room` capabilities) when the game runs there, and this device alone anywhere else,
-// so every page still works offline. Moving to a website with its own database later means a
-// third home behind the same interface; nothing above this file changes.
+// and the live strip. One interface, three homes: the claude.ai page's shared database (the `db`,
+// `user` and `room` capabilities) when the game runs there; the game's own online database
+// (onlineCommunity.ts, Supabase) in the itch.io build; and this device alone anywhere else, or
+// when neither can be reached, so every page still works offline.
 //
 // What is shared is only what a career card shows (the career record), the player's name in the
 // game, and an opaque account id for ownership; never an account name or address.
@@ -88,7 +88,7 @@ export interface Community {
 }
 
 const metalOf = (r: CareerRecord): 'bronze' | 'gold' => (r.legacy >= STATUE.gold || r.hof === 'first' ? 'gold' : 'bronze');
-const feedLine = (r: CareerRecord): string => {
+export const feedLine = (r: CareerRecord): string => {
   const what = r.titles ? `${r.titles}× champion` : r.mvps ? `${r.mvps}× MVP` : r.hof ? 'a Hall of Famer' : r.tier.toLowerCase();
   return `${r.name} (${r.country}) retired at ${r.retiredAt}: ${what}.`;
 };
@@ -381,13 +381,26 @@ export async function readInbox(): Promise<{ rows: FeedbackRow[]; where: 'shared
 }
 
 let picked: Promise<Community> | null = null;
-/** The community this page can reach: shared on claude.ai, this device elsewhere. */
+/** The community this page can reach: shared on claude.ai, the game's own database in the itch.io
+ * build, this device elsewhere. */
 export function community(): Promise<Community> {
   if (picked) return picked;
   picked = (async () => {
     const host = (window as unknown as { claude?: ClaudeHost }).claude;
     // the dev deck never posts to (or reads) the real community: it stays on this device
-    if (!host?.use || DEV) return localCommunity();
+    if (DEV) return localCommunity();
+    if (!host?.use) {
+      // the itch.io build carries its database's address (.env.itch); other builds leave this out
+      if (import.meta.env.VITE_SB_URL && import.meta.env.VITE_SB_KEY) {
+        try {
+          const { onlineCommunity } = await import('./onlineCommunity');
+          return await onlineCommunity(import.meta.env.VITE_SB_URL, import.meta.env.VITE_SB_KEY);
+        } catch {
+          return localCommunity();
+        }
+      }
+      return localCommunity();
+    }
     try {
       const [db, user, room] = (await Promise.all([host.use('db'), host.use('user'), host.use('room')])) as [Db | null, UserApi | null, RoomApi | null];
       if (!db) return localCommunity();

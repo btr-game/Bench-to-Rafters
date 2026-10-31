@@ -19,7 +19,8 @@ export const NEWS: News[] = [
     id: '2026-10-31',
     date: '31 October 2026',
     items: [
-      { icon: 'person', text: 'Pick your look at the start: skin, hair, hair colour and facial hair, in a plain jersey with your number.' },
+      { icon: 'person', text: 'Pick your look at the start: skin, hair, hair colour and facial hair, in a plain jersey with your number, and see your name and number on the back of it.' },
+      { icon: 'arrow', text: 'A tab with an orange dot now takes you straight to what is new there, rings it, and waits for Got it.' },
       { icon: 'ball', text: 'A new intro: the title over a one-on-one (runs, steals, blocks and jumpers), from a high school gym to the NBA. Replay it from Intro on the start page.' },
       { icon: 'laurel', text: 'Moving on to your next career? A thank-you first, with the trophy held high.' },
       { icon: 'hall', text: 'The Reality 99 hall is a real hall now: benches of silhouettes. Tap one to see who made it.' },

@@ -24,6 +24,7 @@ import { importCode, newSlotId, readSlot, writeSlot } from './ui/saves';
 import { DEV } from './dev/mode';
 import { chooseLook } from './content/looks';
 import { NEWS } from './content/whatsNew';
+import { tabNews, type Spot } from './ui/tabNews';
 import type { AchTier } from './engine/achievements';
 
 export type Tab = 'home' | 'season' | 'player' | 'league' | 'records';
@@ -94,6 +95,9 @@ interface Store {
   toggleMaster: () => void;
   /** The tab keys last seen (round 14): a tab whose key moved on shows a "new" dot. */
   seen: Partial<Record<Tab, string>>;
+  /** What that dot was about, for the tab just opened: shown one at a time with Got it (TabNews). */
+  spots: { tab: Tab; list: Spot[]; total: number } | null;
+  endSpot: () => void;
   /** Picks up the career saved on this device; false if there is none or it cannot be read. */
   /** Round 25: the save slot of the career on screen (null until it is first saved). */
   slot: string | null;
@@ -586,10 +590,18 @@ export const useStore = create<Store>((set, get) => ({
   setTab: (tab) =>
     later(() => {
       const g = get().game;
+      // what the tab's dot was about, read before the tab counts as seen
+      const list = g && tab !== get().tab ? tabNews(g, tab, get().seen[tab]) : [];
       // leaving a tab and opening one both count as having seen them
       const seen = g ? { ...get().seen, [get().tab]: tabKey(g, get().tab), [tab]: tabKey(g, tab) } : get().seen;
-      set({ tab, seen });
+      set({ tab, seen, spots: list.length ? { tab, list, total: list.length } : null });
       top();
+    }),
+  spots: null,
+  endSpot: () =>
+    set((s) => {
+      const rest = s.spots?.list.slice(1) ?? [];
+      return { spots: s.spots && rest.length ? { ...s.spots, list: rest } : null };
     }),
   setTheme: (theme) => {
     try {

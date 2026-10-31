@@ -3,7 +3,9 @@ import type { Kit } from '../../content/teamStyle';
 import { dark, glyph, inPoly, light, toPaths, DIGITS, type Pt } from './pixel';
 
 // A jersey laid flat (round 17): the team's kit in pixels, front on, with the wordmark arched
-// across the chest and the number big below it, outlined in the trim.
+// across the chest and the number big below it, outlined in the trim. Or from the back (owner:
+// "show the back jersey so that users can see number and name change"): a shallower neckline,
+// the name across the shoulders and the number big below.
 
 const W = 44;
 const H = 50;
@@ -21,10 +23,13 @@ const BODY: Pt[] = [
   [4.4, 13.5],
   [9.2, 9],
 ];
+// the back's neckline sits higher
+const BACK: Pt[] = BODY.map(([x, y], i) => (i === 2 || i === 3 ? [x, 4] : [x, y]));
 
-function paintJersey(kit: Kit, number: number): string[][] {
+function paintJersey(kit: Kit, number: number, back: boolean): string[][] {
   const g: string[][] = Array.from({ length: H }, () => Array(W).fill(''));
-  const inside = (x: number, y: number) => x >= 0 && y >= 0 && x < W && y < H && inPoly(x + 0.5, y + 0.5, BODY);
+  const shape = back ? BACK : BODY;
+  const inside = (x: number, y: number) => x >= 0 && y >= 0 && x < W && y < H && inPoly(x + 0.5, y + 0.5, shape);
   const white = kit.base.toUpperCase() === '#FFFFFF';
   const fold = white ? '#DCE0E8' : dark(kit.base, 0.14);
   for (let y = 0; y < H; y++)
@@ -47,9 +52,10 @@ function paintJersey(kit: Kit, number: number): string[][] {
       if (g[y][x] === kit.base && x < 12 && y > 14) g[y][x] = light(kit.base, white ? 0 : 0.08);
       if (y === H - 2 && inside(x, y + 1)) g[y][x] = fold; // hem
     }
-  // the wordmark, arched; two words that don't fit go on two lines
+  // the wordmark, arched; two words that don't fit go on two lines (the back has the name instead)
   const fits = (t: string) => t.length * 4 - 1 <= 32;
-  const lines = fits(kit.word) || !kit.word.includes(' ') ? [kit.word.slice(0, 8)] : kit.word.split(' ').slice(0, 2).map((t) => t.slice(0, 8));
+  const word = back ? '' : kit.word;
+  const lines = fits(word) || !word.includes(' ') ? [word.slice(0, 8)] : word.split(' ').slice(0, 2).map((t) => t.slice(0, 8));
   lines.forEach((word, li) => {
     const width = word.length * 4 - 1;
     const x0 = Math.floor((W - width) / 2);
@@ -66,20 +72,43 @@ function paintJersey(kit: Kit, number: number): string[][] {
   const cells: Pt[] = [];
   [...num].forEach((d, i) => {
     const bits = DIGITS[+d];
-    for (let k = 0; k < 15; k++) if (bits[k] === '1') for (const [dx, dy] of [[0, 0], [1, 0], [0, 1], [1, 1]] as Pt[]) cells.push([nx + i * 8 + (k % 3) * 2 + dx, (lines.length === 1 ? 25 : 28) + Math.floor(k / 3) * 2 + dy]);
+    for (let k = 0; k < 15; k++) if (bits[k] === '1') for (const [dx, dy] of [[0, 0], [1, 0], [0, 1], [1, 1]] as Pt[]) cells.push([nx + i * 8 + (k % 3) * 2 + dx, (back ? 24 : lines.length === 1 ? 25 : 28) + Math.floor(k / 3) * 2 + dy]);
   });
   for (const [x, y] of cells) for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as Pt[]) if (inside(x + dx, y + dy)) g[y + dy][x + dx] = kit.trim;
   for (const [x, y] of cells) g[y][x] = kit.ink;
   return g;
 }
 
-export function JerseyArt({ kit, number, size = 80, label }: { kit: Kit; number: number; size?: number; label: string }) {
-  const paths = useMemo(() => toPaths(paintJersey(kit, number)), [kit, number]);
+/** A name in the 3x5 pixel letters, straight across the shoulders (an arch steps unevenly at this
+ * size): the cells and the size of their box. */
+function nameCells(name: string): { d: string; w: number; h: number } {
+  const text = [...name].slice(0, 14);
+  let d = '';
+  text.forEach((ch, i) => {
+    const bits = glyph(ch);
+    for (let k = 0; k < 15; k++) if (bits[k] === '1') d += `M${i * 4 + (k % 3)} ${Math.floor(k / 3)}h1v1h-1z`;
+  });
+  return { d, w: text.length * 4 - 1, h: 5 };
+}
+/** The widest a name may run across the back before its letters shrink to fit. */
+const NAME_ROOM = 34;
+
+export function JerseyArt({ kit, number, size = 80, label, back }: { kit: Kit; number: number; size?: number; label: string; back?: string }) {
+  const isBack = back !== undefined;
+  const paths = useMemo(() => toPaths(paintJersey(kit, number, isBack)), [kit, number, isBack]);
+  const name = useMemo(() => (back ? nameCells(back) : null), [back]);
+  // a long name keeps its letters' shape and gets smaller, the way long names are stitched
+  const k = name && name.w > NAME_ROOM ? NAME_ROOM / name.w : 1;
   return (
     <svg xmlns="http://www.w3.org/2000/svg" className="art art-jersey" data-art="jersey" width={(size * W) / H} height={size} viewBox={`0 0 ${W} ${H}`} shapeRendering="crispEdges" role="img" aria-label={label}>
       {paths.map((p) => (
         <path key={p.fill} d={p.d} fill={p.fill} />
       ))}
+      {name && name.w > 0 && (
+        <svg x={(W - name.w * k) / 2} y={15 + (1 - k) * 2.5} width={name.w * k} height={name.h * k} viewBox={`0 0 ${name.w} ${name.h}`} overflow="visible">
+          <path d={name.d} fill={kit.ink} />
+        </svg>
+      )}
     </svg>
   );
 }

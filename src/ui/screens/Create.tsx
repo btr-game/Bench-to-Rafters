@@ -25,7 +25,8 @@ import { POS_STYLE, PositionCard } from '../art/PositionCard';
 import { HeroArt, archPose } from '../art/Hero';
 import { hash } from '../art/color';
 import { LineupArt } from '../art/Scene';
-import { LookPicker, LookPreview, randomLook, type Jersey } from '../components/LookPicker';
+import { LookPicker, LookPreview, PLAIN, randomLook, type Jersey } from '../components/LookPicker';
+import { JerseyArt } from '../art/Jersey';
 import type { ChosenLook } from '../../content/looks';
 import { enterDev } from '../../dev/mode';
 import { sfx } from '../sound';
@@ -153,6 +154,12 @@ function DevGate() {
   );
 }
 
+
+/** The name on the back of the jersey: the last name, in capitals, without accents. */
+function backName(name: string): string {
+  const words = name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().split(/\s+/).filter(Boolean);
+  return (words[words.length - 1] ?? '').toUpperCase().replace(/[^A-Z0-9-]/g, '');
+}
 
 export function Create() {
   const start = useStore((s) => s.start);
@@ -340,9 +347,17 @@ export function Create() {
         <section className="stack identity">
           {/* round 25 (owner: too much empty space): a compact card, with the jersey he will wear */}
           <div className="card id-card">
-            {/* round 27 (owner): the player himself, in a plain jersey with his number, as he looks */}
+            {/* round 27 (owner): the player himself, in a plain jersey with his number, as he looks; and
+                the back of it (owner: "show the back jersey so that users can see number and name change") */}
             <span className="id-avatar">
-              <LookPreview name={name.trim() || 'Rookie'} number={Number(number) || 0} look={look} jersey={jersey} size={132} />
+              <span className="id-fig">
+                <LookPreview name={name.trim() || 'Rookie'} number={Number(number) || 0} look={look} jersey={jersey} size={132} />
+                <span className="kicker">Front</span>
+              </span>
+              <span className="id-fig">
+                <JerseyArt kit={PLAIN[jersey]} number={Number(number) || 0} back={backName(name)} size={118} label={`The back of your jersey: ${backName(name) || 'no name'}, number ${Number(number) || 0}`} />
+                <span className="kicker">Back</span>
+              </span>
             </span>
             <div className="stack id-fields">
               <div className="sec-title">Who are you?</div>
@@ -608,6 +623,8 @@ export function Create() {
           <LiveStrip />
           <SavesCard />
           <DevGate />
+          {/* the game uses real teams and legends: it says plainly that it is not official */}
+          <p className="small muted keep fan-note">Bench to Rafters is an unofficial fan game. It is not affiliated with or endorsed by the NBA, its teams or its players.</p>
         </section>
       )}
       <WhatsNewPanel />

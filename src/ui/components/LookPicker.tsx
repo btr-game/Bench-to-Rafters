@@ -10,7 +10,7 @@ import { HAIR_COLORS, PlayerArt, SKIN_COLORS } from '../art/Player';
 
 export type Jersey = 'white' | 'black';
 /** The plain practice jersey: one colour, the number, nothing else. */
-const PLAIN: Record<Jersey, Kit> = {
+export const PLAIN: Record<Jersey, Kit> = {
   white: { base: '#F4F4F4', ink: '#1B1820', trim: '#F4F4F4', word: '' },
   black: { base: '#1B1820', ink: '#F4F4F4', trim: '#1B1820', word: '' },
 };

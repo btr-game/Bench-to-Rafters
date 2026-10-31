@@ -1900,3 +1900,73 @@ multiple times."
   the Kits card; long visit buttons in the collection wrap instead of spilling (the luxury car's).
 - **The dev deck's theme**: the theme and court are applied at the root (`components/Look.tsx`), so
   the deck keeps its own instead of keeping whatever the last card had set.
+
+## Publishing: itch.io, with the community online
+
+- **Where** (owner: "let's go with 2 [itch.io]. i do want to get community features activated
+  tho"): the game goes on itch.io as a zip of the static build (`npm run build:itch`); the claude.ai
+  page stays as it is.
+- **The database: Supabase** (owner: "you can suggest connectors as well"). It has a connector, so
+  the project, tables and rules can be set up from here; Firebase was the other candidate but has
+  none. `supabase/migrations/0001_community.sql`: each player's best career per difficulty (all
+  time and today), the Reality 99 hall, statues with one respect per player, the live feed and
+  feedback. Players read everything a career card shows; nobody writes to a table: four checked
+  functions (post a career, raise a statue, pay respects, send feedback) validate what comes in
+  and limit how often. Feedback is readable only by the owner.
+- **Anonymous players**: each copy keeps a random secret and the database stores only its SHA-256,
+  so a row's owner cannot be impersonated from what the boards show, and no account is needed.
+- **The live strip's player count** uses Supabase Realtime presence; the feed is read every 30
+  seconds.
+- **Three homes, one interface** (`ui/community.ts`): claude.ai's shared data, the Supabase
+  database in the itch.io build, or the device alone when neither can be reached. The Supabase code
+  is loaded only by the itch.io build, so the claude.ai page stays one file.
+- **Unofficial fan game**: a line at the foot of the start page says it is not affiliated with or
+  endorsed by the NBA, its teams or its players (it uses real teams and legends).
+- Checked against a real Postgres 16 (the migration, every function's checks and the read-only
+  tables) and with a stand-in client (`tests/online.test.ts`).
+- **The back of the jersey** on the identity card (owner: "can you show the back jersey so that users
+  can see number and name change?"): beside the player, the jersey laid flat from the back (a
+  higher neckline), the last name in capitals across the shoulders (accents dropped, straight: an
+  arch steps unevenly at this size) and the number big below, both following what is typed. A
+  name longer than nine letters keeps its letters and shrinks to fit.
+- **What a tab's dot was about** (owner: "if there's something new in another tab (orange dot),
+  navigate user directly to the new feature... highlight it and put a 'got it' or 'ok'"): opening
+  a tab with a dot reads its old key against the game now (`ui/tabNews.ts`) and takes the page to
+  each change in turn, ringing its card with a note and Got it (`components/TabNews.tsx`): the OVR
+  on the Player tab, new games or a new season on Season, a finished NBA season in the League tab's
+  record book, new awards, tournaments or seasons on Records. The guide's tour waits while one is up.
+- **Enter and Space in the guide** (owner: "pressed enter for got it but ended up skipping an event",
+  then "make the got it of the guide disappear with both space and enter, prioritizing them over
+  other actions"): while a guide step or a tab's note is up, Enter or Space presses its Got it and
+  nothing else (caught before the game's own keys, the timing meters and any focused button); the
+  button shows the key on a computer.
+- **The half-season results wait** (owner: "some playoff games continue (closes screen) regardless of
+  the user's click"): the ticker of games (playoffs included) used to close itself 0.9 s after the
+  last result; now Continue takes the focus and the screen waits for it, except with Fast break or
+  Sim mode on.
+- **Plan cards** (owner: "letters overlap"): the title keeps clear of the number tag in the corner,
+  and a picked plan's Main or Side tag wraps the title onto the next line instead of past the edge.
+- **Music from the start** (owner: "the background music should be playing from the very start of
+  the game"): the music switch is on to start (a player who turned it off keeps it off) and the
+  loop plays everywhere but the mini-games, the intro and the start page included. Browsers keep
+  sound off until the page is touched, so it begins with the first click or key. The dev deck
+  starts quiet.
+- **The database is live**: Supabase project "bench-to-rafters" in Seoul (owner's pick), made through
+  the connector; the migration applied and checked on it as an anonymous player (writes through the
+  four functions only, direct writes refused, feedback and rate limits unreadable). The advisor's two
+  notes are by design: the four functions are the public write API, and the feedback and limits
+  tables have no read rule. `.env.itch` holds its address and publishable key (both public).
+- **Statue plaza cards** (owner: "make the player card much larger? make it popup in the middle of the
+  screen, and exit when pressing space/enter (or a x mark on the corner)"): a tapped statue's career
+  card opens large in the middle of the screen; Space, Enter, Escape, a pixel X in the corner or a
+  click beside it closes it. The Reality 99 hall uses the same pop-up.
+- **Pop-ups on a phone**: the sections' fade-in kept an identity transform after it ended (fill mode
+  both), which pins a fixed layer inside the section: on a phone the plaza's pop-up backdrop covered
+  only part of the page. The fade-in now fills backwards only, the pop-up is drawn on the page body,
+  and the visual check flags any fixed layer inside a moving parent ("trapped").
+- **Red letters on red** (owner: "again, red letter is invisible. try to look for similar bugs"): the
+  "Delete for good" button took .btn.danger's red fill under .btn.ghost.danger's red text. Fixed, and
+  `scripts/class-contrast.cjs` now draws every button, tag and chip class combination in the code in
+  both themes: it also found the Main and Side plan tags (2.8 and 2.6:1 in the dark theme) and the
+  red danger button's white letters in the dark theme (3.0:1), all fixed (`--bad-ink`).
+

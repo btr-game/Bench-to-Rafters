@@ -5,7 +5,8 @@
 
 import { chooseLook } from '../../content/looks';
 import { DevDoor } from '../components/FootBar';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import type { CareerRecord } from '../../engine/career/record';
 import { MODES, type Mode } from '../../engine/balance';
 import { ARCHETYPES } from '../../engine/player/archetypes';
@@ -120,6 +121,46 @@ function CardImage({ rec }: { rec: CareerRecord }) {
   }, [rec]);
   if (src === null) return <p className="small muted keep">Drawing the card…</p>;
   return src ? <img className="log-card-img" src={src} alt={`Career card of ${rec.name}`} /> : null;
+}
+
+/** A pixel X for the close button. */
+function PixelX() {
+  return (
+    <svg viewBox="0 0 7 7" shapeRendering="crispEdges" aria-hidden="true">
+      {[0, 1, 2, 3, 4, 5, 6].flatMap((i) => [<rect key={`a${i}`} x={i} y={i} width={1} height={1} fill="currentColor" />, <rect key={`b${i}`} x={6 - i} y={i} width={1} height={1} fill="currentColor" />])}
+    </svg>
+  );
+}
+
+/** A career card large in the middle of the screen (owner, the statue plaza: "make the player card
+ * much larger? make it popup in the middle of the screen, and exit when pressing space/enter (or a
+ * x mark on the corner is fine)"); the Reality 99 hall uses it too. Space, Enter, Escape, the X or a
+ * click beside it closes it, before the game's own keys. */
+function CardPop({ rec, label, tone, head, onClose }: { rec: CareerRecord; label: string; tone: 'hall' | 'bronze' | 'gold'; head: ReactNode; onClose: () => void }) {
+  useEffect(() => {
+    const key = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape' && e.key !== 'Enter' && e.key !== ' ') return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      onClose();
+    };
+    window.addEventListener('keydown', key, true);
+    return () => window.removeEventListener('keydown', key, true);
+  }, [onClose]);
+  // drawn on the page itself, so a moving parent (the phone's page slide) cannot pin it inside the page
+  return createPortal(
+    <div className="hall-pop" role="dialog" aria-modal="true" aria-label={label} onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className={`hall-pop-card card-pop ${tone}`}>
+        <button className="pop-x" aria-label="Close" onClick={onClose} autoFocus>
+          <PixelX />
+        </button>
+        <div className="hall-pop-head">{head}</div>
+        <CardImage rec={rec} />
+        <p className="small muted keep pop-hint">Space, Enter or Esc to close</p>
+      </div>
+    </div>,
+    document.body,
+  );
 }
 
 function Board({ c }: { c: Api }) {
@@ -295,12 +336,7 @@ function Hall({ c }: { c: Api }) {
   useEffect(() => {
     void c.hall().then(setRows, () => setRows([]));
   }, [c]);
-  useEffect(() => {
-    if (!pick) return;
-    const key = (e: KeyboardEvent) => e.key === 'Escape' && setPick(null);
-    window.addEventListener('keydown', key);
-    return () => window.removeEventListener('keydown', key);
-  }, [pick]);
+  const unpick = useCallback(() => setPick(null), []);
   const seated = rows ?? [];
   // every full bench, and one more with its empty seats locked
   const benches = Array.from({ length: Math.floor(seated.length / per) + 1 }, (_, b) => Array.from({ length: per }, (_, i) => seated[b * per + i] ?? null));
@@ -347,9 +383,13 @@ function Hall({ c }: { c: Api }) {
         </div>
       )}
       {picked && (
-        <div className="hall-pop" role="dialog" aria-modal="true" aria-label={`${picked.rec.name}, Reality 99 hall`} onClick={(e) => e.target === e.currentTarget && setPick(null)}>
-          <div className="hall-pop-card">
-            <div className="hall-pop-head">
+        <CardPop
+          rec={picked.rec}
+          label={`${picked.rec.name}, Reality 99 hall`}
+          tone="hall"
+          onClose={unpick}
+          head={
+            <>
               <span className="hall-pop-art">
                 <PlayerArt name={picked.rec.name} number={picked.rec.number} pos={picked.rec.pos} color={picked.rec.team?.color} team={picked.rec.team?.name ?? ''} size={150} />
               </span>
@@ -364,13 +404,9 @@ function Hall({ c }: { c: Api }) {
                   {picked.rec.nickname ? ` · “${picked.rec.nickname.name}”` : ''}
                 </div>
               </div>
-              <button className="btn small ghost hall-pop-x" onClick={() => setPick(null)} autoFocus>
-                Close
-              </button>
-            </div>
-            <CardImage rec={picked.rec} />
-          </div>
-        </div>
+            </>
+          }
+        />
       )}
     </div>
   );
@@ -380,6 +416,8 @@ function Plaza({ c }: { c: Api }) {
   const [rows, setRows] = useState<StatueRow[] | null>(null);
   rows?.forEach((r) => chooseLook(r.rec.name, r.rec.look)); // round 27: each career in the look he chose
   const [open, setOpen] = useState<string | null>(null);
+  const shut = useCallback(() => setOpen(null), []);
+  const shown = rows?.find((s) => s.id === open) ?? null;
   const [msg, setMsg] = useState('');
   // round 27: house statues stand behind the real ones
   const load = () => void c.statues().then((real) => setRows([...real, ...houseStatues()]), () => setRows(houseStatues()));
@@ -406,7 +444,7 @@ function Plaza({ c }: { c: Api }) {
       <div className="plaza">
         {rows?.map((s) => (
           <div key={s.id} className="plaza-spot">
-            <button className="plaza-statue" onClick={() => setOpen(open === s.id ? null : s.id)} aria-expanded={open === s.id}>
+            <button className="plaza-statue" onClick={() => (sfx('reveal'), setOpen(s.id))} aria-haspopup="dialog" aria-label={`The statue of ${s.rec.name}: see the career card`}>
               <StatueArt rec={s.rec} metal={s.metal} size={130} />
             </button>
             <small>
@@ -420,17 +458,42 @@ function Plaza({ c }: { c: Api }) {
                 {s.paid ? 'Respects paid' : 'Pay respects'}
               </button>
             )}
-            {open === s.id && <CardImage rec={s.rec} />}
           </div>
         ))}
       </div>
+      {shown && (
+        <CardPop
+          rec={shown.rec}
+          label={`${shown.rec.name}, statue plaza`}
+          tone={shown.metal}
+          onClose={shut}
+          head={
+            <>
+              <span className="hall-pop-art">
+                <StatueArt rec={shown.rec} metal={shown.metal} size={150} />
+              </span>
+              <div style={{ minWidth: 0 }}>
+                <b className="hall-story-name">{shown.rec.name}</b>
+                <div className="small muted">
+                  {shown.metal === 'gold' ? 'Gold' : 'Bronze'} statue · {shown.rec.legacy} legacy · {shown.respects} respect{shown.respects === 1 ? '' : 's'}
+                </div>
+                <div className="small muted">
+                  {shown.rec.country} · {NAMES.pos[shown.rec.pos]} · {shown.rec.tier}
+                </div>
+                {shown.house && <HouseTag />}
+              </div>
+            </>
+          }
+        />
+      )}
     </div>
   );
 }
 
-/** `where` (the in-game sender) tags the message with the tab and the point in the career. Three
- * roads (round 25): the maker's inbox (read in the dev deck) for those who may post there, the page's
- * comment box for everyone else on claude.ai, and this device only for a copy opened from a file. */
+/** `where` (the in-game sender) tags the message with the tab and the point in the career. Four
+ * roads: the maker's inbox (read in the dev deck) for those who may post there, the page's comment
+ * box for everyone else on claude.ai, the game's own database in the itch.io copy (read in its
+ * dashboard), and this device only when no database can be reached. */
 function Feedback({ c, where }: { c: Api; where?: string }) {
   const g = useStore((s) => s.game);
   const [text, setText] = useState('');
@@ -463,7 +526,7 @@ function Feedback({ c, where }: { c: Api; where?: string }) {
         <>
           <p className="prose">
             Found a bug, have an idea, or just want to say something?{' '}
-            {c.kind === 'local' ? 'This copy of the game is not connected to its page on claude.ai, so the message stays on this device: to reach the maker, play on the game’s claude.ai page.' : 'It goes straight to the maker’s inbox and nobody else can read it.'}
+            {c.kind === 'local' ? 'This copy of the game is not online right now, so the message stays on this device.' : 'It goes straight to the maker’s inbox and nobody else can read it.'}
             {where ? ' The tab you are on is sent with it.' : ''}
           </p>
           <label className="field">

@@ -7,6 +7,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Dribbler, MOVES } from '../ui/components/Loading';
 import { App } from '../ui/App';
 import { GuideTour } from '../ui/components/GuideTour';
+import { TabNews } from '../ui/components/TabNews';
 import { AchToasts } from '../ui/screens/Achievements';
 import { Icon } from '../ui/art/Icon';
 import { useStore } from '../store';
@@ -38,7 +39,7 @@ export function devSetup(): void {
 
 /** Back to a clean slate between cards: no game, no page, no switches left on. */
 function clean(): void {
-  useStore.setState({ game: null, page: null, mini: null, transition: null, daily: null, tab: 'home', toasts: [], guide: false, master: false, simple: false, intro: false, news: false, thanks: null });
+  useStore.setState({ game: null, page: null, mini: null, transition: null, daily: null, tab: 'home', toasts: [], guide: false, master: false, simple: false, intro: false, news: false, thanks: null, spots: null });
   setAchievements(true);
 }
 
@@ -197,6 +198,7 @@ export function DevDeck() {
           <>
             <App />
             <GuideTour />
+            <TabNews />
             <AchToasts />
           </>
         )}

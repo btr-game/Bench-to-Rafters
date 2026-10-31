@@ -222,6 +222,21 @@ function inspect([phone, W]) {
   }
 
   for (const img of document.querySelectorAll('img')) if (img.complete && img.naturalWidth === 0 && shown(img)) add('broken', img, img.src.slice(0, 60));
+
+  // a layer fixed to the screen (a pop-up, a scrim, a bar) inside a parent that moves (a transform,
+  // a filter, will-change, contain): it is then fixed to that parent instead, and a pop-up's
+  // backdrop covers part of the page (found on a phone's statue plaza, owner: "make it popup in
+  // the middle of the screen")
+  for (const el of document.querySelectorAll('body *')) {
+    if (getComputedStyle(el).position !== 'fixed') continue;
+    for (let e = el.parentElement; e && e !== document.body; e = e.parentElement) {
+      const s = getComputedStyle(e);
+      if (s.transform !== 'none' || s.filter !== 'none' || s.perspective !== 'none' || /transform|filter/.test(s.willChange) || /paint|layout|strict|content/.test(s.contain)) {
+        add('trapped', el, `fixed inside ${e.tagName.toLowerCase()}.${String(e.className).trim().split(/\s+/)[0] ?? ''}`);
+        break;
+      }
+    }
+  }
   return found;
 }
 

@@ -125,10 +125,11 @@ export function App() {
 
 
   useKeys(!mini && !!game);
-  // round 25: sound. The first click wakes the audio; music plays with a career on screen (a
-  // mini-game has its own); what happens in the game has its own sounds
+  // round 25: sound. The first click or key wakes the audio; the music plays from the start (owner:
+  // "the background music should be playing from the very start of the game"), everywhere but the
+  // mini-games, which have their own; what happens in the game has its own sounds
   useEffect(() => wakeOnClick(), []);
-  useEffect(() => music(!!game && !mini && !page), [game, mini, page]);
+  useEffect(() => music(!mini), [mini]);
   useEffect(
     () =>
       useStore.subscribe((now, before) => {

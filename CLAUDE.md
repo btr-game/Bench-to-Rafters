@@ -80,8 +80,11 @@ python3 scripts/visual-diff.py --sheet <out dir>         # contact sheets to loo
 ```
 
 It flags sideways scrolling, content off screen, clipped or spilling text, overlapping text,
-contrast below WCAG AA, tap targets under 32px on a phone, script errors, a buried main card and
-content left under the bars fixed to a phone's foot. Run it before and after, look at the diff, and
+contrast below WCAG AA, tap targets under 32px on a phone, script errors, a buried main card,
+content left under the bars fixed to a phone's foot, and a layer fixed to the screen trapped inside
+a moving parent (a pop-up that then covers only part of the page). For states no screen shows on
+its own (a confirm button, a picked card), `node scripts/class-contrast.cjs` draws every button,
+tag and chip class combination in the code in both themes and lists any under WCAG AA. Run it before and after, look at the diff, and
 add a check whenever a new kind of visual bug turns up.
 
 After any change to the dev deck or to what the game stores, `node scripts/dev-apart.cjs` deals every

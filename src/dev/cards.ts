@@ -163,7 +163,7 @@ const MINI: DevCard[] = (
 export const CARDS: DevCard[] = [
   // start
   { id: 'start', title: 'Start page and player creation', group: 'Start', icon: 'person', blurb: 'Name, position, archetype, focus, country, difficulty.', open: () => void useStore.setState({ game: null, page: null, mini: null }) },
-  { id: 'look', title: 'Your look', group: 'Start', icon: 'jersey', blurb: 'The identity step: skin, hair colour, hair and facial hair on the player, in a plain white or black jersey with his number.', open: () => void useStore.setState({ game: null, page: null, mini: null }), press: '[data-tour="create-next"]' },
+  { id: 'look', title: 'Your look', group: 'Start', icon: 'jersey', blurb: 'The identity step: skin, hair colour, hair and facial hair on the player, in a plain white or black jersey with his number, and the back of the jersey with his name.', open: () => void useStore.setState({ game: null, page: null, mini: null }), press: '[data-tour="create-next"]' },
   {
     id: 'saves',
     title: 'Ten save slots and career codes',
@@ -190,6 +190,7 @@ export const CARDS: DevCard[] = [
   { id: 'settings', title: 'Settings menu', group: 'Career hub', icon: 'dial', blurb: 'Theme, court, sound and music, new career, switches.', open: () => show(nbaStar()), press: '[data-tour="settings-btn"]' },
   { id: 'guide', title: 'The game guide', group: 'Career hub', icon: 'guide', blurb: 'The manual: big headers, expandable cards.', open: () => show(nbaStar()), press: '[data-tour="guide-btn"]' },
   { id: 'tour', title: 'Guide mode tour', group: 'Career hub', icon: 'arrow', blurb: 'Every control, highlighted once.', open: () => (resetTour(), show(hsStart(), 'home', { guide: true, master: false })) },
+  { id: 'tab-news', title: 'What a tab’s dot was about', group: 'Career hub', icon: 'arrow', blurb: 'A tab with a dot takes you to each change in turn, rings its card and waits for Got it (or Enter).', open: () => show(nbaStar(), 'home', { seen: { records: '0:0:0', player: '40:SG' } }), press: '[data-tour="tab-records"]' },
   { id: 'feedback-foot', title: 'Feedback on every tab', group: 'Career hub', icon: 'envelope', blurb: 'The bar at the foot of each tab: a note to the maker, with the tab it came from.', open: () => show(nbaStar()), press: '.feedback-foot > summary' },
   { id: 'master', title: 'Master mode', group: 'Career hub', icon: 'master', blurb: 'No recommendations anywhere.', open: () => show(nbaStar(), 'home', { master: true }) },
   {

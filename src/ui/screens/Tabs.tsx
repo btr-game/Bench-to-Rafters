@@ -386,7 +386,7 @@ export function SeasonTab({ g }: { g: GameState }) {
         </div>
       )}
       {view === 'bracket' && hasBracket ? (
-        <Card title="Postseason">
+        <Card title="Postseason" tour="season-post">
           <BracketView g={g} />
         </Card>
       ) : (
@@ -533,7 +533,7 @@ export function PlayerTab({ g }: { g: GameState }) {
         ]}
       />
       <div className="page-grid three">
-        <Card title="Ratings" kicker={now !== start ? `OVR ${start} → ${now} this season` : 'This season'}>
+        <Card title="Ratings" kicker={now !== start ? `OVR ${start} → ${now} this season` : 'This season'} tour="ratings">
           <Radar g={g} compare={g.season?.attrsStart} />
           <AttrRows g={g} compare={g.season?.attrsStart} />
           <p className="muted small">● focus stat · the dashed shape is where you started the season.</p>
@@ -958,7 +958,7 @@ export function RecordsTab({ g }: { g: GameState }) {
       <div className="start-cards">
         <AchievementsCard />
       </div>
-      <Card title="Season by season">
+      <Card title="Season by season" tour="season-log">
         {g.history.length === 0 ? <p className="muted">Your seasons show up here after the first one.</p> : <HistoryTable rows={g.history} />}
         <p className="muted small">High school and college seasons are listed but do not count toward pro career totals.</p>
       </Card>
@@ -999,7 +999,7 @@ export function RecordsTab({ g }: { g: GameState }) {
       <div className="page-grid two">
         <CareerHighs g={g} />
         {g.tournaments.length > 0 && (
-          <Card title="Tournaments" kicker="Tap an event to see every game">
+          <Card title="Tournaments" kicker="Tap an event to see every game" tour="tournaments">
             <div className="stack" style={{ gap: 6 }}>
               {[...g.tournaments].reverse().map((x, i) => (
                 <details key={i} className="tourney">

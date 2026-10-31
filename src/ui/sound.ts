@@ -3,6 +3,8 @@
 // audio starts on the first click (browsers keep pages quiet until then); the settings menu has a
 // switch for the effects and one for the music, kept on this device.
 
+import { DEV } from '../dev/mode';
+
 /** Every sound effect and when the game plays it (round 26: the dev deck's sound board lists them). */
 export const SFX = [
   ['click', 'Any button'],
@@ -47,7 +49,9 @@ type Sfx = (typeof SFX)[number][0];
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
 let sfxOn = read('btr-sfx', true);
-let musicOn = read('btr-music', false);
+// the music is on to start (owner: "the background music should be playing from the very start of
+// the game"); a player who turned it off keeps it off. The dev deck starts quiet.
+let musicOn = read('btr-music', !DEV);
 let musicTimer: ReturnType<typeof setInterval> | null = null;
 
 function read(key: string, dflt: boolean): boolean {
@@ -254,7 +258,7 @@ export function sfx(name: Sfx, always = false): void {
   }
 }
 
-// ---------- music: a soft four-bar loop while a career is on screen ----------
+// ---------- music: a soft four-bar loop everywhere but the mini-games, from the first click or key ----------
 
 const BASS = [0, 0, 7, 7, 5, 5, 7, 7, 0, 0, 7, 7, 5, 5, 3, 7];
 const LEAD = [12, -1, 16, -1, 19, -1, 16, 14, 12, -1, 16, -1, 17, 16, 14, -1];
@@ -302,12 +306,22 @@ export function setMusic(on: boolean, playing: boolean): void {
   music(playing);
 }
 
-/** The first click wakes the audio up (and every button gets a soft click). */
+/** The first click or key wakes the audio up, so the music starts with it (browsers keep sound
+ * off until then); every button gets a soft click. */
 export function wakeOnClick(): () => void {
-  const onClick = (e: MouseEvent) => {
+  const wake = () => {
     if (audio() && ctx!.state === 'suspended') void ctx!.resume();
+  };
+  const onClick = (e: MouseEvent) => {
+    wake();
     if ((e.target as HTMLElement).closest('button')) sfx('click');
   };
   window.addEventListener('click', onClick, true);
-  return () => window.removeEventListener('click', onClick, true);
+  window.addEventListener('keydown', wake, true);
+  window.addEventListener('pointerdown', wake, true);
+  return () => {
+    window.removeEventListener('click', onClick, true);
+    window.removeEventListener('keydown', wake, true);
+    window.removeEventListener('pointerdown', wake, true);
+  };
 }

@@ -170,7 +170,8 @@ const shown = (el: HTMLElement) => {
 };
 
 export function GuideTour() {
-  const on = useStore((s) => s.guide && !s.master && !s.intro && !s.thanks); // round 27: not over the intro page
+  // round 27: not over the intro page, nor while a tab's news is up (TabNews)
+  const on = useStore((s) => s.guide && !s.master && !s.intro && !s.thanks && !s.spots);
   const [seen, setSeen] = useState(loadSeen);
   const [cur, setCur] = useState<{ step: Step; el: HTMLElement } | null>(null);
   const [box, setBox] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
@@ -258,6 +259,21 @@ export function GuideTour() {
     };
   }, [cur, done]);
 
+  // while a step is up, Enter or Space means "Got it" and nothing else (owner: "pressed enter for
+  // got it but ended up skipping an event", then "both space and enter, prioritizing them over
+  // other actions"): caught before the game's own keys, the meters and any focused button
+  useEffect(() => {
+    if (!cur) return;
+    const key = (e: KeyboardEvent) => {
+      if ((e.key !== 'Enter' && e.key !== ' ') || e.ctrlKey || e.metaKey || e.altKey) return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      done([cur.step.id]);
+    };
+    window.addEventListener('keydown', key, true);
+    return () => window.removeEventListener('keydown', key, true);
+  }, [cur, done]);
+
   useLayoutEffect(() => {
     if (tip.current && tip.current.offsetHeight !== tipH) setTipH(tip.current.offsetHeight);
   });
@@ -281,7 +297,7 @@ export function GuideTour() {
         <p>{cur.step.text}</p>
         <div className="tour-row">
           <button className="btn small" onClick={() => done([cur.step.id])}>
-            Got it
+            Got it <kbd className="tour-key">Enter</kbd>
           </button>
           <button className="link-btn" onClick={() => done(TOUR.map((s) => s.id))}>
             Skip the tour

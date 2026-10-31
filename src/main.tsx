@@ -4,6 +4,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { App } from './ui/App';
 import { GuideTour } from './ui/components/GuideTour';
+import { TabNews } from './ui/components/TabNews';
 import { AchToasts } from './ui/screens/Achievements';
 import { Loading } from './ui/components/Loading';
 import { Look } from './ui/components/Look';
@@ -23,6 +24,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <>
         <App />
         <GuideTour />
+        <TabNews />
         <AchToasts />
       </>
     )}

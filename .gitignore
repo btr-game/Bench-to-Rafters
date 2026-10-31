@@ -1,6 +1,8 @@
 node_modules
 dist
 dist-dev
+dist-itch
+*.zip
 build
 .next
 *.tsbuildinfo
@@ -8,6 +10,7 @@ build
 .env
 .env.*
 !.env.example
+!.env.itch
 *.log
 .cache
 .vite

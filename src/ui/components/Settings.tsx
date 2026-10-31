@@ -139,7 +139,7 @@ export function SettingsMenu({ g }: { g: GameState | null }) {
             </>
           )}
           <Toggle label="Sound effects" note="Chiptune sounds for clicks, wins, titles and the rest." on={snd.sfx} onClick={() => (setSfx(!snd.sfx), setSnd(soundSettings()))} tour="set-sfx" />
-          <Toggle label="Music" note="A soft loop while you play a career." on={snd.music} onClick={() => (setMusic(!snd.music, !!g), setSnd(soundSettings()))} tour="set-music" />
+          <Toggle label="Music" note="A soft loop while you play." on={snd.music} onClick={() => (setMusic(!snd.music, true), setSnd(soundSettings()))} tour="set-music" />
           <Toggle label="Simple text" note="Hide descriptions, keep the choices." on={simple} onClick={toggleSimple} tour="set-simple" />
           <Toggle label="Guide mode" note={master ? 'Off while Master mode is on.' : 'Highlights the next thing to do.'} on={guide && !master} onClick={toggleGuide} tour="set-guide" />
           <Toggle label="Master mode" note="No recommendations: no scouts' calls, fit tags, suggested deals or guide hints. You read the game yourself." on={master} onClick={toggleMaster} tour="set-master" locked={!!g?.flags.oath} />

@@ -35,7 +35,7 @@ function useTicker(total: number, ms: number): [number, () => void] {
 
 // ---------- half-season ticker ----------
 
-function HalfSim({ t, onDone }: { t: Extract<Transition, { kind: 'half' }>; onDone: () => void }) {
+function HalfSim({ t, g, onDone }: { t: Extract<Transition, { kind: 'half' }>; g: GameState; onDone: () => void }) {
   const n = t.games.length;
   const step = Math.max(28, Math.min(150, 2400 / Math.max(1, n)));
   const [i, skip] = useTicker(n, step);
@@ -46,11 +46,19 @@ function HalfSim({ t, onDone }: { t: Extract<Transition, { kind: 'half' }>; onDo
   const pts = shown.reduce((s, g) => s + (g.line?.pts ?? 0), 0);
   const played = shown.filter((g) => g.line).length;
   const done = i >= n;
+  // the results wait for Continue (owner: "some playoff games continue (closes screen) regardless
+  // of the user's click"); only Fast break and Sim mode, which are for moving quickly, go on alone
+  const quick = !!g.flags.fast || !!g.flags.sim;
   useEffect(() => {
-    if (!done) return;
+    if (!done || !quick) return;
     const tm = setTimeout(onDone, reducedMotion() ? 0 : 900);
     return () => clearTimeout(tm);
-  }, [done, onDone]);
+  }, [done, quick, onDone]);
+  // once the last result is in, Continue takes the focus, so Enter goes on
+  const go = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (done) go.current?.focus({ preventScroll: true });
+  }, [done]);
   const recent = shown.slice(-5).reverse();
   return (
     <div className="overlay sim" style={{ ['--team' as string]: t.color }} role="dialog" aria-modal="true" aria-label={`Simulating ${t.label}`}>
@@ -89,7 +97,7 @@ function HalfSim({ t, onDone }: { t: Extract<Transition, { kind: 'half' }>; onDo
             </div>
           ))}
         </div>
-        <button className="btn ghost-dark" onClick={done ? onDone : skip} data-skip={done ? undefined : ''}>
+        <button ref={go} className="btn ghost-dark" onClick={done ? onDone : skip} data-skip={done ? undefined : ''}>
           {done ? 'Continue' : 'Skip'}
         </button>
       </div>
@@ -635,7 +643,7 @@ function MomentPage({ m, g }: { m: Moment; g: GameState }) {
 export function Overlays({ g }: { g: GameState }) {
   const t = useStore((s) => s.transition);
   const end = useStore((s) => s.endTransition);
-  if (t?.kind === 'half') return <HalfSim t={t} onDone={end} />;
+  if (t?.kind === 'half') return <HalfSim t={t} g={g} onDone={end} />;
   if (t?.kind === 'season') return <SeasonCard t={t} g={g} onDone={end} />;
   if (g.moments.length > 0) return <MomentPage m={g.moments[0]} g={g} />;
   return null;
