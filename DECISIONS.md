@@ -1650,8 +1650,15 @@ Reached from the start page and from the bottom of Home (a career in progress is
   - Sound: cameras at a press answer, a deal or a pulled offer in contract talks, a hire, a raise
     or a goodbye on the staff, a chat, a visit, a brand jingle and a perfect release on the timing
     meter, read off the career log and the player.
-  - Fast break and simple text: the nickname page now shows in fast break (once a career); fine
-    pages stay hidden there (the money still goes, and the log keeps it).
+  - Fast break, sim mode and simple text (the owner added sim mode to this step, and to the
+    checklist in CLAUDE.md): the nickname page now shows in fast break (once a career); fine
+    pages stay hidden there (the money still goes, and the log keeps it). Over 40 sim careers
+    (768 seasons) sim mode stops 2.4323 times a season: press conferences never stop it (it
+    answers humbly), fine pages never show, the timing meter never comes up (the postseason is
+    simulated), the shop is skipped and the tabs fold as in fast break. Brand offers are the
+    only new decision that stops it (0.0195 a season), as designed: they shape a career's money.
+    This round's turning points (staff to hire, family requests, investments, the new stories)
+    stop it like every other turning point: 81 of 1,212 turning-point stops.
   - Contrast and keyboard: the scan is still clean in both themes with the new art.
   - Events: seven that bring the new systems into the story: a nickname you never asked for,
     your brand in the news, your shoe sells out, your rival on a podcast, someone wants your staff,

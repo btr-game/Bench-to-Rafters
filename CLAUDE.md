@@ -21,8 +21,9 @@ the owner when the work looks close to the end of the round**.
    pages, items and logos.
 2. **Sound**: a sound effect (and music cue, where it fits) for every new function, once the
    sound system exists.
-3. **Fast break and simple text**: every new screen respects both (fast break skips or
-   auto-resolves it; simple text hides its descriptions).
+3. **Fast break, sim mode and simple text**: every new screen respects all three (fast break
+   skips or auto-resolves it; sim mode makes the routine calls itself and stops only for the
+   ones that shape a career; simple text hides its descriptions).
 4. **Contrast and keyboard**: new UI readable in both themes and usable with the keyboard.
 5. **Achievements** for the new systems.
 6. **Events and pathways** that bring the new features into the story where it makes sense (as
