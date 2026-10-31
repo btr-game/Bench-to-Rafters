@@ -65,7 +65,7 @@ import { buildCandidates, nbaAwards, simpleAwards, type AwardOutcome } from '../
 import { playoffMvps, postseasonRecap, recordNbaYear } from '../awards/playoffs';
 import { pathOf } from './origin';
 import { NeedLive, gameRequest, nextPick, playLiveGame } from './live';
-import { adjust, conferenceRank, milestone, note, pushDecision, pushMoment, rankOnRoster, roleWithTrust, teamById, userOvr } from './common';
+import { adjust, conferenceRank, milestone, note, ordinal, pushDecision, pushMoment, rankOnRoster, roleWithTrust, teamById, userOvr } from './common';
 import { queueMidseasonEvents } from '../events/resolver';
 import { allStarWeekend, conferenceTournament, hsNationals, mcdonaldsGame, nbaCup, nbaPreseason } from '../sim/tournaments';
 import { quickNbaSeason, warmUpNba } from './nbaYear';
@@ -659,12 +659,6 @@ function postseason(s: GameState, league: League, hook: UserGameHook): { result:
 }
 
 export const seasonLabel = (y: number): string => `${y}–${String(y + 1).slice(2)}`;
-
-export const ordinal = (n: number): string => {
-  const sfx = ['th', 'st', 'nd', 'rd'];
-  const v = n % 100;
-  return n + (sfx[(v - 20) % 10] || sfx[v] || sfx[0]);
-};
 
 function finishSeason(s: GameState): void {
   const season = s.season!;

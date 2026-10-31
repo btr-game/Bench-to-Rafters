@@ -1,6 +1,6 @@
 import type { StatLine } from '../engine/types';
 export { fmtMoney } from '../engine/economy/salary';
-export { ordinal } from '../engine/career/season';
+export { ordinal } from '../engine/career/common';
 
 export const ht = (inches: number): string => `${Math.floor(inches / 12)}′${Math.round(inches % 12)}″`;
 export const seasonLabel = (y: number): string => `${y}–${String(y + 1).slice(2)}`;

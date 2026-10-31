@@ -1576,7 +1576,7 @@ td .art-team { display: inline-block; vertical-align: middle; margin: -3px 8px -
 .achv-tier-name { font-family: var(--f-mono); font-size: 11.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
 .badge-art { flex: none; image-rendering: pixelated; }
 @media (prefers-reduced-motion: reduce) { .ach-toast { animation: none; } }
-.plan-card { border-top: 3px solid color-mix(in srgb, var(--tile, var(--line)) 75%, transparent); }
+.plan-card { border-top: 3px solid color-mix(in srgb, var(--tile, var(--line)) 75%, transparent); align-content: start; } /* round 27: titles line up across a row */
 
 /* the playable last minutes (round 24) */
 .clutch-moves { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
@@ -1877,25 +1877,22 @@ td .art-team { display: inline-block; vertical-align: middle; margin: -3px 8px -
 .mode-notes { margin: 0; padding-left: 18px; }
 
 /* round 25: the team strength breakdown */
-.strength-bars { display: grid; gap: 6px; }
-.sb-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(80px, 1fr) auto;
-  gap: 10px;
-  align-items: center;
-  font-size: 15px;
-}
+/* round 27: one grid for all the rows, so every bar starts and ends in the same place (a row with a
+   playoff value used to get a narrower, shifted bar) */
+.strength-bars { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(80px, 1fr) auto; gap: 6px 10px; align-items: center; }
+.sb-row { display: contents; font-size: 15px; }
 .sb-label { min-width: 0; }
 .sb-track { position: relative; height: 12px; background: var(--surface-2); border-radius: 6px; }
 .sb-track::after { content: ''; position: absolute; left: 50%; top: -2px; bottom: -2px; width: 1px; background: var(--line); }
 .sb-fill { position: absolute; top: 0; bottom: 0; border-radius: 6px; }
 .sb-fill.up { background: var(--good); }
 .sb-fill.down { background: var(--bad); }
-.sb-val { font-family: var(--f-mono); font-size: 14px; white-space: nowrap; text-align: right; }
+.sb-val { font-family: var(--f-mono); font-size: 14px; white-space: nowrap; text-align: right; display: grid; justify-items: end; }
+.sb-val small { font-size: 11.5px; color: var(--muted); }
 .sb-row.k-you .sb-label { font-weight: 700; }
 @media (max-width: 640px) {
-  .sb-row { grid-template-columns: minmax(0, 1fr) auto; }
-  .sb-track { grid-column: 1 / -1; order: 3; }
+  .strength-bars { grid-template-columns: minmax(0, 1fr) auto; grid-auto-flow: row dense; }
+  .sb-track { grid-column: 1 / -1; }
 }
 
 /* round 25: contract talks under an offer */

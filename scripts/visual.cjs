@@ -11,6 +11,7 @@
 //   error      a script error or a console error
 //   broken     an image that did not load
 //   buried     the card to act on starts more than a screen and a bit down the page
+//   covered    at the bottom of the page, the last content sits under a bar fixed to the screen's foot
 // Usage (the dev server running, `npx vite --port 5179`):
 //   node scripts/visual.cjs <out dir> [--only id,id] [--configs desktop-light,phone-dark] [--url http://localhost:5179/]
 // Then `python3 scripts/visual-diff.py <old out dir> <new out dir>` lists the screens that changed.
@@ -266,6 +267,27 @@ async function runConfig(browser, cfg) {
     await page.evaluate(() => document.querySelector('.dk-bar')?.setAttribute('style', 'display:none'));
     const missed = await page.$('.dk-miss');
     const found = missed ? [] : await page.evaluate(inspect, [!!cfg.phone, cfg.width]);
+    // at the very bottom of the page, the last of the content clears the bars fixed to the screen's foot
+    // (the tab bar and the next-step pill on a phone)
+    if (!missed) {
+      const covered = await page.evaluate(() => {
+        window.scrollTo(0, document.documentElement.scrollHeight);
+        const bars = [...document.querySelectorAll('body *')].filter((e) => {
+          const s = getComputedStyle(e);
+          if (s.position !== 'fixed' || s.display === 'none' || s.visibility === 'hidden' || e.closest('[aria-modal="true"], .overlay, .dk-bar, .ach-toasts')) return false;
+          const r = e.getBoundingClientRect();
+          return r.height > 0 && r.bottom >= innerHeight - 2 && r.top > innerHeight / 2;
+        });
+        if (!bars.length) return null;
+        const top = Math.min(...bars.map((b) => b.getBoundingClientRect().top));
+        const wrap = document.querySelector('.wrap');
+        const last = wrap && [...wrap.children].filter((c) => c.getBoundingClientRect().height > 0).pop();
+        const bottom = last ? last.getBoundingClientRect().bottom : 0;
+        window.scrollTo(0, 0);
+        return bottom > top + 1 ? `${Math.round(bottom - top)}px of ${last.className || last.tagName} under the bar` : null;
+      });
+      if (covered) found.push({ kind: 'covered', el: '', detail: covered });
+    }
     for (const e of errors) found.push({ kind: 'error', el: '', detail: e });
     report[id] = missed ? [{ kind: 'skipped', el: '', detail: await missed.innerText() }] : found;
     await page.screenshot({ path: path.join(dir, `${id}.png`), fullPage: true }).catch(() => {});

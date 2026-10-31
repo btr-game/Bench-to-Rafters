@@ -13,7 +13,7 @@
 import { TEAM_FACTORS as T, modeDial } from '../balance';
 import { chance, clamp, int, pick, range } from '../rng';
 import type { GameState, League, Team } from '../types';
-import { adjust, logDecision, pushMoment, teamById, userOvr } from './common';
+import { adjust, logDecision, ordinal, pushMoment, teamById, userOvr } from './common';
 import { currentStyle, fitLabel, styleEffect, styleFit, TEAM_STYLES } from './identity';
 import { duoEffect } from './duo';
 import { FAN_CULTURES } from './fanCulture';
@@ -49,7 +49,7 @@ export function startTeamFactors(s: GameState, team: Team, league?: League): { b
     const c = Math.min(T.chemistryMax, streak * T.chemistryPer) * d;
     bonus += c;
     items.push({ label: 'Chemistry (seasons together)', value: c });
-    if (streak >= 2) notes.push(`Chemistry: your ${streak + 1}th season together (+${c.toFixed(1)})`);
+    if (streak >= 2) notes.push(`Chemistry: your ${ordinal(streak + 1)} season together (+${c.toFixed(1)})`);
   }
   // round 15: coach trust is part of chemistry. A trusted player steadies the locker room; a
   // player the coach does not trust splits it.

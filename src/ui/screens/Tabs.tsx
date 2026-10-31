@@ -35,7 +35,7 @@ import { Card, Extra, Meter, Scoreboard } from '../components/bits';
 import { AttrRows } from '../components/PlayerCard';
 import { ScoutCard } from '../components/ScoutCard';
 import { fmtMoney, ht, pct, pg, seasonLabel } from '../format';
-import { ordinal } from '../../engine/career/season';
+import { ordinal } from '../format';
 import { league as leagueOf, ovr, roleName, stageLine, team as teamOf } from '../selectors';
 import { buildWord, idealWeight, weightOf } from '../../engine/player/weight';
 
@@ -525,7 +525,8 @@ export function PlayerTab({ g }: { g: GameState }) {
         sub={`${p.nickname ? `\u201c${p.nickname.name}\u201d · ` : ''}${t ? `${t.name} · ` : ''}${stageLine(g)}`}
         stats={[
           { k: 'OVR', v: now, tone: now > start ? 'good' : now < start ? 'bad' : undefined },
-          { k: 'Peak', v: Math.round(p.peakOvr) },
+          // round 27: the peak is kept at each season's end, so a rise during the season shows here first
+          { k: 'Peak', v: Math.max(Math.round(p.peakOvr), now) },
           { k: 'Age', v: p.age },
           { k: 'Role', v: roleName(g) },
           { k: 'Scouts', v: p.scoutGrade ?? '—' },

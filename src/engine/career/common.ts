@@ -108,3 +108,10 @@ export function pushMoment(s: GameState, m: Omit<Moment, 'id'>): void {
 export function milestone(s: GameState, key: string): void {
   if (!s.milestones.includes(key)) s.milestones.push(key);
 }
+
+/** 1st, 2nd, 3rd, 4th, 11th, 21st... (round 27: here, so the team module can use it too). */
+export const ordinal = (n: number): string => {
+  const sfx = ['th', 'st', 'nd', 'rd'];
+  const v = n % 100;
+  return n + (sfx[(v - 20) % 10] || sfx[v] || sfx[0]);
+};

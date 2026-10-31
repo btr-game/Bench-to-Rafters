@@ -352,7 +352,7 @@ function Context({ g }: { g: GameState }) {
             <div className="small">
               {s.allStar
                 ? "All-Star selection"
-                : `All-Star voting: ${s.allStarRank}th in the conference`}
+                : `All-Star voting: ${ordinal(s.allStarRank)} in the conference`}
             </div>
           )}
         </div>

@@ -30,7 +30,7 @@ export function StrengthCard({ g, title = 'Team strength' }: { g: GameState; tit
             </span>
             <span className="sb-val">
               {sign(x.value)}
-              {x.playoff !== undefined && x.playoff !== x.value ? <small> · {sign(x.playoff)} playoffs</small> : null}
+              {x.playoff !== undefined && x.playoff !== x.value ? <small>{sign(x.playoff)} playoffs</small> : null}
             </span>
           </div>
         ))}

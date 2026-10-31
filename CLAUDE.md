@@ -24,7 +24,8 @@ the owner when the work looks close to the end of the round**.
 3. **Fast break, sim mode and simple text**: every new screen respects all three (fast break
    skips or auto-resolves it; sim mode makes the routine calls itself and stops only for the
    ones that shape a career; simple text hides its descriptions).
-4. **Contrast and keyboard**: new UI readable in both themes and usable with the keyboard.
+4. **Contrast and keyboard**: new UI readable in both themes and usable with the keyboard; the
+   visual check (below) runs clean on every screen, and its diff shows only the changes meant.
 5. **Achievements** for the new systems.
 6. **Events and pathways** that bring the new features into the story where it makes sense (as
    events about weight did when weight came in): new random events, choices or career paths
@@ -63,3 +64,17 @@ npx tsc --noEmit -p .
 npx vitest run          # about 5-10 minutes with the balance tests
 npx vite build
 ```
+
+For any change to what is on screen (round 27, owner: "keep thinking of ways to prevent visual bugs
+and check multiple times"), with the dev server running (`npx vite --port 5179`):
+
+```bash
+node scripts/visual.cjs <out dir>                     # every dev deck card, desktop and phone, light and dark
+python3 scripts/visual-diff.py <last out dir> <out dir>  # the screens that changed, most first
+python3 scripts/visual-diff.py --sheet <out dir>         # contact sheets to look through
+```
+
+It flags sideways scrolling, content off screen, clipped or spilling text, overlapping text,
+contrast below WCAG AA, tap targets under 32px on a phone, script errors, a buried main card and
+content left under the bars fixed to a phone's foot. Run it before and after, look at the diff, and
+add a check whenever a new kind of visual bug turns up.

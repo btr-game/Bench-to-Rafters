@@ -1740,3 +1740,40 @@ Reached from the start page and from the bottom of Home (a career in progress is
   copy opened from a file (past the deck's own storage prefix, read-only). `…#community` opens the
   Community page; `…#inbox` opens the dev door on the start page, and the password lands on the
   deck's Inbox.
+
+## Round 27: the UI round (screen polish, navigation, phone layout)
+
+The owner's scope: screen-by-screen polish, navigation and the phone layout (convenience in the
+sense of fewer clicks was left out), with round 26's end-of-round checklist folded into this one.
+Owner: "this round may cause a lot of visual bugs, so keep thinking of ways to prevent that and check
+multiple times."
+
+- **The visual check** (`scripts/visual.cjs`, `scripts/visual-diff.py`): every dev deck card (74) at
+  1440x900 and 390x844, light and dark, with the same random draws and clock each run. Checks:
+  sideways scrolling, off screen, clipped, spill, overlap (glyph bands, same layer, what a scroller
+  lets through), contrast (WCAG AA), tap targets, script errors, broken images, a buried main card
+  and content under the bars at a phone's foot. The first run flagged several hundred problems; most were the
+  checker learning (a modal hides what is under it, scrollers clip, badges sit on edges on purpose);
+  the rest were real and are fixed. Each new check was proven by putting its bug back and seeing it
+  flagged. `tests/tokens.test.ts` keeps the light and dark tokens in step.
+- **Real bugs it found**: on phones the Home tab showed the folded extras (scouting report,
+  milestones, Around the league, mini-games) above the season's main card, four cards down (round
+  25's Extra wrapper is display: contents, so the phone order missed its cards); the Records tab was
+  442px wide on a 390px phone (the timeline's filters would not wrap); the lab panel in a career and
+  the lab mini-game shared `.lab-row` and `.lab-ovr`, so the mini-game's rule broke the panel's rows;
+  the lab's name box had no type and went unstyled; an effect returned the promise newer browsers give
+  back from scrollTo and took the whole page down (caught by the smoke test before it shipped).
+- **Contrast**: gold text (Stars badge, anomaly tag, legends tiers) uses `--gold-text`; good and warn
+  are darker in light mode (#18703e, #8a5d0c); the mini-game bands and their Unlocked chips are the
+  game's colour at 72%; scout badges use the surface colour as ink (white failed on dark mode's light
+  badges); the dunk rule tiles are a scoreboard; the Reality 99 hall's purple has a text token;
+  legacy tier counts pick their ink by contrast.
+- **Phones**: every control at least 36px to tap (folds, to-do links, swatches, switches); small
+  segmented controls wrap.
+- **Navigation**: one page top for the career log, the achievement book, the community and the
+  mini-games: the way back on the left says where it goes ("Back to the career", "All mini-games"),
+  a you-are-here trail, the game's name; Escape goes back. Tabs open at their top; the browser tab
+  names the page.
+- **Polish**: team strength rows share one grid (bars line up; the playoff value sits under the
+  value); plan cards line up their titles; the Player tab's peak is never below the OVR (the peak is
+  kept at a season's end); "your 3th season together" says 3rd (`ordinal` moved to career/common).
