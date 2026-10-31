@@ -250,6 +250,20 @@ function drums(ctx: AudioContext, out: AudioNode, chart: Chart, start: number): 
   }
 }
 
+/** The dev deck's sound board (round 26): the count-in and two bars of the Lockdown beat. */
+export function previewBeat(): void {
+  try {
+    const ctx = new AudioContext();
+    const out = ctx.createGain();
+    out.gain.value = 0.7;
+    out.connect(ctx.destination);
+    drums(ctx, out, { beat: 0.5, length: 4 } as Chart, ctx.currentTime + 0.05);
+    window.setTimeout(() => void ctx.close(), 9000);
+  } catch {
+    // no audio here
+  }
+}
+
 // The point of the song coming out of the speakers right now (players press on what they hear):
 // the output timestamp, carried forward with the page clock so it moves smoothly between audio
 // buffers; until the device reports one, the audio clock less its reported delay.

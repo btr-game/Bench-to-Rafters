@@ -14,6 +14,7 @@ import { Marked, SUMMARY, SummaryPage, searchCards, searchSummary, snippet } fro
 import { leaveDev } from './mode';
 import { Catalog } from './Catalog';
 import { Inbox } from './Inbox';
+import { SoundBoard } from './SoundBoard';
 import './dev.css';
 
 const groupOf = (g: Group) => GROUPS.find((x) => x.key === g)!;
@@ -70,7 +71,7 @@ export function DevDeck() {
   const [group, setGroup] = useState<Group | 'all'>('all');
   const [q, setQ] = useState('');
   const [results, setResults] = useState(false);
-  const [section, setSection] = useState<'cards' | 'catalog' | 'summary' | 'inbox'>(() => (location.hash === '#inbox' ? 'inbox' : 'cards'));
+  const [section, setSection] = useState<'cards' | 'catalog' | 'sounds' | 'summary' | 'inbox'>(() => (location.hash === '#inbox' ? 'inbox' : 'cards'));
   const [chapter, setChapter] = useState(0);
   const [focus, setFocus] = useState<number | null>(null);
   const [view, setView] = useState<'deck' | 'grid'>('deck');
@@ -172,7 +173,7 @@ export function DevDeck() {
           </div>
           <h1 className="hub-title">The dev deck</h1>
           <p className="prose">
-            Every function in the game, one card each, {CARDS.length} in all, and the project summary, chapter by chapter. Open a card and the game itself takes over with that function on screen, everything unlocked. Cards that need a career play one with the balance harness's smart player first, so a few take a second or two.
+            Every function in the game, one card each ({CARDS.length} in all): open one and the game itself takes over with that function on screen, everything unlocked (cards that need a career play one first, so a few take a second or two). The Catalog shows everything the game draws from, Sounds plays every sound, and the project summary and the feedback Inbox are here too.
           </p>
         </div>
         <div className="dk-tools">
@@ -182,6 +183,9 @@ export function DevDeck() {
             </button>
             <button aria-pressed={section === 'catalog' && !results} onClick={() => (setSection('catalog'), setResults(false))}>
               Catalog
+            </button>
+            <button aria-pressed={section === 'sounds' && !results} onClick={() => (setSection('sounds'), setResults(false))}>
+              Sounds
             </button>
             <button aria-pressed={section === 'summary' && !results} onClick={() => openChapter(chapter)}>
               Project summary
@@ -256,6 +260,8 @@ export function DevDeck() {
         <Catalog />
       ) : section === 'inbox' ? (
         <Inbox />
+      ) : section === 'sounds' ? (
+        <SoundBoard />
       ) : section === 'summary' ? (
         <SummaryPage chapter={chapter} setChapter={(n) => (setChapter(n), setFocus(null))} focus={focus} q={q} />
       ) : (

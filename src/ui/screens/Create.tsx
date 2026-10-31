@@ -124,24 +124,29 @@ function SavesCard() {
 function DevGate() {
   const [pw, setPw] = useState('');
   const [wrong, setWrong] = useState(false);
+  // round 26 (owner: the link was too small to notice): a small card of its own
   return (
-    <details className="dev-gate" open={location.hash === '#inbox' || undefined}>
-      <summary>Developer</summary>
-      <form
-        className="row"
-        style={{ gap: 8 }}
-        onSubmit={(e) => {
-          e.preventDefault();
-          setWrong(!enterDev(pw));
-        }}
-      >
-        <input type="password" aria-label="Developer password" placeholder="Password" value={pw} onChange={(e) => (setPw(e.target.value), setWrong(false))} autoComplete="off" />
-        <button className="btn small" disabled={!pw}>
-          Open the dev deck
-        </button>
-        {wrong && <span className="small" style={{ color: 'var(--bad)' }}>That is not it.</span>}
-      </form>
-    </details>
+    <section className="card dev-gate" aria-label="Developer">
+      <Icon name="cards" size={40} />
+      <div className="stack" style={{ gap: 6 }}>
+        <div className="sec-title">Developer</div>
+        <p className="small muted">The dev deck: every function, the catalog, the sounds and the feedback inbox. Needs the password.</p>
+        <form
+          className="row"
+          style={{ gap: 8 }}
+          onSubmit={(e) => {
+            e.preventDefault();
+            setWrong(!enterDev(pw));
+          }}
+        >
+          <input type="password" aria-label="Developer password" placeholder="Password" value={pw} onChange={(e) => (setPw(e.target.value), setWrong(false))} autoComplete="off" autoFocus={location.hash === '#inbox'} />
+          <button className="btn small" disabled={!pw}>
+            Open the dev deck
+          </button>
+          {wrong && <span className="small" style={{ color: 'var(--bad)' }}>That is not it.</span>}
+        </form>
+      </div>
+    </section>
   );
 }
 

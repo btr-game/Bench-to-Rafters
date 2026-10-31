@@ -3,10 +3,28 @@
 // audio starts on the first click (browsers keep pages quiet until then); the settings menu has a
 // switch for the effects and one for the music, kept on this device.
 
-type Sfx =
-  | 'click' | 'confirm' | 'win' | 'lose' | 'title' | 'award' | 'achievement' | 'injury' | 'fine' | 'coins' | 'nickname'
+/** Every sound effect and when the game plays it (round 26: the dev deck's sound board lists them). */
+export const SFX = [
+  ['click', 'Any button'],
+  ['confirm', 'A good release on the timing meter; a counter in contract talks; a word with your staff'],
+  ['lose', 'A title run that ends short, a lost final'],
+  ['title', 'A championship'],
+  ['award', 'An award, draft night'],
+  ['achievement', 'An achievement banner'],
+  ['injury', 'An injury'],
+  ['fine', 'A fine'],
+  ['coins', 'A purchase; a raise for your staff'],
+  ['nickname', 'A nickname, with its logo'],
   // round 25 end of round: press answers, contract talks, staff, visits, brands, the timing meter
-  | 'shutter' | 'deal' | 'nope' | 'chime' | 'visit' | 'brand' | 'perfect';
+  ['shutter', 'A press conference'],
+  ['deal', 'Contract talks: they agree'],
+  ['nope', 'A late release; they pull the offer; letting staff go'],
+  ['chime', 'A talk with a staff member'],
+  ['visit', 'A visit to something you own'],
+  ['brand', 'A brand deal'],
+  ['perfect', 'A perfect release on the timing meter'],
+] as const;
+type Sfx = (typeof SFX)[number][0];
 
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
@@ -73,9 +91,10 @@ function noise(at: number, len: number, vol = 0.5): void {
 
 const N = (semi: number) => 440 * Math.pow(2, (semi - 9) / 12); // semitones from C4
 
-/** A short sound for something that just happened. */
-export function sfx(name: Sfx): void {
-  if (!sfxOn || !audio()) return;
+/** A short sound for something that just happened (`always`: the sound board, whatever the switch says). */
+export function sfx(name: Sfx, always = false): void {
+  if ((!sfxOn && !always) || !audio()) return;
+  if (ctx!.state === 'suspended') void ctx!.resume();
   const t = ctx!.currentTime + 0.01;
   const seq = (notes: number[], step: number, type: OscillatorType = 'square', vol = 0.8) => notes.forEach((n, i) => tone(N(n), t + i * step, step * 1.6, type, vol));
   switch (name) {
@@ -84,9 +103,6 @@ export function sfx(name: Sfx): void {
       break;
     case 'confirm':
       seq([12, 19], 0.06, 'square', 0.5);
-      break;
-    case 'win':
-      seq([12, 16, 19, 24], 0.07);
       break;
     case 'lose':
       seq([7, 4, 0], 0.12, 'triangle');
@@ -145,8 +161,9 @@ export function sfx(name: Sfx): void {
 const BASS = [0, 0, 7, 7, 5, 5, 7, 7, 0, 0, 7, 7, 5, 5, 3, 7];
 const LEAD = [12, -1, 16, -1, 19, -1, 16, 14, 12, -1, 16, -1, 17, 16, 14, -1];
 
-function startMusic(): void {
-  if (musicTimer || !musicOn || !audio()) return;
+function startMusic(force = false): void {
+  if (musicTimer || (!musicOn && !force) || !audio()) return;
+  if (ctx!.state === 'suspended') void ctx!.resume();
   let i = 0;
   const step = 0.22;
   musicTimer = setInterval(() => {
@@ -167,6 +184,12 @@ function stopMusic(): void {
 /** Music on or off with what is on screen (a mini-game has its own sound). */
 export function music(playing: boolean): void {
   if (playing && musicOn) startMusic();
+  else stopMusic();
+}
+
+/** The sound board's music button: the loop on or off, whatever the switch says. */
+export function previewMusic(on: boolean): void {
+  if (on) startMusic(true);
   else stopMusic();
 }
 

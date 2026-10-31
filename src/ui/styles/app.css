@@ -1919,10 +1919,8 @@ td .art-team { display: inline-block; vertical-align: middle; margin: -3px 8px -
 .oath-honour span { display: grid; gap: 2px; }
 .oath-honour small { color: var(--muted); }
 /* round 25: the dev deck's door, at the foot of the start page */
-.dev-gate { justify-self: start; color: var(--muted); font-size: 14px; }
-.dev-gate > summary { cursor: pointer; padding: 6px 0; }
-.dev-gate form { margin-top: 6px; }
-.dev-gate input { width: 180px; min-height: 38px; }
+.dev-gate { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px; align-items: start; justify-self: start; width: min(100%, 560px); border: 2px dashed var(--line); border-left: 6px solid #7048e8; }
+.dev-gate input { width: 200px; min-height: 40px; }
 /* round 25: the Lockdown intro's court, where the pixel players run a set to the beat */
 .ld-court { position: relative; height: 260px; margin-top: 8px; border-radius: 14px; overflow: hidden; background: linear-gradient(#20242c 0 52%, #a8703c 52% 100%); }
 .ld-court::before { content: ''; position: absolute; inset: 52% 0 0; background: repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.13) 0 2px, transparent 2px 46px), linear-gradient(transparent 40%, rgba(255, 255, 255, 0.06)); }
