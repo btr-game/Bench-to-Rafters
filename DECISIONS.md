@@ -1688,3 +1688,48 @@ Reached from the start page and from the bottom of Home (a career in progress is
     shot of a playable game, ten save slots; docs/reports/2026-10-31-project-summary.docx and the
     dev deck's summary chapter.
 
+
+## Round 26 (owner requests, first batch)
+
+- **Scouting report** (owner: a 65 OVR freshman was projected "101–99", with every milestone ticked):
+  the freshman projection is refit to the round 26 distribution run (4,000 careers per difficulty).
+  Starting OVR at 14 barely predicts the peak: each point ahead of the usual freshman adds 0.279061
+  (Regular guy), 0.297141 (Reality) and −0.030577 (Shoot for the stars) to the peak, with SDs of
+  12.08279, 8.767987 and 3.814488 around the line. The old 1.2 a point is gone. `MODES[*].scout`
+  holds mid, slope and SD; the projection never passes 99 and its range is never upside down. A
+  tick now means "already reached"; everything else stops at 99%.
+- **Achievements came already earned**, for two reasons. A career earned the OVR rungs and Pterodactyl
+  from its starting draw: now nothing is earned before the first season is in, and Pterodactyl
+  asks for 3 blocks and steals a game as well as the wingspan. And the old dev deck page, opened
+  from a file in Chrome, shared the browser's storage with a downloaded copy of the game and
+  wrote its "everything earned" book into it: those entries ("Dev deck") are dropped on load.
+- **The last possession** (owner's recording): with guide mode on, picking a shot opened the meter,
+  the guide tour put a step on the meter, and the "next" highlight around the play area came off,
+  which remounted the screen and threw the shot away. The highlight's wrapper now stays put.
+- **No Shortcuts** (owner: the hardest way to play is Reality, master mode, nothing simplified):
+  picking Reality offers it; taken, the career keeps master mode on and fast break, simple text
+  and sim mode off to the end (`flags.oath`; the engine refuses fast and sim, the store the two
+  switches). The career carries the mark in the top bar, on the leaderboards, the Reality 99 hall,
+  the career log and the retirement page, with six achievements of its own (522 in all).
+- **Feedback**: a sender folded at the foot of every tab in a career, tagged with the tab, the
+  difficulty and the age. It goes to the maker's inbox (Community, Inbox tab) when the viewer may
+  write to the page's shared data (the owner and invited contributors); everyone else on claude.ai
+  gets the page's own comment box (comments, composer only: no permission asked), which the owner
+  sees in the page's comments. A copy opened from a file says plainly that its notes stay on the
+  device.
+- **New career** (owner: no confirmation text, small and easy to miss): a full-size button, then a
+  plain question with "Yes, start over" and "Keep playing". The blank red button came from a
+  round 25 style for the saves list (red text on every danger button); it now only touches
+  outlined ones, which also brings back the text of the retire and delete buttons.
+- **The dev deck moved into the game**, behind a password at the foot of the start page (owner).
+  Dev mode reloads the page into the deck with storage of its own, keeps the community on the
+  device, and adds a Catalog (every list the game draws from, about 1,060 entries over 17
+  categories, with their art) and the Action Cam Lab (formerly its own artifact). The deck and
+  cam lab artifacts are retired. Project summaries are no longer sent as Word files; the summary
+  lives in the deck.
+- Start page: the live strip, the saves and the Developer door sit under Next. The name card is
+  compact, with the jersey he will wear. Lockdown's intro has a little court where the pixel
+  players run a set. The game's tab icon is drawn from script (the host wraps the page, so a
+  static icon link landed in the body), and dev mode shows the deck's own icon.
+- **Distribution report**: docs/reports/2026-10-31-peak-ovr-by-difficulty-and-mode.docx, 18,000
+  careers (2,000 per difficulty and policy, plus 1,000 seeds each in fast break and sim mode).

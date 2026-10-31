@@ -303,17 +303,20 @@ export function guideStep(g: GameState): { spot: GuideSpot; text: string } {
   return { spot: 'main', text };
 }
 
-/** Wraps a spot: with guide mode on and this spot next, it glows and shows the note. */
+/** Wraps a spot: with guide mode on and this spot next, it glows and shows the note. The wrapper
+ * is always there (round 25): adding and dropping it remounted what it holds, so a guide-tour step
+ * opening on the last-possession meter threw the shot away and showed the choices again. */
 export function GuideSpotWrap({ g, spot, children }: { g: GameState; spot: GuideSpot; children: React.ReactNode }) {
   const on = useStore((s) => s.guide && !s.master && !s.tour);
-  if (!on) return <>{children}</>;
-  const step = guideStep(g);
-  if (step.spot !== spot) return <>{children}</>;
+  const step = on ? guideStep(g) : null;
+  const lit = step?.spot === spot;
   return (
-    <div className="guide-target">
-      <div className="guide-tip" role="note">
-        <b>Next</b> {step.text}
-      </div>
+    <div className={lit ? 'guide-target' : 'guide-off'}>
+      {lit && (
+        <div className="guide-tip" role="note">
+          <b>Next</b> {step.text}
+        </div>
+      )}
       {children}
     </div>
   );

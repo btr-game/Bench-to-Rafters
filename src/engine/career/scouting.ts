@@ -66,25 +66,25 @@ export function scoutReport(s: GameState): ScoutReport {
     mid = (p.scoutRange[0] + p.scoutRange[1]) / 2;
     sd = scoutSd(p.age) + 1;
   } else {
-    // freshman year: project from how far ahead of the curve he is
-    const m = MODES[s.mode ?? 'standard'].scoutMid;
-    const typical = expectedOvrAt(m, p.age);
-    mid = m + (ovr - typical) * 1.2;
-    sd = 7;
+    // freshman year: project from how far ahead of the curve he is (fitted to the harness)
+    const f = MODES[s.mode ?? 'standard'].scout;
+    mid = f.mid + (ovr - expectedOvrAt(f.mid, p.age)) * f.slope;
+    sd = f.sd;
   }
-  // he can't peak below where he is now; older players are close to their ceiling
+  // he can't peak below where he is now or above 99; older players are close to their ceiling
   const room = p.age >= 27 ? 1 : p.age >= 24 ? 3 : 99;
-  mid = clamp(Math.max(mid, ovr), ovr, ovr + room);
-  const peakLo = Math.round(Math.max(ovr, mid - sd));
+  mid = clamp(mid, ovr, Math.min(99, ovr + room));
   const peakHi = Math.round(Math.min(99, mid + sd));
+  const peakLo = Math.min(peakHi, Math.round(Math.max(ovr, mid - sd)));
   const odds = {} as ScoutReport['odds'];
   for (const [k, [c, sc]] of Object.entries(ODDS_CURVES)) {
     let pr = 0;
     NODES.forEach((z, i) => {
-      const peak = Math.max(ovr, mid + z * sd);
+      const peak = clamp(mid + z * sd, ovr, 99);
       pr += WEIGHTS[i] * logistic((peak - c) / sc);
     });
-    odds[k as keyof typeof ODDS_CURVES] = pr;
+    // only a milestone already reached is certain (round 25: near-sure odds showed as reached)
+    odds[k as keyof typeof ODDS_CURVES] = Math.min(0.99, pr);
   }
   // milestones already reached are certain
   if (s.nbaGames > 0) odds.nba = 1;

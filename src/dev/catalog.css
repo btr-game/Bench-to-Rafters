@@ -1,0 +1,38 @@
+/* The dev deck's catalog (round 25): every list in the game, one grid per category. */
+.cat { display: grid; gap: 14px; }
+.cat-tools { display: grid; gap: 10px; }
+.cat-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.cat-chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; font-weight: 600; font-size: 15px; cursor: pointer; }
+.cat-chip:hover { border-color: var(--accent); }
+.cat-chip[aria-pressed='true'] { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+.cat-chip:focus-visible, .cat-tile:focus-visible, .cat-search:focus-visible, .cat-more:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.cat-search { max-width: 420px; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; }
+.cat-blurb { margin: 0; color: var(--muted); max-width: 90ch; }
+.cat-blurb b { color: var(--ink); }
+
+.cat-overview { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+.cat-tile { display: grid; justify-items: start; gap: 6px; padding: 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; text-align: left; cursor: pointer; min-width: 0; }
+.cat-tile:hover { border-color: var(--accent); }
+.cat-tile b { font-family: var(--f-display); font-size: 22px; text-transform: uppercase; line-height: 1; }
+.cat-tile small { color: var(--muted); font-size: 14.5px; line-height: 1.35; }
+
+.cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; align-items: start; }
+.cat-item { display: grid; gap: 10px; padding: 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); min-width: 0; }
+.cat-art { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; min-height: 72px; padding: 8px; border-radius: 8px; background: var(--surface-2); overflow: hidden; }
+.cat-art .art-scene, .cat-art svg { max-width: 100%; height: auto; }
+.cat-kits { display: inline-flex; gap: 4px; }
+.cat-body { display: grid; gap: 6px; min-width: 0; }
+.cat-sub { font-family: var(--f-mono); font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); overflow-wrap: anywhere; }
+.cat-title { margin: 0; font-family: var(--f-display); font-size: 21px; line-height: 1.05; text-transform: uppercase; overflow-wrap: anywhere; }
+.cat-text { margin: 0; font-size: 15px; line-height: 1.4; }
+.cat-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 10px; margin: 0; }
+.cat-facts dt { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.cat-facts dd { margin: 0; font-weight: 600; font-size: 14.5px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.cat-lines { margin: 0; padding-left: 18px; display: grid; gap: 2px; font-size: 14px; color: var(--muted); }
+.cat-swatch { display: grid; place-items: center; width: 64px; height: 64px; border-radius: 12px; color: #fff; font-family: var(--f-display); font-size: 22px; text-shadow: 0 1px 0 rgba(0, 0, 0, 0.45); box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.2); }
+.cat-more { justify-self: center; }
+
+@media (max-width: 560px) {
+  .cat-grid, .cat-overview { grid-template-columns: minmax(0, 1fr); }
+  .cat-search { max-width: none; }
+}

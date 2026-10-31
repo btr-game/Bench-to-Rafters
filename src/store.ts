@@ -154,6 +154,21 @@ function teamOf(g: GameState) {
   return lg?.teams.find((t) => t.id === g.teamId) ?? null;
 }
 
+/** The page a link names: …#community, or …#inbox for the maker's inbox (the Community page's last tab). */
+function linkedPage(): Page | null {
+  try {
+    return /^#(community|inbox)$/.test(location.hash) ? 'community' : null;
+  } catch {
+    return null;
+  }
+}
+
+/** A No Shortcuts career (round 25) plays in master mode with the full text, whatever the switches
+ * said before it opened; the switches stay put until it closes. */
+function oathLock(g: GameState): Partial<Pick<Store, 'master' | 'simple'>> {
+  return g.flags.oath ? { master: true, simple: false } : {};
+}
+
 export const useStore = create<Store>((set, get) => ({
   game: null,
   tab: 'home',
@@ -161,12 +176,14 @@ export const useStore = create<Store>((set, get) => ({
   court: loadCourt(),
   simple: loadFlag('btr-simple'),
   toggleSimple: () => {
+    if (get().game?.flags.oath) return; // No Shortcuts (round 25): full text for the whole career
     const simple = !get().simple;
     saveFlag('btr-simple', simple);
     set({ simple });
   },
   master: loadFlag('btr-master'),
   toggleMaster: () => {
+    if (get().game?.flags.oath) return; // No Shortcuts: master mode for the whole career
     const master = !get().master;
     saveFlag('btr-master', master);
     set({ master });
@@ -182,11 +199,12 @@ export const useStore = create<Store>((set, get) => ({
     const s = seed ?? Math.floor(Math.random() * 2 ** 31);
     const game = newGame(s, input);
     fastForward(game);
-    set({ game, slot: newSlotId(), tab: 'home', transition: null, mini: null, seen: allSeen(game) });
+    set({ game, slot: newSlotId(), tab: 'home', transition: null, mini: null, seen: allSeen(game), ...oathLock(game) });
   },
   seen: {},
   saving: 'ok',
-  page: null,
+  // round 26 (owner: "just give me the link to the community page"): #community and #inbox open it
+  page: linkedPage(),
   setPage: (page) => {
     set({ page });
     top();
@@ -216,7 +234,7 @@ export const useStore = create<Store>((set, get) => ({
     const game = await readSlot(id);
     if (!game) return false;
     weightOf(game.player); // careers saved before round 20 get a weight
-    set({ game, slot: id, tab: 'home', transition: null, mini: null, seen: allSeen(game), daily: null });
+    set({ game, slot: id, tab: 'home', transition: null, mini: null, seen: allSeen(game), daily: null, ...oathLock(game) });
     return true;
   },
   importCareer: async (code) => {
@@ -224,7 +242,7 @@ export const useStore = create<Store>((set, get) => ({
     if (!game) return false;
     weightOf(game.player);
     const slot = newSlotId();
-    set({ game, slot, tab: 'home', transition: null, mini: null, seen: allSeen(game), daily: null });
+    set({ game, slot, tab: 'home', transition: null, mini: null, seen: allSeen(game), daily: null, ...oathLock(game) });
     return true;
   },
   choose: (choiceId) => {

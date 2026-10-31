@@ -9,8 +9,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "typecheck": "tsc -b --noEmit",
-    "sim": "tsx scripts/sim.ts",
-    "build:dev": "vite build --config vite.dev.config.ts"
+    "sim": "tsx scripts/sim.ts"
   },
   "dependencies": {
     "react": "^18.3.1",

@@ -4,6 +4,7 @@
 
 import { ACHIEVEMENTS, NO_TOTALS, earnedNow, type Achievement, type CareerTotals } from '../engine/achievements';
 import type { GameState } from '../engine/types';
+import { DEV } from '../dev/mode';
 import { count, nbaTitles } from '../engine/awards/legacy';
 
 const KEY = 'btr-achv-v1';
@@ -16,6 +17,9 @@ export interface AchSaved {
 export function loadAch(): AchSaved {
   try {
     const d = JSON.parse(localStorage.getItem(KEY) ?? 'null') as AchSaved | null;
+    // round 25: the old dev deck page, opened from a file, could write its "everything earned" book
+    // into the game's storage; those entries are not the player's and are dropped
+    if (d?.got && !DEV) for (const id of Object.keys(d.got)) if (d.got[id].who === 'Dev deck') delete d.got[id];
     if (d?.got) return { got: d.got, totals: { ...NO_TOTALS, ...d.totals } };
   } catch {
     // a blocked or broken store reads as nothing earned yet

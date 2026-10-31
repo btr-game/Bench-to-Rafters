@@ -7,7 +7,7 @@
 
 import type { GameState, SeasonRecord } from './types';
 import type { AchTier } from './achievements';
-import { careerIndex } from './awards/legacy';
+import { careerIndex, hallOfFame } from './awards/legacy';
 import { NICKNAMES } from '../content/nicknames';
 
 /** What the round 25 checks read: the career, its NBA seasons and the awards by year. */
@@ -16,6 +16,8 @@ interface Facts25 {
   nba: SeasonRecord[];
   awardsByYear: Map<number, Set<string>>;
   peak: number;
+  retired: boolean;
+  nbaTitlesYears: number[];
 }
 
 interface Ach25 {
@@ -387,5 +389,12 @@ export const ACHIEVEMENTS_25: Ach25[] = [
   A('w-500', 'Five Hundred Wins', 'allstar', 'Win 500 NBA regular-season games.', (f) => f.nba.reduce((a, h) => a + h.w, 0) >= 500),
   A('w-900', 'Win Machine', 'hof', 'Win 900 NBA regular-season games.', (f) => f.nba.reduce((a, h) => a + h.w, 0) >= 900),
   A('w-finals5', 'June Is Busy', 'hof', 'Reach the NBA Finals five times.', (f) => f.nba.filter((h) => /Champion|Finals/i.test(h.result)).length >= 5),
+  // ---- No Shortcuts (round 25, owner: honour the players who take Reality the hardest way) ----
+  A('ns-season', 'No Shortcuts', 'starter', 'Finish a season of a No Shortcuts career: Reality hits hard, master mode, no fast break, simple text or sim.', (f) => !!f.g.flags.oath && f.g.history.length > 0),
+  A('ns-nba', 'The Hard Way', 'allstar', 'Reach the NBA in a No Shortcuts career.', (f) => !!f.g.flags.oath && f.nba.length > 0),
+  A('ns-allstar', 'Earned, Not Given', 'hof', 'Make an All-Star team in a No Shortcuts career.', (f) => !!f.g.flags.oath && won(f, 'ALLSTAR') > 0),
+  A('ns-ring', 'Iron Crown', 'hof', 'Win an NBA title in a No Shortcuts career.', (f) => !!f.g.flags.oath && f.nbaTitlesYears.length > 0),
+  A('ns-mvp', 'Nobody Handed It Over', 'hof', 'Win an MVP in a No Shortcuts career.', (f) => !!f.g.flags.oath && won(f, 'MVP') > 0),
+  A('ns-hof', 'Rafters the Hard Way', 'hof', 'Make the Hall of Fame in a No Shortcuts career.', (f) => !!f.g.flags.oath && f.retired && !!hallOfFame(f.g)),
   A('w-lose3f', 'Always the Bridesmaid', 'allstar', 'Lose three NBA Finals.', (f) => f.nba.filter((h) => /Lost (in )?(the )?(NBA )?Finals/i.test(h.result)).length >= 3),
 ];

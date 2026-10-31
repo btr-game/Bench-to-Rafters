@@ -9,6 +9,7 @@ import { LOG_MAX, LOG_WARN, deleteCard, logCards } from '../careerLog';
 import { canShareFiles, downloadCareerCard, drawCareerCard, shareCareerCard } from '../share';
 import { PlayerArt } from '../art/Player';
 import { Icon } from '../art/Icon';
+import { OathMark } from '../components/OathMark';
 
 /** Download (and on phones, share) the career card. */
 export function CardActions({ rec }: { rec: CareerRecord }) {
@@ -110,6 +111,7 @@ function LogEntry({ rec, onDelete }: { rec: CareerRecord; onDelete: () => void }
             {MODES[rec.mode].name} · {when.toLocaleDateString()}
           </div>
           <b className="log-name">{rec.name}</b>
+          {rec.oath && <OathMark />}
           <div className="small">
             {NAMES.pos[rec.pos]} · {rec.role} · retired at {rec.retiredAt}
           </div>

@@ -10,8 +10,9 @@ const ODDS_LABEL: [string, string][] = [
   ["mvp", "Win an MVP"],
 ];
 
+// a tick only for a milestone already reached (the report caps everything else at 99%)
 const pct = (x: number) =>
-  x >= 0.995 ? "✓" : x < 0.01 ? "<1%" : `${Math.round(x * 100)}%`;
+  x >= 1 ? "✓" : x < 0.01 ? "<1%" : `${Math.min(99, Math.round(x * 100))}%`;
 
 export function ScoutCard({
   g,

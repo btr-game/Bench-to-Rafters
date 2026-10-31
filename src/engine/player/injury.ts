@@ -9,6 +9,8 @@ const NAMES: Record<Injury['key'], string[]> = {
   major: ['High ankle sprain', 'Broken hand', 'Knee sprain (MCL)', 'Stress fracture', 'Torn meniscus'],
   season: ['Torn ACL', 'Ruptured Achilles'],
 };
+/** Every injury the game can hand out, by severity (the dev deck's catalog lists them). */
+export const INJURY_NAMES = NAMES;
 
 export function injuryChance(p: UserPlayer, plan: HalfPlan | PlanDef, minutes: number): number {
   const fatigue = 0.5 + minutes / 60;

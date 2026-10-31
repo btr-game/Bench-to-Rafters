@@ -123,6 +123,7 @@ export function fastForward(s: GameState): void {
  * on the shop, the national team and extra turning points follow the switch.
  */
 export function setFast(s: GameState, on: boolean): void {
+  if (on && s.flags.oath) return; // No Shortcuts (round 25): no quick pace, for the whole career
   s.flags.fast = on ? 1 : 0;
   if (!on) {
     s.flags.simPostseason = 0;
@@ -139,6 +140,7 @@ export function setFast(s: GameState, on: boolean): void {
 
 /** Sim mode on or off (round 25). It turns fast break on with it; turning fast break off ends it. */
 export function setSim(s: GameState, on: boolean): void {
+  if (on && s.flags.oath) return;
   s.flags.sim = on ? 1 : 0;
   if (on) setFast(s, true);
 }

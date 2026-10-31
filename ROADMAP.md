@@ -2,6 +2,10 @@
 
 Ideas the owner has asked to keep for later. Not started unless marked.
 
+## Next (owner, round 26)
+
+- A UI and convenience update, once the round 26 requests are done.
+
 ## Action cam
 
 - Done in round 24: finals (league, NBA Cup, Olympic and World Cup golds) open with a choice to

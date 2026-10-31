@@ -8,6 +8,7 @@
 // game, and an opaque account id for ownership; never an account name or address.
 
 import type { CareerRecord } from '../engine/career/record';
+import { DEV } from '../dev/mode';
 import type { Mode } from '../engine/balance';
 import { todayKey } from '../engine/mini/daily';
 
@@ -330,13 +331,51 @@ function sharedCommunity(db: Db, uid: string | null, owner: boolean, canWrite: b
 
 // ---------- which one ----------
 
+/** Round 25 (owner: "where does the feedback go? make it work"): the shared data only takes writes
+ * from the maker and invited contributors, so anyone else gets claude.ai's own comment box on the
+ * page instead (it asks for no permission). The maker sees every comment in the page's comments. */
+interface CommentsApi {
+  openComposer(target: { element: Element }): Promise<{ opened: boolean }>;
+}
+let comments: Promise<CommentsApi | null> | null = null;
+function commentsApi(): Promise<CommentsApi | null> {
+  if (!comments)
+    comments = (async () => {
+      const host = (window as unknown as { claude?: ClaudeHost }).claude;
+      if (!host?.use || DEV) return null;
+      try {
+        return (await host.use('comments')) as CommentsApi | null;
+      } catch {
+        return null;
+      }
+    })();
+  return comments;
+}
+
+/** Whether this view has the page's comment box to offer. */
+export async function canComment(): Promise<boolean> {
+  return !!(await commentsApi());
+}
+
+/** Opens the comment box on `el`; false when this viewer cannot comment here. */
+export async function openCommentBox(el: Element): Promise<boolean> {
+  const c = await commentsApi();
+  if (!c) return false;
+  try {
+    return (await c.openComposer({ element: el })).opened;
+  } catch {
+    return false;
+  }
+}
+
 let picked: Promise<Community> | null = null;
 /** The community this page can reach: shared on claude.ai, this device elsewhere. */
 export function community(): Promise<Community> {
   if (picked) return picked;
   picked = (async () => {
     const host = (window as unknown as { claude?: ClaudeHost }).claude;
-    if (!host?.use) return localCommunity();
+    // the dev deck never posts to (or reads) the real community: it stays on this device
+    if (!host?.use || DEV) return localCommunity();
     try {
       const [db, user, room] = (await Promise.all([host.use('db'), host.use('user'), host.use('room')])) as [Db | null, UserApi | null, RoomApi | null];
       if (!db) return localCommunity();

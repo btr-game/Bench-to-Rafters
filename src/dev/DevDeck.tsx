@@ -11,8 +11,23 @@ import { Icon } from '../ui/art/Icon';
 import { useStore } from '../store';
 import { CARDS, GROUPS, setAchievements, type DevCard, type Group } from './cards';
 import { Marked, SUMMARY, SummaryPage, searchCards, searchSummary, snippet } from './Summary';
+import { leaveDev } from './mode';
+import { Catalog } from './Catalog';
+import './dev.css';
 
 const groupOf = (g: Group) => GROUPS.find((x) => x.key === g)!;
+
+/** Dev mode starts here (main.tsx): the deck never keeps a career of its own, and every
+ * achievement starts earned so none pop up. All of it lands in the deck's own storage. */
+export function devSetup(): void {
+  try {
+    localStorage.setItem('btr-guide-seen', '1');
+    localStorage.removeItem('btr-save-v1');
+  } catch {
+    // storage blocked: the deck still works, the start page just shows its first-visit sheet
+  }
+  setAchievements(true);
+}
 
 /** Back to a clean slate between cards: no game, no page, no switches left on. */
 function clean(): void {
@@ -54,7 +69,7 @@ export function DevDeck() {
   const [group, setGroup] = useState<Group | 'all'>('all');
   const [q, setQ] = useState('');
   const [results, setResults] = useState(false);
-  const [section, setSection] = useState<'cards' | 'summary'>('cards');
+  const [section, setSection] = useState<'cards' | 'catalog' | 'summary'>('cards');
   const [chapter, setChapter] = useState(0);
   const [focus, setFocus] = useState<number | null>(null);
   const [view, setView] = useState<'deck' | 'grid'>('deck');
@@ -120,9 +135,15 @@ export function DevDeck() {
   if (open)
     return (
       <>
-        <App />
-        <GuideTour />
-        <AchToasts />
+        {open.page ? (
+          <open.page />
+        ) : (
+          <>
+            <App />
+            <GuideTour />
+            <AchToasts />
+          </>
+        )}
         <div className="dk-bar" role="toolbar" aria-label="Dev deck">
           <button className="btn small" onClick={back}>
             Back to the deck
@@ -142,7 +163,12 @@ export function DevDeck() {
     <div className="dk">
       <header className="dk-head">
         <div>
-          <div className="kicker">Bench to Rafters · dev version</div>
+          <div className="dk-top">
+            <div className="kicker">Bench to Rafters · dev mode</div>
+            <button className="btn small ghost" onClick={leaveDev}>
+              Back to the game
+            </button>
+          </div>
           <h1 className="hub-title">The dev deck</h1>
           <p className="prose">
             Every function in the game, one card each, {CARDS.length} in all, and the project summary, chapter by chapter. Open a card and the game itself takes over with that function on screen, everything unlocked. Cards that need a career play one with the balance harness's smart player first, so a few take a second or two.
@@ -152,6 +178,9 @@ export function DevDeck() {
           <div className="seg dk-sections">
             <button aria-pressed={section === 'cards' && !results} onClick={() => (setSection('cards'), setResults(false))}>
               Cards
+            </button>
+            <button aria-pressed={section === 'catalog' && !results} onClick={() => (setSection('catalog'), setResults(false))}>
+              Catalog
             </button>
             <button aria-pressed={section === 'summary' && !results} onClick={() => openChapter(chapter)}>
               Project summary
@@ -219,6 +248,8 @@ export function DevDeck() {
           )}
           {hits.cards.length + hits.summary.length === 0 && <p className="muted">Nothing matches. Try fewer or shorter words.</p>}
         </section>
+      ) : section === 'catalog' ? (
+        <Catalog />
       ) : section === 'summary' ? (
         <SummaryPage chapter={chapter} setChapter={(n) => (setChapter(n), setFocus(null))} focus={focus} q={q} />
       ) : (

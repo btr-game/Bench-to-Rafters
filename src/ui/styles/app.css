@@ -699,7 +699,15 @@ button.scout-row { text-align: left; background: var(--surface); color: inherit;
 
 /* identity page */
 .identity { gap: 12px; }
-.id-row { display: grid; grid-template-columns: minmax(0, 1fr) 96px; gap: 10px; }
+.id-card { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 20px; align-items: center; }
+.id-fields { gap: 8px; }
+.id-row { display: grid; grid-template-columns: minmax(0, 340px) 136px auto; gap: 10px; align-items: end; justify-content: start; }
+@media (max-width: 560px) {
+  .id-card { grid-template-columns: minmax(0, 1fr); justify-items: center; }
+  .id-fields { width: 100%; }
+  .id-row { grid-template-columns: minmax(0, 1fr) 84px; }
+  .id-dice { grid-column: 1 / -1; justify-self: start; }
+}
 .nation-card { border-top: 4px solid var(--accent); }
 .nation-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 6px; }
 .nation { display: grid; gap: 1px; text-align: left; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface-2); color: inherit; min-height: 52px; }
@@ -866,6 +874,7 @@ button.scout-row { text-align: left; background: var(--surface); color: inherit;
 .guide-mode > div { flex: 1; }
 .icon-btn.guide-on { border-color: var(--accent); color: var(--accent); font-weight: 700; }
 .guide-target { position: relative; display: grid; gap: 10px; padding: 10px; margin: -10px; border-radius: 12px; box-shadow: 0 0 0 3px var(--accent); animation: guide-pulse 1.8s ease-in-out infinite; }
+.guide-off { display: contents; }
 .guide-tip { position: relative; padding: 9px 12px; border-radius: 10px; background: var(--accent); color: var(--accent-ink); font-size: 16px; line-height: 1.35; }
 .guide-tip b { font-family: var(--f-mono); font-size: 12.5px; letter-spacing: 0.08em; text-transform: uppercase; margin-right: 6px; }
 .guide-tip::after { content: ''; position: absolute; left: 22px; bottom: -7px; border: 7px solid transparent; border-bottom: 0; border-top-color: var(--accent); }
@@ -1522,7 +1531,11 @@ td .art-team { display: inline-block; vertical-align: middle; margin: -3px 8px -
 @media (hover: hover) and (pointer: fine) { .o-main [data-n] > .label { padding-right: 28px; } }
 .scout-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: start; }
 .scout-head .kicker { overflow-wrap: anywhere; }
-.set-new { padding-top: 2px; }
+.set-new { padding: 10px 0; border-bottom: 1px solid var(--line); }
+.set-new-btn { justify-content: center; }
+.set-confirm { display: grid; gap: 6px; padding: 12px; border-radius: 10px; border: 2px solid var(--bad); background: color-mix(in srgb, var(--bad) 10%, var(--surface)); }
+.set-confirm small { color: var(--ink); font-size: 15px; }
+.set-confirm-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
 
 /* guide mode's tour (round 24): a ring round one control and a note beside it */
 .tour-ring { position: fixed; z-index: 1000; pointer-events: none; border: 3px solid var(--accent); border-radius: 12px; box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 25%, transparent), 0 0 26px color-mix(in srgb, var(--accent) 55%, transparent); animation: tourPulse 1.6s ease-in-out infinite; }
@@ -1609,6 +1622,13 @@ td .art-team { display: inline-block; vertical-align: middle; margin: -3px 8px -
 .inbox-msg p { margin: 0; }
 .community-note { flex-wrap: wrap; }
 .field textarea, .field input { width: 100%; }
+/* round 25: the feedback sender at the foot of every tab, one line until opened */
+.feedback-foot { margin-top: 18px; padding-block: 12px; }
+.feedback-foot > summary { cursor: pointer; font-weight: 600; list-style: none; }
+.feedback-foot > summary::-webkit-details-marker { display: none; }
+.feedback-foot > summary::after { content: '+'; margin-left: auto; font-size: 1.2em; }
+.feedback-foot[open] > summary { margin-bottom: 12px; }
+.feedback-foot[open] > summary::after { content: '−'; }
 
 /* ---- round 24: the roster on the Player tab ---- */
 .roster-fit { display: flex; flex-wrap: wrap; gap: 10px; }
@@ -1802,7 +1822,7 @@ td .art-team { display: inline-block; vertical-align: middle; margin: -3px 8px -
 }
 .save-import { display: grid; gap: 8px; }
 .save-import summary { cursor: pointer; font-weight: 600; }
-.btn.danger { color: var(--bad); border-color: var(--bad); }
+.btn.ghost.danger { color: var(--bad); border-color: var(--bad); }
 @media (max-width: 640px) {
   .save-row { grid-template-columns: 1fr; }
   .save-actions { justify-content: flex-start; }
@@ -1888,3 +1908,55 @@ td .art-team { display: inline-block; vertical-align: middle; margin: -3px 8px -
 .power-rank li { display: flex; justify-content: space-between; gap: 8px; }
 .power-rank li.mine { font-weight: 700; color: var(--accent); }
 .about-you { padding: 8px 10px; border-left: 3px solid var(--accent); background: var(--surface-2); border-radius: 6px; }
+
+/* round 25: No Shortcuts (Reality, master mode, nothing simplified) */
+.oath-card { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px; align-items: start; border: 2px dashed var(--line); }
+.oath-card.on { border-style: solid; border-color: var(--bad); background: color-mix(in srgb, var(--bad) 8%, var(--surface)); }
+.oath-mark { display: inline-flex; align-items: center; gap: 4px; margin-left: 8px; padding: 1px 7px; border-radius: 5px; border: 1px solid var(--bad); color: var(--bad); font-family: var(--f-mono); font-size: 11.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; vertical-align: middle; white-space: nowrap; }
+.oath-badge { display: inline-flex; align-items: center; gap: 4px; }
+.oath-note { margin: 0; color: var(--ink); }
+.oath-honour { gap: 12px; padding: 12px 14px; border-radius: 10px; border: 2px solid var(--bad); background: color-mix(in srgb, var(--bad) 10%, var(--surface)); }
+.oath-honour span { display: grid; gap: 2px; }
+.oath-honour small { color: var(--muted); }
+/* round 25: the dev deck's door, at the foot of the start page */
+.dev-gate { justify-self: start; color: var(--muted); font-size: 14px; }
+.dev-gate > summary { cursor: pointer; padding: 6px 0; }
+.dev-gate form { margin-top: 6px; }
+.dev-gate input { width: 180px; min-height: 38px; }
+/* round 25: the Lockdown intro's court, where the pixel players run a set to the beat */
+.ld-court { position: relative; height: 260px; margin-top: 8px; border-radius: 14px; overflow: hidden; background: linear-gradient(#20242c 0 52%, #a8703c 52% 100%); }
+.ld-court::before { content: ''; position: absolute; inset: 52% 0 0; background: repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.13) 0 2px, transparent 2px 46px), linear-gradient(transparent 40%, rgba(255, 255, 255, 0.06)); }
+.ld-court::after { content: ''; position: absolute; left: 0; right: 0; top: 52%; height: 3px; background: #f4f1ea; opacity: 0.75; }
+.ld-notes i { position: absolute; top: -14px; width: 12px; height: 12px; border-radius: 3px; opacity: 0.35; animation: ld-fall 3.6s linear infinite; }
+.ld-notes i.block { background: #e03131; }
+.ld-notes i.steal { background: #1c7ed6; }
+.ld-hoop { position: absolute; right: 22px; top: 18px; width: 84px; height: auto; }
+.ld-p { position: absolute; bottom: 20px; }
+.ld-p .art-player { display: block; }
+.ld-dribble { left: 12%; animation: ld-cross 2.4s ease-in-out infinite alternate; }
+.ld-dribble .ld-ball { position: absolute; right: -10px; bottom: 6px; }
+.ld-ball { display: block; width: 18px; height: 18px; }
+.ld-ball.bounce { animation: ld-bounce 0.45s cubic-bezier(0.5, 0, 0.5, 1) infinite alternate; }
+.ld-guard { left: 27%; animation: ld-shuffle 1.2s ease-in-out infinite alternate; }
+.ld-shooter { left: 50%; animation: ld-jump 2.8s ease-in-out infinite; }
+.ld-swipe { left: 66%; animation: ld-lunge 2.8s ease-in-out infinite; animation-delay: 1.1s; }
+.ld-arc { position: absolute; left: calc(50% + 34px); bottom: 118px; animation: ld-arc-x 2.8s linear infinite; }
+.ld-arc .ld-ball { animation: ld-arc-y 2.8s linear infinite; }
+@keyframes ld-fall { to { transform: translateY(290px); } }
+@keyframes ld-cross { from { transform: translateX(-14px); } to { transform: translateX(26px); } }
+@keyframes ld-bounce { from { transform: translateY(-34px); } to { transform: translateY(0); } }
+@keyframes ld-shuffle { 0% { transform: translateX(-12px); } 45% { transform: translate(4px, -3px); } 100% { transform: translateX(16px); } }
+@keyframes ld-jump { 0%, 30%, 62%, 100% { transform: none; } 42% { transform: translateY(-26px); } 50% { transform: translateY(-28px); } }
+@keyframes ld-lunge { 0%, 55%, 100% { transform: none; } 66% { transform: translateX(-22px) translateY(-6px); } 76% { transform: translateX(-26px); } }
+/* the shot: out of the shooter's hands at the top of his jump, in a rainbow to the rim */
+@keyframes ld-arc-x { 0%, 44% { transform: translateX(0); opacity: 0; } 46% { opacity: 1; } 78% { transform: translateX(min(34vw, 300px)); opacity: 1; } 80%, 100% { transform: translateX(min(34vw, 300px)); opacity: 0; } }
+@keyframes ld-arc-y { 0%, 44% { transform: translateY(0); } 61% { transform: translateY(-70px); animation-timing-function: ease-in; } 78% { transform: translateY(-40px); } 100% { transform: translateY(-40px); } }
+@media (max-width: 560px) {
+  .ld-court { height: 220px; }
+  .ld-swipe, .ld-notes i:nth-child(n + 4) { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ld-court *, .ld-court { animation: none !important; }
+  .ld-arc { display: none; }
+}
+.start-foot { margin-top: 18px; }

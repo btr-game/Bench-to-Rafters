@@ -23,6 +23,9 @@ import { POS_STYLE, PositionCard } from '../art/PositionCard';
 import { HeroArt, archPose } from '../art/Hero';
 import { hash } from '../art/color';
 import { LineupArt } from '../art/Scene';
+import { JerseyArt } from '../art/Jersey';
+import { enterDev } from '../../dev/mode';
+import type { Kit } from '../../content/teamStyle';
 
 const pick = <T,>(a: readonly T[]): T => a[Math.floor(Math.random() * a.length)];
 const uiRng = makeRng(Math.floor(Math.random() * 2 ** 31));
@@ -117,6 +120,34 @@ function SavesCard() {
   );
 }
 
+/** Round 25 (owner): the dev deck, inside the game, behind a password, at the foot of the start page. */
+function DevGate() {
+  const [pw, setPw] = useState('');
+  const [wrong, setWrong] = useState(false);
+  return (
+    <details className="dev-gate">
+      <summary>Developer</summary>
+      <form
+        className="row"
+        style={{ gap: 8 }}
+        onSubmit={(e) => {
+          e.preventDefault();
+          setWrong(!enterDev(pw));
+        }}
+      >
+        <input type="password" aria-label="Developer password" placeholder="Password" value={pw} onChange={(e) => (setPw(e.target.value), setWrong(false))} autoComplete="off" />
+        <button className="btn small" disabled={!pw}>
+          Open the dev deck
+        </button>
+        {wrong && <span className="small" style={{ color: 'var(--bad)' }}>That is not it.</span>}
+      </form>
+    </details>
+  );
+}
+
+// the jersey on the name card: the game's own colours, his surname across the back
+const ID_KIT: Kit = { base: '#1F5FAD', ink: '#FFFFFF', trim: '#F5C542', word: '' };
+
 export function Create() {
   const start = useStore((s) => s.start);
   const [step, setStep] = useState(0);
@@ -129,6 +160,7 @@ export function Create() {
   const [hand, setHand] = useState<'R' | 'L'>('R');
   const [mode, setMode] = useState<Mode>('standard');
   const [country, setCountry] = useState(''); // '' = the game decides, by real-world odds
+  const [oath, setOath] = useState(false); // round 25: No Shortcuts, offered with Reality
 
   // round 16: random picks, shown as picked (the same one never comes up twice in a row)
   const [rolled, setRolled] = useState<{ pos?: boolean; hand?: boolean; arch?: boolean }>({});
@@ -187,6 +219,7 @@ export function Create() {
       hand,
       mode,
       country: country || undefined,
+      oath: mode === 'reality' && oath,
     });
 
   return (
@@ -202,8 +235,6 @@ export function Create() {
           </button>
         </div>
       </header>
-      <LiveStrip />
-      <SavesCard />
       <section className="hero with-lineup">
         <LineupArt />
         <div className="kicker">A basketball career game</div>
@@ -238,6 +269,24 @@ export function Create() {
               </button>
             ))}
           </div>
+          {/* round 25 (owner): Reality, played the hardest way, asks once and is honoured for it */}
+          {mode === 'reality' && (
+            <div className={`card oath-card${oath ? ' on' : ''}`} role="group" aria-label="The No Shortcuts challenge">
+              <Icon name="oath" size={48} />
+              <div className="stack" style={{ gap: 6 }}>
+                <div className="sec-title">Take the harder road? No Shortcuts</div>
+                <p className="small">Master mode, with no recommendations anywhere, and no Fast break, Simple text or Sim mode, locked for the whole career. Take it and the career carries the No Shortcuts mark on its card, the leaderboards and the career log, with achievements of its own.</p>
+                <div className="row" style={{ gap: 8 }}>
+                  <button className={`btn small${oath ? '' : ' ghost'}`} aria-pressed={oath} onClick={() => setOath(true)}>
+                    {oath ? 'Challenge accepted' : 'Accept the challenge'}
+                  </button>
+                  <button className="btn small ghost" aria-pressed={!oath} onClick={() => setOath(false)}>
+                    Just Reality
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
           <p className="muted small">The league is the same at every difficulty. What changes is your potential, how fast you grow and how often you get hurt. Want it quicker? Flip the Fast break switch inside the game, any time.</p>
           <div className="start-cards">
             <MiniGamesCard />
@@ -250,16 +299,23 @@ export function Create() {
 
       {step === 1 && (
         <section className="stack identity">
-          <div className="card stack">
-            <div className="sec-title">Who are you?</div>
-            <div className="id-row">
-              <div className="field">
-                <label htmlFor="f-name">{UI.create.name}</label>
-                <input id="f-name" type="text" maxLength={28} value={name} onChange={(e) => setName(e.target.value)} />
-              </div>
-              <div className="field id-num">
-                <label htmlFor="f-num">{UI.create.number}</label>
-                <input id="f-num" type="number" min={0} max={99} value={number} onChange={(e) => setNumber(e.target.value)} />
+          {/* round 25 (owner: too much empty space): a compact card, with the jersey he will wear */}
+          <div className="card id-card">
+            <JerseyArt kit={{ ...ID_KIT, word: (name.trim().split(/\s+/).pop() ?? '').toUpperCase() }} number={Number(number) || 0} size={104} label={`Jersey: ${name}, number ${number}`} />
+            <div className="stack id-fields">
+              <div className="sec-title">Who are you?</div>
+              <div className="id-row">
+                <div className="field">
+                  <label htmlFor="f-name">{UI.create.name}</label>
+                  <input id="f-name" type="text" maxLength={28} value={name} onChange={(e) => setName(e.target.value)} />
+                </div>
+                <div className="field id-num">
+                  <label htmlFor="f-num">{UI.create.number}</label>
+                  <input id="f-num" type="number" min={0} max={99} value={number} onChange={(e) => setNumber(e.target.value)} />
+                </div>
+                <button className="btn ghost small id-dice" onClick={() => setName(`${pick(FIRST_NAMES)} ${pick(LAST_NAMES)}`)} title="Pick a random name">
+                  New name
+                </button>
               </div>
             </div>
           </div>
@@ -496,6 +552,15 @@ export function Create() {
           </button>
         )}
       </div>
+      {/* round 25 (owner): the live strip and the saves sit under the hero and the cards (and under
+          Next, so starting a career is no further away), the dev deck's door last */}
+      {step === 0 && (
+        <section className="stack start-foot">
+          <LiveStrip />
+          <SavesCard />
+          <DevGate />
+        </section>
+      )}
     </div>
   );
 }

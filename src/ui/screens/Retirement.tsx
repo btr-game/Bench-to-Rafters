@@ -20,6 +20,7 @@ import { CommunityNote } from './Community';
 import { LegendarySeasons } from '../components/Legendary';
 import { CareerTimeline } from '../components/Timeline';
 import { DailyResult } from '../mini/Daily';
+import { Icon } from '../art/Icon';
 
 function CareerAnalysis({ g }: { g: GameState }) {
   const c = compareCareer(g);
@@ -191,6 +192,15 @@ export function Retirement({ g }: { g: GameState }) {
         </div>
         <div className="verdict">{v.tier}</div>
         <p className="lede">{v.line}</p>
+        {g.flags.oath ? (
+          <div className="oath-honour with-icon">
+            <Icon name="oath" size={40} />
+            <span>
+              <b>No Shortcuts, kept to the end</b>
+              <small>Reality hits hard, master mode, every season played in full. Nobody handed this career anything.</small>
+            </span>
+          </div>
+        ) : null}
         <LoggedNote />
         {!g.flags.daily && g.mode !== 'lab' && <CommunityNote rec={rec} />}
         {hof && <div className="toast">{hof === 'first' ? 'Inducted into the Hall of Fame on the first ballot.' : 'Inducted into the Hall of Fame.'}</div>}

@@ -19,6 +19,7 @@ import { ATTRS } from '../engine/balance';
 import { logCareer } from '../ui/careerLog';
 import { resetTour } from '../ui/components/GuideTour';
 import { decision, moment, onlyMoment, play, type PlayOpts } from './stage';
+import { CamLab } from './CamLab';
 
 export type Group = 'Start' | 'Career hub' | 'Decisions' | 'Big moments' | 'Modes' | 'Mini-games' | 'Records & community';
 export const GROUPS: { key: Group; color: string; icon: string }[] = [
@@ -41,6 +42,8 @@ export interface DevCard {
   open: () => boolean | void;
   /** A control to press once the page is up (a menu, a sheet, a page tab). */
   press?: string;
+  /** A page of the deck's own that shows instead of the game (the action cam lab). */
+  page?: () => JSX.Element;
 }
 
 // ---------- fixtures, played once and reused ----------
@@ -241,6 +244,7 @@ export const CARDS: DevCard[] = [
   { id: 'd-recruit', title: 'Build the starting five', group: 'Decisions', icon: 'superteam', blurb: 'The scouting board and recruiting.', open: () => show(at('recruit', (s) => canRecruit(s))), press: '[data-tour="move-roster"]' },
 
   // big moments
+  { id: 'cam-lab', title: 'Action cam lab', group: 'Big moments', icon: 'camera', blurb: 'Any play on the finals cam, slowed right down, any two teams.', open: () => true, page: CamLab },
   { id: 'm-intro', title: 'Intro moment', group: 'Big moments', icon: 'door', blurb: 'The career begins.', open: () => withMoment('m-intro', (m) => m.kind === 'intro', { mode: 'standard' }) },
   { id: 'm-commit', title: 'College commitment', group: 'Big moments', icon: 'jersey', blurb: 'Signing day.', open: () => withMoment('m-commit', (m) => m.kind === 'commit', { mode: 'standard' }) },
   { id: 'm-draft', title: 'Draft night', group: 'Big moments', icon: 'jersey', blurb: 'The pick, the cap, the handshake.', open: () => withMoment('m-draft', (m) => m.kind === 'draft') },

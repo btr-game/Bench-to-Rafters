@@ -112,3 +112,32 @@
   .sm-pager .btn { max-width: 100%; }
   .sm-title { font-size: 30px; }
 }
+
+/* the action cam lab (round 25: from its own artifact into the deck) */
+.cl { max-width: 980px; margin: 0 auto; padding: 24px 16px 90px; background: #0f1116; color: #f2eee6; min-height: 100vh; box-shadow: 0 0 0 100vmax #0f1116; clip-path: inset(0 -100vmax); display: grid; gap: 18px; font-family: var(--f-body, Archivo, sans-serif); }
+.cl h1 { font-family: var(--f-display); font-weight: 900; font-size: clamp(36px, 6vw, 60px); line-height: 0.9; text-transform: uppercase; margin: 4px 0 8px; }
+.cl h2 { font-family: var(--f-display); font-weight: 800; font-size: 20px; text-transform: uppercase; letter-spacing: 0.04em; margin: 4px 0 8px; }
+.cl p { margin: 0; color: #c9c4ba; }
+.cl-stage { display: grid; gap: 10px; justify-items: center; }
+.cl-stage .cam { max-width: 860px; }
+.cl-caption { display: flex; gap: 12px; align-items: center; justify-content: space-between; width: 100%; max-width: 860px; flex-wrap: wrap; font-family: var(--f-mono); font-size: 14px; color: #c9c4ba; }
+.cl-panel { background: #181b22; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 16px; display: grid; gap: 10px; }
+.cl-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.cl .chip { background: #262a34; color: #f2eee6; border: 1px solid rgba(255,255,255,0.14); border-radius: 999px; padding: 8px 14px; font: 600 15px/1.1 var(--f-body, Archivo, sans-serif); cursor: pointer; }
+.cl .chip.on { background: var(--led, #ffb020); color: #1a1205; border-color: transparent; }
+.cl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+.cl-grid label { display: grid; gap: 4px; font-size: 13px; color: #c9c4ba; }
+.cl-grid label.check { display: flex; align-items: center; gap: 8px; font-size: 15px; color: #f2eee6; }
+.cl select, .cl input:not([type=checkbox]) { background: #0f1116; color: #f2eee6; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; padding: 8px; font-size: 15px; }
+.cl-board { display: grid; grid-template-columns: auto auto auto auto auto; gap: 14px; align-items: baseline; font-family: var(--f-display); font-weight: 900; text-transform: uppercase; }
+.cl-board span { font-size: 44px; }
+.cl-board b { font-size: 22px; color: #c9c4ba; }
+.cl-board small { font-family: var(--f-mono); font-size: 14px; color: var(--led, #ffb020); }
+.cl-feed { list-style: none; padding: 0; margin: 0; width: 100%; max-width: 860px; display: grid; gap: 6px; }
+.cl-feed li { background: rgba(255,255,255,0.06); border-radius: 8px; padding: 8px 12px; opacity: 0.7; }
+.cl-feed li.fresh { opacity: 1; background: rgba(255,255,255,0.13); }
+.cl-feed li span { font-family: var(--f-mono); color: var(--led, #ffb020); margin-right: 8px; }
+.cl-row { display: flex; gap: 8px; }
+
+/* round 25: the deck lives in the game; the way back out */
+.dk-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }

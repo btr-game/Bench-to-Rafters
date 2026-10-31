@@ -44,6 +44,7 @@ export interface CreateInput {
   country?: string; // assigned by the game when omitted
   highSchool?: string;
   fast?: boolean; // fast break: the speed mode (engine/fast.ts)
+  oath?: boolean; // round 25: No Shortcuts (Reality only): master mode, no fast break, simple text or sim
 }
 
 /** "See other candidates": each stat ±3, then re-normalized to exactly 320. */

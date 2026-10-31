@@ -16,7 +16,7 @@ import { MiniGames } from './mini/MiniGames';
 import { Icon } from './art/Icon';
 import { CareerLog } from './screens/CareerLog';
 import { AchievementBook } from './screens/Achievements';
-import { CommunityPage } from './screens/Community';
+import { CommunityPage, FeedbackFoot } from './screens/Community';
 import { ICON_FOR } from './art/icons';
 import { music, sfx, wakeOnClick } from './sound';
 
@@ -63,7 +63,15 @@ function ModeBadge({ g }: { g: GameState }) {
       {ICON_FOR[g.mode] && <Icon name={ICON_FOR[g.mode]} size={14} />}
       <span className="long">{MODES[g.mode]?.name ?? g.mode}</span>
       <span className="short">{SHORT_MODE[g.mode] ?? g.mode}</span>
-      {master && <b> · Master</b>}
+      {g.flags.oath ? (
+        <b className="oath-badge with-icon">
+          {' · '}
+          <Icon name="oath" size={14} />
+          No Shortcuts
+        </b>
+      ) : (
+        master && <b> · Master</b>
+      )}
     </span>
   );
 }
@@ -184,6 +192,7 @@ export function App() {
           {tab === 'league' && <LeagueTab g={game} />}
           {tab === 'records' && <RecordsTab g={game} />}
         </TabView>
+        <FeedbackFoot where={`${tab} tab, ${MODES[game.mode]?.name ?? game.mode}, age ${game.player.age}`} />
       </div>
       <Overlays g={game} />
       <TabBar g={game} />

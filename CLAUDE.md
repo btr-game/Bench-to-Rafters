@@ -38,13 +38,15 @@ the owner when the work looks close to the end of the round**.
 11. **Game guide**: the manual (`SECTIONS` and `QUICK` in `src/ui/components/Guide.tsx`) and
     Guide mode (the tour steps in `src/ui/components/GuideTour.tsx`), so both describe the game
     as it now is.
-12. **Dev deck**: a card for every new function or page (`src/dev/cards.ts`).
-13. **Project summary**: the generator's text and data for the new systems, regenerating both the
-    dev deck's summary chapter (`src/dev/summary.json`) and the Word document
-    (`docs/reports/*-project-summary.docx`, sent to the owner when asked).
+12. **Dev deck**: a card for every new function or page (`src/dev/cards.ts`), and every new list the
+    game draws from in its Catalog (`src/dev/Catalog.tsx`), shown with its art.
+13. **Project summary**: the generator's text and data for the new systems, regenerating the dev
+    deck's summary chapter (`src/dev/summary.json`). The summary lives in the deck only: no Word
+    document (owner, round 26).
 14. **DECISIONS.md** for the round (and ROADMAP.md for ideas kept for later).
-15. **Publish both**: the game and the dev deck artifacts (no owner email anywhere), then commit
-    and push.
+15. **Publish**: the game artifact (no owner email anywhere), then commit and push. The dev deck is
+    part of the game (round 26): the Developer door at the foot of the start page, password
+    `btrdev`, opens it in dev mode, with storage of its own (`src/dev/mode.ts`, `src/dev/storage.ts`).
 
 Other preferences:
 

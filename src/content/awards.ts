@@ -65,6 +65,8 @@ const A: Record<string, [AwardCat, string]> = {
   WCMEDAL: ['country', 'World Cup medal'],
   YOUTHMEDAL: ['country', 'Medal at a youth World Cup'],
 };
+/** Every award key (the dev deck's catalog lists them). */
+export const AWARD_KEYS = Object.keys(A);
 
 export interface AwardLook {
   cat: AwardCat;

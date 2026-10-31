@@ -517,6 +517,67 @@ function Stage({ chart, audio, muted, onDone }: { chart: Chart; audio: AudioCont
 
 // ---------- the game ----------
 
+// the hoop on the intro court, in pixels: backboard, square, rim and net
+const HOOP = [
+  'wwwwwwwwwwwwww',
+  'wKKKKKKKKKKKKw',
+  'wKwwwwwwwwwwKw',
+  'wKwwwRRRRwwwKw',
+  'wKwwwRwwRwwwKw',
+  'wKKKKKKKKKKKKw',
+  'wwwwwwwwwwwwww',
+  '....NNNNNN....',
+  '....wNwwNw....',
+  '.....wNNw.....',
+  '.....w..w.....',
+  '......ww......',
+];
+const HOOP_PAL: Record<string, string> = { w: '#F4F1EA', K: '#3A3D46', R: '#E03131', N: '#F76707' };
+
+/** Round 25 (owner: "the Lockdown page is too blank"): a little court behind the intro where the
+ * pixel players run a set: one dribbles, one shuffles on defense, one pulls up, one jumps the lane. */
+function LockdownCourt() {
+  const hoop = useMemo(
+    () =>
+      HOOP.flatMap((row, y) =>
+        [...row].map((ch, x) => (HOOP_PAL[ch] ? <rect key={`${x}-${y}`} x={x} y={y} width={1} height={1} fill={HOOP_PAL[ch]} /> : null)),
+      ),
+    [],
+  );
+  return (
+    <div className="ld-court" aria-hidden="true">
+      <div className="ld-notes">
+        {[0, 1, 2, 3, 4, 5].map((i) => (
+          <i key={i} className={i % 2 ? 'steal' : 'block'} style={{ left: `${8 + i * 15}%`, animationDelay: `${i * 0.7}s` }} />
+        ))}
+      </div>
+      <svg className="ld-hoop" viewBox="0 0 14 12" shapeRendering="crispEdges">
+        {hoop}
+      </svg>
+      <div className="ld-p ld-dribble">
+        <PlayerArt name="Kai Moreno" number={3} pos="PG" color="#E8590C" size={92} noBall />
+        <span className="ld-ball bounce">
+          <Icon name="ball" size={18} />
+        </span>
+      </div>
+      <div className="ld-p ld-guard">
+        <PlayerArt name="Theo Banks" number={24} pos="SG" color="#1C7ED6" size={96} noBall />
+      </div>
+      <div className="ld-p ld-shooter">
+        <PlayerArt name="Remy Okafor" number={11} pos="SF" color="#E8590C" size={100} noBall />
+      </div>
+      <span className="ld-arc">
+        <span className="ld-ball">
+          <Icon name="ball" size={18} />
+        </span>
+      </span>
+      <div className="ld-p ld-swipe">
+        <PlayerArt name="Jun Park" number={8} pos="PF" color="#1C7ED6" size={98} noBall />
+      </div>
+    </div>
+  );
+}
+
 export function LockdownGame() {
   const game = useStore((s) => s.game);
   const [seed, setSeed] = useState(() => Math.floor(Math.random() * 2 ** 31));
@@ -577,6 +638,7 @@ export function LockdownGame() {
             {muted ? 'Sound off' : 'Sound on'}
           </button>
         </div>
+        <LockdownCourt />
       </section>
     );
 

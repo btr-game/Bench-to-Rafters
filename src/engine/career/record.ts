@@ -28,6 +28,7 @@ export interface CareerRecord {
   index?: { total: number; best: number; score: number }; // round 25: the career index (older records have none)
   nickname?: { id: string; name: string }; // round 25: what the media called him
   rival?: { name: string; level: string; w: number; l: number }; // round 25: his rival, and the head to head
+  oath?: boolean; // round 25: played No Shortcuts (Reality, master mode, nothing simplified)
   rank: number; // all-time legacy rank (101 = outside the top 100)
   rankBehind: string | null;
   hof: 'first' | 'hof' | null;
@@ -95,6 +96,7 @@ export function careerRecord(g: GameState, now = new Date()): CareerRecord {
     id: recordId(g),
     savedAt: now.toISOString(),
     mode: g.mode ?? 'standard',
+    ...(g.flags.oath ? { oath: true } : {}),
     name: p.name,
     number: p.number,
     pos: p.pos,

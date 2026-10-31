@@ -9,7 +9,7 @@ import { useStore, type Court, type Tab, type Theme } from '../../store';
 import { setMusic, setSfx, soundSettings } from '../sound';
 
 /** A switch row: label, short note, on/off button. */
-function Toggle({ label, note, on, onClick, tour }: { label: string; note: string; on: boolean; onClick: () => void; tour: string }) {
+function Toggle({ label, note, on, onClick, tour, locked }: { label: string; note: string; on: boolean; onClick: () => void; tour: string; locked?: boolean }) {
   const icon = /fast/i.test(label) ? 'fast' : /simple/i.test(label) ? 'simple' : /guide/i.test(label) ? 'guide' : /master/i.test(label) ? 'master' : /playoff/i.test(label) ? 'bracket' : /sound|music/i.test(label) ? 'live' : '';
   return (
     <div className="set-row" data-tour={tour}>
@@ -18,7 +18,7 @@ function Toggle({ label, note, on, onClick, tour }: { label: string; note: strin
         <b>{label}</b>
         <small>{note}</small>
       </div>
-      <button className={`switch${on ? ' on' : ''}`} role="switch" aria-checked={on} aria-label={label} onClick={onClick}>
+      <button className={`switch${on ? ' on' : ''}`} role="switch" aria-checked={on} aria-label={label} onClick={onClick} disabled={locked} title={locked ? 'Locked: No Shortcuts' : undefined}>
         <span />
       </button>
     </div>
@@ -95,24 +95,42 @@ export function SettingsMenu({ g }: { g: GameState | null }) {
             </div>
           </div>
           {/* round 24 (owner): New career sits right under the court, not at the bottom of the menu */}
+          {/* round 25 (owner: no confirmation text, small and easy to miss): a full-size button, then
+              a plain question with its answer spelled out */}
           {g && (
-            <div className="set-row set-new" data-tour="set-new">
-              <button className={`btn small block ${armed || retired ? 'danger' : 'ghost'}`} onClick={() => (armed || retired ? (reset(), setOpen(false)) : setArmed(true))}>
-                {armed ? 'Tap again: end this career' : 'New career'}
-              </button>
+            <div className="set-new" data-tour="set-new">
+              {armed && !retired ? (
+                <div className="set-confirm" role="group" aria-label="Start a new career?">
+                  <b>End this career and start a new one?</b>
+                  <small>Its save is deleted. This cannot be undone.</small>
+                  <div className="set-confirm-row">
+                    <button className="btn danger" onClick={() => (reset(), setOpen(false), setArmed(false))} autoFocus>
+                      Yes, start over
+                    </button>
+                    <button className="btn ghost" onClick={() => setArmed(false)}>
+                      Keep playing
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button className="btn block with-icon set-new-btn" onClick={() => (retired ? (reset(), setOpen(false)) : setArmed(true))}>
+                  <Icon name="door" size={24} />
+                  New career
+                </button>
+              )}
             </div>
           )}
           {g && !retired && !g.flags.daily && (
             <>
-              <Toggle label="Fast break" note="Quick seasons; you still make every real call." on={!!g.flags.fast} onClick={toggleFast} tour="set-fast" />
+              <Toggle label="Fast break" note="Quick seasons; you still make every real call." on={!!g.flags.fast} onClick={toggleFast} tour="set-fast" locked={!!g.flags.oath} />
               <Toggle label="Playable playoff games" note="Off: postseason games are simulated." on={!g.flags.simPostseason} onClick={togglePlayoffs} tour="set-playoffs" />
             </>
           )}
           <Toggle label="Sound effects" note="Chiptune sounds for clicks, wins, titles and the rest." on={snd.sfx} onClick={() => (setSfx(!snd.sfx), setSnd(soundSettings()))} tour="set-sfx" />
           <Toggle label="Music" note="A soft loop while you play a career." on={snd.music} onClick={() => (setMusic(!snd.music, !!g), setSnd(soundSettings()))} tour="set-music" />
-          <Toggle label="Simple text" note="Hide descriptions, keep the choices." on={simple} onClick={toggleSimple} tour="set-simple" />
+          <Toggle label="Simple text" note="Hide descriptions, keep the choices." on={simple} onClick={toggleSimple} tour="set-simple" locked={!!g?.flags.oath} />
           <Toggle label="Guide mode" note={master ? 'Off while Master mode is on.' : 'Highlights the next thing to do.'} on={guide && !master} onClick={toggleGuide} tour="set-guide" />
-          <Toggle label="Master mode" note="No recommendations: no scouts' calls, fit tags, suggested deals or guide hints. You read the game yourself." on={master} onClick={toggleMaster} tour="set-master" />
+          <Toggle label="Master mode" note="No recommendations: no scouts' calls, fit tags, suggested deals or guide hints. You read the game yourself." on={master} onClick={toggleMaster} tour="set-master" locked={!!g?.flags.oath} />
           <div className="set-keys hide-touch">
             <b>Keyboard</b>
             <span>

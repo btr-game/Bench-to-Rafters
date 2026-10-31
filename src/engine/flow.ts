@@ -87,6 +87,8 @@ export function newGame(seed: number, input: CreateInput): GameState {
     schoolColor: '',
   };
   if (input.fast || input.mode === 'fast' || input.mode === 'lab') s.flags.fast = 1;
+  // round 25 (owner): No Shortcuts, the hardest way to play, kept for the whole career
+  if (input.oath && s.mode === 'reality' && !s.flags.fast) s.flags.oath = 1;
   if (s.mode === 'lab') labState(player);
   // the game assigns his country, where he grows up and where he plays as a teenager
   assignOrigin(s);

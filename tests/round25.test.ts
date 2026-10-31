@@ -56,7 +56,7 @@ describe('achievements past 500', () => {
     const nba = s.history.filter((h) => h.level === 'NBA' && h.line.gp > 0);
     const awardsByYear = new Map<number, Set<string>>();
     for (const a of s.awards) awardsByYear.set(a.year, (awardsByYear.get(a.year) ?? new Set()).add(a.key));
-    for (const a of ACHIEVEMENTS_25) expect(() => a.test({ g: s, nba, awardsByYear, peak: s.player.peakOvr }), a.id).not.toThrow();
+    for (const a of ACHIEVEMENTS_25) expect(() => a.test({ g: s, nba, awardsByYear, peak: s.player.peakOvr, retired: s.step === 'retired', nbaTitlesYears: [] }), a.id).not.toThrow();
     expect(earnedNow(s, NO_TOTALS).length).toBeGreaterThan(0);
   });
 });

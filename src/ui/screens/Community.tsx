@@ -3,19 +3,21 @@
 // reference: people playing right now, careers since you opened the page, the latest news, today's
 // theme). Data comes from ui/community.ts: shared on the claude.ai page, this device elsewhere.
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { CareerRecord } from '../../engine/career/record';
 import { MODES, type Mode } from '../../engine/balance';
 import { ARCHETYPES } from '../../engine/player/archetypes';
 import { dailyInput, todayKey } from '../../engine/mini/daily';
 import { NAMES } from '../../content/strings';
 import { useStore } from '../../store';
-import { SCORE_NOTE, BOARD_SIZE, STATUE, community, hall99Ok, scoreOf, statueOk, type Community as Api, type FeedItem, type FeedbackRow, type ScoreRow, type StatueRow, type WriteResult } from '../community';
+import { SCORE_NOTE, BOARD_SIZE, STATUE, canComment, community, openCommentBox, hall99Ok, scoreOf, statueOk, type Community as Api, type FeedItem, type FeedbackRow, type ScoreRow, type StatueRow, type WriteResult } from '../community';
 import { drawCareerCard } from '../share';
 import { StatueArt } from '../art/Statue';
 import { PlayerArt } from '../art/Player';
 import { Icon } from '../art/Icon';
 import { Badge } from '../art/Badge';
+import { DEV } from '../../dev/mode';
+import { OathMark } from '../components/OathMark';
 
 const OPENED = Date.now();
 
@@ -163,6 +165,7 @@ function Board({ c }: { c: Api }) {
                   <b>
                     {r.rec.name}
                     {r.mine ? <span className="you"> you</span> : null}
+                    {r.rec.oath ? <OathMark size={16} /> : null}
                   </b>
                   <small>
                     {NAMES.pos[r.rec.pos]} · {r.rec.tier} · peak {Math.round(r.rec.peak)} · {r.rec.titles} title{r.rec.titles === 1 ? '' : 's'}
@@ -200,7 +203,10 @@ function Hall({ c }: { c: Api }) {
             <div key={r.id} className="hall-card">
               <Badge tier="hof" size={40} />
               <div>
-                <b>{r.rec.name}</b>
+                <b>
+                  {r.rec.name}
+                  {r.rec.oath ? <OathMark size={16} /> : null}
+                </b>
                 <small>
                   {r.rec.country} · {NAMES.pos[r.rec.pos]} · {r.rec.tier}
                 </small>
@@ -259,38 +265,88 @@ function Plaza({ c }: { c: Api }) {
   );
 }
 
-function Feedback({ c }: { c: Api }) {
+/** `where` (the in-game sender) tags the message with the tab and the point in the career. Three
+ * roads (round 25): the maker's inbox on the shared page for those who may post there, the page's
+ * comment box for everyone else on claude.ai, and this device only for a copy opened from a file. */
+function Feedback({ c, where }: { c: Api; where?: string }) {
   const g = useStore((s) => s.game);
   const [text, setText] = useState('');
   const [contact, setContact] = useState('');
   const [state, setState] = useState<WriteResult | 'sending' | null>(null);
+  const [commentable, setCommentable] = useState<boolean | null>(null); // null while asking
+  const [boxGone, setBoxGone] = useState(false);
+  const box = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    let live = true;
+    void canComment().then((ok) => live && setCommentable(ok));
+    return () => {
+      live = false;
+    };
+  }, []);
+  const inbox = c.kind === 'local' || c.canWrite;
   const send = async () => {
     setState('sending');
-    setState(await c.sendFeedback(text.trim().slice(0, 2000), contact.trim().slice(0, 200), g?.player.name ?? ''));
+    const body = (where ? `[${where}] ` : '') + text.trim();
+    setState(await c.sendFeedback(body.slice(0, 2000), contact.trim().slice(0, 200), g?.player.name ?? ''));
     setText('');
   };
+  const comment = async () => setBoxGone(!(box.current && (await openCommentBox(box.current))));
+  const viaComment = !!commentable && !boxGone && (!inbox || state === 'denied');
   return (
-    <div className="stack">
-      <p className="prose">Found a bug, have an idea, or just want to say something? It goes straight to the game’s maker and nobody else can read it.</p>
-      <label className="field">
-        <span className="small muted">Your message</span>
-        <textarea rows={6} maxLength={2000} value={text} onChange={(e) => setText(e.target.value)} placeholder="What should the maker know?" />
-      </label>
-      <label className="field">
-        <span className="small muted">How to reach you (optional)</span>
-        <input maxLength={200} value={contact} onChange={(e) => setContact(e.target.value)} placeholder="Only if you want an answer" />
-      </label>
-      <div className="row" style={{ gap: 10, alignItems: 'center' }}>
-        <button className="btn with-icon" data-tour="feedback-send" disabled={!text.trim() || state === 'sending'} onClick={send}>
-          <Icon name="envelope" size={22} />
-          Send feedback
-        </button>
-        {state === 'ok' && <span className="small">Sent. Thank you!</span>}
-        {state === 'denied' && <span className="small" style={{ color: 'var(--bad)' }}>Sending needs an invitation to post here.</span>}
-        {state === 'error' && <span className="small" style={{ color: 'var(--bad)' }}>It did not go through. Try again in a moment.</span>}
-      </div>
-      {c.kind === 'local' && <p className="small muted">Offline, the message is kept on this device.</p>}
+    <div className="stack" ref={box}>
+      {inbox && state !== 'denied' ? (
+        <>
+          <p className="prose">
+            Found a bug, have an idea, or just want to say something?{' '}
+            {c.kind === 'local' ? 'This copy of the game is not connected to its page on claude.ai, so the message stays on this device: to reach the maker, play on the game’s claude.ai page.' : 'It goes straight to the maker’s inbox and nobody else can read it.'}
+            {where ? ' The tab you are on is sent with it.' : ''}
+          </p>
+          <label className="field">
+            <span className="small muted">Your message</span>
+            <textarea rows={where ? 4 : 6} maxLength={2000} value={text} onChange={(e) => setText(e.target.value)} placeholder="What should the maker know?" />
+          </label>
+          <label className="field">
+            <span className="small muted">How to reach you (optional)</span>
+            <input maxLength={200} value={contact} onChange={(e) => setContact(e.target.value)} placeholder="Only if you want an answer" />
+          </label>
+          <div className="row" style={{ gap: 10, alignItems: 'center' }}>
+            <button className="btn with-icon" data-tour="feedback-send" disabled={!text.trim() || state === 'sending'} onClick={send}>
+              <Icon name="envelope" size={22} />
+              {c.kind === 'local' ? 'Keep the note' : 'Send feedback'}
+            </button>
+            {state === 'ok' && <span className="small">{c.kind === 'local' ? 'Kept on this device.' : 'Sent to the maker. Thank you!'}</span>}
+            {state === 'error' && <span className="small" style={{ color: 'var(--bad)' }}>It did not go through. Try again in a moment.</span>}
+          </div>
+        </>
+      ) : (
+        <p className="prose">Found a bug, have an idea, or just want to say something? Leave it as a comment on the game’s page: the maker reads every one.</p>
+      )}
+      {viaComment && (
+        <div className="row" style={{ gap: 10, alignItems: 'center' }}>
+          <button className="btn with-icon" data-tour="feedback-send" onClick={() => void comment()}>
+            <Icon name="envelope" size={22} />
+            Write a comment
+          </button>
+          <span className="small muted">Opens the page’s comment box right here.</span>
+        </div>
+      )}
+      {!inbox && (commentable === false || boxGone) && <p className="small muted">Comments are off for you on this page. Ask the maker for an invitation to send feedback from the game.</p>}
     </div>
+  );
+}
+
+/** Round 25 (owner): the same sender at the foot of every tab in a career, folded to one line. */
+export function FeedbackFoot({ where }: { where: string }) {
+  const c = useCommunity();
+  if (!c) return null;
+  return (
+    <details className="card feedback-foot">
+      <summary className="with-icon">
+        <Icon name="envelope" size={20} />
+        Report a bug or send feedback
+      </summary>
+      <Feedback c={c} where={where} />
+    </details>
   );
 }
 
@@ -331,15 +387,17 @@ type Tab = 'boards' | 'hall' | 'plaza' | 'feedback' | 'inbox';
 export function CommunityPage() {
   const setPage = useStore((s) => s.setPage);
   const c = useCommunity();
-  const [tab, setTab] = useState<Tab>('boards');
+  const [tab, setTab] = useState<Tab>(() => (location.hash === '#inbox' ? 'inbox' : 'boards'));
   const tabs: [Tab, string, string][] = [
     ['boards', 'Leaderboards', 'podium'],
     ['hall', 'Reality 99 hall', 'hall'],
     ['plaza', 'Statue plaza', 'statue'],
     ['feedback', 'Send feedback', 'envelope'],
     // the inbox is the maker's, on the shared page (and in the dev deck, on local notes)
-    ...(c?.isOwner && (c.kind === 'shared' || __DEV_DECK__) ? ([['inbox', 'Inbox', 'inbox']] as [Tab, string, string][]) : []),
+    ...(c?.isOwner && (c.kind === 'shared' || DEV) ? ([['inbox', 'Inbox', 'inbox']] as [Tab, string, string][]) : []),
   ];
+  // a tab this viewer does not have (the inbox, from a link) shows the boards
+  const shown: Tab = tabs.some(([k]) => k === tab) ? tab : 'boards';
   return (
     <div className="wrap">
       <header className="top">
@@ -363,7 +421,7 @@ export function CommunityPage() {
         <LiveStrip />
         <div className="seg" data-tour="comm-tabs">
           {tabs.map(([k, l, icon]) => (
-            <button key={k} className="with-icon" aria-pressed={tab === k} onClick={() => setTab(k)}>
+            <button key={k} className="with-icon" aria-pressed={shown === k} onClick={() => setTab(k)}>
               <Icon name={icon} size={20} />
               {l}
             </button>
@@ -371,13 +429,13 @@ export function CommunityPage() {
         </div>
         {!c ? (
           <p className="muted">Connecting…</p>
-        ) : tab === 'boards' ? (
+        ) : shown === 'boards' ? (
           <Board c={c} />
-        ) : tab === 'hall' ? (
+        ) : shown === 'hall' ? (
           <Hall c={c} />
-        ) : tab === 'plaza' ? (
+        ) : shown === 'plaza' ? (
           <Plaza c={c} />
-        ) : tab === 'feedback' ? (
+        ) : shown === 'feedback' ? (
           <Feedback c={c} />
         ) : (
           <Inbox c={c} />

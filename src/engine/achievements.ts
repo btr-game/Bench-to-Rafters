@@ -333,7 +333,9 @@ export const ACHIEVEMENTS: Achievement[] = [
   A('hurt1', 'Out for the Season', 'bench', 'Miss a season with an injury.', (f) => (f.g.player.injuries ?? []).some((i) => i.key === 'season')),
   A('hurt10', 'Frequent Patient', 'rotation', 'Get hurt ten times in one career.', (f) => (f.g.player.injuries ?? []).length >= 10),
   A('bubble', 'Bubble Wrap', 'hof', 'Play 15 seasons without a single injury.', (f) => f.retired && f.g.history.length >= 15 && (f.g.player.injuries ?? []).length === 0),
-  A('wingspan', 'Pterodactyl', 'starter', 'Have a wingspan seven inches over your height.', (f) => f.g.player.wingspan - f.g.player.height >= 7),
+  // round 25 (owner: some achievements came already earned): the wingspan alone is a birth draw,
+  // so it now has to be put to use as well
+  A('wingspan', 'Pterodactyl', 'starter', 'Have a wingspan seven inches over your height and use it: 3 blocks and steals a game over a season.', (f) => f.g.player.wingspan - f.g.player.height >= 7 && f.g.history.some((h) => h.line.gp >= 10 && (h.line.blk + h.line.stl) / h.line.gp >= 3)),
 
   // ---- money ----
   A('m10', 'Paid in Full', 'rotation', 'Earn $10 million.', (f) => f.g.player.earnings >= 10),
@@ -367,8 +369,11 @@ const TOTALS_ONLY = new Set(['c1', 'c3', 'c5', 'c10', 'c25', 'c50', 'c100', 'all
 /** The achievements this career (and the totals) have earned, by id. */
 export function earnedNow(g: GameState | null, t: CareerTotals): string[] {
   const f = g ? facts(g, t) : ({ t } as Facts);
+  // round 25: nothing comes with the starting draw (a high first OVR used to earn the OVR rungs
+  // on the first screen): a career earns its achievements from the end of its first season
+  const career = !!g?.history.length;
   return ACHIEVEMENTS.filter((a) => {
-    if (!g && !TOTALS_ONLY.has(a.id)) return false;
+    if (!career && !TOTALS_ONLY.has(a.id)) return false;
     try {
       return a.test(f);
     } catch {

@@ -139,18 +139,24 @@ export const FAST_GROWTH = 1.3;
 // claim pays into ratings; teamFx scales the team factors around him (chemistry, star gravity,
 // team style, his team's storyline); ringChase scales the odds that a contender has a
 // minimum-deal spot for him. Missing = 1.
-export const MODES: Record<Mode, { name: string; blurb: string; potential: SkewDist; growth: number; injury: number; scoutMid: number; floor?: { age: number; ovr: number; until: number }; elite?: { from: number; per: number; min: number }; mini?: number; teamFx?: number; ringChase?: number }> = {
-  standard: { name: 'Regular guy', blurb: 'The full game. Most careers peak in the 60s and 70s; the NBA is common, stardom is earned.', potential: POTENTIAL, growth: 0.94, injury: 1, scoutMid: 70, elite: ELITE_CLIMB, mini: 0.4, teamFx: 0.3, ringChase: 0.1 },
+// scout (round 25): the freshman scouting report, before the scouts have a range on him. The
+// projected peak is mid + slope x (how far his OVR is above the usual 14-year-old's), give or take
+// sd. Fitted to the round 25 distribution run (4,000 careers per difficulty, random and smart play):
+// starting OVR barely predicts the peak (each point ahead adds about 0.3), so the old 1.2 a point
+// sent a 65 OVR freshman in Shoot for the stars past 99. Fast break and the lab use Regular guy's.
+export interface FreshScout { mid: number; slope: number; sd: number }
+export const MODES: Record<Mode, { name: string; blurb: string; potential: SkewDist; growth: number; injury: number; scout: FreshScout; floor?: { age: number; ovr: number; until: number }; elite?: { from: number; per: number; min: number }; mini?: number; teamFx?: number; ringChase?: number }> = {
+  standard: { name: 'Regular guy', blurb: 'The full game. Most careers peak in the 60s and 70s; the NBA is common, stardom is earned.', potential: POTENTIAL, growth: 0.94, injury: 1, scout: { mid: 72.9, slope: 0.28, sd: 12.1 }, elite: ELITE_CLIMB, mini: 0.4, teamFx: 0.3, ringChase: 0.1 },
   // fast break: the regular game at a quick pace (engine/fast.ts). The quick pace means fewer
   // events, one training group a season and no shop, so the head start is set by simulation:
   // mean peak 76.4 against 73.6 for Regular guy (300 smart careers each, round 8).
-  fast: { name: 'Fast break', blurb: 'The regular game at a quick pace, with a small head start. One training plan a season, no shop, no national team, playoffs simulated: you still make every real call.', potential: { ...POTENTIAL, base: 54, min: 56 }, growth: 1.12, injury: 1, scoutMid: 73 },
+  fast: { name: 'Fast break', blurb: 'The regular game at a quick pace, with a small head start. One training plan a season, no shop, no national team, playoffs simulated: you still make every real call.', potential: { ...POTENTIAL, base: 54, min: 56 }, growth: 1.12, injury: 1, scout: { mid: 73, slope: 0.28, sd: 12.1 } },
   // built in a lab (round 8): fast break, but growth is paid out as credits the player spends
   // on any rating (career/lab.ts). Spending where it counts is worth a lot, so its potential
   // sits a little below fast break's: an OVR-minded build peaks at 77.6 on average (round 8).
-  lab: { name: 'Built in a lab', blurb: 'Fast break, but you build the player. Training and events earn credits, and you spend them on any rating you want. Pick your own height.', potential: { ...POTENTIAL, base: 51, min: 53 }, growth: 1.12, injury: 1, scoutMid: 73 },
-  reality: { name: 'Reality hits hard', blurb: 'Like real life: most careers end short of the NBA, and those who make it fight for a spot. Every choice counts.', potential: { base: 51, mu: 2.25, sigma: 0.6, min: 52, max: 99 }, growth: 0.9, injury: 1.3, scoutMid: 50 },
-  stars: { name: 'Shoot for the stars', blurb: 'Built for greatness: every career reaches stardom, and the very top is within reach.', potential: { base: 83, mu: 1.8, sigma: 0.6, min: 85, max: 99 }, growth: 1.2, injury: 0.6, scoutMid: 93, floor: { age: 22, ovr: 80, until: 29 } },
+  lab: { name: 'Built in a lab', blurb: 'Fast break, but you build the player. Training and events earn credits, and you spend them on any rating you want. Pick your own height.', potential: { ...POTENTIAL, base: 51, min: 53 }, growth: 1.12, injury: 1, scout: { mid: 73, slope: 0.28, sd: 12.1 } },
+  reality: { name: 'Reality hits hard', blurb: 'Like real life: most careers end short of the NBA, and those who make it fight for a spot. Every choice counts.', potential: { base: 51, mu: 2.25, sigma: 0.6, min: 52, max: 99 }, growth: 0.9, injury: 1.3, scout: { mid: 66.2, slope: 0.3, sd: 8.8 } },
+  stars: { name: 'Shoot for the stars', blurb: 'Built for greatness: every career reaches stardom, and the very top is within reach.', potential: { base: 83, mu: 1.8, sigma: 0.6, min: 85, max: 99 }, growth: 1.2, injury: 0.6, scout: { mid: 92.1, slope: 0, sd: 3.8 }, floor: { age: 22, ovr: 80, until: 29 } },
 };
 // stat caps may sit above 99 so elite players can actually reach the top of the scale
 export const CAP_MAX = 99;
