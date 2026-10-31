@@ -12,9 +12,11 @@ import './ui/styles/app.css';
 import { DECK_LOGO, GAME_LOGO, setFavicon } from './ui/art/favicon';
 import { DEV } from './dev/mode';
 import { DevDeck, devSetup } from './dev/DevDeck';
+import { joinCourt } from './ui/community';
 
 setFavicon(DEV ? DECK_LOGO : GAME_LOGO);
 if (DEV) devSetup();
+joinCourt();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

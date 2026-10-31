@@ -425,7 +425,8 @@ function Plaza({ c }: { c: Api }) {
   const pay = async (id: string) => {
     const r = await c.respect(id);
     if (r === 'ok') sfx('respect');
-    setMsg(r === 'ok' ? '' : 'Paying respects needs an invitation to post here.');
+    // an invitation is a claude.ai matter; anywhere players can write, a failed respect just did not get through
+    setMsg(r === 'ok' ? '' : c.canWrite ? 'That did not go through. Try again in a moment.' : 'Paying respects needs an invitation to post here.');
     load();
   };
   return (
@@ -492,8 +493,8 @@ function Plaza({ c }: { c: Api }) {
 
 /** `where` (the in-game sender) tags the message with the tab and the point in the career. Four
  * roads: the maker's inbox (read in the dev deck) for those who may post there, the page's comment
- * box for everyone else on claude.ai, the game's own database in the itch.io copy (read in its
- * dashboard), and this device only when no database can be reached. */
+ * box for everyone else on claude.ai, the game's own database on the website (read in the dev
+ * deck's inbox with the inbox key), and this device only when no database can be reached. */
 function Feedback({ c, where }: { c: Api; where?: string }) {
   const g = useStore((s) => s.game);
   const [text, setText] = useState('');
@@ -647,7 +648,7 @@ export function CommunityNote({ rec }: { rec: CareerRecord }) {
         Career index {scoreOf(rec).toFixed(1)}{rec.index ? ` (career ${rec.index.total.toFixed(1)}, best five seasons ${rec.index.best.toFixed(1)})` : ''} on the {MODES[rec.mode].name} boards.
         {hall99Ok(rec) ? ' A 99 in Reality hits hard: you are in the Reality 99 hall.' : ''}
         {statueOk(rec) && built !== 'ok' ? ` ${rec.legacy} legacy points: this career can have a statue in the plaza.` : ''}
-        {built === 'ok' ? ' Your statue stands in the plaza.' : built === 'full' ? ' The plaza is full (100 statues).' : built === 'denied' ? ' Raising a statue needs an invitation to post here.' : built === 'error' ? ' The statue could not be raised. Try again.' : ''}
+        {built === 'ok' ? ' Your statue stands in the plaza.' : built === 'full' ? ' The plaza is full (100 statues).' : built === 'denied' && !c.canWrite ? ' Raising a statue needs an invitation to post here.' : built === 'error' || built === 'denied' ? ' The statue could not be raised. Try again.' : ''}
       </span>
       {statueOk(rec) && built !== 'ok' && (
         <button className="btn small" data-tour="statue-raise" disabled={built === 'busy'} onClick={build}>

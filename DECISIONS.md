@@ -1974,4 +1974,26 @@ multiple times."
   connector (new Netlify sites start behind a team login). It builds from the GitHub repository on
   every push (`netlify.toml`), so updates need no uploads. The sandbox cannot reach Netlify, so the
   repository is linked from Netlify's own dashboard.
+- **Community check on the website** (owner: "can you look through every community function and update
+  it if it doesnt work? the send feedback option isnt really runnin"). Every database write was run
+  with 240 real careers (80 per difficulty) on a local copy of the database, and the live functions
+  were checked to be the same: boards, the Reality 99 hall, statues (bronze, gold, refused), respects
+  and feedback all work. Feedback did arrive; nothing showed it. Fixed:
+  - **The inbox reads the website's feedback**: the dev deck's Inbox asks for an inbox key once per
+    device and reads the notes through `read_feedback` (`0002_inbox.sql`); the database keeps only
+    the key's SHA-256, and players can read neither the notes nor the keys.
+  - **A career the database put off is posted again**: it takes one career per player every 15
+    seconds, and sim mode can end two sooner; the game tries again (and after a dropped
+    connection), three times in all.
+  - **Failed respects and statues say so plainly** off claude.ai (the "needs an invitation" line is
+    a claude.ai matter).
+- **On the court for the whole visit** (owner: "when the user enters the game, they are no longer
+  treated as being 'on the court', so the number reduces"): the website left the live count when
+  the strip left the screen. Every copy now joins the count when the game opens and stays until the
+  page closes; two tabs in one browser are one player.
+- **The dev deck in a tab of its own** (owner: "when i enter the dev deck, the tab reloads ... can we
+  fix this?"): dev mode is read once when a page loads, so that the deck's storage never mixes with
+  the game's, so the deck needs a fresh page. On the website it now opens in a new tab and the
+  game's tab stays as it was; Back to the game closes the deck's tab. Inside the claude.ai page (a
+  frame, which cannot rely on opening tabs) it still reloads.
 

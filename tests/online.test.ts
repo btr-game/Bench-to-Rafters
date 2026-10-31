@@ -9,6 +9,9 @@ type Call = { kind: string; args: unknown[] };
 const calls: Call[] = [];
 const tables: Record<string, unknown[]> = {};
 let rpcAnswer: unknown = 'ok';
+// answers for the next calls, first in first out (then rpcAnswer)
+const rpcQueue: { data: unknown; error: unknown }[] = [];
+let removed = 0;
 
 // a chainable query that records itself and resolves to the table's rows
 function query(table: string) {
@@ -20,9 +23,9 @@ function query(table: string) {
 vi.mock('@supabase/supabase-js', () => ({
   createClient: () => ({
     from: (t: string) => query(t),
-    rpc: async (name: string, args: unknown) => (calls.push({ kind: `rpc.${name}`, args: [args] }), { data: rpcAnswer, error: null }),
-    channel: () => ({ on() { return this; }, subscribe() { return this; }, presenceState: () => ({}), track: async () => {} }),
-    removeChannel: async () => {},
+    rpc: async (name: string, args: unknown) => (calls.push({ kind: `rpc.${name}`, args: [args] }), rpcQueue.shift() ?? { data: rpcAnswer, error: null }),
+    channel: (name: string) => (calls.push({ kind: 'channel', args: [name] }), { on() { return this; }, subscribe() { return this; }, presenceState: () => ({}), track: async () => {} }),
+    removeChannel: async () => void removed++,
   }),
 }));
 
@@ -31,6 +34,8 @@ beforeEach(() => {
   calls.length = 0;
   for (const k of Object.keys(tables)) delete tables[k];
   rpcAnswer = 'ok';
+  rpcQueue.length = 0;
+  removed = 0;
   vi.stubGlobal('localStorage', { getItem: (k: string) => store.get(k) ?? null, setItem: (k: string, v: string) => void store.set(k, v) });
   vi.stubGlobal('window', { setInterval: () => 1, clearInterval: () => {} });
 });
@@ -94,5 +99,49 @@ describe('the online community', () => {
     tables.hall = [{ rec_id: 'c1', who: 'a', score: 120, rec: rec() }, { rec_id: 'c5', who: 'b', score: 80, rec: rec({ id: 'c5', peak: 97 }) }];
     const c = await onlineCommunity('https://x.supabase.co', 'key');
     expect((await c.hall()).map((x) => x.id)).toEqual(['c1']);
+  });
+
+  it('keeps this visit on the court when the strip goes away (owner: entering the game dropped the count)', async () => {
+    const { onlineCommunity } = await import('../src/ui/onlineCommunity');
+    const c = await onlineCommunity('https://x.supabase.co', 'key');
+    const off = c.presence(() => {});
+    off(); // the start page's strip goes when a career starts
+    c.presence(() => {})(); // and the Community page's
+    expect(removed).toBe(0);
+    expect(calls.filter((x) => x.kind === 'channel')).toHaveLength(1);
+  });
+
+  it('posts a career again when the database says it came too soon, or the line dropped', async () => {
+    vi.useFakeTimers();
+    try {
+      const { onlineCommunity } = await import('../src/ui/onlineCommunity');
+      const c = await onlineCommunity('https://x.supabase.co', 'key');
+      rpcQueue.push({ data: 'busy', error: null }, { data: null, error: { message: 'Failed to fetch' } }, { data: 'ok', error: null });
+      const done = c.postCareer(rec() as never);
+      await vi.advanceTimersByTimeAsync(16000 + 5000);
+      await done;
+      expect(calls.filter((x) => x.kind === 'rpc.post_career')).toHaveLength(3);
+      // and gives up after three tries
+      calls.length = 0;
+      rpcQueue.push({ data: 'busy', error: null }, { data: 'busy', error: null }, { data: 'busy', error: null }, { data: 'ok', error: null });
+      const again = c.postCareer(rec() as never);
+      await vi.advanceTimersByTimeAsync(60000);
+      await again;
+      expect(calls.filter((x) => x.kind === 'rpc.post_career')).toHaveLength(3);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('reads the maker’s inbox with the inbox key, and says when the key is wrong', async () => {
+    const { readOnlineInbox } = await import('../src/ui/onlineCommunity');
+    rpcQueue.push({ data: [{ id: 3, at: '2026-10-31T13:04:44Z', text: 'hello', contact: '', player: 'Kai' }], error: null });
+    expect(await readOnlineInbox('https://x.supabase.co', 'key', 'a-key-that-is-long-enough-1234')).toEqual([{ at: '2026-10-31T13:04:44Z', text: 'hello', contact: '', player: 'Kai' }]);
+    const ask = calls.find((x) => x.kind === 'rpc.read_feedback')!.args[0] as Record<string, unknown>;
+    expect(ask.p_key).toBe('a-key-that-is-long-enough-1234');
+    rpcQueue.push({ data: null, error: { code: '42501', message: 'denied' } });
+    expect(await readOnlineInbox('https://x.supabase.co', 'key', 'wrong-key-that-is-long-enough')).toBe('denied');
+    rpcQueue.push({ data: null, error: { code: 'PGRST000', message: 'down' } });
+    expect(await readOnlineInbox('https://x.supabase.co', 'key', 'a-key-that-is-long-enough-1234')).toBe('error');
   });
 });

@@ -23,7 +23,10 @@ export function DevDoor() {
         style={{ gap: 8, flexWrap: 'wrap' }}
         onSubmit={(e) => {
           e.preventDefault();
-          setWrong(!enterDev(pw));
+          const ok = enterDev(pw);
+          setWrong(!ok);
+          // the deck opens in a tab of its own: this one goes on as it was
+          if (ok) setPw('');
         }}
       >
         <input type="password" aria-label="Developer password" placeholder="Password" value={pw} onChange={(e) => (setPw(e.target.value), setWrong(false))} autoComplete="off" />

@@ -51,10 +51,10 @@ itself a minute or two after it is pushed. The same build can also go on itch.io
 The online copy keeps its leaderboards, Reality 99 hall, statue plaza, live strip and feedback in
 a free Supabase database. (The claude.ai page uses that page's own shared data instead.)
 
-1. **The database, once.** A Supabase project with `supabase/migrations/0001_community.sql` run in
-   it (done: project "bench-to-rafters" in Seoul, set up through the Supabase connector; by hand:
-   New project, then SQL Editor, paste the file, Run). Its tables are read-only to players; every write goes through the
-   checked functions at the foot of that file.
+1. **The database, once.** A Supabase project with the files in `supabase/migrations` run in it, in
+   order (done: project "bench-to-rafters" in Seoul, set up through the Supabase connector; by
+   hand: New project, then SQL Editor, paste each file, Run). Its tables are read-only to players;
+   every write goes through the checked functions in `0001_community.sql`.
 2. **Its address.** Put the project's URL and its publishable (anon) key in `.env.itch`:
 
    ```
@@ -74,7 +74,11 @@ a free Supabase database. (The claude.ai page uses that page's own shared data i
 4. **itch.io.** Dashboard, Create new project. Kind of project: HTML. Upload the zip and tick
    "This file will be played in the browser". Viewport 1280 × 800, with the fullscreen button
    and "Mobile friendly" on. Save as a draft, try it, then set it to Public.
-5. **Feedback** from players is in the Supabase dashboard: Table Editor, `feedback`.
+5. **Feedback** from players: the dev deck's Inbox on the website, with the inbox key (entered
+   once per device). The key is a long random string kept by the owner; the database holds only
+   its SHA-256 (`owner_keys`, `0002_inbox.sql`). A new key: make one, then in the SQL Editor
+   `insert into owner_keys (hash) values (encode(extensions.digest('<the key>', 'sha256'), 'hex'));`
+   and delete the old row. The Supabase dashboard (Table Editor, `feedback`) shows them too.
 6. **Pausing.** A free Supabase project pauses after a week with no players. The game then keeps
    to each device until it is restored (Supabase dashboard, Restore project).
 

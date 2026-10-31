@@ -1,16 +1,16 @@
-// The community online, for copies of the game outside claude.ai (itch.io). Owner: "let's go with
-// [itch.io]. i do want to get community features activated tho." A Supabase database
-// (supabase/migrations/0001_community.sql) behind the same interface as the other two homes in
-// community.ts. Everyone reads the boards; every write is a database function that checks it.
-// Players are anonymous: this copy keeps a random secret, and the database stores only its
-// SHA-256 (who), which is also how a row is known to be this player's own.
-// Loaded only by the itch.io build (npm run build:itch), so the claude.ai page never carries it.
+// The community online, for copies of the game outside claude.ai: the website
+// (bench-to-rafters.netlify.app) and the itch.io zip. Owner: "i do want to get community features
+// activated tho." A Supabase database (supabase/migrations) behind the same interface as the other
+// two homes in community.ts. Everyone reads the boards; every write is a database function that
+// checks it. Players are anonymous: this copy keeps a random secret, and the database stores only
+// its SHA-256 (who), which is also how a row is known to be this player's own.
+// Loaded only by the online build (npm run build:itch), so the claude.ai page never carries it.
 
 import { createClient, type RealtimeChannel } from '@supabase/supabase-js';
 import type { CareerRecord } from '../engine/career/record';
 import type { Mode } from '../engine/balance';
 import { todayKey } from '../engine/mini/daily';
-import { BOARD_SIZE, STATUE, feedLine, hall99Ok, scoreOf, type Community, type FeedItem, type ScoreRow, type StatueRow, type WriteResult } from './community';
+import { BOARD_SIZE, STATUE, feedLine, hall99Ok, scoreOf, type Community, type FeedItem, type FeedbackRow, type ScoreRow, type StatueRow, type WriteResult } from './community';
 
 const SECRET = 'btr-online-secret';
 function secretOf(): string {
@@ -30,6 +30,7 @@ async function sha256(s: string): Promise<string> {
   const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
   return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, '0')).join('');
 }
+const wait = (ms: number) => new Promise<void>((ok) => setTimeout(ok, ms));
 const within = <T,>(p: PromiseLike<T>, ms: number): Promise<T> => Promise.race([Promise.resolve(p), new Promise<T>((_, no) => setTimeout(() => no(new Error('timeout')), ms))]);
 
 interface BoardRow {
@@ -54,7 +55,9 @@ export async function onlineCommunity(url: string, key: string): Promise<Communi
   const rows = (mode: Mode, day: string, data: BoardRow[] | null): ScoreRow[] =>
     (data ?? []).map((d) => ({ id: d.who, mode, day, score: d.score, rec: d.rec, mine: d.who === me, by: d.who }));
 
-  // one presence channel for the page, however many strips listen to it
+  // one presence channel for the visit, however many strips listen to it. Owner: "when the user
+  // enters the game, they are no longer treated as being 'on the court'": the channel stays joined
+  // until the page closes, whether or not a strip is on screen
   let channel: RealtimeChannel | null = null;
   const listeners = new Set<(n: number) => void>();
   const tell = () => {
@@ -66,7 +69,14 @@ export async function onlineCommunity(url: string, key: string): Promise<Communi
     kind: 'shared',
     canWrite: true,
     async postCareer(r) {
-      await sb.rpc('post_career', { p_secret: secret, p_mode: r.mode, p_day: todayKey(), p_score: scoreOf(r), p_rec: r, p_line: feedLine(r) });
+      const args = { p_secret: secret, p_mode: r.mode, p_day: todayKey(), p_score: scoreOf(r), p_rec: r, p_line: feedLine(r) };
+      // the database takes one career per player every 15 seconds (sim mode can end two sooner), and
+      // a dropped connection loses the post: try again a little later, three times in all
+      for (let i = 0; i < 3; i++) {
+        const { data, error } = await sb.rpc('post_career', args);
+        if (!error && data !== 'busy') return;
+        if (i < 2) await wait(error ? 5000 : 16000);
+      }
     },
     async scores(mode, scope) {
       const day = todayKey();
@@ -125,13 +135,20 @@ export async function onlineCommunity(url: string, key: string): Promise<Communi
         });
       }
       tell();
-      return () => {
-        listeners.delete(cb);
-        if (!listeners.size && channel) {
-          void sb.removeChannel(channel);
-          channel = null;
-        }
-      };
+      return () => void listeners.delete(cb);
     },
   };
+}
+
+/** The maker's inbox (dev deck): every note sent from the website, for the holder of the inbox key
+ * (supabase/migrations/0002_inbox.sql). 'denied' when the key is wrong. */
+export async function readOnlineInbox(url: string, key: string, inboxKey: string): Promise<FeedbackRow[] | 'denied' | 'error'> {
+  const sb = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
+  try {
+    const { data, error } = await within(sb.rpc('read_feedback', { p_key: inboxKey }), 10000);
+    if (error) return error.code === '42501' ? 'denied' : 'error';
+    return ((data ?? []) as { at: string; text: string; contact: string; player: string }[]).map((x) => ({ at: x.at, text: x.text, contact: x.contact, player: x.player }));
+  } catch {
+    return 'error';
+  }
 }

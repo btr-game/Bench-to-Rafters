@@ -1,7 +1,7 @@
 // The online community (round 24): leaderboards, the Reality 99 hall, the statue plaza, feedback
 // and the live strip. One interface, three homes: the claude.ai page's shared database (the `db`,
 // `user` and `room` capabilities) when the game runs there; the game's own online database
-// (onlineCommunity.ts, Supabase) in the itch.io build; and this device alone anywhere else, or
+// (onlineCommunity.ts, Supabase) in the website's build; and this device alone anywhere else, or
 // when neither can be reached, so every page still works offline.
 //
 // What is shared is only what a career card shows (the career record), the player's name in the
@@ -380,9 +380,30 @@ export async function readInbox(): Promise<{ rows: FeedbackRow[]; where: 'shared
   }
 }
 
+/** Whether this is the online build (the website), which carries its database's address (.env.itch). */
+export const onlineBuild = (): boolean => !!(import.meta.env.VITE_SB_URL && import.meta.env.VITE_SB_KEY);
+
+/** The website's inbox for the dev deck: the notes players sent there, for the holder of the inbox
+ * key. Only the online build reaches it; the claude.ai page reads its own (readInbox above). */
+export async function readWebInbox(inboxKey: string): Promise<FeedbackRow[] | 'denied' | 'error'> {
+  if (import.meta.env.VITE_SB_URL && import.meta.env.VITE_SB_KEY) {
+    const { readOnlineInbox } = await import('./onlineCommunity');
+    return readOnlineInbox(import.meta.env.VITE_SB_URL, import.meta.env.VITE_SB_KEY, inboxKey);
+  }
+  return 'error';
+}
+
+/** Counts this visit "on the court" from the moment the game opens until the page closes (owner:
+ * "when the user enters the game, they are no longer treated as being on the court"), whichever
+ * page is on screen. The dev deck stays off the count. */
+export function joinCourt(): void {
+  if (DEV) return;
+  void community().then((c) => c.presence(() => {}));
+}
+
 let picked: Promise<Community> | null = null;
-/** The community this page can reach: shared on claude.ai, the game's own database in the itch.io
- * build, this device elsewhere. */
+/** The community this page can reach: shared on claude.ai, the game's own database in the online
+ * build (the website), this device elsewhere. */
 export function community(): Promise<Community> {
   if (picked) return picked;
   picked = (async () => {
@@ -390,7 +411,7 @@ export function community(): Promise<Community> {
     // the dev deck never posts to (or reads) the real community: it stays on this device
     if (DEV) return localCommunity();
     if (!host?.use) {
-      // the itch.io build carries its database's address (.env.itch); other builds leave this out
+      // the online build carries its database's address (.env.itch); other builds leave this out
       if (import.meta.env.VITE_SB_URL && import.meta.env.VITE_SB_KEY) {
         try {
           const { onlineCommunity } = await import('./onlineCommunity');
