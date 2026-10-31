@@ -18,9 +18,10 @@ import { FIRST_NAMES, LAST_NAMES } from '../src/content/names';
 
 export type Policy = 'random' | 'smart';
 
-function randomInput(r: Rng, policy: Policy) {
-  const pos: Pos = pick(r, POSITIONS);
-  const archetype = int(r, 0, ARCHETYPES[pos].length - 1);
+/** The start page's picks; `force` fixes the position and archetype (round 28: difficulty by position and archetype). */
+function randomInput(r: Rng, policy: Policy, force?: { pos: Pos; archetype: number }) {
+  const pos: Pos = force?.pos ?? pick(r, POSITIONS);
+  const archetype = force ? force.archetype : int(r, 0, ARCHETYPES[pos].length - 1);
   const arch = ARCHETYPES[pos][archetype];
   let focus = [...ATTRS].sort(() => next(r) - 0.5).slice(0, 2);
   if (policy === 'smart') {
@@ -216,9 +217,9 @@ export interface PlayModes {
   sim?: boolean;
 }
 
-export function runCareer(seed: number, policy: Policy, mode: Mode = 'standard', minis: MiniPlay = 'none', play: PlayModes = {}): CareerResult {
+export function runCareer(seed: number, policy: Policy, mode: Mode = 'standard', minis: MiniPlay = 'none', play: PlayModes = {}, force?: { pos: Pos; archetype: number }): CareerResult {
   const r = makeRng(seed ^ 0x9e3779b9);
-  const s = newGame(seed, { ...randomInput(r, policy), ...simIdentity(seed), mode });
+  const s = newGame(seed, { ...randomInput(r, policy, force), ...simIdentity(seed), mode });
   // the harness simulates every postseason (the playable replay would only slow it down)
   s.flags.simPostseason = 1;
   if (play.fast || play.sim) s.flags.fast = 1;
@@ -413,7 +414,7 @@ export const TARGETS: Record<Policy, Record<string, [number, number]>> = {
     mvp: [0.06, 0.14],
     title: [0.25, 0.38],
     hof: [0.07, 0.16],
-    undraftedOfDeclared: [0.28, 0.45],
+    undraftedOfDeclared: [0.18, 0.4], // round 28: the easier ceiling gets more of them drafted (17.5% measured)
     meanNbaSeasons: [11, 14],
     medianRetireAge: [32, 36],
   },

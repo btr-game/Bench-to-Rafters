@@ -76,7 +76,7 @@ function teamSystem(s: GameState, team: Team): { key: TeamStyle; his: boolean } 
   return { key: SYSTEMS[h % SYSTEMS.length], his: false };
 }
 
-export interface RosterFit {
+interface RosterFit {
   system: TeamStyle;
   his: boolean; // the system is the style he set
   profile: Attrs; // the team's weighted average ratings

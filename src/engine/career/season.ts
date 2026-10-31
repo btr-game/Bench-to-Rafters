@@ -24,8 +24,7 @@ import {
   RECRUIT,
   ROLE_MINUTES,
   TEAM_FACTORS,
-  LONGEVITY,
-} from '../balance';
+  LONGEVITY } from '../balance';
 import { chance, clamp, int, normal, range, weightedIndex, type Rng } from '../rng';
 import type { Attrs, GameLog, GameState, HalfPlan, League, LevelKey, RoleKey, SeasonRecord, SeasonState, StatLine, Team } from '../types';
 import { ovrOf } from '../player/ovr';
@@ -282,7 +281,7 @@ function makeHook(s: GameState, league: League, level: LevelKey, acc: HalfAcc, s
       }
     }
     acc.games++;
-    const plan = blendPlans(season.plan, season.plan2);
+    const plan = blendPlans(season.plan, season.plan2, p.age);
     // hot and cold nights, inside a streaky rhythm for the half
     const form = clamp(normal(rng, 1, FORM.gameSd) * (season.rhythm ?? 1), FORM.min, FORM.max);
     if (p.injury && p.injury.key !== 'dtd') {
@@ -500,7 +499,7 @@ function growthAfterHalf(s: GameState, acc: HalfAcc, level: LevelKey, ovr: numbe
   // a breakthrough on the grind plan teaches him how to work
   if (outcome.key === 'breakthrough' && (season.plan === 'grind' || season.plan2 === 'grind')) p.growthRate = Math.min(GROWTH_RATE.max, rate * 1.02);
   const before = ovrOf(p.attrs, p.pos);
-  const plan = blendPlans(season.plan, season.plan2);
+  const plan = blendPlans(season.plan, season.plan2, p.age);
   const attrs0 = { ...p.attrs };
   applyHalfGrowth(s.rng, p, {
     minutesShare: share,
@@ -941,7 +940,7 @@ const REP_BUMP: Record<string, number> = {
   ALLCONF: 2,
 };
 
-export function snapshotNba(s: GameState): void {
+function snapshotNba(s: GameState): void {
   const nba = s.nba!;
   const ppgs: number[] = [];
   for (const t of nba.teams) for (const g of t.roster) if (g.s && g.s.gp >= 58) ppgs.push(g.s.pts / g.s.gp);
@@ -957,7 +956,7 @@ export function snapshotNba(s: GameState): void {
 }
 
 /** Recruiting rank against a national class (§8), computed analytically from the class distribution. */
-export function computeRecruiting(s: GameState): void {
+function computeRecruiting(s: GameState): void {
   const p = s.player;
   // underclassmen are judged on where they are heading by senior year
   const gradeGap = (4 - Math.min(4, s.hsYear)) * 3.5;

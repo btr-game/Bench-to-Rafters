@@ -88,7 +88,7 @@ export function conferenceRank(team: Team, league: League): number {
 }
 
 /** Who is on the floor for a final: him, his teammates and the other side, by name. */
-export function castFor(s: GameState, oppShort: string, played: boolean): DramaCast {
+function castFor(s: GameState, oppShort: string, played: boolean): DramaCast {
   const lg = s.stage === 'NBA' ? s.nba : s.league;
   const mine = lg?.teams.find((t) => t.id === lg.userTeamId);
   const opp = lg?.teams.find((t) => t.short === oppShort);

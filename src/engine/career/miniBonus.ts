@@ -25,7 +25,7 @@ export const MINI_CLAIMS = { perSeason: 2, share: [1, 0.5] };
  * that (aging does not lock it again). From the start page every game is free to play.
  * Rewards are larger (x1.6) to match.
  */
-export const MINI_UNLOCK: Record<MiniId, { key: AttrKey | 'OVR' | 'DEF'; at: number; label: string }> = {
+const MINI_UNLOCK: Record<MiniId, { key: AttrKey | 'OVR' | 'DEF'; at: number; label: string }> = {
   threes: { key: 'SHT', at: 85, label: 'Shooting' },
   dunk: { key: 'ATH', at: 85, label: 'Athleticism' },
   office: { key: 'IQ', at: 85, label: 'Basketball IQ' },
@@ -58,7 +58,7 @@ export function syncMiniUnlocks(s: GameState): string[] {
   return fresh;
 }
 
-export const MINI_NAMES: Record<MiniId, string> = { threes: 'Three-point contest', dunk: 'Dunk contest', office: 'Front Office', lab: 'Built in a lab', legends: 'Legends showdown', street: '3-on-3 streetball', rhythm: 'Lockdown' };
+const MINI_NAMES: Record<MiniId, string> = { threes: 'Three-point contest', dunk: 'Dunk contest', office: 'Front Office', lab: 'Built in a lab', legends: 'Legends showdown', street: '3-on-3 streetball', rhythm: 'Lockdown' };
 
 export type MiniResult =
   | { game: 'threes'; score: number; won: boolean; own: boolean }
@@ -79,7 +79,7 @@ export function canClaimMini(s: GameState | null, id?: MiniId): boolean {
 }
 
 /** What the next claim is worth, as a share of the full reward. */
-export const nextShare = (s: GameState): number => MINI_CLAIMS.share[Math.min(claimsUsed(s), MINI_CLAIMS.share.length - 1)];
+const nextShare = (s: GameState): number => MINI_CLAIMS.share[Math.min(claimsUsed(s), MINI_CLAIMS.share.length - 1)];
 
 /**
  * What a result is worth, before it is applied. Round 12c ("the rewards are too weak; they take
@@ -125,7 +125,7 @@ export function miniReward(r: MiniResult): { attrs: Partial<Record<AttrKey, numb
 
 /** Bonuses taper on ratings that are already elite, so mini-games are no shortcut to 99. */
 // round 15: the unlocks already ask for 85+, so the taper starts higher
-export const MINI_TAPER: [number, number][] = [
+const MINI_TAPER: [number, number][] = [
   [95, 0.45],
   [90, 0.7],
 ];

@@ -17,6 +17,7 @@ import { MiniBonus } from './MiniBonus';
 import { TimingMeter } from '../components/TimingMeter';
 import { Icon } from '../art/Icon';
 import { sfx } from '../sound';
+import { PixelWord } from '../art/PixelText';
 
 // each crew's colour, in the order of the crews in the engine
 const CREW_COLOR = ['#E8590C', '#1C7ED6', '#7048E8'];
@@ -155,7 +156,17 @@ function CourtPixels() {
   );
 }
 
-function Court({ st, spots, ball, shooter, inside, highlight, crewColor }: { st: StreetState; spots: Map<string, Pt>; ball: Pt; shooter: string | null; inside: boolean; highlight: { key: number; text: string } | null; crewColor: string }) {
+/** Round 28 (owner: "after each play, put large texts appear at the top of the rim? like miss, make,
+ * steal"): the play in one word, gold when it went your way, red when it did not. */
+function callOf(p: Play): { word: string; good: boolean } {
+  const good = p.side === 'us' ? p.made : !p.made;
+  if (p.steal) return { word: 'STEAL', good };
+  if (p.blocked) return { word: 'BLOCK', good };
+  if (p.made) return { word: p.dunk ? 'DUNK' : 'MAKE', good };
+  return { word: 'MISS', good };
+}
+
+function Court({ st, spots, ball, shooter, inside, highlight, call, crewColor }: { st: StreetState; spots: Map<string, Pt>; ball: Pt; shooter: string | null; inside: boolean; highlight: { key: number; text: string } | null; call: { key: number; word: string; good: boolean } | null; crewColor: string }) {
   const crew = st.crew;
   const ours = [st.me, ...st.mates];
   const usKit = genericKits(US_COLOR, 'PARK').road;
@@ -182,6 +193,11 @@ function Court({ st, spots, ball, shooter, inside, highlight, crewColor }: { st:
       <div className="sb-ball" style={{ left: `${ball[0]}%`, top: `${ball[1]}%` }}>
         <Icon name="ball" size={20} />
       </div>
+      {call && (
+        <div key={`c${call.key}`} className={`sb-call ${call.good ? 'good' : 'bad'}`} aria-hidden="true">
+          <PixelWord text={call.word} color={call.good ? '#FFD43B' : '#FF8787'} shade={call.good ? '#5A4206' : '#5C1A1A'} className="sb-call-word" />
+        </div>
+      )}
       {highlight && (
         <div key={`h${highlight.key}`} className="sb-highlight">
           {highlight.text}
@@ -261,7 +277,7 @@ export function StreetballGame() {
   const [, force] = useState(0);
   const [timed, setTimed] = useState<Move | null>(null);
   const [cam, setCam] = useState<{ key: number; play: DramaPlay; note: string } | null>(null);
-  const [view, setView] = useState<{ spots: Map<string, Pt>; ball: Pt; shooter: string | null; inside: boolean; highlight: { key: number; text: string } | null }>({ spots: new Map(), ball: hand(OFF[0]), shooter: null, inside: false, highlight: null });
+  const [view, setView] = useState<{ spots: Map<string, Pt>; ball: Pt; shooter: string | null; inside: boolean; highlight: { key: number; text: string } | null; call: { key: number; word: string; good: boolean } | null }>({ spots: new Map(), ball: hand(OFF[0]), shooter: null, inside: false, highlight: null, call: null });
   const [busy, setBusy] = useState(false);
   const timers = useRef<number[]>([]);
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
@@ -270,7 +286,7 @@ export function StreetballGame() {
   /** Everyone back in place for the next possession, the ball with its handler. */
   const settle = useCallback((x: StreetState, play: Play | null) => {
     const spots = layout(x, x.ourBall);
-    setView({ spots, ball: hand(x.ourBall ? (spots.get(x.me.name) ?? OFF[0]) : OFF[0]), shooter: null, inside: false, highlight: play?.highlight ? { key: x.plays.length, text: play.highlight } : null });
+    setView({ spots, ball: hand(x.ourBall ? (spots.get(x.me.name) ?? OFF[0]) : OFF[0]), shooter: null, inside: false, highlight: play?.highlight ? { key: x.plays.length, text: play.highlight } : null, call: play ? { key: x.plays.length, ...callOf(play) } : null });
     // round 27: the play's sound as it lands
     if (play) sfx(play.made ? 'swish' : play.steal || play.blocked ? 'block' : 'rim');
     setBusy(false);
@@ -290,7 +306,7 @@ export function StreetballGame() {
     const spots = layout(x, play.side === 'us', play.handler);
     const path = ballPath(play, spots);
     setBusy(true);
-    setView({ spots, ball: path[0], shooter: play.steal ? play.def : play.shooter, inside: INSIDE.includes(play.move) && !play.steal, highlight: null });
+    setView({ spots, ball: path[0], shooter: play.steal ? play.def : play.shooter, inside: INSIDE.includes(play.move) && !play.steal, highlight: null, call: null });
     path.slice(1).forEach((b, i) => later(STEP_MS * (i + 1), () => setView((v) => ({ ...v, ball: b }))));
     later(STEP_MS * path.length + 250, () => settle(x, play));
   };
@@ -383,7 +399,7 @@ export function StreetballGame() {
               <ActionCam key={cam.key} play={cam.play} us={{ kit: genericKits(US_COLOR, 'PARK').road, color: US_COLOR }} them={{ kit: genericKits(color, crew.name.split(' ').pop()!.toUpperCase().slice(0, 6)).road, color }} winner="us" me={{ name: st.me.name, number: 1 }} venue="park" note={cam.note} />
             </div>
           ) : (
-            <Court st={st} spots={view.spots} ball={view.ball} shooter={view.shooter} inside={view.inside} highlight={view.highlight} crewColor={color} />
+            <Court st={st} spots={view.spots} ball={view.ball} shooter={view.shooter} inside={view.inside} highlight={view.highlight} call={view.call} crewColor={color} />
           )}
           {/* the action cam tells its own play: the ticker catches up when it ends */}
           <Ticker plays={st.plays} me={st.me.name} upTo={cam ? st.plays.length - 1 : st.plays.length} />

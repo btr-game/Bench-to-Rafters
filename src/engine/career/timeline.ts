@@ -18,7 +18,7 @@ export interface TimelineMark {
   big?: boolean; // drawn on the chart, not only listed
 }
 
-export interface TimelineSeason {
+interface TimelineSeason {
   year: number;
   age: number;
   ovrStart: number;

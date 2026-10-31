@@ -7,7 +7,8 @@ import { NickLogo } from '../art/NickLogo';
 import { Card } from './bits';
 
 // The Player tab's name and brand (round 25): the nickname the media gave him, his logo, and
-// the brand deal or signature line that carries it.
+// the brand deal or signature line that carries it. Round 28: the logo is a locked spot until his
+// first brand deal draws it.
 
 export function NameCard({ g }: { g: GameState }) {
   const p = g.player;
@@ -17,7 +18,16 @@ export function NameCard({ g }: { g: GameState }) {
     <Card title="Name and brand" kicker={n ? `Since ${n.year}` : 'No nickname yet'} tour="name-card">
       {n ? (
         <div className="name-row">
-          <NickLogo id={n.id} name={p.name} size={72} />
+          {n.logo || d ? (
+            <NickLogo id={n.id} name={p.name} size={72} />
+          ) : (
+            // round 28: the logo comes with his first brand deal
+            <span className="logo-locked" title="Your logo comes with your first brand deal" aria-label="Logo: comes with your first brand deal">
+              <svg viewBox="0 0 9 9" shapeRendering="crispEdges" aria-hidden="true">
+                {['..#####..', '.#.....#.', '#..###..#', '#.#...#.#', '#....#..#', '#...#...#', '#.......#', '.#..#..#.', '..#####..'].flatMap((row, y) => [...row].map((c, x) => (c === '#' ? <rect key={`${x}-${y}`} x={x} y={y} width={1} height={1} fill="currentColor" /> : null)))}
+              </svg>
+            </span>
+          )}
           <div className="stack" style={{ gap: 4, minWidth: 0 }}>
             <b className="nick-name">&ldquo;{n.name}&rdquo;</b>
             <span className="small">They call you that {n.why}.</span>

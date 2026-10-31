@@ -6,21 +6,21 @@ import { clamp, int, normal, pick, shuffle, type Rng } from '../rng';
 import type { GameState, GenPlayer, Pos } from '../types';
 import { ARCHETYPES } from '../player/archetypes';
 
-export function newId(s: GameState): number {
+function newId(s: GameState): number {
   return s.nextId++;
 }
 
-export function genName(rng: Rng): string {
+function genName(rng: Rng): string {
   return `${pick(rng, FIRST_NAMES)} ${pick(rng, LAST_NAMES)}`;
 }
 
-export function genHeight(rng: Rng, pos: Pos): number {
+function genHeight(rng: Rng, pos: Pos): number {
   const [a, b] = HEIGHT_RANGE[pos];
   return Math.round(clamp(normal(rng, (a + b) / 2, HEIGHT_DRAW.sd), a - HEIGHT_DRAW.below, b + HEIGHT_DRAW.above));
 }
 
 /** Potential for a generated player: young players have room to grow. */
-export function genPotential(rng: Rng, ovr: number, age: number): number {
+function genPotential(rng: Rng, ovr: number, age: number): number {
   const room = Math.max(0, (24 - age) * 2.6 + normal(rng, 0, 3.5));
   return clamp(Math.round(ovr + room), Math.round(ovr), 97);
 }

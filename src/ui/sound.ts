@@ -3,7 +3,7 @@
 // audio starts on the first click (browsers keep pages quiet until then); the settings menu has a
 // switch for the effects and one for the music, kept on this device.
 
-import { DEV } from '../dev/mode';
+import { isDev } from '../dev/mode';
 
 /** Every sound effect and when the game plays it (round 26: the dev deck's sound board lists them). */
 export const SFX = [
@@ -43,6 +43,17 @@ export const SFX = [
   ['block', '3-on-3: a block or a steal'],
   ['reveal', 'Reality 99 hall: a player steps into the light'],
   ['respect', 'Paying respects at a statue'],
+  // round 28 (owner: "add sound for minigames (3 point contest specifically)")
+  ['net', '3-point contest: a swish, all net'],
+  ['rimin', '3-point contest: in off the rim'],
+  ['brick', '3-point contest: off the mark'],
+  ['money', '3-point contest: a money ball drops'],
+  ['fire', '3-point contest: on fire'],
+  ['tick', '3-point contest: the last five seconds'],
+  ['buzzer', 'The buzzer: a contest round ends'],
+  ['slam', 'Dunk contest: a dunk landed'],
+  ['judges', 'Dunk contest: the judges hold up their cards'],
+  ['clutch', 'The finals: your play in the last minutes'],
 ] as const;
 type Sfx = (typeof SFX)[number][0];
 
@@ -51,7 +62,7 @@ let master: GainNode | null = null;
 let sfxOn = read('btr-sfx', true);
 // the music is on to start (owner: "the background music should be playing from the very start of
 // the game"); a player who turned it off keeps it off. The dev deck starts quiet.
-let musicOn = read('btr-music', !DEV);
+let musicOn = read('btr-music', !isDev());
 let musicTimer: ReturnType<typeof setInterval> | null = null;
 
 function read(key: string, dflt: boolean): boolean {
@@ -255,6 +266,47 @@ export function sfx(name: Sfx, always = false): void {
       tone(N(31), t, 0.5, 'triangle', 0.6);
       tone(N(38), t + 0.01, 0.4, 'triangle', 0.25);
       break;
+    case 'net': // the net snaps
+      noise(t, 0.2, 0.4);
+      tone(N(36), t + 0.03, 0.08, 'triangle', 0.3);
+      tone(N(43), t + 0.08, 0.1, 'triangle', 0.22);
+      break;
+    case 'rimin': // a tap on the iron, then the net
+      tone(N(14), t, 0.08, 'square', 0.3);
+      noise(t + 0.09, 0.14, 0.3);
+      break;
+    case 'brick': // a dull clank and a thud
+      tone(N(2), t, 0.16, 'square', 0.45);
+      tone(N(3), t, 0.16, 'square', 0.3);
+      noise(t + 0.12, 0.08, 0.35);
+      break;
+    case 'money': // coins on the swish
+      noise(t, 0.16, 0.35);
+      seq([24, 28, 31, 36], 0.045, 'triangle', 0.5);
+      break;
+    case 'fire': // a rising whoosh
+      seq([12, 16, 19, 24, 28, 31], 0.035, 'square', 0.35);
+      noise(t, 0.3, 0.2);
+      break;
+    case 'tick':
+      tone(N(36), t, 0.025, 'square', 0.3);
+      break;
+    case 'buzzer': // the horn
+      tone(N(-10), t, 0.7, 'square', 0.55);
+      tone(N(-9), t, 0.7, 'square', 0.35);
+      break;
+    case 'slam': // the rim shakes
+      noise(t, 0.12, 0.8);
+      tone(N(-12), t, 0.22, 'square', 0.6);
+      tone(N(14), t + 0.05, 0.25, 'square', 0.2);
+      break;
+    case 'judges': // the cards go up, one, two, three, four, five
+      seq([19, 19, 19, 19, 24], 0.08, 'square', 0.3);
+      break;
+    case 'clutch': // the ball in his hands, the crowd on its feet
+      seq([7, 12, 16], 0.05, 'square', 0.4);
+      noise(t + 0.1, 0.25, 0.18);
+      break;
   }
 }
 
@@ -296,6 +348,13 @@ export function previewMusic(on: boolean): void {
 }
 
 export const soundSettings = () => ({ sfx: sfxOn, music: musicOn });
+/** Reads the switches again as the dev deck opens or closes (each keeps its own); the loop stops
+ * if they say so (the game's screen starts it again when it comes back). */
+export function refreshSound(): void {
+  sfxOn = read('btr-sfx', true);
+  musicOn = read('btr-music', !isDev());
+  if (!musicOn) stopMusic();
+}
 export function setSfx(on: boolean): void {
   sfxOn = on;
   write('btr-sfx', on);

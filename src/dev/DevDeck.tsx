@@ -13,7 +13,7 @@ import { Icon } from '../ui/art/Icon';
 import { useStore } from '../store';
 import { CARDS, GROUPS, setAchievements, type DevCard, type Group } from './cards';
 import { Marked, SUMMARY, SummaryPage, searchCards, searchSummary, snippet } from './Summary';
-import { leaveDev } from './mode';
+import { leaveDev } from './devSwitch';
 import { SettingsMenu } from '../ui/components/Settings';
 import { writeReal } from './storage';
 import { ACH_KEY, emptyAch } from '../ui/achievements';
@@ -34,12 +34,12 @@ export function devSetup(): void {
   } catch {
     // storage blocked: the deck still works, the start page just shows its first-visit sheet
   }
-  setAchievements(true);
+  clean();
 }
 
 /** Back to a clean slate between cards: no game, no page, no switches left on. */
 function clean(): void {
-  useStore.setState({ game: null, page: null, mini: null, transition: null, daily: null, tab: 'home', toasts: [], guide: false, master: false, simple: false, intro: false, news: false, thanks: null, spots: null });
+  useStore.setState({ game: null, slot: null, page: null, mini: null, transition: null, daily: null, tab: 'home', toasts: [], guide: false, master: false, simple: false, intro: false, news: false, thanks: null, spots: null, tour: false });
   setAchievements(true);
 }
 
@@ -225,7 +225,7 @@ export function DevDeck() {
             <div className="kicker">Bench to Rafters · dev mode</div>
             <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
               <ResetAch />
-              {/* round 27 (owner): the deck's own theme and court, and the rest of the settings */}
+              {/* round 27 (owner): the theme and the court (the game's own, round 28), and the rest of the settings */}
               <SettingsMenu g={null} />
               <button className="btn small ghost" onClick={leaveDev}>
                 Back to the game

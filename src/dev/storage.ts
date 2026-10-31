@@ -1,12 +1,16 @@
-// The dev deck keeps its own storage (round 25). Every key it reads or writes in localStorage carries
-// a prefix of its own, so its setup (every achievement earned, sample careers in the log, no saved
-// career) never lands in the player's game. main.tsx imports this first, before the store reads
-// anything; outside dev mode it does nothing.
+// The dev deck keeps its own storage (round 25). While the deck is on, every key it reads or writes
+// in localStorage carries a prefix of its own, so its setup (every achievement earned, sample careers
+// in the log, no saved career) never lands in the player's game. main.tsx imports this first, before
+// the store reads anything. Round 28: the deck is a page the game flips to in place, so the prefix
+// follows the switch; the theme and the court are the game's own in both (owner: "theme and court of
+// dev deck should always be the same with the main game").
 
-import { DEV } from './mode';
+import { isDev } from './mode';
 
 const PREFIX = 'btr-dev:';
-const own = (k: string) => (k.startsWith(PREFIX) ? k : PREFIX + k);
+/** Keys the deck shares with the game, never prefixed. */
+const SHARED = new Set(['btr-theme', 'btr-court']);
+const own = (k: string) => (!isDev() || SHARED.has(k) || k.startsWith(PREFIX) ? k : PREFIX + k);
 const realGet = typeof Storage === 'undefined' ? null : Storage.prototype.getItem;
 const realSet = typeof Storage === 'undefined' ? null : Storage.prototype.setItem;
 
@@ -30,15 +34,15 @@ export function writeReal(key: string, value: string): boolean {
   }
 }
 
-if (DEV && realGet) {
+if (realGet && realSet) {
   try {
-    const { setItem, removeItem } = Storage.prototype;
+    const { removeItem } = Storage.prototype;
     // only localStorage: the dev-mode mark itself lives in sessionStorage
     Storage.prototype.getItem = function (this: Storage, k: string) {
       return realGet.call(this, this === localStorage ? own(k) : k);
     };
     Storage.prototype.setItem = function (this: Storage, k: string, v: string) {
-      setItem.call(this, this === localStorage ? own(k) : k, v);
+      realSet.call(this, this === localStorage ? own(k) : k, v);
     };
     Storage.prototype.removeItem = function (this: Storage, k: string) {
       removeItem.call(this, this === localStorage ? own(k) : k);

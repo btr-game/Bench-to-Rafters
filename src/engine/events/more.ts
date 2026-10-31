@@ -8,6 +8,7 @@ import { marketValue, fmtMoney } from '../economy/salary';
 import type { EventChoice, EventDef } from './defs';
 import { pathOf } from '../career/origin';
 import { canHire, hireStaff } from '../career/staff';
+import { breakGroup } from '../career/duo';
 
 const ALL: Stage[] = ['HS', 'NCAA', 'GL', 'EU', 'INT', 'NBA'];
 const PRO: Stage[] = ['GL', 'EU', 'INT', 'NBA'];
@@ -44,6 +45,7 @@ function tradeAway(s: GameState, rng: Rng): string {
   s.player.captain = false;
   logDecision(s, 'trade', `Traded from the ${from} to the ${target.name}.`, target.id);
   pushMoment(s, { kind: 'event', title: 'Traded', teamName: target.name, color: target.color, text: `The ${from} send ${s.player.name} to the ${target.name}.`, lines: [`New team: ${target.name}`, 'Coach trust resets to 50'] });
+  breakGroup(s); // round 28: a duo or Big Three ends with the trade
   return `You are a ${target.short} now.`;
 }
 

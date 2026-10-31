@@ -50,7 +50,7 @@ export const TACTIC_LABEL: Record<Tactic, { name: string; text: string }> = {
   depth: { name: 'Deep rotation', text: 'Ten guys, fresh legs. Needs a strong bench.' },
 };
 
-export interface FoProspect {
+interface FoProspect {
   pr: Prospect;
   level: number; // 0-3: how closely he has been scouted
   ovrN: number[]; // the scouts' error at each level (fixed when the class is made)
@@ -62,7 +62,7 @@ export interface FoProspect {
   pick?: number;
 }
 
-export interface FoFree {
+interface FoFree {
   p: GenPlayer;
   from: string;
   ask: number;
@@ -71,7 +71,7 @@ export interface FoFree {
   signed?: boolean;
 }
 
-export interface FoSeason {
+interface FoSeason {
   year: number;
   w: number;
   l: number;
@@ -315,7 +315,7 @@ export const payroll = (fo: FoState): number => myTeam(fo).roster.reduce((a, p) 
 export const capOf = (fo: FoState): number => capFor(fo.world.year);
 
 /** What a team thinks a player is worth in a trade. */
-export function tradeValue(p: GenPlayer): number {
+function tradeValue(p: GenPlayer): number {
   const age = p.age <= 24 ? 1.15 : p.age <= 29 ? 1 : p.age <= 32 ? 0.8 : 0.55;
   const upside = p.age <= 24 ? Math.max(0, p.pot - p.ovr) * 1.2 : 0;
   // stars cost extra: nobody gives one up for a pile of good players
@@ -345,7 +345,7 @@ export function tradeRead(fo: FoState, targetId: number, offer: number[]): { moo
   return { mood: ratio >= FO.accept + 0.1 ? 'They like it' : ratio >= FO.accept - 0.12 ? 'Close' : ratio >= 0.45 ? 'Not enough' : 'No chance', salaryOk, ratio };
 }
 
-export interface TradeIdea {
+interface TradeIdea {
   targetId: number;
   ids: number[]; // your players going the other way
   before: number; // your team strength now
@@ -362,7 +362,7 @@ export function strengthAfter(fo: FoState, targetId: number, offer: number[]): n
 }
 
 /** The trade value a deal must carry so the other side says yes whatever its mood that day. */
-export const SURE_THING = FO.accept / 0.9;
+const SURE_THING = FO.accept / 0.9;
 
 /**
  * Suggested offers for one player (round 12b: "the suggestions are still a little bad"). Every

@@ -19,7 +19,7 @@ import { NAMES } from '../../content/strings';
 // credits, lower award bars and a gentler grade scale
 export const LAB_GAME = { seasons: 10, startAge: 19, startOvr: 60, step: 3, credits: [14, 13, 12, 10, 9, 8, 7, 6, 5, 4], twistChance: 0.45 };
 
-export interface LabSeason {
+interface LabSeason {
   age: number;
   ovr: number;
   line: string;

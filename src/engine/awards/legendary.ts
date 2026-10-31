@@ -6,7 +6,7 @@
 import type { GameState, SeasonRecord } from '../types';
 import { perGame } from '../sim/statModel';
 
-export interface LegendarySeason {
+interface LegendarySeason {
   id: string;
   name: string;
   line: string; // what made it legendary, in a sentence

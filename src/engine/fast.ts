@@ -20,7 +20,7 @@ import { pushPlanDecision } from './career/season';
 const BIG_EVENT = /Breakthrough season|The leap|Everything changes|Exempted|rafters/i;
 function isBig(m: Moment): boolean {
   if (m.arc || m.drama) return true;
-  if (m.logo) return true; // round 25: the day he gets his nickname, once a career
+  if (m.logo || m.nick) return true; // the day he gets his nickname, and the day his logo comes out (round 28)
   if (m.kind === 'draft' || m.kind === 'title' || m.kind === 'intro') return true;
   if (m.kind === 'awards') return /MVP|All-NBA|Champion|Player of the Year/i.test((m.lines ?? []).join(' ') + m.title);
   if (m.kind === 'injury') return /season|ACL|Everything/i.test(m.title + m.text);

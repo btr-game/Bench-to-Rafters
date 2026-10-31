@@ -13,12 +13,14 @@ import { ActionCam, type CamSide, type Venue } from '../art/ActionCam';
 import { ClutchPanel, GRADE_NOTE, GRADE_POINTS, calledPlay, clutchMoves, type ClutchMove, type Grade } from './Clutch';
 import { Icon } from '../art/Icon';
 import { NickLogo } from '../art/NickLogo';
+import { PixelWord } from '../art/PixelText';
 import { InjuryBadge } from '../art/careerArt';
 import { ORIGINS } from '../../content/origins';
 import { kitFor, styleLeague } from '../art/Player';
 import { genericKits } from '../../content/teamStyle';
 import { CelebrationArt, StoryScene } from '../art/Scene';
 import { AwardArt, awardKeyOf } from '../art/Award';
+import { MedalArt } from '../art/Medal';
 
 const reducedMotion = () => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
@@ -566,8 +568,8 @@ function MoodFx({ mood, color }: { mood: NonNullable<Moment['mood']>; color: str
     return (
       <div className="fx-layer" aria-hidden="true">
         <div className={`fx-medal ${mood}`}>
-          <span className="fx-ribbon" />
-          <span className="fx-disc">{mood === 'silver' ? '2' : '3'}</span>
+          {/* round 28: a pixel medal (it was a smooth CSS disc) */}
+          <MedalArt metal={mood} place={mood === 'silver' ? 2 : 3} ribbon="currentColor" size={150} />
         </div>
       </div>
     );
@@ -602,7 +604,13 @@ function MomentPage({ m, g }: { m: Moment; g: GameState }) {
           <DraftReveal m={m} />
         ) : (
           <div className="stack reveal" style={{ gap: 12 }}>
-            {m.logo ? <NickLogo id={m.logo} name={g.player.name} size={160} /> : m.duo && activeDuo(g) ? <DuoArt g={g} b={activeDuo(g)!} third={activeTrio(g)} size={170} /> : <StoryScene g={g} title={m.title} kind={m.kind} prize={m.kind === 'awards' ? m.lines?.[0] : m.kind === 'title' ? m.title : m.kind === 'tournament' ? `${m.title}. ${m.text}` : undefined} />}
+            {m.logo ? (
+              <NickLogo id={m.logo} name={g.player.name} size={160} />
+            ) : m.nick ? (
+              <div className="nick-reveal">
+                <PixelWord text={m.nick} color="#FFD43B" shade="#5A4206" className="nick-word" />
+              </div>
+            ) : m.duo && activeDuo(g) ? <DuoArt g={g} b={activeDuo(g)!} third={activeTrio(g)} size={170} /> : <StoryScene g={g} title={m.title} kind={m.kind} prize={m.kind === 'awards' ? m.lines?.[0] : m.kind === 'title' ? m.title : m.kind === 'tournament' ? `${m.title}. ${m.text}` : undefined} />}
             <div className="kicker on-dark">{KICKER[m.kind]}</div>
             {m.kind === 'injury' ? (
               <div className="title-with-icon">

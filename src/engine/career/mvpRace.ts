@@ -9,7 +9,7 @@ import { valuePerGame } from '../sim/statModel';
 import { userOvr } from './common';
 import { projectedLines } from '../sim/genStats';
 
-export const MVP_RACE = { fromOvr: 92, top: 5 };
+const MVP_RACE = { fromOvr: 92, top: 5 };
 
 export function liveMvpRace(s: GameState): (MvpLadder & { final: boolean }) | null {
   if (s.stage !== 'NBA' || !s.nba) return null;

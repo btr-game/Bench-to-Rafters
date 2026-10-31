@@ -364,6 +364,14 @@ export const ACHIEVEMENTS: Achievement[] = [
   A('daily30', 'Month of Sundays', 'allstar', 'Play the daily challenge on thirty days.', (f) => f.t.daily >= 30),
   // round 28: Share the game
   A('share1', 'Word of Mouth', 'bench', 'Share the game with someone.', (f) => (f.t.shared ?? 0) >= 1),
+  // round 28: crunch time in a final, the logo at the first brand deal, the talk with the coach
+  A('crunch1', 'Two-Minute Drill', 'rotation', 'Play the last two minutes of a final yourself.', (f) => (f.g.flags.crunch ?? 0) >= 1),
+  A('crunchwin', 'Closing Time', 'starter', 'Win a final in crunch time, calling the plays yourself.', (f) => (f.g.flags.crunchWon ?? 0) >= 1),
+  A('crunchback', 'Down but Not Out', 'allstar', 'Trail when crunch time starts in a final, and win it.', (f) => (f.g.flags.crunchBack ?? 0) >= 1),
+  A('crunchot', 'Bonus Basketball', 'allstar', 'Win a final in overtime, calling the plays yourself.', (f) => (f.g.flags.crunchOtWon ?? 0) >= 1),
+  A('crunch5', 'Ice Water', 'hof', 'Win five finals in crunch time over a career.', (f) => (f.g.flags.crunchWon ?? 0) >= 5),
+  A('logo', 'Brand New Look', 'rotation', 'Have your nickname’s logo drawn for your first brand deal.', (f) => !!f.g.player.nickname?.logo),
+  A('chalk', 'Chalk Talk', 'bench', 'Sit down with the coach and set the team’s style.', (f) => !!f.g.teamStyle),
   // round 25: the book past 500 (achievements25.ts)
   ...ACHIEVEMENTS_25,
   // round 27: the mini-games, in the arcade and in a career (achievementsMini.ts)

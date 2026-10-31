@@ -6,8 +6,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { ACHIEVEMENTS, ACH_TIERS, type AchTier } from '../../engine/achievements';
 import { MINI_TOTALS_ONLY } from '../../engine/achievementsMini';
 import { useStore } from '../../store';
+import type { GameState } from '../../engine/types';
 import { PageTop } from '../components/PageTop';
-import { loadAch } from '../achievements';
+import { loadAch, runOf } from '../achievements';
 import { Badge } from '../art/Badge';
 
 const tierOf = (k: AchTier) => ACH_TIERS.find((t) => t.key === k)!;
@@ -43,12 +44,22 @@ export function AchToasts() {
   );
 }
 
-/** The entry on the start page. */
-export function AchievementsCard() {
+/** What one career earned (round 28), newest first. */
+function earnedIn(g: GameState): { id: string; name: string; tier: AchTier }[] {
+  const run = runOf(g);
+  const got = loadAch().got;
+  return ACHIEVEMENTS.filter((a) => got[a.id]?.run === run)
+    .sort((a, b) => (got[a.id].at < got[b.id].at ? 1 : -1))
+    .map((a) => ({ id: a.id, name: a.name, tier: a.tier }));
+}
+
+/** The entry on the start page, and on the Records tab of a career (with what that career earned). */
+export function AchievementsCard({ g }: { g?: GameState }) {
   const setPage = useStore((s) => s.setPage);
   const [got] = useState(() => Object.keys(loadAch().got).length);
+  const mine = useMemo(() => (g ? earnedIn(g) : []), [g]);
   return (
-    <section className="card stack">
+    <section className="card stack" data-tour={g ? 'run-ach' : undefined}>
       <div className="sec-title with-icon">
         <Badge tier="starter" size={26} />
         Achievements
@@ -56,6 +67,22 @@ export function AchievementsCard() {
       <p className="small muted">
         {got} of {ACHIEVEMENTS.length} earned, over every career on this device. The rest are riddles.
       </p>
+      {g && (
+        <div className="run-ach">
+          <div className="kicker">{mine.length ? `This career: ${mine.length} earned` : 'This career: none yet'}</div>
+          {mine.length > 0 && (
+            <div className="run-ach-list">
+              {mine.slice(0, 8).map((a) => (
+                <span key={a.id} className="run-ach-chip" style={{ ['--tier' as string]: tierOf(a.tier).color }} title={tierOf(a.tier).name}>
+                  <Badge tier={a.tier} size={20} />
+                  {a.name}
+                </span>
+              ))}
+              {mine.length > 8 && <span className="small muted">and {mine.length - 8} more</span>}
+            </div>
+          )}
+        </div>
+      )}
       <button className="btn ghost" data-tour="ach" onClick={() => setPage('achievements')}>
         Open the achievement book
       </button>
@@ -63,7 +90,21 @@ export function AchievementsCard() {
   );
 }
 
-type Filter = 'all' | 'got' | 'open' | 'arcade' | 'minicareer' | AchTier;
+type Filter = 'all' | 'run' | 'got' | 'open' | 'arcade' | 'minicareer' | AchTier;
+
+/** The book from the top bar of a career (round 28, owner: "make the achievement book able to access
+ * in-game as well"): a badge and the count this career has earned. */
+export function AchButton({ g }: { g: GameState }) {
+  const setPage = useStore((s) => s.setPage);
+  const n = useMemo(() => earnedIn(g).length, [g]);
+  return (
+    <button className="icon-btn ach-btn" data-tour="ach-btn" aria-label={`Achievement book: ${n} earned this career`} title="Achievement book" onClick={() => setPage('achievements')}>
+      <Badge tier="starter" size={18} />
+      <span className="share-word">Achievements</span>
+      {n > 0 && <span className="ach-btn-n">{n}</span>}
+    </button>
+  );
+}
 
 // round 27: the mini-game achievements, in the arcade and in a career (engine/achievementsMini.ts)
 const ARCADE = new Set(MINI_TOTALS_ONLY);
@@ -72,15 +113,31 @@ const isMini = (id: string) => id.startsWith('mg-') || id === 'side';
 /** The book: every achievement by tier; the ones not earned yet keep their secret. */
 export function AchievementBook() {
   const setPage = useStore((s) => s.setPage);
+  const game = useStore((s) => s.game);
   const [saved] = useState(loadAch);
-  const [filter, setFilter] = useState<Filter>('all');
   const got = saved.got;
+  // round 28: from a career, the book opens on what this career has earned (when it has earned any)
+  const run = game ? runOf(game) : null;
+  const ran = run ? ACHIEVEMENTS.filter((a) => got[a.id]?.run === run).length : 0;
+  const [filter, setFilter] = useState<Filter>(() => (ran ? 'run' : 'all'));
   const list = useMemo(
     () =>
       ACHIEVEMENTS.filter((a) =>
-        filter === 'all' ? true : filter === 'got' ? !!got[a.id] : filter === 'open' ? !got[a.id] : filter === 'arcade' ? ARCADE.has(a.id) : filter === 'minicareer' ? isMini(a.id) && !ARCADE.has(a.id) : a.tier === filter,
+        filter === 'all'
+          ? true
+          : filter === 'run'
+            ? got[a.id]?.run === run
+            : filter === 'got'
+              ? !!got[a.id]
+              : filter === 'open'
+                ? !got[a.id]
+                : filter === 'arcade'
+                  ? ARCADE.has(a.id)
+                  : filter === 'minicareer'
+                    ? isMini(a.id) && !ARCADE.has(a.id)
+                    : a.tier === filter,
       ),
-    [filter, got],
+    [filter, got, run],
   );
   const total = Object.keys(got).length;
   return (
@@ -118,6 +175,7 @@ export function AchievementBook() {
         <div className="seg">
           {(
             [
+              ...(run ? ([['run', `This career (${ran})`]] as [Filter, string][]) : []),
               ['all', 'All'],
               ['got', 'Earned'],
               ['open', 'Still a riddle'],
@@ -134,12 +192,14 @@ export function AchievementBook() {
           {list.map((a) => {
             const g = got[a.id];
             const t = tierOf(a.tier);
+            const here = !!g && !!run && g.run === run;
             return (
-              <div key={a.id} className={`ach-card${g ? ' got' : ''}`} style={{ ['--tier' as string]: t.color }}>
+              <div key={a.id} className={`ach-card${g ? ' got' : ''}${here ? ' this-run' : ''}`} style={{ ['--tier' as string]: t.color }}>
                 <Badge tier={a.tier} locked={!g} size={38} />
                 <div>
                   <b>{a.name}</b>
                   <small className="achv-tier-name">{t.name}</small>
+                  {here && <small className="this-run-tag">This career</small>}
                   {g ? (
                     <p className="small">
                       {a.how}{' '}

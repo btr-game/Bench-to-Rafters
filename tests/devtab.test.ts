@@ -1,65 +1,86 @@
-// The dev deck in a tab of its own (owner: "when i enter the dev deck, the tab reloads ... this
-// still kind of bothers me"): how a page knows it is the deck, and how the deck goes back.
+// The dev deck as a page of the game (round 28, owner: "can you make the dev deck just another page
+// in the game instead of having to open another tab in the browser? just like how the minigame page
+// appears", and "theme and court of dev deck should always be the same with the main game"): a switch
+// flipped in place, with the deck's storage kept apart while it is on.
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-function browser(opts: { session?: Record<string, string>; local?: Record<string, string>; opener?: boolean } = {}) {
-  const session = new Map(Object.entries(opts.session ?? {}));
-  const local = new Map(Object.entries(opts.local ?? {}));
-  const reload = vi.fn();
-  const close = vi.fn();
-  const win: Record<string, unknown> = { opener: opts.opener ? {} : null, close, closed: false };
-  win.top = win;
-  win.self = win;
-  const store = (m: Map<string, string>) => ({ getItem: (k: string) => m.get(k) ?? null, setItem: (k: string, v: string) => void m.set(k, v), removeItem: (k: string) => void m.delete(k) });
-  vi.stubGlobal('window', win);
-  vi.stubGlobal('sessionStorage', store(session));
-  vi.stubGlobal('localStorage', store(local));
-  vi.stubGlobal('location', { reload, href: 'https://bench-to-rafters.netlify.app/' });
-  return { session, local, reload, close };
+/** A browser's two stores, as plain maps behind a Storage class the prefix can patch. */
+function browser(session: Record<string, string> = {}) {
+  class FakeStorage {
+    m = new Map<string, string>();
+    getItem(k: string) {
+      return this.m.get(k) ?? null;
+    }
+    setItem(k: string, v: string) {
+      this.m.set(k, String(v));
+    }
+    removeItem(k: string) {
+      this.m.delete(k);
+    }
+  }
+  const local = new FakeStorage();
+  const sess = new FakeStorage();
+  for (const [k, v] of Object.entries(session)) sess.m.set(k, v);
+  vi.stubGlobal('Storage', FakeStorage);
+  vi.stubGlobal('localStorage', local);
+  vi.stubGlobal('sessionStorage', sess);
+  return { local: local.m, session: sess.m };
 }
 const load = async () => {
   vi.resetModules();
-  return import('../src/dev/mode');
+  const mode = await import('../src/dev/mode');
+  const storage = await import('../src/dev/storage');
+  return { ...mode, ...storage };
 };
 afterEach(() => vi.unstubAllGlobals());
 
-describe('the dev deck in its own tab', () => {
-  it('is the game in an ordinary tab', async () => {
+describe('the dev deck as a page of the game', () => {
+  it('starts as the game, or as the deck in a tab reloaded inside it', async () => {
     browser();
-    expect((await load()).DEV).toBe(false);
+    expect((await load()).isDev()).toBe(false);
+    browser({ 'btr-dev-on': '1' });
+    expect((await load()).isDev()).toBe(true);
   });
 
-  it('is the deck in a tab the game just opened for it, and keeps it so on a reload', async () => {
-    const b = browser({ local: { 'btr-dev-handoff': String(Date.now()) }, opener: true });
-    expect((await load()).DEV).toBe(true);
-    expect(b.local.has('btr-dev-handoff')).toBe(false); // used once
-    expect(b.session.get('btr-dev-on')).toBe('1');
-  });
-
-  it('is not the deck from a stale handoff, or in a tab nobody opened', async () => {
-    browser({ local: { 'btr-dev-handoff': String(Date.now() - 60000) }, opener: true });
-    expect((await load()).DEV).toBe(false);
-    browser({ local: { 'btr-dev-handoff': String(Date.now()) }, opener: false });
-    expect((await load()).DEV).toBe(false);
-  });
-
-  it('closes its tab to go back to the game, and reloads only a tab it took over', async () => {
-    const b = browser({ session: { 'btr-dev-on': '1' }, opener: true });
+  it('flips in place and tells whoever listens, keeping the mark for a reload', async () => {
+    const b = browser();
     const m = await load();
-    m.leaveDev();
-    expect(b.close).toHaveBeenCalled();
-    expect(b.reload).not.toHaveBeenCalled();
-    expect(b.session.has('btr-dev-on')).toBe(false);
-    const c = browser({ session: { 'btr-dev-on': '1' } });
-    (await load()).leaveDev();
-    expect(c.reload).toHaveBeenCalled();
+    const heard: boolean[] = [];
+    const stop = m.onDev((on) => heard.push(on));
+    m.setDev(true);
+    expect(m.isDev()).toBe(true);
+    expect(b.session.get('btr-dev-on')).toBe('1');
+    m.setDev(true); // no change, no call
+    m.setDev(false);
+    stop();
+    m.setDev(true);
+    expect(heard).toEqual([true, false]);
+  });
+
+  it('keeps its storage apart while it is on, and shares the theme and the court', async () => {
+    const b = browser();
+    const m = await load();
+    localStorage.setItem('btr-achv-v1', 'game');
+    m.setDev(true);
+    expect(localStorage.getItem('btr-achv-v1')).toBeNull(); // the deck's own book, empty so far
+    localStorage.setItem('btr-achv-v1', 'deck');
+    localStorage.setItem('btr-theme', 'dark');
+    localStorage.setItem('btr-court', 'street');
+    expect(m.readReal('btr-achv-v1')).toBe('game');
+    m.setDev(false);
+    expect(localStorage.getItem('btr-achv-v1')).toBe('game');
+    expect(localStorage.getItem('btr-theme')).toBe('dark');
+    expect(localStorage.getItem('btr-court')).toBe('street');
+    expect(b.local.get('btr-dev:btr-achv-v1')).toBe('deck');
+    expect(b.local.has('btr-dev:btr-theme')).toBe(false);
   });
 
   it('keeps the deck out with a wrong password', async () => {
-    const b = browser();
-    expect((await load()).enterDev('not-the-password')).toBe(false);
-    expect(b.reload).not.toHaveBeenCalled();
+    browser();
+    const m = await load();
+    expect(m.devPassword('not-the-password')).toBe(false);
+    expect(m.isDev()).toBe(false);
   });
 });
 

@@ -1,13 +1,14 @@
 // The career log (round 24): the career cards of the last finished careers, kept on this device.
-// Five at most: at four the page warns, and a sixth pushes out the oldest. Deleting a card here
+// Ten at most, like the saved careers (round 28; five before): at nine the page warns, and an
+// eleventh pushes out the oldest. Deleting a card here
 // never touches anything posted elsewhere (a leaderboard keeps its own copy).
 
 import { chooseLook } from '../content/looks';
 import type { CareerRecord } from '../engine/career/record';
 
 const KEY = 'btr-log-v1';
-export const LOG_MAX = 5;
-export const LOG_WARN = 4;
+export const LOG_MAX = 10;
+export const LOG_WARN = 9;
 
 interface LogData {
   cards: CareerRecord[];

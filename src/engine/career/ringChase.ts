@@ -11,7 +11,7 @@ import { logDecision, userOvr } from './common';
 import { minSalary } from '../economy/salary';
 import { nbaOffer, offerChoice } from './offers';
 
-export interface ChaserRole {
+interface ChaserRole {
   name: string;
   text: string;
   up: Partial<Record<AttrKey, number>>;
@@ -37,7 +37,7 @@ export const CHASER_ROLES: Record<ChaserKey, ChaserRole & { fit: (a: Record<Attr
 };
 
 /** The roles that suit him best, best first. */
-export function chaserRolesFor(s: GameState, n = 3): ChaserKey[] {
+function chaserRolesFor(s: GameState, n = 3): ChaserKey[] {
   const a = s.player.attrs;
   return (Object.keys(CHASER_ROLES) as ChaserKey[]).sort((x, y) => CHASER_ROLES[y].fit(a) - CHASER_ROLES[x].fit(a)).slice(0, n);
 }

@@ -9,7 +9,7 @@ import { marketValue, rookieScale } from '../economy/salary';
 import type { DraftPickResult } from './draft';
 
 /** Season-level growth or decline for a generated player. */
-export function progressGen(rng: Rng, p: GenPlayer): void {
+function progressGen(rng: Rng, p: GenPlayer): void {
   p.age += 1;
   const gap = GEN_GROWTH.gapRate[Math.max(19, p.age - 1)] ?? 0;
   if (gap > 0 && p.pot > p.ovr) p.ovr += (p.pot - p.ovr) * gap * (p.dev ?? GEN_GROWTH.devMean) * range(rng, 0.7, 1.3);
@@ -22,7 +22,7 @@ export function progressGen(rng: Rng, p: GenPlayer): void {
   if (p.ovr > p.pot) p.pot = Math.round(p.ovr);
 }
 
-export function updateGenRep(p: GenPlayer): void {
+function updateGenRep(p: GenPlayer): void {
   // without a season line (the user was not in the league) reputation follows OVR
   const target = p.s && p.s.gp > 10 ? clamp((valuePerGame(p.s) - 12) * 3.2, 0, 100) : clamp((p.ovr - 72) * 5, 0, 100);
   p.rep = clamp(p.rep * 0.6 + target * 0.4, 0, 100);

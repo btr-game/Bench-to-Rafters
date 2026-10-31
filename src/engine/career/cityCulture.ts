@@ -14,7 +14,7 @@ import { NBA_TEAMS } from '../../content/teams';
 import { fanHalf } from './fanCulture';
 import { addPounds, syncWeight, weightUnits } from '../player/weight';
 
-export interface CityCulture {
+interface CityCulture {
   name: string;
   /** What living and playing there is like, in a sentence. */
   text: string;

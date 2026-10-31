@@ -39,18 +39,18 @@ import { chance, clamp, normal, range, type Rng } from '../rng';
 import type { AttrKey, Attrs, HalfPlan, UserPlayer } from '../types';
 import { ovrOf } from './ovr';
 
-export function standardRate(age: number): number {
+function standardRate(age: number): number {
   let rate = 0;
   for (const [minAge, r] of BASE_RATE) if (age >= minAge) rate = r;
   return rate;
 }
 
 /** Years the hidden growth rate moves his body clock: fast learners stay young longer. */
-export function primeShift(p: UserPlayer): number {
+function primeShift(p: UserPlayer): number {
   return clamp(((p.growthRate ?? 1) - 1) * GROWTH_RATE_AGE.primeYears, GROWTH_RATE_AGE.minShift, GROWTH_RATE_AGE.maxShift);
 }
 
-export function baseRate(p: UserPlayer, minutesFactor: number): number {
+function baseRate(p: UserPlayer, minutesFactor: number): number {
   // the shift only moves the back end of the curve: a young body clock never drops a teenager
   // below the start of the table (which would mean no growth at all)
   const age = Math.max(BASE_RATE[0][0], p.age - primeShift(p));
@@ -87,7 +87,7 @@ export function expectedOvrAt(pot: number, age: number): number {
   return o;
 }
 
-export function minutesFactor(share: number, played: boolean): number {
+function minutesFactor(share: number, played: boolean): number {
   if (!played) return MINUTES_FACTOR[0][1];
   let f = MINUTES_FACTOR[1][1];
   for (let i = 1; i < MINUTES_FACTOR.length; i++) if (share >= MINUTES_FACTOR[i][0]) f = MINUTES_FACTOR[i][1];
@@ -104,7 +104,7 @@ export function perfFactor(actualGmSc: number, expectedGmSc: number): number {
   return clamp(1 + (ratio - 1) * PERF_FACTOR.slope, PERF_FACTOR.min, PERF_FACTOR.max);
 }
 
-export interface HalfGrowthCtx {
+interface HalfGrowthCtx {
   minutesShare: number;
   played: boolean;
   ovr: number;
@@ -166,7 +166,7 @@ export function applyHalfGrowth(rng: Rng, p: UserPlayer, ctx: HalfGrowthCtx): Pa
 
 /** Season-level decline after the decline start age. Returns the OVR change. */
 /** How hard aging hits, from body wear: 0.6x for a fresh body, about 1.3x at 35 wear, 2.6x at 100. */
-export function wearMult(p: UserPlayer): number {
+function wearMult(p: UserPlayer): number {
   return WEAR.declineBase + (p.wear ?? 0) / WEAR.declineDiv;
 }
 

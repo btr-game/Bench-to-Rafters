@@ -13,7 +13,7 @@ export const THREES = { racks: 5, balls: 5, seconds: 60, money: 2, zoneBase: 0.0
 // until you miss), and the last ten seconds speed everything up.
 export const LIVELY = { pace: [0.8, 1.35] as [number, number], centre: [0.32, 0.68] as [number, number], surgeChance: 0.22, surgeMult: [1.8, 2.5] as [number, number], surgeAt: [150, 900] as [number, number], surgeLen: [220, 450] as [number, number], fireAfter: 3, fireZone: 1.35, crunchFrom: 10, crunch: 1.18, moneyZone: 0.85 };
 
-export interface BallSetup {
+interface BallSetup {
   pace: number; // multiplies the sweep speed
   centre: number; // where the green zone sits (0-1)
   surge: { at: number; len: number; mult: number } | null; // ms after the ball comes up
@@ -51,7 +51,7 @@ export function zoneWidth(skill: number, ballIndex: number): number {
 }
 
 /** Make chance for a simulated shooter: the best real ones make about three in four. */
-export const simChance = (skill: number): number => Math.min(0.8, 0.26 + skill * 0.0046);
+const simChance = (skill: number): number => Math.min(0.8, 0.26 + skill * 0.0046);
 
 /** A simulated round: the score, rack by rack. */
 export function simRound(r: Rng, skill: number): number {

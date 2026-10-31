@@ -51,7 +51,8 @@ export function tabKey(g: GameState, tab: 'home' | 'season' | 'player' | 'league
     case 'season':
       return `${g.year}:${s ? s.games.length + s.postGames.length + (s.preGames?.length ?? 0) + (s.cupGames?.length ?? 0) : 0}`;
     case 'player':
-      return `${Math.round(ovr(g))}:${g.player.pos}`;
+      // round 28: a nickname and the logo's first showing are news too
+      return `${Math.round(ovr(g))}:${g.player.pos}:${g.player.nickname?.id ?? ''}:${g.player.nickname?.logo || g.player.brand ? 1 : 0}`;
     case 'league':
       return `${g.nbaHistory.length}`;
     case 'records':

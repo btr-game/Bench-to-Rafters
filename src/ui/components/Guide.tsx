@@ -27,6 +27,7 @@ const SECTIONS: { title: string; where: string; items: [string, string[]][] }[] 
       ['How you play', ['A card on Home with every mode as a switch.', 'Sim: makes the routine calls (plans, summers, call-ups, press) and stops only for the big ones.', 'Fast break: quick seasons; each tab folds its extra cards behind "Show everything".', 'Simple text: hides the explanations on every tab.']],
       ['Guide mode', ['Walks you through every button once, step by step.', 'New things get their step the first time they unlock.', 'Then it highlights the next thing to do. Turn it on here, in Settings or on How you play.']],
       ['Master mode', ['No recommendations anywhere: no scouts’ calls, fit tags, suggested deals or hints.', 'In Settings or on How you play.']],
+      ['Achievements', ['The Achievements button in the top bar opens the book from inside a career, with a count of what this career has earned.', 'Those earned in this career are highlighted in gold and listed first.']],
       ['Pages', ['The career log, the achievement book, the community and the mini-games open as pages of their own.', 'Top left says where Back goes; next to it, where you are. Escape goes back too.']],
       ['Keyboard', ['Enter: the main button (skips a final to the buzzer first).', '1–9, 0, - and =: pick a choice. Space: stop a timing meter.', 'H S P L R: tabs. Esc: back from a page, or close a menu.']],
       ['Sound', ['Chiptune sound effects and a soft music loop, both on from your first click or key (browsers keep sound off until then).', 'The music rests in the mini-games, which have their own. Both switch in Settings.']],
@@ -41,7 +42,7 @@ const SECTIONS: { title: string; where: string; items: [string, string[]][] }[] 
       ['No Shortcuts', ['Picking Reality hits hard offers the hardest way to play: the road picks your player at random (position, archetype, focus, country, hand, name), then master mode with no Fast break or Sim mode, locked for the whole career. Simple text is allowed.', 'Such a career carries the mark in the top bar, on the leaderboards, the career log and its own banner when it ends, with achievements of its own.']],
       ['Your look', ['On the identity step: skin tone, hair, hair colour and facial hair, shown on your player in a plain white or black jersey with your number; beside him, the back of the jersey with your name and number as you type them.', 'No accessories to start: the wardrobe adds what you buy.']],
       ['Where you start', ['Pick a country for its road to the pros, or Surprise me.', 'Hometown and first school are revealed when the career starts.']],
-      ['Position, hand and archetype', ['Pick each yourself, or tap Random next to it.', 'Random at the top rolls everything at once.', 'Each archetype has its own traced action pose.']],
+      ['Position, hand and archetype', ['Pick each yourself, or tap Random next to it.', 'Each archetype has its own traced action pose.']],
       ['Focus stats', ['Two ratings that grow almost twice as fast.', 'Changing them later takes a breakthrough season.']],
       ['Continue', ['Your saved careers are under the difficulties and Next, newest first.', 'Paste a career code there to bring one from another browser.']],
       ['Intro and What’s new', ['Intro (top of the start page) plays the opening again: the title over a one-on-one, from a high school gym to the NBA.', 'What’s new pops up over the start page once after each update with the latest changes; the What’s new button next to Intro opens it again (a dot means you haven’t opened it yet).']],
@@ -52,20 +53,21 @@ const SECTIONS: { title: string; where: string; items: [string, string[]][] }[] 
     title: 'Every season',
     where: 'Home, the main card in the middle',
     items: [
-      ['Plans', ['Pick one or two plans for each half. The first is the main plan.', 'One plan alone works a little better.', 'Plans shape growth, minutes, injuries, mood and fame.']],
+      ['Plans', ['Pick one or two plans for each half. The first is the main plan.', 'One plan alone works a little better.', 'Plans shape growth, minutes, injuries, mood and fame.', 'Age matters: at 23 or younger, Grind, Spotlight and learning from a vet work better and safer (tagged Young legs); from 30, Recovery and Team first do (tagged Veteran).']],
       ['Turning points', ['Events ask you to choose; the result is rolled each time.', 'Green and red chips show what changed.', 'The risk tag shows how swingy a choice is.']],
       ['Storylines', ['Some events unfold over several seasons, one chapter each summer.']],
       ['Around the league', ['The season’s storylines, in the side column, each with what it means for you.', 'Before the second half, call how up to three end, for reputation.', 'The papers write about you too: trade rumours, MVP buzz, doubts. It moves your next free agency: more or fewer suitors, more or less money.']],
       ['Why it went this way', ['The Season tab breaks your team’s strength down: your teammates, you, and every team factor.', 'The season summary shows the same chart.']],
       ['Rival', ['One rival at a time, and it only grows: a draft classmate, then a starter at your position on a rival team, then the player you trade MVP races with.', 'Its card on Home keeps the head to head.']],
-      ['Nickname', ['At Star reputation the media gives you one, from how you look, play and live.', 'It comes with its own two-colour logo.']],
-      ['Staff', ['Turning points offer a chef, a trainer, a sleep coach and more.', 'Each is paid every season for a small edge (Player tab): stop by once a season, give a raise or let them go.']],
+      ['Nickname', ['At Star reputation the media gives you one, from how you look, play and live; the Player tab lights up with it.', 'Its two-colour logo is drawn when you sign your first brand deal.']],
+      ['Staff', ['Turning points offer a chef, a trainer, a sleep coach and more.', 'Each is paid every season for a small edge (Player tab).', 'Talk to one once a season for a little more of it (the trainer a touch of athleticism, the chef a fitter body); give a raise or let them go.']],
       ['Fines', ['Pro games can bring a fine: a technical, the referees, a late bus.', 'It comes out of the bank, and a page says how much.']],
       ['Weight', ['Every body has a best playing weight (Player tab).', 'Heavier: stronger inside, slower. Lighter: quicker, easier to push around.', 'Plans, injuries, the shop and summers move it.']],
       ['City and fans', ['Every NBA city has a culture that helps or hurts you each half.', 'Its fans add a home and playoff edge and react to wins and losses.', 'Shown on the Season tab and on every NBA offer.']],
       ['Coach trust and reputation', ['Trust steadies or splits the locker room (team strength).', 'Reputation brings better salaries, offers and trade odds.']],
       ['MVP race', ['In the NBA, once you are near the top: the leaders and how close you are.']],
       ['Playoffs and finals', ['Playable games: a tactic each quarter and the last shot of close games.', 'The last shot goes to the timing meter: a perfect release makes it much likelier to drop.', 'Switch playable games off in Settings.']],
+      ['Crunch time', ['A final within 8 points with two minutes left is yours to finish, trip by trip, on a 3-on-3 court in the arena.', 'Your ball: attack the rim, pull up, shoot the three, post up, or draw two and kick it out. Their ball: contest, help at the rim, switch, or gamble for the steal.', 'Each trip ends in a big word over the rim. Level at the buzzer: overtime, played the same way. Keys 1 to 5 pick.']],
       ['The last minutes', ['Finals, Olympic and the biggest tournament finals end on the action cam.', 'Play them (pick a move, stop the meter in the green), watch them, or skip.', 'Good timing earns a clutch rating: a little fame and mood. The result stays as played.']],
       ['Roster and fit', ['Your team’s five and bench are on the Player tab.', 'Chemistry is better when the five is balanced, or peaks where the team’s system wants it.', 'A bench better than most helps too.']],
       ['National team', ['World Cups, the Olympics, the Asian Games: medals and reputation, at the cost of rest.']],
@@ -77,8 +79,8 @@ const SECTIONS: { title: string; where: string; items: [string, string[]][] }[] 
     items: [
       ['Focus stats', ['A breakthrough season unlocks a change for that offseason; the tile glows.']],
       ['Position', ['Move one spot a summer, two if your height fits.']],
-      ['Starting five', ['NBA, once you are your team’s first option.', 'Recruit a starter for any position. The scouts weigh how he fits the roster.', 'About one recruit in four clicks: a duo, then a Big Three.']],
-      ['Team style', ['NBA starters: pick how the team plays, once a summer.', 'Each style suits some players better than others.', 'It becomes the system your roster is measured against.']],
+      ['Starting five', ['NBA, once you are your team’s first option.', 'Recruit a starter for any position. The scouts weigh how he fits the roster.', 'About one recruit in four clicks: a duo, then a Big Three.', 'A duo or Big Three ends the moment any of you changes teams; whoever stays starts over.']],
+      ['Team style', ['NBA starters: pick how the team plays, once a summer, in a talk with the coach (speech bubbles, then the new playbook).', 'Each style suits some players better than others.', 'It becomes the system your roster is measured against.']],
       ['Request a trade', ['NBA, under contract: aim for a contender, the champions, your rival...', 'The card says at once where you went, or what it cost you.']],
       ['Jersey number', ['Switch numbers between seasons. The one you retire in is the one that hangs.']],
       ['Retire, or chase a ring', ['Retire between any two seasons.', 'A veteran can first become a specialist for a contender.']],
@@ -87,7 +89,7 @@ const SECTIONS: { title: string; where: string; items: [string, string[]][] }[] 
       ['Brand deals', ['At Superstar reputation, two brands bid each summer.', 'A fixed deal, or your own signature line under your logo: an Icon gets a shoe every season.']],
       ['Shop and summer', ['Six items each summer, one from each shelf, from about 190; the richer you are, the pricier the stock.', 'Then a summer program for next season.']],
       ['Accessories', ['Headbands, sleeves, wristbands and leg sleeves in ten colours, each with a tiny effect.', 'They go on your player at once; the wardrobe on the Player tab swaps or removes them.']],
-      ['Collection', ['Everything you bought, by shelf, on the Player tab.', 'Take the car for a drive, fly the jet, go home: once a season each, a little mood.']],
+      ['Collection', ['Everything you bought, by shelf, on the Player tab.', 'Take the car for a drive, fly the jet, go home, as often as you like.', 'The first visit each season gives a small edge: a little mood and rest (and fame for a public place).']],
     ],
   },
   {
@@ -112,7 +114,7 @@ const SECTIONS: { title: string; where: string; items: [string, string[]][] }[] 
     items: [
       ['Season', ['Your team, record, game log, standings, city and fans, the bracket.']],
       ['Player', ['Ratings (shape and bars), status, kits, scouting (the projected peak stays a rough range until college).', 'Your name card (nickname and brand), then staff, wardrobe and collection side by side.', 'The body map: muscles training built, and every injury (hover or tap a red spot to see it).', 'The roster: the five, the bench, the system and how they fit.']],
-      ['League', ['Both conferences, scoring leaders, award voting, the record book.']],
+      ['League', ['Standings as win bars with every crest and the playoff line.', 'The leaders in points, rebounds and assists as bar charts, award voting as bars, the last champions’ banners, the record book.']],
       ['Records', ['The career timeline and journal, season by season, trophies, totals, highs.']],
     ],
   },
@@ -133,14 +135,15 @@ const SECTIONS: { title: string; where: string; items: [string, string[]][] }[] 
     title: 'Beyond one career',
     where: 'The start page',
     items: [
-      ['Career log', ['The career cards of your last 5 finished careers.', 'A warning at 4; when full, a new career replaces the oldest.', 'Show, download or delete any card.']],
+      ['Career log', ['The career cards of your last 10 finished careers.', 'A warning at 9; when full, a new career replaces the oldest.', 'Show, download or delete any card.']],
       ['Achievements', ['More than 500 milestones in five tiers, kept for good across careers.', 'Mini-games have their own: for the arcade itself, and for what the bonuses did for your career.', 'A banner drops in when you earn one; tap it away.', 'Ones you haven’t earned show only their name: a riddle.']],
-      ['Thank you for playing', ['The first time you leave a career for a new one: your player with the trophy, and the career’s honours around the title.']],
+      ['Thank you for playing', ['Every time you leave a career: your player with the trophy, and the career’s honours around the title.']],
+      ['What it qualifies for', ['The end-of-career page says where the career stands: its place on today’s and the all-time board, the Reality 99 hall, a statue (with the button to raise it) or how much legacy a statue still needs.']],
       ['Leaderboards', ['Today and all time, for each difficulty.', 'The top 100 players, each at their best career.', 'Ranked by career index: every season’s honours plus the best five seasons.', 'House players (marked house) keep the boards company until real careers push them down.']],
       ['Reality 99 hall', ['Every Reality hits hard career that reaches 99, seated on the benches of a hall; a bench fills before the next one opens.', 'Tap a player for the career card.']],
       ['Statue plaza', ['Regular guy careers with 150+ legacy can raise a statue: your player cast in bronze, or gold from 220 or a first-ballot Hall of Famer.', 'Up to 100 statues, with a few house statues until real ones come. Pay your respects to the others.']],
       ['Send feedback', ['Found a bug or have an idea? The bar at the foot of every tab and every mini-game sends it, with where you were; so does the Community page.', 'Online (on itch.io, or the game’s claude.ai page) it goes to the maker; on claude.ai, if the page lets you comment but not post, it opens the page’s comment box instead. Offline it stays on the device.']],
-      ['Developer', ['The card at the foot of the start page, and the Developer fold next to the feedback bar on every page, open the maker’s dev deck. It needs a password.']],
+      ['Developer', ['The card at the foot of the start page, and the Developer fold next to the feedback bar on every page, open the maker’s dev deck as a page of the game. It needs a password.', 'Back to the game returns to where you were, with the same theme and court.']],
     ],
   },
 ];
@@ -266,10 +269,10 @@ export function GuideButton() {
 // "Make the guide into an activatable mode, highlighting all steps the user has to take." With
 // guide mode on, the one thing to do next gets a glowing outline and a short note right above it.
 
-export type GuideSpot = 'main' | 'moves';
+type GuideSpot = 'main' | 'moves';
 
 /** What to do next, and where. */
-export function guideStep(g: GameState): { spot: GuideSpot; text: string } {
+function guideStep(g: GameState): { spot: GuideSpot; text: string } {
   const pr = prompt(g);
   if (pr.type === 'decision') {
     const d = pr.decision;

@@ -4,7 +4,7 @@ import { FAN_VOTE, LEVELS, MIN_GAMES_AWARD_FRAC } from '../balance';
 import type { AwardRace, League, LevelKey, StatLine, Team } from '../types';
 import { genProfile, perGame, valuePerGame } from '../sim/statModel';
 
-export interface Cand {
+interface Cand {
   id: string;
   name: string;
   team: Team;
@@ -21,7 +21,7 @@ export interface Cand {
   ovr: number;
 }
 
-export interface UserCandInput {
+interface UserCandInput {
   name: string;
   teamId: string;
   line: StatLine;

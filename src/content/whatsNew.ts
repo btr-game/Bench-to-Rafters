@@ -16,6 +16,24 @@ interface News {
 
 export const NEWS: News[] = [
   {
+    id: '2026-10-31-r28',
+    date: '31 October 2026',
+    items: [
+      { icon: 'clutch', text: 'Crunch time: a close final’s last two minutes are yours, trip by trip on a 3-on-3 court in the arena. Pick the play, call the defense, and play overtime if it ends level.' },
+      { icon: 'regular', text: 'Regular guy is easier, most of all for the archetypes that used to fall short.' },
+      { icon: 'laurel', text: 'The achievement book opens from the top bar in a career, and what this career earned is highlighted.' },
+      { icon: 'crown', text: 'Your nickname’s logo is drawn when you sign your first brand deal, and the nickname lights up the Player tab.' },
+      { icon: 'chart', text: 'The League tab in pictures: win bars with crests, the leaders and award voting as charts, the champions’ banners.' },
+      { icon: 'motion', text: 'Set the team’s style in a talk with the coach.' },
+      { icon: 'post', text: '3-on-3: MAKE, MISS, STEAL and the rest in big letters over the rim. The three-point and dunk contests have sound.' },
+      { icon: 'grind', text: 'Young players get more from Grind, Spotlight and learning from a vet; veterans from Recovery and Team first.' },
+      { icon: 'chef', text: 'A talk with your staff, and a visit to what you own (as often as you like), each give a small edge once a season.' },
+      { icon: 'superteam', text: 'Duos and Big Threes end when any of them changes teams, and look like your cute player now.' },
+      { icon: 'statue', text: 'The end of a career says what it qualifies for: the leaderboards, the Reality 99 hall, a statue. The thank-you comes every time, and the career log keeps ten.' },
+      { icon: 'globe', text: 'Every medal and chart is pixel art now.' },
+    ],
+  },
+  {
     id: '2026-10-31-share',
     date: '31 October 2026',
     items: [{ icon: 'share', text: 'Share the game: a Share button on every page gives you the link to send to a friend, or to post on X, Reddit, Facebook or WhatsApp.' }],

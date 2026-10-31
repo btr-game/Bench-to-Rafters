@@ -13,7 +13,7 @@ import { originOf } from '../../content/origins';
 import { logDecision, pushMoment, userOvr } from './common';
 import { signContract } from './offseason';
 
-export interface CountryEdge {
+interface CountryEdge {
   recruit: number; // added to the recruiting score
   youthGrowth: number; // growth multiplier at home as a teenager
   euPay: number; // EuroLeague salary multiplier

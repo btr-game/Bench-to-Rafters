@@ -12,7 +12,7 @@ const NAMES: Record<Injury['key'], string[]> = {
 /** Every injury the game can hand out, by severity (the dev deck's catalog lists them). */
 export const INJURY_NAMES = NAMES;
 
-export function injuryChance(p: UserPlayer, plan: HalfPlan | PlanDef, minutes: number): number {
+function injuryChance(p: UserPlayer, plan: HalfPlan | PlanDef, minutes: number): number {
   const fatigue = 0.5 + minutes / 60;
   // very tall bodies break down more often
   const tall = Math.max(0, p.fullHeight - HEIGHT_LIMITS.bandHi) * HEIGHT_LIMITS.tallInjury;

@@ -38,6 +38,8 @@ import { fmtMoney, ht, pct, pg, seasonLabel } from '../format';
 import { ordinal } from '../format';
 import { league as leagueOf, ovr, roleName, stageLine, team as teamOf } from '../selectors';
 import { buildWord, idealWeight, weightOf } from '../../engine/player/weight';
+import { polyCells, type Pt } from '../art/pixel';
+import { ChampionStrip, LeaderBars, StandingsBars, VoteBars } from '../components/LeagueVisuals';
 
 /** The ratings his weight is adding or taking away right now, biggest first. */
 function frameLine(p: GameState['player']): string {
@@ -316,7 +318,7 @@ function trimOf(g: GameState): string | undefined {
 }
 
 /** A page banner: art on the left, the headline, then the numbers that matter (round 14). */
-export function PageHero({ art, venue, place, arena, stripe, kicker, title, sub, color, stats, children }: { art?: ReactNode; venue: VenueKind; place?: string | null; arena?: string; stripe?: string; kicker: string; title: string; sub?: ReactNode; color?: string; stats: { k: string; v: ReactNode; tone?: 'good' | 'bad' }[]; children?: ReactNode }) {
+function PageHero({ art, venue, place, arena, stripe, kicker, title, sub, color, stats, children }: { art?: ReactNode; venue: VenueKind; place?: string | null; arena?: string; stripe?: string; kicker: string; title: string; sub?: ReactNode; color?: string; stats: { k: string; v: ReactNode; tone?: 'good' | 'bad' }[]; children?: ReactNode }) {
   return (
     <header className="page-hero" style={{ ...(color ? { ['--team' as string]: color } : {}), ...(stripe ? { ['--team2' as string]: stripe } : {}) }}>
       <VenueArt kind={venue} place={place} arena={arena} />
@@ -464,24 +466,27 @@ function CityCard({ g }: { g: GameState }) {
 
 // ---------- Player ----------
 
-/** The eight ratings as a shape, with the start of the season dashed behind it. */
+/** The eight ratings as a shape, with the start of the season behind it. Round 28 (owner: "any
+ * graphic that isnt pixels, change them"): drawn on a grid of 4-unit squares. */
 function Radar({ g, compare }: { g: GameState; compare?: Record<string, number> }) {
   const n = ATTRS.length;
   const R = 92;
   const c = 130;
-  const pt = (i: number, v: number) => {
+  const pt = (i: number, v: number): Pt => {
     const a = (Math.PI * 2 * i) / n - Math.PI / 2;
     const r = (Math.max(0, Math.min(99, v)) / 99) * R;
-    return `${(c + Math.cos(a) * r).toFixed(1)},${(c + Math.sin(a) * r).toFixed(1)}`;
+    return [c + Math.cos(a) * r, c + Math.sin(a) * r];
   };
-  const shape = (vals: (k: string) => number) => ATTRS.map((k, i) => pt(i, vals(k))).join(' ');
+  const shape = (vals: (k: string) => number): Pt[] => ATTRS.map((k, i) => pt(i, vals(k)));
+  const now = shape((k) => g.player.attrs[k as keyof typeof g.player.attrs]);
   return (
-    <svg className="radar" viewBox="0 0 260 260" role="img" aria-label="Ratings shape">
+    <svg className="radar" viewBox="0 0 260 260" role="img" aria-label="Ratings shape" shapeRendering="crispEdges">
       {[25, 50, 75, 99].map((v) => (
-        <polygon key={v} points={ATTRS.map((_, i) => pt(i, v)).join(' ')} className="ring" />
+        <path key={v} d={polyCells(ATTRS.map((_, i) => pt(i, v)), 4, 'edge')} className="ring" />
       ))}
-      {compare && <polygon points={shape((k) => compare[k])} className="was" />}
-      <polygon points={shape((k) => g.player.attrs[k as keyof typeof g.player.attrs])} className="now" />
+      {compare && <path d={polyCells(shape((k) => compare[k]), 4, 'edge')} className="was" />}
+      <path d={polyCells(now, 4, 'fill')} className="now" />
+      <path d={polyCells(now, 4, 'edge')} className="now-edge" />
       {ATTRS.map((k, i) => {
         const a = (Math.PI * 2 * i) / n - Math.PI / 2;
         const x = c + Math.cos(a) * (R + 22);
@@ -785,11 +790,12 @@ export function LeagueTab({ g }: { g: GameState }) {
           ...(last ? [{ k: 'Last champion', v: last.champion }] : []),
         ]}
       />
+      {/* round 28 (owner: "make it much more visual"): the standings as win bars, the playoff line drawn */}
       {conf.length ? (
         <div className="page-grid two">
           {conf.map((c) => (
-            <Card key={c} title={`${c}ern Conference`}>
-              <StandingsTable lg={lg} teams={lg.teams.filter((t) => t.conf === c)} userId={g.teamId} />
+            <Card key={c} title={`${c}ern Conference`} kicker="Top six to the playoffs, seven to ten to the play-in">
+              <StandingsBars lg={lg} teams={lg.teams.filter((t) => t.conf === c)} userId={g.teamId} cut={6} />
             </Card>
           ))}
         </div>
@@ -798,65 +804,28 @@ export function LeagueTab({ g }: { g: GameState }) {
           <Standings g={{ ...g, league: lg, stage: g.stage }} />
         </Card>
       )}
-      <Extra>
-      <div className="page-grid two">
-        <Card title={withLines.length ? 'Scoring leaders' : 'Top players'} kicker="Fictional players">
-          <div className="tbl-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th className="l">Player</th>
-                  <th className="l">Team</th>
-                  <th>Age</th>
-                  <th>OVR</th>
-                  {withLines.length > 0 && <th>PPG</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {leaders.map(({ p, t }, i) => (
-                  <tr key={p.id}>
-                    <td>{i + 1}</td>
-                    <td className="l">
-                      {p.name} <span className="muted">{p.pos}</span>
-                    </td>
-                    <td className="l">
-                      <span className="sw" style={{ background: t.color }} />
-                      {t.abbr}
-                    </td>
-                    <td>{p.age}</td>
-                    <td>{Math.round(p.ovr)}</td>
-                    {withLines.length > 0 && <td>{perGame(p.s!, 'pts').toFixed(1)}</td>}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      {withLines.length > 0 && (
+        <Card title="League leaders" kicker="Per game, ten games or more">
+          <div className="lg-leader-grid">
+            {(['pts', 'reb', 'ast'] as const).map((k) => (
+              <LeaderBars key={k} lg={lg} stat={k} userName={g.player.name} />
+            ))}
           </div>
         </Card>
-        {races.length > 0 ? (
+      )}
+      {g.nbaHistory.length > 0 && (
+        <Card title="Champions" kicker="The last NBA titles, newest first">
+          <ChampionStrip g={g} />
+        </Card>
+      )}
+      <Extra>
+        {races.length > 0 && (
           <Card title="Last season's award voting">
-            {races.map((r) => (
-              <div key={r.award} className="stack" style={{ gap: 4, marginBottom: 10 }}>
-                <b>{r.award === 'MVP' ? 'MVP voting' : r.award}</b>
-                <ol className="vote-list">
-                  {r.top.map((x, i) => (
-                    <li key={i} className={x.isUser ? 'me' : ''}>
-                      <span>
-                        {x.name} <span className="muted">({x.team}{x.ovr ? ` · OVR ${x.ovr}` : ''})</span>
-                      </span>
-                      {x.line && <span className="muted small">{x.line}</span>}
-                    </li>
-                  ))}
-                </ol>
-                {r.userRank && r.userRank > r.top.length ? <span className="small muted">You finished {ordinal(r.userRank)}.</span> : null}
-              </div>
-            ))}
+            <VoteBars races={races} />
+            {races.map((r) => (r.userRank && r.userRank > 5 ? <p key={r.award} className="small muted">{r.award === 'MVP' ? 'MVP' : r.award}: you finished {ordinal(r.userRank)}.</p> : null))}
           </Card>
-        ) : (
-          g.nbaHistory.length > 0 && <NbaHistoryCard g={g} />
         )}
-      </div>
-      {races.length > 0 && g.nbaHistory.length > 0 && <NbaHistoryCard g={g} />}
+        {g.nbaHistory.length > 0 && <NbaHistoryCard g={g} />}
       </Extra>
     </div>
   );
@@ -956,7 +925,7 @@ export function RecordsTab({ g }: { g: GameState }) {
         <CareerTimeline g={g} />
       </Extra>
       <div className="start-cards">
-        <AchievementsCard />
+        <AchievementsCard g={g} />
       </div>
       <Card title="Season by season" tour="season-log">
         {g.history.length === 0 ? <p className="muted">Your seasons show up here after the first one.</p> : <HistoryTable rows={g.history} />}

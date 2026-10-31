@@ -21,8 +21,8 @@ import { standings } from '../sim/leagueSim';
 import { nbaStrength } from './nbaWorld';
 import { logDecision, pushMoment, userOvr } from '../career/common';
 
-export type StoryKind = 'superteam' | 'underdog' | 'rival' | 'dynasty' | 'lastdance' | 'tank' | 'favorite' | MineKind;
-export type MineKind = 'grit' | 'chip' | 'pace' | 'bond' | 'showtime';
+type StoryKind = 'superteam' | 'underdog' | 'rival' | 'dynasty' | 'lastdance' | 'tank' | 'favorite' | MineKind;
+type MineKind = 'grit' | 'chip' | 'pace' | 'bond' | 'showtime';
 
 export interface LeagueStory {
   kind: StoryKind;
@@ -55,7 +55,7 @@ export const STORY_LABEL: Record<StoryKind, string> = {
 export const STORY = { underdog: 2, tank: -1.5, superteamFrom: 78, mineChance: 0.4, calls: 3, callRep: 2, grudgeRep: 3, showtimeRep: 3 };
 
 /** His team's possible stories: what each adds (regular season, playoffs) and how it reads. */
-export const MINE: Record<MineKind, { regular: number; playoff: number; title: (t: string) => string; text: (t: string) => string }> = {
+const MINE: Record<MineKind, { regular: number; playoff: number; title: (t: string) => string; text: (t: string) => string }> = {
   grit: { regular: 0.3, playoff: 1.2, title: (t) => `Defense travels in ${t}`, text: (t) => `The ${t} have bought in on defense. Nobody wants to see them in a seven-game series.` },
   chip: { regular: 0.8, playoff: 0.6, title: () => 'A chip on the shoulder', text: (t) => `Last season ended badly and the ${t} have not forgotten. Every practice has an edge to it.` },
   pace: { regular: 1.2, playoff: -0.3, title: () => 'Seven seconds or less', text: (t) => `The ${t} are the fastest team in the league. Great TV in January; the playoffs will slow them down.` },

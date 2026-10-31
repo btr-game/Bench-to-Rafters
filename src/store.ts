@@ -21,7 +21,7 @@ import { logCareer, type LogResult } from './ui/careerLog';
 import { checkAch, countCareer } from './ui/achievements';
 import { community } from './ui/community';
 import { importCode, newSlotId, readSlot, writeSlot } from './ui/saves';
-import { DEV } from './dev/mode';
+import { isDev } from './dev/mode';
 import { chooseLook } from './content/looks';
 import { NEWS } from './content/whatsNew';
 import { tabNews, type Spot } from './ui/tabNews';
@@ -31,7 +31,7 @@ export type Tab = 'home' | 'season' | 'player' | 'league' | 'records';
 export type Theme = 'auto' | 'light' | 'dark';
 /** The page background: plain, a hardwood floor or streetball asphalt (round 17). */
 export type Court = 'classic' | 'hardwood' | 'street';
-export type Page = 'log' | 'achievements' | 'community';
+type Page = 'log' | 'achievements' | 'community';
 export type Mini = 'hub' | 'office' | 'threes' | 'legends' | 'lab' | 'dunk' | 'street' | 'rhythm' | 'daily';
 
 /** A short interstitial between steps (not part of the saved game). */
@@ -154,7 +154,7 @@ const saveFlag = (key: string, on: boolean): void => {
  * Not in the dev deck, whose cards would all open under the tour.
  */
 function noRecord(): boolean {
-  if (DEV) return false;
+  if (isDev()) return false;
   try {
     const has = (k: string) => {
       const v = localStorage.getItem(k);
@@ -198,7 +198,7 @@ export function newsFresh(): boolean {
   }
 }
 function newsDue(): boolean {
-  if (DEV || !newsFresh()) return false;
+  if (isDev() || !newsFresh()) return false;
   if (noRecord()) {
     markNews();
     return false;
@@ -329,7 +329,6 @@ export const useStore = create<Store>((set, get) => ({
   },
   thanks: null,
   endThanks: () => {
-    saveFlag('btr-thanks-seen', true);
     set({ thanks: null });
   },
   loading: null,
@@ -566,9 +565,10 @@ export const useStore = create<Store>((set, get) => ({
   // Your careers removes one
   reset: () => {
     flushSave();
-    // round 27 (owner): the first time someone moves on to a new career, a thank-you page first
+    // round 27 (owner): a thank-you page first. Round 28 (owner: "make the thank you page appear
+    // everytime the user exits a career"): every time, not only the first
     const g = get().game;
-    const thanks = g && !g.flags.daily && g.mode !== 'lab' && !loadFlag('btr-thanks-seen') ? g : null;
+    const thanks = g && !g.flags.daily && g.mode !== 'lab' ? g : null;
     set({ game: null, slot: null, tab: 'home', transition: null, thanks });
   },
   mini: null,
@@ -683,6 +683,26 @@ export function achievementsNow(): void {
   const shown: Store['toasts'] = fresh.slice(0, 3).map((a) => ({ id: a.id, name: a.name, tier: a.tier }));
   if (fresh.length > 3) shown[2] = { ...shown[2], more: fresh.length - 3 };
   useStore.setState({ toasts: [...useStore.getState().toasts, ...shown].slice(-4) });
+}
+
+/** What is on the game's screen (round 28): set aside while the dev deck is open, then put back.
+ * The theme and the court are left out, since the deck shares them with the game. */
+export type View = Partial<Store>;
+export function viewNow(): View {
+  return Object.fromEntries(Object.entries(useStore.getState()).filter(([k, v]) => typeof v !== 'function' && k !== 'theme' && k !== 'court' && k !== 'loading')) as View;
+}
+/** The start page as the game's own storage has it (the deck was opened before the game was). */
+export function startView(): View {
+  return { game: null, tab: 'home', page: null, mini: null, transition: null, daily: null, toasts: [], thanks: null, spots: null, intro: false, news: false, slot: null, seen: {}, logged: null, tour: false, simple: loadFlag('btr-simple'), master: loadFlag('btr-master'), guide: loadFlag('btr-guide-mode') };
+}
+/** Settles what is waiting to be written as the deck opens (`flush`: the game's last move is
+ * saved where it belongs) or closes (dropped: nothing of the deck's reaches the game). */
+export function settle(flush: boolean): void {
+  if (achTimer) clearTimeout(achTimer);
+  achTimer = null;
+  if (flush && saveTimer) flushSave();
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = null;
 }
 
 // closing the tab inside the half second still keeps the last move

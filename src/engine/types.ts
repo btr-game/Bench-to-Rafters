@@ -21,7 +21,7 @@ export interface Injury {
 }
 
 /** Round 22: one injury of his career. */
-export interface InjuryRecord {
+interface InjuryRecord {
   age: number;
   year?: number;
   name: string;
@@ -68,7 +68,7 @@ export interface GameLog {
   post?: string; // round name in postseason
 }
 
-export interface Program {
+interface Program {
   id: string;
   name: string;
   seasonsLeft: number;
@@ -155,6 +155,7 @@ export interface Nickname {
   why: string;
   reasons: string[]; // what the picker saw in him
   year: number;
+  logo?: boolean; // round 28: the logo is out (it comes with his first brand deal)
 }
 
 export interface StaffMember {
@@ -274,7 +275,7 @@ export interface AwardRace {
   top: { name: string; team: string; value: number; line?: string; ovr?: number; isUser?: boolean }[];
 }
 
-export interface AwardWin {
+interface AwardWin {
   year: number;
   level: LevelKey;
   key: string; // e.g. 'MVP', 'ALLNBA1', 'TITLE'
@@ -320,7 +321,7 @@ export interface TourneyRecord {
   notes?: string[];
 }
 
-export interface DecisionLogEntry {
+interface DecisionLogEntry {
   year: number;
   age: number;
   kind: string;
@@ -439,7 +440,7 @@ export interface Rivalry {
   ended?: string; // why it ended (he retired)
 }
 
-export interface DraftResult {
+interface DraftResult {
   year: number;
   picks: DraftPick[];
   userPick: number | null;
@@ -480,7 +481,8 @@ export interface Moment {
   // round 15: how the page celebrates (or doesn't) once any game reel has finished
   mood?: 'champion' | 'gold' | 'silver' | 'bronze' | 'heartbreak' | 'out';
   duo?: boolean; // round 22: the page where a duo forms shows the two of them
-  logo?: string; // round 25: a nickname's logo (content/nicknames.ts id)
+  logo?: string; // round 25: a nickname's logo (content/nicknames.ts id); round 28: shown when his first brand deal draws it
+  nick?: string; // round 28: the day the media names him (the name alone; the logo waits for a brand)
 }
 
 export interface GameState {

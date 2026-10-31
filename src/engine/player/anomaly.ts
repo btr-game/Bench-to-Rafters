@@ -6,7 +6,7 @@ import { ANOMALY, CAP_MAX } from '../balance';
 import { chance, clamp, pick, type Rng } from '../rng';
 import type { AttrKey, Pos, UserPlayer } from '../types';
 
-export interface Anomaly {
+interface Anomaly {
   name: string;
   text: string;
   pos: Pos[];

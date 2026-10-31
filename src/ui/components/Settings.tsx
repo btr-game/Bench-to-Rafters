@@ -77,10 +77,11 @@ export function SettingsMenu({ g }: { g: GameState | null }) {
   return (
     <div className="set-wrap" ref={box}>
       <button className="icon-btn" data-tour="settings-btn" aria-expanded={open} aria-haspopup="true" onClick={() => setOpen(!open)}>
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" aria-hidden="true">
-          <path d="M4 7h10M18 7h2M4 17h4M12 17h8" />
-          <circle cx="16" cy="7" r="2" />
-          <circle cx="10" cy="17" r="2" />
+        {/* round 28: two sliders on a 12x12 pixel grid */}
+        <svg viewBox="-1 -1 14 14" width="18" height="18" fill="currentColor" shapeRendering="crispEdges" aria-hidden="true">
+          {['............', '.......##...', '.##########.', '.......##...', '............', '............', '............', '...##.......', '.##########.', '...##.......', '............', '............'].flatMap((row, y) =>
+            [...row].map((c, x) => (c === '#' ? <rect key={`${x}-${y}`} x={x} y={y} width={1} height={1} /> : null)),
+          )}
         </svg>
         <span className="hide-narrow">Settings</span>
       </button>
@@ -247,5 +248,5 @@ export function useKeys(active: boolean) {
 }
 
 function choices(): HTMLElement[] {
-  return [...document.querySelectorAll<HTMLElement>('.o-main button.choice:not(:disabled):not([data-enter]), .o-main button.offer, .o-main button.item:not(:disabled)')].slice(0, CHOICE_KEYS.length);
+  return [...document.querySelectorAll<HTMLElement>('.o-main button.choice:not(:disabled):not([data-enter]), .o-main button.offer, .o-main button.item:not(:disabled), .o-main button.role-card')].slice(0, CHOICE_KEYS.length);
 }

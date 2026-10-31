@@ -1,7 +1,8 @@
 // Thank you for playing (round 27, owner: "for first starters, let's add a thank you for playing
 // page when they start a new career (either because they've retired ... or when they quit and start
 // a new career). this should also have a background animation. crowds cheering, and the avatar is
-// holding up a trophy"). Once, the first time someone leaves a career for a new one.
+// holding up a trophy"). Round 28 (owner: "make the thank you page appear everytime the user exits a
+// career"): every time someone leaves a career, not only the first.
 
 import { useEffect, useMemo } from 'react';
 import type { GameState } from '../../engine/types';

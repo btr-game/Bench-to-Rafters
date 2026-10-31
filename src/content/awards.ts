@@ -1,7 +1,7 @@
 // How each award looks and what it means (playtest round 6): a category colour, an icon and
 // a one-line description, so the trophy cabinet reads at a glance.
 
-export type AwardCat = 'title' | 'mvp' | 'series' | 'team' | 'defense' | 'rookie' | 'skills' | 'country' | 'school';
+type AwardCat = 'title' | 'mvp' | 'series' | 'team' | 'defense' | 'rookie' | 'skills' | 'country' | 'school';
 
 export const AWARD_CATS: Record<AwardCat, { name: string; color: string }> = {
   title: { name: 'Championship', color: '#B8860B' },
@@ -68,7 +68,7 @@ const A: Record<string, [AwardCat, string]> = {
 /** Every award key (the dev deck's catalog lists them). */
 export const AWARD_KEYS = Object.keys(A);
 
-export interface AwardLook {
+interface AwardLook {
   cat: AwardCat;
   color: string;
   desc: string;

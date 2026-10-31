@@ -8,7 +8,9 @@
 // Both grow as the duo matures. It ends when either of them leaves the team.
 // Round 22: a Big Three. When a second recruit's bond fills while the duo stands, he joins them:
 // the team gets another chemistry bonus, his game a little more efficiency and more assists, and
-// a few fewer shots (three stars share the ball). It breaks back into a duo if one of them leaves.
+// a few fewer shots (three stars share the ball). Round 28 (owner: "make sure duos or big threes
+// break apart when any of the three move teams"): when any of them leaves, him included, the whole
+// group is over at once; a teammate who stays starts his bond again.
 // Nothing about the spark is shown; the only clues are the lines in the summer notes.
 
 import { DUO } from '../balance';
@@ -57,22 +59,57 @@ export function meetRecruit(s: GameState, p: GenPlayer): void {
   (s.bonds ??= []).push({ id: p.id, name: p.name, pos: p.pos, spark: clamp(spark, 0, 1), bond: 0, seasons: 0 });
 }
 
-/** The duo he has right now (formed, and both still on the team). */
+const formedOf = (s: GameState): Bond[] => (s.bonds ?? []).filter((b) => b.formed !== undefined);
+const onTeam = (s: GameState, b: Bond): boolean => {
+  const t = s.stage === 'NBA' ? teamById(s.nba, s.teamId) : null;
+  return !!t && t.roster.some((x) => x.id === b.id);
+};
+
+/** The duo he has right now: formed, and everyone in it (a Big Three's third man too) still on his team. */
 export function activeDuo(s: GameState): Bond | null {
-  if (s.stage !== 'NBA') return null;
-  const t = teamById(s.nba, s.teamId);
-  if (!t) return null;
-  const here = (s.bonds ?? []).filter((b) => b.formed !== undefined && t.roster.some((x) => x.id === b.id));
-  // if the duo partner left, the third man of a Big Three is his duo now
-  return here.find((b) => !b.trio) ?? here[0] ?? null;
+  const f = formedOf(s);
+  if (!f.length || f.some((b) => !onTeam(s, b))) return null;
+  return f.find((b) => !b.trio) ?? f[0];
 }
 
 /** The third member of his Big Three, when all three are still together. */
 export function activeTrio(s: GameState): Bond | null {
   const d = activeDuo(s);
-  const t = teamById(s.nba, s.teamId);
-  if (!d || !t) return null;
-  return (s.bonds ?? []).find((b) => b.id !== d.id && b.formed !== undefined && t.roster.some((x) => x.id === b.id)) ?? null;
+  return d ? (formedOf(s).find((b) => b.id !== d.id) ?? null) : null;
+}
+
+/** Someone in his duo or Big Three has gone (or he has): the group ends, all of it, with one page.
+ * Called after each season, and the moment he is traded (round 28). */
+export function breakGroup(s: GameState): void {
+  const formed = formedOf(s);
+  const gone = formed.filter((b) => !onTeam(s, b));
+  if (!formed.length || !gone.length) return;
+  const stay = formed.filter((b) => onTeam(s, b));
+  const name = formed.find((b) => b.trio)?.nick ?? formed[0].nick ?? 'The duo';
+  const seasons = Math.max(...formed.map((b) => b.seasons));
+  const mine = s.stage === 'NBA' ? teamById(s.nba, s.teamId) : null;
+  const moved = gone.length === formed.length && !stay.length;
+  const where = (b: Bond) => s.nba?.teams.find((x) => x.roster.some((y) => y.id === b.id));
+  const why = moved && (gone.every((b) => where(b)?.id !== s.teamId))
+    ? mine
+      ? `You play for the ${mine.name} now.`
+      : 'You are on a different team now.'
+    : gone.map((b) => (where(b) ? `${b.name} plays for the ${where(b)!.name} now.` : `${b.name} has moved on.`)).join(' ');
+  logDecision(s, 'duo', `${name} split up after ${seasons} season${seasons === 1 ? '' : 's'} together.`);
+  pushMoment(s, {
+    kind: 'event',
+    title: `${name}: the end`,
+    color: '#4A4F57',
+    text: `${why} ${seasons} season${seasons === 1 ? '' : 's'} together, and nobody will forget how it looked.`,
+    lines: [formed.length > 1 ? 'The Big Three bonus is gone' : 'The duo bonus is gone', stay.length ? `You and ${stay.map((b) => b.name).join(' and ')} start over` : 'A new recruit could spark another one'],
+  });
+  for (const b of stay) {
+    b.formed = undefined;
+    b.trio = undefined;
+    b.nick = undefined;
+    b.bond = Math.min(b.bond, DUO.restart);
+  }
+  s.bonds = (s.bonds ?? []).filter((b) => !gone.includes(b));
 }
 
 /**
@@ -117,21 +154,9 @@ export function growBonds(s: GameState, last: SeasonRecord | null): void {
   if (!s.bonds?.length) return;
   // careers saved before round 22 can hold two bonds with the same teammate: keep the further one
   s.bonds = s.bonds.filter((b, i, all) => !all.some((o, j) => o.id === b.id && j !== i && (o.formed !== undefined && b.formed === undefined ? true : o.bond > b.bond || (o.bond === b.bond && j < i))));
-  const t = teamById(s.nba, s.teamId);
-  const here = (b: Bond) => s.stage === 'NBA' && !!t && t.roster.some((x) => x.id === b.id);
+  breakGroup(s);
   for (const b of [...s.bonds]) {
-    if (!here(b)) {
-      if (b.formed !== undefined) {
-        const now = s.nba?.teams.find((x) => x.roster.some((y) => y.id === b.id));
-        logDecision(s, 'duo', `${b.nick} split up after ${b.seasons} season${b.seasons === 1 ? '' : 's'} together.`);
-        pushMoment(s, {
-          kind: 'event',
-          title: `${b.nick}: the end`,
-          color: '#4A4F57',
-          text: `${now ? `${b.name} plays for the ${now.name} now.` : `You and ${b.name} are on different teams now.`} ${b.seasons} season${b.seasons === 1 ? '' : 's'} together, and nobody will forget how it looked.`,
-          lines: ['The duo bonus is gone', 'A new recruit could spark another one'],
-        });
-      }
+    if (!onTeam(s, b)) {
       s.bonds = s.bonds.filter((x) => x !== b);
       continue;
     }

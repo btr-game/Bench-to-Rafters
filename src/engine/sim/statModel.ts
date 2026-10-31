@@ -53,7 +53,7 @@ const kneed = (r: number): number => (r > USAGE_KNEE.at ? USAGE_KNEE.at + (r - U
 
 export const genUsageWeight = (g: GenPlayer): number => Math.exp(kneed(SHAPE_SCORE[g.pos][g.shape] + g.ovr) / USAGE_TEMP);
 
-export function scoringRating(a: Attrs): number {
+function scoringRating(a: Attrs): number {
   const w = USAGE_SCORING_W;
   return a.SHT * w.SHT + a.FIN * w.FIN + a.PLY * w.PLY + a.ATH * w.ATH + a.IQ * w.IQ;
 }

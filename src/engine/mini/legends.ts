@@ -40,9 +40,9 @@ const COUNTER: Record<Plan, Style> = { pace: 'paint', lock: 'shooting', paint: '
 // more (-0.8 to -1.0), your player counts twice instead of three times, and his form swings more
 export const LEGENDS = { counter: 1.4, wrong: -1.0, starGap: 0.3, scale: 6, squeeze: 0.65, rookieWeight: 2, formSd: 2.5, startOvr: 72, growShare: [0.35, 0.4, 0.5, 0.7], breakthrough: 0.12, setback: 0.08 };
 // chemistry (round 15): how your player fits the franchise’s identity and the four next to him
-export const CHEM = { fits: 0.8, hole: 0.5, crowd: -0.7, position: -0.5, alpha: -0.4, max: 1.5 };
+const CHEM = { fits: 0.8, hole: 0.5, crowd: -0.7, position: -0.5, alpha: -0.4, max: 1.5 };
 // a super-rookie's ceiling: the Shoot for the stars model, a notch higher (median about 92)
-export const ROOKIE_POT = { ...MODES.stars.potential, base: 86, sigma: 0.5, min: 88, max: 99 };
+const ROOKIE_POT = { ...MODES.stars.potential, base: 86, sigma: 0.5, min: 88, max: 99 };
 
 export type Focus = LegendSpot['tag'];
 export const FOCUS_LABEL: Record<Focus, { name: string; text: string }> = {
@@ -75,7 +75,7 @@ export interface LTeam {
   l: number;
 }
 
-export interface LSeries {
+interface LSeries {
   round: string;
   a: string; // higher seed
   b: string;
@@ -160,7 +160,7 @@ function styleOf(five: LegendSpot[]): Style {
 }
 
 /** Team rating: the five's average, plus a little for balance (a creator, a big, a shooter, a stopper). */
-export function ratingOf(five: LegendSpot[]): number {
+function ratingOf(five: LegendSpot[]): number {
   const w = (p: LegendSpot) => (p.rookie ? LEGENDS.rookieWeight : 1);
   const avg = five.reduce((a, p) => a + p.ovr * w(p), 0) / five.reduce((a, p) => a + w(p), 0);
   const has = (t: LegendSpot['tag']) => five.some((p) => p.tag === t);

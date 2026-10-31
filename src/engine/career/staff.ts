@@ -1,7 +1,7 @@
 // Personal staff (round 25). A staff member is hired in an event (the hire events in
 // events/round25.ts, and the old events that offered a nutritionist or a sports psychologist),
 // is paid every season out of the bank, and gives a very small benefit; he can be talked to once
-// a season, given a raise (a bigger benefit for more pay, up to level 3), or let go. If the bank
+// a season (a share of that benefit on the spot, round 28), given a raise (a bigger benefit for more pay, up to level 3), or let go. If the bank
 // cannot pay him, he leaves.
 
 import { ATTR_MAX, STAFF_PAY } from '../balance';
@@ -31,6 +31,46 @@ export function hireStaff(s: GameState, role: StaffRole): StaffMember | null {
 
 const bump = (s: GameState, k: AttrKey, v: number) => (s.player.attrs[k] = clamp(s.player.attrs[k] + v, 15, ATTR_MAX));
 
+/** What he does for him, at `k` times his level-1 benefit (the season's work, or a talk's share of it). */
+function staffEffect(s: GameState, m: StaffMember, k: number): void {
+  const p = s.player;
+  switch (m.role) {
+    case 'chef':
+      p.morale = adjust(p.morale, 1 * k);
+      changeWeight(p, (idealWeight(p.height, p.age) - weightOf(p)) * 0.08 * k, 0.25);
+      break;
+    case 'nutritionist':
+      changeWeight(p, (idealWeight(p.height, p.age) - weightOf(p)) * 0.15 * k, 0.25);
+      p.declineMultNext *= 1 - 0.01 * k;
+      break;
+    case 'trainer':
+      bump(s, 'ATH', 0.3 * k);
+      break;
+    case 'physio':
+      p.injuryMultNext *= 1 - 0.03 * k;
+      p.wear = Math.max(0, (p.wear ?? 0) - 1 * k);
+      break;
+    case 'shooting':
+      bump(s, 'SHT', 0.3 * k);
+      p.range = clamp(p.range + 0.4 * k, 0, 99);
+      break;
+    case 'skills':
+      bump(s, 'PLY', 0.3 * k);
+      p.offhand = clamp(p.offhand + 0.5 * k, 0, 99);
+      break;
+    case 'psychologist':
+      p.morale = adjust(p.morale, 2 * k);
+      break;
+    case 'analyst':
+      bump(s, 'IQ', 0.3 * k);
+      break;
+    case 'sleep':
+      p.declineMultNext *= 1 - 0.015 * k;
+      p.injuryMultNext *= 1 - 0.01 * k;
+      break;
+  }
+}
+
 /** At season's end: everyone is paid, and does his small part. */
 export function payStaff(s: GameState): string[] {
   const p = s.player;
@@ -44,42 +84,7 @@ export function payStaff(s: GameState): string[] {
     }
     p.bank -= pay;
     m.paid += pay;
-    const k = STAFF_PAY.effect[m.level - 1];
-    switch (m.role) {
-      case 'chef':
-        p.morale = adjust(p.morale, 1 * k);
-        changeWeight(p, (idealWeight(p.height, p.age) - weightOf(p)) * 0.08 * k, 0.25);
-        break;
-      case 'nutritionist':
-        changeWeight(p, (idealWeight(p.height, p.age) - weightOf(p)) * 0.15 * k, 0.25);
-        p.declineMultNext *= 1 - 0.01 * k;
-        break;
-      case 'trainer':
-        bump(s, 'ATH', 0.3 * k);
-        break;
-      case 'physio':
-        p.injuryMultNext *= 1 - 0.03 * k;
-        p.wear = Math.max(0, (p.wear ?? 0) - 1 * k);
-        break;
-      case 'shooting':
-        bump(s, 'SHT', 0.3 * k);
-        p.range = clamp(p.range + 0.4 * k, 0, 99);
-        break;
-      case 'skills':
-        bump(s, 'PLY', 0.3 * k);
-        p.offhand = clamp(p.offhand + 0.5 * k, 0, 99);
-        break;
-      case 'psychologist':
-        p.morale = adjust(p.morale, 2 * k);
-        break;
-      case 'analyst':
-        bump(s, 'IQ', 0.3 * k);
-        break;
-      case 'sleep':
-        p.declineMultNext *= 1 - 0.015 * k;
-        p.injuryMultNext *= 1 - 0.01 * k;
-        break;
-    }
+    staffEffect(s, m, STAFF_PAY.effect[m.level - 1]);
   }
   return notes;
 }
@@ -90,7 +95,10 @@ export function talkStaff(s: GameState, id: number): string | null {
   if (!m || m.talked === s.year) return null;
   m.talked = s.year;
   s.player.morale = adjust(s.player.morale, STAFF_PAY.talk);
-  return pick(s.rng, STAFF[m.role].talk);
+  // round 28 (owner: "when talking to staff, i think there should be a small advantage"): the talk
+  // does a share of his season's work on the spot
+  staffEffect(s, m, STAFF_PAY.effect[m.level - 1] * STAFF_PAY.talkShare);
+  return `${pick(s.rng, STAFF[m.role].talk)} ${STAFF[m.role].edge}`;
 }
 
 /** A raise: one level up, more pay, more help. */

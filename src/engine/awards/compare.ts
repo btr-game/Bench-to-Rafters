@@ -14,7 +14,7 @@ import { LEGENDS, type Legend } from '../../content/legends';
 import { count } from './legacy';
 import { NAMES } from '../../content/strings';
 
-export const COMPARE_MIN_OVR = 80;
+const COMPARE_MIN_OVR = 80;
 
 type Vec = number[];
 
@@ -120,7 +120,7 @@ export function rankModelFit(): { r2: number; spearman: number } {
 
 // ---------- the player's career ----------
 
-export function careerOf(s: GameState): Career | null {
+function careerOf(s: GameState): Career | null {
   const rows = s.history.filter((h) => h.level === 'NBA' && h.line.gp > 0);
   if (rows.length === 0) return null;
   const tot = rows.reduce((t, h) => ({ gp: t.gp + h.line.gp, pts: t.pts + h.line.pts, reb: t.reb + h.line.reb, ast: t.ast + h.line.ast }), { gp: 0, pts: 0, reb: 0, ast: 0 });
@@ -143,7 +143,7 @@ export function careerOf(s: GameState): Career | null {
   };
 }
 
-export interface Comparison {
+interface Comparison {
   eligible: boolean;
   reason?: string;
   rank?: number; // projected all-time rank (may be above 100)

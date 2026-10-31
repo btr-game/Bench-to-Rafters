@@ -1,4 +1,5 @@
-// The career log (round 24): the career cards of the last five finished careers, on this device.
+// The career log (round 24): the career cards of the last ten finished careers (five before round
+// 28), on this device.
 
 import { FootBar } from '../components/FootBar';
 import { useEffect, useState } from 'react';

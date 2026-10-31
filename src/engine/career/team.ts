@@ -15,7 +15,7 @@ import { chance, clamp, int, pick, range } from '../rng';
 import type { GameState, League, Team } from '../types';
 import { adjust, logDecision, ordinal, pushMoment, teamById, userOvr } from './common';
 import { currentStyle, fitLabel, styleEffect, styleFit, TEAM_STYLES } from './identity';
-import { duoEffect } from './duo';
+import { duoEffect, breakGroup } from './duo';
 import { FAN_CULTURES } from './fanCulture';
 import { rosterFit } from './roster';
 import { takePressFx } from './press';
@@ -242,6 +242,7 @@ export function requestTrade(s: GameState, aim: TradeAim = 'better'): void {
   s.player.morale = adjust(s.player.morale, 6);
   if (aim === 'rival') s.player.rep = clamp(s.player.rep + 4, 0, 100);
   logDecision(s, 'trade', `Traded from the ${from.name} to the ${to.name} at his request (${TRADE_AIM[aim].label.toLowerCase()}).`, to.id);
+  breakGroup(s); // round 28: a duo or Big Three ends with the trade
   const extra = aim === 'rival' ? ['The rivalry is personal now (reputation +4)'] : aim === 'needed' ? ['They will build around you'] : aim === 'champion' ? ['Joining the champions'] : [];
   pushMoment(s, { kind: 'commit', title: 'Traded', teamName: to.name, color: to.color, text: `You asked out, and the ${from.name} found a deal. You are a member of the ${to.name}.`, lines: [`Roster rank: ${rosterRank(nba, to.id)} of ${nba.teams.length}`, 'Same contract, new team', ...extra] });
   s.toast = `Traded to the ${to.name}.`;
@@ -250,7 +251,7 @@ export function requestTrade(s: GameState, aim: TradeAim = 'better'): void {
 
 // ---------- winning players ----------
 
-export interface WinningEdge {
+interface WinningEdge {
   regular: number; // team strength at full minutes, regular season
   playoff: number; // ...and in the postseason, where defense and decisions matter more
   traits: string[];

@@ -38,13 +38,13 @@ export function playoffTeamIds(s: GameState): Set<string> {
   return set;
 }
 
-export interface UserProspect {
+interface UserProspect {
   board: number;
   prospect: Prospect;
 }
 
 /** The user's prospect card for this year's draft. */
-export function userProspect(s: GameState): UserProspect {
+function userProspect(s: GameState): UserProspect {
   const p = s.player;
   const ovr = ovrOf(p.attrs, p.pos);
   const last = s.history[s.history.length - 1];

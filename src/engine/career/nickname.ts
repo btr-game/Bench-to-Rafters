@@ -160,7 +160,9 @@ export function awardNickname(s: GameState, color: string, teamName: string): vo
     color,
     teamName,
     lines: p.nickname.reasons.length ? [`They noticed ${p.nickname.reasons.join(', ')}.`] : [],
-    logo: p.nickname.id,
+    // round 28 (owner: "instead of giving the nickname and its icon at the same time, reveal the icon
+    // when the player gets a brand signing"): the name alone today
+    nick: p.nickname.name,
   });
 }
 
@@ -204,7 +206,19 @@ export function resolveBrand(s: GameState, d: Decision, choiceId: string): strin
   const [kind, brand] = choiceId.split(':') as ['deal' | 'line', string];
   const colors = (d.data?.colors ?? {}) as Record<string, string>;
   const years = kind === 'deal' ? BRAND.deal.years : BRAND.line.years;
+  const first = !p.brand;
   p.brand = { brand, color: colors[brand] ?? '#343A40', kind, years, left: years, perYear: kind === 'deal' ? Number(d.data?.deal ?? 0) : lineBase(s), since: s.year + 1, earned: p.brand?.earned ?? 0, shoe: p.brand?.shoe ?? 0 };
+  // round 28: his first deal draws his logo, and the page shows it for the first time
+  if (first && p.nickname && !p.nickname.logo) {
+    p.nickname.logo = true;
+    pushMoment(s, {
+      kind: 'event',
+      title: 'Your logo',
+      text: `${brand} draws it up: ${p.nickname.name}, on ${kind === 'deal' ? 'everything they make' : 'your own line'}.`,
+      color: p.brand.color,
+      logo: p.nickname.id,
+    });
+  }
   return kind === 'deal' ? `You signed with ${brand}: your logo on everything they make for ${years} seasons.` : `${brand} launches your signature line.`;
 }
 

@@ -203,7 +203,6 @@ export function Retirement({ g }: { g: GameState }) {
           </div>
         ) : null}
         <LoggedNote />
-        {!g.flags.daily && g.mode !== 'lab' && <CommunityNote rec={rec} />}
         {hof && <div className="toast">{hof === 'first' ? 'Inducted into the Hall of Fame on the first ballot.' : 'Inducted into the Hall of Fame.'}</div>}
         <div className="row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
           <CardActions rec={rec} />
@@ -212,6 +211,8 @@ export function Retirement({ g }: { g: GameState }) {
           </button>
         </div>
       </section>
+      {/* round 28: what the career means for the community, as a card of its own right under the verdict */}
+      {!g.flags.daily && g.mode !== 'lab' && <CommunityNote rec={rec} />}
       <NbaTeams g={g} />
       <RaftersSummary
         g={g}

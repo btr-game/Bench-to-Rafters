@@ -17,8 +17,7 @@ import {
   type Mode,
   type SkewDist,
   REROLL_SPREAD,
-  SCOUT_NOISE,
-} from '../balance';
+  SCOUT_NOISE, ARCH_CEILING } from '../balance';
 import { chance, clamp, int, next, normal, range, weightedIndex, type Rng } from '../rng';
 import type { AttrKey, Attrs, Pos, UserPlayer } from '../types';
 import { ARCHETYPES } from './archetypes';
@@ -98,7 +97,8 @@ function buildPlayer(rng: Rng, input: CreateInput): UserPlayer {
   // some 14-year-olds are nearly done growing, others have half a foot to go
   const height = fullHeight - weightedPick(rng, [[1, 2], [2, 3], [3, 3], [4, 2], [5, 1.2], [6, 0.8], [7, 0.4]]);
   const mode = MODES[input.mode ?? 'standard'];
-  const potential = drawPotential(rng, mode.potential);
+  // round 28: the archetypes that peaked lowest start with a little more ceiling (ARCH_CEILING)
+  const potential = Math.min(99, drawPotential(rng, mode.potential) + (input.mode === 'lab' ? 0 : (ARCH_CEILING[arch.name] ?? 0)));
   const caps = {} as Attrs;
   // the ceiling comes from the card, so a head start does not raise it
   for (const k of ATTRS) caps[k] = clamp(potential + (card[k] - 40) * CAP_FROM_START, 30, CAP_MAX);
@@ -167,7 +167,7 @@ export function heightExtreme(h: number): number {
   return h < HEIGHT_LIMITS.bandLo ? h - HEIGHT_LIMITS.bandLo : h > HEIGHT_LIMITS.bandHi ? h - HEIGHT_LIMITS.bandHi : 0;
 }
 
-export function gradeFor(p: number): string {
+function gradeFor(p: number): string {
   if (p >= 88) return 'A+';
   if (p >= 84) return 'A';
   if (p >= 80) return 'A−';

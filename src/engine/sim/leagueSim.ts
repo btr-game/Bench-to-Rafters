@@ -149,7 +149,7 @@ function runBracket(
 }
 
 /** Standard bracket order for n = 2^k seeds: [0, n-1, n/2-1, n/2, ...]. */
-export function bracketOrder(n: number): number[] {
+function bracketOrder(n: number): number[] {
   let order = [0];
   while (order.length < n) {
     const m = order.length * 2;

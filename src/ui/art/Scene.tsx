@@ -489,9 +489,20 @@ function Celebrate({ c, kit, name, number, accent, x, y, scale }: { c: Cheer; ki
           </g>
         ) : (
           <g className="cel-chomp">
-            <path d="M14 21L18 17M22 21L19 17" stroke="#1C7ED6" strokeWidth="1.2" />
-            <circle cx="18.5" cy="17.5" r="2.6" fill={medal[0]} stroke="#18141C" strokeWidth="0.6" />
-            <circle cx="18.5" cy="17.5" r="1.3" fill="none" stroke={medal[1]} strokeWidth="0.6" />
+            {/* round 28: the medal he bites, on the pixel grid (it was two smooth circles) */}
+            {[
+              [14, 20],
+              [15, 19],
+              [16, 18],
+              [22, 20],
+              [21, 19],
+              [20, 18],
+            ].map(([x, y]) => (
+              <rect key={`r${x}`} x={x} y={y} width={1} height={1} fill="#1C7ED6" />
+            ))}
+            {['.OOO.', 'OMMMO', 'OMHMO', 'OMMMO', '.OOO.'].flatMap((row, y) =>
+              [...row].map((ch, x) => (ch === '.' ? null : <rect key={`m${x}-${y}`} x={16 + x} y={15 + y} width={1} height={1} fill={ch === 'O' ? '#18141C' : ch === 'H' ? medal[1] : medal[0]} />)),
+            )}
           </g>
         )}
         {[

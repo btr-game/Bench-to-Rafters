@@ -12,7 +12,7 @@ import { count, hallOfFame, legacyScore, nbaCareerPoints, raftersTeams } from '.
 
 export type TierKey = 'S' | 'A' | 'B' | 'C' | 'D';
 
-export interface TierItem {
+interface TierItem {
   key: string; // award key, or HOF / RAFTERS
   label: string;
   pts: number;
@@ -115,7 +115,7 @@ export function legacyIndex(s: GameState): number {
  * titles won as a key player, so those use the average weight; every top-100 player is in
  * the Hall of Fame (the top 40 as first-ballot picks) with one jersey in the rafters.
  */
-export function legendIndex(l: Legend): number {
+function legendIndex(l: Legend): number {
   const titlesKey = Math.min(l.titles, l.fmvp + (l.allNba1 > 0 ? 1 : 0));
   const pts =
     l.mvp * LEGACY.mvp +
@@ -134,7 +134,7 @@ export function legendIndex(l: Legend): number {
 
 const LEGEND_PTS = LEGENDS.map((l) => ({ name: l.name, pts: legendIndex(l) })).sort((a, b) => b.pts - a.pts);
 
-export interface LegacyRank {
+interface LegacyRank {
   pts: number;
   rank: number; // among the 100 legends plus him; 101 means outside the top 100
   above: { name: string; pts: number } | null; // the legend just ahead

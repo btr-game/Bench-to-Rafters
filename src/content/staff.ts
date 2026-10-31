@@ -13,6 +13,7 @@ interface StaffDef {
   does: string; // what he does for you, in words
   pitch: string; // the event that offers him
   talk: string[];
+  edge: string; // round 28: what a talk does for him, in words (shown after what he says)
 }
 
 export const STAFF: Record<StaffRole, StaffDef> = {
@@ -24,6 +25,7 @@ export const STAFF: Record<StaffRole, StaffDef> = {
     does: 'Keeps you near your playing weight and in a good mood.',
     pitch: 'A chef who cooked for two championship teams wants to run your kitchen full-time.',
     talk: ['"Salmon tonight. And no, the fries are not a vegetable."', '"Your mother sent me her recipe. I made it better. Do not tell her."', '"Eat the greens first. Then we talk about dessert."'],
+    edge: '(A small edge: in better spirits, and his weight closer to ideal.)',
   },
   nutritionist: {
     role: 'nutritionist',
@@ -33,6 +35,7 @@ export const STAFF: Record<StaffRole, StaffDef> = {
     does: 'Plans what you eat, so the weight stays where it should and the body ages slower.',
     pitch: 'A nutritionist offers to plan every meal you eat, all year.',
     talk: ['"Your bloodwork is the best on the team. Keep it that way."', '"Hydration is a skill. Drink."', '"Sugar after the game, not before. Trust me."'],
+    edge: '(A small edge: his weight closer to ideal, and a body that ages a touch slower.)',
   },
   trainer: {
     role: 'trainer',
@@ -42,6 +45,7 @@ export const STAFF: Record<StaffRole, StaffDef> = {
     does: 'A little more athleticism every season.',
     pitch: 'A strength trainer with a waiting list has an opening, if you want him all year.',
     talk: ['"Three more. You said that last time. Three more."', '"Your vertical is up an inch. Do not get excited. Squat."', '"Rest day tomorrow. I mean it."'],
+    edge: '(A small edge: a touch more athleticism.)',
   },
   physio: {
     role: 'physio',
@@ -51,6 +55,7 @@ export const STAFF: Record<StaffRole, StaffDef> = {
     does: 'Fewer injuries, and less wear on the body.',
     pitch: 'A physiotherapist who kept a veteran playing to 40 offers to travel with you.',
     talk: ['"The left knee is talking again. We listen to it."', '"Ice, then the bands, then sleep."', '"Your hamstrings are tighter than the team’s budget."'],
+    edge: '(A small edge: fresher legs, and a little less injury risk.)',
   },
   shooting: {
     role: 'shooting',
@@ -60,6 +65,7 @@ export const STAFF: Record<StaffRole, StaffDef> = {
     does: 'A little better shooting and a little more range every season.',
     pitch: 'A shooting coach who rebuilt three NBA jumpers wants to work with you every day.',
     talk: ['"Elbow in. Follow through. Hold it until it drops."', '"Five hundred makes, not five hundred shots."', '"You dip the ball on the catch. Stop it."'],
+    edge: '(A small edge: a touch better shooting and range.)',
   },
   skills: {
     role: 'skills',
@@ -69,6 +75,7 @@ export const STAFF: Record<StaffRole, StaffDef> = {
     does: 'A little better handle and weak hand every season.',
     pitch: 'A skills coach famous for his ball-handling videos offers a year-round deal.',
     talk: ['"Two balls. Eyes up. Again."', '"Your left hand is getting there. Slowly."', '"Tennis ball drills. Do not ask why."'],
+    edge: '(A small edge: a touch better playmaking and off hand.)',
   },
   psychologist: {
     role: 'psychologist',
@@ -78,6 +85,7 @@ export const STAFF: Record<StaffRole, StaffDef> = {
     does: 'Keeps your head right: a lift in morale every season.',
     pitch: 'A sports psychologist offers to work with you all season, in person and on the phone.',
     talk: ['"What did the last miss teach you? Then let it go."', '"Breathe in for four. Out for six."', '"You are allowed to enjoy this, you know."'],
+    edge: '(A small edge: in better spirits.)',
   },
   analyst: {
     role: 'analyst',
@@ -87,6 +95,7 @@ export const STAFF: Record<StaffRole, StaffDef> = {
     does: 'Film on every opponent: a little more feel for the game every season.',
     pitch: 'A video analyst offers to cut film on every opponent you will ever face.',
     talk: ['"Their center hedges hard on the high pick. Watch."', '"You pick up your dribble when you are tired. Here, here and here."', '"Twelve clips. Ten minutes. Go."'],
+    edge: '(A small edge: a touch higher basketball IQ.)',
   },
   sleep: {
     role: 'sleep',
@@ -96,6 +105,7 @@ export const STAFF: Record<StaffRole, StaffDef> = {
     does: 'Better sleep: the body ages a little slower and gets hurt a little less.',
     pitch: 'A sleep coach wants to fix your nights: travel, time zones and all.',
     talk: ['"Phone out of the room. Yes, out."', '"Nine hours. The best players sleep the most."', '"The flight lands at two. You sleep on the plane, not after."'],
+    edge: '(A small edge: better rest, a body that ages a touch slower.)',
   },
 };
 

@@ -4,19 +4,24 @@
 
 import { ACHIEVEMENTS, NO_TOTALS, earnedNow, type Achievement, type CareerTotals } from '../engine/achievements';
 import type { GameState } from '../engine/types';
-import { DEV } from '../dev/mode';
+import { isDev } from '../dev/mode';
 import { count, nbaTitles } from '../engine/awards/legacy';
 import { addMiniResult } from '../engine/achievementsMini';
 import type { MiniResult } from '../engine/career/miniBonus';
 
 const KEY = 'btr-achv-v1';
 
-export interface AchSaved {
-  got: Record<string, { at: string; who: string }>;
+interface AchSaved {
+  // round 28: `run` is the career that earned it (runOf), so a career can show what it earned
+  got: Record<string, { at: string; who: string; run?: string }>;
   totals: CareerTotals;
   /** The day of a reset (round 27, the dev deck): daily challenges before it no longer count. */
   since?: string;
 }
+
+/** Which career a game is (round 28, owner: "in game, specifically highlight achievements achieved
+ * in that run"): its seed and the player's name, the same through every season of it. */
+export const runOf = (g: GameState): string => `${g.seed}-${g.player.name}`;
 
 /** A book with nothing in it, counting from today: what the dev deck's Reset achievements writes. */
 export const emptyAch = (today: string): AchSaved => ({ got: {}, totals: { ...NO_TOTALS }, since: today });
@@ -27,7 +32,7 @@ export function loadAch(): AchSaved {
     const d = JSON.parse(localStorage.getItem(KEY) ?? 'null') as AchSaved | null;
     // round 25: the old dev deck page, opened from a file, could write its "everything earned" book
     // into the game's storage; those entries are not the player's and are dropped
-    if (d?.got && !DEV) for (const id of Object.keys(d.got)) if (d.got[id].who === 'Dev deck') delete d.got[id];
+    if (d?.got && !isDev()) for (const id of Object.keys(d.got)) if (d.got[id].who === 'Dev deck') delete d.got[id];
     if (d?.got) return { got: d.got, totals: { ...NO_TOTALS, ...d.totals }, since: d.since };
   } catch {
     // a blocked or broken store reads as nothing earned yet
@@ -87,7 +92,7 @@ export function checkAch(g: GameState | null): Achievement[] {
   const fresh = earnedNow(g, d.totals).filter((id) => !d.got[id]);
   if (!fresh.length) return [];
   const at = new Date().toISOString();
-  for (const id of fresh) d.got[id] = { at, who: g?.player.name ?? '' };
+  for (const id of fresh) d.got[id] = { at, who: g?.player.name ?? '', ...(g ? { run: runOf(g) } : {}) };
   saveAch(d);
   return fresh.map((id) => ACHIEVEMENTS.find((a) => a.id === id)!);
 }

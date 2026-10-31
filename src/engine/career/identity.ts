@@ -22,7 +22,7 @@ export const TEAM_STYLES: Record<TeamStyle, { name: string; text: string; fits: 
   star: { name: 'Run it through you', text: 'Your team, your ball. As good as you are: it lifts the team if you are a star and sinks it if you are not.', fits: 'stars (OVR 85+)', weights: {}, regular: 0, playoff: 0, usage: 1.12 },
 };
 
-export const STYLE = { fitSpread: 8, perf: 0.05, usage: 0.06, team: 0.5, starFrom: 82, starPer: 0.15, starMax: 1.8 };
+const STYLE = { fitSpread: 8, perf: 0.05, usage: 0.06, team: 0.5, starFrom: 82, starPer: 0.15, starMax: 1.8 };
 
 const STARTER: RoleKey[] = ['starter', 'key'];
 

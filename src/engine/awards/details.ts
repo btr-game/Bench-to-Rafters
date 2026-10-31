@@ -8,7 +8,7 @@ import { NBA_TEAMS } from '../../content/teams';
 import { HONOR_PTS, TIERS, legacyIndex, type TierKey } from './tiers';
 import { legacyScore, nbaCareerPoints, nbaTitles, raftersTeams } from './legacy';
 
-export interface AchievementDetail {
+interface AchievementDetail {
   label: string;
   key: string;
   desc: string;
@@ -67,7 +67,7 @@ export function achievementDetail(s: GameState, label: string): AchievementDetai
   };
 }
 
-export interface RaftersTeam {
+interface RaftersTeam {
   id: string;
   name: string;
   color: string;

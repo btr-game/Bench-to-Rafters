@@ -13,6 +13,7 @@ import { LegendBust } from '../art/Legend';
 import { PlayerArt } from '../art/Player';
 import { TEAM_STYLE, genericKits } from '../../content/teamStyle';
 import { team as teamOf } from '../selectors';
+import { sfx } from '../sound';
 
 type Ball = 'todo' | 'make' | 'miss';
 
@@ -80,6 +81,14 @@ function Round({ shooter, moneyRack, onDone, label }: { shooter: Shooter; moneyR
     return () => cancelAnimationFrame(raf);
   }, [started, done, setups]);
 
+  // round 28: the last five seconds tick, the buzzer ends the round
+  const sec = Math.ceil(left);
+  useEffect(() => {
+    if (started && !done && sec <= 5 && sec > 0) sfx('tick');
+  }, [sec, started, done]);
+  useEffect(() => {
+    if (done && started) sfx('buzzer');
+  }, [done, started]);
   useEffect(() => {
     if (done && started) {
       const t = setTimeout(() => onDone(score), 900);
@@ -111,6 +120,9 @@ function Round({ shooter, moneyRack, onDone, label }: { shooter: Shooter; moneyR
     setShot({ n: i, result: r });
     const st = made ? streak + 1 : 0;
     setStreak(st);
+    // round 28: every shot has its sound; a money ball and catching fire have their own
+    sfx(made && v === THREES.money ? 'money' : r === 'swish' ? 'net' : r === 'make' ? 'rimin' : r === 'rim' ? 'rim' : 'brick');
+    if (st === LIVELY.fireAfter) sfx('fire');
     setFlash(
       (r === 'swish' ? `Swish! +${v}` : r === 'make' ? `Good +${v}` : r === 'rim' ? 'In and out' : 'Off the mark') +
         (st === LIVELY.fireAfter ? ' · On fire!' : !made && streak >= LIVELY.fireAfter ? ' · Cooled off' : ''),

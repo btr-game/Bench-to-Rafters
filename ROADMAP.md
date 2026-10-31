@@ -45,3 +45,13 @@ Ideas the owner has asked to keep for later. Not started unless marked.
 - The magazine tour event needs a mansion, a penthouse, an island or a yacht; the smart harness
   never buys them, so its rate is measured only in real play.
 
+
+## Kept for later (round 28)
+
+- Balance, for the owner: titles at 40.6% in Regular guy after this round's easier ceiling
+  (approved 29.2% in round 22). A playoff grind, or a smaller ceiling bonus for the archetypes that
+  already win titles most, are the options on the table.
+- Crunch time in the Olympic and World Cup finals too (they are tournament games, outside the
+  playable postseason).
+- Events about the round's systems: a coach who will not change the style, a teammate who asks to
+  be traded away from the Big Three.

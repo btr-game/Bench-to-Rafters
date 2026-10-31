@@ -96,10 +96,10 @@ export function payroll(s: GameState): number {
   return (t?.roster.reduce((a, p) => a + p.salary, 0) ?? 0) + (s.contract?.salary ?? 0);
 }
 
-export const capLine = (s: GameState): number => capFor(s.year + 1) * R.capShare;
+const capLine = (s: GameState): number => capFor(s.year + 1) * R.capShare;
 
 /** He is the first option: nobody on the roster is better. */
-export function isFirstOption(s: GameState): boolean {
+function isFirstOption(s: GameState): boolean {
   const t = myTeam(s);
   if (!t || s.stage !== 'NBA') return false;
   const ovr = userOvr(s);

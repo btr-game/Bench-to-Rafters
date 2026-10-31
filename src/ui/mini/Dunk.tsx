@@ -10,6 +10,7 @@ import { LegendBust } from '../art/Legend';
 import { DUNKER_TEAMS } from '../../content/legendNumbers';
 import { kitFor, styleLeague } from '../art/Player';
 import { team as teamOf } from '../selectors';
+import { sfx } from '../sound';
 
 /** One part of a dunk to pick: its name and difficulty dots; a check mark when chosen. A move he
  * has already landed in this contest is gone (round 24), so its chip is crossed out. */
@@ -217,6 +218,9 @@ export function DunkGame() {
     setStage('tap');
   };
   const land = (s: DunkScore) => {
+    // round 28: the slam, then the judges' cards
+    if (s.made) sfx('slam');
+    window.setTimeout(() => sfx('judges'), s.made ? 380 : 60);
     setMine((m) => m.map((r, k) => (k === round - 1 ? [...r, s] : r)));
     // only a dunk he landed shows its parts; its moves are gone for the rest of the contest
     if (s.made) setUsed((u) => [...u, ...dunkParts(design).map((p) => p.id)]);
@@ -228,6 +232,7 @@ export function DunkGame() {
     if (missedAt === null) return land(judge(rng, design, q, attempt, used));
     if (attempt >= DUNK.attempts) return land(bailOut(rng));
     setAttempt(attempt + 1);
+    sfx('brick');
     setMissed(taps[missedAt].label);
     setStage('build');
   };

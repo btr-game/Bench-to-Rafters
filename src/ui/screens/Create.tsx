@@ -29,7 +29,7 @@ import { LineupArt } from '../art/Scene';
 import { LookPicker, LookPreview, PLAIN, randomLook, type Jersey } from '../components/LookPicker';
 import { JerseyArt } from '../art/Jersey';
 import type { ChosenLook } from '../../content/looks';
-import { enterDev } from '../../dev/mode';
+import { enterDev } from '../../dev/devSwitch';
 import { sfx } from '../sound';
 
 const pick = <T,>(a: readonly T[]): T => a[Math.floor(Math.random() * a.length)];
@@ -143,7 +143,7 @@ function DevGate() {
             e.preventDefault();
             const ok = enterDev(pw);
             setWrong(!ok);
-            // the deck opens in a tab of its own: this one goes on as it was
+            // the deck opens in place; the password is not kept for the way back
             if (ok) setPw('');
           }}
         >
@@ -218,6 +218,8 @@ export function Create() {
     setFocus([]);
   };
   const reroll = () => setCands(ARCHETYPES[pos].map((a) => rerollAttrs(uiRng, a.attrs)));
+  // rolls every pick at once: the No Shortcuts road (round 28, owner: the button at the top went,
+  // "when there's already randomizers" beside each pick)
   const randomAll = () => {
     const p = pick(POSITIONS);
     setName(`${pick(FIRST_NAMES)} ${pick(LAST_NAMES)}`);
@@ -281,9 +283,6 @@ export function Create() {
           <ShareButton />
           <SettingsMenu g={null} />
           <GuideButton />
-          <button className="icon-btn" data-tour="random" onClick={randomAll} disabled={road && step === 4} title={road && step === 4 ? 'No Shortcuts: no rerolls' : undefined}>
-            {UI.create.random}
-          </button>
         </div>
       </header>
       <section className="hero with-lineup">

@@ -2008,3 +2008,97 @@ multiple times."
   the "sent" sound, Escape and a tap beside it close it, focus goes back to the button; the
   thank-you page's Enter (Play again) waits while it is open. Word of Mouth (Bench) for the first
   link sent; a guide card, a tour step, a dev deck card and a What's new entry.
+
+## Round 28 (owner requests, with screenshots)
+
+- **Regular guy too difficult** (owner: "analyze based on position, archetype"): 25 archetypes ×
+  60 careers (smart policy, `scripts/archetypes.ts`). Positions were level; archetypes were not
+  (mean peak 72.7 to 78.1), and the cause was careers running into their potential, not the
+  starting cards (all within ±0.45 OVR of each other). A growth multiplier per archetype did
+  nothing for that reason and was taken out. Instead each archetype adds a potential bonus at
+  creation (`ARCH_CEILING`, 0.1 to 3.0; none in Built in a lab) and standard growth goes from
+  0.94 to 0.97. The same grid after: mean peak 74.8546 → 76.1443, NBA 79.93% → 83.67%, All-Star
+  37.87% → 41.80%, MVP 12.87% → 13.33%, Hall of Fame 15.00% → 16.13%, titles 36.80% → 39.93%,
+  the spread between archetypes (SD of their means) 1.6835 → 1.1038. Random policy: 70.3335 →
+  71.9285, NBA 73.53% → 77.47%, MVP 5.27% → 7.13%.
+- **Start page:** the Random button at the top is gone (each field keeps its own; No Shortcuts
+  still rolls everything).
+- **Achievements in a career:** an Achievements button in the top bar opens the book from a career,
+  with the count this career has earned; the book's "This career" filter puts those first, in gold.
+  Each earned entry remembers its career (`seed-name`).
+- **Nickname, then logo:** the nickname moment shows the name alone, in the pixel font (now the
+  whole alphabet, digits and punctuation); the name card keeps a locked spot; the first brand deal
+  draws the logo in a moment of its own. The nickname is news on the Player tab.
+- **League tab in pictures:** standings as win bars of pixel cells with crests and a playoff line,
+  leaders in points, rebounds and assists as bar charts with icons, award voting as bars, the last
+  eight champions as their banners. The old leaders table is gone.
+- **Team style:** set in a talk with the coach (both as the cute sprites, three speech bubbles, then
+  the playbook). Enter or Space skips ahead, Escape closes; fast break and sim skip it.
+- **3-on-3:** a big pixel word over the rim after each play. **Mini-game sound:** ten new sounds
+  for the three-point contest (all net, in off the rim, off the rim, a brick, a money ball, on
+  fire, the last five seconds, the buzzer) and the dunk contest (the slam, the judges).
+- **Pixel art everywhere** (owner: "the bronze medal for olympics is not pixelated. any graphic that
+  isnt pixels, change them"): the medal is a 16 × 25 pixel grid, the tab icons 12 × 12 grids, the
+  timeline's marks and OVR line stepped, the radar built from cells (`polyCells`), 29 smooth
+  gradients turned into hard bands, the last round dots squared. Duo and Big Three art use the
+  cute sprites.
+- **Duos and Big Threes end** when any of them changes teams: one moment says so; the teammate who
+  stays starts over (bond up to 60); the one who left is dropped.
+- **Small edges:** a talk with a staff member adds 35% of the member's yearly edge, once a season;
+  a lifestyle item can be visited as often as he likes, and the first visit each season gives 3
+  morale, 1 less wear and reputation for a public place.
+- **Age and plans:** at 23 or younger, Grind, Spotlight and learning from a vet grow 8% more,
+  injure 10% less, +1 morale; from 30, Recovery and Team first grow 8% more, injure 12% less, +2
+  trust (Team first +0.2 team). The plan cards say "Young legs" or "Veteran".
+- **Crunch time in a final** (owner: "let the user contribute ... on the last minutes of the final
+  quarter (or overtime) ... basically play the 3v3 game but in the finals"): a final within 8 with
+  two minutes left is played trip by trip: 8 trips of 15 seconds from his ball, then 6 for each
+  overtime (up to three). Five plays on offense, four calls on defense, odds from his ratings,
+  morale and the team gap (`CRUNCH` in balance.ts). A pixel arena court, 3 against 3, the clock,
+  and a word over the rim after each trip; the Q4 column and the score count up together.
+  Conference finals keep the old last shot. Fast break and sim simulate the postseason as before.
+  The career counts crunch times played, won, won from behind and won in overtime.
+- **Career log keeps ten** (like the saved careers), warning at nine. **Thank you for playing**
+  comes every time a career is left. **What the career qualifies for** shows on the retirement page:
+  the boards (rank today and all time, against real and house rows), the Reality 99 hall, a statue.
+- **Number keys** pick a veteran role card.
+- **The dev deck is a page of the game** (owner: "just like how the minigame page appears"): it
+  opens in place, no new tab, no reload. Dev mode is a switch now (`mode.ts`); the storage prefix
+  follows it (`storage.ts`), with the theme and the court shared (owner: "theme and court of dev
+  deck should always be the same with the main game"). On the way in the game's last move is saved
+  and its screen set aside; on the way out what the deck left waiting is dropped and the game comes
+  back as it was (`devSwitch.ts`). The community, sound and achievements read the switch live.
+  `scripts/dev-apart.cjs` now plays it as a player would: a career under way, the door, every card,
+  Back to the game; the career comes back and no key of the game's changes.
+- **End of round:**
+  - Graphics: the finals court (`FinalsCourt.tsx`), the coach's office, the medal, the League
+    charts, the nickname word; all pixel art.
+  - Sound: a sound for each crunch-time trip (the clutch sting to start, the buzzer for overtime,
+    swish, rim, block), the coach talk's chimes, the community note's award.
+  - Fast break, sim and simple text: crunch time only comes with playable playoffs on; the coach
+    talk is skipped in both; simple text hides the playbook's description.
+  - Contrast and keyboard: the "You" tag on the finals court was 4.37:1 and is now dark; keys 1 to 5
+    pick in crunch time.
+  - Achievements: seven (Two-Minute Drill, Closing Time, Down but Not Out, Bonus Basketball, Ice
+    Water, Brand New Look, Chalk Talk), 556 in all.
+  - Events: none new; the round's systems already reach the story through moments (the logo, a
+    group's end, crunch time).
+  - Harness: `smartChoice` answers a crunch-time pick with the first call (the harness simulates
+    the postseason, so it never meets one); the dev deck's crunch card plays to a final itself.
+  - Dead code: 109 exports used only in their own file lost `export`; `.vote-list` CSS (the old
+    award list) went.
+  - Tests: tests/round28.test.ts (15 tests: age edges, staff and visits, Big Three breaks, the logo,
+    the log, crunch time, the new achievements); tests/devtab.test.ts rewritten for the in-place
+    switch.
+  - Balance (1,600 careers, smart player, casual mini-games, against round 22's approved numbers):
+    mean peak 75.3438 (74.4923, +3.03 standard errors), NBA 81.2500% (78.3%), All-Star 39.6250%
+    (35.8%), MVP 13.6875% (11.9%), Hall of Fame 16.0625% (11.2%), titles 40.6250% (29.2%). Every
+    number rose, as asked; titles rose the most. For the owner to decide. The balance test's band
+    for undrafted-of-declared (smart policy) moves from 28–45% to 18–40%: 17.5% are undrafted now
+    that more of them are good enough (it is the one band the easier ceiling pushed out).
+  - Guide: the manual (crunch time, achievements in a career, the logo, staff talks, visits, age
+    edges, duos ending, the coach, the League tab, the log of ten, the thank-you, what a career
+    qualifies for, the dev deck in place); the tour has 109 steps (3 new).
+  - Dev deck: 82 cards (crunch time, achievements in a career, a Big Three ends); the Catalog has
+    the crunch-time calls, the coach's lines for each style, the age edges on plans and each
+    archetype's ceiling bonus.

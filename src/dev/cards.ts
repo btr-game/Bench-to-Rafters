@@ -17,8 +17,10 @@ import { newSlotId, writeSlot } from '../ui/saves';
 import { todayKey } from '../engine/mini/daily';
 import { ATTRS } from '../engine/balance';
 import { logCareer } from '../ui/careerLog';
+import { runOf } from '../ui/achievements';
 import { resetTour } from '../ui/components/GuideTour';
 import { decision, moment, onlyMoment, play, type PlayOpts } from './stage';
+import { isFinal, type LiveRequest } from '../engine/career/live';
 import { CamLab } from './CamLab';
 import { LoadingLab } from './LoadingLab';
 
@@ -92,6 +94,15 @@ const withMoment = (key: string, ok: (m: Moment) => boolean, o: PlayOpts = {}) =
   return show(g && onlyMoment(g, ok), 'home', {}, true);
 };
 const atDecision = (kind: string, o: PlayOpts = {}) => show(at(`d-${kind}-${o.mode ?? 'stars'}`, decision(kind), o));
+/** A live game's request is at this stage. */
+const liveAt = (stage: LiveRequest['stage']) => (_: GameState, p: Parameters<Parameters<typeof play>[0]>[1]) => p.type === 'decision' && p.decision.kind === 'live' && (p.decision.data?.req as LiveRequest | undefined)?.stage === stage;
+/** Round 28: sims every series to the final, plays the final's games, the steady call each quarter. */
+const toFinal: PlayOpts['pick'] = (_, d) => {
+  if (d.kind !== 'live') return undefined;
+  const r = d.data?.req as LiveRequest;
+  if (r.stage === 'game') return isFinal(r.round) ? 'play' : d.choices.some((c) => c.id === 'series') ? 'series' : 'sim';
+  return r.stage === 'quarter' ? 'steady' : r.stage === 'clutch' ? 'pull@good' : d.choices[0].id;
+};
 /** A career played as No Shortcuts (round 26): Reality, master mode, nothing simplified. */
 const oath = (g: GameState | null) => {
   if (g) Object.assign(g.flags, { oath: 1, fast: 0, sim: 0 }), (g.mode = 'reality');
@@ -185,7 +196,7 @@ export const CARDS: DevCard[] = [
   { id: 'player', title: 'Player tab', group: 'Career hub', icon: 'person', blurb: 'Ratings, status, contract, profile, scouting, body map.', open: () => show(nbaStar(), 'player') },
   { id: 'roster', title: 'Team roster and fit', group: 'Career hub', icon: 'roster', blurb: 'The five, the bench, the system and the chemistry.', open: () => show(nbaStar(), 'player'), press: '[data-tour="roster"]' },
   { id: 'bodymap', title: 'Body map with an injury', group: 'Career hub', icon: 'health', blurb: 'The pixel body map, hurt.', open: () => show(at('injured', (s) => !!s.player.injury && s.stage === 'NBA'), 'player') },
-  { id: 'league', title: 'League tab and bracket', group: 'Career hub', icon: 'bracket', blurb: 'Standings, the playoff bracket, the record book.', open: () => show(at('bracket', (s) => s.stage === 'NBA' && s.step === 'summary' && !!s.nba?.bracket), 'league') },
+  { id: 'league', title: 'League tab and bracket', group: 'Career hub', icon: 'bracket', blurb: 'Standings as win bars with crests and the playoff line, the leaders and award voting as bar charts, the last champions’ banners, the bracket, the record book.', open: () => show(at('bracket', (s) => s.stage === 'NBA' && s.step === 'summary' && !!s.nba?.bracket), 'league') },
   { id: 'records', title: 'Records tab', group: 'Career hub', icon: 'chart', blurb: 'Trophies, banners, career highs, timeline.', open: () => show(at('late', (s) => s.stage === 'NBA' && s.player.age >= 31 && s.step === 'summary'), 'records') },
   { id: 'settings', title: 'Settings menu', group: 'Career hub', icon: 'dial', blurb: 'Theme, court, sound and music, new career, switches.', open: () => show(nbaStar()), press: '[data-tour="settings-btn"]' },
   { id: 'guide', title: 'The game guide', group: 'Career hub', icon: 'guide', blurb: 'The manual: big headers, expandable cards.', open: () => show(nbaStar()), press: '[data-tour="guide-btn"]' },
@@ -221,13 +232,13 @@ export const CARDS: DevCard[] = [
   { id: 'modes', title: 'How you play', group: 'Career hub', icon: 'dial', blurb: 'Every mode as a switch, above Around the league.', open: () => show(loaded()), press: '[data-tour="modes"]' },
   { id: 'strength', title: 'Why it went this way', group: 'Career hub', icon: 'chart', blurb: 'Team strength, factor by factor.', open: () => show(nbaStar(), 'season') },
   { id: 'rival', title: 'Rival', group: 'Career hub', icon: 'rival', blurb: 'Draft class, head to head, MVP race: you and him on one floor.', open: () => show(loaded()) },
-  { id: 'name-card', title: 'Nickname and brand', group: 'Career hub', icon: 'crown', blurb: 'His nickname, its two-colour logo, the brand deal.', open: () => show(loaded(), 'player') },
-  { id: 'staff', title: 'Staff', group: 'Career hub', icon: 'chef', blurb: 'Each at work in the role’s uniform: stop by, raise, let go.', open: () => show(loaded(), 'player') },
+  { id: 'name-card', title: 'Nickname and brand', group: 'Career hub', icon: 'crown', blurb: 'His nickname, its two-colour logo (locked until his first brand deal), the brand deal.', open: () => show(loaded(), 'player') },
+  { id: 'staff', title: 'Staff', group: 'Career hub', icon: 'chef', blurb: 'Each at work in the role’s uniform: a talk once a season for a small edge, a raise, letting go.', open: () => show(loaded(), 'player') },
   { id: 'wardrobe', title: 'Wardrobe', group: 'Career hub', icon: 'hanger', blurb: 'Accessories on the avatar; swap or take them off.', open: () => show(loaded(), 'player') },
-  { id: 'collection', title: 'Collection and visits', group: 'Career hub', icon: 'car', blurb: 'Everything bought; visit the car, the jet, the house.', open: () => show(loaded(), 'player') },
+  { id: 'collection', title: 'Collection and visits', group: 'Career hub', icon: 'car', blurb: 'Everything bought; visit as often as he likes, the first visit each season with a small edge.', open: () => show(loaded(), 'player') },
 
   // decisions
-  { id: 'd-plan', title: 'Training plan', group: 'Decisions', icon: 'grind', blurb: 'Plans with colour strips, two at half strength.', open: () => atDecision('plan', { mode: 'standard' }) },
+  { id: 'd-plan', title: 'Training plan', group: 'Decisions', icon: 'grind', blurb: 'Plans with colour strips, two at half strength; tags on the plans that suit his age.', open: () => atDecision('plan', { mode: 'standard' }) },
   { id: 'd-event', title: 'Turning point', group: 'Decisions', icon: 'news', blurb: 'An event with a choice and a rolled result.', open: () => atDecision('event') },
   { id: 'd-offers', title: 'College offers', group: 'Decisions', icon: 'bag', blurb: 'Where he goes after high school.', open: () => atDecision('offers', { mode: 'standard' }) },
   { id: 'd-declare', title: 'Draft declaration', group: 'Decisions', icon: 'door', blurb: 'Declare, test the waters or stay.', open: () => atDecision('declare') },
@@ -238,6 +249,7 @@ export const CARDS: DevCard[] = [
   { id: 'd-brand', title: 'Brand offers', group: 'Decisions', icon: 'shoe', blurb: 'A fixed deal or a signature line under his logo.', open: () => show(at('d-brand', decision('brand'))) },
   { id: 'd-talks', title: 'Contract talks', group: 'Decisions', icon: 'office', blurb: 'More money, a year or a bigger role, under each pro offer.', open: () => show(at('d-talks', (s, p) => p.type === 'decision' && p.decision.kind === 'offers' && PRO.includes(s.stage))) },
   { id: 'd-live', title: 'Playable playoff game', group: 'Decisions', icon: 'clutch', blurb: 'A tactic each quarter; the last shot of a close game goes to the timing meter.', open: () => atDecision('live', { live: true }) },
+  { id: 'd-crunch', title: 'Crunch time in a final', group: 'Decisions', icon: 'clutch', blurb: 'The last two minutes of a close final on the court, trip by trip: pick the play, call the defense, overtime if it ends level.', open: () => show(at('d-crunch', liveAt('crunch'), { live: true, pick: toFinal, tries: 20 })) },
   { id: 'd-assign', title: 'Midseason assignment', group: 'Decisions', icon: 'swap', blurb: 'A G League stint or a move.', open: () => atDecision('assign', { mode: 'standard' }) },
   { id: 'd-retire', title: 'Retirement prompt', group: 'Decisions', icon: 'lastdance', blurb: 'Retire, one more year, or chase a ring.', open: () => atDecision('retirePrompt') },
   {
@@ -248,7 +260,7 @@ export const CARDS: DevCard[] = [
     blurb: 'The specialist roles for a veteran.',
     open: () => show(at('chaser', decision('chaserRole'), { pick: (_, d) => (d.kind === 'retirePrompt' && d.choices.some((c) => c.id === 'ringchase' && !c.disabled) ? 'ringchase' : undefined) })),
   },
-  { id: 'd-style', title: 'Team style', group: 'Decisions', icon: 'motion', blurb: 'Steer how the team plays.', open: () => show(at('style', (s) => canSetStyle(s))), press: '[data-tour="move-style"]' },
+  { id: 'd-style', title: 'Team style', group: 'Decisions', icon: 'motion', blurb: 'A talk with the coach: speech bubbles, then the new playbook.', open: () => show(at('style', (s) => canSetStyle(s))), press: '[data-tour="move-style"]' },
   { id: 'd-recruit', title: 'Build the starting five', group: 'Decisions', icon: 'superteam', blurb: 'The scouting board and recruiting.', open: () => show(at('recruit', (s) => canRecruit(s))), press: '[data-tour="move-roster"]' },
 
   // big moments
@@ -256,7 +268,7 @@ export const CARDS: DevCard[] = [
   { id: 'intro', title: 'Intro page', group: 'Start', icon: 'ball', blurb: 'The title over a side-on one-on-one: runs, steals, blocks and jumpers in pixel frames, the venue changing every five seconds. First visit only, or the Intro button on the start page.', open: () => void useStore.setState({ game: null, page: null, mini: null, intro: true }) },
   { id: 'whats-new', title: 'What’s new', group: 'Start', icon: 'news', blurb: 'The latest changes in a panel over part of the start page. It opens by itself once after each update; What’s new beside Intro opens it again.', open: () => void useStore.setState({ game: null, page: null, mini: null, intro: false, thanks: null, news: true }) },
   { id: 'share', title: 'Share the game', group: 'Start', icon: 'share', blurb: 'The Share button on every page: the link to copy, the phone’s share sheet, and posts for X, Reddit, Facebook, WhatsApp and email. Sharing earns Word of Mouth.', open: () => void useStore.setState({ game: null, page: null, mini: null, intro: false, thanks: null, news: false }), press: '[data-tour="share-btn"]' },
-  { id: 'thanks', title: 'Thank you for playing', group: 'Start', icon: 'laurel', blurb: 'The first time someone leaves a career for a new one: the crowd, the confetti, the trophy held high.', open: () => {
+  { id: 'thanks', title: 'Thank you for playing', group: 'Start', icon: 'laurel', blurb: 'Every time someone leaves a career: the crowd, the confetti, the trophy held high.', open: () => {
     const g = nbaStar();
     if (!g) return false;
     useStore.setState({ game: null, page: null, mini: null, thanks: g });
@@ -269,7 +281,8 @@ export const CARDS: DevCard[] = [
   { id: 'm-finals', title: 'NBA Finals (playable)', group: 'Big moments', icon: 'clutch', blurb: 'Play, watch or skip the last minutes.', open: () => withMoment('m-finals', (m) => m.kind === 'title' && !!m.drama && m.mood === 'champion' && m.game?.level === 'NBA') },
   { id: 'm-gold', title: 'Olympic or World Cup final', group: 'Big moments', icon: 'globe', blurb: 'National colours on a FIBA floor.', open: () => withMoment('m-gold', (m) => m.kind === 'tournament' && !!m.drama) },
   { id: 'm-fine', title: 'Fined', group: 'Big moments', icon: 'envelope', blurb: 'A letter from the league office, and the amount.', open: () => withMoment('m-fine', (m) => m.kind === 'fine') },
-  { id: 'm-nickname', title: 'A nickname', group: 'Big moments', icon: 'crown', blurb: 'The day the media names him, with its logo.', open: () => withMoment('m-nickname', (m) => !!m.logo) },
+  { id: 'm-nickname', title: 'A nickname', group: 'Big moments', icon: 'crown', blurb: 'The day the media names him: the name alone, in big pixel letters.', open: () => withMoment('m-nickname', (m) => !!m.nick) },
+  { id: 'm-logo', title: 'Your logo', group: 'Big moments', icon: 'shoe', blurb: 'His first brand deal draws the logo of his nickname; the name card has kept a locked spot for it until now.', open: () => withMoment('m-logo', (m) => !!m.logo) },
   { id: 'm-injury', title: 'Injury', group: 'Big moments', icon: 'health', blurb: 'The bad news and the timeline.', open: () => withMoment('m-injury', (m) => m.kind === 'injury') },
   {
     id: 'm-duo',
@@ -290,6 +303,30 @@ export const CARDS: DevCard[] = [
     },
   },
   {
+    id: 'm-duo-end',
+    title: 'A Big Three ends',
+    group: 'Big moments',
+    icon: 'superteam',
+    blurb: 'One of the three is traded away: the group is over, and whoever stays starts again.',
+    open: () => {
+      const g = nbaStar();
+      const last = g?.history[g.history.length - 1];
+      const five = g ? startingFive(g) : [];
+      const t = g?.nba?.teams.find((x) => x.id === g.teamId);
+      const other = g?.nba?.teams.find((x) => x.id !== g.teamId);
+      if (!g || !last || five.length < 2 || !t || !other) return false;
+      const [a, b] = [five[0].p, five[1].p];
+      g.bonds = [
+        { id: a.id, name: a.name, pos: a.pos, spark: 0.9, bond: 100, seasons: 2, formed: g.year - 1, nick: 'The Splash Pair' },
+        { id: b.id, name: b.name, pos: b.pos, spark: 0.9, bond: 100, seasons: 1, formed: g.year, trio: true },
+      ];
+      t.roster = t.roster.filter((x) => x.id !== b.id);
+      other.roster.push(b);
+      growBonds(g, { ...last, teamId: g.teamId!, w: 50, l: 32, line: { ...last.line, gp: Math.max(1, last.line.gp) } });
+      return show(onlyMoment(g, (m) => /the end/.test(m.title)), 'home', {}, true);
+    },
+  },
+  {
     id: 'm-transition',
     title: 'Season transition',
     group: 'Big moments',
@@ -297,7 +334,7 @@ export const CARDS: DevCard[] = [
     blurb: 'The screen between seasons.',
     open: () => show(nbaStar(), 'home', { transition: { kind: 'season', label: 'Next season', sub: 'Age 25 · Year 4 in the NBA', color: '#1C7ED6' } }),
   },
-  { id: 'retired', title: 'Retirement page', group: 'Big moments', icon: 'stars', blurb: 'The career card, legacy, statue, log.', open: () => show(retired(3)) },
+  { id: 'retired', title: 'Retirement page', group: 'Big moments', icon: 'stars', blurb: 'The career card, legacy, what the career qualifies for (boards, hall, statue), the log.', open: () => show(retired(3)) },
 
   // modes
   // round 26-27: No Shortcuts, from the offer to the banner
@@ -325,8 +362,29 @@ export const CARDS: DevCard[] = [
   },
 
   // records and community
-  { id: 'log', title: 'Career log', group: 'Records & community', icon: 'cards', blurb: 'The last five career cards.', open: () => (seedLog(), useStore.setState({ game: null, mini: null, page: 'log' })) },
+  { id: 'log', title: 'Career log', group: 'Records & community', icon: 'cards', blurb: 'The last ten career cards.', open: () => (seedLog(), useStore.setState({ game: null, mini: null, page: 'log' })) },
   { id: 'ach-all', title: 'Achievement book (all earned)', group: 'Records & community', icon: 'laurel', blurb: `Every one of the ${ACHIEVEMENTS.length}, with how it was earned.`, open: () => (setAchievements(true), useStore.setState({ game: null, mini: null, page: 'achievements' })) },
+  {
+    id: 'ach-run',
+    title: 'Achievements in a career',
+    group: 'Records & community',
+    icon: 'laurel',
+    blurb: 'The book from the top bar inside a career: what this career earned comes first, in gold.',
+    // a book where a third of the first forty were earned by this career
+    open: () => {
+      const g = nbaStar();
+      if (!g) return false;
+      const run = runOf(g);
+      const got = Object.fromEntries(ACHIEVEMENTS.slice(0, 40).map((a, i) => [a.id, { at: new Date().toISOString(), who: i % 3 === 0 ? g.player.name : 'Dev deck', run: i % 3 === 0 ? run : 'another' }]));
+      try {
+        localStorage.setItem('btr-achv-v1', JSON.stringify({ got, totals: {} }));
+      } catch {
+        // nothing kept: the book opens empty
+      }
+      return show(g);
+    },
+    press: '[data-tour="ach-btn"]',
+  },
   { id: 'ach-none', title: 'Achievement book (new player)', group: 'Records & community', icon: 'lock', blurb: 'Every name a riddle.', open: () => (setAchievements(false), useStore.setState({ game: null, mini: null, page: 'achievements' })) },
   {
     id: 'ach-toast',

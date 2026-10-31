@@ -62,8 +62,9 @@ import { weightOf } from "../../engine/player/weight";
 import { ModesCard } from '../components/ModesCard';
 import { StrengthCard } from '../components/StrengthCard';
 import { RivalCard } from '../components/RivalCard';
+import { CoachTalk } from '../components/CoachTalk';
 
-export function SeasonSummary({ rec }: { rec: SeasonRecord }) {
+function SeasonSummary({ rec }: { rec: SeasonRecord }) {
   const delta = rec.ovrEnd - rec.ovrStart;
   const l = rec.line;
   return (
@@ -847,6 +848,14 @@ function StyleCard({ g }: { g: GameState }) {
   const mutate = useStore((s) => s.mutate);
   const master = useStore((s) => s.master);
   const now = currentStyle(g);
+  // round 28: the new style comes out of a talk with the coach (not in fast break or sim mode)
+  const [talk, setTalk] = useState<TeamStyle | null>(null);
+  const quick = !!g.flags.fast || !!g.flags.sim;
+  const choose = (k: TeamStyle) => {
+    if (k === now) return;
+    mutate((x) => setStyle(x, k));
+    if (!quick) setTalk(k);
+  };
   return (
     <section className="card stack">
       <div className="row">
@@ -870,7 +879,7 @@ function StyleCard({ g }: { g: GameState }) {
             <button
               key={k}
               className={`choice style-choice${now === k ? " selected" : ""}`}
-              onClick={() => mutate((x) => setStyle(x, k))}
+              onClick={() => choose(k)}
             >
               {/* round 24: each style as the coach draws it */}
               <PlaybookArt style={k} size={120} />
@@ -897,6 +906,7 @@ function StyleCard({ g }: { g: GameState }) {
             </button>
           ))}
       </div>
+      {talk && <CoachTalk g={g} style={talk} onClose={() => setTalk(null)} />}
     </section>
   );
 }

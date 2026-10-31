@@ -116,8 +116,24 @@ export interface SkewDist {
   min: number;
   max: number;
 }
-export const POTENTIAL: SkewDist = { base: 37, mu: 3.44, sigma: 0.4, min: 40, max: 103 };
-export const ELITE_CLIMB = { from: 85, per: 0.07, min: 0.4 };
+const POTENTIAL: SkewDist = { base: 37, mu: 3.44, sigma: 0.4, min: 40, max: 103 };
+const ELITE_CLIMB = { from: 85, per: 0.07, min: 0.4 };
+
+/**
+ * Round 28 (owner: "regular guy is too difficult (analyze based on position, archetype)"). Positions
+ * came out level (mean peaks within 1.3 OVR of each other), archetypes did not: 60 smart careers of
+ * each on Regular guy peaked from 72.7 (3&D Guard, Athletic Wing) to 78.1 (Speedster). Every card's
+ * OVR ceiling is the same within half a point, and faster growth for the low ones changed nothing
+ * (tried, measured: their careers run into the ceiling, not out of time). So each archetype below
+ * 76 starts with a higher potential: 0.9 of its shortfall, in OVR points. The rest are unchanged.
+ */
+export const ARCH_CEILING: Record<string, number> = {
+  'Stretch Big': 1.8, 'Post Scorer': 2.2, 'Playmaking Big': 2.0,
+  Bruiser: 2.6, 'Rim Runner': 2.9, 'Two-Way Forward': 1.9, 'Playmaking Four': 0.1,
+  'Scoring Guard': 1.7, 'Two-Way Guard': 1.5, 'Jumbo Playmaker': 1.1,
+  '3&D Wing': 2.6, 'Athletic Wing': 3.0, 'Scoring Wing': 2.1, 'Glue Guy': 0.5,
+  Slasher: 2.6, '3&D Guard': 3.0, 'Combo Guard': 1.3,
+};
 
 // Difficulty modes (playtest round 6). Each sets the potential distribution, a growth
 // multiplier and an injury multiplier; the league around the player is the same.
@@ -144,9 +160,9 @@ export const FAST_GROWTH = 1.3;
 // sd. Fitted to the round 25 distribution run (4,000 careers per difficulty, random and smart play):
 // starting OVR barely predicts the peak (each point ahead adds about 0.3), so the old 1.2 a point
 // sent a 65 OVR freshman in Shoot for the stars past 99. Fast break and the lab use Regular guy's.
-export interface FreshScout { mid: number; slope: number; sd: number }
+interface FreshScout { mid: number; slope: number; sd: number }
 export const MODES: Record<Mode, { name: string; blurb: string; potential: SkewDist; growth: number; injury: number; scout: FreshScout; floor?: { age: number; ovr: number; until: number }; elite?: { from: number; per: number; min: number }; mini?: number; teamFx?: number; ringChase?: number }> = {
-  standard: { name: 'Regular guy', blurb: 'The full game. Most careers peak in the 60s and 70s; the NBA is common, stardom is earned.', potential: POTENTIAL, growth: 0.94, injury: 1, scout: { mid: 72.9, slope: 0.28, sd: 12.1 }, elite: ELITE_CLIMB, mini: 0.4, teamFx: 0.3, ringChase: 0.1 },
+  standard: { name: 'Regular guy', blurb: 'The full game. Most careers peak in the 60s and 70s; the NBA is common, stardom is earned.', potential: POTENTIAL, growth: 0.97, injury: 1, scout: { mid: 72.9, slope: 0.28, sd: 12.1 }, elite: ELITE_CLIMB, mini: 0.4, teamFx: 0.3, ringChase: 0.1 },
   // fast break: the regular game at a quick pace (engine/fast.ts). The quick pace means fewer
   // events, one training group a season and no shop, so the head start is set by simulation:
   // mean peak 76.4 against 73.6 for Regular guy (300 smart careers each, round 8).
@@ -254,9 +270,43 @@ export const LAB = { rate: 0.85, cost: [[0, 1], [80, 1.5], [90, 2]] as [number, 
  */
 export const SOLO_PLAN = { amp: 1.1, growth: 1.03 };
 
-/** The plan that actually applies: one plan, a little amplified, or a main plan and a side plan blended. */
-export function blendPlans(a: HalfPlan, b?: HalfPlan | null): PlanDef {
-  const A = HALF_PLANS[a];
+/**
+ * Round 28 (owner: "young age should have advantage doing some plans like grind, spotlight, listen
+ * to vets, while vets should also have advantage doing others, like recovery, team first"): up to
+ * `young.upTo` the hard-work and learning plans grow more and hurt less; from `vet.from` recovery
+ * and Team first do more (and Team first lifts the team more).
+ */
+export const AGE_PLANS = {
+  young: { upTo: 23, plans: ['grind', 'spotlight', 'mentor'] as HalfPlan[], growth: 1.08, injury: 0.9, morale: 1 },
+  vet: { from: 30, plans: ['recovery', 'teamfirst'] as HalfPlan[], growth: 1.08, injury: 0.88, teamBoost: 0.2, trust: 2 },
+};
+
+/** Whether his age gives a plan an edge (the plan cards show it). */
+export function ageEdge(plan: HalfPlan, age: number): 'young' | 'vet' | null {
+  if (age <= AGE_PLANS.young.upTo && AGE_PLANS.young.plans.includes(plan)) return 'young';
+  if (age >= AGE_PLANS.vet.from && AGE_PLANS.vet.plans.includes(plan)) return 'vet';
+  return null;
+}
+
+/** A plan as it works for a player of this age. */
+function aged(plan: HalfPlan, age?: number): PlanDef {
+  const d = HALF_PLANS[plan];
+  const edge = age === undefined ? null : ageEdge(plan, age);
+  if (edge === 'young') {
+    const y = AGE_PLANS.young;
+    return { ...d, growth: d.growth * y.growth, injury: d.injury * y.injury, morale: d.morale + y.morale };
+  }
+  if (edge === 'vet') {
+    const v = AGE_PLANS.vet;
+    return { ...d, growth: d.growth * v.growth, injury: d.injury * v.injury, teamBoost: d.teamBoost + (plan === 'teamfirst' ? v.teamBoost : 0), trust: d.trust + v.trust };
+  }
+  return d;
+}
+
+/** The plan that actually applies: one plan, a little amplified, or a main plan and a side plan blended
+ * (for a player of `age`, when given: round 28's age edges). */
+export function blendPlans(a: HalfPlan, b?: HalfPlan | null, age?: number): PlanDef {
+  const A = aged(a, age);
   if (!b || b === a) {
     const k = SOLO_PLAN.amp;
     const m = (x: number) => 1 + (x - 1) * k;
@@ -278,7 +328,7 @@ export function blendPlans(a: HalfPlan, b?: HalfPlan | null): PlanDef {
       swing: A.swing ? { ...A.swing, mean: A.swing.mean * k, sd: A.swing.sd * k } : undefined,
     };
   }
-  const B = HALF_PLANS[b];
+  const B = aged(b, age);
   const { main, side } = TWO_PLAN_SHARE;
   const mult = (x: number, y: number) => 1 + (x - 1) * main + (y - 1) * side;
   const add = (x: number, y: number) => x * main + y * side;
@@ -325,7 +375,7 @@ export const HALF_PLANS: Record<HalfPlan, PlanDef> = {
 };
 
 // Each half rolls an outcome for the plan. Morale shifts the odds toward breakthroughs.
-export interface PlanOutcome {
+interface PlanOutcome {
   key: string;
   label: string;
   weight: number;
@@ -418,7 +468,7 @@ export const INJURY_SEVERITY: { key: 'dtd' | 'minor' | 'major' | 'season'; share
 export const OFFSEASON_DAYS = 160;
 
 // §7 level scale (average OVR of a rotation player) and game settings (§8, §9)
-export interface LevelInfo {
+interface LevelInfo {
   name: string;
   short: string;
   avg: number; // used by the stat model for relative efficiency
@@ -539,13 +589,46 @@ export const CAREER_INDEX = { stretch: 5, ovrFloor: 60, ovrPer: 10 };
 // of it times how far his reputation is above 60 (out of 40), and puts out a shoe every season
 // once he reaches `shoeRep` (Icon).
 export const NICKNAME = { rep: 55, noise: 0.2 };
-// round 25: a visit to something he owns (content/visits.ts), once a season each
-export const VISIT = { morale: 2 };
+// round 25: a visit to something he owns (content/visits.ts). Round 28: as often as he likes; the
+// first of a season lifts morale and takes `rest` off his body wear
+export const VISIT = { morale: 3, rest: 1 };
 // round 25: personal staff (career/staff.ts). Pay and benefit by level (a raise moves him up one);
-// benefits a season at level 1, times `effect[level - 1]`; a talk once a season lifts morale.
+// benefits a season at level 1, times `effect[level - 1]`; a talk once a season lifts morale and
+// (round 28) does `talkShare` of his season's benefit on the spot.
 // round 25 (the owner: the playable finals change the result): the last possession of a close
 // playable playoff game is a timing meter; the timing moves the chance the shot drops
 export const CLUTCH_TIMING = { perfect: 0.35, good: 0.12, late: -0.15, max: 0.95, min: 0.05 };
+/**
+ * Round 28 (owner: "for finals runs ... on the last minutes of the final quarter (or overtime), the
+ * user can choose moves and basically play the 3v3 game but in the finals"): crunch time in a
+ * playable final (career/live.ts). When the game is within `within` points with two minutes left,
+ * the last minutes are `possessions` trips (alternating, `secs` each); an overtime is `ot` more.
+ * On offense he picks the move: its make chance is `base`, plus `per` for every point the rating
+ * that drives it is above the league's average, plus `morale` per point of morale over 60; `tov`
+ * of trips are turned over, a drive has `andOne`. On defense he picks the call: the other team
+ * makes `them` of its shots (moved by `strength` per point of team strength between the sides),
+ * less what his call and the rating behind it take away; `gamble` goes for the steal.
+ */
+export const CRUNCH = {
+  within: 8,
+  possessions: 8,
+  secs: 15,
+  ot: 6,
+  maxOt: 3,
+  base: { drive: 0.5, pull: 0.43, three: 0.35, post: 0.47, kick: 0.45 } as Record<string, number>,
+  per: 0.007,
+  morale: 0.001,
+  min: 0.12,
+  max: 0.8,
+  tov: 0.06,
+  andOne: 0.15,
+  them: 0.47,
+  themThree: 0.33,
+  strength: 0.012,
+  stop: { contest: 0.04, help: 0.04, switch: 0.03, gamble: -0.08 } as Record<string, number>,
+  stopPer: 0.004,
+  steal: { gamble: 0.17, other: 0.03 },
+};
 // round 25: contract talks (career/negotiate.ts). Up to `asks` asks an offer; the team's patience
 // starts at `base`, plus reputation / `repPer`, plus how far his OVR is above the league average
 // / `ovrPer`, less `perAsk` for each ask before; a yes gives the whole ask, a "let's meet halfway"
@@ -560,7 +643,7 @@ export const NEGOTIATE = { asks: 2, base: 0.35, repPer: 220, ovrPer: 45, perAsk:
 export const PRESS = { gap: 2, questions: 1, bigQuestions: 2, big: ['title', 'lost-final', 'award'], humble: { trust: 2, rep: 0.5, chem: 0.1 }, confident: { rep: 1.5, morale: 2 }, fiery: { rep: 2.5, trust: -2, fire: 0.15 }, fineChance: 0.2, fans: 1 };
 // round 25: a legacy project funded in an event (events/round25.ts) adds legacy points
 export const LEGACY_PROJECT = { points: 3 };
-export const STAFF_PAY = { pay: [1, 1.7, 2.6], effect: [1, 1.5, 2], talk: 1, afford: 4, max: 6 };
+export const STAFF_PAY = { pay: [1, 1.7, 2.6], effect: [1, 1.5, 2], talk: 1, talkShare: 0.35, afford: 4, max: 6 };
 // round 25: fines, rolled like injuries, game by game in a pro league. `perGame` is the chance a
 // game; low morale and a big name make it likelier; at most `maxSeason` a season. Amounts in $M
 // for the NBA (times `abroad` in the other leagues).
@@ -795,7 +878,7 @@ export const STARTERS_RECRUIT = { capShare: 1, match: 1.25, moves: 2, asks: 3, c
 // noise); at 100 they are a duo. A duo starts at `start` strength and adds `perSeason` a
 // season up to 1: team strength + team, his efficiency x(1 + perf), assists x(1 + ast) and
 // shots x(1 + usage), all times that strength.
-export const DUO = { realChance: 0.25, real: [0.65, 1] as [number, number], plain: [0.05, 0.3] as [number, number], fit: 0.1, grow: 55, winW: 30, trustW: 0.2, sd: 8, start: 0.6, perSeason: 0.15, team: 1.2, perf: 0.035, ast: 0.12, usage: 0.04, stay: 3, trio: { team: 1.0, perf: 0.02, ast: 0.06, usage: -0.03 } };
+export const DUO = { realChance: 0.25, real: [0.65, 1] as [number, number], plain: [0.05, 0.3] as [number, number], fit: 0.1, grow: 55, winW: 30, trustW: 0.2, sd: 8, start: 0.6, perSeason: 0.15, team: 1.2, perf: 0.035, ast: 0.12, usage: 0.04, stay: 3, restart: 60, trio: { team: 1.0, perf: 0.02, ast: 0.06, usage: -0.03 } };
 
 /** A mode's dial (round 14): 1 unless the mode sets it. */
 export const modeDial = (mode: Mode, k: 'mini' | 'teamFx' | 'ringChase'): number => MODES[mode]?.[k] ?? 1;

@@ -11,7 +11,8 @@ import { Card } from './bits';
 
 // Everything he has bought (round 25, the owner: a showcase of the purchases, and a visit to the
 // car, the jet, the house...). Accessories live in the wardrobe instead. A thing he can use has a
-// button: once a season, a short scene of him there and a little lift.
+// button: a short scene of him there, as often as he likes (round 28, owner: "let the user
+// revisit"); the first visit of a season gives a small edge.
 
 const SHELVES: ShopCategory[] = ['Lifestyle', 'Training', 'Recovery', 'Shoes', 'Gear'];
 
@@ -62,8 +63,8 @@ export function CollectionCard({ g }: { g: GameState }) {
                     </span>
                     <span className="coll-name">{i.name}</span>
                     {v && (
-                      <button className="btn small" disabled={done} title={done ? 'Once a season' : undefined} onClick={() => go(i.id)}>
-                        {done ? 'Visited' : v.verb}
+                      <button className="btn small" title={done ? 'Visited this season: the small edge comes again next season' : 'A small edge, once a season'} onClick={() => go(i.id)}>
+                        {done ? 'Go again' : v.verb}
                       </button>
                     )}
                   </div>

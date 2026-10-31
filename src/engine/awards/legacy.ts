@@ -145,7 +145,7 @@ export function hallOfFame(s: GameState): 'first' | 'hof' | null {
   return l >= LEGACY.firstBallot ? 'first' : l >= LEGACY.hof ? 'hof' : null;
 }
 
-export interface TitleWon {
+interface TitleWon {
   year: number;
   level: string; // "NBA", "NCAA", ...
   label: string; // "NBA Champion", "National champions", ...

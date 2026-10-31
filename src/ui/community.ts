@@ -8,7 +8,7 @@
 // game, and an opaque account id for ownership; never an account name or address.
 
 import type { CareerRecord } from '../engine/career/record';
-import { DEV } from '../dev/mode';
+import { isDev } from '../dev/mode';
 import { readReal } from '../dev/storage';
 import type { Mode } from '../engine/balance';
 import { todayKey } from '../engine/mini/daily';
@@ -327,10 +327,11 @@ interface CommentsApi {
 }
 let comments: Promise<CommentsApi | null> | null = null;
 function commentsApi(): Promise<CommentsApi | null> {
+  if (isDev()) return Promise.resolve(null);
   if (!comments)
     comments = (async () => {
       const host = (window as unknown as { claude?: ClaudeHost }).claude;
-      if (!host?.use || DEV) return null;
+      if (!host?.use) return null;
       try {
         return (await host.use('comments')) as CommentsApi | null;
       } catch {
@@ -396,8 +397,10 @@ export async function readWebInbox(inboxKey: string): Promise<FeedbackRow[] | 'd
 /** Counts this visit "on the court" from the moment the game opens until the page closes (owner:
  * "when the user enters the game, they are no longer treated as being on the court"), whichever
  * page is on screen. The dev deck stays off the count. */
+let joined = false;
 export function joinCourt(): void {
-  if (DEV) return;
+  if (isDev() || joined) return;
+  joined = true;
   void community().then((c) => c.presence(() => {}));
 }
 
@@ -405,11 +408,12 @@ let picked: Promise<Community> | null = null;
 /** The community this page can reach: shared on claude.ai, the game's own database in the online
  * build (the website), this device elsewhere. */
 export function community(): Promise<Community> {
+  // the dev deck never posts to (or reads) the real community: it stays on this device, in the
+  // deck's own storage
+  if (isDev()) return Promise.resolve(localCommunity());
   if (picked) return picked;
   picked = (async () => {
     const host = (window as unknown as { claude?: ClaudeHost }).claude;
-    // the dev deck never posts to (or reads) the real community: it stays on this device
-    if (DEV) return localCommunity();
     if (!host?.use) {
       // the online build carries its database's address (.env.itch); other builds leave this out
       if (import.meta.env.VITE_SB_URL && import.meta.env.VITE_SB_KEY) {

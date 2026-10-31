@@ -50,3 +50,31 @@ export function toPaths(grid: string[][]): { fill: string; d: string }[] {
   return [...by].map(([fill, d]) => ({ fill, d }));
 }
 
+
+/**
+ * A polygon on a grid of `cell`-sized squares (round 28: charts drawn in pixels too), as an SVG path
+ * of square runs: `fill` covers every square whose centre is inside, `edge` only the inside squares
+ * that touch the outside (a one-square outline).
+ */
+export function polyCells(poly: Pt[], cell: number, mode: 'fill' | 'edge'): string {
+  const xs = poly.map((p) => p[0]);
+  const ys = poly.map((p) => p[1]);
+  const x0 = Math.floor(Math.min(...xs) / cell) - 1;
+  const x1 = Math.ceil(Math.max(...xs) / cell) + 1;
+  const y0 = Math.floor(Math.min(...ys) / cell) - 1;
+  const y1 = Math.ceil(Math.max(...ys) / cell) + 1;
+  const at = (cx: number, cy: number) => inPoly((cx + 0.5) * cell, (cy + 0.5) * cell, poly);
+  let d = '';
+  for (let cy = y0; cy <= y1; cy++) {
+    let run = -1;
+    for (let cx = x0; cx <= x1 + 1; cx++) {
+      const on = cx <= x1 && at(cx, cy) && (mode === 'fill' || !at(cx - 1, cy) || !at(cx + 1, cy) || !at(cx, cy - 1) || !at(cx, cy + 1));
+      if (on && run < 0) run = cx;
+      else if (!on && run >= 0) {
+        d += `M${run * cell} ${cy * cell}h${(cx - run) * cell}v${cell}h${-(cx - run) * cell}Z`;
+        run = -1;
+      }
+    }
+  }
+  return d;
+}

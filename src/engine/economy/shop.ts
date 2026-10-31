@@ -9,7 +9,7 @@ import { logDecision, pushDecision } from '../career/common';
 import { fmtMoney } from './salary';
 import { changeWeight, idealWeight, weightOf } from '../player/weight';
 
-export const MAX_PURCHASES = 3;
+const MAX_PURCHASES = 3;
 const STOCK = { size: 6, afford: 5 };
 
 const HELPS: Record<string, string> = {
@@ -24,7 +24,7 @@ const HELPS: Record<string, string> = {
 };
 
 /** Plain-language effect of an item; no numbers, the player judges the value. */
-export function describeItem(it: ShopItem): string {
+function describeItem(it: ShopItem): string {
   const parts: string[] = [];
   const attrs = it.attrs ? ATTRS.filter((k) => it.attrs![k]) : [];
   if (attrs.length) parts.push(`Helps ${attrs.map((k) => HELPS[k]).join(' and ')}`);
@@ -143,15 +143,19 @@ export function resolveShop(s: GameState, d: Decision, id: string): string | nul
   return `${it.name}: ${describeItem(it)}.`;
 }
 
-/** A visit to something he owns (round 25): once a season each, a little lift, and a little fame for the public ones. */
+/** A visit to something he owns (round 25). Round 28 (owner: "let the user revisit", and "same
+ * [a small advantage] for visiting lifestyle"): he can go back any time; the first visit of a
+ * season lifts his mood, rests his legs a little, and raises his profile for the public ones. */
 export function visitItem(s: GameState, id: string): string | null {
   const v = VISITS[id];
   const p = s.player;
   if (!v || !s.purchases.includes(id)) return null;
   const seen = (p.visits ??= {});
-  if (seen[id] === s.year) return null;
+  const line = pick(s.rng, v.lines);
+  if (seen[id] === s.year) return line;
   seen[id] = s.year;
   p.morale = clamp(p.morale + VISIT.morale, 0, 100);
+  p.wear = Math.max(0, (p.wear ?? 0) - VISIT.rest);
   if (v.rep) p.rep = clamp(p.rep + v.rep, 0, 100);
-  return pick(s.rng, v.lines);
+  return `${line} (A small edge: in better spirits, fresher legs${v.rep ? ', a bigger name' : ''}.)`;
 }

@@ -624,33 +624,115 @@ export function CommunityPage() {
   );
 }
 
-/** On the retirement page: the boards it went to, the hall, and a statue to raise. */
+/** Where a score would rank on one board: real players' bests and the house players, this career
+ * and this player's own entries aside. */
+async function rankOn(c: Api, rec: CareerRecord, scope: 'day' | 'all'): Promise<number> {
+  const s = scoreOf(rec);
+  const rows = [...(await c.scores(rec.mode, scope).catch(() => [] as ScoreRow[])), ...houseScores(rec.mode, scope)];
+  return rows.filter((r) => !r.mine && r.rec.id !== rec.id && r.score > s).length + 1;
+}
+
+/** On the retirement page (round 28, owner: "if the user's player is eligible for leaderboard or any
+ * other community sharing thing, they should be notified when the career ends"): a card at the top
+ * that says where the career ranks today and all time, whether it is in the Reality 99 hall, and
+ * whether it can raise a statue (with the button), or how far it was from one. */
 export function CommunityNote({ rec }: { rec: CareerRecord }) {
   const c = useCommunity();
   const setPage = useStore((s) => s.setPage);
   const [built, setBuilt] = useState<WriteResult | 'busy' | null>(null);
+  const [rank, setRank] = useState<{ day: number; all: number } | null>(null);
+  useEffect(() => {
+    if (!c) return;
+    let live = true;
+    // the post goes up as the career ends: give it a moment before reading the boards back
+    const t = window.setTimeout(() => {
+      void Promise.all([rankOn(c, rec, 'day'), rankOn(c, rec, 'all')]).then(([day, all]) => {
+        if (!live) return;
+        setRank({ day, all });
+        if (day <= BOARD_SIZE || all <= BOARD_SIZE || hall99Ok(rec) || statueOk(rec)) sfx('award');
+      });
+    }, 1200);
+    return () => {
+      live = false;
+      window.clearTimeout(t);
+    };
+  }, [c, rec]);
   if (!c) return null;
   const build = async () => {
     setBuilt('busy');
     setBuilt(await c.buildStatue(rec));
   };
+  const mode = MODES[rec.mode].name;
+  const onBoard = (n: number) => n <= BOARD_SIZE;
   return (
-    <div className="log-note community-note">
-      <Icon name="podium" size={22} />
-      <span>
-        Career index {scoreOf(rec).toFixed(1)}{rec.index ? ` (career ${rec.index.total.toFixed(1)}, best five seasons ${rec.index.best.toFixed(1)})` : ''} on the {MODES[rec.mode].name} boards.
-        {hall99Ok(rec) ? ' A 99 in Reality hits hard: you are in the Reality 99 hall.' : ''}
-        {statueOk(rec) && built !== 'ok' ? ` ${rec.legacy} legacy points: this career can have a statue in the plaza.` : ''}
-        {built === 'ok' ? ' Your statue stands in the plaza.' : built === 'full' ? ' The plaza is full (100 statues).' : built === 'denied' && !c.canWrite ? ' Raising a statue needs an invitation to post here.' : built === 'error' || built === 'denied' ? ' The statue could not be raised. Try again.' : ''}
-      </span>
-      {statueOk(rec) && built !== 'ok' && (
-        <button className="btn small" data-tour="statue-raise" disabled={built === 'busy'} onClick={build}>
-          Raise a statue
-        </button>
+    <section className="card community-note stack" data-tour="community-note" aria-live="polite">
+      <div className="sec-title with-icon">
+        <Icon name="podium" size={26} />
+        This career and the community
+      </div>
+      <div className="cn-row">
+        <Icon name="podium" size={30} />
+        <div>
+          <b>
+            {!rank
+              ? `Career index ${scoreOf(rec).toFixed(1)}: checking the ${mode} boards…`
+              : onBoard(rank.day) || onBoard(rank.all)
+                ? `On the ${mode} leaderboard: ${[onBoard(rank.day) ? `#${rank.day} today` : '', onBoard(rank.all) ? `#${rank.all} all time` : ''].filter(Boolean).join(', ')}`
+                : `Career index ${scoreOf(rec).toFixed(1)}: outside the ${mode} top ${BOARD_SIZE} this time`}
+          </b>
+          <small className="muted">
+            Career index {scoreOf(rec).toFixed(1)}
+            {rec.index ? ` (career ${rec.index.total.toFixed(1)}, best five seasons ${rec.index.best.toFixed(1)})` : ''}. The boards keep each player’s best career{c.kind === 'local' ? ', on this device' : ''}.
+          </small>
+        </div>
+      </div>
+      {hall99Ok(rec) && (
+        <div className="cn-row">
+          <Icon name="hall" size={30} />
+          <div>
+            <b>In the Reality 99 hall</b>
+            <small className="muted">A 99 in Reality hits hard: your seat in the hall is lit.</small>
+          </div>
+        </div>
       )}
-      <button className="btn ghost small" onClick={() => setPage('community')}>
-        Community
-      </button>
-    </div>
+      {rec.mode === 'standard' && (
+        <div className="cn-row">
+          <Icon name="statue" size={30} />
+          <div>
+            {statueOk(rec) ? (
+              <>
+                <b>{built === 'ok' ? 'Your statue stands in the plaza' : `This career can raise a statue (${rec.legacy >= STATUE.gold || rec.hof === 'first' ? 'gold' : 'bronze'})`}</b>
+                <small className="muted">
+                  {built === 'full'
+                    ? 'The plaza is full (100 statues).'
+                    : built === 'denied' && !c.canWrite
+                      ? 'Raising a statue needs an invitation to post here.'
+                      : built === 'error' || built === 'denied'
+                        ? 'The statue could not be raised. Try again.'
+                        : `${rec.legacy} legacy points: ${STATUE.minLegacy} raise a statue, ${STATUE.gold} or a first-ballot Hall of Famer make it gold.`}
+                </small>
+              </>
+            ) : (
+              <>
+                <b>No statue this time</b>
+                <small className="muted">
+                  {rec.legacy} legacy points; a statue takes {STATUE.minLegacy} on Regular guy.
+                </small>
+              </>
+            )}
+          </div>
+          {statueOk(rec) && built !== 'ok' && (
+            <button className="btn small" data-tour="statue-raise" disabled={built === 'busy'} onClick={build}>
+              Raise a statue
+            </button>
+          )}
+        </div>
+      )}
+      <div className="row" style={{ gap: 8 }}>
+        <button className="btn ghost small" onClick={() => setPage('community')}>
+          See the community
+        </button>
+      </div>
+    </section>
   );
 }

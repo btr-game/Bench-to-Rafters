@@ -14,7 +14,7 @@ import { adjust, logDecision, pushDecision, pushMoment, rankOnRoster } from '../
 import { originOf } from '../../content/origins';
 import { teamUsageMean, rankMinutes } from './genStats';
 
-export interface Opp {
+interface Opp {
   name: string;
   short: string;
   strength: number;
@@ -30,7 +30,7 @@ function profile(s: GameState) {
 }
 
 /** One game outside the regular season with a full box score for the player. */
-export function exhibitionGame(
+function exhibitionGame(
   s: GameState,
   level: LevelKey,
   role: RoleKey,
@@ -129,7 +129,7 @@ function knockout(s: GameState, level: LevelKey, role: RoleKey, my: Opp, opps: O
 }
 
 /** Result tables for a tournament page: the player's games, then the rest of the event. */
-export function tourneyRecap(games: GameLog[], notes: string[], myName: string): { heading: string; rows: string[] }[] {
+function tourneyRecap(games: GameLog[], notes: string[], myName: string): { heading: string; rows: string[] }[] {
   const rows = games.map((g) => `${g.post ?? 'Game'}: ${g.res} ${g.us}–${g.them} vs ${g.opp}${g.line ? ` · ${g.line.pts} pts, ${g.line.reb} reb, ${g.line.ast} ast` : ''}`);
   const out = [{ heading: `${myName}'s games`, rows }];
   if (notes.length > 0) out.push({ heading: 'Around the bracket', rows: notes });
@@ -328,7 +328,7 @@ const SENIOR: [string, number][] = [
   ['Cameroon', 71], ['South Sudan', 73], ['Dominican Republic', 73], ['Mexico', 70],
 ];
 
-export interface NationalEvent {
+interface NationalEvent {
   name: string;
   youth: boolean;
   legacy: number; // legacy points for gold
@@ -339,7 +339,7 @@ const ASIAN_GAMES: [string, number][] = [
   ['China', 71], ['Japan', 72], ['South Korea', 68], ['Philippines', 70], ['Iran', 66], ['Jordan', 65], ['Lebanon', 67], ['Chinese Taipei', 63],
 ];
 
-export function nationalEventFor(year: number, age: number, nation = ''): NationalEvent | null {
+function nationalEventFor(year: number, age: number, nation = ''): NationalEvent | null {
   const summer = year + 1;
   // the Asian Games: every four years, two summers after the Olympics
   if (age >= 19 && summer % 4 === 2 && ASIAN_GAMES.some(([n]) => n === nation)) return { name: `${summer} Asian Games`, youth: false, legacy: 0.5 };
@@ -350,11 +350,11 @@ export function nationalEventFor(year: number, age: number, nation = ''): Nation
   return null;
 }
 
-export const nationOf = (s: GameState): string => originOf(s.player.country).nation;
+const nationOf = (s: GameState): string => originOf(s.player.country).nation;
 const nationColor = (s: GameState): string => originOf(s.player.country).nationColor;
 
 /** Chance of a call-up: the nation's talent pool sets the bar. */
-export function callUpChance(s: GameState, ev: NationalEvent): number {
+function callUpChance(s: GameState, ev: NationalEvent): number {
   const ovr = ovrOf(s.player.attrs, s.player.pos);
   const nation = nationOf(s);
   const usa = nation === 'USA';

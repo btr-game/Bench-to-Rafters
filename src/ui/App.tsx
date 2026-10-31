@@ -17,7 +17,7 @@ import { Overlays } from './components/Overlays';
 import { MiniGames } from './mini/MiniGames';
 import { Icon } from './art/Icon';
 import { CareerLog } from './screens/CareerLog';
-import { AchievementBook } from './screens/Achievements';
+import { AchButton, AchievementBook } from './screens/Achievements';
 import { CommunityPage } from './screens/Community';
 import { FootBar } from './components/FootBar';
 import { Intro } from './screens/Intro';
@@ -26,13 +26,18 @@ import { ICON_FOR } from './art/icons';
 import { music, sfx, wakeOnClick } from './sound';
 
 
-const ICONS: Record<Tab, ReactNode> = {
-  home: <path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" />,
-  season: <path d="M4 5h16v15H4zM4 9h16M9 3v4M15 3v4" />,
-  player: <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm-7 9a7 7 0 0 1 14 0" />,
-  league: <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />,
-  records: <path d="M7 4h10v5a5 5 0 0 1-10 0zM12 14v4M8 21h8M7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3" />,
+// round 28 (owner: "any graphic that isnt pixels, change them"): the tab icons on a 12x12 pixel
+// grid, in the tab's own colour
+const ICON_ROWS: Record<Tab, string[]> = {
+  home: ['.....##.....', '....####....', '...##..##...', '..##....##..', '.##......##.', '##........##', '.#........#.', '.#..####..#.', '.#..#..#..#.', '.#..#..#..#.', '.#..#..#..#.', '.####..####.'],
+  season: ['..#.....#...', '.#########..', '.#.......#..', '.#########..', '.#.......#..', '.#.#.#.#.#..', '.#.......#..', '.#.#.#.#.#..', '.#.......#..', '.#########..', '............', '............'],
+  player: ['....####....', '...#....#...', '...#....#...', '...#....#...', '....####....', '............', '...######...', '..#......#..', '.#........#.', '.#........#.', '.#........#.', '.##########.'],
+  league: ['.......##...', '.......##...', '.......##...', '..##...##...', '..##...##...', '..##...##.##', '..##...##.##', '..##.#.##.##', '..##.#.##.##', '..##.#.##.##', '############', '............'],
+  records: ['.##########.', '#.#......#.#', '#.#......#.#', '.##......##.', '..#......#..', '...#....#...', '....####....', '.....##.....', '.....##.....', '....####....', '...######...', '............'],
 };
+const ICONS: Record<Tab, ReactNode> = Object.fromEntries(
+  (Object.keys(ICON_ROWS) as Tab[]).map((t) => [t, ICON_ROWS[t].flatMap((row, y) => [...row].map((c, x) => (c === '#' ? <rect key={`${x}-${y}`} x={x} y={y} width={1} height={1} /> : null)))]),
+) as unknown as Record<Tab, ReactNode>;
 
 /** The main tabs: along the top on a computer, along the bottom on a phone. A dot marks a tab with something new. */
 function TabBar({ g, top = false }: { g: GameState; top?: boolean }) {
@@ -45,7 +50,7 @@ function TabBar({ g, top = false }: { g: GameState; top?: boolean }) {
         const fresh = t !== tab && seen[t] !== undefined && seen[t] !== tabKey(g, t);
         return (
           <button key={t} data-tour={`tab-${t}`} aria-current={tab === t ? 'page' : undefined} onClick={() => setTab(t)} title={`${UI.tabs[t]} (${t[0].toUpperCase()})`}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <svg viewBox="-1 -1 14 14" fill="currentColor" shapeRendering="crispEdges" aria-hidden="true">
               {ICONS[t]}
             </svg>
             {UI.tabs[t]}
@@ -159,7 +164,7 @@ export function App() {
         const seen = new Set(b.moments.map((m) => m.id));
         const fresh = g.moments.find((m) => !seen.has(m.id));
         if (!fresh) return;
-        if (fresh.logo) sfx('nickname');
+        if (fresh.logo || fresh.nick) sfx('nickname');
         else if (fresh.kind === 'title') sfx(fresh.mood === 'champion' ? 'title' : 'lose');
         else if (fresh.lostFinal) sfx('lose');
         else if (fresh.kind === 'awards' || fresh.kind === 'draft') sfx('award');
@@ -191,6 +196,7 @@ export function App() {
           <TabBar g={game} top />
           <div className="top-right">
             <NextStep g={game} />
+            <AchButton g={game} />
             <ShareButton />
             <GuideButton />
             <SettingsMenu g={game} />

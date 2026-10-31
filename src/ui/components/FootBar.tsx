@@ -5,7 +5,8 @@
 
 import { useState } from 'react';
 import { FeedbackFoot } from '../screens/Community';
-import { DEV, enterDev } from '../../dev/mode';
+import { isDev } from '../../dev/mode';
+import { enterDev } from '../../dev/devSwitch';
 import { Icon } from '../art/Icon';
 import { ShareButton } from './Share';
 
@@ -13,7 +14,7 @@ import { ShareButton } from './Share';
 export function DevDoor() {
   const [pw, setPw] = useState('');
   const [wrong, setWrong] = useState(false);
-  if (DEV) return null;
+  if (isDev()) return null;
   return (
     <details className="card dev-door">
       <summary className="with-icon">
@@ -27,7 +28,7 @@ export function DevDoor() {
           e.preventDefault();
           const ok = enterDev(pw);
           setWrong(!ok);
-          // the deck opens in a tab of its own: this one goes on as it was
+          // the deck opens in place; the password is not kept for the way back
           if (ok) setPw('');
         }}
       >

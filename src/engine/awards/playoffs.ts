@@ -6,7 +6,7 @@ import type { Bracket, GameLog, GameState, League, LevelKey, NbaYearRecord, Seri
 import { sumLines, valuePerGame } from '../sim/statModel';
 import { statText, type AwardOutcome } from './awards';
 
-export interface UserSeriesInput {
+interface UserSeriesInput {
   teamId: string;
   name: string;
   games: GameLog[];
@@ -71,7 +71,7 @@ export function playoffMvps(rng: Rng, league: League, bracket: Bracket, user: Us
 }
 
 /** "BOS def. LAL 4–2" style summary of a bracket's last series. */
-export function finalsText(league: League, bracket: Bracket): { champion: string; runnerUp: string; result: string } {
+function finalsText(league: League, bracket: Bracket): { champion: string; runnerUp: string; result: string } {
   const fin = bracket.rounds[bracket.rounds.length - 1]?.series[0];
   const name = (id: string) => league.teams.find((t) => t.id === id)?.name ?? id;
   if (!fin) return { champion: name(bracket.champion), runnerUp: '', result: '' };

@@ -12,7 +12,7 @@ import { NAMES } from '../../content/strings';
 
 const ht = (inches: number): string => `${Math.floor(inches / 12)}′${Math.round(inches % 12)}″`;
 
-export interface PosOption {
+interface PosOption {
   pos: Pos;
   ovr: number;
   fit: string;

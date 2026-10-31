@@ -6,15 +6,17 @@ import { team as teamOf } from '../selectors';
 import { StoryScene } from '../art/Scene';
 import { BrandLogo, eventIcon } from '../art/careerArt';
 import { SHIFT_COLOR, choiceIcon, shopIcon, shopShift } from '../art/icons';
-import { useState } from 'react';
-import type { Decision, GameState, Offer } from '../../engine/types';
+import { useEffect, useState } from 'react';
+import type { Decision, GameState, HalfPlan, Offer } from '../../engine/types';
 import type { LiveRequest } from '../../engine/career/live';
-import { LEVELS } from '../../engine/balance';
+import { LEVELS, ageEdge } from '../../engine/balance';
 import { NAMES } from '../../content/strings';
 import { useStore } from '../../store';
 import { brief, fmtMoney, ordinal } from '../format';
 import { NBA_TEAMS } from '../../content/teams';
 import { TimingMeter } from '../components/TimingMeter';
+import { FinalsCourt } from '../components/FinalsCourt';
+import { sfx } from '../sound';
 import { negotiable, type Ask } from '../../engine/career/negotiate';
 
 const TIER: Record<string, string> = { blue: 'Blue blood', power: 'Power program', major: 'Major conference', mid: 'Mid-major' };
@@ -113,6 +115,18 @@ const PLAN_TINT: Record<string, string> = {
 };
 const planTint = (id: string) => ({ ['--tile' as string]: PLAN_TINT[id] ?? 'var(--line)' });
 
+/** Round 28: the plans his age makes stronger, tagged on their cards. */
+function AgeTag({ plan }: { plan: string }) {
+  const age = useStore((s) => s.game?.player.age ?? 20);
+  const edge = ageEdge(plan as HalfPlan, age);
+  if (!edge) return null;
+  return (
+    <span className="plan-tag age" title={edge === 'young' ? 'Young legs: this plan does more for you, and is easier on the body, up to 23' : 'A veteran’s plan: it does more for you from 30'}>
+      {edge === 'young' ? 'Young legs' : 'Veteran'}
+    </span>
+  );
+}
+
 function PlanPicker({ d }: { d: Decision }) {
   const choose = useStore((s) => s.choose);
   const [picked, setPicked] = useState<string[]>([]);
@@ -129,6 +143,7 @@ function PlanPicker({ d }: { d: Decision }) {
               <span className="label with-icon">
                 <Icon name={choiceIcon(c.id)} size={26} />
                 {c.label}
+                <AgeTag plan={c.id} />
                 {c.risk && <span className={`risk risk-${c.risk.toLowerCase()}`}>{c.risk} risk</span>}
               </span>
               <small>{c.detail}</small>
@@ -154,6 +169,7 @@ function PlanPicker({ d }: { d: Decision }) {
                 <Icon name={choiceIcon(c.id)} size={26} />
                 {on && <span className={`plan-tag ${picked.indexOf(c.id) === 0 ? 'main' : 'side'}`}>{picked.indexOf(c.id) === 0 ? 'Main' : 'Side'}</span>}
                 {c.label}
+                <AgeTag plan={c.id} />
                 {c.risk && <span className={`risk risk-${c.risk.toLowerCase()}`}>{c.risk} risk</span>}
               </span>
               <small>{c.detail}</small>
@@ -175,10 +191,20 @@ function LiveView({ g, d }: { g: GameState; d: Decision }) {
   // round 25: the last possession is his to time; the meter decides the shot
   const [timed, setTimed] = useState<string | null>(null);
   const pick = (id: string) => (r.stage === 'clutch' && (id === 'pull' || id === 'drive') ? setTimed(id) : choose(id));
-  const team = g.season ? (g.stage === 'NBA' ? g.nba : g.league)?.teams.find((t) => t.id === g.teamId) : null;
+  const lg = g.season ? (g.stage === 'NBA' ? g.nba : g.league) : null;
+  const team = lg?.teams.find((t) => t.id === g.teamId) ?? null;
   const me = team?.short ?? 'You';
   const started = r.stage !== 'game';
   const l = r.line;
+  const crunch = r.stage === 'crunch';
+  // round 28: crunch time sounds out each trip (the first one, a new overtime, then how it went)
+  useEffect(() => {
+    if (!crunch) return;
+    if (!r.last) sfx(r.ot ? 'buzzer' : 'clutch');
+    else if (!r.last.good) sfx('rim');
+    else sfx(r.last.word === 'STEAL' || r.last.word === 'BLOCK' || r.last.word === 'STOP' ? 'block' : 'swish');
+  }, [d.id, crunch, r.last, r.ot]);
+  const opp = lg?.teams.find((t) => t.name === r.opp);
   return (
     <div className="stack live">
       <div>
@@ -196,11 +222,11 @@ function LiveView({ g, d }: { g: GameState; d: Decision }) {
               <div className="v">{r.us}</div>
             </div>
             <div className="cell">
-              <div className="k">{r.stage === 'clutch' ? '0:14 Q4' : r.quarter === 1 ? 'Tip-off' : `End Q${r.quarter - 1}`}</div>
-              <div className="v dim">—</div>
+              <div className="k">{crunch ? (r.ot ? `OT${r.ot > 1 ? ` ${r.ot}` : ''}` : 'Q4') : r.stage === 'clutch' ? '0:14 Q4' : r.quarter === 1 ? 'Tip-off' : `End Q${r.quarter - 1}`}</div>
+              <div className={`v${crunch ? ' live-clock' : ' dim'}`}>{crunch ? r.clock : '—'}</div>
             </div>
             <div className="cell">
-              <div className="k">{r.opp.split(' ').slice(-1)[0]}</div>
+              <div className="k">{opp?.short ?? r.opp.split(' ').slice(-1)[0]}</div>
               <div className="v">{r.them}</div>
             </div>
           </div>
@@ -242,8 +268,18 @@ function LiveView({ g, d }: { g: GameState; d: Decision }) {
           )}
         </>
       )}
+      {crunch && (
+        <div className="stack fc-wrap" data-tour="live-crunch">
+          <FinalsCourt me={g.player.name} number={g.player.number} us={{ name: me, color: team?.color ?? '#1F5FBF', team: team?.name, abbr: team?.abbr }} them={{ name: r.opp, color: opp?.color ?? '#495057', team: opp?.name, abbr: opp?.abbr }} level={g.stage} side={r.side ?? 'off'} last={r.last} home={r.home} wear={g.player.wardrobe?.on} />
+          <div className={`fc-ball ${r.side === 'def' ? 'def' : 'off'}`}>
+            <Icon name={r.side === 'def' ? 'lockdown' : 'ball'} size={22} />
+            <b>{r.side === 'def' ? 'Their ball: call the defense' : 'Your ball: pick the play'}</b>
+          </div>
+          {r.last && <p className={`fc-last ${r.last.good ? 'good' : 'bad'}`}>{r.last.text}</p>}
+        </div>
+      )}
       <p>{brief(d.text, simple)}</p>
-      {r.recent.length > 0 && (
+      {r.recent.length > 0 && !crunch && (
         <div className="small muted">
           {r.recent.map((x, i) => (
             <div key={i}>{x}</div>

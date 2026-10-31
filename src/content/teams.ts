@@ -2,7 +2,7 @@
 
 import type { NcaaTier } from '../engine/types';
 
-export interface NbaTeamInfo {
+interface NbaTeamInfo {
   abbr: string;
   city: string;
   nick: string;
@@ -67,7 +67,7 @@ export const RIVALS: [string, string][] = [
   ['SAS', 'DAL'],
 ];
 
-export interface CollegeInfo {
+interface CollegeInfo {
   name: string;
   tier: NcaaTier;
   conf: string;
@@ -157,7 +157,7 @@ export const COLLEGES: CollegeInfo[] = [
   C('Samford', 'mid', 'SoCon', '#002D72'),
 ];
 
-export interface ClubInfo {
+interface ClubInfo {
   name: string;
   short: string;
   strength: number;
@@ -234,7 +234,7 @@ export const HOMETOWN_SCHOOLS: { town: string; schools: string[]; colors: string
 ];
 
 // Other overseas leagues (level INT). Strength is mean team strength; salary in $M a year.
-export interface IntLeagueInfo {
+interface IntLeagueInfo {
   key: string;
   name: string;
   country: string;

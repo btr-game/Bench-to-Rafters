@@ -25,7 +25,7 @@ const PROFILES = new Map<string, Profile>();
 const W = { focus: 1, archetype: 0.6, position: 3.5, weak: 0.5, near: -0.7, maxed: -2, slope: 0.8, min: 0.55, max: 2.2, road: 1.35 };
 
 /** What an event does to ratings, learned by playing each choice on a throwaway copy. */
-export function profileOf(s: GameState, e: EventDef): Profile {
+function profileOf(s: GameState, e: EventDef): Profile {
   const hit = PROFILES.get(e.id);
   if (hit) return hit;
   const prof: Profile = {};

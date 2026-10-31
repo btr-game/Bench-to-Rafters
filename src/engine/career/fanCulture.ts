@@ -9,7 +9,7 @@ import type { GameState } from '../types';
 import { adjust, teamById } from './common';
 import { NBA_TEAMS } from '../../content/teams';
 
-export interface FanCulture {
+interface FanCulture {
   name: string;
   text: string;
   crowd: number; // team strength in the regular season (home games are half of them)

@@ -8,7 +8,7 @@ import { NAMES } from '../content/strings';
 import { seasonLabel } from './format';
 import { tabKey } from './selectors';
 
-export type NewsTab = 'home' | 'season' | 'player' | 'league' | 'records';
+type NewsTab = 'home' | 'season' | 'player' | 'league' | 'records';
 
 /** One change on a tab: the card to take the player to (the first that is on the page) and a line about it. */
 export interface Spot {
@@ -49,6 +49,11 @@ export function tabNews(g: GameState, tab: NewsTab, before: string | undefined):
       const [a, b] = [Number(was[0]), Number(is[0])];
       if (a !== b) out.push({ sel: [D('ratings'), '.page .card'], text: `Your OVR went ${b > a ? 'up' : 'down'} from ${a} to ${b}. The ratings show where it moved.` });
       if (was[1] !== is[1]) out.push({ sel: [D('ratings'), '.page .card'], text: `You play ${NAMES.pos[g.player.pos as keyof typeof NAMES.pos] ?? g.player.pos} now.` });
+      // round 28 (owner: "getting the nickname should also count as a new feature"): keys from before
+      // round 28 have no nickname part, and say nothing about it
+      const nick = g.player.nickname;
+      if (was.length > 2 && nick && was[2] !== is[2]) out.push({ sel: [D('name-card'), '.page .card'], text: `The media has a name for you: “${nick.name}”. It is on your name card.` });
+      else if (was.length > 3 && nick && was[3] === '0' && is[3] === '1') out.push({ sel: [D('name-card'), '.page .card'], text: `Your logo is out, with your first brand deal: see it on your name card.` });
       break;
     }
     case 'league': {

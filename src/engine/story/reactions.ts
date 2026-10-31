@@ -19,7 +19,7 @@ function fill(t: string, v: Record<string, string>): string {
   return t.replace(/\{(\w+)\}/g, (_, k: string) => v[k] ?? '');
 }
 
-export function moodOf(rec: SeasonRecord): Mood {
+function moodOf(rec: SeasonRecord): Mood {
   if (rec.awards.length > 0 || rec.result.includes('hampion')) return 'great';
   const delta = rec.ovrEnd - rec.ovrStart;
   if (rec.line.gp === 0 || rec.role === 'deep') return delta > 2 ? 'meh' : 'bad';

@@ -32,35 +32,32 @@ const W = 900;
 const H = 270;
 const PAD = { l: 40, r: 16, t: 34, b: 30 };
 
+// round 28 (owner: "any graphic that isnt pixels, change them"): the marks on a 7x7 pixel grid,
+// two units a pixel, in place of circles, stars and turned squares
+const GLYPH: Record<'ring' | 'star' | 'cross' | 'arrow' | 'pair' | 'diamond', string[]> = {
+  ring: ['..###..', '.#...#.', '#.....#', '#.....#', '#.....#', '.#...#.', '..###..'],
+  star: ['...#...', '...#...', '#######', '.#####.', '..###..', '.##.##.', '.#...#.'],
+  cross: ['...#...', '...#...', '...#...', '#######', '...#...', '...#...', '...#...'],
+  arrow: ['.#.....', '.##....', '.###...', '.####..', '.###...', '.##....', '.#.....'],
+  pair: ['.......', '.......', '.#...#.', '###.###', '.#...#.', '.......', '.......'],
+  diamond: ['...#...', '..###..', '.#####.', '#######', '.#####.', '..###..', '...#...'],
+};
+
+function PixelMark({ rows, x, y, fill, cell = 2 }: { rows: string[]; x: number; y: number; fill: string; cell?: number }) {
+  const h = (rows.length * cell) / 2;
+  const w = (rows[0].length * cell) / 2;
+  return (
+    <g fill={fill} shapeRendering="crispEdges">
+      {rows.flatMap((row, r) => [...row].map((ch, c) => (ch === '#' ? <rect key={`${c}-${r}`} x={Math.round(x - w) + c * cell} y={Math.round(y - h) + r * cell} width={cell} height={cell} /> : null)))}
+    </g>
+  );
+}
+
 /** A small glyph for a mark on the chart. */
 function Glyph({ kind, x, y }: { kind: MarkKind; x: number; y: number }) {
   const c = KIND[kind].color;
-  if (kind === 'title') return <circle cx={x} cy={y} r={6} fill="none" stroke={c} strokeWidth={3} />;
-  if (kind === 'legend' || kind === 'award') {
-    const r = kind === 'legend' ? 8 : 6;
-    const pts = Array.from({ length: 10 }, (_, i) => {
-      const a = (Math.PI / 5) * i - Math.PI / 2;
-      const rr = i % 2 ? r * 0.45 : r;
-      return `${x + Math.cos(a) * rr},${y + Math.sin(a) * rr}`;
-    }).join(' ');
-    return <polygon points={pts} fill={c} />;
-  }
-  if (kind === 'injury')
-    return (
-      <g stroke={c} strokeWidth={3}>
-        <line x1={x - 5} y1={y} x2={x + 5} y2={y} />
-        <line x1={x} y1={y - 5} x2={x} y2={y + 5} />
-      </g>
-    );
-  if (kind === 'move') return <polygon points={`${x - 5},${y - 5} ${x + 5},${y} ${x - 5},${y + 5}`} fill={c} />;
-  if (kind === 'duo')
-    return (
-      <g fill={c}>
-        <circle cx={x - 3.5} cy={y} r={3.5} />
-        <circle cx={x + 3.5} cy={y} r={3.5} />
-      </g>
-    );
-  return <rect x={x - 4} y={y - 4} width={8} height={8} fill={c} transform={`rotate(45 ${x} ${y})`} />;
+  const rows = kind === 'title' ? GLYPH.ring : kind === 'legend' || kind === 'award' ? GLYPH.star : kind === 'injury' ? GLYPH.cross : kind === 'move' ? GLYPH.arrow : kind === 'duo' ? GLYPH.pair : GLYPH.diamond;
+  return <PixelMark rows={rows} x={x} y={y} fill={c} cell={kind === 'legend' ? 3 : 2} />;
 }
 
 function Chart({ g, pick, picked }: { g: GameState; pick: (year: number) => void; picked: number | null }) {
@@ -73,7 +70,9 @@ function Chart({ g, pick, picked }: { g: GameState; pick: (year: number) => void
   const colW = (W - PAD.l - PAD.r) / n;
   const xOf = (i: number) => PAD.l + colW * (i + 0.5);
   const yOf = (v: number) => PAD.t + (1 - (v - lo) / (hi - lo)) * (H - PAD.t - PAD.b);
-  const line = [`${PAD.l + 2},${yOf(seasons[0].ovrStart)}`, ...seasons.map((x, i) => `${xOf(i)},${yOf(x.ovrEnd)}`)].join(' ');
+  // round 28: the OVR line in pixel steps: across to each season, then up or down to its OVR
+  const pts: [number, number][] = [[PAD.l + 2, yOf(seasons[0].ovrStart)], ...seasons.map((x, i): [number, number] => [xOf(i), yOf(x.ovrEnd)])].map(([a, b]) => [Math.round(a), Math.round(b)]);
+  const line = pts.flatMap(([x, y], i) => (i === 0 ? [`${x},${y}`] : [`${x},${pts[i - 1][1]}`, `${x},${y}`])).join(' ');
   const grid = [30, 40, 50, 60, 70, 80, 90].filter((v) => v > lo && v < hi);
   // the NBA scale's landmarks, as coloured lines
   const bands = ([[72, 'Rotation'], [80, 'All-Star'], [90, 'All-NBA 1st'], [95, 'MVP']] as [number, string][]).filter(([v]) => v > lo && v < hi);
@@ -104,7 +103,7 @@ function Chart({ g, pick, picked }: { g: GameState; pick: (year: number) => void
       ))}
       <polyline points={line} className="tl-line" />
       {seasons.map((x, i) => (
-        <circle key={x.year} cx={xOf(i)} cy={yOf(x.ovrEnd)} r={4} className="tl-dot" />
+        <rect key={x.year} x={Math.round(xOf(i)) - 4} y={Math.round(yOf(x.ovrEnd)) - 4} width={8} height={8} className="tl-dot" />
       ))}
       {seasons.map((x, i) => {
         const here = big.filter((m) => m.year === x.year).slice(0, 4);

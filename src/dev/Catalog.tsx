@@ -5,7 +5,9 @@
 
 import { Fragment, useMemo, useState, type CSSProperties, type ReactNode } from 'react';
 import './catalog.css';
-import { DIFFICULTIES, HALF_PLANS, INJURY_SEVERITY, INJURY_TOLL, BASE_INJURY, LEVELS, LEAGUE_STRENGTH, MODES, WEAR } from '../engine/balance';
+import { AGE_PLANS, ARCH_CEILING, CRUNCH, DIFFICULTIES, HALF_PLANS, INJURY_SEVERITY, INJURY_TOLL, BASE_INJURY, LEVELS, LEAGUE_STRENGTH, MODES, WEAR } from '../engine/balance';
+import { DEFENSE, OFFENSE } from '../engine/career/live';
+import { COACH_LINES } from '../ui/components/CoachTalk';
 import type { AttrKey, GameState, HalfPlan, LevelKey, Pos } from '../engine/types';
 import { newGame } from '../engine/flow';
 import { INJURY_NAMES } from '../engine/player/injury';
@@ -356,6 +358,8 @@ const CATEGORIES: Category[] = [
             ...(Object.entries(a.attrs).map(([k, v]) => [NAMES.attr[k as AttrKey], String(v)]) as [string, string][]),
             ['Range', String(a.range)],
             ...(a.height ? ([['Height', `${signed(a.height, 0)} in`]] as [string, string][]) : []),
+            // round 28: the potential bonus each archetype is dealt (all but Built in a lab)
+            ...(ARCH_CEILING[a.name] ? ([['Ceiling bonus', `+${ARCH_CEILING[a.name]}`]] as [string, string][]) : []),
           ],
         })),
       ),
@@ -470,6 +474,9 @@ const CATEGORIES: Category[] = [
             ...(p.chem ? ([['Chemistry', signed(p.chem, 2)]] as [string, string][]) : []),
           ] as [string, string][],
           lines: [
+            // round 28: the plans that suit an age
+            ...(AGE_PLANS.young.plans.includes(k) ? [`Young legs (${AGE_PLANS.young.upTo} and under): growth ×${AGE_PLANS.young.growth}, injuries ×${AGE_PLANS.young.injury}, morale +${AGE_PLANS.young.morale}`] : []),
+            ...(AGE_PLANS.vet.plans.includes(k) ? [`Veteran (${AGE_PLANS.vet.from} and over): growth ×${AGE_PLANS.vet.growth}, injuries ×${AGE_PLANS.vet.injury}, trust +${AGE_PLANS.vet.trust}${k === 'teamfirst' ? `, team +${AGE_PLANS.vet.teamBoost}` : ''}`] : []),
             ...attrList(p.attrs).map((x) => `${x} a half`),
             ...(p.rangeGain ? [`Range +${p.rangeGain}`] : []),
             ...(p.offhandGain ? [`Off hand +${p.offhandGain}`] : []),
@@ -525,9 +532,46 @@ const CATEGORIES: Category[] = [
             ['Playoffs', signed(t.playoff)],
             ['His usage', `×${t.usage}`],
           ] as [string, string][],
-          lines: attrList(t.weights).map((x) => `Weight on ${x}`),
+          // round 28: the talk with the coach that sets it
+          lines: [...attrList(t.weights).map((x) => `Weight on ${x}`), ...COACH_LINES[k].map((l, i) => `${i === 1 ? 'Coach' : 'You'}: “${l}”`)],
         };
       }),
+  },
+  {
+    // round 28: the calls of crunch time in a final (engine/career/live.ts)
+    key: 'crunch',
+    name: 'Crunch-time calls',
+    icon: 'clutch',
+    blurb: `The plays and defenses of a final's last two minutes: ${CRUNCH.possessions} trips from 2:00, ${CRUNCH.ot} more for each overtime.`,
+    entries: () => [
+      ...Object.entries(OFFENSE).map(([k, m]) => ({
+        key: `o-${k}`,
+        title: m.label,
+        sub: 'Your ball',
+        group: 'Offense',
+        text: m.detail,
+        art: () => <Icon name="ball" size={44} />,
+        facts: [
+          ['Points', String(m.pts)],
+          ['Base odds', `${Math.round((CRUNCH.base[k] ?? 0) * 100)}%`],
+          ['Rating', NAMES.attr[m.attr]],
+          ['Per point over the level', `+${CRUNCH.per * 100}%`],
+        ] as [string, string][],
+      })),
+      ...Object.entries(DEFENSE).map(([k, d]) => ({
+        key: `d-${k}`,
+        title: d.label,
+        sub: 'Their ball',
+        group: 'Defense',
+        text: d.detail,
+        art: () => <Icon name="lockdown" size={44} />,
+        facts: [
+          ['Stop bonus', signed((CRUNCH.stop[k] ?? 0) * 100, 0) + '%'],
+          ['Rating', NAMES.attr[d.attr]],
+          ['Steal chance', `${Math.round((k === 'gamble' ? CRUNCH.steal.gamble : CRUNCH.steal.other) * 100)}%`],
+        ] as [string, string][],
+      })),
+    ],
   },
   {
     key: 'cultures',
