@@ -91,6 +91,11 @@ const withMoment = (key: string, ok: (m: Moment) => boolean, o: PlayOpts = {}) =
   return show(g && onlyMoment(g, ok), 'home', {}, true);
 };
 const atDecision = (kind: string, o: PlayOpts = {}) => show(at(`d-${kind}-${o.mode ?? 'stars'}`, decision(kind), o));
+/** A career played as No Shortcuts (round 26): Reality, master mode, nothing simplified. */
+const oath = (g: GameState | null) => {
+  if (g) Object.assign(g.flags, { oath: 1, fast: 0, sim: 0 }), (g.mode = 'reality');
+  return show(g, 'home', { master: true, simple: false });
+};
 
 // ---------- records, the log and the community, seeded on this page only ----------
 
@@ -180,6 +185,7 @@ export const CARDS: DevCard[] = [
   { id: 'settings', title: 'Settings menu', group: 'Career hub', icon: 'dial', blurb: 'Theme, court, sound and music, new career, switches.', open: () => show(nbaStar()), press: '[data-tour="settings-btn"]' },
   { id: 'guide', title: 'The game guide', group: 'Career hub', icon: 'guide', blurb: 'The manual: big headers, expandable cards.', open: () => show(nbaStar()), press: '[data-tour="guide-btn"]' },
   { id: 'tour', title: 'Guide mode tour', group: 'Career hub', icon: 'arrow', blurb: 'Every control, highlighted once.', open: () => (resetTour(), show(hsStart(), 'home', { guide: true, master: false })) },
+  { id: 'feedback-foot', title: 'Feedback on every tab', group: 'Career hub', icon: 'envelope', blurb: 'The bar at the foot of each tab: a note to the maker, with the tab it came from.', open: () => show(nbaStar()), press: '.feedback-foot > summary' },
   { id: 'master', title: 'Master mode', group: 'Career hub', icon: 'master', blurb: 'No recommendations anywhere.', open: () => show(nbaStar(), 'home', { master: true }) },
   {
     id: 'fast',
@@ -279,6 +285,10 @@ export const CARDS: DevCard[] = [
   { id: 'retired', title: 'Retirement page', group: 'Big moments', icon: 'stars', blurb: 'The career card, legacy, statue, log.', open: () => show(retired(3)) },
 
   // modes
+  // round 26-27: No Shortcuts, from the offer to the banner
+  { id: 'oath-offer', title: 'No Shortcuts: the offer', group: 'Modes', icon: 'oath', blurb: 'Picking Reality asks once: take the hardest way to play?', open: () => void useStore.setState({ game: null, page: null, mini: null }), press: '.modes .mode-card:nth-child(2)' },
+  { id: 'oath-career', title: 'No Shortcuts career', group: 'Modes', icon: 'oath', blurb: 'Master mode on, Fast break, Simple text and Sim locked off; the mark in the top bar.', open: () => oath(hsStart('reality')) },
+  { id: 'oath-retired', title: 'No Shortcuts, kept to the end', group: 'Modes', icon: 'oath', blurb: 'Its own banner on the retirement page.', open: () => oath(retired(3)), press: 'text=See the whole career' },
   { id: 'mode-reality', title: 'Reality hits hard', group: 'Modes', icon: 'reality', blurb: 'Most careers end short of the NBA.', open: () => show(hsStart('reality')) },
   { id: 'mode-stars', title: 'Shoot for the stars', group: 'Modes', icon: 'stars', blurb: 'Every career reaches stardom.', open: () => show(hsStart('stars')) },
   { id: 'mode-lab', title: 'Built in a lab', group: 'Modes', icon: 'lab', blurb: 'Spend credits on any rating.', open: () => show(hsStart('lab')) },

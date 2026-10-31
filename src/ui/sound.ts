@@ -23,6 +23,9 @@ export const SFX = [
   ['visit', 'A visit to something you own'],
   ['brand', 'A brand deal'],
   ['perfect', 'A perfect release on the timing meter'],
+  // round 27: No Shortcuts and feedback
+  ['oath', 'Taking the No Shortcuts challenge'],
+  ['sent', 'Feedback sent (or kept)'],
 ] as const;
 type Sfx = (typeof SFX)[number][0];
 
@@ -152,6 +155,14 @@ export function sfx(name: Sfx, always = false): void {
       break;
     case 'perfect':
       seq([24, 28, 31, 36, 40], 0.04, 'square', 0.45);
+      break;
+    case 'oath': // low and resolute: a vow, then the anvil
+      seq([0, 7, 12], 0.16, 'triangle', 1);
+      tone(N(-12), t + 0.5, 0.5, 'square', 0.4);
+      noise(t + 0.5, 0.08, 0.5);
+      break;
+    case 'sent': // a paper plane: up and away
+      seq([19, 24, 31], 0.05, 'triangle', 0.6);
       break;
   }
 }

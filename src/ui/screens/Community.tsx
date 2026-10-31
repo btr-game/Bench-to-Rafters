@@ -18,6 +18,7 @@ import { PlayerArt } from '../art/Player';
 import { Icon } from '../art/Icon';
 import { Badge } from '../art/Badge';
 import { OathMark } from '../components/OathMark';
+import { sfx } from '../sound';
 
 const OPENED = Date.now();
 
@@ -287,7 +288,9 @@ function Feedback({ c, where }: { c: Api; where?: string }) {
   const send = async () => {
     setState('sending');
     const body = (where ? `[${where}] ` : '') + text.trim();
-    setState(await c.sendFeedback(body.slice(0, 2000), contact.trim().slice(0, 200), g?.player.name ?? ''));
+    const sent = await c.sendFeedback(body.slice(0, 2000), contact.trim().slice(0, 200), g?.player.name ?? '');
+    if (sent === 'ok') sfx('sent');
+    setState(sent);
     setText('');
   };
   const comment = async () => setBoxGone(!(box.current && (await openCommentBox(box.current))));

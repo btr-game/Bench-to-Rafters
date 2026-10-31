@@ -20,7 +20,7 @@ import { CommunityNote } from './Community';
 import { LegendarySeasons } from '../components/Legendary';
 import { CareerTimeline } from '../components/Timeline';
 import { DailyResult } from '../mini/Daily';
-import { Icon } from '../art/Icon';
+import { BannerArt } from '../art/Trophy';
 
 function CareerAnalysis({ g }: { g: GameState }) {
   const c = compareCareer(g);
@@ -193,11 +193,12 @@ export function Retirement({ g }: { g: GameState }) {
         <div className="verdict">{v.tier}</div>
         <p className="lede">{v.line}</p>
         {g.flags.oath ? (
-          <div className="oath-honour with-icon">
-            <Icon name="oath" size={40} />
+          <div className="oath-honour">
+            {/* round 27 (owner): its own banner for the rafters */}
+            <BannerArt kind="oath" color="#7A1E1E" trim="#C9CFDA" lines={['NO', 'SHORT', 'CUTS']} size={132} />
             <span>
               <b>No Shortcuts, kept to the end</b>
-              <small>Reality hits hard, master mode, every season played in full. Nobody handed this career anything.</small>
+              <small className="muted">Reality hits hard, master mode, every season played in full. Nobody handed this career anything.</small>
             </span>
           </div>
         ) : null}

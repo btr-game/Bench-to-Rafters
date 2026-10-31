@@ -27,7 +27,8 @@ const SECTIONS: { title: string; where: string; items: [string, string[]][] }[] 
       ['How you play', ['A card on Home with every mode as a switch.', 'Sim: makes the routine calls (plans, summers, call-ups, press) and stops only for the big ones.', 'Fast break: quick seasons; each tab folds its extra cards behind "Show everything".', 'Simple text: hides the explanations on every tab.']],
       ['Guide mode', ['Walks you through every button once, step by step.', 'New things get their step the first time they unlock.', 'Then it highlights the next thing to do. Turn it on here, in Settings or on How you play.']],
       ['Master mode', ['No recommendations anywhere: no scouts’ calls, fit tags, suggested deals or hints.', 'In Settings or on How you play.']],
-      ['Keyboard', ['Enter: the main button (skips a final to the buzzer first).', '1–9, 0, - and =: pick a choice. Space: stop a timing meter.', 'H S P L R: tabs.']],
+      ['Pages', ['The career log, the achievement book, the community and the mini-games open as pages of their own.', 'Top left says where Back goes; next to it, where you are. Escape goes back too.']],
+      ['Keyboard', ['Enter: the main button (skips a final to the buzzer first).', '1–9, 0, - and =: pick a choice. Space: stop a timing meter.', 'H S P L R: tabs. Esc: back from a page, or close a menu.']],
       ['Sound', ['Chiptune sound effects (on) and a soft music loop (off to start).', 'Both switch in Settings.']],
     ],
   },
@@ -36,10 +37,11 @@ const SECTIONS: { title: string; where: string; items: [string, string[]][] }[] 
     where: 'The start page',
     items: [
       ['Difficulty', ['Regular guy, Reality hits hard or Shoot for the stars.', 'Fixed for the whole career, and always shown by the game’s name.']],
+      ['No Shortcuts', ['Picking Reality hits hard offers the hardest way to play: master mode, and no Fast break, Simple text or Sim mode, locked for the whole career.', 'Such a career carries the mark in the top bar, on the leaderboards, the career log and its own banner when it ends, with achievements of its own.']],
       ['Where you start', ['Pick a country for its road to the pros, or Surprise me.', 'Hometown and first school are revealed when the career starts.']],
       ['Position, hand and archetype', ['Pick each yourself, or tap Random next to it.', 'Random at the top rolls everything at once.', 'Each archetype has its own traced action pose.']],
       ['Focus stats', ['Two ratings that grow almost twice as fast.', 'Changing them later takes a breakthrough season.']],
-      ['Continue', ['Your saved careers are at the top of the start page, newest first.', 'Paste a career code there to bring one from another browser.']],
+      ['Continue', ['Your saved careers are under the difficulties and Next, newest first.', 'Paste a career code there to bring one from another browser.']],
     ],
   },
   {
@@ -132,7 +134,8 @@ const SECTIONS: { title: string; where: string; items: [string, string[]][] }[] 
       ['Leaderboards', ['Today and all time, for each difficulty.', 'The top 100 players, each at their best career.', 'Ranked by career index: every season’s honours plus the best five seasons.']],
       ['Reality 99 hall', ['Every Reality hits hard career that reaches 99.']],
       ['Statue plaza', ['Regular guy careers with 150+ legacy can raise a statue; gold from 220 or a first-ballot Hall of Famer.', 'Up to 100 statues. Pay your respects to the others.']],
-      ['Send feedback', ['A note straight to the game’s maker. Nobody else reads it.']],
+      ['Send feedback', ['Found a bug or have an idea? The bar at the foot of every tab sends it, with the tab you were on; so does the Community page.', 'On the game’s claude.ai page it goes to the maker; if the page lets you comment but not post, it opens the page’s comment box instead. A copy opened from a file keeps it on the device.']],
+      ['Developer', ['The card at the foot of the start page opens the maker’s dev deck. It needs a password.']],
     ],
   },
 ];

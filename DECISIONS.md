@@ -1777,3 +1777,11 @@ multiple times."
 - **Polish**: team strength rows share one grid (bars line up; the playoff value sits under the
   value); plan cards line up their titles; the Player tab's peak is never below the OVR (the peak is
   kept at a season's end); "your 3th season together" says 3rd (`ordinal` moved to career/common).
+- **End of rounds 26 and 27** (the owner chose which steps): art: No Shortcuts has its own banner on
+  the retirement page (iron and red, the shield sewn on). Sound: a resolute vow for taking No
+  Shortcuts and a paper-plane send for feedback (19 effects on the dev deck's board). Fast break, sim
+  and simple text: No Shortcuts locks them; simple text hides the offer's and the honour's
+  descriptions. The manual has No Shortcuts, pages and Escape, the feedback bar and the Developer
+  card; Guide mode has 102 steps (three new: the offer, the way back, the feedback bar). The dev deck
+  has four new cards (the offer, a No Shortcuts career, its banner, the feedback bar) and a chapter
+  16 in its summary. Skipped at the owner's word: achievements, events and the balance run.

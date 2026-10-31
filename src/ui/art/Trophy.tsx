@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { ink as inkOn, rgb } from './color';
 import { dark, glyph, light, toPaths, DIGITS } from './pixel';
+import { ICONS as PIX_ICONS, PAL } from './icons';
 
 // Trophies, rings, medals and banners in pixels (round 17). Icons are 16x16 bitmaps:
 // O outline, Y metal, y metal shade, W shine, G gem or cloth in the team colour, R ribbon,
@@ -69,7 +70,7 @@ function text(grid: string[][], word: string, y: number, c: string) {
   });
 }
 
-function paintBanner(kind: 'title' | 'retired', color: string, trim: string, lines: string[], number?: number): string[][] {
+function paintBanner(kind: 'title' | 'retired' | 'oath', color: string, trim: string, lines: string[], number?: number): string[][] {
   const g: string[][] = Array.from({ length: BH }, () => Array(BW).fill(''));
   const inside = (x: number, y: number) => x >= 1 && x < BW - 1 && y >= 3 && y < BH - 1 - Math.max(0, 6 - Math.abs(x - BW / 2) * 0.45) * (y > BH - 9 ? 1 : 0);
   for (let y = 0; y < BH; y++)
@@ -87,6 +88,10 @@ function paintBanner(kind: 'title' | 'retired', color: string, trim: string, lin
   const ink = Math.abs(lum(trim) - lum(color)) > 70 ? trim : inkOn(color);
   if (kind === 'title') {
     lines.forEach((l, i) => text(g, l, 9 + i * 7, ink));
+  } else if (kind === 'oath') {
+    // round 27: No Shortcuts, the iron shield sewn on, the words under it
+    PIX_ICONS.oath.forEach((row, y) => [...row].forEach((ch, x) => PAL[ch] && (g[8 + y][10 + x] = PAL[ch])));
+    lines.forEach((l, i) => text(g, l, 26 + i * 7, ink));
   } else {
     // the number, three times size
     const num = String(number ?? 0);
@@ -102,7 +107,7 @@ function paintBanner(kind: 'title' | 'retired', color: string, trim: string, lin
   return g;
 }
 
-export function BannerArt({ kind, color, trim = '#FFFFFF', lines, number, size = 120 }: { kind: 'title' | 'retired'; color: string; trim?: string; lines: string[]; number?: number; size?: number }) {
+export function BannerArt({ kind, color, trim = '#FFFFFF', lines, number, size = 120 }: { kind: 'title' | 'retired' | 'oath'; color: string; trim?: string; lines: string[]; number?: number; size?: number }) {
   const paths = useMemo(() => toPaths(paintBanner(kind, color, trim, lines.map((l) => l.toUpperCase().slice(0, 8)), number)), [kind, color, trim, lines, number]);
   return (
     <svg className="art art-banner" width={(size * BW) / BH} height={size} viewBox={`0 0 ${BW} ${BH}`} shapeRendering="crispEdges" role="img" aria-label={lines.join(' ')}>

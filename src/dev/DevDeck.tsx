@@ -64,7 +64,7 @@ function press(sel: string): void {
   const el = sel.startsWith('text=') ? [...document.querySelectorAll<HTMLElement>('button')].find((b) => b.textContent?.trim() === sel.slice(5)) : document.querySelector<HTMLElement>(sel);
   if (!el) return;
   el.scrollIntoView({ block: 'center' });
-  if (el.tagName === 'BUTTON') el.click();
+  if (el.tagName === 'BUTTON' || el.tagName === 'SUMMARY') el.click();
 }
 
 export function DevDeck() {

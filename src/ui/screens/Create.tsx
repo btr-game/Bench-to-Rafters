@@ -25,6 +25,7 @@ import { hash } from '../art/color';
 import { LineupArt } from '../art/Scene';
 import { JerseyArt } from '../art/Jersey';
 import { enterDev } from '../../dev/mode';
+import { sfx } from '../sound';
 import type { Kit } from '../../content/teamStyle';
 
 const pick = <T,>(a: readonly T[]): T => a[Math.floor(Math.random() * a.length)];
@@ -280,9 +281,9 @@ export function Create() {
               <Icon name="oath" size={48} />
               <div className="stack" style={{ gap: 6 }}>
                 <div className="sec-title">Take the harder road? No Shortcuts</div>
-                <p className="small">Master mode, with no recommendations anywhere, and no Fast break, Simple text or Sim mode, locked for the whole career. Take it and the career carries the No Shortcuts mark on its card, the leaderboards and the career log, with achievements of its own.</p>
+                <p className="small muted">Master mode, with no recommendations anywhere, and no Fast break, Simple text or Sim mode, locked for the whole career. Take it and the career carries the No Shortcuts mark on its card, the leaderboards and the career log, with achievements of its own.</p>
                 <div className="row" style={{ gap: 8 }}>
-                  <button className={`btn small${oath ? '' : ' ghost'}`} aria-pressed={oath} onClick={() => setOath(true)}>
+                  <button className={`btn small${oath ? '' : ' ghost'}`} aria-pressed={oath} onClick={() => (oath || sfx('oath'), setOath(true))}>
                     {oath ? 'Challenge accepted' : 'Accept the challenge'}
                   </button>
                   <button className="btn small ghost" aria-pressed={!oath} onClick={() => setOath(false)}>
