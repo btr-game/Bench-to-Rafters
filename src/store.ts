@@ -23,6 +23,7 @@ import { community } from './ui/community';
 import { importCode, newSlotId, readSlot, writeSlot } from './ui/saves';
 import { DEV } from './dev/mode';
 import { chooseLook } from './content/looks';
+import { NEWS } from './content/whatsNew';
 import type { AchTier } from './engine/achievements';
 
 export type Tab = 'home' | 'season' | 'player' | 'league' | 'records';
@@ -46,6 +47,10 @@ interface Store {
   intro: boolean;
   endIntro: () => void;
   showIntro: () => void;
+  /** What's new is open (owner: "make what's new a pop up that covers part of the screen"). */
+  news: boolean;
+  showNews: () => void;
+  endNews: () => void;
   /** The career just left, for the thank-you page (round 27): the first time only. */
   thanks: GameState | null;
   endThanks: () => void;
@@ -167,6 +172,35 @@ function newcomer(): boolean {
   saveFlag('btr-guide-mode', true);
   return true;
 }
+/**
+ * What's new opens by itself once after each update, on the start page, for someone who has played
+ * here before (owner: "make what's new a pop up"); a first-time player starts on this version, with
+ * the intro and the guide instead. Not in the dev deck, which has a card for it.
+ */
+const NEWS_KEY = 'btr-news-seen';
+function markNews() {
+  try {
+    localStorage.setItem(NEWS_KEY, NEWS[0].id);
+  } catch {
+    /* it opens again next visit; nothing else is lost */
+  }
+}
+/** The latest changes have not been opened on this device yet. */
+export function newsFresh(): boolean {
+  try {
+    return localStorage.getItem(NEWS_KEY) !== NEWS[0].id;
+  } catch {
+    return false;
+  }
+}
+function newsDue(): boolean {
+  if (DEV || !newsFresh()) return false;
+  if (noRecord()) {
+    markNews();
+    return false;
+  }
+  return true;
+}
 /** Round 27 (owner: "for first starters, an intro page"): once, before anything is on the device. */
 function firstIntro(): boolean {
   try {
@@ -280,6 +314,15 @@ export const useStore = create<Store>((set, get) => ({
     set({ intro: false });
   },
   showIntro: () => set({ intro: true }),
+  news: newsDue(),
+  showNews: () => {
+    markNews();
+    set({ news: true });
+  },
+  endNews: () => {
+    markNews();
+    set({ news: false });
+  },
   thanks: null,
   endThanks: () => {
     saveFlag('btr-thanks-seen', true);

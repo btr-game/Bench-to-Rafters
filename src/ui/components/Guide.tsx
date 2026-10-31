@@ -30,6 +30,7 @@ const SECTIONS: { title: string; where: string; items: [string, string[]][] }[] 
       ['Pages', ['The career log, the achievement book, the community and the mini-games open as pages of their own.', 'Top left says where Back goes; next to it, where you are. Escape goes back too.']],
       ['Keyboard', ['Enter: the main button (skips a final to the buzzer first).', '1–9, 0, - and =: pick a choice. Space: stop a timing meter.', 'H S P L R: tabs. Esc: back from a page, or close a menu.']],
       ['Sound', ['Chiptune sound effects (on) and a soft music loop (off to start).', 'Both switch in Settings.']],
+      ['Loading', ['When a step takes a moment, your player dribbles in the corner until it is ready.']],
     ],
   },
   {
@@ -43,7 +44,7 @@ const SECTIONS: { title: string; where: string; items: [string, string[]][] }[] 
       ['Position, hand and archetype', ['Pick each yourself, or tap Random next to it.', 'Random at the top rolls everything at once.', 'Each archetype has its own traced action pose.']],
       ['Focus stats', ['Two ratings that grow almost twice as fast.', 'Changing them later takes a breakthrough season.']],
       ['Continue', ['Your saved careers are under the difficulties and Next, newest first.', 'Paste a career code there to bring one from another browser.']],
-      ['Intro and What’s new', ['Intro (top of the start page) plays the opening again: the title over a one-on-one, from a high school gym to the NBA.', 'What’s new lists the latest changes to the game; a dot means you haven’t opened it yet.']],
+      ['Intro and What’s new', ['Intro (top of the start page) plays the opening again: the title over a one-on-one, from a high school gym to the NBA.', 'What’s new pops up over the start page once after each update with the latest changes; the What’s new button next to Intro opens it again (a dot means you haven’t opened it yet).']],
     ],
   },
   {
@@ -109,7 +110,7 @@ const SECTIONS: { title: string; where: string; items: [string, string[]][] }[] 
     where: 'Each opens with a banner of the numbers that matter',
     items: [
       ['Season', ['Your team, record, game log, standings, city and fans, the bracket.']],
-      ['Player', ['Ratings (shape and bars), status, kits, scouting.', 'Your name card (nickname and brand), staff, wardrobe and collection.', 'The body map: muscles training built, and every injury.', 'The roster: the five, the bench, the system and how they fit.']],
+      ['Player', ['Ratings (shape and bars), status, kits, scouting (the projected peak stays a rough range until college).', 'Your name card (nickname and brand), then staff, wardrobe and collection side by side.', 'The body map: muscles training built, and every injury (hover or tap a red spot to see it).', 'The roster: the five, the bench, the system and how they fit.']],
       ['League', ['Both conferences, scoring leaders, award voting, the record book.']],
       ['Records', ['The career timeline and journal, season by season, trophies, totals, highs.']],
     ],
@@ -132,10 +133,11 @@ const SECTIONS: { title: string; where: string; items: [string, string[]][] }[] 
     where: 'The start page',
     items: [
       ['Career log', ['The career cards of your last 5 finished careers.', 'A warning at 4; when full, a new career replaces the oldest.', 'Show, download or delete any card.']],
-      ['Achievements', ['More than 500 milestones in five tiers, kept for good across careers.', 'A banner drops in when you earn one; tap it away.', 'Ones you haven’t earned show only their name: a riddle.']],
-      ['Leaderboards', ['Today and all time, for each difficulty.', 'The top 100 players, each at their best career.', 'Ranked by career index: every season’s honours plus the best five seasons.']],
-      ['Reality 99 hall', ['Every Reality hits hard career that reaches 99.']],
-      ['Statue plaza', ['Regular guy careers with 150+ legacy can raise a statue; gold from 220 or a first-ballot Hall of Famer.', 'Up to 100 statues. Pay your respects to the others.']],
+      ['Achievements', ['More than 500 milestones in five tiers, kept for good across careers.', 'Mini-games have their own: for the arcade itself, and for what the bonuses did for your career.', 'A banner drops in when you earn one; tap it away.', 'Ones you haven’t earned show only their name: a riddle.']],
+      ['Thank you for playing', ['The first time you leave a career for a new one: your player with the trophy, and the career’s honours around the title.']],
+      ['Leaderboards', ['Today and all time, for each difficulty.', 'The top 100 players, each at their best career.', 'Ranked by career index: every season’s honours plus the best five seasons.', 'House players (marked house) keep the boards company until real careers push them down.']],
+      ['Reality 99 hall', ['Every Reality hits hard career that reaches 99, seated on the benches of a hall; a bench fills before the next one opens.', 'Tap a player for the career card.']],
+      ['Statue plaza', ['Regular guy careers with 150+ legacy can raise a statue: your player cast in bronze, or gold from 220 or a first-ballot Hall of Famer.', 'Up to 100 statues, with a few house statues until real ones come. Pay your respects to the others.']],
       ['Send feedback', ['Found a bug or have an idea? The bar at the foot of every tab and every mini-game sends it, with where you were; so does the Community page.', 'On the game’s claude.ai page it goes to the maker; if the page lets you comment but not post, it opens the page’s comment box instead. A copy opened from a file keeps it on the device.']],
       ['Developer', ['The card at the foot of the start page, and the Developer fold next to the feedback bar on every page, open the maker’s dev deck. It needs a password.']],
     ],

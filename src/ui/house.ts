@@ -19,6 +19,9 @@ function hash(s: string): number {
   return h >>> 0;
 }
 
+/** Every house career (the dev deck's Catalog lists them). */
+export const houseRecords = (): CareerRecord[] => RECS;
+
 /** House rows for a board: all of a difficulty's for all time; four of them, changing daily, for today. */
 export function houseScores(mode: Mode, scope: 'day' | 'all'): ScoreRow[] {
   const day = todayKey();

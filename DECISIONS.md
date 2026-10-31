@@ -1871,6 +1871,18 @@ multiple times."
   seams a whole pixel thick.
 - **Legendary seasons**: the band's text takes dark or white ink from the team colour (white on a
   light orange band was 2.56:1).
+- **What's new as a pop-up** (owner: "make what's new a pop up that covers part of the screen? and
+  when the user closes it, they can still access it next to a button on intro"): the start-page card
+  is gone; a panel slides in down the right of the start page (a sheet from the foot on a phone)
+  once after each update, for someone who has played here before, and the What's new button beside
+  Intro opens it again. A first-time player is marked as on the current version (the intro and the
+  guide come first). Not automatic in the dev deck, which has a card for it.
+- **Each create step opens at the top** (owner: "when i move from the home page to identity, make the
+  screen start at the top"): the browser's scroll anchoring kept the Next button in place, so the
+  identity step opened at its foot; every step change now scrolls to the top.
+- **Position cards** (the visual check, once the dev deck had a card for the identity step): the
+  letters take the position colour mixed toward the text colour, and the picked card's band and its
+  Selected tag a darker shade of it, so all pass contrast in both themes (they were 2.7 to 3.5:1).
 - **Thank you for playing**: the first time someone leaves a career for a new one; the player with
   the trophy under one spotlight, three dim rows of pixel fans (owner: "a little overwhelming" on
   the first pass, so the crowd is darker, only the front row waves, the confetti is sparse and the

@@ -38,7 +38,7 @@ export function devSetup(): void {
 
 /** Back to a clean slate between cards: no game, no page, no switches left on. */
 function clean(): void {
-  useStore.setState({ game: null, page: null, mini: null, transition: null, daily: null, tab: 'home', toasts: [], guide: false, master: false, simple: false, intro: false, thanks: null });
+  useStore.setState({ game: null, page: null, mini: null, transition: null, daily: null, tab: 'home', toasts: [], guide: false, master: false, simple: false, intro: false, news: false, thanks: null });
   setAchievements(true);
 }
 

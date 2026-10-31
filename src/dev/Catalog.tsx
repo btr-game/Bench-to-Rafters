@@ -46,7 +46,6 @@ import { BrandLogo, SEV_COLOR, SEV_NAME, eventIcon, injuryIcon, leagueIcon, leve
 import { ICON_FOR, SHIFT_COLOR, shopIcon, shopShift } from '../ui/art/icons';
 import { TeamArt } from '../ui/art/Crest';
 import { JerseyArt } from '../ui/art/Jersey';
-import { kitFor, type KitName } from '../ui/art/Player';
 import { HeroArt, archPose } from '../ui/art/Hero';
 import { POS_STYLE } from '../ui/art/PositionCard';
 import { FlagArt } from '../ui/art/Flag';
@@ -57,6 +56,11 @@ import { PlaybookArt } from '../ui/art/Playbook';
 import { StaffScene } from '../ui/art/Scene';
 import { hash } from '../ui/art/color';
 import type { KitLeague } from '../content/teamStyle';
+import { LOOK_FACES, LOOK_HAIRS, LOOK_STYLES, type ChosenLook } from '../content/looks';
+import { FACE_NAME, HAIR_NAME, LookPreview, STYLE_NAME } from '../ui/components/LookPicker';
+import { PlayerArt, PlayerStatue, SKIN_COLORS, kitFor, type KitName } from '../ui/art/Player';
+import { VENUES, Venue } from '../ui/screens/Intro';
+import { houseRecords } from '../ui/house';
 
 interface Entry {
   key: string;
@@ -635,6 +639,68 @@ const CATEGORIES: Category[] = [
         art: () => <HeroArt pose={archPose(r.name, 'SF')} model={r.name} number={(hash(r.name) % 54) + 1} kit={{ base: '#2A2F36', ink: '#FFFFFF', trim: '#C9CFDA', word: '' }} size={96} />,
         lines: [...attrList(r.up, 0), ...attrList(r.down, 0).map((x) => x.replace('+', '−')), ...(r.range ? [`Range +${r.range}`] : [])],
       })),
+  },
+  {
+    key: 'looks',
+    name: 'Looks',
+    icon: 'person',
+    // round 27 (owner: "use that for the user avatar choice"): the parts every avatar is built from
+    blurb: 'The parts every avatar is built from, and that a player picks on the identity step: skin, hair colour, hair and facial hair.',
+    entries: () => {
+      const base: ChosenLook = { skin: 3, hair: 'k', style: 'short', face: 'none' };
+      const one = (key: string, title: string, group: string, look: ChosenLook, sub?: string): Entry => ({
+        key,
+        title,
+        group,
+        sub,
+        art: () => <LookPreview name={`Catalog look ${key}`} number={7} look={look} jersey="white" size={96} />,
+      });
+      return [
+        ...SKIN_COLORS.map((c, i) => one(`skin-${i}`, `Skin ${i + 1}`, 'Skin', { ...base, skin: i }, c)),
+        ...LOOK_HAIRS.map((h) => one(`hair-${h}`, HAIR_NAME[h], 'Hair colour', { ...base, hair: h })),
+        ...LOOK_STYLES.map((s) => one(`style-${s}`, STYLE_NAME[s], 'Hair', { ...base, style: s })),
+        ...LOOK_FACES.map((f) => one(`face-${f}`, FACE_NAME[f], 'Facial hair', { ...base, face: f })),
+      ];
+    },
+  },
+  {
+    key: 'courts',
+    name: 'Intro courts',
+    icon: 'ball',
+    blurb: 'The courts behind the intro’s one-on-one, in a career’s order, five seconds each.',
+    entries: () =>
+      VENUES.map((v, i) => ({
+        key: v.cls,
+        title: v.where,
+        sub: `${i * 5}–${i * 5 + 5} s`,
+        art: () => (
+          <div className="cat-venue">
+            <Venue draw={v.draw} />
+          </div>
+        ),
+      })),
+  },
+  {
+    key: 'house',
+    name: 'House players',
+    icon: 'crowd',
+    blurb: 'Small careers the game played itself: at the foot of the leaderboards and in the statue plaza until real careers push them down.',
+    entries: () =>
+      houseRecords().map((r) => {
+        const statue = r.id.startsWith('house-statue');
+        return {
+          key: r.id,
+          title: r.name,
+          sub: `${NAMES.pos[r.pos]} · #${r.number}`,
+          group: statue ? 'Statues' : MODES[r.mode].name,
+          art: () => (statue ? <PlayerStatue name={r.name} number={r.number} pos={r.pos} metal="bronze" size={96} /> : <PlayerArt name={r.name} number={r.number} pos={r.pos} color={r.team?.color ?? '#2A2F36'} size={96} />),
+          facts: [
+            ['Peak', r.peak.toFixed(1)],
+            ['Tier', r.tier],
+            ['Index', (r.index?.score ?? 0).toFixed(1)],
+          ] as [string, string][],
+        };
+      }),
   },
 ];
 

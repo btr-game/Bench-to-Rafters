@@ -40,12 +40,6 @@ export function chooseLook(name: string, look: ChosenLook | undefined): void {
   if (look) CHOSEN.set(name, look);
 }
 
-/** A starting look from a name (the parts only, no accessories): the creation page's first pick. */
-export function lookFromName(name: string): ChosenLook {
-  const t = lookTraits(name);
-  return { skin: t.skin, hair: t.hair, style: t.style, face: t.face };
-}
-
 /** A legend as he really looked (content/legendLooks.ts), the user's player as he chose, anyone else from his name. */
 export function lookTraits(name: string): LookTraits {
   const c = CHOSEN.get(name);

@@ -1245,7 +1245,7 @@ td .art-team { display: inline-block; vertical-align: middle; margin: -3px 8px -
 .pos-card { position: relative; display: grid; grid-template-rows: auto 1fr auto auto; padding: 0; border: 2px solid color-mix(in srgb, var(--pos) 35%, var(--line)); border-radius: 12px; background: var(--surface); text-align: left; overflow: hidden; min-width: 0; transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease; }
 .pos-card:hover { transform: translateY(-2px); box-shadow: 0 6px 16px color-mix(in srgb, var(--pos) 25%, transparent); }
 .pos-head { display: grid; padding: 8px 12px 7px; background: color-mix(in srgb, var(--pos) 18%, var(--surface)); border-bottom: 3px solid var(--pos); }
-.pos-head b { font-family: var(--f-display); font-weight: 900; font-size: 40px; line-height: 0.9; color: var(--pos); letter-spacing: 0.02em; }
+.pos-head b { font-family: var(--f-display); font-weight: 900; font-size: 40px; line-height: 0.9; color: color-mix(in srgb, var(--pos) 60%, var(--ink)); letter-spacing: 0.02em; }
 .pos-head span { font-family: var(--f-mono); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
 .pos-stage { position: relative; display: grid; place-items: end center; min-height: 190px; padding-top: 8px; background: linear-gradient(180deg, #0e1014, #1b1e24); }
 .pos-court { position: absolute; inset: auto 0 0 0; width: 100%; height: auto; image-rendering: pixelated; opacity: 0.95; }
@@ -1253,9 +1253,9 @@ td .art-team { display: inline-block; vertical-align: middle; margin: -3px 8px -
 .pos-role { padding: 8px 12px 0; font-size: 14px; line-height: 1.3; }
 .pos-height { padding: 4px 12px 10px; font-family: var(--f-mono); font-size: 12.5px; color: var(--muted); }
 .pos-card[aria-pressed='true'] { border-color: var(--pos); box-shadow: 0 0 0 3px color-mix(in srgb, var(--pos) 35%, transparent); }
-.pos-card[aria-pressed='true'] .pos-head { background: var(--pos); }
+.pos-card[aria-pressed='true'] .pos-head { background: color-mix(in srgb, var(--pos) 70%, #000); }
 .pos-card[aria-pressed='true'] .pos-head b, .pos-card[aria-pressed='true'] .pos-head span { color: #fff; }
-.pos-check { position: absolute; top: 10px; right: 10px; padding: 2px 8px; border-radius: 999px; background: #fff; color: var(--pos); font-size: 12px; font-weight: 700; }
+.pos-check { position: absolute; top: 10px; right: 10px; padding: 2px 8px; border-radius: 999px; background: #fff; color: color-mix(in srgb, var(--pos) 70%, #000); font-size: 12px; font-weight: 700; }
 @media (max-width: 899px) { .pos-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 599px) { .pos-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } .pos-head b { font-size: 32px; } }
 .pix-icon { image-rendering: pixelated; flex: none; }
@@ -2133,8 +2133,21 @@ input[type='range'] { width: 100%; min-height: 32px; accent-color: var(--accent)
 .news-list li svg { flex: none; margin-top: 1px; }
 .news-list li span { min-width: 0; }
 .news-list.big li { font-size: 17px; }
-.news-pop { position: fixed; inset: 0; z-index: 300; display: flex; align-items: flex-start; justify-content: center; padding: max(16px, env(safe-area-inset-top, 0px)) 16px; background: var(--scrim); overflow-y: auto; animation: fadeIn 0.18s ease both; }
-.news-pop-card { margin-block: auto; width: min(620px, 100%); display: grid; gap: 14px; padding: 18px 20px; border-radius: 10px; border: 2px solid var(--line); background: var(--surface); box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4); animation: hall-pop-in 0.22s ease-out both; }
+/* What's new (owner: "a pop up that covers part of the screen"): a panel down the right of the
+   start page, a sheet from the foot on a phone, the page still in sight behind a light veil; it
+   slides in on four steps, like the pixel art */
+.news-btn .news-dot { width: 8px; height: 8px; box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 25%, transparent); }
+.news-scrim { position: fixed; inset: 0; z-index: 300; background: color-mix(in srgb, var(--scrim) 55%, transparent); animation: fadeIn 0.18s ease both; }
+.news-panel { position: absolute; top: max(16px, env(safe-area-inset-top, 0px)); right: max(16px, env(safe-area-inset-right, 0px)); bottom: max(16px, env(safe-area-inset-bottom, 0px)); width: min(480px, calc(100vw - 32px)); display: flex; flex-direction: column; gap: 14px; padding: 18px 20px; overflow-y: auto; overscroll-behavior: contain; background: var(--surface); color: var(--ink); border: 3px solid var(--ink); box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.35); animation: news-in 0.28s steps(4, end) both; }
+.news-head { display: flex; align-items: flex-start; gap: 12px; }
+.news-head > svg { flex: none; margin-top: 2px; }
+.news-head .title { margin: 0; }
+.news-foot { margin: 0; }
+@keyframes news-in { from { opacity: 0; transform: translateX(48px); } to { opacity: 1; transform: none; } }
+@keyframes news-up { from { opacity: 0; transform: translateY(48px); } to { opacity: 1; transform: none; } }
+@media (max-width: 640px) {
+  .news-panel { top: auto; left: max(12px, env(safe-area-inset-left, 0px)); right: max(12px, env(safe-area-inset-right, 0px)); bottom: max(12px, env(safe-area-inset-bottom, 0px)); width: auto; max-height: 74dvh; padding: 16px; animation-name: news-up; }
+}
 
 /* ---------- thank you for playing (round 27): a cheering crowd, confetti, the trophy held high ---------- */
 .thanks { position: fixed; inset: 0; z-index: 90; display: grid; place-items: start center; overflow: hidden; background: #0d0f15; color: #f4f1ea; }

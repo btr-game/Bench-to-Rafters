@@ -1,12 +1,14 @@
 // What's new (round 27, owner: "if you want to show new updates, make a what's new popup or card in
-// the homepage, showing the changes"). Newest first; the start page shows the latest, with a dot
-// until it is opened. Changes to how the game plays and looks, not bug fixes.
+// the homepage, showing the changes"; then "make what's new a pop up that covers part of the
+// screen"). Newest first; the latest opens by itself once after each update (store.ts) and from
+// the button beside Intro (ui/components/WhatsNew.tsx). Changes to how the game plays and looks,
+// not bug fixes.
 
 export interface NewsItem {
   icon: string;
   text: string;
 }
-export interface News {
+interface News {
   id: string;
   date: string;
   items: NewsItem[];

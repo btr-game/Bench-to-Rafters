@@ -47,7 +47,7 @@ function floor(out: Px[], wood: [string, string], paint: string, line = '#F4F1EA
   for (const [x, y, w] of [[73, 66, 15], [71, 67, 2], [88, 67, 2], [70, 68, 1], [90, 68, 1], [70, 69, 1], [90, 69, 1], [71, 70, 2], [88, 70, 2], [73, 71, 15]] as [number, number, number][]) out.push([x, y, w, 1, line]);
 }
 
-const VENUES: { cls: string; where: string; draw: () => Px[] }[] = [
+export const VENUES: { cls: string; where: string; draw: () => Px[] }[] = [
   {
     cls: 'v-hs',
     where: 'High school',
@@ -121,7 +121,7 @@ const VENUES: { cls: string; where: string; draw: () => Px[] }[] = [
   },
 ];
 
-function Venue({ draw }: { draw: () => Px[] }) {
+export function Venue({ draw }: { draw: () => Px[] }) {
   const px = useMemo(draw, [draw]);
   return (
     <svg className="in-venue" viewBox="0 0 160 90" preserveAspectRatio="xMidYMax slice" shapeRendering="crispEdges" aria-hidden="true">

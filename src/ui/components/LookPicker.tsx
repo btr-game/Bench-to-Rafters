@@ -10,14 +10,14 @@ import { HAIR_COLORS, PlayerArt, SKIN_COLORS } from '../art/Player';
 
 export type Jersey = 'white' | 'black';
 /** The plain practice jersey: one colour, the number, nothing else. */
-export const PLAIN: Record<Jersey, Kit> = {
+const PLAIN: Record<Jersey, Kit> = {
   white: { base: '#F4F4F4', ink: '#1B1820', trim: '#F4F4F4', word: '' },
   black: { base: '#1B1820', ink: '#F4F4F4', trim: '#1B1820', word: '' },
 };
 
-const STYLE_NAME: Record<string, string> = { short: 'Short', buzz: 'Buzz', flattop: 'Flat-top', afro: 'Afro', bigafro: 'Big afro', cornrows: 'Cornrows', twists: 'Twists', curly: 'Curly', parted: 'Parted', long: 'Long', mop: 'Mop', mullet: 'Mullet', bald: 'Bald' };
-const FACE_NAME: Record<string, string> = { none: 'Clean', stubble: 'Stubble', mustache: 'Mustache', goatee: 'Goatee', beard: 'Beard', bigbeard: 'Big beard', sideburns: 'Sideburns' };
-const HAIR_NAME: Record<string, string> = { k: 'Black', b: 'Brown', l: 'Blond', r: 'Red', g: 'Grey' };
+export const STYLE_NAME: Record<string, string> = { short: 'Short', buzz: 'Buzz', flattop: 'Flat-top', afro: 'Afro', bigafro: 'Big afro', cornrows: 'Cornrows', twists: 'Twists', curly: 'Curly', parted: 'Parted', long: 'Long', mop: 'Mop', mullet: 'Mullet', bald: 'Bald' };
+export const FACE_NAME: Record<string, string> = { none: 'Clean', stubble: 'Stubble', mustache: 'Mustache', goatee: 'Goatee', beard: 'Beard', bigbeard: 'Big beard', sideburns: 'Sideburns' };
+export const HAIR_NAME: Record<string, string> = { k: 'Black', b: 'Brown', l: 'Blond', r: 'Red', g: 'Grey' };
 
 /** A random look from the parts. */
 export const randomLook = (): ChosenLook => ({

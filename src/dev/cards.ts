@@ -163,6 +163,7 @@ const MINI: DevCard[] = (
 export const CARDS: DevCard[] = [
   // start
   { id: 'start', title: 'Start page and player creation', group: 'Start', icon: 'person', blurb: 'Name, position, archetype, focus, country, difficulty.', open: () => void useStore.setState({ game: null, page: null, mini: null }) },
+  { id: 'look', title: 'Your look', group: 'Start', icon: 'jersey', blurb: 'The identity step: skin, hair colour, hair and facial hair on the player, in a plain white or black jersey with his number.', open: () => void useStore.setState({ game: null, page: null, mini: null }), press: '[data-tour="create-next"]' },
   {
     id: 'saves',
     title: 'Ten save slots and career codes',
@@ -252,6 +253,7 @@ export const CARDS: DevCard[] = [
   // big moments
   { id: 'cam-lab', title: 'Action cam lab', group: 'Big moments', icon: 'camera', blurb: 'Any play on the finals cam, slowed right down, any two teams.', open: () => true, page: CamLab },
   { id: 'intro', title: 'Intro page', group: 'Start', icon: 'ball', blurb: 'The title over a side-on one-on-one: runs, steals, blocks and jumpers in pixel frames, the venue changing every five seconds. First visit only, or the Intro button on the start page.', open: () => void useStore.setState({ game: null, page: null, mini: null, intro: true }) },
+  { id: 'whats-new', title: 'What’s new', group: 'Start', icon: 'news', blurb: 'The latest changes in a panel over part of the start page. It opens by itself once after each update; What’s new beside Intro opens it again.', open: () => void useStore.setState({ game: null, page: null, mini: null, intro: false, thanks: null, news: true }) },
   { id: 'thanks', title: 'Thank you for playing', group: 'Start', icon: 'laurel', blurb: 'The first time someone leaves a career for a new one: the crowd, the confetti, the trophy held high.', open: () => {
     const g = nbaStar();
     if (!g) return false;
@@ -335,8 +337,8 @@ export const CARDS: DevCard[] = [
       useStore.setState({ toasts: ACH_TIERS.slice(0, 3).map((t, i) => ({ id: `dev-${t.key}`, name: ACHIEVEMENTS.find((a) => a.tier === t.key)!.name, tier: t.key, more: i === 2 ? 9 : undefined })) });
     },
   },
-  { id: 'c-boards', title: 'Leaderboards', group: 'Records & community', icon: 'podium', blurb: 'Daily and all-time, every difficulty, ranked by career index.', open: () => (seedCommunity(), useStore.setState({ game: null, mini: null, page: 'community' })) },
-  { id: 'c-hall', title: 'Reality 99 hall', group: 'Records & community', icon: 'hall', blurb: 'Every Reality career that reached 99.', open: () => (seedCommunity(), useStore.setState({ game: null, mini: null, page: 'community' })), press: 'text=Reality 99 hall' },
-  { id: 'c-plaza', title: 'Statue plaza', group: 'Records & community', icon: 'statue', blurb: 'Bronze and gold, pay your respects.', open: () => (seedCommunity(), useStore.setState({ game: null, mini: null, page: 'community' })), press: 'text=Statue plaza' },
+  { id: 'c-boards', title: 'Leaderboards', group: 'Records & community', icon: 'podium', blurb: 'Daily and all-time, every difficulty, ranked by career index, with the house players at the foot.', open: () => (seedCommunity(), useStore.setState({ game: null, mini: null, page: 'community' })) },
+  { id: 'c-hall', title: 'Reality 99 hall', group: 'Records & community', icon: 'hall', blurb: 'Every Reality career that reached 99, on the benches of a hall; tap one for the card.', open: () => (seedCommunity(), useStore.setState({ game: null, mini: null, page: 'community' })), press: 'text=Reality 99 hall' },
+  { id: 'c-plaza', title: 'Statue plaza', group: 'Records & community', icon: 'statue', blurb: 'Cute players cast in bronze and gold, house statues among them; pay your respects.', open: () => (seedCommunity(), useStore.setState({ game: null, mini: null, page: 'community' })), press: 'text=Statue plaza' },
   { id: 'c-feedback', title: 'Send feedback', group: 'Records & community', icon: 'envelope', blurb: 'A note to the maker.', open: () => (seedCommunity(), useStore.setState({ game: null, mini: null, page: 'community' })), press: 'text=Send feedback' },
 ];

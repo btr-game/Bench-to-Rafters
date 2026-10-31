@@ -177,3 +177,24 @@ describe('the look he picks (owner: "let the user choose the appearance of the p
     expect(lookTraits('Look Picked')).toEqual({ ...look, gear: [] });
   });
 });
+
+describe('a player drawn facing left', () => {
+  it('has his number painted back to front, so it reads right once the sprite is turned round', async () => {
+    const { paint, RUN_A } = await import('../src/ui/art/sprite');
+    const kit = { base: '#123456', ink: '#ABCDEF', trim: '#123456', word: '' };
+    const look = { skin: '#8D5524', hair: '#1B1820', style: 'short' as const, face: 'none' as const, gear: [], shoe: '#2A2D34' };
+    // where the number's ink sits, as a pattern from its own left edge
+    const inkAt = (g: string[][], turned: boolean) => {
+      const at: [number, number][] = [];
+      g.forEach((row, y) => row.forEach((c, x) => c === kit.ink && at.push([turned ? row.length - 1 - x : x, y])));
+      const x0 = Math.min(...at.map(([x]) => x));
+      return at.map(([x, y]) => `${x - x0},${y}`).sort();
+    };
+    const plain = inkAt(paint(RUN_A, kit, look, 24), false);
+    const turned = inkAt(paint(RUN_A, kit, look, 24, true), true);
+    expect(plain.length).toBeGreaterThan(10);
+    expect(turned).toEqual(plain);
+    // and drawn the plain way, a turned-round sprite would read backwards
+    expect(inkAt(paint(RUN_A, kit, look, 24), true)).not.toEqual(plain);
+  });
+});

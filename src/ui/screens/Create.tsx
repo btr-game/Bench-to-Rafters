@@ -1,6 +1,6 @@
 import { Icon } from '../art/Icon';
 import { ICON_FOR, archetypeIcon } from '../art/icons';
-import { useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { ARCHETYPES } from '../../engine/player/archetypes';
 import { rerollAttrs } from '../../engine/player/create';
 import { makeRng } from '../../engine/rng';
@@ -16,7 +16,7 @@ import { ht, seasonLabel } from '../format';
 import { MiniGamesCard } from '../mini/MiniGames';
 import { CareerLogCard } from './CareerLog';
 import { SettingsMenu } from '../components/Settings';
-import { WhatsNewCard } from '../components/WhatsNew';
+import { WhatsNewButton, WhatsNewPanel } from '../components/WhatsNew';
 import { GuideButton } from '../components/Guide';
 import { AchievementsCard } from './Achievements';
 import { CommunityCard, LiveStrip } from './Community';
@@ -158,6 +158,16 @@ export function Create() {
   const start = useStore((s) => s.start);
   const showIntro = useStore((s) => s.showIntro);
   const [step, setStep] = useState(0);
+  // each step opens at the top (owner: "when i move from the home page to identity, make the screen
+  // start at the top"; the browser kept the Next button in place, so the page opened at its foot)
+  const firstStep = useRef(true);
+  useLayoutEffect(() => {
+    if (firstStep.current) {
+      firstStep.current = false;
+      return;
+    }
+    window.scrollTo(0, 0);
+  }, [step]);
   const [name, setName] = useState(`${pick(FIRST_NAMES)} ${pick(LAST_NAMES)}`);
   const [number, setNumber] = useState(String(Math.floor(Math.random() * 35)));
   const [pos, setPos] = useState<Pos>('SG');
@@ -256,6 +266,7 @@ export function Create() {
           <button className="icon-btn" data-tour="intro-btn" onClick={showIntro}>
             Intro
           </button>
+          <WhatsNewButton />
           <SettingsMenu g={null} />
           <GuideButton />
           <button className="icon-btn" data-tour="random" onClick={randomAll} disabled={road && step === 4} title={road && step === 4 ? 'No Shortcuts: no rerolls' : undefined}>
@@ -317,7 +328,6 @@ export function Create() {
           )}
           <p className="muted small">The league is the same at every difficulty. What changes is your potential, how fast you grow and how often you get hurt. Want it quicker? Flip the Fast break switch inside the game, any time.</p>
           <div className="start-cards">
-            <WhatsNewCard />
             <MiniGamesCard />
             <CareerLogCard />
             <AchievementsCard />
@@ -600,6 +610,7 @@ export function Create() {
           <DevGate />
         </section>
       )}
+      <WhatsNewPanel />
     </div>
   );
 }

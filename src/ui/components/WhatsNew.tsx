@@ -1,83 +1,96 @@
-// The What's new card on the start page and its pop-up (round 27; content/whatsNew.ts).
+// What's new (round 27; content/whatsNew.ts). Owner: "make what's new a pop up that covers part of
+// the screen, and when the user closes it, they can still access it next to [the Intro] button".
+// A panel down the right of the start page (a sheet from the foot on a phone) that opens by itself
+// once after each update (store.ts, newsDue); the button beside Intro opens it again.
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { NEWS } from '../../content/whatsNew';
+import { newsFresh, useStore } from '../../store';
 import { Icon } from '../art/Icon';
 import { sfx } from '../sound';
 
-const KEY = 'btr-news-seen';
-const seenId = (): string | null => {
-  try {
-    return localStorage.getItem(KEY);
-  } catch {
-    return null;
-  }
-};
+/** The button beside Intro, with a dot until the latest changes have been opened. */
+export function WhatsNewButton() {
+  const open = useStore((s) => s.news);
+  const showNews = useStore((s) => s.showNews);
+  const fresh = !open && newsFresh();
+  return (
+    <button
+      className="icon-btn news-btn"
+      data-tour="whats-new"
+      aria-haspopup="dialog"
+      aria-expanded={open}
+      aria-label={fresh ? 'What’s new (not opened yet)' : undefined}
+      onClick={() => {
+        sfx('page');
+        showNews();
+      }}
+    >
+      What&rsquo;s new
+      {fresh && <span className="news-dot" aria-hidden="true" />}
+    </button>
+  );
+}
 
-export function WhatsNewCard() {
+/** The panel itself. */
+export function WhatsNewPanel() {
+  const open = useStore((s) => s.news);
+  const endNews = useStore((s) => s.endNews);
+  const closeBtn = useRef<HTMLButtonElement>(null);
   const latest = NEWS[0];
-  const [open, setOpen] = useState(false);
-  const [fresh, setFresh] = useState(() => seenId() !== latest.id);
-  const show = () => {
-    setOpen(true);
-    sfx('page');
-    if (fresh) {
-      setFresh(false);
-      try {
-        localStorage.setItem(KEY, latest.id);
-      } catch {
-        /* the dot comes back next visit; nothing else is lost */
-      }
-    }
+
+  // closing hands the focus back to the button beside Intro
+  const close = () => {
+    endNews();
+    requestAnimationFrame(() => document.querySelector<HTMLElement>('[data-tour="whats-new"]')?.focus());
   };
   useEffect(() => {
     if (!open) return;
-    const key = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false);
-    window.addEventListener('keydown', key);
-    return () => window.removeEventListener('keydown', key);
+    closeBtn.current?.focus();
+    // Escape closes it; Tab stays on its one control while it is up
+    const key = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.stopImmediatePropagation();
+        close();
+      } else if (e.key === 'Tab') {
+        e.preventDefault();
+        closeBtn.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', key, true);
+    return () => window.removeEventListener('keydown', key, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
-  return (
-    <section className="card stack news-card" data-tour="whats-new">
-      <div className="sec-title with-icon">
-        <Icon name="news" size={28} />
-        What&rsquo;s new
-        {fresh && <span className="news-dot" aria-label="New" />}
-      </div>
-      <ul className="news-list">
-        {latest.items.slice(0, 3).map((x) => (
-          <li key={x.text}>
-            <Icon name={x.icon} size={22} />
-            <span>{x.text}</span>
-          </li>
-        ))}
-      </ul>
-      <button className="btn ghost" onClick={show}>
-        See all {latest.items.length} changes
-      </button>
-      {open && (
-        <div className="news-pop" role="dialog" aria-modal="true" aria-label="What's new" onClick={(e) => e.target === e.currentTarget && setOpen(false)}>
-          <div className="news-pop-card">
-            <div className="row" style={{ alignItems: 'flex-start', gap: 12 }}>
-              <div style={{ minWidth: 0 }}>
-                <div className="kicker">{latest.date}</div>
-                <h2 className="title">What&rsquo;s new</h2>
-              </div>
-              <div className="spacer" />
-              <button className="btn small ghost" onClick={() => setOpen(false)} autoFocus>
-                Close
-              </button>
-            </div>
-            <ul className="news-list big">
-              {latest.items.map((x) => (
-                <li key={x.text}>
-                  <Icon name={x.icon} size={28} />
-                  <span>{x.text}</span>
-                </li>
-              ))}
-            </ul>
+
+  if (!open) return null;
+  return createPortal(
+    <div className="news-scrim" onClick={(e) => e.target === e.currentTarget && close()}>
+      <aside className="news-panel" role="dialog" aria-modal="true" aria-labelledby="news-title">
+        <header className="news-head">
+          <Icon name="news" size={36} />
+          <div style={{ minWidth: 0 }}>
+            <div className="kicker">{latest.date}</div>
+            <h2 className="title" id="news-title">
+              What&rsquo;s new
+            </h2>
           </div>
-        </div>
-      )}
-    </section>
+          <div className="spacer" />
+          <button ref={closeBtn} className="btn small ghost" onClick={close}>
+            Close
+          </button>
+        </header>
+        <ul className="news-list big">
+          {latest.items.map((x) => (
+            <li key={x.text}>
+              <Icon name={x.icon} size={28} />
+              <span>{x.text}</span>
+            </li>
+          ))}
+        </ul>
+        <p className="small muted news-foot">To see this again, press What&rsquo;s new next to Intro at the top of the start page.</p>
+      </aside>
+    </div>,
+    document.body,
   );
 }
