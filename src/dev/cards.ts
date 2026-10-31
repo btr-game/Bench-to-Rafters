@@ -255,6 +255,7 @@ export const CARDS: DevCard[] = [
   { id: 'cam-lab', title: 'Action cam lab', group: 'Big moments', icon: 'camera', blurb: 'Any play on the finals cam, slowed right down, any two teams.', open: () => true, page: CamLab },
   { id: 'intro', title: 'Intro page', group: 'Start', icon: 'ball', blurb: 'The title over a side-on one-on-one: runs, steals, blocks and jumpers in pixel frames, the venue changing every five seconds. First visit only, or the Intro button on the start page.', open: () => void useStore.setState({ game: null, page: null, mini: null, intro: true }) },
   { id: 'whats-new', title: 'What’s new', group: 'Start', icon: 'news', blurb: 'The latest changes in a panel over part of the start page. It opens by itself once after each update; What’s new beside Intro opens it again.', open: () => void useStore.setState({ game: null, page: null, mini: null, intro: false, thanks: null, news: true }) },
+  { id: 'share', title: 'Share the game', group: 'Start', icon: 'share', blurb: 'The Share button on every page: the link to copy, the phone’s share sheet, and posts for X, Reddit, Facebook, WhatsApp and email. Sharing earns Word of Mouth.', open: () => void useStore.setState({ game: null, page: null, mini: null, intro: false, thanks: null, news: false }), press: '[data-tour="share-btn"]' },
   { id: 'thanks', title: 'Thank you for playing', group: 'Start', icon: 'laurel', blurb: 'The first time someone leaves a career for a new one: the crowd, the confetti, the trophy held high.', open: () => {
     const g = nbaStar();
     if (!g) return false;

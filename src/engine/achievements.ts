@@ -35,6 +35,7 @@ export interface CareerTotals {
   master: number; // careers finished in Master mode
   daily: number; // days the daily challenge was played
   mini?: MiniTotals; // round 27: every mini-game run on this device (achievementsMini.ts)
+  shared?: number; // round 28: times the game's link went out (Share the game)
 }
 export const NO_TOTALS: CareerTotals = { finished: 0, byMode: {}, titles: 0, mvps: 0, fast: 0, master: 0, daily: 0 };
 
@@ -361,6 +362,8 @@ export const ACHIEVEMENTS: Achievement[] = [
   A('daily1', 'Daily Grind', 'bench', 'Play a daily challenge.', (f) => f.t.daily >= 1),
   A('daily7', 'Week Streak', 'rotation', 'Play the daily challenge on seven days.', (f) => f.t.daily >= 7),
   A('daily30', 'Month of Sundays', 'allstar', 'Play the daily challenge on thirty days.', (f) => f.t.daily >= 30),
+  // round 28: Share the game
+  A('share1', 'Word of Mouth', 'bench', 'Share the game with someone.', (f) => (f.t.shared ?? 0) >= 1),
   // round 25: the book past 500 (achievements25.ts)
   ...ACHIEVEMENTS_25,
   // round 27: the mini-games, in the arcade and in a career (achievementsMini.ts)
@@ -368,7 +371,7 @@ export const ACHIEVEMENTS: Achievement[] = [
 ];
 
 // the ones that only read the totals kept across careers (they can be checked with no career open)
-const TOTALS_ONLY = new Set(['c1', 'c3', 'c5', 'c10', 'c25', 'c50', 'c100', 'allmodes', 'fastdone', 'masterdone', 'titles10', 'mvp10', 'daily1', 'daily7', 'daily30', ...MINI_TOTALS_ONLY]);
+const TOTALS_ONLY = new Set(['c1', 'c3', 'c5', 'c10', 'c25', 'c50', 'c100', 'allmodes', 'fastdone', 'masterdone', 'titles10', 'mvp10', 'daily1', 'daily7', 'daily30', 'share1', ...MINI_TOTALS_ONLY]);
 
 /** The achievements this career (and the totals) have earned, by id. */
 export function earnedNow(g: GameState | null, t: CareerTotals): string[] {

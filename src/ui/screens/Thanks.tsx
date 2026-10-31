@@ -11,6 +11,7 @@ import { PixelWord } from '../art/PixelText';
 import { AwardArt } from '../art/Award';
 import { Icon } from '../art/Icon';
 import { hallOfFame, raftersTeams } from '../../engine/awards/legacy';
+import { ShareButton } from '../components/Share';
 
 const CONFETTI = ['#F76707', '#FCC419', '#1C7ED6', '#2F9E44', '#E03131', '#7048E8', '#F8F9FA'];
 const SKIN = ['#F3D2B8', '#D4A077', '#B67F55', '#8E5B3A', '#6B4029', '#E8BC98'];
@@ -55,7 +56,8 @@ function CrowdRow({ seed, up }: { seed: number; up: boolean }) {
 export function Thanks({ g }: { g: GameState }) {
   const end = useStore((s) => s.endThanks);
   useEffect(() => {
-    const key = (e: KeyboardEvent) => (e.key === 'Enter' || e.key === 'Escape') && end();
+    // a pop-up over the page (Share the game) keeps its keys
+    const key = (e: KeyboardEvent) => (e.key === 'Enter' || e.key === 'Escape') && !document.querySelector('[role="dialog"]') && end();
     window.addEventListener('keydown', key);
     return () => window.removeEventListener('keydown', key);
   }, [end]);
@@ -118,9 +120,13 @@ export function Thanks({ g }: { g: GameState }) {
           <PixelWord text="FOR PLAYING" color="#FFD43B" shade="#5A4206" className="th-word" />
         </h1>
         <p className="intro-line">Every career is a different road. Ready for the next one?</p>
-        <button className="btn intro-go" onClick={end} autoFocus>
-          Play again
-        </button>
+        <div className="th-go">
+          <button className="btn intro-go" onClick={end} autoFocus>
+            Play again
+          </button>
+          {/* round 28 (owner: a share button throughout): the moment someone liked a career most */}
+          <ShareButton look="big" />
+        </div>
       </div>
     </main>
   );

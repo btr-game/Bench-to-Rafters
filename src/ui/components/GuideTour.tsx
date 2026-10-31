@@ -26,6 +26,7 @@ const TOUR: Step[] = [
   T('guide-btn', D('guide-btn'), 'The manual: every feature in a few short points. Guide mode switches on and off there too.'),
   T('intro-btn', D('intro-btn'), 'Intro plays the opening again.'),
   T('whats-new', D('whats-new'), 'What’s new: the latest changes to the game. It opens by itself once after each update; this opens it again.'),
+  T('share-btn', D('share-btn'), 'Share gives you the game’s link to send to a friend.'),
   T('random', D('random'), 'Random rolls every pick at once.'),
   T('start-mode', '.modes', 'How hard the road is. It stays for the whole career.'),
   T('oath', '.oath-card', 'With Reality hits hard: No Shortcuts, the hardest way to play. The road picks your player at random, then master mode with no Fast break or Sim, for the whole career, and a mark of honour for it.'),

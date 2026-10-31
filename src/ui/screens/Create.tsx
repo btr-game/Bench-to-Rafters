@@ -17,6 +17,7 @@ import { MiniGamesCard } from '../mini/MiniGames';
 import { CareerLogCard } from './CareerLog';
 import { SettingsMenu } from '../components/Settings';
 import { WhatsNewButton, WhatsNewPanel } from '../components/WhatsNew';
+import { ShareButton } from '../components/Share';
 import { GuideButton } from '../components/Guide';
 import { AchievementsCard } from './Achievements';
 import { CommunityCard, LiveStrip } from './Community';
@@ -277,6 +278,7 @@ export function Create() {
             Intro
           </button>
           <WhatsNewButton />
+          <ShareButton />
           <SettingsMenu g={null} />
           <GuideButton />
           <button className="icon-btn" data-tour="random" onClick={randomAll} disabled={road && step === 4} title={road && step === 4 ? 'No Shortcuts: no rerolls' : undefined}>

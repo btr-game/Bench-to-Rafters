@@ -1997,3 +1997,14 @@ multiple times."
   game's tab stays as it was; Back to the game closes the deck's tab. Inside the claude.ai page (a
   frame, which cannot rely on opening tabs) it still reloads.
 
+- **Share the game** (owner: "can you add a share button throughout? as in share the link of the game,
+  not the player card or anything"): a Share button in the top bar of the career and of the start
+  page, at the top of the side pages (community, career log, achievements, mini-games), at the foot
+  of every tab beside the feedback, and on the thank-you page. One pop-up: the website's link to
+  copy (selected for a manual copy where copying is blocked), the phone's share sheet where the
+  browser has one, and links that open a post on X, Reddit, Facebook, WhatsApp or an email. Plain
+  text labels for the sites, no copies of their logos. The link is the website on every copy,
+  claude.ai's included (`GAME_URL` in components/Share.tsx). Pixel icon (an arrow out of a box),
+  the "sent" sound, Escape and a tap beside it close it, focus goes back to the button; the
+  thank-you page's Enter (Play again) waits while it is open. Word of Mouth (Bench) for the first
+  link sent; a guide card, a tour step, a dev deck card and a What's new entry.

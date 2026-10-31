@@ -1887,6 +1887,23 @@ export const ICONS: Record<string, string[]> = {
     '.OwwwwwwwwwwwwO.',
     '.OOOOOOOOOOOOOO.',
   ],
+  // round 28: Share the game (components/Share.tsx)
+  share: [
+    '.......OO.......',
+    '......ONNO......',
+    '.....ONNNNO.....',
+    '....ONNnnNNO....',
+    '...OOOONNOOOO...',
+    '......ONNO......',
+    '.OOOO.ONNO.OOOO.',
+    '.OwwO.ONNO.OwwO.',
+    '.OwwO.OnnO.OwwO.',
+    '.OwwO.OOOO.OwwO.',
+    '.OwwOOOOOOOOwwO.',
+    '.OwwwwwwwwwwwwO.',
+    '.OMMMMMMMMMMMMO.',
+    '.OOOOOOOOOOOOOO.',
+  ],
   statue: [
     '..........OOO...',
     '.........OTTTO..',

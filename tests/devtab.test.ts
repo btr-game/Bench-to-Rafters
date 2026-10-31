@@ -62,3 +62,18 @@ describe('the dev deck in its own tab', () => {
     expect(b.reload).not.toHaveBeenCalled();
   });
 });
+
+describe('Share the game', () => {
+  it('earns Word of Mouth from the totals alone, with no career open', async () => {
+    const { earnedNow, NO_TOTALS } = await import('../src/engine/achievements');
+    expect(earnedNow(null, { ...NO_TOTALS })).not.toContain('share1');
+    expect(earnedNow(null, { ...NO_TOTALS, shared: 1 })).toContain('share1');
+  });
+
+  it('shares the website, and every site link carries it', async () => {
+    const src = (await import('node:fs')).readFileSync('src/ui/components/Share.tsx', 'utf8');
+    expect(src).toContain("GAME_URL = 'https://bench-to-rafters.netlify.app/'");
+    for (const site of ['twitter.com/intent/tweet', 'reddit.com/submit', 'facebook.com/sharer', 'wa.me', 'mailto:']) expect(src).toContain(site);
+    expect(src.match(/enc\(GAME_URL\)|\$\{GAME_URL\}/g)?.length).toBeGreaterThanOrEqual(5);
+  });
+});

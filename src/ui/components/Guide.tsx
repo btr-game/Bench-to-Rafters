@@ -45,6 +45,7 @@ const SECTIONS: { title: string; where: string; items: [string, string[]][] }[] 
       ['Focus stats', ['Two ratings that grow almost twice as fast.', 'Changing them later takes a breakthrough season.']],
       ['Continue', ['Your saved careers are under the difficulties and Next, newest first.', 'Paste a career code there to bring one from another browser.']],
       ['Intro and What’s new', ['Intro (top of the start page) plays the opening again: the title over a one-on-one, from a high school gym to the NBA.', 'What’s new pops up over the start page once after each update with the latest changes; the What’s new button next to Intro opens it again (a dot means you haven’t opened it yet).']],
+      ['Share the game', ['Share (top of every page, at the foot of each tab, and on the thank-you page) gives you the game’s link: copy it, send it with your phone’s share sheet, or post it on X, Reddit, Facebook, WhatsApp or by email.']],
     ],
   },
   {

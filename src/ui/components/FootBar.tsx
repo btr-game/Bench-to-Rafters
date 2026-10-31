@@ -1,11 +1,13 @@
 // The foot of every page (round 27, owner: "make me be able to access the dev deck in any page. put
 // it next to the feedback on the bottom", and "the feedback card should also appear in all of the
-// minigames as well"): Report a bug or send feedback, and the Developer door (password).
+// minigames as well"): Report a bug or send feedback, Share the game (round 28), and the Developer
+// door (password).
 
 import { useState } from 'react';
 import { FeedbackFoot } from '../screens/Community';
 import { DEV, enterDev } from '../../dev/mode';
 import { Icon } from '../art/Icon';
+import { ShareButton } from './Share';
 
 /** The dev deck's door, folded: the password, then the deck. Not shown inside the deck itself. */
 export function DevDoor() {
@@ -44,6 +46,7 @@ export function FootBar({ where }: { where: string }) {
   return (
     <div className="foot-bar">
       <FeedbackFoot where={where} />
+      <ShareButton look="foot" />
       <DevDoor />
     </div>
   );

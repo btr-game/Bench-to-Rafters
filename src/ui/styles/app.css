@@ -1709,7 +1709,7 @@ td .art-team { display: inline-block; vertical-align: middle; margin: -3px 8px -
 /* round 25: the feedback sender at the foot of every tab, one line until opened */
 .feedback-foot { margin-top: 18px; padding-block: 12px; }
 /* round 27: feedback and the Developer door side by side at the foot of every page */
-.foot-bar { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: start; margin-top: 18px; }
+.foot-bar { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 12px; align-items: start; margin-top: 18px; }
 .foot-bar > .feedback-foot, .foot-bar > .dev-door { margin-top: 0; }
 .dev-door { padding-block: 12px; }
 .dev-door > summary { cursor: pointer; font-weight: 600; list-style: none; }
@@ -2288,3 +2288,22 @@ input[type='range'] { width: 100%; min-height: 32px; accent-color: var(--accent)
   .in-a { transform: translateX(calc(50vw - var(--pl) * 1.3)); } .in-b { transform: translateX(calc(50vw - var(--pl) * 0.3)); }
   .in-frames .fr-stand { opacity: 1; } .in-b .in-dribble, .in-shot { opacity: 0; }
 }
+
+/* round 28: Share the game (components/Share.tsx): a button in the top bars, at the foot of the
+   pages and on the thank-you page, and its pop-up */
+.share-btn svg { flex: none; }
+@media (max-width: 640px) { .top .share-btn .share-word { display: none; } }
+.share-card { position: relative; margin-block: auto; width: min(480px, 100%); display: grid; gap: 12px; padding: 20px; border-radius: 10px; border: 3px solid var(--accent); background: var(--surface); box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45); animation: hall-pop-in 0.22s ease-out both; }
+.share-head { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; align-items: center; padding-right: 48px; }
+.share-head p { margin: 2px 0 0; }
+.share-link { display: flex; flex-wrap: wrap; gap: 8px; }
+.share-link input { flex: 1 1 220px; min-width: 0; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 15px; }
+.share-said { margin: 0; min-height: 1.45em; }
+.share-native { justify-self: start; }
+.share-sites { display: flex; flex-wrap: wrap; gap: 8px; }
+.share-sites .btn { text-decoration: none; }
+.share-foot { display: flex; align-items: center; gap: 8px; margin: 0; padding-block: 12px; min-height: 61px; /* the closed feedback bar beside it */ font: inherit; font-weight: 600; color: var(--ink); text-align: left; cursor: pointer; }
+.share-foot:hover { border-color: var(--accent); }
+.th-go { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 12px; }
+@media (prefers-reduced-motion: reduce) { .share-card { animation: none; } }
+

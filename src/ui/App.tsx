@@ -4,6 +4,7 @@ import type { GameState } from '../engine/types';
 import { MODES } from '../engine/balance';
 import { ovrOf } from '../engine/player/ovr';
 import { NextStep, SettingsMenu, useKeys } from './components/Settings';
+import { ShareButton } from './components/Share';
 import { tabKey } from './selectors';
 import { useStore, type Tab } from '../store';
 import { UI } from '../content/strings';
@@ -190,6 +191,7 @@ export function App() {
           <TabBar g={game} top />
           <div className="top-right">
             <NextStep g={game} />
+            <ShareButton />
             <GuideButton />
             <SettingsMenu g={game} />
           </div>

@@ -16,6 +16,11 @@ interface News {
 
 export const NEWS: News[] = [
   {
+    id: '2026-10-31-share',
+    date: '31 October 2026',
+    items: [{ icon: 'share', text: 'Share the game: a Share button on every page gives you the link to send to a friend, or to post on X, Reddit, Facebook or WhatsApp.' }],
+  },
+  {
     id: '2026-10-31',
     date: '31 October 2026',
     items: [

@@ -73,6 +73,13 @@ export function recordMini(r: MiniResult): void {
   saveAch(d);
 }
 
+/** The game's link went out (round 28, Share the game): counted for Word of Mouth. */
+export function recordShare(): void {
+  const d = loadAch();
+  d.totals.shared = (d.totals.shared ?? 0) + 1;
+  saveAch(d);
+}
+
 /** Checks everything against the career on screen; returns what is new (and keeps it). */
 export function checkAch(g: GameState | null): Achievement[] {
   const d = loadAch();

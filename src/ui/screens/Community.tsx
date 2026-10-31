@@ -19,6 +19,7 @@ import { drawCareerCard } from '../share';
 import { StatueArt } from '../art/Statue';
 import { PlayerArt } from '../art/Player';
 import { Icon } from '../art/Icon';
+import { PixelX } from '../art/PixelX';
 import { OathMark } from '../components/OathMark';
 import { sfx } from '../sound';
 import { houseScores, houseStatues } from '../house';
@@ -124,14 +125,6 @@ function CardImage({ rec }: { rec: CareerRecord }) {
 }
 
 /** A pixel X for the close button. */
-function PixelX() {
-  return (
-    <svg viewBox="0 0 7 7" shapeRendering="crispEdges" aria-hidden="true">
-      {[0, 1, 2, 3, 4, 5, 6].flatMap((i) => [<rect key={`a${i}`} x={i} y={i} width={1} height={1} fill="currentColor" />, <rect key={`b${i}`} x={6 - i} y={i} width={1} height={1} fill="currentColor" />])}
-    </svg>
-  );
-}
-
 /** A career card large in the middle of the screen (owner, the statue plaza: "make the player card
  * much larger? make it popup in the middle of the screen, and exit when pressing space/enter (or a
  * x mark on the corner is fine)"); the Reality 99 hall uses it too. Space, Enter, Escape, the X or a

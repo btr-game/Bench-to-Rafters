@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useStore } from '../../store';
+import { ShareButton } from './Share';
 
 // The top of a page of its own (round 27, navigation): the way back on the left, saying where it
 // goes; where you are; the game's name on the right. Escape goes back too, unless a dialog, the
@@ -32,6 +33,7 @@ export function PageTop({ trail, back, backLabel, extra }: { trail: string[]; ba
       </nav>
       <div className="top-right">
         {extra}
+        <ShareButton />
         <div className="brand">
           Bench to <span>Rafters</span>
         </div>
