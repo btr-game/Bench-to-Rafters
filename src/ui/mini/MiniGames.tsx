@@ -4,6 +4,7 @@
 import { Icon } from '../art/Icon';
 import { ICON_FOR } from '../art/icons';
 import { useStore } from '../../store';
+import { PageTop } from '../components/PageTop';
 import { MINI_CLAIMS, claimsUsed, miniProgress, type MiniId } from '../../engine/career/miniBonus';
 import { FrontOffice } from './FrontOffice';
 import { LegendsGame } from './Legends';
@@ -109,27 +110,27 @@ export function MiniEnd({ children }: { children?: React.ReactNode }) {
   );
 }
 
+const MINI_NAME: Record<string, string> = Object.fromEntries(GAMES.map((x) => [x.id, x.name]));
+
 export function MiniGames() {
   const mini = useStore((s) => s.mini);
   const setMini = useStore((s) => s.setMini);
   const hasCareer = useStore((s) => !!s.game);
   return (
     <div className="wrap no-tabs">
-      <header className="top">
-        <div className="brand">
-          Bench to <span>Rafters</span>
-        </div>
-        <div className="top-right">
-          {mini !== 'hub' && (
-            <button className="icon-btn" onClick={() => setMini('hub')}>
-              All games
+      {/* round 27: the shared page top; in a game the way back is the hub, and the career is one tap away */}
+      <PageTop
+        trail={mini === 'hub' || !mini ? ['Mini-games'] : ['Mini-games', MINI_NAME[mini] ?? mini]}
+        back={() => setMini(mini === 'hub' ? null : 'hub')}
+        backLabel={mini === 'hub' ? undefined : 'All mini-games'}
+        extra={
+          mini !== 'hub' && (
+            <button className="icon-btn exit-btn" onClick={() => setMini(null)}>
+              {hasCareer ? 'Back to the career' : 'Exit'}
             </button>
-          )}
-          <button className="icon-btn exit-btn" onClick={() => setMini(null)}>
-            {hasCareer ? 'Back to career' : 'Exit'}
-          </button>
-        </div>
-      </header>
+          )
+        }
+      />
       {mini === 'hub' && <Hub />}
       {mini === 'office' && <FrontOffice />}
       {mini === 'threes' && <ThreesGame />}

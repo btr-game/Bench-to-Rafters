@@ -10,6 +10,7 @@ import { ARCHETYPES } from '../../engine/player/archetypes';
 import { dailyInput, todayKey } from '../../engine/mini/daily';
 import { NAMES } from '../../content/strings';
 import { useStore } from '../../store';
+import { PageTop } from '../components/PageTop';
 import { SCORE_NOTE, BOARD_SIZE, STATUE, canComment, community, openCommentBox, hall99Ok, scoreOf, statueOk, type Community as Api, type FeedItem, type ScoreRow, type StatueRow, type WriteResult } from '../community';
 import { drawCareerCard } from '../share';
 import { StatueArt } from '../art/Statue';
@@ -363,14 +364,7 @@ export function CommunityPage() {
   ];
   return (
     <div className="wrap">
-      <header className="top">
-        <div className="brand">
-          Bench to <span>Rafters</span>
-        </div>
-        <button className="btn ghost" onClick={() => setPage(null)}>
-          Back
-        </button>
-      </header>
+      <PageTop trail={['Community']} back={() => setPage(null)} />
       <section className="stack stage-in">
         <div>
           <div className="kicker">{c?.kind === 'shared' ? 'Shared with everyone on this page' : 'Offline: this device only'}</div>

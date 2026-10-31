@@ -88,7 +88,7 @@ export function LabGame() {
         <section className="card stack">
           <div className="sec-title">Season by season</div>
           {st.history.map((h) => (
-            <div key={h.age} className="lab-row">
+            <div key={h.age} className="labg-row">
               <b>{h.age}</b>
               <span>{h.ovr}</span>
               <span className="small">{h.line}</span>
@@ -120,11 +120,11 @@ export function LabGame() {
               {st.pos} · {ht(st.height)}
             </span>
           </div>
-          <div className="lab-ovr">
+          <div className="labg-ovr">
             <b>{Math.round(ovr)}</b>
             <span className="small muted">OVR</span>
           </div>
-          <div className="lab-credits">
+          <div className="labg-credits">
             <b>{st.credits.toFixed(1)}</b>
             <span className="small muted">credits</span>
           </div>

@@ -119,6 +119,18 @@ export function DevDeck() {
     setOpen(null);
   };
 
+  // the visual check (scripts/visual.cjs, round 27) deals every card by id
+  useEffect(() => {
+    (window as unknown as { __deck?: unknown }).__deck = {
+      ids: CARDS.map((c) => c.id),
+      open: (id: string) => {
+        const c = CARDS.find((x) => x.id === id);
+        if (c) deal(c);
+      },
+      back: () => (clean(), setOpen(null)),
+    };
+  }, [deal]);
+
   // arrows flip the deck, Enter opens the card on top
   useEffect(() => {
     if (open || view !== 'deck' || section !== 'cards' || results) return;

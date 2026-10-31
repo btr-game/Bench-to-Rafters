@@ -4,6 +4,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ACHIEVEMENTS, ACH_TIERS, type AchTier } from '../../engine/achievements';
 import { useStore } from '../../store';
+import { PageTop } from '../components/PageTop';
 import { loadAch } from '../achievements';
 import { Badge } from '../art/Badge';
 
@@ -75,14 +76,7 @@ export function AchievementBook() {
   const total = Object.keys(got).length;
   return (
     <div className="wrap">
-      <header className="top">
-        <div className="brand">
-          Bench to <span>Rafters</span>
-        </div>
-        <button className="btn ghost" onClick={() => setPage(null)}>
-          Back
-        </button>
-      </header>
+      <PageTop trail={['Achievement book']} back={() => setPage(null)} />
       <section className="stack stage-in">
         <div>
           <div className="kicker">

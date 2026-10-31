@@ -5,6 +5,7 @@ import type { CareerRecord } from '../../engine/career/record';
 import { MODES } from '../../engine/balance';
 import { NAMES } from '../../content/strings';
 import { useStore } from '../../store';
+import { PageTop } from '../components/PageTop';
 import { LOG_MAX, LOG_WARN, deleteCard, logCards } from '../careerLog';
 import { canShareFiles, downloadCareerCard, drawCareerCard, shareCareerCard } from '../share';
 import { PlayerArt } from '../art/Player';
@@ -150,14 +151,7 @@ export function CareerLog() {
   const warn = fullness(cards.length, cards[cards.length - 1]);
   return (
     <div className="wrap">
-      <header className="top">
-        <div className="brand">
-          Bench to <span>Rafters</span>
-        </div>
-        <button className="btn ghost" onClick={() => setPage(null)}>
-          Back
-        </button>
-      </header>
+      <PageTop trail={['Career log']} back={() => setPage(null)} />
       <section className="stack stage-in">
         <div>
           <div className="kicker">

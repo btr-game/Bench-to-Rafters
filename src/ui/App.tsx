@@ -109,6 +109,15 @@ export function App() {
   useEffect(() => {
     document.documentElement.classList.toggle('simple', simple);
   }, [simple]);
+  // round 27 (navigation): a tab opens at its top, not where the last one was scrolled to, and the
+  // browser tab says where you are
+  useEffect(() => {
+    window.scrollTo(0, 0); // braces: newer browsers return a promise from scrollTo, and an effect may only return its clean-up
+  }, [tab, page, mini]);
+  useEffect(() => {
+    const where = mini ? 'Mini-games' : page === 'log' ? 'Career log' : page === 'achievements' ? 'Achievement book' : page === 'community' ? 'Community' : game ? UI.tabs[tab] : '';
+    document.title = where ? `${where} · Bench to Rafters` : 'Bench to Rafters';
+  }, [tab, page, mini, game]);
   const fast = !!game?.flags.fast && game.step !== 'retired';
 
   useEffect(() => {

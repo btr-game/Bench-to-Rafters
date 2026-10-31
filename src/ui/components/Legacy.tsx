@@ -22,7 +22,7 @@ export function LegacyTierList({ g }: { g: GameState }) {
                   <span key={it.key} className={`tier-item${n > 0 ? ' got' : ''}`} style={n > 0 ? { borderColor: t.color } : undefined} title={it.note}>
                     {it.label}
                     <em>{it.pts} pts</em>
-                    {n > 0 && <b style={{ background: t.color }}>×{n}</b>}
+                    {n > 0 && <b style={{ background: t.color, color: ink(t.color) }}>×{n}</b>}
                   </span>
                 );
               })}

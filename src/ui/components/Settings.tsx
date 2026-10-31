@@ -134,7 +134,7 @@ export function SettingsMenu({ g }: { g: GameState | null }) {
           <div className="set-keys hide-touch">
             <b>Keyboard</b>
             <span>
-              <kbd>Enter</kbd> continue, leave the shop or skip a final to the buzzer · <kbd>1</kbd>–<kbd>9</kbd> <kbd>0</kbd> <kbd>-</kbd> <kbd>=</kbd> pick a choice · <kbd>H</kbd> <kbd>S</kbd> <kbd>P</kbd> <kbd>L</kbd> <kbd>R</kbd> tabs
+              <kbd>Enter</kbd> continue, leave the shop or skip a final to the buzzer · <kbd>1</kbd>–<kbd>9</kbd> <kbd>0</kbd> <kbd>-</kbd> <kbd>=</kbd> pick a choice · <kbd>H</kbd> <kbd>S</kbd> <kbd>P</kbd> <kbd>L</kbd> <kbd>R</kbd> tabs · <kbd>Esc</kbd> back from a page, close a menu
             </span>
           </div>
           <div className="set-foot">
