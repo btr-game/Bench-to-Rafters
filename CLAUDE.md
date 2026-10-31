@@ -45,7 +45,9 @@ the owner when the work looks close to the end of the round**.
     deck's summary chapter (`src/dev/summary.json`). The summary lives in the deck only: no Word
     document (owner, round 26).
 14. **DECISIONS.md** for the round (and ROADMAP.md for ideas kept for later).
-15. **Publish**: the game artifact (no owner email anywhere), then commit and push. The dev deck is
+15. **Publish**: the game artifact (no owner email anywhere), then commit and push. A push to `main`
+    also publishes the website (bench-to-rafters.netlify.app; Netlify builds it, `netlify.toml`),
+    so push only after the checks pass. The dev deck is
     part of the game (round 26): the Developer door at the foot of the start page, password
     `btrdev`, opens it in dev mode, with storage of its own (`src/dev/mode.ts`, `src/dev/storage.ts`).
 
