@@ -2604,7 +2604,8 @@ multiple times."
       Against round 32 every line is within about one standard error and every one moved a little
       toward the approved numbers; career by career (the same seeds), the Hall of Fame moved most,
       −1.6875 points (−2.38 SE), as the new turning points take turns from older ones. The gap to
-      the approved numbers is the earlier rounds'; the owner decides.
+      the approved numbers is the earlier rounds'. The owner's call: no balance change (“dont think
+      balance is needed. we can publish now”).
   11. The manual has a chapter on the road map (the levels, lessons, the island, the closing tour,
       graduation and the exit code, the Levels card), the achievement count and the new kinds, and
       the shop's 208 items; Guide mode has a step for the Levels card.
