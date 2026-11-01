@@ -27,7 +27,8 @@ import { ICON_FOR } from './art/icons';
 import { music, onHeard, sfx, wakeOnClick } from './sound';
 import { recordHeard } from './achievements';
 import { trackOf } from './tracks';
-import { inTutorial, levelTabs, nextLevel } from './road';
+import { inTutorial, levelTabs, nextLevel, roadDone } from './road';
+import { Graduation } from './screens/Graduation';
 import { LEVEL_NAME, levelOf } from '../engine/levels';
 import { RoadMap } from './screens/RoadMap';
 import { LevelEnd } from './screens/LevelEnd';
@@ -212,10 +213,12 @@ export function App() {
   // then the road map; none of the start page's pages
   if (inTutorial(road) && !game) {
     if (mini) return <MiniGames />;
+    if (roadDone(road)) return <Graduation />;
     const next = nextLevel(road);
     return creating || next === 'beginner' ? <Create level={creating ?? 'beginner'} /> : <RoadMap />;
   }
   if (creating && !game) return <Create level={creating} />;
+  if (page === 'road' && !game) return <RoadMap />;
   if (page === 'log') return <CareerLog />;
   if (page === 'achievements') return <AchievementBook />;
   if (page === 'community') return <CommunityPage />;

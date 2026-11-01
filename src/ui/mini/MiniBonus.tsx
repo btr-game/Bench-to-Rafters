@@ -20,6 +20,8 @@ export function MiniBonus({ result }: { result: MiniResult }) {
     counted.current = true;
     recordMini(result);
     achievementsNow();
+    // round 33: the island's grade for the road map
+    useStore.getState().gradeMini(result);
   }, [result]);
   if (!game || game.step === 'retired') return <MiniEnd />;
   const reward = scaledReward(game, result);

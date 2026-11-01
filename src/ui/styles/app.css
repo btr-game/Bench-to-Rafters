@@ -2596,3 +2596,21 @@ input[type='range'] { width: 100%; min-height: 32px; accent-color: var(--accent)
   .adds-grid { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 6px; }
   .adds-grid li { padding: 10px 4px 8px; font-size: calc(13px * var(--ts)); }
 }
+/* the island: each mini-game's best grade (a C or better passes) */
+.island-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(56px, 1fr)); gap: 6px; }
+.island-grid li { display: grid; justify-items: center; gap: 2px; padding: 6px 4px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface-2); }
+.island-grid li b { font-family: var(--f-display); font-size: calc(20px * var(--ts)); line-height: 1; color: var(--muted); }
+.island-grid li.done { border-color: var(--good); }
+.island-grid li.done b { color: var(--good); }
+.hub-req.island-req.done { color: var(--good); font-weight: 700; }
+/* graduation: the diploma, the same pixel scroll, with the exit code */
+.diploma { width: min(560px, 100%); margin: 6px auto 14px; display: grid; filter: drop-shadow(4px 4px 0 rgba(0, 0, 0, 0.28)); }
+.diploma-paper { gap: 10px; padding: 22px 26px 18px; }
+.diploma-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.diploma-list li { display: flex; align-items: center; gap: 10px; color: #3A2716; font-weight: 600; }
+.diploma-code { display: grid; justify-items: center; gap: 6px; padding: 12px; border: 4px dashed #B8995F; text-align: center; color: #3A2716; }
+.diploma-code > span { font-family: var(--f-mono); text-transform: uppercase; letter-spacing: 0.1em; font-size: calc(13px * var(--ts)); }
+.diploma-code b { font-family: var(--f-mono); font-size: calc(34px * var(--ts)); letter-spacing: 0.18em; color: #9B2C1A; user-select: all; }
+.diploma-code small { font-size: calc(13px * var(--ts)); color: #5A4229; max-width: 34ch; }
+.mode-card.recommended { box-shadow: 0 0 0 3px var(--accent); }
+.mode-card.recommended .tag { margin-left: 6px; }

@@ -4,6 +4,7 @@
 import { FootBar } from '../components/FootBar';
 import { Icon } from '../art/Icon';
 import { ICON_FOR } from '../art/icons';
+import { ROAD_MINIS, ROAD_NEED, inTutorial, passGrade, type RoadMini } from '../road';
 import { useStore } from '../../store';
 import { PageTop } from '../components/PageTop';
 import { MINI_CLAIMS, claimsUsed, miniProgress, type MiniId } from '../../engine/career/miniBonus';
@@ -32,6 +33,9 @@ function Hub() {
   const setMini = useStore((s) => s.setMini);
   const game = useStore((s) => s.game);
   const career = game && game.step !== 'retired' ? game : null;
+  // round 33: in the tutorial this is the island: every game once, a C or better
+  const road = useStore((s) => s.road);
+  const island = inTutorial(road);
   return (
     <section className="stack stage-in">
       <div>
@@ -41,13 +45,15 @@ function Hub() {
           Pick a game
         </h1>
         <p className="small muted">
-          {career
+          {island
+            ? `The island: play each game once and get a C or better. ${ROAD_MINIS.filter((m) => passGrade(road.minis[m])).length} of ${ROAD_MINIS.length} done.`
+            : career
             ? `For ${career.player.name}: each game opens when his ratings reach it, and a good result earns a rating bonus (${MINI_CLAIMS.perSeason - claimsUsed(career)} of ${MINI_CLAIMS.perSeason} claims left this season).`
             : 'Free play: every game is open. With a career in progress, games unlock as your player grows and pay a rating bonus.'}
         </p>
       </div>
       <div className="hub-grid">
-        {GAMES.map((x) => {
+        {GAMES.filter((x) => !island || x.id !== 'daily').map((x) => {
           const pr = career && x.id !== 'daily' ? miniProgress(career, x.id) : null;
           // the daily challenge is its own career: only from the start page, not during one
           const dailyShut = x.id === 'daily' && !!career;
@@ -63,6 +69,14 @@ function Hub() {
                 {x.name}
               </b>
               <small>{x.text}</small>
+              {island && x.id !== 'daily' && (
+                <span className={`hub-req island-req${passGrade(road.minis[x.id as RoadMini]) ? ' done' : ''}`}>
+                  <span>
+                    C: {ROAD_NEED[x.id as RoadMini]}
+                    {road.minis[x.id as RoadMini] ? ` · best ${road.minis[x.id as RoadMini]}` : ''}
+                  </span>
+                </span>
+              )}
               {dailyShut && (
                 <span className="hub-req">
                   <span>Not during a career: play it from the start page, or once this career is over.</span>
@@ -85,7 +99,7 @@ function Hub() {
           );
         })}
       </div>
-      <p className="muted small">Your career is safe: Back to career is always at the top right.</p>
+      {!island && <p className="muted small">Your career is safe: Back to career is always at the top right.</p>}
     </section>
   );
 }
@@ -117,6 +131,7 @@ export function MiniGames() {
   const mini = useStore((s) => s.mini);
   const setMini = useStore((s) => s.setMini);
   const hasCareer = useStore((s) => !!s.game);
+  const island = useStore((s) => inTutorial(s.road));
   return (
     <div className="wrap no-tabs">
       {/* round 27: the shared page top; in a game the way back is the hub, and the career is one tap away */}
@@ -127,7 +142,7 @@ export function MiniGames() {
         extra={
           mini !== 'hub' && (
             <button className="icon-btn exit-btn" onClick={() => setMini(null)}>
-              {hasCareer ? 'Back to the career' : 'Exit'}
+              {hasCareer ? 'Back to the career' : island ? 'Back to the road map' : 'Exit'}
             </button>
           )
         }

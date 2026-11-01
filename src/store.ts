@@ -26,7 +26,7 @@ import { attachChild, logCareer, type LogResult } from './ui/careerLog';
 import { checkAch, countCareer, earnedIn, recordUndo } from './ui/achievements';
 import { community } from './ui/community';
 import { dropRun, importCode, newSlotId, readRun, readSlot, writeRun, writeSlot } from './ui/saves';
-import { exitCode, levelTabs, loadRoad, saveRoad, type Road } from './ui/road';
+import { bestGrade, exitCode, levelTabs, loadRoad, roadGrade, saveRoad, type Road } from './ui/road';
 import { levelOf, type Level } from './engine/levels';
 import { isDev } from './dev/mode';
 import { chooseLook } from './content/looks';
@@ -40,7 +40,7 @@ export type Theme = 'auto' | 'light' | 'dark';
 export type Court = 'classic' | 'hardwood' | 'street';
 /** Round 31: the text size, a multiplier on every font size (tokens.css, --ts). */
 export type TextSize = 'm' | 'l' | 'xl';
-type Page = 'log' | 'achievements' | 'community';
+type Page = 'log' | 'achievements' | 'community' | 'road';
 export type Mini = 'hub' | 'office' | 'threes' | 'legends' | 'lab' | 'dunk' | 'street' | 'rhythm' | 'daily';
 
 /** A short interstitial between steps (not part of the saved game). */
@@ -154,6 +154,12 @@ interface Store {
   skipTutorial: (code: string) => boolean;
   /** A level career has ended and its last page was read: the level is passed, back to the road. */
   endLevel: () => void;
+  /** A mini-game run ended: its grade on the island, kept if it is the best so far. */
+  gradeMini: (r: MiniResult) => void;
+  /** The graduation page's last button: the full game opens, with Regular guy suggested. */
+  graduate: () => void;
+  /** Round 33: the start page suggests a Regular guy career (right after graduation, this visit). */
+  recommend: boolean;
 }
 
 // ---------- autosave (round 14; round 25: ten slots, ui/saves.ts) ----------
@@ -458,7 +464,9 @@ export const useStore = create<Store>((set, get) => ({
   creating: null,
   setCreating: (creating) =>
     later(() => {
-      set({ creating });
+      // back from a level's start page: the road map (from the start page's Levels card, once the
+      // full game is open; the tutorial shows it anyway)
+      set({ creating, page: creating ? null : get().road.free ? 'road' : null });
       top();
     }),
   skipTutorial: (code) => {
@@ -479,8 +487,23 @@ export const useStore = create<Store>((set, get) => ({
     saveRoad(road);
     dropRun();
     // the thank-you page, then the road map (owner: "still include thank you for playing")
-    set({ road, game: null, thanks: g, tab: 'home', transition: null, undo: null, ...savedSwitches() });
+    set({ road, game: null, thanks: g, tab: 'home', transition: null, undo: null, page: road.free ? 'road' : null, ...savedSwitches() });
     top();
+  },
+  recommend: false,
+  graduate: () => {
+    const road = { ...get().road, free: 1 as const };
+    saveRoad(road);
+    set({ road, recommend: true, page: null, creating: null, mini: null, ...savedSwitches() });
+    top();
+  },
+  gradeMini: (r) => {
+    const road = get().road;
+    const best = bestGrade(road.minis[r.game], roadGrade(r));
+    if (best === road.minis[r.game]) return;
+    const next = { ...road, minis: { ...road.minis, [r.game]: best } };
+    saveRoad(next);
+    set({ road: next });
   },
   slot: null,
   resume: async (id) => {

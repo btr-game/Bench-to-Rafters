@@ -212,3 +212,27 @@ describe('the road map on this device', () => {
     for (const f of walk('src')) expect(readFileSync(f, 'utf8').includes(code), f).toBe(false);
   });
 });
+
+describe('the island', () => {
+  it('grades each mini-game run, keeps the best, and passes at C', async () => {
+    const { roadGrade, bestGrade, passGrade, islandDone, roadDone, ROAD_MINIS } = await import('../src/ui/road');
+    expect(roadGrade({ game: 'threes', score: 12, won: false, own: true })).toBe('D');
+    expect(roadGrade({ game: 'threes', score: 13, won: false, own: true })).toBe('C');
+    expect(roadGrade({ game: 'threes', score: 5, won: true, own: true })).toBe('A');
+    expect(roadGrade({ game: 'office', titles: 0, playoffs: 1, seasons: 3, fired: true })).toBe('C');
+    expect(roadGrade({ game: 'office', titles: 0, playoffs: 0, seasons: 3, fired: false })).toBe('D');
+    expect(roadGrade({ game: 'legends', reached: 'semis' })).toBe('C');
+    expect(roadGrade({ game: 'street', reached: 'close' })).toBe('C');
+    expect(roadGrade({ game: 'rhythm', grade: 'S' })).toBe('S');
+    expect(bestGrade('B', 'D')).toBe('B');
+    expect(bestGrade('D', 'A')).toBe('A');
+    expect(bestGrade(undefined, 'C')).toBe('C');
+    expect(passGrade('S') && passGrade('C') && !passGrade('D') && !passGrade(undefined)).toBe(true);
+    const all = Object.fromEntries(ROAD_MINIS.map((m) => [m, 'C']));
+    const passed = { beginner: { star: true }, intermediate: { star: true }, advanced: { star: false } };
+    expect(islandDone({ passed, minis: all })).toBe(true);
+    expect(roadDone({ passed, minis: all })).toBe(false);
+    expect(roadDone({ passed, minis: all, toured: 1 })).toBe(true);
+    expect(roadDone({ passed, minis: { ...all, dunk: 'D' }, toured: 1 })).toBe(false);
+  });
+});

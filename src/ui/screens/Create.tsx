@@ -36,6 +36,7 @@ import { LEVEL_COPY, LEVEL_GOAL } from '../../content/roadmap';
 import { ROADMAP } from '../../engine/balance';
 import { FootBar } from '../components/FootBar';
 import { LevelAdds } from '../components/LevelAdds';
+import { LevelsCard } from './RoadMap';
 
 const pick = <T,>(a: readonly T[]): T => a[Math.floor(Math.random() * a.length)];
 const uiRng = makeRng(Math.floor(Math.random() * 2 ** 31));
@@ -134,6 +135,8 @@ export function Create({ level }: { level?: Level } = {}) {
   const start = useStore((s) => s.start);
   const showIntro = useStore((s) => s.showIntro);
   const setCreating = useStore((s) => s.setCreating);
+  // round 33: right after graduation, a Regular guy career is suggested (owner: "highly suggested, but not necessary")
+  const recommend = useStore((s) => s.recommend);
   const [step, setStep] = useState(0);
   // each step opens at the top (owner: "when i move from the home page to identity, make the screen
   // start at the top"; the browser kept the Next button in place, so the page opened at its foot)
@@ -322,10 +325,11 @@ export function Create({ level }: { level?: Level } = {}) {
           <div className="kicker">Choose how hard the road is</div>
           <div className="modes">
             {DIFFICULTIES.map((m) => (
-              <button key={m} className={`choice mode-card${mode === m ? ' selected' : ''}`} aria-pressed={mode === m} onClick={() => setMode(m)}>
+              <button key={m} className={`choice mode-card${mode === m ? ' selected' : ''}${recommend && m === 'standard' ? ' recommended' : ''}`} aria-pressed={mode === m} onClick={() => setMode(m)} data-tour={m === 'standard' ? 'mode-regular' : undefined}>
                 <span className="label with-icon">
                   <Icon name={ICON_FOR[m]} size={32} />
                   {MODES[m].name}
+                  {recommend && m === 'standard' && <span className="tag good">Recommended</span>}
                 </span>
                 <small>{MODES[m].blurb}</small>
               </button>
@@ -371,6 +375,7 @@ export function Create({ level }: { level?: Level } = {}) {
           )}
           <p className="muted small">The league is the same at every difficulty. What changes is your potential, how fast you grow and how often you get hurt. Want it quicker? Flip the Fast break switch inside the game, any time.</p>
           <div className="start-cards">
+            <LevelsCard />
             <MiniGamesCard />
             <CareerLogCard />
             <AchievementsCard />

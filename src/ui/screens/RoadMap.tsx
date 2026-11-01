@@ -11,8 +11,9 @@ import { SKIN_COLORS, HAIR_COLORS } from '../art/Player';
 import { LEVEL_IDS, LEVEL_NAME, type Level } from '../../engine/levels';
 import { LEVEL_COPY, LEVEL_GOAL } from '../../content/roadmap';
 import { ROADMAP } from '../../engine/balance';
-import { levelOpen, nextLevel, type Road, type RoadMini } from '../road';
+import { ROAD_MINIS, ROAD_NEED, inTutorial, levelOpen, nextLevel, passGrade, type Road, type RoadMini } from '../road';
 import { LevelAdds } from '../components/LevelAdds';
+import { Roll, Tick } from '../components/Scroll';
 import { SettingsMenu } from '../components/Settings';
 import { ShareButton } from '../components/Share';
 import { FootBar } from '../components/FootBar';
@@ -234,55 +235,8 @@ function MapArt({ road, sailing, onSailed }: { road: Road; sailing: boolean; onS
   );
 }
 
-/** A box on the bucket list, ticked in red ink once that goal is done: a 6 by 6 grid of big pixels. */
-function Tick({ on }: { on: boolean }) {
-  return (
-    <svg className="bucket-box" viewBox="0 0 6 6" width={24} height={24} shapeRendering="crispEdges" aria-hidden="true">
-      <rect x={0} y={0} width={6} height={6} fill={INK.ink} />
-      <rect x={1} y={1} width={4} height={4} fill={INK.light} />
-      {on && (
-        <g fill={INK.red}>
-          <rect x={1} y={3} width={1} height={1} />
-          <rect x={2} y={4} width={1} height={1} />
-          <rect x={3} y={3} width={1} height={1} />
-          <rect x={4} y={2} width={1} height={1} />
-          <rect x={5} y={0} width={1} height={2} />
-        </g>
-      )}
-    </svg>
-  );
-}
-
-// The bucket list as an old paper scroll (owner: "can you give the bucket list a more paper vibe?",
-// with a picture of a parchment rolled at both ends on wooden rods; then "make it more roughly
-// pixellated. less pixels"): chunky pixel art, every pixel four screen pixels wide: the rolls and
-// their knobs, the paper with specks and stains, ragged steps along its sides.
-const INK = { ink: '#3A2716', faded: '#6B5236', red: '#9B2C1A', light: '#F3E6C6' };
-const WOOD: Record<string, string> = { O: '#3B2414', T: '#9A6A3A', t: '#6E4826', L: '#C99A62' };
-/** A knob at the end of a roll, and the stub of its rod (drawn for the left end; the right is mirrored). */
-const KNOB = ['.OO...', 'OLTO..', 'OTTOOO', 'OTTOLL', 'OTTOtt', 'OTTOOO', 'OTtO..', '.OO...'];
-
-function Knob({ flip = false }: { flip?: boolean }) {
-  return (
-    <svg className="scroll-knob" viewBox="0 0 6 8" width={24} height={32} shapeRendering="crispEdges" aria-hidden="true" style={flip ? { transform: 'scaleX(-1)' } : undefined}>
-      {KNOB.flatMap((row, y) => [...row].map((c, x) => (WOOD[c] ? <rect key={`${x}-${y}`} x={x} y={y} width={1} height={1} fill={WOOD[c]} /> : null)))}
-    </svg>
-  );
-}
-
-/** One roll of the scroll: a knob, the rolled paper, a knob. */
-function Roll() {
-  return (
-    <div className="scroll-roll" aria-hidden="true">
-      <Knob />
-      <span className="scroll-cyl" />
-      <Knob flip />
-    </div>
-  );
-}
-
-const MINIS: RoadMini[] = ['threes', 'dunk', 'street', 'legends', 'lab', 'rhythm', 'office'];
-const passGrade = (g?: string) => !!g && /^[ABC]/.test(g);
+const MINIS = ROAD_MINIS;
+const MINI_ICON: Record<RoadMini, string> = { threes: 'shoot', dunk: 'finish', street: 'flame', legends: 'spotlight', lab: 'lab', rhythm: 'lockdown', office: 'office' };
 
 /** The bucket list in the map's top-right corner: every goal on the road, ticked as it is done. */
 function BucketList({ road }: { road: Road }) {
@@ -384,6 +338,16 @@ function IslandStop({ road, onSail }: { road: Road; onSail: () => void }) {
       </div>
       <p className="small">{open ? 'Play each one once and get a C or better. Any time, between levels.' : 'Opens after beginner.'}</p>
       {open && (
+        <ul className="island-grid">
+          {MINIS.map((m) => (
+            <li key={m} className={passGrade(road.minis[m]) ? 'done' : ''} title={`C: ${ROAD_NEED[m]}`}>
+              <Icon name={MINI_ICON[m]} size={32} />
+              <b>{road.minis[m] ?? '·'}</b>
+            </li>
+          ))}
+        </ul>
+      )}
+      {open && (
         <div className="row-end">
           <button className="btn ghost" onClick={onSail}>
             Take the boat to the island
@@ -394,10 +358,29 @@ function IslandStop({ road, onSail }: { road: Road; onSail: () => void }) {
   );
 }
 
+/** The start page's Levels card, once the full game is open: the road map, to play a level again. */
+export function LevelsCard() {
+  const setPage = useStore((s) => s.setPage);
+  return (
+    <section className="card stack">
+      <div className="sec-title with-icon">
+        <Icon name="map" size={28} />
+        Levels
+      </div>
+      <p className="small muted">The road map: beginner, intermediate and advanced. Play any of them again; they count nowhere.</p>
+      <button className="btn ghost" data-tour="levels-card" onClick={() => setPage('road')}>
+        Open the road map
+      </button>
+    </section>
+  );
+}
+
 export function RoadMap() {
   const road = useStore((s) => s.road);
   const setMini = useStore((s) => s.setMini);
+  const setPage = useStore((s) => s.setPage);
   const [sailing, setSailing] = useState(false);
+  const tut = inTutorial(road);
   return (
     <div className="wrap no-tabs roadmap-page">
       <header className="top">
@@ -405,6 +388,11 @@ export function RoadMap() {
           Bench to <span>Rafters</span>
         </div>
         <div className="row" style={{ gap: 8 }}>
+          {!tut && (
+            <button className="icon-btn" onClick={() => setPage(null)}>
+              Back to the start page
+            </button>
+          )}
           <ShareButton />
           <SettingsMenu g={null} />
         </div>

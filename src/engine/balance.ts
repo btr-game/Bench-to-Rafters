@@ -685,6 +685,19 @@ export const ROADMAP = {
   advanced: { nbaSeasons: 7, potential: { base: 76, mu: 1.6, sigma: 0.5, min: 78, max: 97 } as SkewDist, growth: 1.02, floor: { age: 21, ovr: 76, until: 30 } },
 };
 /**
+ * The island's grades (round 33, owner: "for the user to pass the tutorial, they must play each
+ * minigame at least once, earning at least a C"; Front Office: "a C = make the playoffs once").
+ * The marks follow each game's career-bonus tiers (career/miniBonus.ts): C is the first score that
+ * earns a bonus. A three-point score, a dunk contest's best dunk, the lab's peak OVR, a Front Office
+ * run's playoff trips; the others grade by how far the run went.
+ */
+export const ROAD_GRADES = {
+  threes: { A: 23, B: 18, C: 13 },
+  dunk: { A: 44, B: 40, C: 35 },
+  lab: { A: 93, B: 87, C: 80 },
+  office: { B: 2, C: 1 }, // playoff trips; a title is an A
+};
+/**
  * The next generation (round 32, owner: "similar height (... variance, and also like the low-chance
  * breakthroughs, they might be significantly taller/shorter than the father), similar potential
  * (same with height, variance and breakthrough), and similar looks ... make the chances that the
