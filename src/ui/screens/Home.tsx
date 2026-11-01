@@ -317,7 +317,7 @@ function RecordWatch({ g }: { g: GameState }) {
   if (!watch.length) return null;
   return (
     <div className="record-watch" data-tour="record-watch">
-      <Icon name="chart" size={22} />
+      <Icon name="record" size={22} />
       <div className="stack" style={{ gap: 4, minWidth: 0 }}>
         <span className="kicker">Record watch</span>
         {watch.map((w) => (

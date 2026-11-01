@@ -32,6 +32,9 @@ function playOut(s: GameState, maxSteps = 5000): number {
   return steps;
 }
 
+/** Lets the test worker's messages through during a long synchronous test. */
+const breathe = () => new Promise<void>((r) => setTimeout(r, 0));
+
 describe('rng', () => {
   it('is deterministic for a seed', () => {
     const a = makeRng(7);
@@ -121,18 +124,20 @@ describe('engine purity', () => {
 describe('growth calibration (§7)', () => {
   // Potential is the ceiling for an average career; good choices (shop, plans, events)
   // can add a few points. Random choices peak lower than smart ones.
-  it('a potential-70 player peaks near OVR 70', () => {
-    const meanPeak = (policy: 'random' | 'smart') => {
+  it('a potential-70 player peaks near OVR 70', async () => {
+    const meanPeak = async (policy: 'random' | 'smart') => {
       const peaks: number[] = [];
       for (let i = 0; i < 300; i++) {
+        // a breath every few careers, so the worker can answer vitest (a 3-minute block timed it out)
+        if (i % 10 === 0) await breathe();
         const r = runCareer(20000 + i, policy);
         if (r.potential >= 67 && r.potential <= 73) peaks.push(r.peakOvr);
       }
       expect(peaks.length).toBeGreaterThan(30);
       return peaks.reduce((s, x) => s + x, 0) / peaks.length;
     };
-    const random = meanPeak('random');
-    const smart = meanPeak('smart');
+    const random = await meanPeak('random');
+    const smart = await meanPeak('smart');
     console.log(`potential 67-73 mean peak: random ${random.toFixed(2)}, smart ${smart.toFixed(2)}`);
     expect(smart).toBeGreaterThan(random); // good decisions matter
     expect(smart).toBeGreaterThan(67);
@@ -149,9 +154,10 @@ describe('international origins', () => {
     expect(s.league?.label).toMatch(/^Lithuanian junior league/);
   });
 
-  it('a European who turns pro at 16 can still be drafted from his club', () => {
+  it('a European who turns pro at 16 can still be drafted from his club', async () => {
     let draftedFromEurope = 0;
     for (let i = 0; i < 40; i++) {
+      if (i % 5 === 0) await breathe();
       const s = newGame(900 + i, { name: 'X', number: 1, pos: 'SF', archetype: 0, focus: ['SHT', 'ATH'], country: 'Spain' });
       for (let steps = 0; steps < 3000 && s.player.age < 23; steps++) {
         const pr = prompt(s);
@@ -451,7 +457,10 @@ describe('round 9: starting five, league stories, finals drama', () => {
         takePayCut(s);
         expect(s.contract!.salary).toBeCloseTo(Math.round(salary * 0.9 * 10) / 10, 6);
         const mine = s.nba!.teams.find((t) => t.id === s.teamId)!;
-        for (const t of scoutingBoard(s).filter((x) => x.fits)) {
+        for (const first of scoutingBoard(s).filter((x) => x.fits)) {
+          // the board as it is now: a recruit before this one changed who would go the other way
+          const t = scoutingBoard(s).find((x) => x.p.id === first.p.id);
+          if (!t || !t.fits) continue;
           if (t.lineup) {
             expect(recruitPlayer(s, t.p.id)).toBe(false);
             continue;

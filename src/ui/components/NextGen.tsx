@@ -13,11 +13,12 @@ import { chooseLook } from '../../content/looks';
 import { useStore } from '../../store';
 import { Card } from './bits';
 import { PlayerArt } from '../art/Player';
+import { sfx } from '../sound';
 
 const SHARE = Math.round(NEXT_GEN.share * 100);
 
 /** His peak, his biggest honour and the five big numbers. */
-export function ChildFacts({ kid }: { kid: ChildLegacy }) {
+function ChildFacts({ kid }: { kid: ChildLegacy }) {
   return (
     <div className="ng-facts">
       <div className="ng-head">
@@ -82,7 +83,7 @@ export function NextGen({ g }: { g: GameState }) {
           )}
         </div>
       </div>
-      <button className="btn" onClick={play}>
+      <button className="btn" onClick={() => (sfx('family'), play())}>
         Play {first}'s career
       </button>
     </Card>

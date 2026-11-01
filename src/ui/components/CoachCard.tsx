@@ -6,6 +6,7 @@ import type { GameState } from '../../engine/types';
 import { TEMPER, TEMPER_FX, canAskRole, myTeam, coachOf, roleOdds, trustWord } from '../../engine/career/coach';
 import { useStore } from '../../store';
 import { CoachArt } from '../art/Coach';
+import { sfx } from '../sound';
 import { Icon } from '../art/Icon';
 
 export function CoachCard({ g }: { g: GameState }) {
@@ -35,7 +36,7 @@ export function CoachCard({ g }: { g: GameState }) {
         </span>
         {!simple && <span className="small muted">{TEMPER_FX[c.temper]}</span>}
         {canAskRole(g) ? (
-          <button className="btn ghost small" onClick={ask}>
+          <button className="btn ghost small" onClick={() => (sfx('knock'), ask())}>
             Ask for a bigger role{master ? '' : ` · ${roleOdds(g).toLowerCase()}`}
           </button>
         ) : g.season && g.flags.roleAsk === g.year ? (

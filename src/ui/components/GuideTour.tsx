@@ -22,7 +22,7 @@ const D = (id: string) => `[data-tour="${id}"]`;
 
 // in order: the start page, the top bar, Home, the decisions, the offseason, the tabs, the end
 const TOUR: Step[] = [
-  T('start-continue', '.saves-card .btn', 'Your careers on this device: pick one up where you left it, or copy its code to play it somewhere else.'),
+  T('start-continue', '.continue-card .btn', 'Your latest career: pick it up where you left it. Every saved career is in the career log.'),
   T('guide-btn', D('guide-btn'), 'The manual: every feature in a few short points. Guide mode switches on and off there too.'),
   T('intro-btn', D('intro-btn'), 'Intro plays the opening again.'),
   T('whats-new', D('whats-new'), 'What’s new: the latest changes to the game. It opens by itself once after each update; this opens it again.'),
@@ -32,6 +32,7 @@ const TOUR: Step[] = [
   T('oath', '.oath-card:not(.comet-card)', 'With Reality hits hard: Rough Road, the hardest way to play. The road picks your player at random, then master mode with no Fast break or Sim, for the whole career, and a mark of honour for it.'),
   T('minis', D('minis'), 'Mini-games. Free from the start page; in a career each one opens with your ratings and pays a rating bonus.'),
   T('log', D('log'), 'The career log: the cards of your last ten finished careers. Lock up to five to keep them for good.'),
+  T('log-saves', '.saves-card', 'Every career saved on this device: continue one, look back, copy its code to play it somewhere else, or import one.'),
   T('log-lock', D('log-lock'), 'Lock a card: a new career never replaces it, and it can’t be deleted until you unlock it. Five at most.'),
   T('log-pick', D('log-pick'), 'Compare: pick two cards to see them side by side.'),
   T('log-compare', D('log-compare'), 'Two careers side by side: the better of each row in bold with a ▲.'),
@@ -89,6 +90,8 @@ const TOUR: Step[] = [
   T('chip-master', D('chip-master'), 'Master mode: no hints or recommendations anywhere.'),
   T('chip-playoffs', D('chip-playoffs'), 'Play playoff games yourself, or let them be simulated.'),
   T('fold', '.fold-toggle', 'Fast break folded some cards away. This brings them back for a look.'),
+  T('coach-home', D('coach-home'), 'Your head coach: his temperament, how much he trusts you, and once a season a knock on his door to ask for a bigger role.'),
+  T('record-watch', D('record-watch'), 'A record within reach this season. Chase it for a few more shots, or let it come.'),
   T('rival', D('rival'), 'Your rival: who, the head to head, and the race season by season.'),
   T('settings-btn', D('settings-btn'), 'Settings: look, New career and the switches.'),
   T('set-theme', D('set-theme'), 'Light, dark, or follow your device.'),
@@ -101,6 +104,7 @@ const TOUR: Step[] = [
   T('set-guide', D('set-guide'), 'Guide mode: this tour, then the next thing to do.'),
   T('set-master', D('set-master'), 'Master mode: no hints or recommendations anywhere.'),
   T('set-sfx', D('set-sfx'), 'Sound effects on or off, and how loud.'),
+  T('set-announcer', D('set-announcer'), 'The announcer: a deep voice for the big plays. It follows the sound effects.'),
   T('set-music', D('set-music'), 'Music: a chiptune loop for each part of the game, every level and league, the offseason and each mini-game, with its own volume.'),
   T('stories', '.fold-head', 'Around the league: this season’s storylines. Call how they end for reputation.'),
   T('tab-season', D('tab-season'), 'Season: your team and the whole league in one, the most worth a look first.'),
@@ -108,6 +112,7 @@ const TOUR: Step[] = [
   T('season-leaders', D('season-leaders'), 'The league leaders. You are marked when you make the list.'),
   T('season-city', '.city-card', 'Your city and its fans, and what they do to you.'),
   T('season-games', D('season-games'), 'Every game you played.'),
+  T('locker', D('locker'), 'The locker room: click in, walk with A and D, talk with Space. Each teammate and the coach once a half: chemistry, mood and trust.'),
   T('strength', D('strength'), 'Why your team is as good as it is: teammates, you, and every team factor.'),
   T('bracket', '.bracket', 'The playoff bracket.'),
   T('tab-player', D('tab-player'), 'Player: ratings, status, kits, scouting and your body.'),
@@ -139,9 +144,11 @@ const TOUR: Step[] = [
   T('move-trade', `${D('move-trade')}:not(:disabled)`, 'Ask for a trade, and aim it.'),
   T('move-number', `${D('move-number')}:not(:disabled)`, 'Change your number.'),
   T('move-retire', `${D('move-retire')}:not(:disabled)`, 'Retire, between any two seasons.'),
+  T('move-farewell', `${D('move-farewell')}:not(:disabled)`, 'Announce next season as your last: a farewell tour, gifts on the road, then you retire.'),
   T('card-download', D('card-download'), 'Download your career card as an image.'),
   T('retire-new', D('retire-new'), 'Start the next career. This one stays in your log.'),
   T('community-note', D('community-note'), 'What this career qualifies for: the leaderboards, the Reality 99 hall, a statue.'),
+  T('next-gen', D('next-gen'), 'Your son’s career, at Comet speed. A quarter of his legacy points join yours.'),
   T('statue-raise', D('statue-raise'), 'A Regular guy career with 150+ legacy can raise a statue in the plaza.'),
   T('log-entry', '.log-entry', 'Show, download or delete any card.'),
 ];

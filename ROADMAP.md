@@ -79,3 +79,17 @@ Ideas the owner has asked to keep for later. Not started unless marked.
   that thanks people and writes the career card's epilogue.
 - The undo could keep more than one step, for players who want to walk back a whole summer.
 - Compare could take a card from the community boards, not just the log.
+
+## Kept for later (round 32)
+
+- **Next generation**: built this round (the son's career at Comet speed, a share of his legacy on
+  his father's card). A son played by hand (not as a Comet), and media pressure from the famous
+  surname, are left for later.
+- **The coach**: lines in the team style talk that change with his temperament; coaches at high
+  school and college with faces of their own (offered this round and not picked); assistant coaches
+  in the locker room.
+- **The sim's best shooting nights**: the league record for threes in a game (14) fell in 6 of 30
+  test careers. A rarer tail for threes in a game would make the record watch and the record
+  achievements mean more; the owner decides.
+- The locker room could remember: a hothead you calmed twice, a rookie you mentored all season,
+  as relationships that carry over between seasons.

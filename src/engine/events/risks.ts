@@ -294,7 +294,8 @@ export const RISK_EVENTS: EventDef[] = [
     cooldownSeasons: 3,
     title: 'Hot seat',
     text: (s) => {
-      const t = myTeam(s)!;
+      const t = myTeam(s);
+      if (!t) return 'The front office is out of patience with the coach.';
       const c = coachOf(t);
       return `${t.w}–${t.l}, and the front office is out of patience. ${c.name}’s job is on the line, and the reporters want to know where you stand.`;
     },
@@ -303,7 +304,8 @@ export const RISK_EVENTS: EventDef[] = [
         label: 'Back him in public',
         detail: 'He might keep his job, and remember who stood up for him',
         resolve: (s, rng) => {
-          const t = myTeam(s)!;
+          const t = myTeam(s);
+          if (!t) return ok('By the time it is settled, you have moved on.');
           const c = coachOf(t);
           if (chance(rng, COACH.backSave.base + s.player.rep * COACH.backSave.rep)) {
             s.player.trust = adjust(s.player.trust, COACH.backTrust);
@@ -319,7 +321,8 @@ export const RISK_EVENTS: EventDef[] = [
         label: 'Stay out of it',
         detail: 'The front office decides',
         resolve: (s, rng) => {
-          const t = myTeam(s)!;
+          const t = myTeam(s);
+          if (!t) return ok('By the time it is settled, you have moved on.');
           const c = coachOf(t);
           if (chance(rng, 0.6)) {
             const now = changeCoach(s, t);
@@ -334,7 +337,8 @@ export const RISK_EVENTS: EventDef[] = [
               label: 'Tell them it is time for a change',
               detail: 'He goes; some of the room liked him',
               resolve: (s: GameState) => {
-                const t = myTeam(s)!;
+                const t = myTeam(s);
+                if (!t) return ok('By the time it is settled, you have moved on.');
                 const c = coachOf(t);
                 const now = changeCoach(s, t, COACH.newTrust + 5);
                 if (s.season) s.season.teamBonus = Math.round(((s.season.teamBonus ?? 0) - 0.1) * 100) / 100;
@@ -454,11 +458,14 @@ export const RISK_EVENTS: EventDef[] = [
     id: 'newborn',
     stages: ADULT,
     phase: 'off',
-    when: (s) => s.player.age >= 23,
+    // round 32: a family comes through the Love storyline now, so this is a second child, a
+    // daughter, a couple of years after the first (the son who may play his own career)
+    when: (s) => s.player.age >= 23 && !!s.flags.wed && !!s.flags.child && s.year >= s.flags.child + 2 && !s.flags.gen2,
     weight: 0.5,
     cooldownSeasons: 6,
+    oncePerCareer: true,
     title: 'A new baby',
-    text: 'Your partner is due in the middle of summer workouts.',
+    text: 'Your partner is due again, in the middle of summer workouts.',
     choices: [
       {
         label: 'Take the summer off',

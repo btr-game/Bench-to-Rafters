@@ -16,7 +16,13 @@ import { SHOP_ITEMS } from '../content/shop';
 import { newSlotId, writeSlot } from '../ui/saves';
 import { todayKey } from '../engine/mini/daily';
 import { ATTRS } from '../engine/balance';
-import { lockCard, logCards, logCareer } from '../ui/careerLog';
+import { attachChild, lockCard, logCards, logCareer } from '../ui/careerLog';
+import { advance as step, choose as pickChoice, prompt as nextPrompt } from '../engine/flow';
+import { offerEvent } from '../engine/events/resolver';
+import { announceFarewell, canFarewell, isFarewellSeason } from '../engine/career/farewell';
+import { recordWatch } from '../engine/career/records';
+import { canAskRole } from '../engine/career/coach';
+import { childLegacy } from '../engine/nextGen';
 import { runOf } from '../ui/achievements';
 import { resetTour } from '../ui/components/GuideTour';
 import { decision, moment, onlyMoment, play, type PlayOpts } from './stage';
@@ -154,8 +160,26 @@ function seedLog(locks = false): void {
   const tiers = ['hof', 'allstar', 'allstar', 'starter', 'starter', 'starter', 'rotation', 'rotation', 'bench', 'bench'] as const;
   const ach = (n: number) => ({ n, top: ACHIEVEMENTS.filter((a) => a.tier === 'hof' || a.tier === 'allstar').slice(0, 1).concat(ACHIEVEMENTS.slice(40, 49)).map((a, i) => ({ name: a.name, tier: tiers[i] })) });
   records().forEach((r, i, all) => logCareer(i === all.length - 1 ? { ...r, comet: true, mode: 'stars', ach: ach(41) } : i === all.length - 2 ? { ...r, oath: true, mode: 'reality', ach: ach(27) } : r));
+  // round 32: one father with his son's career on his card
+  const dad = records()[1];
+  if (dad) attachChild(dad.id, SON(dad.name));
   // round 29: lock the oldest two, so the page shows both kinds
   if (locks) for (const c of logCards().slice(-2)) lockCard(c.id, true);
+}
+
+/** Round 32: a son's career, for the cards that show one. */
+const SON = (father: string) => childLegacy({ ...records()[0], name: `Tari ${father.split(' ').slice(-1)[0]}`, peak: 81, honours: [{ text: '2× All-Star', color: '#E2B33C' }], nbaSeasons: 11, nbaPoints: 14210, mvps: 0, titles: 1, allStars: 2, legacy: 64 });
+
+/** Plays a staged career on (first choices, the season advancing) until `until` holds. */
+function forward(g: GameState | null, until: (s: GameState) => boolean, max = 3000): GameState | null {
+  if (!g) return null;
+  for (let k = 0; k < max && !until(g); k++) {
+    const p = nextPrompt(g);
+    if (p.type === 'retired') return null;
+    if (p.type === 'decision') pickChoice(g, p.decision.choices.find((c) => !c.disabled)!.id);
+    else step(g);
+  }
+  return until(g) ? g : null;
 }
 
 /** Every achievement earned (so none pop up while you look around), or none. */
@@ -192,11 +216,11 @@ export const CARDS: DevCard[] = [
     title: 'Ten save slots and career codes',
     group: 'Start',
     icon: 'disk',
-    blurb: 'Every career on this device, newest first: continue, copy its code, delete. Paste a code to import.',
+    blurb: 'In the career log: every career on this device, newest first: continue, look back, copy its code, delete; paste a code to import. The start page keeps a Continue card for the latest.',
     open: () => {
       const g = loaded();
       if (!g) return false;
-      void writeSlot(newSlotId(), g).then(() => useStore.setState({ game: null, page: null, mini: null }));
+      void writeSlot(newSlotId(), g).then(() => useStore.setState({ game: null, page: 'log', mini: null }));
     },
   },
   { id: 'daily', title: 'Daily challenge', group: 'Start', icon: 'calendar', blurb: "Today's prospect, the same for everyone. Mini-games locked.", open: () => void (useStore.setState({ game: null, mini: null, page: null }), useStore.getState().startDaily()) },
@@ -378,6 +402,100 @@ export const CARDS: DevCard[] = [
     },
   },
 
+  // round 32: the locker room, the coach, the farewell tour, record chases, love and the next generation
+  { id: 'locker', title: 'Locker room', group: 'Career hub', icon: 'locker', blurb: 'On the Season tab: walk with A and D, talk to the five and the bench and the coach; a feud to settle; the coach can be fired from here at the top of the league.', open: () => show(loaded(), 'season'), press: '.lk-who.coach' },
+  { id: 'coach-home', title: 'The head coach on Home', group: 'Career hub', icon: 'whistle', blurb: 'His face, temperament and what it does, how much he trusts you, and once a season the role talk.', open: () => show(at('coach-ask', (s, p) => s.stage === 'NBA' && canAskRole(s) && p.type === 'decision' && p.decision.kind === 'plan', { mode: 'standard' })) },
+  { id: 'coach-talk', title: 'Team style talk with the coach', group: 'Decisions', icon: 'whistle', blurb: 'The new game plan, set face to face with the team’s own head coach (his pixel avatar, by temperament).', open: () => show(at('style', (s) => canSetStyle(s))), press: ['[data-tour="move-style"]', '.style-choice:not(.selected)'] },
+  {
+    id: 'd-hotseat',
+    title: 'Hot seat',
+    group: 'Decisions',
+    icon: 'whistle',
+    blurb: 'A losing team, the coach’s job on the line: back him, stay out of it, or (a name in the league) tell the front office it is time.',
+    open: () => {
+      const g = at('hotseat', (s) => s.stage === 'NBA' && s.step === 'midseason');
+      if (g) {
+        g.player.rep = Math.max(g.player.rep, 70);
+        offerEvent(g, 'coachfired');
+      }
+      return show(g);
+    },
+  },
+  { id: 'farewell-offer', title: 'Farewell tour: the offer', group: 'Decisions', icon: 'gift', blurb: 'An offseason move for a veteran: announce that next season is the last.', open: () => show(at('farewell', (s) => canFarewell(s))), press: '[data-tour="move-farewell"]' },
+  {
+    id: 'farewell-season',
+    title: 'Farewell tour: the last season',
+    group: 'Big moments',
+    icon: 'gift',
+    blurb: 'Home during the farewell season: the banner, every arena saying goodbye.',
+    open: () => {
+      const g = at('farewell', (s) => canFarewell(s));
+      if (g) announceFarewell(g);
+      return show(forward(g, (s) => isFarewellSeason(s) && s.step === 'preseason'));
+    },
+  },
+  {
+    id: 'm-farewell',
+    title: 'Farewell tour: the last page',
+    group: 'Big moments',
+    icon: 'gift',
+    blurb: 'The road arenas’ gifts, the honour, then the retirement page.',
+    open: () => {
+      const g = at('farewell', (s) => canFarewell(s));
+      if (g) announceFarewell(g);
+      const done = forward(g, (s) => s.moments.some((m) => m.title === 'The farewell tour'));
+      return show(done && onlyMoment(done, (m) => m.title === 'The farewell tour'), 'home', {}, true);
+    },
+  },
+  { id: 'record-watch', title: 'Record watch', group: 'Career hub', icon: 'record', blurb: 'Close to passing a legend on the all-time scoring list, or near a single-game league record: a warning, and Chase it.', open: () => show(at('record-watch', (s) => s.stage === 'NBA' && s.step === 'preseason' && recordWatch(s).some((w) => w.kind === 'list'))) },
+  { id: 'm-wedding', title: 'Love: the wedding', group: 'Big moments', icon: 'heart', blurb: 'A chapter of the Love storyline (dating, a proposal, the wedding, a family), on the garden wedding scene.', open: () => withMoment('m-wedding', (m) => /^Love: The wedding/.test(m.title), { mode: 'standard', tries: 12 }) },
+  {
+    id: 'next-gen',
+    title: 'The next generation: his son',
+    group: 'Big moments',
+    icon: 'family',
+    blurb: 'After a career with a child: the son, his father’s number and hometown, and his career at Comet speed.',
+    open: () => {
+      const g = retired(3);
+      if (g) g.flags.child = g.year - 6;
+      return show(g);
+    },
+    press: 'text=See the whole career',
+  },
+  {
+    id: 'next-gen-done',
+    title: 'The next generation: how the son did',
+    group: 'Big moments',
+    icon: 'family',
+    blurb: 'On the father’s page: the son’s peak, biggest honour and five numbers, and the legacy points he added.',
+    open: () => {
+      const g = retired(3);
+      if (g) {
+        g.flags.child = g.year - 6;
+        g.flags.childPlayed = 1;
+        g.kid = SON(g.player.name);
+      }
+      return show(g);
+    },
+    press: 'text=See the whole career',
+  },
+  {
+    id: 'son-end',
+    title: 'The next generation: the son’s last page',
+    group: 'Big moments',
+    icon: 'family',
+    blurb: 'A son’s career has no card of its own: his page says whose son he was and where his legacy went.',
+    open: () => {
+      const g = retired(3);
+      if (g) {
+        g.flags.gen2 = 1;
+        g.flags.comet = 1;
+        g.parent = { name: 'Marcus Hale', recId: 'dev-father', legacy: 180, slot: 'dev-none', peak: 88, titles: 1, mvps: 0 };
+      }
+      return show(g);
+    },
+    press: 'text=See the whole career',
+  },
   // records and community
   { id: 'log', title: 'Career log', group: 'Records & community', icon: 'cards', blurb: 'The last ten career cards, two of them locked.', open: () => (seedLog(true), useStore.setState({ game: null, mini: null, page: 'log' })) },
   { id: 'log-compare', title: 'Compare two careers', group: 'Records & community', icon: 'cards', blurb: 'Two log cards side by side: peak, index, legacy, rank, honours, NBA numbers; the better of each in bold with a ▲.', open: () => (seedLog(true), useStore.setState({ game: null, mini: null, page: 'log' })), press: ['[data-tour="log-pick"]:not([aria-pressed="true"])', '[data-tour="log-pick"]:not([aria-pressed="true"])'] },

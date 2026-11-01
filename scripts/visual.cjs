@@ -331,7 +331,15 @@ async function runConfig(browser, cfg) {
     }
     for (const e of errors) found.push({ kind: 'error', el: '', detail: e });
     report[id] = missed ? [{ kind: 'skipped', el: '', detail: await missed.innerText() }] : found;
-    await page.screenshot({ path: path.join(dir, `${id}.png`), fullPage: true }).catch(() => {});
+    // round 32: a full-screen pop-up (a moment's page, a talk with the coach) is shot as the player
+    // sees it, at screen size: in a full-page shot a layer fixed to the screen covers only the first
+    // screenful, or is missed (every moment's page was missing from the sheets until now)
+    const popup = await page.evaluate(() => [...document.querySelectorAll('.overlay, [aria-modal="true"]')].some((e) => {
+      const s = getComputedStyle(e);
+      const r = e.getBoundingClientRect();
+      return s.position === 'fixed' && s.display !== 'none' && r.width >= innerWidth * 0.9 && r.height >= innerHeight * 0.9;
+    }));
+    await page.screenshot({ path: path.join(dir, `${id}.png`), fullPage: !popup }).catch(() => {});
     // round 27: a card that reloads the page is a bug of its own, not the end of the run
     await page.evaluate(() => window.__deck.back()).catch(async (e) => {
       report[id] = [...(report[id] ?? []), { kind: 'error', el: '', detail: `the page navigated away (${String(e.message).split('\n')[0]})` }];

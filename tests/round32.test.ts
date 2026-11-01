@@ -119,3 +119,231 @@ describe('round 32: Day one scrolls', () => {
     expect(src).not.toMatch(/overlay moment \$\{m\.kind\}/);
   });
 });
+
+// ---------- the rest of round 32: the head coach, the locker room, the farewell tour, records ----------
+
+import { ACHIEVEMENTS } from '../src/engine/achievements';
+import { ROUND32_EVENTS } from '../src/engine/events/round32';
+import { offerEvent } from '../src/engine/events/resolver';
+import { COACH, FAREWELL, LOCKER, TRUST_ROLE } from '../src/engine/balance';
+import { askRole, canAskRole, changeCoach, coachOf, coachOfYear, myTeam, offseasonCoaching, onHotSeat } from '../src/engine/career/coach';
+import { lockerRoom, lockerTalk, talkFor } from '../src/engine/career/locker';
+import { announceFarewell, canFarewell, endFarewell } from '../src/engine/career/farewell';
+import { GAME_RECORDS, SCORING_LIST, canChase, chaseRecord, recordWatch } from '../src/engine/career/records';
+import { nbaCareerPoints } from '../src/engine/awards/legacy';
+
+/** A stars career played until an NBA season is about to tip off, its plan picked (or, with `off`,
+ * an NBA offseason with its calls made). Fast break goes preseason, midseason, summary. */
+function inNBA(seed: number, off = false): GameState {
+  const r = makeRng(seed);
+  const s = newGame(seed, { ...input, mode: 'stars' });
+  s.flags.fast = 1;
+  s.flags.simPostseason = 1;
+  for (let k = 0; k < 6000; k++) {
+    if (s.stage === 'NBA' && !s.pending.length && (off ? s.step === 'offseason' : !!s.season && s.step === 'preseason')) return s;
+    const pr = prompt(s);
+    if (pr.type === 'retired') break;
+    if (pr.type === 'decision') choose(s, smartChoice(s, pr.decision, r));
+    else advance(s);
+  }
+  throw new Error(`seed ${seed} never reached the NBA`);
+}
+
+describe('round 32: the head coach', () => {
+  const g = inNBA(32101);
+
+  it('every team has a coach of its own, and a new one each time one goes', () => {
+    const t = myTeam(g)!;
+    const a = coachOf(t);
+    expect(coachOf(t)).toEqual(a);
+    const s = structuredClone(g);
+    const t2 = myTeam(s)!;
+    const was = t2.coachN ?? 0;
+    const now = changeCoach(s, t2, 47);
+    expect(t2.coachN).toBe(was + 1);
+    expect(now).toEqual(coachOf(t2));
+    expect(s.player.trust).toBe(47); // his own team: trust starts over
+    expect(s.flags.coaches).toBe((g.flags.coaches ?? 0) + 1);
+    // in the NBA the coaching factor is drawn again and counted in the team's strength
+    expect(typeof t2.coach).toBe('number');
+  });
+
+  it('the role talk: once a season, never with the biggest role; a yes lifts trust to the next role', () => {
+    let yes = 0;
+    for (let i = 0; i < 40; i++) {
+      const s = structuredClone(g);
+      s.rng = makeRng(900 + i);
+      if (s.season!.role === 'key') s.season!.role = 'rotation';
+      expect(canAskRole(s)).toBe(true);
+      const out = askRole(s);
+      expect(out).toBeTruthy();
+      expect(canAskRole(s)).toBe(false);
+      expect(askRole(s)).toBeNull();
+      if (s.flags.roleYes) {
+        yes++;
+        expect(s.player.trust).toBeGreaterThanOrEqual(TRUST_ROLE.up);
+      } else expect(s.player.trust).toBeLessThan(g.player.trust + 1);
+    }
+    expect(yes).toBeGreaterThan(0);
+    expect(yes).toBeLessThan(40);
+    const s = structuredClone(g);
+    s.season!.role = 'key';
+    expect(canAskRole(s)).toBe(false);
+  });
+
+  it('the hot seat: only a team under .400 after 12 games', () => {
+    const s = structuredClone(g);
+    const t = myTeam(s)!;
+    Object.assign(t, { w: 3, l: 7 });
+    expect(onHotSeat(s)).toBe(false); // too early
+    Object.assign(t, { w: 4, l: 10 });
+    expect(onHotSeat(s)).toBe(true);
+    Object.assign(t, { w: 7, l: 7 });
+    expect(onHotSeat(s)).toBe(false);
+  });
+
+  it('NBA teams that lose badly may fire their coach in the summer; winners never do', () => {
+    let fired = 0;
+    for (let i = 0; i < 60; i++) {
+      const s = structuredClone(g);
+      s.rng = makeRng(1200 + i);
+      const nba = s.nba!;
+      nba.teams.forEach((t, j) => Object.assign(t, j === 0 ? { w: 15, l: 67 } : { w: 50, l: 32 }));
+      const n0 = nba.teams.map((t) => t.coachN ?? 0);
+      const lines = offseasonCoaching(s, nba);
+      nba.teams.slice(1).forEach((t, j) => expect(t.coachN ?? 0).toBe(n0[j + 1]));
+      if ((nba.teams[0].coachN ?? 0) > n0[0]) {
+        fired++;
+        expect(lines[0]).toMatch(/fire/);
+      }
+    }
+    // 45% (COACH.fireChance) of 60: about 27
+    expect(fired).toBeGreaterThan(60 * COACH.fireChance * 0.5);
+    expect(fired).toBeLessThan(60 * COACH.fireChance * 1.5);
+  });
+
+  it('Coach of the Year goes to the team that beat its talent by the most; his own is worth trust', () => {
+    const s = structuredClone(g);
+    const nba = s.nba!;
+    const weakest = [...nba.teams].sort((a, b) => a.strength - b.strength)[0];
+    nba.teams.forEach((t) => Object.assign(t, { w: 41, l: 41 }));
+    Object.assign(weakest, { w: 60, l: 22 });
+    s.teamId = weakest.id;
+    const before = s.player.trust;
+    const coy = coachOfYear(s, nba)!;
+    expect(coy.team.id).toBe(weakest.id);
+    expect(s.flags.coyYear).toBe(s.year);
+    expect(s.player.trust).toBe(Math.min(100, before + COACH.coyTrust));
+  });
+
+  it('the coach events still answer when he has left the team since they were asked (the crash)', () => {
+    for (const id of ['coachDinner', 'coachPoached', 'coachfired', 'prankWar']) {
+      const s = structuredClone(g);
+      s.player.rep = 70;
+      expect(offerEvent(s, id)).toBe(true);
+      const d = s.pending[0];
+      expect(d.data?.eventId).toBe(id);
+      s.teamId = null as unknown as string; // between teams by the time he answers
+      expect(() => choose(s, d.choices[0].id)).not.toThrow();
+    }
+  });
+});
+
+describe('round 32: the locker room', () => {
+  const g = inNBA(32102);
+
+  it('the room: up to seven people, the coach at his door, each with a character and something to say', () => {
+    const room = lockerRoom(g)!;
+    expect(room).toBeTruthy();
+    expect(room.mates.length).toBeGreaterThan(0);
+    expect(room.mates.length).toBeLessThanOrEqual(6);
+    for (const m of room.mates) expect(talkFor(room, String(m.id))!.options.length).toBeGreaterThanOrEqual(2);
+    expect(talkFor(room, 'coach')!.options.length).toBe(3);
+  });
+
+  it('one talk each a half, and the chemistry it moves stays inside the season cap', () => {
+    const s = structuredClone(g);
+    const room = lockerRoom(s)!;
+    const first = room.mates[0];
+    const opt = talkFor(room, String(first.id))!.options[0].id;
+    expect(lockerTalk(s, String(first.id), opt)).not.toBeNull();
+    expect(lockerTalk(s, String(first.id), opt)).toBeNull();
+    expect(s.flags.lkTalk).toBe((g.flags.lkTalk ?? 0) + 1);
+    // however many talks pile up, the room moves chemistry by the cap at most
+    for (let i = 0; i < 30; i++) {
+      s.locker!.done = [];
+      for (const m of room.mates) {
+        const t = talkFor(room, String(m.id))!;
+        lockerTalk(s, String(m.id), t.options[0].id);
+      }
+    }
+    expect(Math.abs(s.locker!.chem)).toBeLessThanOrEqual(LOCKER.cap + 1e-9);
+  });
+});
+
+describe('round 32: the farewell tour and record chases', () => {
+  it('from 32 in an NBA offseason: the tour, its gifts, its honour', () => {
+    const g = inNBA(32103, true);
+    const s = structuredClone(g);
+    s.player.age = FAREWELL.age - 1;
+    expect(canFarewell(s)).toBe(false);
+    s.player.age = FAREWELL.age;
+    expect(canFarewell(s)).toBe(true);
+    const morale = s.player.morale;
+    announceFarewell(s);
+    expect(s.flags.farewell).toBe(s.year + 1);
+    expect(s.player.morale).toBe(Math.min(100, morale + FAREWELL.morale));
+    expect(canFarewell(s)).toBe(false);
+    // the end of the last season: six road arenas, none of them his own, and the honour
+    s.year = s.flags.farewell!;
+    s.step = 'summary';
+    endFarewell(s);
+    expect(s.player.gifts).toHaveLength(FAREWELL.gifts);
+    expect(new Set(s.player.gifts!.map((x) => x.team)).size).toBe(FAREWELL.gifts);
+    expect(s.player.gifts!.some((x) => x.team === myTeam(s)?.name)).toBe(false);
+    expect(s.awards.some((a) => a.key === 'FAREWELL' && a.year === s.year)).toBe(true);
+  });
+
+  it('the record watch: near a legend on the list, near a single-game record; a chase once a season', () => {
+    const g = inNBA(32104);
+    const s = structuredClone(g);
+    expect(SCORING_LIST[0].pts).toBeGreaterThan(SCORING_LIST[SCORING_LIST.length - 1].pts);
+    // a career high a point short of the threes record
+    s.highs = { ...(s.highs ?? {}), nba: { ...(s.highs?.nba ?? {}), tpm: { v: GAME_RECORDS.tpm.v - 1, year: s.year } } } as GameState['highs'];
+    expect(recordWatch(s).some((w) => w.kind === 'game' && /threes/.test(w.text))).toBe(true);
+    // a last NBA season that leaves him 500 points short of a legend mid-list: a season's pace away
+    const target = SCORING_LIST[50];
+    const pts = target.pts - 500 - nbaCareerPoints(s);
+    s.history.push({ ...(s.history[s.history.length - 1] ?? {}), level: 'NBA', line: { ...(s.history[s.history.length - 1]?.line ?? {}), pts }, post: { pts: 0 } } as GameState['history'][number]);
+    const w = recordWatch(s).find((x) => x.kind === 'list');
+    expect(w).toBeTruthy();
+    expect(canChase(s)).toBe(true);
+    chaseRecord(s);
+    expect(s.flags.chase).toBe(s.year);
+    expect(canChase(s)).toBe(false);
+  });
+});
+
+describe('round 32: achievements and events', () => {
+  it('the book holds more than 650, every id and name once', () => {
+    expect(ACHIEVEMENTS.length).toBeGreaterThan(650);
+    expect(new Set(ACHIEVEMENTS.map((a) => a.id)).size).toBe(ACHIEVEMENTS.length);
+    expect(new Set(ACHIEVEMENTS.map((a) => a.name)).size).toBe(ACHIEVEMENTS.length);
+  });
+
+  it('the round\'s events can be offered and answered on a real NBA season', () => {
+    const g = inNBA(32105);
+    for (const e of ROUND32_EVENTS) {
+      const s = structuredClone(g);
+      s.flags.wed = s.year - 1;
+      s.flags.child = s.year - 3;
+      expect(offerEvent(s, e.id)).toBe(true);
+      const d = s.pending[0];
+      for (const c of d.choices) {
+        const t = structuredClone(s);
+        expect(() => choose(t, c.id)).not.toThrow();
+        expect(t.result?.title).toBe(e.title);
+      }
+    }
+  });
+});

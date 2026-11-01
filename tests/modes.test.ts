@@ -8,11 +8,15 @@ import { runCareer } from '../scripts/harness';
 
 const N = 120;
 
+/** Lets the test worker's messages through during a long synchronous test. */
+const breathe = () => new Promise<void>((r) => setTimeout(r, 0));
+
 describe('difficulty modes', () => {
-  it('reality hits hard: peaks average the high 60s and the NBA is far from certain', () => {
+  it('reality hits hard: peaks average the high 60s and the NBA is far from certain', async () => {
     let nba = 0;
     let sum = 0;
     for (let i = 0; i < N; i++) {
+      if (i % 10 === 0) await breathe();
       const c = runCareer(910000 + i, 'smart', 'reality');
       if (c.playedNba) nba++;
       sum += c.peakOvr;
@@ -23,9 +27,10 @@ describe('difficulty modes', () => {
     expect(nba / N).toBeLessThan(0.75);
   });
 
-  it('shoot for the stars: every career that reaches 22 peaks at 80+, centred in the early 90s', () => {
+  it('shoot for the stars: every career that reaches 22 peaks at 80+, centred in the early 90s', async () => {
     const peaks: number[] = [];
     for (let i = 0; i < N; i++) {
+      if (i % 10 === 0) await breathe();
       const c = runCareer(920000 + i, 'random', 'stars');
       if (c.retireAge >= 22) expect(c.peakOvr).toBeGreaterThanOrEqual(79.5);
       peaks.push(c.peakOvr);

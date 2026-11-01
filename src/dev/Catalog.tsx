@@ -59,6 +59,9 @@ import { PlaybookArt } from '../ui/art/Playbook';
 import { StaffScene } from '../ui/art/Scene';
 import { CoachArt } from '../ui/art/Coach';
 import { TEMPER, TEMPER_FX, coachOf } from '../engine/career/coach';
+import { PERSONA, talkFor, type Mate, type Persona, type Room } from '../engine/career/locker';
+import { GAME_RECORDS, SCORING_LIST } from '../engine/career/records';
+import { FAREWELL_GIFTS } from '../content/farewell';
 import type { Team } from '../engine/types';
 import { hash } from '../ui/art/color';
 import type { KitLeague } from '../content/teamStyle';
@@ -209,6 +212,14 @@ function tollText(key: string): string {
 const LEGEND_TEAM: Record<string, string> = Object.fromEntries(Object.entries(FRANCHISE_FIVES).flatMap(([abbr, five]) => five.map((p) => [p.name, abbr])));
 const FILL = { first: 'Marcus', last: 'Vale', i: 'M', num: '23', town: 'Dayton' };
 const fillName = (n: string) => n.replace(/\{(\w+)\}/g, (_, k: string) => FILL[k as keyof typeof FILL] ?? k);
+const PERSONA_WHO: Record<Persona, string> = {
+  rookie: 'The youngest in the room, if he is 22 or a rookie',
+  vet: 'The oldest, if he is 30 or more',
+  star: 'The best of the rest, if he is close to you',
+  joker: 'One of the others',
+  quiet: 'One of the others',
+  hothead: 'One of the others; about every other half he starts a feud',
+};
 const PATH: Record<string, string> = { us: 'High school, then college', euro: 'Club academy', academy: 'Academy abroad', aus: 'Australian pathway', canada: 'Canadian prep', asia: 'Asian league pathway' };
 
 const CATEGORIES: Category[] = [
@@ -699,6 +710,65 @@ const CATEGORIES: Category[] = [
           };
         }),
       ),
+  },
+  {
+    // round 32: who a teammate can be in the locker room, and what he says when you walk up
+    key: 'personas',
+    name: 'Locker room',
+    icon: 'locker',
+    blurb: 'The characters teammates take in the locker room, what each says and what he can say back.',
+    entries: () =>
+      (Object.keys(PERSONA) as Persona[]).map((k, i) => {
+        const mate: Mate = { id: i + 1, name: 'Marcus Vale', pos: (['PG', 'SG', 'SF', 'PF', 'C', 'SF'] as const)[i], age: 27, ovr: 75, persona: k };
+        const talk = talkFor({ mates: [mate] } as unknown as Room, String(mate.id));
+        return {
+          key: k,
+          title: PERSONA[k],
+          sub: PERSONA_WHO[k],
+          text: talk?.line,
+          art: () => <PlayerArt name={`${k} Vale`} number={(i * 11) % 49 + 1} pos={mate.pos} size={72} noBall />,
+          lines: talk?.options.map((o) => `Answer: ${o.label}`),
+        };
+      }),
+  },
+  {
+    // round 32: the record watch's targets
+    key: 'records',
+    name: 'League records',
+    icon: 'record',
+    blurb: 'The single-game records and the all-time scoring list the record watch counts toward.',
+    entries: () => [
+      ...Object.entries(GAME_RECORDS).map(([k, r]) => ({
+        key: k,
+        title: `${r.v} ${r.what}`,
+        group: 'Single game',
+        art: () => <Icon name="record" size={48} />,
+      })),
+      ...SCORING_LIST.slice(0, 25).map((l, i) => ({
+        key: `list-${l.name}`,
+        title: `${i + 1}. ${l.name}`,
+        sub: `${l.pts.toLocaleString('en-US')} points`,
+        group: 'All-time scoring list',
+        art: () => <LegendBust name={l.name} team={LEGEND_TEAM[l.name] ?? ''} size={56} />,
+      })),
+    ],
+  },
+  {
+    // round 32: what the road arenas can give on a farewell tour
+    key: 'gifts',
+    name: 'Farewell gifts',
+    icon: 'gift',
+    blurb: 'What a road arena can give him on a farewell tour; six of them, one each, at its end.',
+    entries: () =>
+      FAREWELL_GIFTS.map((x, i) => ({
+        key: x,
+        title: x[0].toUpperCase() + x.slice(1),
+        art: () => (
+          <span className="shop-tile" style={{ ['--tile' as string]: SHIFT_COLOR[i % SHIFT_COLOR.length] }}>
+            <Icon name="gift" shift={i % 6} size={40} />
+          </span>
+        ),
+      })),
   },
   {
     key: 'legends',

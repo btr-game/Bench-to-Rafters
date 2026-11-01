@@ -41,7 +41,7 @@ export interface Room {
 }
 
 /** The half the room is open for (a talk each a half), or null when there is no season on. */
-export function lockerPhase(s: GameState): string | null {
+function lockerPhase(s: GameState): string | null {
   if (!s.teamId || s.stage === 'RETIRED' || !s.season) return null;
   const half = s.step === 'preseason' || s.step === 'firstHalf' ? 1 : s.step === 'midseason' || s.step === 'secondHalf' ? 2 : s.step === 'postseason' ? 3 : 0;
   return half ? `${s.year}-${half}` : null;
@@ -77,7 +77,7 @@ export function lockerRoom(s: GameState): Room | null {
 
 // ---------- the talks ----------
 
-export interface TalkOption {
+interface TalkOption {
   id: string;
   label: string;
 }

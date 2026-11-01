@@ -67,6 +67,15 @@ function pickOne(s: GameState, phase: 'mid' | 'off'): void {
   push(s, list[i], fits[i].reason);
 }
 
+/** The dev deck (round 32): one event in front of the player, whatever its conditions. */
+export function offerEvent(s: GameState, id: string): boolean {
+  const e = EVENTS.find((x) => x.id === id);
+  if (!e) return false;
+  push(s, e);
+  s.pending.unshift(s.pending.pop()!);
+  return true;
+}
+
 export function queueMidseasonEvents(s: GameState): void {
   if (!chance(s.rng, EV_RATES.midseasonChance)) return;
   pickOne(s, 'mid');

@@ -200,7 +200,7 @@ const ARCS: ArcDef[] = [
         if (who === 2) rep(s, 2);
         return {
           title: 'The wedding',
-          text: who === 2 ? 'A wedding the magazines call the event of the year. Your teammates dance badly on the cover.' : who === 1 ? 'Back home, in the gym where you met, with the whole town there.' : 'A small wedding by the water. No cameras. Perfect.',
+          text: who === 2 ? 'A wedding the magazines call the event of the year. Your teammates dance badly on the cover.' : who === 1 ? 'Back home, in the garden behind the gym where you met, with the whole town there.' : 'A small wedding by the water. No cameras. Perfect.',
           ask: { text: 'Start a family?', choices: [{ id: 'family', label: 'Start a family' }, { id: 'later', label: 'Not yet' }] },
         };
       }

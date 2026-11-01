@@ -58,7 +58,11 @@ Other preferences:
 - **Every graphic is pixel art** (owner, after round 27: "for every graphic you make, make them
   pixelated. this includes the intro and thank you page"): drawn on a pixel grid with square pixels
   (`shapeRendering="crispEdges"`, hard colour stops), never smooth gradients, curves or blurs for
-  the art itself; animations move in steps where it helps the look.
+  the art itself; animations move in steps where it helps the look. The one exception is a
+  **gradient background** behind the art, such as a moment page's (owner, round 32: "for gradient
+  backgrounds (for example, the marraige page background) they can be left unpixelated. it's
+  actually one of the things i enjoyed before the game"): those stay smooth. Meters, bars and
+  objects drawn in CSS (a plank, a plinth, a court's horizon) stay banded.
 
 - The owner is an IB DP student. Documents for people (reports, summaries) are Word files
   unless asked otherwise.

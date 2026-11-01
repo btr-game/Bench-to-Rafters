@@ -5,7 +5,7 @@
 import { chance, clamp } from '../rng';
 import type { GameState, Stage } from '../types';
 import { adjust, tally } from '../career/common';
-import { TEMPER, changeCoach, coachOf, myTeam } from '../career/coach';
+import { TEMPER, changeCoach, coachOf, myTeam, type Coach } from '../career/coach';
 import { isFarewellSeason } from '../career/farewell';
 import { chasing } from '../career/records';
 import type { EventDef } from './defs';
@@ -22,6 +22,11 @@ const ok = (outcome: string, log?: string) => ({ outcome, log });
 const coachName = (s: GameState) => {
   const t = myTeam(s);
   return t ? coachOf(t).name : 'the coach';
+};
+/** His coach, or (between teams, when an event asked earlier is answered) the last one. */
+const coachNow = (s: GameState): Pick<Coach, 'name' | 'temper'> => {
+  const t = myTeam(s);
+  return t ? coachOf(t) : { name: 'Your coach', temper: 'players' };
 };
 
 export const ROUND32_EVENTS: EventDef[] = [
@@ -77,12 +82,12 @@ export const ROUND32_EVENTS: EventDef[] = [
     cooldownSeasons: 3,
     title: 'Dinner at the coach’s house',
     text: (s) => {
-      const t = myTeam(s)!;
-      const c = coachOf(t);
+      const c = coachNow(s);
       return `${c.name} (${TEMPER[c.temper].toLowerCase()}) has you over for dinner. His wife made too much food. He wants to talk.`;
     },
+    // the choices are worked out again when he answers, when he may be between teams
     choices: (s) => {
-      const c = coachOf(myTeam(s)!);
+      const c = coachNow(s);
       return [
         {
           label: 'Talk basketball all night',
@@ -120,12 +125,14 @@ export const ROUND32_EVENTS: EventDef[] = [
         detail: 'Your word carries weight; it might be enough',
         resolve: (s, rng) => {
           const name = coachName(s);
+          const t = myTeam(s);
+          if (!t) return ok(`${name} takes the bigger job. You are between teams anyway.`);
           if (chance(rng, 0.45 + s.player.rep / 250)) {
             trust(s, 5);
             tally(s, 'coachKept');
             return ok(`${name} turns them down. "The kid asked me to stay." Coach trust +5.`, `Talked ${name} into staying.`);
           }
-          const now = changeCoach(s, myTeam(s)!);
+          const now = changeCoach(s, t);
           return ok(`${name} takes the money. ${now.name} (${TEMPER[now.temper].toLowerCase()}) replaces him; coach trust starts over.`, `${name} left for a bigger job.`);
         },
       },
@@ -134,7 +141,9 @@ export const ROUND32_EVENTS: EventDef[] = [
         detail: 'He goes; a new coach comes in',
         resolve: (s) => {
           const name = coachName(s);
-          const now = changeCoach(s, myTeam(s)!, 55);
+          const t = myTeam(s);
+          if (!t) return ok(`${name} takes the bigger job, with your blessing.`);
+          const now = changeCoach(s, t, 55);
           morale(s, 1);
           return ok(`You shake his hand at the airport. ${now.name} (${TEMPER[now.temper].toLowerCase()}) takes over, and he has heard good things about you.`, `${name} left for a bigger job, with your blessing.`);
         },

@@ -5,7 +5,7 @@
 import type { CareerRecord } from '../engine/career/record';
 import { MODES } from '../engine/balance';
 
-export interface CompareRow {
+interface CompareRow {
   label: string;
   a: string;
   b: string;

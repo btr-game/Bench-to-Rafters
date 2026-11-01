@@ -16,6 +16,19 @@ interface News {
 
 export const NEWS: News[] = [
   {
+    id: '2026-11-01-r32',
+    date: '1 November 2026',
+    items: [
+      { icon: 'locker', text: 'The locker room, on the Season tab: walk it with A and D, talk with Space. A rookie to mentor, a veteran with advice, a star, a joker, a hothead who starts feuds, and the coach at his door.' },
+      { icon: 'whistle', text: 'Every team has a head coach with a name, a face and a temperament that changes your season. Ask him for a bigger role once a season; back him or not when his job is on the line; coaches come and go, and one is Coach of the Year.' },
+      { icon: 'family', text: 'Love: a sweetheart, a celebrity or someone outside the game, then a wedding and a family. Retire with a son and you can play his career: he takes after you, and part of his legacy counts for yours.' },
+      { icon: 'wave', text: 'A farewell tour: from 32, announce your last season. Road arenas give you gifts, and the tour is an honour of its own.' },
+      { icon: 'record', text: 'Record watch: Home tells you when a legend on the all-time scoring list, or a league record, is within reach. Chase it if you like.' },
+      { icon: 'mic', text: 'The announcer: a deep voice for blocks, steals, threes, dunks and buzzer beaters (Settings, with the sound effects).' },
+      { icon: 'cards', text: 'A new career card (difficulty, challenge, your best achievements as medals), the Records tab with your timeline first, and saved careers in the career log. More than 650 achievements now.' },
+    ],
+  },
+  {
     id: '2026-11-01-r31',
     date: '1 November 2026',
     items: [

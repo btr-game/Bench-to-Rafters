@@ -57,7 +57,7 @@ export function coachOf(team: Team): Coach {
 export const myTeam = (s: GameState): Team | null => teamById(s.stage === 'NBA' ? s.nba : s.league, s.teamId);
 
 /** His own coach now, or null between teams. */
-export const myCoach = (s: GameState): Coach | null => {
+const myCoach = (s: GameState): Coach | null => {
   const t = myTeam(s);
   return t ? coachOf(t) : null;
 };
@@ -69,7 +69,7 @@ export function trustWord(t: number): string {
 
 // ---------- temperament ----------
 
-export interface TemperFx {
+interface TemperFx {
   temper: Temper;
   chem: number; // added to the season's chemistry
   post: number; // added in the postseason
@@ -105,7 +105,7 @@ export function canAskRole(s: GameState): boolean {
 }
 
 /** How likely he is to say yes (shown to the player only as a word). */
-export function roleChance(s: GameState): number {
+function roleChance(s: GameState): number {
   const c = myCoach(s);
   const season = s.season;
   if (!c || !season) return 0;

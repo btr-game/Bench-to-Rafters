@@ -31,7 +31,7 @@ const LEGS: Record<number, string> = {
 
 /** One pose for each temperament (letters as in sprite.ts: J jacket, N shirt, T tie, P trousers,
  * G clipboard, g its paper). */
-export const COACH_POSES: Record<Temper, Pose> = {
+const COACH_POSES: Record<Temper, Pose> = {
   hardliner: pose({
     19: '........JJJJNNTTNNJJJJ',
     20: '........JJJJjNTTNjJJJJ',
@@ -87,7 +87,7 @@ function hash(str: string): number {
 }
 
 /** His clothes and his look, from his name and the team's colour. */
-export function coachLook(c: Pick<Coach, 'name' | 'temper'>, color: string): { kit: Kit; look: Look; glasses: boolean } {
+function coachLook(c: Pick<Coach, 'name' | 'temper'>, color: string): { kit: Kit; look: Look; glasses: boolean } {
   const k = hash(c.name);
   const kit: Kit = c.temper === 'players' ? { base: color, ink: '#F4F4F4', trim: color, word: '' } : { base: SUITS[k % SUITS.length], ink: SHIRTS[(k >>> 4) % SHIRTS.length], trim: color, word: '' };
   const own = lookOf(c.name, '#1B1820');
