@@ -32,21 +32,38 @@ function voice(): SpeechSynthesisVoice | null {
   return all.find((v) => /daniel|david|fred|alex|male|guy|arthur|aaron|james/i.test(v.name)) ?? all[0] ?? null;
 }
 
-/** Shouts `words`, cutting off whatever he was still saying. */
-export function announce(words: string): void {
-  if (!on || typeof speechSynthesis === 'undefined' || typeof SpeechSynthesisUtterance === 'undefined') return;
+/** Every line he shouts, and when (round 33: the dev deck's sound board plays them). */
+export const CALLS: [string, string][] = [
+  ['Stolen!', 'A steal on the court (3-on-3, crunch time)'],
+  ['Rejected!', 'A block'],
+  ['What a stop!', 'A stop on defense in crunch time'],
+  ['Slam dunk!', 'A dunk'],
+  ['And one!', 'A basket and the foul'],
+  ['From downtown!', 'A three'],
+  ['Buzzer beater!', 'A make in the last three seconds'],
+  ['Alley-oop!', 'An alley-oop in 3-on-3'],
+  ['Posterized!', 'A poster dunk in 3-on-3'],
+  ['Champions!', 'The page of a title'],
+  ['Breakthrough!', 'The page of a breakthrough season'],
+  ['Let’s go!', 'Turning him on in Settings'],
+];
+
+/** Shouts `words`, cutting off whatever he was still saying. `preview` (the dev deck) plays him
+ * even with the game's sound off, and leaves the device's count of his calls alone. */
+export function announce(words: string, preview = false): void {
+  if ((!on && !preview) || typeof speechSynthesis === 'undefined' || typeof SpeechSynthesisUtterance === 'undefined') return;
   const s = soundSettings();
-  if (!s.sfx || s.sfxVol <= 0) return;
+  if (!preview && (!s.sfx || s.sfxVol <= 0)) return;
   try {
     const u = new SpeechSynthesisUtterance(words);
     const v = voice();
     if (v) u.voice = v;
     u.pitch = 0.35;
     u.rate = 0.88;
-    u.volume = Math.min(1, s.sfxVol + 0.15);
+    u.volume = preview ? 1 : Math.min(1, s.sfxVol + 0.15);
     speechSynthesis.cancel();
     speechSynthesis.speak(u);
-    recordCall();
+    if (!preview) recordCall();
   } catch {
     // no speech on this device: the game goes on without the voice
   }

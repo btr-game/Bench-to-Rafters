@@ -12,6 +12,7 @@ import { TRACKS, type TrackId } from '../ui/tracks';
 import { beatLoop } from '../ui/mini/Lockdown';
 import { PATTERNS, TEMPOS } from '../engine/mini/rhythm';
 import { Icon } from '../ui/art/Icon';
+import { CALLS, announce } from '../ui/announcer';
 
 export function SoundBoard() {
   const [beat, setBeat] = useState<number | null>(null);
@@ -43,6 +44,17 @@ export function SoundBoard() {
           <button key={id} className={`dk-sound${last === id ? ' on' : ''}`} onClick={() => (sfx(id, true), setLast(id))}>
             <b>{id}</b>
             <small>{where}</small>
+          </button>
+        ))}
+      </div>
+      {/* round 33 (owner: "the sounds from the announcer ... add that") */}
+      <div className="kicker">The announcer</div>
+      <p className="small muted">The browser's own voice, pitched low and slowed down, so it sounds a little different on every device (and is silent where the browser has no speech).</p>
+      <div className="dk-sound-grid">
+        {CALLS.map(([line, when]) => (
+          <button key={line} className={`dk-sound${last === line ? ' on' : ''}`} onClick={() => (announce(line, true), setLast(line))}>
+            <b>{line}</b>
+            <small>{when}</small>
           </button>
         ))}
       </div>

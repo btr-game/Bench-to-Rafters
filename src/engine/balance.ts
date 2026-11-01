@@ -683,6 +683,18 @@ export const RECORD_CHASE = { games: 72, near: 0.8, usage: 0.05, injury: 0.1, ch
  * `potSd`, and a `potJump` chance of `potJumpSize` points (up only `potUp` of the time). The child's
  * legacy adds `share` of itself to his.
  */
+/**
+ * The road map (round 33, engine/levels.ts): three short careers before the full game. Each starts
+ * as a high school senior, plays one college season and `nbaSeasons` NBA seasons. Potential and
+ * growth are set so at least 80% of careers make an NBA All-Star team (owner: "make the difficulty
+ * for all levels slightly easier so that nba all star could be achieved above 80%").
+ */
+export const ROADMAP = {
+  beginner: { nbaSeasons: 5, potential: { base: 80, mu: 1.6, sigma: 0.5, min: 82, max: 97 } as SkewDist, growth: 1.1, events: 1 },
+  intermediate: { nbaSeasons: 6, potential: { base: 80, mu: 1.6, sigma: 0.5, min: 82, max: 97 } as SkewDist, growth: 1.1, events: 1 },
+  advanced: { nbaSeasons: 7, potential: { base: 80, mu: 1.6, sigma: 0.5, min: 82, max: 97 } as SkewDist, growth: 1.1, events: 2 },
+};
+
 // girl: the chance the first child is a daughter (owner: "make the first child half-half boy and girl"); only a son plays a career
 export const NEXT_GEN = { heightSd: 1.2, jump: 0.06, jumpIn: [3, 6], potShift: -3, potSd: 3.5, potJump: 0.06, potJumpSize: [7, 12], potUp: 0.35, share: 0.25, girl: 0.5 };
 export const STAFF_PAY = { pay: [1, 1.7, 2.6], effect: [1, 1.5, 2], talk: 1, talkShare: 0.35, afford: 4, max: 6 };

@@ -83,6 +83,11 @@ export function NextGen({ g }: { g: GameState }) {
           )}
         </div>
       </div>
+      {/* round 33 (owner: "give a quick warning that it will be played in sim & fast break mode"):
+          shown in simple text too, right where he decides */}
+      <p className="ng-warn" role="note">
+        <b>Heads up:</b> {first}'s career plays in Sim and Fast break, locked on. The game makes the routine calls and the turning points; you choose where he plays, the draft and when he retires.
+      </p>
       <button className="btn" onClick={() => (sfx('family'), play())}>
         Play {first}'s career
       </button>

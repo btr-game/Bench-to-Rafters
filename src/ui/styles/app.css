@@ -2511,7 +2511,11 @@ input[type='range'] { width: 100%; min-height: 32px; accent-color: var(--accent)
 .continue-card { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; }
 
 /* round 32: the next generation (the son's career, on the father's page and log card) */
+/* round 33: the Season tab's team strength beside its city and fans (one column when there is no city card, or on a phone) */
+.season-pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr)); gap: 16px; align-items: start; }
 .ng-row { display: flex; gap: 14px; align-items: center; }
+/* round 33: the son's career plays itself; said where the player decides */
+.ng-warn { margin: 0; border: 1px solid var(--warn); border-left-width: 6px; border-radius: 8px; padding: 8px 12px; font-size: calc(14.5px * var(--ts)); }
 .ng-row > :first-child { flex: none; }
 .ng-name { font-family: var(--f-display); font-weight: 800; font-size: calc(26px * var(--ts)); line-height: 1; text-transform: uppercase; overflow-wrap: anywhere; }
 .ng-facts { display: grid; gap: 10px; }

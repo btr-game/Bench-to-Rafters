@@ -22,6 +22,7 @@ import { Catalog } from './Catalog';
 import { Inbox } from './Inbox';
 import { MusicBoard, SoundBoard } from './SoundBoard';
 import { useRealLive } from '../ui/screens/Community';
+import { NEWS } from '../content/whatsNew';
 import './dev.css';
 
 const groupOf = (g: Group) => GROUPS.find((x) => x.key === g)!;
@@ -88,6 +89,43 @@ function resetGame(): boolean {
 
 const DECK_OPENED = Date.now();
 
+/** Round 33 (owner: "make the what's new accessible in the dev deck"): every update players have
+ * been shown, newest first; the pop-up itself opens from here as they see it. */
+function NewsHistory({ onOpen }: { onOpen: () => void }) {
+  return (
+    <section className="stack dk-news" aria-label="What’s new, every update">
+      <div className="dk-sound-head">
+        <div>
+          <h2 className="sec-title with-icon">
+            <Icon name="news" size={30} />
+            What’s new
+          </h2>
+          <p className="small muted">Every update players have been shown, newest first. On the start page they see only the latest, once after each update.</p>
+        </div>
+        <button className="btn small" onClick={onOpen}>
+          Open it as players see it
+        </button>
+      </div>
+      {NEWS.map((n, i) => (
+        <article key={n.id} className="card stack dk-news-entry">
+          <div className="kicker">
+            {n.date}
+            {i === 0 ? ' · the latest' : ''}
+          </div>
+          <ul className="news-list">
+            {n.items.map((it) => (
+              <li key={it.text}>
+                <Icon name={it.icon} size={26} />
+                <span>{it.text}</span>
+              </li>
+            ))}
+          </ul>
+        </article>
+      ))}
+    </section>
+  );
+}
+
 /** Round 32 (owner: "to track the real amount of people, put the real values in the dev deck so
  * that only the devs can see it"): the live strip's numbers without the house players. */
 function RealLive() {
@@ -132,7 +170,7 @@ export function DevDeck() {
   const [group, setGroup] = useState<Group | 'all'>('all');
   const [q, setQ] = useState('');
   const [results, setResults] = useState(false);
-  const [section, setSection] = useState<'cards' | 'catalog' | 'sounds' | 'music' | 'summary' | 'inbox'>(() => (location.hash === '#inbox' ? 'inbox' : 'cards'));
+  const [section, setSection] = useState<'cards' | 'catalog' | 'sounds' | 'music' | 'summary' | 'inbox' | 'news'>(() => (location.hash === '#inbox' ? 'inbox' : 'cards'));
   const [chapter, setChapter] = useState(0);
   const [focus, setFocus] = useState<number | null>(null);
   const [view, setView] = useState<'deck' | 'grid'>('deck');
@@ -277,6 +315,9 @@ export function DevDeck() {
             <button aria-pressed={section === 'inbox' && !results} onClick={() => (setSection('inbox'), setResults(false))}>
               Inbox
             </button>
+            <button aria-pressed={section === 'news' && !results} onClick={() => (setSection('news'), setResults(false))}>
+              What’s new
+            </button>
           </div>
           <div className="dk-searchbox">
             <input
@@ -344,6 +385,8 @@ export function DevDeck() {
         <Catalog />
       ) : section === 'inbox' ? (
         <Inbox />
+      ) : section === 'news' ? (
+        <NewsHistory onOpen={() => deal(CARDS.find((c) => c.id === 'whats-new')!)} />
       ) : section === 'sounds' ? (
         <SoundBoard />
       ) : section === 'music' ? (
