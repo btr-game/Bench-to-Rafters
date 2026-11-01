@@ -46,6 +46,7 @@ import { buildWord, driftWeight, idealWeight, weightOf } from '../player/weight'
 import { growBonds } from './duo';
 import { pushBrand } from './nickname';
 import { pushPress } from './press';
+import { allows, inLevel, levelFloor, roadOffers } from '../levels';
 
 // ---------- entering the offseason ----------
 
@@ -89,7 +90,7 @@ export function beginOffseason(s: GameState): void {
   p.wear = clamp((p.wear ?? 0) - WEAR.summerRest + Math.max(0, p.age - 25) * WEAR.agePerYear, 0, 100);
   // shoot-for-the-stars mode: never too far behind the path to the floor
   // (only through the prime: after 29 age hits stars as hard as anyone)
-  const floor = MODES[s.mode ?? 'standard'].floor;
+  const floor = levelFloor(s) ?? MODES[s.mode ?? 'standard'].floor;
   if (floor && p.age <= floor.until) {
     const start = ovrOf(p.startAttrs, p.pos);
     const want = start + (floor.ovr - start) * clamp((p.age - 14) / (floor.age - 14), 0, 1);
@@ -153,12 +154,14 @@ export function beginOffseason(s: GameState): void {
   p.growthMultNext = 1;
   if (s.stage !== 'RETIRED') {
     // South Korea: military service (it goes first, before any contract talks)
-    pushMilitary(s);
+    // round 33: the road map's levels leave military service, the national team and press
+    // conferences to the full game (the closing tour shows press conferences)
+    if (!inLevel(s)) pushMilitary(s);
     // fast break (and the lab) skips the national team: no call-ups, no tournaments
-    if (!s.flags.fast) pushNationalTeam(s);
+    if (!s.flags.fast && !inLevel(s)) pushNationalTeam(s);
     pushSummer(s);
-    pushPress(s);
-    pushBrand(s);
+    if (!inLevel(s)) pushPress(s);
+    if (allows(s, 'brand')) pushBrand(s);
     pushShop(s);
     queueOffseasonEvent(s);
   }
@@ -229,7 +232,7 @@ function resolveSummer(s: GameState, id: string): void {
 // ---------- high school → the split ----------
 
 function pushSplit(s: GameState): void {
-  const offers = originOffers(s, splitOffers(s));
+  const offers = roadOffers(s, originOffers(s, splitOffers(s)));
   if (offers.length === 0) {
     pushDecision(s, {
       kind: 'offers',
@@ -241,7 +244,7 @@ function pushSplit(s: GameState): void {
     return;
   }
   const choices = offers.map(offerChoice);
-  if (s.hsYear === 4 && (s.stars <= 3 || pathOf(s) !== 'us')) {
+  if (s.hsYear === 4 && (s.stars <= 3 || pathOf(s) !== 'us') && allows(s, 'roads')) {
     const abroad = pathOf(s) !== 'us';
     choices.push({
       id: 'prep',
@@ -412,12 +415,13 @@ function pushUndrafted(s: GameState): void {
     retireNow(s, 'No team called after the draft.');
     return;
   }
+  const shown = roadOffers(s, offers);
   pushDecision(s, {
     kind: 'offers',
     title: 'Undrafted',
     text: 'Your name was not called. The phone still rings.',
-    choices: offers.map(offerChoice),
-    data: { offers, context: 'undrafted' },
+    choices: shown.map(offerChoice),
+    data: { offers: shown, context: 'undrafted' },
   });
 }
 
@@ -452,14 +456,15 @@ function proContractStep(s: GameState): void {
     if (expired) retireNow(s, 'No contract offers came.');
     return;
   }
-  const choices = offers.map(offerChoice);
+  const shown = roadOffers(s, offers);
+  const choices = shown.map(offerChoice);
   if (!expired) choices.push({ id: 'stay', label: `Stay with ${teamById(s.league, s.teamId)?.name ?? 'your club'}`, detail: `${c!.years} year(s) left on your deal.` });
   pushDecision(s, {
     kind: 'offers',
-    title: offers.some((o) => o.level === 'NBA') ? 'NBA teams are calling' : 'New contract',
-    text: offers.some((o) => o.level === 'NBA') ? 'Your play got noticed. NBA teams want you in camp.' : 'Your contract is up. Here is what is out there.',
+    title: shown.some((o) => o.level === 'NBA') ? 'NBA teams are calling' : 'New contract',
+    text: shown.some((o) => o.level === 'NBA') ? 'Your play got noticed. NBA teams want you in camp.' : 'Your contract is up. Here is what is out there.',
     choices,
-    data: { offers, context: 'pro' },
+    data: { offers: shown, context: 'pro' },
   });
 }
 
@@ -512,7 +517,7 @@ function pushFreeAgency(s: GameState, lastShare: number, lastRole: RoleKey): voi
     offers.push(nbaOffer(s, supTeam, 'sixth', minSalary(s.year + 1, s.serviceYears) * 1.5, 2, 'standard', 'The superteam: sixth man behind three stars'));
   // Europe and Asia call too, unless he is clearly an NBA player: a bigger role, often more money
   const ovr = userOvr(s);
-  if (offers.length > 0 && ovr < OVERSEAS_FA.belowOvr) {
+  if (offers.length > 0 && ovr < OVERSEAS_FA.belowOvr && allows(s, 'roads')) {
     offers.push(...europeOffers(s, ovr, ovr < OVERSEAS_FA.twoBelow ? 2 : 1));
     if (chance(s.rng, OVERSEAS_FA.asiaChance)) offers.push(...intOffers(s, ovr, 1, { cba: s.player.age >= 27 }));
   }
@@ -594,6 +599,8 @@ export function signContract(s: GameState, c: Contract, stage: GameState['stage'
 
 export function signOffer(s: GameState, o: Offer, context: string, others: Offer[]): void {
   const year = s.year + 1;
+  // intermediate's talks are for its first NBA deal past the rookie scale (levels.ts talksOpen)
+  if (inLevel(s) && o.level === 'NBA' && o.kind === 'standard') s.flags.nbaDeal = 1;
   const stage: GameState['stage'] = o.level === 'NCAA' ? 'NCAA' : o.level === 'GL' ? 'GL' : o.level === 'EU' ? 'EU' : o.level === 'INT' ? 'INT' : 'NBA';
   if (o.kind === 'exhibit10') {
     const team = teamById(s.nba, o.teamId)!;

@@ -131,7 +131,12 @@ export function recordLocks(n: number): void {
 }
 
 /** Round 29: a music loop was heard; true the first time. */
+/** The music loops of the tutorial, left out of Full Album (the levels count nowhere). */
+export const TUTORIAL_LOOPS = ['road', 'sad'];
+
 export function recordHeard(id: string): boolean {
+  // round 33: the tutorial's two loops (the road map, a missed goal) are not part of the album
+  if (TUTORIAL_LOOPS.includes(id)) return false;
   const d = loadAch();
   if (d.totals.heard?.includes(id)) return false;
   d.totals.heard = [...(d.totals.heard ?? []), id];

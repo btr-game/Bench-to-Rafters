@@ -165,6 +165,12 @@ export const SHOP_ITEMS: ShopItem[] = [
   { id: 'meditation', name: 'Meditation app', category: 'Lifestyle', price: 0.07 * K, blurb: 'Ten minutes a day. Breathe.', morale: 3 },
   { id: 'stream-setup', name: 'Streaming setup', category: 'Lifestyle', price: 2 * K, blurb: 'Fans watch you play video games. You gain followers.', rep: 3, morale: 2 },
   { id: 'team-dinner', name: 'Dinner for the whole team', category: 'Lifestyle', price: 4 * K, blurb: 'Steaks on you. The locker room remembers.', trust: 4, morale: 3 },
+  // round 33: efficiency, and the nights that go wrong (the round's achievements)
+  { id: 'shot-chart-wall', name: 'Your shot chart, poster size', category: 'Training', price: 0.15 * K, blurb: 'Green where you make them. Red where you should stop.', attrs: { IQ: 0.5 } },
+  { id: 'ft-routine-coach', name: 'Free-throw routine specialist', category: 'Training', price: 4 * K, blurb: 'Same breath, same dribbles, same spin. Underhand, if you dare.', attrs: { SHT: 0.5 }, morale: 1 },
+  { id: 'ball-security', name: 'Ball-security camp with a retired point guard', category: 'Training', price: 6 * K, blurb: 'Two hands in traffic. Fewer giveaways.', attrs: { PLY: 0.5, IQ: 0.5 } },
+  { id: 'box-score-frame', name: 'Your best box score, framed', category: 'Lifestyle', price: 0.4 * K, blurb: 'Every number from your best night, behind glass.', rep: 1, morale: 3 },
+  { id: 'gold-brick', name: 'A gold-painted brick', category: 'Lifestyle', price: 0.05 * K, blurb: 'For the night nothing went in. You can laugh about it now.', morale: 4 },
   // round 32: the locker room, the coach, the farewell tour, record chases, love and a family
   { id: 'locker-speaker', name: 'Locker room sound system', category: 'Lifestyle', price: 1.5 * K, blurb: 'Pregame playlists the whole room argues about.', morale: 3, trust: 1 },
   { id: 'hof-whistle', name: 'A Hall of Fame coach\u2019s whistle', category: 'Lifestyle', price: 3 * K, blurb: 'A gift for your coach. He hangs it in his office.', trust: 4, morale: 1 },

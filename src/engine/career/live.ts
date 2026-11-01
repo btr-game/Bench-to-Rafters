@@ -57,6 +57,8 @@ export interface LiveState {
   simAll: boolean;
   simSeries: string | null;
   recent: string[];
+  // round 33: beginner's one last shot (levels.ts shotDue): no other pick in this postseason
+  shot?: boolean;
 }
 
 export interface SeriesCtx {
@@ -255,9 +257,11 @@ export function playLiveGame(s: GameState, a: LiveGameArgs): { line: StatLine; u
     losses: sr?.losses ?? 0,
     recent: s.live?.recent.slice(-3) ?? [],
   };
+  // round 33: beginner's one last shot plays the quarters on its own and keeps the finish close
+  const shot = !!s.live?.shot;
   for (let q = 1; q <= 4; q++) {
     const where = q === 1 ? 'Tip-off' : q === 3 ? 'Halftime' : `End of the ${q === 2 ? '1st' : '3rd'} quarter`;
-    const tactic = nextPick(s, {
+    const tactic = shot ? 'steady' : nextPick(s, {
       ...head,
       stage: 'quarter',
       title: `${a.round}${head.bestOf > 1 ? ` · Game ${head.game}` : ''} · ${q === 1 ? '1st' : q === 2 ? '2nd' : q === 3 ? '3rd' : '4th'} quarter`,
@@ -294,6 +298,11 @@ export function playLiveGame(s: GameState, a: LiveGameArgs): { line: StatLine; u
   }
   line.gp = 1;
   line.gs = a.started ? 1 : 0;
+  if (shot) {
+    // down one with the ball: make it and they win
+    if (Math.abs(us - them) > 3) them = us + 1;
+    s.flags.levelShot = 1;
+  }
   if (crunched) {
     const st = { us, them, line, qs, last: null as LiveRequest['last'] };
     crunchDown = us < them;

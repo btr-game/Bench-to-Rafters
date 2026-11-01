@@ -28,11 +28,15 @@ import { resetTour } from '../ui/components/GuideTour';
 import { decision, moment, onlyMoment, play, type PlayOpts } from './stage';
 import { isFinal, type LiveRequest } from '../engine/career/live';
 import { CamLab } from './CamLab';
+import { LEVEL_IDS, type Level } from '../engine/levels';
+import { ROAD_MINIS, type Road } from '../ui/road';
+import type { ChosenLook } from '../content/looks';
 import { LoadingLab } from './LoadingLab';
 
-export type Group = 'Start' | 'Career hub' | 'Decisions' | 'Big moments' | 'Modes' | 'Mini-games' | 'Records & community';
+export type Group = 'Start' | 'Tutorial' | 'Career hub' | 'Decisions' | 'Big moments' | 'Modes' | 'Mini-games' | 'Records & community';
 export const GROUPS: { key: Group; color: string; icon: string }[] = [
   { key: 'Start', color: '#E8590C', icon: 'door' },
+  { key: 'Tutorial', color: '#862E9C', icon: 'map' },
   { key: 'Career hub', color: '#1C7ED6', icon: 'chart' },
   { key: 'Decisions', color: '#2B8A3E', icon: 'checklist' },
   { key: 'Big moments', color: '#C92A2A', icon: 'laurel' },
@@ -192,6 +196,40 @@ export function setAchievements(all: boolean): void {
   }
 }
 
+// ---------- round 33: the tutorial's pages, on a road of the deck's own (never saved) ----------
+
+const LOOK: ChosenLook = { skin: 3, hair: 'k', style: 'flattop', face: 'none' };
+const ALL_C = Object.fromEntries(ROAD_MINIS.map((m) => [m, 'C'])) as Road['minis'];
+/** The tutorial on screen, the road this far: its pages alone, or with their lessons. */
+function onRoad(passed: Level[], extra: Partial<Road> = {}, preview: Road['preview'] = 'page', more: Partial<ReturnType<typeof useStore.getState>> = {}): boolean {
+  // the second level passed short of its goal, so the map shows both marks
+  const road: Road = { passed: Object.fromEntries(passed.map((l, i) => [l, { star: i !== 1 }])), minis: {}, look: LOOK, ...extra, preview };
+  useStore.setState({ road, ...more });
+  return true;
+}
+const levelRun = (key: string, level: Level, until: Parameters<typeof play>[0], o: PlayOpts = {}) => fixture(`lv-${key}`, () => play(until, { level, ...o }));
+const ended = (star: boolean) => (s: GameState) => s.step === 'retired' && s.flags.levelEnd === (star ? 2 : 1);
+
+const TUTORIAL: DevCard[] = [
+  { id: 'road-map', title: 'The road map', group: 'Tutorial', icon: 'map', blurb: 'The tutorial between levels: the pixel map with the car driving on to the next stop, the bucket list on a paper scroll, and the next level with what it adds.', open: () => onRoad(['beginner']) },
+  { id: 'road-late', title: 'The road map, near its end', group: 'Tutorial', icon: 'map', blurb: 'All three levels passed (one short of the All-Star goal): the island of mini-games with the grades so far, and the closing tour waiting.', open: () => onRoad(LEVEL_IDS, { minis: { threes: 'A', dunk: 'C', street: 'C', lab: 'B' } }) },
+  { id: 'road-free', title: 'The road map from the start page', group: 'Tutorial', icon: 'map', blurb: 'Once the full game is open, the Levels card brings the road back: every level to play again, kept nowhere.', open: () => onRoad(LEVEL_IDS, { minis: ALL_C, toured: 1, free: 1 }, 'page', { page: 'road' }) },
+  { id: 'level-1', title: 'Level 1: Beginner', group: 'Tutorial', icon: 'lvl-HSV', blurb: 'The first page of every device: the school on the map, the goal (an NBA All-Star team), a name, a number, a position and an archetype; the rest is chosen for him.', open: () => onRoad([]) },
+  { id: 'level-2', title: 'Level 2: Intermediate', group: 'Tutorial', icon: 'lvl-NCAA', blurb: 'The level’s start page: the college on the map, the icons for what the level adds, and the focus to pick.', open: () => onRoad(['beginner'], {}, 'page', { creating: 'intermediate' }) },
+  { id: 'level-3', title: 'Level 3: Advanced', group: 'Tutorial', icon: 'lvl-NBA', blurb: 'The last level’s start page: the arena on the map, the country and the shooting hand as well.', open: () => onRoad(['beginner', 'intermediate'], {}, 'page', { creating: 'advanced' }) },
+  { id: 'level-career', title: 'A beginner career', group: 'Tutorial', icon: 'lvl-HSV', blurb: 'A level career at its first call: Home and Player only, the level’s badge, fast break’s pace, two plans of its own.', open: () => show(levelRun('beg', 'beginner', decision('plan'))) },
+  { id: 'level-nba', title: 'An intermediate career in the NBA', group: 'Tutorial', icon: 'lvl-NCAA', blurb: 'Intermediate with three tabs, its sim and fast break chips, and the first NBA season ahead.', open: () => show(levelRun('int', 'intermediate', (s, p) => p.type === 'decision' && p.decision.kind === 'plan' && s.stage === 'NBA')) },
+  { id: 'level-shot', title: 'Beginner’s last shot', group: 'Tutorial', icon: 'shoot', blurb: 'Beginner’s one playoff moment: the game comes down to his shot, on the timing meter.', open: () => show(levelRun('shot', 'beginner', liveAt('clutch'), { live: true })) },
+  { id: 'level-won', title: 'A level passed: the goal reached', group: 'Tutorial', icon: 'stars', blurb: 'The end of a level career that made an All-Star team: its numbers, and what the next level adds.', open: () => show(levelRun('won', 'beginner', ended(true))) },
+  { id: 'level-missed', title: 'A level passed: so close', group: 'Tutorial', icon: 'morale', blurb: 'The end of a level career with no All-Star team: its own card and its own sad loop, and the road still goes on.', open: () => show(levelRun('missed', 'intermediate', ended(false), { tries: 30 })) },
+  { id: 'island', title: 'The island of mini-games', group: 'Tutorial', icon: 'palm', blurb: 'Every mini-game once, a C or better in each: the mark to beat and the best grade so far on every card.', open: () => onRoad(LEVEL_IDS, { minis: { threes: 'B', dunk: 'C', lab: 'D' } }, 'page', { mini: 'hub' }) },
+  { id: 'graduation', title: 'Graduation', group: 'Tutorial', icon: 'cap', blurb: 'The tutorial done: the diploma with the exit code, a copy button, and the way into the full game.', open: () => onRoad(LEVEL_IDS, { minis: ALL_C, toured: 1 }) },
+  { id: 'lesson', title: 'A lesson on screen', group: 'Tutorial', icon: 'guide', blurb: 'The tutorial guide: the page shaded but for one control, the note beside it, Got it or Your turn, and the exit code for anyone who has it.', open: () => onRoad([], {}, 'lesson') },
+  { id: 'closing-tour', title: 'The closing tour', group: 'Tutorial', icon: 'arena', blurb: 'After the levels: a star’s career, stop by stop, for every system no level has; the bar says which stop, Next stop goes on once its lessons are done.', open: () => (onRoad(LEVEL_IDS, { minis: ALL_C }, 'lesson'), useStore.getState().startClosing()) },
+  { id: 'recommended', title: 'The full game, first look', group: 'Tutorial', icon: 'door', blurb: 'Just after graduation: the start page with Regular guy recommended and its own few lessons.', open: () => onRoad(LEVEL_IDS, { minis: ALL_C, toured: 1, free: 1 }, 'lesson', { recommend: true }) },
+  { id: 'skip-door', title: 'The Skip door', group: 'Tutorial', icon: 'lock', blurb: 'At the foot of every tutorial page: the exit code (shown at graduation) opens the full game on this device for good.', open: () => onRoad(['beginner']), press: '[data-tour="skip-door"]' },
+];
+
 // ---------- the deck ----------
 
 const MINI: DevCard[] = (
@@ -311,6 +349,7 @@ export const CARDS: DevCard[] = [
     useStore.setState({ game: null, page: null, mini: null, thanks: g });
   } },
   { id: 'loading', title: 'Loading pop-out', group: 'Start', icon: 'ball', blurb: 'The pixel player who dribbles while a slow step runs: all nine moves, and a button to make the page lag.', open: () => true, page: LoadingLab },
+  ...TUTORIAL,
   { id: 'm-intro', title: 'Intro moment', group: 'Big moments', icon: 'door', blurb: 'The career begins.', open: () => withMoment('m-intro', (m) => m.kind === 'intro', { mode: 'standard' }) },
   { id: 'm-commit', title: 'College commitment', group: 'Big moments', icon: 'jersey', blurb: 'Signing day.', open: () => withMoment('m-commit', (m) => m.kind === 'commit', { mode: 'standard' }) },
   { id: 'm-draft', title: 'Draft night', group: 'Big moments', icon: 'jersey', blurb: 'The pick, the cap, the handshake.', open: () => withMoment('m-draft', (m) => m.kind === 'draft') },

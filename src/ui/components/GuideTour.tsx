@@ -10,6 +10,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useStore } from '../../store';
+import { inTutorial } from '../road';
 
 interface Step {
   id: string;
@@ -31,6 +32,7 @@ const TOUR: Step[] = [
   T('comet', '.comet-card', 'With Shoot for the stars: Comet, the stars at hyper speed. Fast break and Sim for the whole career, about five minutes.'),
   T('oath', '.oath-card:not(.comet-card)', 'With Reality hits hard: Rough Road, the hardest way to play. The road picks your player at random, then master mode with no Fast break or Sim, for the whole career, and a mark of honour for it.'),
   T('minis', D('minis'), 'Mini-games. Free from the start page; in a career each one opens with your ratings and pays a rating bonus.'),
+  T('levels', D('levels-card'), 'The road map: the three levels and the island, to play again. Level careers count nowhere.'),
   T('log', D('log'), 'The career log: the cards of your last ten finished careers. Lock up to five to keep them for good.'),
   T('log-saves', '.saves-card', 'Every career saved on this device: continue one, look back, copy its code to play it somewhere else, or import one.'),
   T('log-lock', D('log-lock'), 'Lock a card: a new career never replaces it, and it can’t be deleted until you unlock it. Five at most.'),
@@ -97,7 +99,7 @@ const TOUR: Step[] = [
   T('set-theme', D('set-theme'), 'Light, dark, or follow your device.'),
   T('set-court', D('set-court'), 'The page background.'),
   T('set-text', D('set-text'), 'Text size: Large and Extra large make every word bigger.'),
-  T('set-new', D('set-new'), 'Ends this career. Tap twice to be sure.'),
+  T('set-new', D('set-new'), 'Leaves this career for a new one (it asks first). The career stays saved in the career log, ready to continue.'),
   T('set-fast', D('set-fast'), 'Fast break, also here.'),
   T('set-playoffs', D('set-playoffs'), 'Off: postseason games are simulated.'),
   T('set-simple', D('set-simple'), 'Simple text, also here.'),
@@ -194,7 +196,8 @@ const shown = (el: HTMLElement) => {
 
 export function GuideTour() {
   // round 27: not over the intro page, nor while a tab's news is up (TabNews)
-  const on = useStore((s) => s.guide && !s.master && !s.intro && !s.thanks && !s.spots);
+  // round 33: never in the tutorial, which has its own guide (Guide mode stays for after it)
+  const on = useStore((s) => s.guide && !s.master && !s.intro && !s.thanks && !s.spots && !inTutorial(s.road) && !s.game?.flags.level);
   const [seen, setSeen] = useState(loadSeen);
   const [cur, setCur] = useState<{ step: Step; el: HTMLElement } | null>(null);
   const [box, setBox] = useState<{ x: number; y: number; w: number; h: number } | null>(null);

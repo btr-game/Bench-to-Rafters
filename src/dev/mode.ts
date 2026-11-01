@@ -12,7 +12,8 @@ const FLAG = 'btr-dev-on';
 // FNV-1a of the password, so the page does not spell it out
 const KEY = 0x2b798e22;
 
-function hash(s: string): number {
+/** FNV-1a, 32 bits: the deck's password and the tutorial's exit code are kept as these (ui/road.ts). */
+export function fnv1a(s: string): number {
   let h = 0x811c9dc5;
   for (const c of s) h = Math.imul(h ^ c.charCodeAt(0), 0x01000193) >>> 0;
   return h;
@@ -51,4 +52,4 @@ export function setDev(next: boolean): void {
 }
 
 /** Whether the password is the deck's. */
-export const devPassword = (password: string): boolean => hash(password.trim()) === KEY;
+export const devPassword = (password: string): boolean => fnv1a(password.trim()) === KEY;

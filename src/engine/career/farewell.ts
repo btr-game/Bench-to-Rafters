@@ -9,8 +9,10 @@ import { FAREWELL } from '../balance';
 import { shuffle } from '../rng';
 import type { GameState } from '../types';
 import { adjust, logDecision, pushMoment } from './common';
+import { inLevel } from '../levels';
 
 export function canFarewell(s: GameState): boolean {
+  if (inLevel(s)) return false; // round 33: the closing tour shows it
   return s.stage === 'NBA' && s.step === 'offseason' && !!s.teamId && s.player.age >= FAREWELL.age && !s.flags.farewell;
 }
 

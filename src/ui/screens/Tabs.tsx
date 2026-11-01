@@ -346,30 +346,27 @@ export function SeasonTab({ g }: { g: GameState }) {
       >
         <FormStrip games={games} />
       </PageHero>
-      {lg?.bracket && (
-        <Card title="Postseason" kicker={`${seasonLabel(g.year)} · ${lg.level === 'NBA' ? 'the playoffs' : 'the postseason'}`} tour="season-post">
-          <BracketView g={g} />
-        </Card>
-      )}
-      {view && (
-        <div className={t ? 'page-grid wide-side' : 'stack'}>
-          <StandingsCard g={g} lg={view} />
-          {t && (
-            <div className="stack">
-              <StrengthCard g={g} />
-              <Extra>
-                <CityCard g={g} />
-              </Extra>
-            </div>
-          )}
-        </div>
-      )}
-      {/* round 32: the locker room, between the standings and the league's leaders */}
+      {/* round 33 (owner: "move up the locker room to the top ... the team strength and team
+          culture+fan culture side-by-side ... right below the locker room, and then the standings") */}
       {t && (
         <Extra>
           <LockerRoom g={g} />
         </Extra>
       )}
+      {t && (
+        <div className="season-pair">
+          <StrengthCard g={g} />
+          <Extra>
+            <CityCard g={g} />
+          </Extra>
+        </div>
+      )}
+      {lg?.bracket && (
+        <Card title="Postseason" kicker={`${seasonLabel(g.year)} · ${lg.level === 'NBA' ? 'the playoffs' : 'the postseason'}`} tour="season-post">
+          <BracketView g={g} />
+        </Card>
+      )}
+      {view && <StandingsCard g={g} lg={view} />}
       {view && leaders && (
         <Card title="League leaders" kicker="Per game, ten games or more" tour="season-leaders">
           <div className="lg-leader-grid">

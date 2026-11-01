@@ -27,6 +27,12 @@ import { ICON_FOR } from './art/icons';
 import { music, onHeard, sfx, wakeOnClick } from './sound';
 import { recordHeard } from './achievements';
 import { trackOf } from './tracks';
+import { inTutorial, levelTabs, nextLevel, roadDone } from './road';
+import { Graduation } from './screens/Graduation';
+import { STOPS } from './tutorial/closing';
+import { LEVEL_NAME, levelOf } from '../engine/levels';
+import { RoadMap } from './screens/RoadMap';
+import { LevelEnd } from './screens/LevelEnd';
 
 
 // round 28 (owner: "any graphic that isnt pixels, change them"): the tab icons on a 12x12 pixel
@@ -50,7 +56,7 @@ function TabBar({ g, top = false }: { g: GameState; top?: boolean }) {
   const seen = useStore((s) => s.seen);
   return (
     <nav className={top ? 'toptabs' : 'tabbar'} aria-label="Main">
-      {(Object.keys(UI.tabs) as Tab[]).map((t) => {
+      {((levelTabs(g) ?? Object.keys(UI.tabs)) as Tab[]).map((t) => {
         const fresh = t !== tab && seen[t] !== undefined && seen[t] !== tabKey(g, t);
         return (
           <button key={t} data-tour={`tab-${t}`} aria-current={tab === t ? 'page' : undefined} onClick={() => setTab(t)} title={`${UI.tabs[t]} (${t[0].toUpperCase()})`}>
@@ -66,11 +72,53 @@ function TabBar({ g, top = false }: { g: GameState; top?: boolean }) {
   );
 }
 
+/** Round 33: the closing tour's bar: the stop on screen, and on to the next once its lessons are done. */
+function TourBar() {
+  const closing = useStore((s) => s.closing);
+  const up = useStore((s) => s.lessonUp);
+  const nextStop = useStore((s) => s.nextStop);
+  // a moment for the stop's first lesson to show before Next stop can be pressed
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    setReady(false);
+    const t = setTimeout(() => setReady(true), 1500);
+    return () => clearTimeout(t);
+  }, [closing?.i]);
+  if (!closing) return null;
+  const stop = STOPS.find((x) => x.id === closing.ids[closing.i]);
+  const last = closing.i >= closing.ids.length - 1;
+  return (
+    <div className="card tour-bar" data-tour="tour-bar">
+      <Icon name="map" size={28} />
+      <div style={{ minWidth: 0 }}>
+        <div className="kicker">
+          Closing tour · stop {closing.i + 1} of {closing.ids.length}
+        </div>
+        <b>{stop?.title}</b>
+      </div>
+      <div className="spacer" />
+      <button className="btn" disabled={up || !ready} onClick={nextStop}>
+        {last ? 'Finish the tour' : 'Next stop'}
+      </button>
+    </div>
+  );
+}
+
 const SHORT_MODE: Record<string, string> = { standard: 'Regular', reality: 'Reality', stars: 'Stars', fast: 'Fast', lab: 'Lab' };
 
 /** The difficulty, always in view (round 15), and Master mode when it is on. */
 function ModeBadge({ g }: { g: GameState }) {
   const master = useStore((s) => s.master);
+  // round 33: a level career shows its level, not a difficulty
+  const level = levelOf(g);
+  if (level)
+    return (
+      <span className="mode-badge mode-level" title="Level">
+        <Icon name="map" size={14} />
+        <span className="long">Level {['beginner', 'intermediate', 'advanced'].indexOf(level) + 1} · {LEVEL_NAME[level]}</span>
+        <span className="short">{LEVEL_NAME[level]}</span>
+      </span>
+    );
   return (
     <span className={`mode-badge mode-${g.mode}`} title="Difficulty">
       {ICON_FOR[g.mode] && <Icon name={ICON_FOR[g.mode]} size={14} />}
@@ -125,6 +173,8 @@ export function App() {
   const intro = useStore((s) => s.intro);
   const thanks = useStore((s) => s.thanks);
   const simple = useStore((s) => s.simple);
+  const road = useStore((s) => s.road);
+  const creating = useStore((s) => s.creating);
   useEffect(() => {
     document.documentElement.classList.toggle('simple', simple);
   }, [simple]);
@@ -137,7 +187,8 @@ export function App() {
     const where = mini ? 'Mini-games' : page === 'log' ? 'Career log' : page === 'achievements' ? 'Achievement book' : page === 'community' ? 'Community' : game ? UI.tabs[tab] : '';
     document.title = where ? `${where} · Bench to Rafters` : 'Bench to Rafters';
   }, [tab, page, mini, game]);
-  const fast = !!game?.flags.fast && game.step !== 'retired';
+  // round 33: a level plays at fast break's pace but keeps every card in view
+  const fast = !!game?.flags.fast && game.step !== 'retired' && !game.flags.level;
 
 
   useKeys(!mini && !!game);
@@ -191,6 +242,16 @@ export function App() {
 
   if (thanks && !game) return <Thanks g={thanks} />;
   if (intro && !game) return <Intro />;
+  // round 33: the tutorial, until the full game opens on this device: the beginner career first,
+  // then the road map; none of the start page's pages
+  if (inTutorial(road) && !game) {
+    if (mini) return <MiniGames />;
+    if (roadDone(road)) return <Graduation />;
+    const next = nextLevel(road);
+    return creating || next === 'beginner' ? <Create level={creating ?? 'beginner'} /> : <RoadMap />;
+  }
+  if (creating && !game) return <Create level={creating} />;
+  if (page === 'road' && !game) return <RoadMap />;
   if (page === 'log') return <CareerLog />;
   if (page === 'achievements') return <AchievementBook />;
   if (page === 'community') return <CommunityPage />;
@@ -212,13 +273,14 @@ export function App() {
           <div className="top-right">
             <NextStep g={game} />
             <ShareButton />
-            <GuideButton />
+            {!game.flags.level && <GuideButton />}
             <SettingsMenu g={game} />
           </div>
         </header>
         {game.flags.daily ? <DailyStrip g={game} /> : null}
+        {game.flags.tour ? <TourBar /> : null}
         <TabView key={tab} fast={fast}>
-          {tab === 'home' && (retired ? <Retirement g={game} /> : <Home g={game} />)}
+          {tab === 'home' && (retired ? game.flags.level ? <LevelEnd g={game} /> : <Retirement g={game} /> : <Home g={game} />)}
           {tab === 'season' && <SeasonTab g={game} />}
           {tab === 'player' && <PlayerTab g={game} />}
           {tab === 'records' && <RecordsTab g={game} />}

@@ -9,6 +9,8 @@ import { isDev } from '../../dev/mode';
 import { enterDev } from '../../dev/devSwitch';
 import { Icon } from '../art/Icon';
 import { ShareButton } from './Share';
+import { useStore } from '../../store';
+import { inTutorial } from '../road';
 
 /** The dev deck's door, folded: the password, then the deck. Not shown inside the deck itself. */
 export function DevDoor() {
@@ -42,12 +44,47 @@ export function DevDoor() {
   );
 }
 
+/** Round 33 (owner: "on one corner or the bottom of the tutorial, there's a skip button, where the
+ * user can insert the code to skip it. this allows old users to skip"): the exit code, on every
+ * page of the tutorial. The graduation page shows the code. */
+function SkipDoor() {
+  const road = useStore((s) => s.road);
+  const skip = useStore((s) => s.skipTutorial);
+  const [code, setCode] = useState('');
+  const [wrong, setWrong] = useState(false);
+  if (!inTutorial(road)) return null;
+  return (
+    <details className="card dev-door skip-door" data-tour="skip-door">
+      <summary className="with-icon">
+        <Icon name="door" size={20} />
+        Skip the tutorial
+      </summary>
+      <p className="small muted">Played before? Enter the exit code: the full game opens at once. You get the code when you finish the tutorial.</p>
+      <form
+        className="row"
+        style={{ gap: 8, flexWrap: 'wrap' }}
+        onSubmit={(e) => {
+          e.preventDefault();
+          setWrong(!skip(code));
+        }}
+      >
+        <input type="text" aria-label="Exit code" placeholder="Exit code" value={code} onChange={(e) => (setCode(e.target.value), setWrong(false))} autoComplete="off" autoCapitalize="off" spellCheck={false} />
+        <button className="btn small" disabled={!code.trim()}>
+          Skip
+        </button>
+        {wrong && <span className="small" style={{ color: 'var(--bad)' }}>That is not the code.</span>}
+      </form>
+    </details>
+  );
+}
+
 /** `where` tags a feedback note with the page it came from. */
 export function FootBar({ where }: { where: string }) {
   return (
     <div className="foot-bar">
       <FeedbackFoot where={where} />
       <ShareButton look="foot" />
+      <SkipDoor />
       <DevDoor />
     </div>
   );

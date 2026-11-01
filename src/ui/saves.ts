@@ -115,6 +115,40 @@ export function deleteSlot(id: string): void {
   }
 }
 
+// ---------- a level career (round 33) ----------
+// A career on the road map has one save of its own, outside the slots, so it never shows in the
+// career log's saved careers, and a reload goes straight back into it.
+
+const RUN = 'btr-level-run';
+
+export async function writeRun(g: GameState): Promise<boolean> {
+  try {
+    localStorage.setItem(RUN, await pack(JSON.stringify(g)));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function readRun(): Promise<GameState | null> {
+  try {
+    const raw = localStorage.getItem(RUN);
+    if (!raw) return null;
+    const game = JSON.parse(await unpack(raw)) as GameState;
+    return game?.player && game.step && game.flags?.level ? game : null;
+  } catch {
+    return null;
+  }
+}
+
+export function dropRun(): void {
+  try {
+    localStorage.removeItem(RUN);
+  } catch {
+    /* nothing to drop */
+  }
+}
+
 // ---------- the export code ----------
 
 const CODE = 'BTR1.';

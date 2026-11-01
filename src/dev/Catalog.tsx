@@ -30,6 +30,17 @@ import { ROUND15_EVENTS } from '../engine/events/round15';
 import { WEIGHT_EVENTS } from '../engine/events/weightEvents';
 import { ROUND21_EVENTS } from '../engine/events/round21';
 import { ROUND25_EVENTS } from '../engine/events/round25';
+import { ROUND32_EVENTS } from '../engine/events/round32';
+import { ROUND33_EVENTS } from '../engine/events/round33';
+import { BEGINNER_EVENTS, LEVEL_IDS, LEVEL_NAME } from '../engine/levels';
+import { ROADMAP, ROAD_GRADES } from '../engine/balance';
+import { SIX_PLANS } from '../engine/career/season';
+import { LEVEL_COPY } from '../content/roadmap';
+import { ROAD_MINIS, ROAD_NEED } from '../ui/road';
+import { PlaceArt } from '../ui/screens/RoadMap';
+import { GAMES, miniIcon } from '../ui/mini/MiniGames';
+import { LESSONS, type Where } from '../ui/tutorial/lessons';
+import { STOPS } from '../ui/tutorial/closing';
 import { SHOP_ITEMS, type ShopItem } from '../content/shop';
 import { NBA_TEAMS, COLLEGES, EURO_CLUBS, INT_LEAGUES, RIVALS, HOMETOWN_SCHOOLS, HS_SCHOOL_NAMES, HS_COLORS } from '../content/teams';
 import { EVENT_THEMES, themeOf } from './eventThemes';
@@ -164,6 +175,8 @@ const EVENT_SETS: [string, EventDef[]][] = [
   ['Weight', WEIGHT_EVENTS],
   ['Round 21', ROUND21_EVENTS],
   ['Round 25', ROUND25_EVENTS],
+  ['Round 32', ROUND32_EVENTS],
+  ['Round 33', ROUND33_EVENTS],
 ];
 
 function eventEntry(set: string, e: EventDef): Entry {
@@ -489,6 +502,8 @@ const CATEGORIES: Category[] = [
             ...(p.chem ? ([['Chemistry', signed(p.chem, 2)]] as [string, string][]) : []),
           ] as [string, string][],
           lines: [
+            // round 33: beginner's six, one a season
+            ...(SIX_PLANS.includes(k) ? ['One of beginner’s six (one plan a season, at full strength)'] : []),
             // round 28: the plans that suit an age
             ...(AGE_PLANS.young.plans.includes(k) ? [`Young legs (${AGE_PLANS.young.upTo} and under): growth ×${AGE_PLANS.young.growth}, injuries ×${AGE_PLANS.young.injury}, morale +${AGE_PLANS.young.morale}`] : []),
             ...(AGE_PLANS.vet.plans.includes(k) ? [`Veteran (${AGE_PLANS.vet.from} and over): growth ×${AGE_PLANS.vet.growth}, injuries ×${AGE_PLANS.vet.injury}, trust +${AGE_PLANS.vet.trust}${k === 'teamfirst' ? `, team +${AGE_PLANS.vet.teamBoost}` : ''}`] : []),
@@ -893,7 +908,93 @@ const CATEGORIES: Category[] = [
         };
       }),
   },
+  // ---------- round 33: the road map ----------
+  {
+    key: 'road',
+    name: 'Road map levels',
+    icon: 'map',
+    blurb: 'The tutorial’s three short careers: where each starts, what it adds, how long it runs, and how it is tuned so most make the All-Star goal.',
+    entries: () =>
+      LEVEL_IDS.map((l) => {
+        const c = LEVEL_COPY[l];
+        const r = ROADMAP[l];
+        return {
+          key: l,
+          title: `Level ${c.n}: ${LEVEL_NAME[l]}`,
+          sub: c.place,
+          text: c.lede,
+          art: () => <PlaceArt place={l} size={120} />,
+          facts: [
+            ['NBA seasons', String(r.nbaSeasons)],
+            ['Potential', `${r.potential.base} base, ${r.potential.min} at least`],
+            ['Growth', `×${r.growth}`],
+            ['Floor', `OVR ${r.floor.ovr}, ages ${r.floor.age} to ${r.floor.until}`],
+          ] as [string, string][],
+          lines: c.adds.map((a) => `Adds: ${a.label}`),
+        };
+      }),
+  },
+  {
+    key: 'island',
+    name: 'The island',
+    icon: 'palm',
+    blurb: 'Every mini-game once with a C or better, between levels: the mark for each grade.',
+    entries: () =>
+      ROAD_MINIS.map((m) => {
+        const g = GAMES.find((x) => x.id === m);
+        const marks = (ROAD_GRADES as Record<string, Partial<Record<'A' | 'B' | 'C', number>>>)[m];
+        return {
+          key: m,
+          title: g?.name ?? m,
+          sub: `C: ${ROAD_NEED[m]}`,
+          art: () => <Icon name={miniIcon(m)} size={44} />,
+          facts: marks ? (Object.entries(marks).map(([k, v]) => [k, String(v)]) as [string, string][]) : undefined,
+        };
+      }),
+  },
+  {
+    key: 'lessons',
+    name: 'Tutorial lessons',
+    icon: 'guide',
+    blurb: 'Every lesson of the tutorial guide in order, by where it shows. A lesson to read waits for Got it; a lesson to do waits for its control.',
+    entries: () =>
+      LESSONS.map((l) => ({
+        key: l.id,
+        title: l.id,
+        group: WHERE_NAME[l.at],
+        sub: l.act ? 'Use the control' : 'Got it',
+        text: l.text,
+        lines: [`Points at ${l.sel}`, ...(l.after ? [`After ${l.after}`] : [])],
+      })),
+  },
+  {
+    key: 'stops',
+    name: 'Closing tour stops',
+    icon: 'arena',
+    blurb: 'The closing tour in order: a star’s career staged for each stop, and the lessons it shows. A stop whose lessons are all done is skipped.',
+    entries: () =>
+      STOPS.map((st, i) => ({
+        key: st.id,
+        title: `${i + 1}. ${st.title}`,
+        sub: st.tab ? `The ${st.tab[0].toUpperCase()}${st.tab.slice(1)} tab` : 'Home',
+        group: i < 9 ? 'What no level has' : i < STOPS.length - 1 ? 'The catch-up' : 'The switches',
+        lines: st.lessons.map((id) => LESSONS.find((x) => x.id === id)?.text ?? id),
+      })),
+  },
+  {
+    key: 'beginner-events',
+    name: 'Beginner’s turning points',
+    icon: 'book',
+    blurb: 'Beginner’s one turning point a season, in this order (the next that fits when one does not); each teaches one thing.',
+    entries: () =>
+      BEGINNER_EVENTS.flatMap((id, i) => {
+        const e = EVENT_SETS.flatMap(([, list]) => list).find((x) => x.id === id);
+        return e ? [{ ...eventEntry('Beginner', e), key: `beg-${id}`, title: `${i + 1}. ${e.title}`, group: undefined }] : [];
+      }),
+  },
 ];
+
+const WHERE_NAME: Record<Where, string> = { beginner: 'Beginner', intermediate: 'Intermediate', advanced: 'Advanced', tour: 'The closing tour', graduated: 'After graduation' };
 
 /** Each group together, in the order the groups first appear (a stable sort). */
 function byGroup(list: Entry[]): Entry[] {

@@ -19,6 +19,7 @@ import { duoEffect, breakGroup } from './duo';
 import { FAN_CULTURES } from './fanCulture';
 import { rosterFit } from './roster';
 import { takePressFx } from './press';
+import { allows } from '../levels';
 
 /** 1 = the best roster in the league. */
 export function rosterRank(league: League, teamId: string): number {
@@ -174,6 +175,7 @@ export function midseasonSwing(s: GameState, league: League): void {
 // ---------- trade requests ----------
 
 export function canRequestTrade(s: GameState): boolean {
+  if (!allows(s, 'trade')) return false; // round 33: advanced level and up
   return s.step === 'offseason' && s.stage === 'NBA' && !!s.contract && s.contract.years > 0 && s.flags.tradeAsk !== s.year && !!s.nba;
 }
 

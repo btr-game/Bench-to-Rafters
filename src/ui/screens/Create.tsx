@@ -31,6 +31,12 @@ import { JerseyArt } from '../art/Jersey';
 import type { ChosenLook } from '../../content/looks';
 import { enterDev } from '../../dev/devSwitch';
 import { sfx } from '../sound';
+import type { Level } from '../../engine/levels';
+import { LEVEL_COPY, LEVEL_GOAL } from '../../content/roadmap';
+import { ROADMAP } from '../../engine/balance';
+import { FootBar } from '../components/FootBar';
+import { LevelAdds } from '../components/LevelAdds';
+import { LevelsCard, PlaceArt } from './RoadMap';
 
 const pick = <T,>(a: readonly T[]): T => a[Math.floor(Math.random() * a.length)];
 const uiRng = makeRng(Math.floor(Math.random() * 2 ** 31));
@@ -124,9 +130,13 @@ function backName(name: string): string {
   return (words[words.length - 1] ?? '').toUpperCase().replace(/[^A-Z0-9-]/g, '');
 }
 
-export function Create() {
+/** The new-career page; with `level`, a career on the road map (round 33): fewer steps, no difficulty. */
+export function Create({ level }: { level?: Level } = {}) {
   const start = useStore((s) => s.start);
   const showIntro = useStore((s) => s.showIntro);
+  const setCreating = useStore((s) => s.setCreating);
+  // round 33: right after graduation, a Regular guy career is suggested (owner: "highly suggested, but not necessary")
+  const recommend = useStore((s) => s.recommend);
   const [step, setStep] = useState(0);
   // each step opens at the top (owner: "when i move from the home page to identity, make the screen
   // start at the top"; the browser kept the Next button in place, so the page opened at its foot)
@@ -196,12 +206,17 @@ export function Create() {
   // round 27 (owner: "for harder road of reality, make the position, country, archetype, focus
   // stats, basically the whole intro random"): Rough Road skips the picking. The road rolls the
   // player, country by real-world odds, and shows him on the last step, with no reroll.
-  const road = mode === 'reality' && oath;
+  const rough = !level && mode === 'reality' && oath;
+  const steps = level ? LEVEL_COPY[level].steps : UI.create.steps;
+  const cur = steps[step];
+  const last = steps.length - 1;
+  // round 33: country and hand belong to advanced (below it he is American and right-handed)
+  const roads = !level || level === 'advanced';
   const rollRoad = () => {
     randomAll();
     let x = Math.random() * ORIGINS.reduce((t, o) => t + o.weight, 0);
     setCountry((ORIGINS.find((o) => (x -= o.weight) <= 0) ?? ORIGINS[0]).country);
-    setStep(4);
+    setStep(steps.indexOf('Confirm'));
   };
   const toggleFocus = (k: AttrKey) =>
     setFocus((f) => (f.includes(k) ? f.filter((x) => x !== k) : f.length >= 2 ? [f[1], k] : [...f, k]));
@@ -209,11 +224,25 @@ export function Create() {
   const attrs = cands[arch];
   const archetype = ARCHETYPES[pos][arch];
   const [hMin, hMax] = HEIGHT_RANGE[pos];
-  const canNext = step === 1 ? name.trim().length > 0 : step === 3 ? focus.length === 2 : true;
-  const steps = UI.create.steps;
+  const canNext = cur === 'Identity' ? name.trim().length > 0 : cur === 'Focus' ? focus.length === 2 : true;
+  // beginner picks no focus: his archetype's two best ratings
+  const autoFocus = [...ATTRS].sort((a, b) => attrs[b] - attrs[a]).slice(0, 2);
 
   const begin = () =>
-    start({
+    level
+      ? start({
+          name: name.trim() || 'Rookie',
+          number: Math.max(0, Math.min(99, Number(number) || 0)),
+          pos,
+          archetype: arch,
+          attrs,
+          focus: level === 'beginner' ? autoFocus : focus,
+          hand: roads ? hand : 'R',
+          country: roads ? country || undefined : undefined,
+          look,
+          level,
+        })
+      : start({
       name: name.trim() || 'Rookie',
       number: Math.max(0, Math.min(99, Number(number) || 0)),
       pos,
@@ -228,12 +257,19 @@ export function Create() {
       look,
     });
 
+  const copy = level ? LEVEL_COPY[level] : null;
   return (
     <div className="wrap no-tabs">
       <header className="top">
         <div className="brand">
           Bench to <span>Rafters</span>
         </div>
+        {copy ? (
+          <div className="row" style={{ gap: 8 }}>
+            <ShareButton />
+            <SettingsMenu g={null} />
+          </div>
+        ) : (
         <div className="row" style={{ gap: 8 }}>
           {/* round 27 (owner: "the homepage itself doesn't allow settings. put it in"; the intro "should
               be accessible to players if they want") */}
@@ -245,7 +281,25 @@ export function Create() {
           <SettingsMenu g={null} />
           <GuideButton />
         </div>
+        )}
       </header>
+      {copy && level ? (
+        <section className="hero level-hero">
+          <PlaceArt place={level} size={176} />
+          <div className="kicker">
+            Level {copy.n} of 3 · {copy.place}
+          </div>
+          <h1>{level === 'beginner' ? 'Beginner' : level === 'intermediate' ? 'Intermediate' : 'Advanced'}</h1>
+          <p className="lede">{copy.lede}</p>
+          <p className="level-goal with-icon">
+            <Icon name="laurel" size={22} />
+            <span>
+              <b>The goal:</b> {LEVEL_GOAL} in {ROADMAP[level].nbaSeasons} NBA seasons.
+            </span>
+          </p>
+          {level !== 'beginner' && step === 0 && <LevelAdds level={level} />}
+        </section>
+      ) : (
       <section className="hero with-lineup">
         <LineupArt />
         <div className="kicker">A basketball career game</div>
@@ -257,6 +311,7 @@ export function Create() {
           the G League, get drafted, and find out whether your jersey ends up hanging in the rafters.
         </p>
       </section>
+      )}
       <div className="stepper" aria-label="Steps">
         {steps.map((s, i) => (
           <span key={s} className={i === step ? 'on' : ''} aria-current={i === step ? 'step' : undefined}>
@@ -266,15 +321,16 @@ export function Create() {
       </div>
       <div style={{ height: 12 }} />
 
-      {step === 0 && (
+      {cur === 'Difficulty' && (
         <section className="stack">
           <div className="kicker">Choose how hard the road is</div>
           <div className="modes">
             {DIFFICULTIES.map((m) => (
-              <button key={m} className={`choice mode-card${mode === m ? ' selected' : ''}`} aria-pressed={mode === m} onClick={() => setMode(m)}>
+              <button key={m} className={`choice mode-card${mode === m ? ' selected' : ''}${recommend && m === 'standard' ? ' recommended' : ''}`} aria-pressed={mode === m} onClick={() => setMode(m)} data-tour={m === 'standard' ? 'mode-regular' : undefined}>
                 <span className="label with-icon">
                   <Icon name={ICON_FOR[m]} size={32} />
                   {MODES[m].name}
+                  {recommend && m === 'standard' && <span className="tag good">Recommended</span>}
                 </span>
                 <small>{MODES[m].blurb}</small>
               </button>
@@ -320,6 +376,7 @@ export function Create() {
           )}
           <p className="muted small">The league is the same at every difficulty. What changes is your potential, how fast you grow and how often you get hurt. Want it quicker? Flip the Fast break switch inside the game, any time.</p>
           <div className="start-cards">
+            <LevelsCard />
             <MiniGamesCard />
             <CareerLogCard />
             <AchievementsCard />
@@ -328,7 +385,7 @@ export function Create() {
         </section>
       )}
 
-      {step === 1 && (
+      {cur === 'Identity' && (
         <section className="stack identity">
           {/* round 25 (owner: too much empty space): a compact card, with the jersey he will wear */}
           <div className="card id-card">
@@ -363,6 +420,7 @@ export function Create() {
             <LookPicker look={look} setLook={setLook} jersey={jersey} setJersey={setJersey} />
           </div>
 
+          {roads && (
           <div className="card stack nation-card">
             <div className="sec-title">Where do you start?</div>
             <p className="small muted">Your country sets your road until college or the pros: the youth system, the showcases, and who calls first.</p>
@@ -409,6 +467,7 @@ export function Create() {
               )}
             </div>
           </div>
+          )}
 
           <div className="card stack">
             <div className="sec-title">On the court</div>
@@ -441,6 +500,7 @@ export function Create() {
                 {rolled.pos && <span className="rolled"> · picked at random</span>}
               </p>
             </fieldset>
+            {roads && (
             <fieldset>
               <legend>Dominant hand</legend>
               <div className="seg">
@@ -471,15 +531,16 @@ export function Create() {
                 Lefties are rarer, so defenders see them less. Either way, your weak hand starts raw.
               </p>
             </fieldset>
+            )}
             <div className="assigned">
               <div className="kicker">{UI.create.assignedTitle}</div>
-              <div className="small">{UI.create.assignedText}</div>
+              <div className="small">{UI.create.assignedText}{level === 'beginner' ? ' So are your archetype and your two focus ratings: the ones a ' + NAMES.pos[pos].toLowerCase() + ' like you is best at.' : ''}</div>
             </div>
           </div>
         </section>
       )}
 
-      {step === 2 && (
+      {cur === 'Archetype' && (
         <section className="stack">
           <div className="row">
             <div className="kicker">
@@ -529,7 +590,7 @@ export function Create() {
         </section>
       )}
 
-      {step === 3 && (
+      {cur === 'Focus' && (
         <section className="card stack">
           <div className="sec-title">Focus stats</div>
           <p className="muted small">{UI.create.focusHelp}</p>
@@ -548,11 +609,11 @@ export function Create() {
         </section>
       )}
 
-      {step === 4 && (
+      {cur === 'Confirm' && (
         <section className="card stack">
           <div className="row">
             <div style={{ minWidth: 0 }}>
-              <div className="kicker">Freshman · age 14</div>
+              <div className="kicker">{level ? 'High school senior · age 17' : 'Freshman · age 14'}</div>
               <div className="pc-name">{name || 'Rookie'}</div>
               <div className="muted">
                 #{number} · {NAMES.pos[pos]} · {archetype.name}
@@ -561,6 +622,7 @@ export function Create() {
             </div>
 
           </div>
+          {!level && (
           <div className="board">
             {ATTRS.map((k) => (
               <div className="cell" key={k}>
@@ -572,8 +634,14 @@ export function Create() {
               </div>
             ))}
           </div>
+          )}
+          {level ? (
+            <p className="muted small">
+              Three high school seasons are behind him: you start on the first day of his senior year. Focus: {(level === 'beginner' ? autoFocus : focus).map((k) => NAMES.attr[k]).join(' and ')}. The goal: {LEVEL_GOAL} in {ROADMAP[level].nbaSeasons} NBA seasons.
+            </p>
+          ) : (
           <p className="muted small">
-            {road && (
+            {rough && (
               <span className="oath-rolled with-icon">
                 <Icon name="oath" size={18} />
                 Rough Road: the road picked all of this for you, his look included. No rerolls.{' '}
@@ -581,18 +649,24 @@ export function Create() {
             )}
             Focus: {focus.map((k) => NAMES.attr[k]).join(' and ')}. Height: still growing, most end up {ht(hMin + (archetype.height ?? 0))}–{ht(hMax + (archetype.height ?? 0))}, some well outside it. This card is a typical {archetype.name.toLowerCase()}; your real starting level is set at tryouts. {UI.create.assignedText}
           </p>
+          )}
         </section>
       )}
 
       <div style={{ height: 14 }} />
       <div className="row-end">
+        {step === 0 && level && level !== 'beginner' && (
+          <button className="btn ghost" onClick={() => setCreating(null)}>
+            Back to the road map
+          </button>
+        )}
         {step > 0 && (
-          <button className="btn ghost" onClick={() => setStep(road && step === 4 ? 0 : step - 1)}>
+          <button className="btn ghost" onClick={() => setStep(rough && step === last ? 0 : step - 1)}>
             {UI.create.back}
           </button>
         )}
-        {step < 4 ? (
-          <button className="btn" data-tour="create-next" disabled={!canNext} onClick={() => (step === 0 && road ? rollRoad() : setStep(step + 1))}>
+        {step < last ? (
+          <button className="btn" data-tour="create-next" disabled={!canNext} onClick={() => (step === 0 && rough ? rollRoad() : setStep(step + 1))}>
             {UI.create.next}
           </button>
         ) : (
@@ -603,7 +677,7 @@ export function Create() {
       </div>
       {/* round 25 (owner): the live strip and the saves sit under the hero and the cards (and under
           Next, so starting a career is no further away), the dev deck's door last */}
-      {step === 0 && (
+      {cur === 'Difficulty' && (
         <section className="stack start-foot">
           <LiveStrip />
           <ContinueCard />
@@ -612,7 +686,7 @@ export function Create() {
           <p className="small muted keep fan-note">Bench to Rafters is an unofficial fan game. It is not affiliated with or endorsed by the NBA, its teams or its players.</p>
         </section>
       )}
-      <WhatsNewPanel />
+      {level ? <FootBar where={`level ${level}, create, ${cur.toLowerCase()}`} /> : <WhatsNewPanel />}
     </div>
   );
 }

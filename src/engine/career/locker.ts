@@ -16,6 +16,7 @@ import type { GameState, GenPlayer, Pos, Team } from '../types';
 import { adjust, logDecision, tally, userOvr } from './common';
 import { TEMPER, changeCoach, coachOf, h32, myTeam, type Coach } from './coach';
 import { benchOf, fiveOf } from './roster';
+import { inLevel } from '../levels';
 
 // ---------- who is in the room ----------
 
@@ -48,6 +49,7 @@ function lockerPhase(s: GameState): string | null {
 }
 
 export function lockerRoom(s: GameState): Room | null {
+  if (inLevel(s)) return null; // round 33: the closing tour shows the locker room
   const phase = lockerPhase(s);
   const team = myTeam(s);
   if (!phase || !team || team.roster.length === 0) return null;

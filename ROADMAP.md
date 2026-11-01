@@ -94,7 +94,7 @@ Ideas the owner has asked to keep for later. Not started unless marked.
 - The locker room could remember: a hothead you calmed twice, a rookie you mentored all season,
   as relationships that carry over between seasons.
 
-## Round 33 (planned): three levels before the full game
+## Round 33: three levels before the full game (built in round 33; DECISIONS.md has what was built)
 
 Owner, after round 32: "from now on, the users have to play three levels to access the full game
 (main homepage)". Beginner, then intermediate, then advanced; the full start page (every
@@ -105,10 +105,19 @@ after the third.
 accessed the game but didnt properly play it"): devices that played before go through the levels
 too; their saves, log and achievements stay on the device and are there when the full game opens.
 
-**The way out**: an escape code beside the Developer door, for anyone who should skip the levels
-(owner's code; like the dev password, only a hash of it in the shipped code, and scripts take it
-from an environment variable). The Developer door and the feedback channel stay on every page,
-in the levels too.
+**The way out** (owner, revised during round 33: "anyone who goes into the browser automatically
+gets assigned to the tutorial, regardless of their data. but, at the end of the tutorial, the game
+reveals the exit password ... on one corner or the bottom of the tutorial, there's a skip button,
+where the user can insert the code to skip it. this allows old users to skip"):
+- Every device starts in the tutorial, whatever it has saved.
+- A Skip button sits in a corner of every tutorial page; it asks for the exit code, and the right
+  code opens the full game at once.
+- The graduation at the end of the tutorial shows the exit code, so a player who finished can skip
+  on another device, or after the device forgets.
+- Finishing the tutorial or entering the code opens the full game on that device for good.
+- The check uses a hash of the code. Because the game must show the code at the end, the code
+  itself is in the game too, lightly encoded so it does not appear as plain text in the page.
+- The Developer door and the feedback channel stay on every page, in the levels too.
 
 **The levels count nowhere in the community**: no boards, no feed, no live count of careers ended,
 no statue or hall.
@@ -136,5 +145,77 @@ no statue or hall.
 - The graduation page leads to the levels page (intermediate and advanced), not the full start
   page.
 
-**Intermediate and advanced**: being discussed with the owner (advanced "very similar to regular
-mode").
+**Revised after round 32** (owner):
+- Intermediate is simpler than first proposed, and advanced only a step beyond it ("slightly more
+  complicated than intermediate"). After the levels, the guide leads the player to a Regular guy
+  career: highly suggested, not required.
+- **The goal of every level is an NBA All-Star team.** The levels' difficulty is set so that at
+  least 80% of careers make one (measured with the harness). A career that misses ends on a card of
+  its own with sad music, and still the thank-you page.
+- **Mini-games are not in the levels**, but passing the tutorial needs every mini-game played at
+  least once with a C or better. Lockdown and Front Office already grade A to D; the others get a
+  scale of their own.
+- **The tutorial guide**: separate from Guide mode, which stays as it is for players who forget
+  something. It covers everything the manual does except the achievements, the career log and the
+  community, so that by the end the player knows every function as if they had read the project
+  summary. Its steps cannot be skipped: while it asks for something, nothing else on the page
+  responds.
+- **What each level holds** (owner's final call):
+
+  | | Beginner (5–10 min) | Intermediate (~10 min) | Advanced (~15 min) |
+  |---|---|---|---|
+  | Creation | name, number, position, look | + archetype, focus | + country (its road), hand |
+  | Path | 1 high school, 1 college, draft, several NBA seasons | + a college from offers | + G League and overseas offers |
+  | Plans | 1 a season, from 6 | 1 or 2 a season, all 12 | 1 or 2 a half (the full system) |
+  | Turning points | 1 hand-picked a season | 1 a season, from the full pool | the full pool, and storylines |
+  | Shop | 3 items, 1 purchase | the normal shop | + staff, wardrobe, collection |
+  | Contracts | set for him | contract talks on the first NBA deal | every deal, and trade requests |
+  | Season | results | standings, leaders, the bracket | + the coach card (role talk, hot seat), team style |
+  | Playoffs | one last shot | playable games | + crunch time and the action cam |
+  | NBA life | none | nickname, brands, rival (few choices each) | + starting five, body and weight |
+  | Modes | none | Fast break | + Sim |
+  | Goal | an All-Star team | an All-Star team | an All-Star team |
+
+- **The closing tour**, after advanced, on a prepared star career, each step asking the player to
+  do the thing: the locker room, Around the league with city and fans, duos and the Big Three, press
+  conferences, the record watch, the farewell tour, the ring-chaser role, Love and the next
+  generation, the Records and Extras tabs, undo, Simple text, Master mode and Settings. It ends on
+  the full start page with "Start a Regular guy career (recommended)" lit up.
+- **Missing the All-Star goal still passes the level** (the sad ending card, then on to the next).
+- **Mini-games**: played from the levels page at any time after beginner, in any order; Front
+  Office's C is making the playoffs once; the C marks for the three-point contest, the dunk contest,
+  3-on-3, Legends and the lab come from test runs, for the owner to approve.
+- **No stuck steps**: no emergency skip; instead every tutorial step is checked by a test that plays
+  all three levels and the closing tour start to finish, on a computer and a phone, before release.
+- **The levels page is a road map** (owner: "i like the word road map a lot ... make a map"): a
+  pixel map with the high school (beginner), a college campus (intermediate) and an NBA arena
+  (advanced) on the land, joined by a road, and the mini-games as an overseas league on an island
+  across the water. His avatar drives a car between the places and takes a boat to the island. A
+  checklist in the top-right corner, like a bucket list, ticks each goal as it is done (the three
+  levels, then each mini-game at C or better).
+- **No achievements** in the levels; **advanced counts nowhere** in the community either; a saved
+  career from before waits until the full game opens; the full start page keeps a **Levels** card to
+  replay any level.
+
+## Kept for later (round 33)
+
+- **Out of reach in the book**: a 60-50-90 season, a season under 30% from the field, 95% from the
+  line and an OVR of 10 (the owner's example) never happened in 750 careers, so they are not
+  achievements. Wider tails in the game simulation (a hotter or colder night now and then) would
+  make them possible; the owner decides.
+- **The island's lessons**: the mini-games teach themselves today; a lesson or two inside each,
+  the first time it is played from the island, would match the levels.
+- **Replaying a level**: level careers count nowhere. A best time or a best peak for each level,
+  kept on the device, could give the Levels card a reason to come back.
+
+## Round 34 (planned): simplification
+
+Owner, during round 33: "for round 34, the theme is simplification. we're gonna make most in-game
+cards foldable."
+
+- Most in-game cards fold: a card shows its title (and a line of what matters most) and opens on a
+  tap. Fast break's "Show everything" folding (round 25) and the Season tab's foldable Around the
+  league (round 15) are the starting points.
+- To settle with the owner when the round starts: which cards stay open (the main card at Home,
+  the decision on screen), whether a card remembers being opened, and whether the levels and the
+  tutorial guide follow the same folding.

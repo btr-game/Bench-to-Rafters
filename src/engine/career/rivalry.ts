@@ -11,6 +11,7 @@
 import { RIVALS } from '../../content/teams';
 import { userOvr } from './common';
 import type { GameState, GenPlayer, Pos, Rivalry, Team } from '../types';
+import { allows } from '../levels';
 
 const GROUP: Record<Pos, string> = { PG: 'g', SG: 'g', SF: 'w', PF: 'b', C: 'b' };
 const LEVEL_ORDER: Rivalry['level'][] = ['draft', 'starter', 'mvp'];
@@ -57,6 +58,7 @@ function candidate(s: GameState, level: Rivalry['level']): { p: GenPlayer; t: Te
 
 /** At the end of each NBA season: the rivalry starts, grows, or carries on. */
 export function updateRivalry(s: GameState): void {
+  if (!allows(s, 'rival')) return; // round 33: intermediate level and up
   if (s.stage !== 'NBA' || !s.nba || !s.season) return;
   const role = s.season.role;
   const r = s.rivalry;

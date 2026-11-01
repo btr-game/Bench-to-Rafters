@@ -10,6 +10,7 @@
 // sound.ts plays them; the dev deck's Music tab lists them with their icons.
 
 import type { GameState } from '../engine/types';
+import { inTutorial, nextLevel, type Road } from './road';
 
 export type Wave = 'square' | 'triangle' | 'sawtooth' | 'pulse25' | 'pulse12';
 
@@ -186,6 +187,32 @@ export const TRACKS = {
     ],
     drums: 'k...s...',
   },
+  // round 33: the road map between the levels, and the end of a level that missed its goal (owner:
+  // "make an ending card with sad music just for that")
+  road: {
+    name: 'Road trip',
+    where: 'The road map, between the tutorial’s levels',
+    icon: 'map',
+    step: bpm(128),
+    voices: [
+      { wave: 'pulse25', vol: 0.1, notes: 'C5 - E5 G5 - E5 C5 - | D5 - F5 A5 - F5 D5 - | E5 - G5 C6 - G5 E5 - | F5 - E5 D5 - - . . | C5 - E5 G5 - E5 C5 - | A4 - C5 F5 - E5 D5 - | G4 - B4 D5 - F5 E5 D5 | C5 - - - - - . .' },
+      { wave: 'triangle', vol: 0.32, notes: 'C3 . G2 . C3 . G2 . | D3 . A2 . D3 . A2 . | E3 . B2 . E3 . B2 . | F2 . C3 . G2 . G2 . | C3 . G2 . C3 . G2 . | F2 . C3 . F2 . C3 . | G2 . D3 . G2 . B2 . | C3 . G2 . C3 . . .' },
+      { wave: 'pulse12', vol: 0.05, notes: '. C4+E4+G4 . C4+E4+G4 . C4+E4+G4 . C4+E4+G4 | . D4+F4+A4 . D4+F4+A4 . D4+F4+A4 . D4+F4+A4 | . E4+G4+B4 . E4+G4+B4 . E4+G4+B4 . E4+G4+B4 | . F4+A4+C5 . F4+A4+C5 . G4+B4+D5 . G4+B4+D5' },
+    ],
+    drums: 'k.hsk.hs',
+  },
+  sad: {
+    name: 'So close',
+    where: 'The end of a level that missed its All-Star goal',
+    icon: 'morale',
+    step: bpm(76),
+    voices: [
+      { wave: 'pulse25', vol: 0.09, notes: 'A4 - - - C5 - B4 - | A4 - - - E4 - - - | F4 - - - A4 - G4 - | E4 - - - - - . . | A4 - - - C5 - D5 - | E5 - - - D5 - C5 - | B4 - - - G#4 - B4 - | A4 - - - - - . .' },
+      { wave: 'triangle', vol: 0.28, notes: 'A2 - - - - - - - | E2 - - - - - - - | F2 - - - - - - - | C2 - - - - - - - | A2 - - - - - - - | C2 - - - - - - - | E2 - - - - - - - | A2 - - - - - - -' },
+      { wave: 'pulse12', vol: 0.04, notes: 'A3+C4+E4 - - - - - - - | E3+G3+B3 - - - - - - - | F3+A3+C4 - - - - - - - | C3+E3+G3 - - - - - - - | A3+C4+E4 - - - - - - - | C3+E3+G3 - - - - - - - | E3+G#3+B3 - - - - - - - | A3+C4+E4 - - - - - - -' },
+    ],
+    drums: 'k.......',
+  },
   hub: {
     name: 'Arcade',
     where: 'The mini-games hub and the daily challenge’s page',
@@ -274,13 +301,15 @@ const LEVEL_TRACK: Record<string, TrackId> = { HS: 'hs', NCAA: 'college', GL: 'g
 
 /** The loop for what is on screen. A page of its own (the log, the book, the community) keeps the
  * one under it; Lockdown has its own beat, so none. */
-export function trackOf(s: { game: GameState | null; thanks: unknown; intro: boolean; mini: string | null }): TrackId | null {
+export function trackOf(s: { game: GameState | null; thanks: unknown; intro: boolean; mini: string | null; road?: Road; creating?: unknown; page?: string | null }): TrackId | null {
   const g = s.game;
   if (s.thanks && !g) return 'thanks';
   if (s.intro && !g) return 'intro';
   if (s.mini) return s.mini === 'rhythm' ? null : s.mini === 'hub' || s.mini === 'daily' ? 'hub' : s.mini in TRACKS ? (s.mini as TrackId) : 'hub';
+  // round 33: the road map (in the tutorial, or opened from the start page's Levels card)
+  if (!g && !s.creating && (s.page === 'road' || (s.road && inTutorial(s.road) && nextLevel(s.road) !== 'beginner'))) return 'road';
   if (!g) return 'start';
-  if (g.step === 'retired') return 'retired';
+  if (g.step === 'retired') return g.flags.level && g.flags.levelEnd !== 2 ? 'sad' : 'retired';
   if (g.step === 'offseason' || g.stage === 'FA') return 'offseason';
   return LEVEL_TRACK[g.stage] ?? 'start';
 }

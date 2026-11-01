@@ -4,6 +4,7 @@ import React, { useSyncExternalStore } from 'react';
 import ReactDOM from 'react-dom/client';
 import { App } from './ui/App';
 import { GuideTour } from './ui/components/GuideTour';
+import { Lessons } from './ui/tutorial/Lessons';
 import { TabNews } from './ui/components/TabNews';
 import { AchToasts } from './ui/screens/Achievements';
 import { Loading } from './ui/components/Loading';
@@ -29,6 +30,7 @@ function Root() {
     <>
       <App />
       <GuideTour />
+      <Lessons />
       <TabNews />
       <AchToasts />
     </>

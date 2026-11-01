@@ -50,7 +50,7 @@
 .dk-dealing-card b { font-family: var(--f-display); font-size: 24px; text-transform: uppercase; }
 .dk-dealing-card small { color: var(--muted); }
 @keyframes dk-deal { from { transform: rotate(-2deg); } to { transform: rotate(2deg) translateY(-4px); } }
-.dk-bar { position: fixed; left: 16px; bottom: 16px; z-index: 300; display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; border: 2px solid #1b1820; background: var(--surface); box-shadow: 0 8px 22px rgba(0, 0, 0, 0.25); max-width: calc(100vw - 32px); }
+.dk-bar { position: fixed; left: 16px; bottom: 16px; z-index: 1300; display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; border: 2px solid #1b1820; background: var(--surface); box-shadow: 0 8px 22px rgba(0, 0, 0, 0.25); max-width: calc(100vw - 32px); }
 .dk-bar span { display: grid; min-width: 0; }
 .dk-bar small { font-family: var(--f-mono); font-size: 11px; color: var(--muted); text-transform: uppercase; }
 .dk-bar b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

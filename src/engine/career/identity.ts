@@ -11,6 +11,7 @@ import type { AttrKey, GameState, RoleKey } from '../types';
 import { clamp } from '../rng';
 import { modeDial } from '../balance';
 import { logDecision, userOvr } from './common';
+import { allows } from '../levels';
 
 export type TeamStyle = 'pace' | 'defense' | 'motion' | 'inside' | 'star';
 
@@ -28,6 +29,7 @@ const STARTER: RoleKey[] = ['starter', 'key'];
 
 /** He can steer the team's style once he starts for an NBA team (round 13: starter level). */
 export function canSetStyle(s: GameState): boolean {
+  if (!allows(s, 'style')) return false; // round 33: advanced level and up
   const last = [...s.history].reverse().find((h) => h.level === 'NBA' && h.teamId === s.teamId);
   return s.step === 'offseason' && s.stage === 'NBA' && !!s.contract && s.contract.years > 0 && !!last && STARTER.includes(last.role) && s.flags.styleYear !== s.year;
 }

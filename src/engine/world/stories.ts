@@ -20,6 +20,7 @@ import type { Bracket, GameState, League, Team } from '../types';
 import { standings } from '../sim/leagueSim';
 import { nbaStrength } from './nbaWorld';
 import { logDecision, pushMoment, userOvr } from '../career/common';
+import { inLevel } from '../levels';
 
 type StoryKind = 'superteam' | 'underdog' | 'rival' | 'dynasty' | 'lastdance' | 'tank' | 'favorite' | MineKind;
 type MineKind = 'grit' | 'chip' | 'pace' | 'bond' | 'showtime';
@@ -166,6 +167,7 @@ function mineStory(s: GameState, lg: League, mine: string): LeagueStory | null {
 }
 
 export function startStories(s: GameState, lg: League): void {
+  if (inLevel(s)) return; // round 33: Around the league belongs to the closing tour
   const mine = lg.userTeamId;
   const order = ranked(lg);
   const n = order.length;

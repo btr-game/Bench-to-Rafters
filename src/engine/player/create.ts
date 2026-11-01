@@ -1,5 +1,6 @@
 import {
   AGING_ODDS,
+  ROADMAP,
   ARCHETYPE_TOTAL,
   ATTRS,
   CAP_FROM_START,
@@ -46,6 +47,7 @@ export interface CreateInput {
   comet?: boolean; // round 30: Comet (Shoot for the stars only): fast break and sim for the whole career, about five minutes
   oath?: boolean; // round 25: Rough Road (Reality only): master mode, no fast break or sim (round 27: simple text allowed, a random player)
   look?: import('../../content/looks').ChosenLook; // round 27: the look he picked (from his name if not)
+  level?: import('../levels').Level; // round 33: a career on the road map (engine/levels.ts)
 }
 
 /** "See other candidates": each stat ±3, then re-normalized to exactly 320. */
@@ -99,11 +101,12 @@ function buildPlayer(rng: Rng, input: CreateInput): UserPlayer {
   const height = fullHeight - weightedPick(rng, [[1, 2], [2, 3], [3, 3], [4, 2], [5, 1.2], [6, 0.8], [7, 0.4]]);
   const mode = MODES[input.mode ?? 'standard'];
   // round 28: the archetypes that peaked lowest start with a little more ceiling (ARCH_CEILING)
-  const potential = Math.min(99, drawPotential(rng, mode.potential) + (input.mode === 'lab' ? 0 : (ARCH_CEILING[arch.name] ?? 0)));
+  // round 33: a level draws from its own, kinder potential (ROADMAP)
+  const pd = input.level ? ROADMAP[input.level].potential : mode.potential;
+  const potential = Math.min(99, drawPotential(rng, pd) + (input.mode === 'lab' ? 0 : (ARCH_CEILING[arch.name] ?? 0)));
   const caps = {} as Attrs;
   // the ceiling comes from the card, so a head start does not raise it
   for (const k of ATTRS) caps[k] = clamp(potential + (card[k] - 40) * CAP_FROM_START, 30, CAP_MAX);
-  const pd = mode.potential;
   const potZ = (Math.log(Math.max(1, potential - pd.base)) - pd.mu) / pd.sigma;
   // Laplace draw around the target (inverse CDF), nudged a little by potential
   const u = next(rng) - 0.5;

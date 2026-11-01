@@ -674,6 +674,30 @@ export const FAREWELL = { age: 32, morale: 10, rep: 2, post: 0.5, legacy: 2, gif
  */
 export const RECORD_CHASE = { games: 72, near: 0.8, usage: 0.05, injury: 0.1, chem: 0.1 };
 /**
+ * The road map (round 33, engine/levels.ts): three short careers before the full game. Each starts
+ * as a high school senior, plays one college season and `nbaSeasons` NBA seasons. Potential and
+ * growth are set so at least 80% of careers make an NBA All-Star team (owner: "make the difficulty
+ * for all levels slightly easier so that nba all star could be achieved above 80%").
+ */
+export const ROADMAP = {
+  beginner: { nbaSeasons: 5, potential: { base: 80, mu: 1.6, sigma: 0.5, min: 82, max: 97 } as SkewDist, growth: 1.1, floor: { age: 21, ovr: 80, until: 30 } },
+  intermediate: { nbaSeasons: 6, potential: { base: 79, mu: 1.6, sigma: 0.5, min: 81, max: 97 } as SkewDist, growth: 1.07, floor: { age: 21, ovr: 78, until: 30 } },
+  advanced: { nbaSeasons: 7, potential: { base: 76, mu: 1.6, sigma: 0.5, min: 78, max: 97 } as SkewDist, growth: 1.02, floor: { age: 21, ovr: 76, until: 30 } },
+};
+/**
+ * The island's grades (round 33, owner: "for the user to pass the tutorial, they must play each
+ * minigame at least once, earning at least a C"; Front Office: "a C = make the playoffs once").
+ * The marks follow each game's career-bonus tiers (career/miniBonus.ts): C is the first score that
+ * earns a bonus. A three-point score, a dunk contest's best dunk, the lab's peak OVR, a Front Office
+ * run's playoff trips; the others grade by how far the run went.
+ */
+export const ROAD_GRADES = {
+  threes: { A: 23, B: 18, C: 13 },
+  dunk: { A: 44, B: 40, C: 35 },
+  lab: { A: 93, B: 87, C: 80 },
+  office: { B: 2, C: 1 }, // playoff trips; a title is an A
+};
+/**
  * The next generation (round 32, owner: "similar height (... variance, and also like the low-chance
  * breakthroughs, they might be significantly taller/shorter than the father), similar potential
  * (same with height, variance and breakthrough), and similar looks ... make the chances that the
@@ -681,9 +705,9 @@ export const RECORD_CHASE = { games: 72, near: 0.8, usage: 0.05, injury: 0.1, ch
  * legacy points, but not fully"). engine/nextGen.ts. Height: his, with an sd of `heightSd` inches,
  * and a `jump` chance of `jumpIn` inches either way. Potential: his plus `potShift`, an sd of
  * `potSd`, and a `potJump` chance of `potJumpSize` points (up only `potUp` of the time). The child's
- * legacy adds `share` of itself to his.
+ * legacy adds `share` of itself to his. `girl`: the chance the first child is a daughter (owner: "make
+ * the first child half-half boy and girl"); only a son plays a career.
  */
-// girl: the chance the first child is a daughter (owner: "make the first child half-half boy and girl"); only a son plays a career
 export const NEXT_GEN = { heightSd: 1.2, jump: 0.06, jumpIn: [3, 6], potShift: -3, potSd: 3.5, potJump: 0.06, potJumpSize: [7, 12], potUp: 0.35, share: 0.25, girl: 0.5 };
 export const STAFF_PAY = { pay: [1, 1.7, 2.6], effect: [1, 1.5, 2], talk: 1, talkShare: 0.35, afford: 4, max: 6 };
 // round 25: fines, rolled like injuries, game by game in a pro league. `perGame` is the chance a

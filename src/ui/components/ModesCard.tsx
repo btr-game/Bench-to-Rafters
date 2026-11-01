@@ -1,6 +1,7 @@
 import type { GameState } from '../../engine/types';
 import { useStore } from '../../store';
 import { Icon } from '../art/Icon';
+import { allows } from '../../engine/levels';
 
 // Every way to play, one tap away (round 25, the owner: easier access to all the modes, above
 // Around the league instead of in the top bar).
@@ -14,6 +15,31 @@ function Chip({ icon, label, on, onClick, tour, disabled }: { icon: string; labe
   );
 }
 
+/** A level's switches: Fast break (on, for the level's pace) from intermediate, Sim in advanced. */
+function LevelModes({ g }: { g: GameState }) {
+  const st = useStore();
+  const fast = allows(g, 'fast');
+  const sim = allows(g, 'sim');
+  if (!fast && !sim) return null;
+  const notes = NOTE.filter(([k]) => (k === 'sim' && g.flags.sim) || (k === 'fast' && g.flags.fast && !g.flags.sim)).map(([, t]) => t);
+  return (
+    <section className="card stack modes-card" data-tour="modes">
+      <div className="kicker">How you play</div>
+      <div className="mode-chips">
+        {sim && <Chip icon="sim" label="Sim" on={!!g.flags.sim} onClick={st.toggleSim} tour="chip-sim" disabled={g.step === 'retired'} />}
+        {fast && <Chip icon="fast" label="Fast break" on={!!g.flags.fast} onClick={st.toggleFast} tour="chip-fast" disabled={g.step === 'retired'} />}
+      </div>
+      {notes.length > 0 && (
+        <ul className="small muted mode-notes">
+          {notes.map((t) => (
+            <li key={t}>{t}</li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
 const NOTE: [string, string][] = [
   ['sim', 'Sim: the season plays itself, turning points included (it lists the calls it made); it stops for offers, the draft and contracts.'],
   ['fast', 'Fast break: quick seasons; you still make every real call.'],
@@ -24,6 +50,9 @@ const NOTE: [string, string][] = [
 
 export function ModesCard({ g }: { g: GameState }) {
   const st = useStore();
+  // round 33: a level shows only its own switches (Fast break from intermediate, Sim in advanced);
+  // beginner has none, so no card
+  if (g.flags.level) return <LevelModes g={g} />;
   // round 30: a Comet keeps Fast break and Sim on for the whole career
   const locked = g.mode === 'lab' || g.step === 'retired' || !!g.flags.daily || !!g.flags.oath || !!g.flags.comet;
   const oath = !!g.flags.oath;

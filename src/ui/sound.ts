@@ -64,6 +64,11 @@ export const SFX = [
   ['undo', 'Undo: a choice taken back'],
   ['knock', 'Knocking on the coach’s door: asking for a bigger role'],
   ['family', 'The next generation: your son’s career begins'],
+  // round 33: the tutorial
+  ['drive', 'The road map: your car drives to the next stop'],
+  ['sail', 'The road map: the boat to the island of mini-games'],
+  ['lesson', 'The tutorial: a lesson done'],
+  ['graduate', 'Graduation: the tutorial is done and the full game opens'],
 ] as const;
 type Sfx = (typeof SFX)[number][0];
 
@@ -377,6 +382,24 @@ export function sfx(name: Sfx, always = false): void {
     case 'unlock': // the shackle springs up
       noise(t, 0.03, 0.3);
       seq([7, 14], 0.05, 'triangle', 0.5);
+      break;
+    case 'drive': // a little engine puttering off, then a beep of the horn
+      for (let i = 0; i < 6; i++) tone(N(-5 + (i % 2) * 2), t + i * 0.07, 0.05, 'square', 0.25);
+      seq([19, 19], 0.08, 'square', 0.3);
+      break;
+    case 'sail': // a ship's horn, low and long, and the water
+      tone(N(-5), t, 0.5, 'triangle', 0.6);
+      tone(N(-1), t + 0.55, 0.6, 'triangle', 0.5);
+      noise(t + 0.2, 0.5, 0.12);
+      break;
+    case 'lesson': // a pencil tick on the list
+      tone(N(31), t, 0.03, 'triangle', 0.35);
+      tone(N(36), t + 0.04, 0.04, 'triangle', 0.3);
+      break;
+    case 'graduate': // caps in the air: a rising fanfare, the crowd
+      seq([12, 16, 19, 24, 28, 31, 36], 0.09);
+      tone(N(0), t, 0.7, 'triangle', 0.6);
+      noise(t + 0.6, 0.5, 0.3);
       break;
   }
 }

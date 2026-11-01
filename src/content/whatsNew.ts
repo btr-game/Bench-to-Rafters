@@ -16,6 +16,17 @@ interface News {
 
 export const NEWS: News[] = [
   {
+    id: '2026-11-01-r33',
+    date: '1 November 2026',
+    items: [
+      { icon: 'map', text: 'The road map: every device now starts with three short careers (beginner, intermediate, advanced), an island of mini-games and a closing tour, with a lesson for every button. Played before? Skip the tutorial takes the exit code from the graduation page.' },
+      { icon: 'cap', text: 'Graduated? The Levels card on the start page plays any level again.' },
+      { icon: 'shoot', text: 'Achievements for efficiency (a perfect night from the field, 50-40-90 at 25 a game) and for nights so bad they are hard to have (0 for 12, 13 turnovers, a 15-win team). 680 in all.' },
+      { icon: 'news', text: 'New turning points: a 1-for-14 night, the ball from a perfect one, an underhand free-throw routine, the analytics report and a front office that wants you to sit. Five new things in the shop.' },
+      { icon: 'locker', text: 'The Season tab starts with the locker room, then your team beside its city and fans. New career says where the career you leave is kept: the career log.' },
+    ],
+  },
+  {
     id: '2026-11-01-r32',
     date: '1 November 2026',
     items: [

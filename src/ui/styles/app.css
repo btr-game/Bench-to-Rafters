@@ -1585,6 +1585,7 @@ td .art-team { display: inline-block; vertical-align: middle; margin: -3px 8px -
 .scout-head .kicker { overflow-wrap: anywhere; }
 .set-new { padding: 10px 0; border-bottom: 1px solid var(--line); }
 .set-new-btn { justify-content: center; }
+.set-new-note { display: block; margin-top: 6px; color: var(--muted); font-size: calc(13px * var(--ts)); text-align: center; }
 .set-confirm { display: grid; gap: 6px; padding: 12px; border-radius: 10px; border: 2px solid var(--bad); background: color-mix(in srgb, var(--bad) 10%, var(--surface)); }
 .set-confirm small { color: var(--ink); font-size: calc(15px * var(--ts)); }
 .set-confirm-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
@@ -2510,7 +2511,11 @@ input[type='range'] { width: 100%; min-height: 32px; accent-color: var(--accent)
 .continue-card { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; }
 
 /* round 32: the next generation (the son's career, on the father's page and log card) */
+/* round 33: the Season tab's team strength beside its city and fans (one column when there is no city card, or on a phone) */
+.season-pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr)); gap: 16px; align-items: start; }
 .ng-row { display: flex; gap: 14px; align-items: center; }
+/* round 33: the son's career plays itself; said where the player decides */
+.ng-warn { margin: 0; border: 1px solid var(--warn); border-left-width: 6px; border-radius: 8px; padding: 8px 12px; font-size: calc(14.5px * var(--ts)); }
 .ng-row > :first-child { flex: none; }
 .ng-name { font-family: var(--f-display); font-weight: 800; font-size: calc(26px * var(--ts)); line-height: 1; text-transform: uppercase; overflow-wrap: anywhere; }
 .ng-facts { display: grid; gap: 10px; }
@@ -2536,3 +2541,88 @@ input[type='range'] { width: 100%; min-height: 32px; accent-color: var(--accent)
 .coach-trust { font-weight: 600; font-size: calc(15px * var(--ts)); }
 .coach-trust.good { color: var(--good); }
 .coach-trust.bad { color: var(--bad); }
+
+/* Round 33: the road map's levels. The create page's level hero, and what a level adds (owner: "a
+   quick overview (use a lot of icons and little text)"): a grid of pixel icons, a word or two each */
+.level-hero h1 { font-size: calc(clamp(44px, 9vw, 92px) * var(--ts)); }
+.level-goal { display: flex; align-items: center; gap: 8px; margin: 0; padding: 8px 12px; border-radius: 8px; background: var(--accent-soft); border-left: 4px solid var(--accent); }
+.level-adds { display: grid; gap: 10px; border-top: 4px solid var(--accent); }
+.adds-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px; }
+.adds-grid li { position: relative; display: grid; justify-items: center; align-content: start; gap: 6px; padding: 12px 6px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface-2); text-align: center; font-weight: 700; font-size: calc(14px * var(--ts)); line-height: 1.15; min-width: 0; overflow-wrap: anywhere; }
+.adds-grid li .art-icon, .adds-grid li svg { image-rendering: pixelated; }
+.adds-plus { position: absolute; top: 3px; left: 6px; font-family: var(--f-mono); font-weight: 800; color: var(--accent); font-size: calc(15px * var(--ts)); }
+.adds-was { border-style: dashed !important; background: transparent !important; color: var(--muted); }
+/* the road map page: the pixel map with the bucket list in its top-right corner, then the stops */
+.roadmap { position: relative; }
+.roadmap-art { display: block; width: 100%; height: auto; border-radius: 10px; border: 1px solid var(--line); image-rendering: pixelated; }
+.bucket { position: absolute; top: 8px; right: 10px; width: min(310px, 46%); display: grid; filter: drop-shadow(3px 3px 0 rgba(0, 0, 0, 0.28)); }
+/* the rolls: wooden knobs, and the rolled paper in hard bands, four pixels each (owner: "more
+   roughly pixellated. less pixels") */
+.scroll-roll { display: flex; align-items: center; position: relative; z-index: 1; }
+.scroll-knob { flex: none; display: block; }
+.scroll-cyl { flex: 1; height: 24px; margin-inline: -4px; border-inline: 4px solid #3B2414;
+  background: linear-gradient(to bottom, #5A3E22 0 4px, #F4E6C4 4px 8px, #E3CB98 8px 16px, #C8A66C 16px 20px, #5A3E22 20px 24px); }
+/* the paper: parchment, big specks and stains, an aged band, ragged sides in big steps */
+.scroll-paper { margin: -8px 16px; padding: 18px 18px 14px; display: grid; gap: 6px; color: #3A2716;
+  background-color: #E9D5A8;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 8' shape-rendering='crispEdges'%3E%3Cpath d='M1 1h2v1h1v2h-3z' fill='%23DCC18A'/%3E%3Cpath d='M7 4h2v2h-2z' fill='%23DFC690'/%3E%3Cpath d='M4 6h1v1h-1z' fill='%23D4B680'/%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8' shape-rendering='crispEdges'%3E%3Crect x='1' y='2' width='1' height='1' fill='%23D2B47C'/%3E%3Crect x='5' y='0' width='1' height='1' fill='%23DCC290'/%3E%3Crect x='6' y='5' width='1' height='1' fill='%23CDAE76'/%3E%3Crect x='2' y='6' width='1' height='1' fill='%23DCC290'/%3E%3C/svg%3E");
+  background-size: 80px 64px, 32px 32px; image-rendering: pixelated;
+  box-shadow: inset 0 0 0 4px #D7BC86;
+  clip-path: polygon(4px 0, calc(100% - 8px) 0, calc(100% - 8px) 10%, 100% 10%, 100% 26%, calc(100% - 4px) 26%, calc(100% - 4px) 42%, 100% 42%, 100% 56%, calc(100% - 8px) 56%, calc(100% - 8px) 68%, calc(100% - 4px) 68%, calc(100% - 4px) 84%, 100% 84%, 100% 100%, 8px 100%, 8px 90%, 0 90%, 0 74%, 4px 74%, 4px 60%, 0 60%, 0 46%, 8px 46%, 8px 32%, 0 32%, 0 16%, 4px 16%); }
+.bucket-title { font-family: var(--f-display); font-weight: 900; text-transform: uppercase; letter-spacing: 0.04em; font-size: calc(20px * var(--ts)); color: #3A2716; border-bottom: 4px dashed #B8995F; padding-bottom: 4px; }
+.bucket ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 5px; }
+.bucket li { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 8px; font-size: calc(14px * var(--ts)); line-height: 1.2; min-width: 0; color: #3A2716; font-weight: 600; }
+.bucket li span { min-width: 0; overflow-wrap: anywhere; }
+.bucket li.done span { text-decoration: line-through; text-decoration-thickness: 3px; text-decoration-color: #9B2C1A; color: #6B5236; }
+.bucket-box { flex: none; }
+.bucket-tag { font-family: var(--f-mono); color: #9B2C1A; background: #F3E6C6; padding: 0 3px; font-weight: 700; white-space: nowrap; }
+@media (max-width: 720px) {
+  .bucket { position: static; width: auto; margin-top: 10px; }
+}
+.road-stops { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; margin-top: 14px; }
+.road-stop.next { grid-column: 1 / -1; border-top: 4px solid var(--accent); }
+.road-stop.locked { opacity: 0.72; }
+.road-stop-head { gap: 12px; align-items: center; flex-wrap: wrap; }
+/* the end of a level career */
+.level-end-card.won { border-top: 4px solid var(--gold); }
+.level-end-card.missed { border-top: 4px solid var(--muted); }
+.level-end-head { gap: 14px; align-items: center; }
+.level-end-title { margin: 0; font-family: var(--f-display); font-size: calc(30px * var(--ts)); line-height: 1.05; text-transform: uppercase; }
+.level-end-stats { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; }
+.level-end-stats li { display: grid; justify-items: center; gap: 2px; padding: 10px 6px; border-radius: 8px; background: var(--surface-2); border: 1px solid var(--line); text-align: center; }
+.level-end-stats b { font-family: var(--f-display); font-size: calc(26px * var(--ts)); line-height: 1; }
+.level-end-stats span { font-size: calc(13px * var(--ts)); color: var(--muted); }
+@media (max-width: 560px) {
+  .adds-grid { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 6px; }
+  .adds-grid li { padding: 10px 4px 8px; font-size: calc(13px * var(--ts)); }
+}
+/* the island: each mini-game's best grade (a C or better passes) */
+.island-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(56px, 1fr)); gap: 6px; }
+.island-grid li { display: grid; justify-items: center; gap: 2px; padding: 6px 4px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface-2); }
+.island-grid li b { font-family: var(--f-display); font-size: calc(20px * var(--ts)); line-height: 1; color: var(--muted); }
+.island-grid li.done { border-color: var(--good); }
+.island-grid li.done b { color: var(--good); }
+.hub-req.island-req.done { color: var(--good); font-weight: 700; }
+/* graduation: the diploma, the same pixel scroll, with the exit code */
+.diploma { width: min(560px, 100%); margin: 6px auto 14px; display: grid; filter: drop-shadow(4px 4px 0 rgba(0, 0, 0, 0.28)); }
+.diploma-paper { gap: 10px; padding: 22px 26px 18px; }
+.diploma-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.diploma-list li { display: flex; align-items: center; gap: 10px; color: #3A2716; font-weight: 600; }
+.diploma-code { display: grid; justify-items: center; gap: 6px; padding: 12px; border: 4px dashed #B8995F; text-align: center; color: #3A2716; }
+.diploma-code > span { font-family: var(--f-mono); text-transform: uppercase; letter-spacing: 0.1em; font-size: calc(13px * var(--ts)); }
+.diploma-code b { font-family: var(--f-mono); font-size: calc(34px * var(--ts)); letter-spacing: 0.18em; color: #9B2C1A; user-select: all; }
+.diploma-code small { font-size: calc(13px * var(--ts)); color: #5A4229; max-width: 34ch; }
+.mode-card.recommended { box-shadow: 0 0 0 3px var(--accent); }
+.mode-card.recommended .tag { margin-left: 6px; }
+/* the tutorial guide: the page shaded around one control, which alone responds */
+.lesson-layer { position: fixed; inset: 0; z-index: 1200; pointer-events: none; }
+.lesson-shade { position: fixed; background: rgba(12, 14, 22, 0.58); pointer-events: auto; }
+.lesson-shade.clear { background: transparent; }
+.lesson-ring { z-index: 1201; }
+.lesson-tip { z-index: 1202; pointer-events: auto; }
+.lesson-turn { font-weight: 700; color: var(--accent); }
+.lesson-exit { gap: 6px; flex-wrap: wrap; }
+.lesson-exit input { width: 9em; min-width: 0; }
+/* the closing tour's bar */
+.tour-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; border-left: 4px solid var(--accent); margin-bottom: 12px; }
+.place-art { display: block; image-rendering: pixelated; border-radius: 6px; border: 2px solid var(--line); flex: none; max-width: 100%; height: auto; }

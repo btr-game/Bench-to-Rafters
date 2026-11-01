@@ -19,6 +19,7 @@ import { TimingMeter } from '../components/TimingMeter';
 import { FinalsCourt } from '../components/FinalsCourt';
 import { sfx } from '../sound';
 import { negotiable, type Ask } from '../../engine/career/negotiate';
+import { talksOpen } from '../../engine/levels';
 
 const TIER: Record<string, string> = { blue: 'Blue blood', power: 'Power program', major: 'Major conference', mid: 'Mid-major' };
 
@@ -46,8 +47,9 @@ function OfferCard({ o, onPick }: { o: Offer; onPick: () => void }) {
 }
 
 /** Contract talks (round 25): ask for one thing at a time, twice at most; the answer comes at once. */
-function Talks({ o, onSaid }: { o: Offer; onSaid: (text: string | null) => void }) {
+function Talks({ g, o, onSaid }: { g: GameState; o: Offer; onSaid: (text: string | null) => void }) {
   const talk = useStore((s) => s.negotiate);
+  if (!talksOpen(g)) return null;
   if (!negotiable(o)) return o.asked ? <div className="small muted talk-done">Talks are over: sign it or leave it.</div> : null;
   const ask = (a: Ask) => onSaid(talk(o.id, a));
   return (
@@ -417,7 +419,7 @@ export function DecisionView({ g, d }: { g: GameState; d: Decision }) {
           {offers.map((o) => (
             <div key={o.id} className="offer-wrap">
               <OfferCard o={o} onPick={() => choose(o.id)} />
-              <Talks o={o} onSaid={(text) => setTalk(text ? { id: d.id, text } : null)} />
+              <Talks g={g} o={o} onSaid={(text) => setTalk(text ? { id: d.id, text } : null)} />
             </div>
           ))}
         </div>
