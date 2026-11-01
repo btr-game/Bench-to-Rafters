@@ -2207,3 +2207,98 @@ multiple times."
   play as sim or as a Comet), the Catalog's challenges, the project summary. Settings' keyboard
   line said L for a tab that left in round 29; it says E now. No new decision kinds for the
   harness; the balance tests do not play sim, so their numbers stand.
+
+## Round 31 (owner requests)
+
+- **Text size and volume** (owner: "accessibility: do text size, volume sliders"): Normal, Large
+  and Extra large in Settings. Every font size in the stylesheet (335 of them, px, rem, clamp or a
+  variable) is written as `calc(size * var(--ts))`, and `--ts` is 1, 1.15 or 1.3 on
+  `:root[data-text]`; sizes in em follow their parent. Sound effects and music each have a volume
+  slider (0–100 in steps of 5) under their switch: each goes through a gain of its own on the way
+  to the master gain, stored as `btr-sfx-vol` and `btr-music-vol`; Lockdown's beat follows the
+  music's. Text size and volumes are shared with the dev deck. A screen reader pass was explained
+  (labels for pixel words and icons, announcements, focus in pop-ups, charts as text, timing
+  options, a run with VoiceOver and NVDA); the owner did not want it.
+- **Undo** (owner: "undo last choice is great. It would be off for No Shortcuts and Comet so
+  leaderboards stay fair"): every choice and step on Home and the offseason moves keep the game as
+  it was; Undo on Home (or U) puts it back and says what it takes back. One step, and never for
+  Rough Road, Comet, the daily challenge or an ended career (`canUndo`). Undoing keeps the count
+  of achievements the career has earned (they can't be taken back). Take Two for the first.
+- **Compare two careers** (owner: "comparing two careers looks good"): Compare on two career log
+  cards sets them side by side (`ui/compare.ts`): the difficulty and tier, then peak, index,
+  legacy, all-time rank (lower is better), Hall of Fame, titles, MVPs, All-Stars, NBA seasons and
+  points, and retiring age (a fact, not a score). The better of each row is in bold with a ▲, so
+  colour is not the only sign. Tale of the Tape for the first.
+- **The summary by function** (owner: "you're still putting some things in the project summary by
+  round. fix that. for example, comet isnt in settings at start"): every "Round N" heading folded
+  into the chapter its function belongs to (Comet and Rough Road under the challenges at the
+  start, and so on); the summary has no round headings now.
+- **Rough Road** (owner: "can you name it rough road instead of no shortcuts?" and "rough road
+  should also warn the user that their avatar is also completely random"): the name everywhere a
+  player reads it (the offer, the mark, the banner, achievements, the guide, the summary); the
+  flag stays `flags.oath`. The offer and the last step say the road picks his look too.
+- **Leaderboards for Rough Road and Comet** (owner: "in community, add some more tabs for the
+  comet and [rough] road"): five boards. A Rough Road career ranks on Reality's board and its own;
+  a Comet only on its own, leaving the Shoot for the stars board to careers played by hand.
+  Locally and on the shared page the boards are filters on the career's marks; online,
+  `supabase/migrations/0003_challenge_boards.sql` lets `best_all` and `best_day` hold the two
+  boards and has `post_career` file each career on its boards (and refuse a Comet that isn't
+  Stars or a Rough Road that isn't Reality). It keeps the function's signature, so the website
+  already out keeps working. Tested inside a block that rolls back: a Comet went to `comet`, a
+  Rough Road to `reality` and `rough`, a plain Stars career to `stars`, mismatched marks were
+  refused, nothing stayed. The house players were played again: ten for each of the five boards
+  and six statues (`scripts/house.ts`).
+- **The Extras tab** (owner: "i dont like the gap here. make the achievements visible when the
+  user opens the book", then "also put the orange dot for new features (unlocked achievement,
+  unlocked minigame)"): the Achievements card keeps only how many this career earned, so the four
+  cards line up; the book, opened from a career, starts with what that career earned. The tab's
+  dot now also comes for an achievement the career earns, naming up to three (the game keeps the
+  count, `achN`).
+- **The coach talk** (owner: "was this added? i cant seem to access it"): it was, but picking a
+  style closed the style card at once (it can be set once a summer), and the talk was drawn inside
+  that card, so it closed with it before anyone saw it. The talk lives with the offseason moves
+  now and plays in full.
+- **Simple text keeps the numbers** (owner: "even with simple text, i want to see the season stats
+  ... but not in a way that it's visually exhausting"): simple text hid the whole season
+  write-up, its stat board with it. One quiet line of averages stays above Home's main card: the
+  half so far, the season just ended, or the last one.
+- **A postseason said plainly** (owner, of the playoffs page: "not exactly sure what the results
+  are here. be more apparent"): the line that said who won was the one Simple text hides. The page
+  now leads with his team and its finish, then the champion, in big type and kept in Simple text;
+  series read "winner beat loser 4–2" with the winner in bold and his marked W or L. The arena's
+  ribbon read GOLD MEDAL GAME on every tournament page: PLAYOFFS for a postseason, TOURNAMENT for
+  the others, MEDAL ROUND for the national team, with confetti only for a title or a medal.
+- **The shop** (owner: "prices of shopping items should be way more inflated as the player's
+  salary gets higher ... get rid of the limit, extend the number of items in the shop to 6, and
+  just make them expensive enough for the user to barely purchase 2~3. but dont inflate prices
+  too much. if the player is getting like 50 or above million a year, price of items shouldnt be
+  a problem anymore"): prices are the sticker up to $1M a year of income (salary and brand deal),
+  rising on a log scale to three times it at $50M (×2.177184 at $10M), rounded to two figures.
+  The six are drawn around 42% of the bank each, so two or three fit; from $20M a year that
+  share falls to 3% at $50M, where they all fit. No limit on buying. One from each shelf while
+  shelves have something near his price (the round 25 rule), a second otherwise; an accessory is
+  one of the six on 40% of visits, as they cost next to nothing. Tried at 30% of the bank first:
+  3.5–3.8 fit, too many. Measured over 120 careers (`scripts/shopcheck.ts`): under $20M a year
+  2.70–2.85 of the real items fit at once (two or three on 87–94% of visits); at $50M and above
+  all six fit on 92.2%. Shopping Spree (four in a visit) and Cleaned Out (six).
+- **End of the round:** pixel icons for undo, compare and text size (on the Undo button, the
+  comparison and the Settings row); the undo and compare sounds; the stat line shows only in
+  Simple text and Fast break's own recap carries the same numbers; Comet and Rough Road have no
+  undo. Achievements: Take Two, Tale of the Tape, Shopping Spree, Cleaned Out (568 in all). No new
+  decision kinds for the harness (it buys as long as a training, recovery or shoe item fits).
+  Dead code: the Achievements card's chip list and its styles, the shop's three-purchase limit and
+  its old stock, the book's "This career" filter (the section at the top replaces it). Tests:
+  `tests/round31.test.ts` (undo and its limits, the boards, the shop's prices, stock and no limit,
+  Compare, the Extras key, a postseason's outcome, the achievements and icons). Guide: Settings,
+  Undo, Keyboard (U), Rough Road, Extras, the career log's Compare, the leaderboards, Simple text,
+  a postseason's page, the shop; the tour has 122 steps (6 new). Dev deck: 91 cards (Compare two
+  careers, the Rough Road and Comet boards, a playoffs exit); a card's press can be a list of
+  controls now. The project summary, by function. What's new.
+- Balance (1,600 careers, seeds 100003–101602, smart player, casual mini-games, against round 22's
+  approved numbers): mean peak 74.8305 (74.4923, +1.16 standard errors), NBA 79.0625% (78.3%),
+  All-Star 39.6875% (35.8%), MVP 13.6250% (11.9%), Hall of Fame 17.3750% (11.2%), titles 39.5625%
+  (29.2%). The same careers with last round's shop: 75.0008, 80.6250%, 41.1875%, 12.9375%,
+  15.4375%, 40.0625%; career by career the new shop moves peak by −0.1704 (−1.40 standard
+  errors), the NBA −1.5625 points, All-Stars −1.5000, MVPs +0.6875, the Hall of Fame +1.9375
+  (+2.80) and titles −0.5000. The rise against the approved numbers is last round's easier
+  ceilings, not the shop. For the owner to decide.

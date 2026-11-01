@@ -184,6 +184,52 @@ function buildPlays(m: Moment, name: string): Play[] {
   return plays;
 }
 
+/** How a postseason ended for him, before the tables (round 31, owner: "not exactly sure what the
+ * results are here. be more apparent"): his team's finish and the champion, in big type, kept in
+ * simple text. */
+function Outcome({ o }: { o: NonNullable<Moment['outcome']> }) {
+  return (
+    <div className="moment-outcome">
+      <div className="mo-row mine">
+        <span className="mo-tag">Your team · {o.short}</span>
+        <b>{o.result}</b>
+      </div>
+      <div className="mo-row">
+        <span className="mo-tag champ">Champion</span>
+        <b>{o.champion}</b>
+      </div>
+    </div>
+  );
+}
+
+/** One line of a recap table, with the winner in bold and, on a line of his team's, a W or an L. */
+function RecapRow({ r, mine }: { r: string; mine?: string }) {
+  const has = (x: string) => !!mine && x === mine;
+  const series = r.match(/^(.+?) def\. (.+?) (\d+–\d+)$/) ?? r.match(/^(.+?) (\d+–\d+) (.+)$/);
+  if (series) {
+    const [w, l, score] = r.includes(' def. ') ? [series[1], series[2], series[3]] : [series[1], series[3], series[2]];
+    const tag = has(w) ? 'W' : has(l) ? 'L' : null;
+    return (
+      <div className={`post-recap-row${tag ? ` mine ${tag === 'W' ? 'won' : 'lost'}` : ''}`}>
+        {tag && <span className="rr-tag">{tag}</span>}
+        <b>{w}</b> beat {l} <span className="rr-score">{score}</span>
+      </div>
+    );
+  }
+  const game = r.match(/^Game (\d+): (.+?) (\d+), (.+?) (\d+)$/);
+  if (game) {
+    const [, n, a, x, b, y] = game;
+    const aWon = Number(x) > Number(y);
+    return (
+      <div className={`post-recap-row game${has(a) || has(b) ? ' mine' : ''}`}>
+        <span className="rr-n">Game {n}</span>
+        {aWon ? <b>{a} {x}</b> : `${a} ${x}`}, {aWon ? `${b} ${y}` : <b>{b} {y}</b>}
+      </div>
+    );
+  }
+  return <div className="post-recap-row">{r}</div>;
+}
+
 function Recap({ m }: { m: Moment }) {
   if (!m.recap || m.recap.length === 0) return null;
   return (
@@ -192,9 +238,7 @@ function Recap({ m }: { m: Moment }) {
         <div key={i} className="post-recap-sec" style={{ animationDelay: `${0.3 + i * 0.15}s` }}>
           <div className="kicker on-dark">{sec.heading}</div>
           {sec.rows.map((r, k) => (
-            <div key={k} className="post-recap-row">
-              {r}
-            </div>
+            <RecapRow key={k} r={r} mine={m.outcome?.short ?? m.game?.teamShort} />
           ))}
         </div>
       ))}
@@ -610,7 +654,7 @@ function MomentPage({ m, g }: { m: Moment; g: GameState }) {
               <div className="nick-reveal">
                 <PixelWord text={m.nick} color="#FFD43B" shade="#5A4206" className="nick-word" />
               </div>
-            ) : m.duo && activeDuo(g) ? <DuoArt g={g} b={activeDuo(g)!} third={activeTrio(g)} size={170} /> : <StoryScene g={g} title={m.title} kind={m.kind} prize={m.kind === 'awards' ? m.lines?.[0] : m.kind === 'title' ? m.title : m.kind === 'tournament' ? `${m.title}. ${m.text}` : undefined} />}
+            ) : m.duo && activeDuo(g) ? <DuoArt g={g} b={activeDuo(g)!} third={activeTrio(g)} size={170} /> : <StoryScene g={g} title={m.title} kind={m.kind === 'tournament' && (m.mood === 'silver' || m.mood === 'bronze' || m.mood === 'out') ? 'medal' : m.kind} prize={m.kind === 'awards' ? m.lines?.[0] : m.kind === 'title' ? m.title : m.kind === 'tournament' ? `${m.title}. ${m.text}` : undefined} />}
             <div className="kicker on-dark">{KICKER[m.kind]}</div>
             {m.kind === 'injury' ? (
               <div className="title-with-icon">
@@ -620,7 +664,8 @@ function MomentPage({ m, g }: { m: Moment; g: GameState }) {
             ) : (
               <div className="moment-title">{m.title}</div>
             )}
-            <p className="on-dark lede-dark prose">{m.text}</p>
+            {/* round 31: a tournament's line is its result, so simple text keeps it */}
+            {m.outcome ? <Outcome o={m.outcome} /> : <p className={`on-dark lede-dark${m.kind === 'tournament' ? '' : ' prose'}`}>{m.text}</p>}
             {m.kind === 'awards' ? (
               <div className="banners">
                 {m.lines?.map((x, i) => (

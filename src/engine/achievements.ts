@@ -38,6 +38,8 @@ export interface CareerTotals {
   shared?: number; // round 28: times the game's link went out (Share the game)
   locked?: number; // round 29: the most career log cards locked at once
   heard?: string[]; // round 29: the music loops heard (ui/tracks.ts)
+  undone?: number; // round 31: choices taken back
+  compared?: number; // round 31: pairs of career log cards set side by side
 }
 
 /** Round 29: how many music loops the game has (ui/tracks.ts; a test keeps the two in step). */
@@ -381,6 +383,11 @@ export const ACHIEVEMENTS: Achievement[] = [
   A('lock1', 'Under Lock and Key', 'bench', 'Lock a card in the career log, so it is never replaced.', (f) => (f.t.locked ?? 0) >= 1),
   A('lock5', 'The Vault', 'rotation', 'Have five career log cards locked at once.', (f) => (f.t.locked ?? 0) >= 5),
   A('mixtape', 'Mixtape', 'bench', 'Hear five different music loops.', (f) => (f.t.heard?.length ?? 0) >= 5),
+  A('undo1', 'Take Two', 'bench', 'Take back a choice and make it again.', (f) => (f.t.undone ?? 0) >= 1),
+  // round 31: the career log's Compare, the shop without a limit, the challenge boards
+  A('cmp1', 'Tale of the Tape', 'bench', 'Set two careers side by side in the career log.', (f) => (f.t.compared ?? 0) >= 1),
+  A('spree', 'Shopping Spree', 'rotation', 'Buy four things in one visit to the shop.', (f) => (f.g.flags.spree ?? 0) >= 4),
+  A('cleanout', 'Cleaned Out', 'allstar', 'Buy all six things in one visit to the shop.', (f) => (f.g.flags.spree ?? 0) >= 6),
   A('album', 'Full Album', 'allstar', `Hear all ${MUSIC_LOOPS} music loops: every level and league, the offseason, the mini-games, the intro and the curtain call.`, (f) => (f.t.heard?.length ?? 0) >= MUSIC_LOOPS),
   // round 25: the book past 500 (achievements25.ts)
   ...ACHIEVEMENTS_25,
@@ -389,7 +396,7 @@ export const ACHIEVEMENTS: Achievement[] = [
 ];
 
 // the ones that only read the totals kept across careers (they can be checked with no career open)
-const TOTALS_ONLY = new Set(['c1', 'c3', 'c5', 'c10', 'c25', 'c50', 'c100', 'allmodes', 'fastdone', 'masterdone', 'titles10', 'mvp10', 'daily1', 'daily7', 'daily30', 'share1', 'lock1', 'lock5', 'mixtape', 'album', ...MINI_TOTALS_ONLY]);
+const TOTALS_ONLY = new Set(['c1', 'c3', 'c5', 'c10', 'c25', 'c50', 'c100', 'allmodes', 'fastdone', 'masterdone', 'titles10', 'mvp10', 'daily1', 'daily7', 'daily30', 'share1', 'lock1', 'lock5', 'mixtape', 'album', 'undo1', 'cmp1', ...MINI_TOTALS_ONLY]);
 
 /** The achievements this career (and the totals) have earned, by id. */
 export function earnedNow(g: GameState | null, t: CareerTotals): string[] {

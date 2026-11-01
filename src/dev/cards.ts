@@ -43,8 +43,8 @@ export interface DevCard {
   blurb: string;
   /** Stages the store; returns false when no career reached the state. */
   open: () => boolean | void;
-  /** A control to press once the page is up (a menu, a sheet, a page tab). */
-  press?: string;
+  /** A control to press once the page is up (a menu, a sheet, a page tab), or several in turn. */
+  press?: string | string[];
   /** A page of the deck's own that shows instead of the game (the action cam lab). */
   page?: () => JSX.Element;
 }
@@ -103,7 +103,7 @@ const toFinal: PlayOpts['pick'] = (_, d) => {
   if (r.stage === 'game') return isFinal(r.round) ? 'play' : d.choices.some((c) => c.id === 'series') ? 'series' : 'sim';
   return r.stage === 'quarter' ? 'steady' : r.stage === 'clutch' ? 'pull@good' : d.choices[0].id;
 };
-/** A career played as No Shortcuts (round 26): Reality, master mode, nothing simplified. */
+/** A career played as Rough Road (round 26): Reality, master mode, nothing simplified. */
 const oath = (g: GameState | null) => {
   if (g) Object.assign(g.flags, { oath: 1, fast: 0, sim: 0 }), (g.mode = 'reality');
   return show(g, 'home', { master: true, simple: false });
@@ -128,6 +128,13 @@ function seedCommunity(): void {
       return { id: `s${i}${k}`, mode, day: k === 1 ? '2026-01-01' : day, score: rec.legacy + Math.max(0, Math.round(rec.peak) - 60), rec, mine: i === 0 };
     }),
   );
+  // the challenge boards: each career again as a Rough Road one and as a Comet
+  rs.forEach((r, i) => {
+    const rough = vary(r, 60 + i, { mode: 'reality', oath: true, legacy: Math.max(10, r.legacy - 20 + i * 7) });
+    const comet = vary(r, 70 + i, { mode: 'stars', comet: true, legacy: Math.max(10, r.legacy - 10 + i * 5) });
+    scores.push({ id: `r${i}`, mode: 'reality', day, score: rough.legacy + Math.max(0, Math.round(rough.peak) - 60), rec: rough, mine: i === 1 });
+    scores.push({ id: `c${i}`, mode: 'stars', day, score: comet.legacy + Math.max(0, Math.round(comet.peak) - 60), rec: comet, mine: i === 1 });
+  });
   // round 27: six in the hall, so the benches show a full row and the next one opening
   for (let i = 0; i < 6; i++) {
     const legend = vary(rs[i % rs.length], 40 + i, { mode: 'reality', peak: 99, legacy: 260 - i * 7, pos: (['PG', 'SG', 'SF', 'PF', 'C'] as const)[i % 5] });
@@ -283,6 +290,7 @@ export const CARDS: DevCard[] = [
   { id: 'm-awards', title: 'Awards night', group: 'Big moments', icon: 'laurel', blurb: 'MVP, All-NBA, the trophies.', open: () => withMoment('m-awards', (m) => m.kind === 'awards') },
   { id: 'm-finals', title: 'NBA Finals (playable)', group: 'Big moments', icon: 'clutch', blurb: 'Play, watch or skip the last minutes.', open: () => withMoment('m-finals', (m) => m.kind === 'title' && !!m.drama && m.mood === 'champion' && m.game?.level === 'NBA') },
   { id: 'm-gold', title: 'Olympic or World Cup final', group: 'Big moments', icon: 'globe', blurb: 'National colours on a FIBA floor.', open: () => withMoment('m-gold', (m) => m.kind === 'tournament' && !!m.drama) },
+  { id: 'm-playoffs', title: 'Playoffs out', group: 'Big moments', icon: 'bracket', blurb: 'A postseason that ended short: how his team finished and who won it all, in big type, then the series with his marked W or L.', open: () => withMoment('m-playoffs', (m) => !!m.outcome && !m.lostFinal && m.game === undefined) },
   { id: 'm-fine', title: 'Fined', group: 'Big moments', icon: 'envelope', blurb: 'A letter from the league office, and the amount.', open: () => withMoment('m-fine', (m) => m.kind === 'fine') },
   { id: 'm-nickname', title: 'A nickname', group: 'Big moments', icon: 'crown', blurb: 'The day the media names him: the name alone, in big pixel letters.', open: () => withMoment('m-nickname', (m) => !!m.nick) },
   { id: 'm-logo', title: 'Your logo', group: 'Big moments', icon: 'shoe', blurb: 'His first brand deal draws the logo of his nickname; the name card has kept a locked spot for it until now.', open: () => withMoment('m-logo', (m) => !!m.logo) },
@@ -340,13 +348,13 @@ export const CARDS: DevCard[] = [
   { id: 'retired', title: 'Retirement page', group: 'Big moments', icon: 'stars', blurb: 'The career card, legacy, what the career qualifies for (boards, hall, statue), the log.', open: () => show(retired(3)) },
 
   // modes
-  // round 26-27: No Shortcuts, from the offer to the banner
-  { id: 'oath-offer', title: 'No Shortcuts: the offer', group: 'Modes', icon: 'oath', blurb: 'Picking Reality asks once: take the hardest way to play?', open: () => void useStore.setState({ game: null, page: null, mini: null }), press: '.modes .mode-card:nth-child(2)' },
+  // round 26-27: Rough Road, from the offer to the banner
+  { id: 'oath-offer', title: 'Rough Road: the offer', group: 'Modes', icon: 'oath', blurb: 'Picking Reality asks once: take the hardest way to play?', open: () => void useStore.setState({ game: null, page: null, mini: null }), press: '.modes .mode-card:nth-child(2)' },
   { id: 'comet-offer', title: 'Comet, offered', group: 'Modes', icon: 'comet', blurb: 'Round 30: Shoot for the stars at hyper speed, offered on the start page with the stars.', open: () => void useStore.setState({ game: null, page: null, mini: null }), press: '.modes .mode-card:nth-child(3)' },
   { id: 'comet-career', title: 'Comet career', group: 'Modes', icon: 'comet', blurb: 'Fast break and Sim locked on; the story it did not stop for, in a list of highlights; the Comet mark.', open: () => show(at('comet', (s, p) => s.stage === 'NBA' && !!s.reel?.length && p.type === 'decision', { quick: 'comet' }), 'home', {}, true) },
   { id: 'sim-calls', title: 'Sim made the call', group: 'Modes', icon: 'sim', blurb: 'Round 30: sim mode makes the turning points too, and lists each call with how it went.', open: () => show(at('sim-calls', (s) => !!s.simCalls?.length, { quick: 'sim' }), 'home') },
-  { id: 'oath-career', title: 'No Shortcuts career', group: 'Modes', icon: 'oath', blurb: 'Master mode on, Fast break and Sim locked off; the mark in the top bar.', open: () => oath(hsStart('reality')) },
-  { id: 'oath-retired', title: 'No Shortcuts, kept to the end', group: 'Modes', icon: 'oath', blurb: 'Its own banner on the retirement page.', open: () => oath(retired(3)), press: 'text=See the whole career' },
+  { id: 'oath-career', title: 'Rough Road career', group: 'Modes', icon: 'oath', blurb: 'Master mode on, Fast break and Sim locked off; the mark in the top bar.', open: () => oath(hsStart('reality')) },
+  { id: 'oath-retired', title: 'Rough Road, kept to the end', group: 'Modes', icon: 'oath', blurb: 'Its own banner on the retirement page.', open: () => oath(retired(3)), press: 'text=See the whole career' },
   { id: 'mode-reality', title: 'Reality hits hard', group: 'Modes', icon: 'reality', blurb: 'Most careers end short of the NBA.', open: () => show(hsStart('reality')) },
   { id: 'mode-stars', title: 'Shoot for the stars', group: 'Modes', icon: 'stars', blurb: 'Every career reaches stardom.', open: () => show(hsStart('stars')) },
   { id: 'mode-lab', title: 'Built in a lab', group: 'Modes', icon: 'lab', blurb: 'Spend credits on any rating.', open: () => show(hsStart('lab')) },
@@ -369,6 +377,7 @@ export const CARDS: DevCard[] = [
 
   // records and community
   { id: 'log', title: 'Career log', group: 'Records & community', icon: 'cards', blurb: 'The last ten career cards, two of them locked.', open: () => (seedLog(true), useStore.setState({ game: null, mini: null, page: 'log' })) },
+  { id: 'log-compare', title: 'Compare two careers', group: 'Records & community', icon: 'cards', blurb: 'Two log cards side by side: peak, index, legacy, rank, honours, NBA numbers; the better of each in bold with a ▲.', open: () => (seedLog(true), useStore.setState({ game: null, mini: null, page: 'log' })), press: ['[data-tour="log-pick"]:not([aria-pressed="true"])', '[data-tour="log-pick"]:not([aria-pressed="true"])'] },
   { id: 'log-live', title: 'Career log from a career', group: 'Records & community', icon: 'lock', blurb: 'Opened from the Extras tab: look, download and lock; no Delete until the start page.', open: () => (seedLog(true), show(nbaStar(), 'extras', { page: 'log' })) },
   { id: 'ach-all', title: 'Achievement book (all earned)', group: 'Records & community', icon: 'laurel', blurb: `Every one of the ${ACHIEVEMENTS.length}, with how it was earned.`, open: () => (setAchievements(true), useStore.setState({ game: null, mini: null, page: 'achievements' })) },
   {
@@ -404,7 +413,9 @@ export const CARDS: DevCard[] = [
       useStore.setState({ toasts: ACH_TIERS.slice(0, 3).map((t, i) => ({ id: `dev-${t.key}`, name: ACHIEVEMENTS.find((a) => a.tier === t.key)!.name, tier: t.key, more: i === 2 ? 9 : undefined })) });
     },
   },
-  { id: 'c-boards', title: 'Leaderboards', group: 'Records & community', icon: 'podium', blurb: 'Daily and all-time, every difficulty, ranked by career index, with the house players at the foot.', open: () => (seedCommunity(), useStore.setState({ game: null, mini: null, page: 'community' })) },
+  { id: 'c-boards', title: 'Leaderboards', group: 'Records & community', icon: 'podium', blurb: 'Daily and all-time, a board for each difficulty and each challenge, ranked by career index, with the house players at the foot.', open: () => (seedCommunity(), useStore.setState({ game: null, mini: null, page: 'community' })) },
+  { id: 'c-rough', title: 'Rough Road board', group: 'Records & community', icon: 'oath', blurb: 'Rough Road careers only, today and all time; they rank on the Reality board too.', open: () => (seedCommunity(), useStore.setState({ game: null, mini: null, page: 'community' })), press: '[data-board="rough"]' },
+  { id: 'c-comet', title: 'Comet board', group: 'Records & community', icon: 'comet', blurb: 'Comet careers only, off the Shoot for the stars board, so careers played by hand compete with each other.', open: () => (seedCommunity(), useStore.setState({ game: null, mini: null, page: 'community' })), press: '[data-board="comet"]' },
   { id: 'c-hall', title: 'Reality 99 hall', group: 'Records & community', icon: 'hall', blurb: 'Every Reality career that reached 99, on the benches of a hall; tap one for the card.', open: () => (seedCommunity(), useStore.setState({ game: null, mini: null, page: 'community' })), press: 'text=Reality 99 hall' },
   { id: 'c-plaza', title: 'Statue plaza', group: 'Records & community', icon: 'statue', blurb: 'Cute players cast in bronze and gold, house statues among them; pay your respects.', open: () => (seedCommunity(), useStore.setState({ game: null, mini: null, page: 'community' })), press: 'text=Statue plaza' },
   { id: 'c-feedback', title: 'Send feedback', group: 'Records & community', icon: 'envelope', blurb: 'A note to the maker.', open: () => (seedCommunity(), useStore.setState({ game: null, mini: null, page: 'community' })), press: 'text=Send feedback' },

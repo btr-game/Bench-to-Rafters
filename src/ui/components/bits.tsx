@@ -32,6 +32,31 @@ export function Scoreboard({ line, showGp = true }: { line: StatLine; showGp?: b
   );
 }
 
+/** Simple text hides a season's write-up, not its numbers (round 31, owner: "even with simple text,
+ * i want to see the season stats... but not in a way that it's visually exhausting"): one quiet line
+ * of averages, numbers in bold. */
+export function StatStrip({ line, label }: { line: StatLine; label: string }) {
+  if (!line.gp) return null;
+  const cells: [string, string][] = [
+    [pg(line, 'pts'), 'PTS'],
+    [pg(line, 'reb'), 'REB'],
+    [pg(line, 'ast'), 'AST'],
+    [pg(line, 'stl'), 'STL'],
+    [pg(line, 'blk'), 'BLK'],
+    [pct(line.fgm, line.fga), 'FG%'],
+  ];
+  return (
+    <p className="stat-strip num" aria-label={`${label}: season averages`}>
+      <span className="kicker">{label}</span>
+      {cells.map(([v, k]) => (
+        <span key={k}>
+          <b>{v}</b> {k}
+        </span>
+      ))}
+    </p>
+  );
+}
+
 export interface BannerItem {
   label: string;
   icon?: ReactNode;

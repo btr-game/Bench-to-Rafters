@@ -89,7 +89,7 @@ function paintBanner(kind: 'title' | 'retired' | 'oath', color: string, trim: st
   if (kind === 'title') {
     lines.forEach((l, i) => text(g, l, 9 + i * 7, ink));
   } else if (kind === 'oath') {
-    // round 27: No Shortcuts, the iron shield sewn on, the words under it
+    // round 27: Rough Road, the iron shield sewn on, the words under it
     PIX_ICONS.oath.forEach((row, y) => [...row].forEach((ch, x) => PAL[ch] && (g[8 + y][10 + x] = PAL[ch])));
     lines.forEach((l, i) => text(g, l, 26 + i * 7, ink));
   } else {

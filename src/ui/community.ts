@@ -10,7 +10,7 @@
 import type { CareerRecord } from '../engine/career/record';
 import { isDev } from '../dev/mode';
 import { readReal } from '../dev/storage';
-import type { Mode } from '../engine/balance';
+import { MODES, type Mode } from '../engine/balance';
 import { todayKey } from '../engine/mini/daily';
 
 // ---------- what counts ----------
@@ -25,6 +25,18 @@ export const SCORE_NOTE = 'Ranked by career index: every season scores its honou
 /** Round 24 (owner): the board ranks players by their best career; this many make it. */
 export const BOARD_SIZE = 100;
 
+/** The boards: one a difficulty, and one for each challenge (owner, round 31: "add some more tabs
+ * for the comet and [rough] road"). A Rough Road career ranks on Reality's board and on its own; a
+ * Comet only on its own, so careers played by hand compete with each other on Shoot for the stars. */
+export type Board = Mode | 'rough' | 'comet';
+export const BOARDS: Board[] = ['standard', 'reality', 'stars', 'rough', 'comet'];
+export const boardName = (b: Board): string => (b === 'rough' ? 'Rough Road' : b === 'comet' ? 'Comet' : MODES[b].name);
+export const onBoard = (r: CareerRecord, b: Board): boolean => (b === 'comet' ? !!r.comet : b === 'rough' ? !!r.oath : r.mode === b && !r.comet);
+/** The board a career is known by: its challenge's, or its difficulty's. */
+export const homeBoard = (r: CareerRecord): Board => (r.comet ? 'comet' : r.oath ? 'rough' : r.mode);
+/** The difficulty a board's careers are played on (where the shared page files them). */
+const modeOfBoard = (b: Board): Mode => (b === 'comet' ? 'stars' : b === 'rough' ? 'reality' : b);
+
 /** Statues: Regular guy careers from this many legacy points; the plaza holds 100. */
 export const STATUE = { minLegacy: 150, max: 100, gold: 220 };
 export const statueOk = (r: CareerRecord) => r.mode === 'standard' && r.legacy >= STATUE.minLegacy;
@@ -33,7 +45,7 @@ export const hall99Ok = (r: CareerRecord) => r.mode === 'reality' && Math.round(
 
 export interface ScoreRow {
   id: string;
-  mode: Mode;
+  mode: Board;
   day: string;
   score: number;
   rec: CareerRecord;
@@ -77,7 +89,7 @@ export interface Community {
   kind: 'shared' | 'local';
   canWrite: boolean;
   postCareer(r: CareerRecord): Promise<void>;
-  scores(mode: Mode, scope: 'day' | 'all'): Promise<ScoreRow[]>;
+  scores(board: Board, scope: 'day' | 'all'): Promise<ScoreRow[]>;
   hall(): Promise<ScoreRow[]>;
   statues(): Promise<StatueRow[]>;
   buildStatue(r: CareerRecord): Promise<WriteResult>;
@@ -132,10 +144,10 @@ function localCommunity(): Community {
       d.feed = [{ t: feedLine(r), at: Date.now() }, ...d.feed].slice(0, 30);
       lsave(d);
     },
-    async scores(mode, scope) {
+    async scores(board, scope) {
       const day = todayKey();
       return lload()
-        .scores.filter((x) => x.mode === mode && (scope === 'all' || x.day === day))
+        .scores.filter((x) => onBoard(x.rec, board) && (scope === 'all' || x.day === day))
         .sort((a, b) => b.score - a.score)
         .slice(0, BOARD_SIZE);
     },
@@ -240,12 +252,14 @@ function sharedCommunity(db: Db, uid: string | null, canWrite: boolean, room: Ro
         // a refused write leaves the boards as they were
       }
     },
-    async scores(mode, scope) {
-      let q = db.collection('scores').where('mode', '==', mode);
+    async scores(board, scope) {
+      let q = db.collection('scores').where('mode', '==', modeOfBoard(board));
       if (scope === 'day') q = q.where('day', '==', todayKey());
       // enough careers to find the best hundred players, each counted once
       const snap = await q.orderBy('score', 'desc').limit(BOARD_SIZE * 8).get();
-      return bestPerPlayer(snap.docs.map(row).filter((x): x is ScoreRow => !!x)).slice(0, BOARD_SIZE);
+      return bestPerPlayer(snap.docs.map(row).filter((x): x is ScoreRow => !!x && onBoard(x.rec, board)))
+        .slice(0, BOARD_SIZE)
+        .map((x) => ({ ...x, mode: board }));
     },
     async hall() {
       const snap = await db.collection('scores').where('mode', '==', 'reality').orderBy('score', 'desc').limit(200).get();

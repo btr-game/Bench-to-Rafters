@@ -172,7 +172,7 @@ export function fastForward(s: GameState): void {
  * on the shop, the national team and extra turning points follow the switch.
  */
 export function setFast(s: GameState, on: boolean): void {
-  if (on && s.flags.oath) return; // No Shortcuts (round 25): no quick pace, for the whole career
+  if (on && s.flags.oath) return; // Rough Road (round 25): no quick pace, for the whole career
   if (!on && s.flags.comet) return; // Comet (round 30): the quick pace, for the whole career
   s.flags.fast = on ? 1 : 0;
   if (!on) {

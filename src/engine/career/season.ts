@@ -772,6 +772,7 @@ function finishSeason(s: GameState): void {
       text: `${teamById(league, league.bracket.champion)?.name ?? 'Someone else'} won it all. ${post.result}.`,
       lines: [],
       recap,
+      outcome: { team: team.name, short: team.short, result: post.result, champion: teamById(league, league.bracket.champion)?.name ?? 'Someone else' },
       ...(inFinal && lastGame && lastGame.res === 'L' ? { game: { ...lastGame, level, teamShort: team.short }, lostFinal: true, mood: 'heartbreak' as const, title: 'So close' } : {}),
     });
   }

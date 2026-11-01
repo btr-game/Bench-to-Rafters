@@ -26,8 +26,8 @@ export const SFX = [
   ['visit', 'A visit to something you own'],
   ['brand', 'A brand deal'],
   ['perfect', 'A perfect release on the timing meter'],
-  // round 27: No Shortcuts and feedback
-  ['oath', 'Taking the No Shortcuts challenge'],
+  // round 27: Rough Road and feedback
+  ['oath', 'Taking the Rough Road challenge'],
   ['sent', 'Feedback sent (or kept)'],
   // round 27 (owner: "can you add more sound to the game?")
   ['tab', 'Switching tabs'],
@@ -60,11 +60,26 @@ export const SFX = [
   ['unlock', 'Unlocking a card in the career log'],
   // round 30
   ['comet', 'Riding the comet: the Comet challenge taken'],
+  // round 31
+  ['undo', 'Undo: a choice taken back'],
 ] as const;
 type Sfx = (typeof SFX)[number][0];
 
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
+// round 31 (owner: "volume sliders"): a level each for the effects and the music, 0 to 1, kept on this device
+let sfxBus: GainNode | null = null;
+let musicBus: GainNode | null = null;
+const readVol = (key: string): number => {
+  try {
+    const v = Number(localStorage.getItem(key));
+    return localStorage.getItem(key) === null || !Number.isFinite(v) ? 1 : Math.max(0, Math.min(1, v));
+  } catch {
+    return 1;
+  }
+};
+let sfxVol = readVol('btr-sfx-vol');
+let musicVol = readVol('btr-music-vol');
 let sfxOn = read('btr-sfx', true);
 // the music is on to start (owner: "the background music should be playing from the very start of
 // the game"); a player who turned it off keeps it off. The dev deck starts quiet.
@@ -95,6 +110,12 @@ function audio(): AudioContext | null {
     master = ctx.createGain();
     master.gain.value = 0.18;
     master.connect(ctx.destination);
+    sfxBus = ctx.createGain();
+    sfxBus.gain.value = sfxVol;
+    sfxBus.connect(master);
+    musicBus = ctx.createGain();
+    musicBus.gain.value = musicVol;
+    musicBus.connect(master);
   } catch {
     ctx = null;
   }
@@ -118,7 +139,7 @@ function pulse(duty: number): PeriodicWave {
   return w;
 }
 
-function tone(freq: number, at: number, len: number, type: OscillatorType | Wave = 'square', vol = 1): void {
+function tone(freq: number, at: number, len: number, type: OscillatorType | Wave = 'square', vol = 1, out: AudioNode = sfxBus!): void {
   const c = ctx!;
   const o = c.createOscillator();
   const g = c.createGain();
@@ -127,12 +148,12 @@ function tone(freq: number, at: number, len: number, type: OscillatorType | Wave
   o.frequency.setValueAtTime(freq, at);
   g.gain.setValueAtTime(vol, at);
   g.gain.exponentialRampToValueAtTime(0.001, at + len);
-  o.connect(g).connect(master!);
+  o.connect(g).connect(out);
   o.start(at);
   o.stop(at + len + 0.02);
 }
 
-function noise(at: number, len: number, vol = 0.5): void {
+function noise(at: number, len: number, vol = 0.5, out: AudioNode = sfxBus!): void {
   const c = ctx!;
   const buf = c.createBuffer(1, Math.ceil(c.sampleRate * len), c.sampleRate);
   const d = buf.getChannelData(0);
@@ -142,7 +163,7 @@ function noise(at: number, len: number, vol = 0.5): void {
   const g = c.createGain();
   g.gain.setValueAtTime(vol, at);
   g.gain.exponentialRampToValueAtTime(0.001, at + len);
-  s.connect(g).connect(master!);
+  s.connect(g).connect(out);
   s.start(at);
 }
 
@@ -248,7 +269,7 @@ export function sfx(name: Sfx, always = false): void {
         g.gain.setValueAtTime(0.0001, at);
         g.gain.exponentialRampToValueAtTime(0.35, at + 0.01);
         g.gain.exponentialRampToValueAtTime(0.001, at + 0.14);
-        o.connect(g).connect(master!);
+        o.connect(g).connect(sfxBus!);
         o.start(at);
         lfo.start(at);
         o.stop(at + 0.16);
@@ -336,6 +357,10 @@ export function sfx(name: Sfx, always = false): void {
       tone(N(2), t + 0.03, 0.08, 'square', 0.5);
       tone(N(-5), t + 0.09, 0.1, 'triangle', 0.6);
       break;
+    case 'undo': // a tape rewinding: a quick fall, then a click
+      seq([24, 19, 15, 12, 7], 0.03, 'triangle', 0.5);
+      noise(t + 0.17, 0.03, 0.25);
+      break;
     case 'comet': // a streak across the sky: a rising run, then a sparkle
       seq([12, 16, 19, 24, 28, 31, 36], 0.035, 'square', 0.45);
       noise(t + 0.2, 0.35, 0.12);
@@ -369,7 +394,7 @@ function compile(id: TrackId): Compiled {
 }
 
 /** A kick: a short sine sweep down. */
-function kick(at: number): void {
+function kick(at: number, out: AudioNode): void {
   const c = ctx!;
   const o = c.createOscillator();
   const g = c.createGain();
@@ -378,7 +403,7 @@ function kick(at: number): void {
   o.frequency.exponentialRampToValueAtTime(45, at + 0.12);
   g.gain.setValueAtTime(0.7, at);
   g.gain.exponentialRampToValueAtTime(0.001, at + 0.14);
-  o.connect(g).connect(master!);
+  o.connect(g).connect(out);
   o.start(at);
   o.stop(at + 0.16);
 }
@@ -391,15 +416,15 @@ function playStep(c: Compiled, i: number, t: number): void {
     const e = v.at[i % v.at.length];
     if (!e) continue;
     const vol = v.vol / Math.sqrt(e.semis.length);
-    for (const n of e.semis) tone(N(n), t, c.step * e.len * 0.92, v.wave, vol);
+    for (const n of e.semis) tone(N(n), t, c.step * e.len * 0.92, v.wave, vol, musicBus!);
   }
   const d = c.drums[slot % (c.drums.length || 1)];
-  if (d === 'k' || d === 'K') kick(t);
+  if (d === 'k' || d === 'K') kick(t, musicBus!);
   if (d === 's' || d === 'S') {
-    noise(t, 0.1, 0.2);
-    tone(185, t, 0.05, 'triangle', 0.25);
+    noise(t, 0.1, 0.2, musicBus!);
+    tone(185, t, 0.05, 'triangle', 0.25, musicBus!);
   }
-  if (d === 'h' || d === 'K' || d === 'S') noise(t, 0.025, 0.07);
+  if (d === 'h' || d === 'K' || d === 'S') noise(t, 0.025, 0.07, musicBus!);
 }
 
 // the loop the screen asks for, and the one playing
@@ -455,7 +480,24 @@ export function previewMusic(track: TrackId | null): void {
 /** Whether music can be heard right now (the intro's button asks before the first click). */
 export const musicAudible = (): boolean => musicOn && !!musicTimer && ctx?.state === 'running';
 
-export const soundSettings = () => ({ sfx: sfxOn, music: musicOn });
+export const soundSettings = () => ({ sfx: sfxOn, music: musicOn, sfxVol, musicVol });
+
+/** Round 31: a channel's level, 0 to 1 (the settings' sliders); it applies at once. */
+export function setVolume(kind: 'sfx' | 'music', v: number): void {
+  const level = Math.max(0, Math.min(1, v));
+  if (kind === 'sfx') sfxVol = level;
+  else musicVol = level;
+  const bus = kind === 'sfx' ? sfxBus : musicBus;
+  if (bus && ctx) bus.gain.setTargetAtTime(level, ctx.currentTime, 0.02);
+  try {
+    localStorage.setItem(kind === 'sfx' ? 'btr-sfx-vol' : 'btr-music-vol', String(level));
+  } catch {
+    /* the level still applies for this visit */
+  }
+}
+
+/** The music's level, for Lockdown's beat, which plays on an audio of its own. */
+export const musicVolume = (): number => musicVol;
 /** Reads the switches again as the dev deck opens or closes (each keeps its own); the loop stops
  * if they say so (the game's screen starts it again when it comes back). */
 export function refreshSound(): void {

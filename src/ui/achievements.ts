@@ -23,6 +23,13 @@ interface AchSaved {
  * in that run"): its seed and the player's name, the same through every season of it. */
 export const runOf = (g: GameState): string => `${g.seed}-${g.player.name}`;
 
+/** What one career earned, newest first (the Extras tab's card and dot, the Records tab). */
+export function earnedIn(g: GameState): Achievement[] {
+  const run = runOf(g);
+  const got = loadAch().got;
+  return ACHIEVEMENTS.filter((a) => got[a.id]?.run === run).sort((a, b) => (got[a.id].at < got[b.id].at ? 1 : -1));
+}
+
 /** A book with nothing in it, counting from today: what the dev deck's Reset achievements writes. */
 export const emptyAch = (today: string): AchSaved => ({ got: {}, totals: { ...NO_TOTALS }, since: today });
 export const ACH_KEY = KEY;
@@ -82,6 +89,20 @@ export function recordMini(r: MiniResult): void {
 export function recordShare(): void {
   const d = loadAch();
   d.totals.shared = (d.totals.shared ?? 0) + 1;
+  saveAch(d);
+}
+
+/** Round 31: a choice taken back (Take Two). */
+export function recordUndo(): void {
+  const d = loadAch();
+  d.totals.undone = (d.totals.undone ?? 0) + 1;
+  saveAch(d);
+}
+
+/** Round 31: two career log cards set side by side. */
+export function recordCompare(): void {
+  const d = loadAch();
+  d.totals.compared = (d.totals.compared ?? 0) + 1;
   saveAch(d);
 }
 

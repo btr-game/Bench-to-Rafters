@@ -16,6 +16,19 @@ interface News {
 
 export const NEWS: News[] = [
   {
+    id: '2026-11-01-r31',
+    date: '1 November 2026',
+    items: [
+      { icon: 'undo', text: 'Undo: changed your mind? Undo on Home, or U, takes back your last choice or step. Off for Rough Road, Comet and the daily challenge, so their boards stay fair.' },
+      { icon: 'textsize', text: 'Text size (Normal, Large, Extra large) and a volume slider for sound effects and for music, in Settings.' },
+      { icon: 'compare', text: 'Compare two careers in the career log: side by side, peak to NBA points, the better of each row marked.' },
+      { icon: 'podium', text: 'Two new leaderboards: Rough Road (the new name of No Shortcuts) and Comet. Comet careers leave the Shoot for the stars board to careers played by hand.' },
+      { icon: 'bag', text: 'The shop has no limit now: six things a summer, priced for what you earn, so two or three fit your bank. From about $50M a year, money stops mattering.' },
+      { icon: 'bracket', text: 'A postseason that ends short says so plainly: your team’s finish and the champion, your series marked W or L. Simple text keeps the season’s averages in one line on Home.' },
+      { icon: 'laurel', text: 'The achievement book opens on what this career has earned, and the Extras tab gets a dot when you earn one.' },
+    ],
+  },
+  {
     id: '2026-11-01-r30',
     date: '1 November 2026',
     items: [
@@ -74,7 +87,7 @@ export const NEWS: News[] = [
       { icon: 'live', text: 'When a step takes a moment, your player dribbles in the corner while it loads (nine moves).' },
       { icon: 'note', text: 'Fourteen new sounds: tabs, pages, tip-offs, swishes, a new team, your jersey going up.' },
       { icon: 'health', text: 'Body map: hover a red spot to see the injury.' },
-      { icon: 'oath', text: 'No Shortcuts: the road picks your player for you. Simple text is allowed now.' },
+      { icon: 'oath', text: 'Rough Road: the road picks your player for you. Simple text is allowed now.' },
       { icon: 'scouts', text: 'The projected peak stays a rough read until college: no early spoilers.' },
       { icon: 'dial', text: 'Settings on the start page; the feedback bar in every mini-game.' },
       { icon: 'roster', text: 'Player tab: staff, wardrobe and collection side by side, and the wardrobe shows the kit you picked.' },

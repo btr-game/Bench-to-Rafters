@@ -22,7 +22,7 @@ const path = require('path');
 
 const args = process.argv.slice(2);
 const out = args[0];
-if (!out) throw new Error('usage: node scripts/visual.cjs <out dir> [--only ids] [--configs names] [--url url]');
+if (!out) throw new Error('usage: node scripts/visual.cjs <out dir> [--only ids] [--configs names] [--xl] [--url url]');
 const opt = (k) => {
   const i = args.indexOf(k);
   return i >= 0 ? args[i + 1] : null;
@@ -34,7 +34,10 @@ const CONFIGS = [
   { name: 'desktop-dark', width: 1440, height: 900, scheme: 'dark' },
   { name: 'phone-light', width: 390, height: 844, scheme: 'light', phone: true },
   { name: 'phone-dark', width: 390, height: 844, scheme: 'dark', phone: true },
-].filter((c) => !opt('--configs') || opt('--configs').split(',').includes(c.name));
+  // round 31: Extra large text (Settings), with --xl or by name
+  { name: 'desktop-xl', width: 1440, height: 900, scheme: 'light', text: 'xl', xl: true },
+  { name: 'phone-xl', width: 390, height: 844, scheme: 'dark', phone: true, text: 'xl', xl: true },
+].filter((c) => (opt('--configs') ? opt('--configs').split(',').includes(c.name) : !c.xl || args.includes('--xl')));
 
 /** Runs in the page: every problem it can find, as plain data. */
 function inspect([phone, W]) {
@@ -252,9 +255,10 @@ async function runConfig(browser, cfg) {
   let errors = [];
   page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
   page.on('console', (m) => m.type() === 'error' && errors.push(`console: ${m.text().slice(0, 200)}`));
-  await page.addInitScript(() => {
+  await page.addInitScript((text) => {
     try {
       sessionStorage.setItem('btr-dev-on', '1');
+      if (text) localStorage.setItem('btr-text', text);
     } catch {}
     // the same random draws and the same clock every run, so two runs differ only where the code did
     let seed = 20261031;
@@ -270,7 +274,7 @@ async function runConfig(browser, cfg) {
       }
     }
     window.Date = FixedDate;
-  });
+  }, cfg.text ?? null);
   await page.goto(URL);
   await page.waitForFunction(() => window.__deck, null, { timeout: 30000 });
   // no transitions or animations in the shots: what is checked is where things settle

@@ -28,7 +28,7 @@ export interface CareerRecord {
   index?: { total: number; best: number; score: number }; // round 25: the career index (older records have none)
   nickname?: { id: string; name: string }; // round 25: what the media called him
   rival?: { name: string; level: string; w: number; l: number }; // round 25: his rival, and the head to head
-  oath?: boolean; // round 25: played No Shortcuts (Reality, master mode, nothing simplified)
+  oath?: boolean; // round 25: played Rough Road (Reality, master mode, nothing simplified)
   comet?: boolean; // round 30: played as a Comet (Shoot for the stars at hyper speed)
   look?: import('../../content/looks').ChosenLook; // round 27: the look he picked
   rank: number; // all-time legacy rank (101 = outside the top 100)

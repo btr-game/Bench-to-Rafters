@@ -121,6 +121,7 @@ describe('staff', () => {
 describe('fines', () => {
   it('come at most twice a season and come out of the bank', () => {
     const s = copy();
+    s.moments = []; // the fixture's own moments aside
     const season = { fines: 0 } as unknown as SeasonState;
     const bank = s.player.bank;
     for (let i = 0; i < 20000; i++) rollFine(s, season, s.rng, 'BOS');
@@ -235,14 +236,24 @@ describe('rivals, the news and the strength breakdown', () => {
 });
 
 describe('the shop and the wardrobe', () => {
-  it('stocks one item per shelf', () => {
+  it('stocks one item per shelf while shelves have something near his price (round 31: two from one otherwise)', () => {
     const s = copy();
-    s.player.bank = 1000;
+    s.player.bank = 0.002; // $2K: every shelf has things at this price
+    s.contract = null;
     s.pending = [];
     pushShop(s);
     const d = s.pending.find((x) => x.kind === 'shop')!;
     const shelves = d.choices.map((c) => SHOP_ITEMS.find((it) => it.id === c.id)?.category).filter(Boolean);
-    expect(new Set(shelves).size).toBe(shelves.length);
+    expect(shelves).toHaveLength(6);
+    expect(new Set(shelves).size).toBeGreaterThanOrEqual(5);
+    expect(shelves.filter((c) => c === 'Accessories').length).toBeLessThanOrEqual(1);
+    // a billion in the bank: only the big shelves sell anything near that, so they show more than one
+    s.player.bank = 1000;
+    s.pending = [];
+    pushShop(s);
+    const rich = s.pending.find((x) => x.kind === 'shop')!.choices.filter((c) => c.id !== 'leave' && !c.tags?.includes('Accessories'));
+    expect(rich.length).toBeGreaterThanOrEqual(5);
+    for (const c of rich) expect(Number(c.meta?.price)).toBeGreaterThanOrEqual(1);
   });
 
   it('puts a bought accessory on, and the wardrobe can take it off', () => {

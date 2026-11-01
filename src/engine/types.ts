@@ -483,6 +483,8 @@ export interface Moment {
   duo?: boolean; // round 22: the page where a duo forms shows the two of them
   logo?: string; // round 25: a nickname's logo (content/nicknames.ts id); round 28: shown when his first brand deal draws it
   nick?: string; // round 28: the day the media names him (the name alone; the logo waits for a brand)
+  // round 31: how a postseason ended for him, said plainly at the top of its page
+  outcome?: { team: string; short: string; result: string; champion: string };
 }
 
 export interface GameState {
@@ -534,6 +536,7 @@ export interface GameState {
   result?: EventResult | null; // the last event's outcome with what changed
   simCalls?: EventResult[]; // round 30: the turning points sim mode decided since the player's last move
   reel?: { title: string; line: string }[]; // round 30, Comet: the story pages folded into a list since his last move
+  achN?: number; // round 31: how many achievements this career has earned (the Extras tab's dot)
   moments: Moment[]; // story pages waiting to be shown
   purchases: string[]; // shop item ids ever bought
   tournaments: TourneyRecord[];

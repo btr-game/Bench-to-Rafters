@@ -5,10 +5,21 @@ import { Icon } from '../art/Icon';
 import { useEffect, useRef, useState } from 'react';
 import type { GameState } from '../../engine/types';
 import { prompt } from '../../engine/flow';
-import { useStore, type Court, type Tab, type Theme } from '../../store';
-import { setMusic, setSfx, soundSettings } from '../sound';
+import { canUndo, useStore, type Court, type Tab, type TextSize, type Theme } from '../../store';
+import { setMusic, setSfx, setVolume, sfx, soundSettings } from '../sound';
 
 /** A switch row: label, short note, on/off button. */
+/** Round 31 (owner: "volume sliders"): a channel's level, under its switch; arrow keys step it by 5%. */
+function Volume({ label, value, onChange, disabled }: { label: string; value: number; onChange: (v: number) => void; disabled: boolean }) {
+  return (
+    <label className="set-vol">
+      <span>{label} volume</span>
+      <input type="range" min={0} max={100} step={5} value={Math.round(value * 100)} disabled={disabled} aria-valuetext={`${Math.round(value * 100)} percent`} onChange={(e) => onChange(Number(e.target.value) / 100)} />
+      <b>{Math.round(value * 100)}%</b>
+    </label>
+  );
+}
+
 function Toggle({ label, note, on, onClick, tour, locked }: { label: string; note: string; on: boolean; onClick: () => void; tour: string; locked?: boolean }) {
   const icon = /fast/i.test(label) ? 'fast' : /simple/i.test(label) ? 'simple' : /guide/i.test(label) ? 'guide' : /master/i.test(label) ? 'master' : /playoff/i.test(label) ? 'bracket' : /sound|music/i.test(label) ? 'live' : '';
   return (
@@ -18,7 +29,7 @@ function Toggle({ label, note, on, onClick, tour, locked }: { label: string; not
         <b>{label}</b>
         <small>{note}</small>
       </div>
-      <button className={`switch${on ? ' on' : ''}`} role="switch" aria-checked={on} aria-label={label} onClick={onClick} disabled={locked} title={locked ? 'Locked: No Shortcuts' : undefined}>
+      <button className={`switch${on ? ' on' : ''}`} role="switch" aria-checked={on} aria-label={label} onClick={onClick} disabled={locked} title={locked ? 'Locked for this career’s challenge' : undefined}>
         <span />
       </button>
     </div>
@@ -43,6 +54,8 @@ export function SettingsMenu({ g }: { g: GameState | null }) {
   const setTheme = useStore((s) => s.setTheme);
   const court = useStore((s) => s.court);
   const setCourt = useStore((s) => s.setCourt);
+  const text = useStore((s) => s.text);
+  const setText = useStore((s) => s.setText);
   const simple = useStore((s) => s.simple);
   const toggleSimple = useStore((s) => s.toggleSimple);
   const guide = useStore((s) => s.guide);
@@ -107,6 +120,19 @@ export function SettingsMenu({ g }: { g: GameState | null }) {
               ))}
             </div>
           </div>
+          <div className="set-row" data-tour="set-text">
+            <b className="with-icon">
+              <Icon name="textsize" size={18} />
+              Text size
+            </b>
+            <div className="seg small-seg">
+              {(['m', 'l', 'xl'] as TextSize[]).map((t) => (
+                <button key={t} aria-pressed={text === t} onClick={() => setText(t)}>
+                  {t === 'm' ? 'Normal' : t === 'l' ? 'Large' : 'Extra large'}
+                </button>
+              ))}
+            </div>
+          </div>
           {/* round 24 (owner): New career sits right under the court, not at the bottom of the menu */}
           {/* round 25 (owner: no confirmation text, small and easy to miss): a full-size button, then
               a plain question with its answer spelled out */}
@@ -140,14 +166,16 @@ export function SettingsMenu({ g }: { g: GameState | null }) {
             </>
           )}
           <Toggle label="Sound effects" note="Chiptune sounds for clicks, wins, titles and the rest." on={snd.sfx} onClick={() => (setSfx(!snd.sfx), setSnd(soundSettings()))} tour="set-sfx" />
+          <Volume label="Effects" value={snd.sfxVol} disabled={!snd.sfx} onChange={(v) => (setVolume('sfx', v), setSnd(soundSettings()))} />
           <Toggle label="Music" note="A loop for each part of the game: every level and league, the offseason, the mini-games." on={snd.music} onClick={() => (setMusic(!snd.music), setSnd(soundSettings()))} tour="set-music" />
+          <Volume label="Music" value={snd.musicVol} disabled={!snd.music} onChange={(v) => (setVolume('music', v), setSnd(soundSettings()))} />
           <Toggle label="Simple text" note="Hide descriptions, keep the choices." on={simple} onClick={toggleSimple} tour="set-simple" />
           <Toggle label="Guide mode" note={master ? 'Off while Master mode is on.' : 'Highlights the next thing to do.'} on={guide && !master} onClick={toggleGuide} tour="set-guide" />
           <Toggle label="Master mode" note="No recommendations: no scouts' calls, fit tags, suggested deals or guide hints. You read the game yourself." on={master} onClick={toggleMaster} tour="set-master" locked={!!g?.flags.oath} />
           <div className="set-keys hide-touch">
             <b>Keyboard</b>
             <span>
-              <kbd>Enter</kbd> continue, leave the shop or skip a final to the buzzer · <kbd>1</kbd>–<kbd>9</kbd> <kbd>0</kbd> <kbd>-</kbd> <kbd>=</kbd> pick a choice · <kbd>H</kbd> <kbd>S</kbd> <kbd>P</kbd> <kbd>R</kbd> <kbd>E</kbd> tabs · <kbd>Esc</kbd> back from a page, close a menu
+              <kbd>Enter</kbd> continue, leave the shop or skip a final to the buzzer · <kbd>1</kbd>–<kbd>9</kbd> <kbd>0</kbd> <kbd>-</kbd> <kbd>=</kbd> pick a choice · <kbd>H</kbd> <kbd>S</kbd> <kbd>P</kbd> <kbd>R</kbd> <kbd>E</kbd> tabs · <kbd>U</kbd> undo the last choice · <kbd>Esc</kbd> back from a page, close a menu
             </span>
           </div>
           <div className="set-foot">
@@ -236,6 +264,16 @@ export function useKeys(active: boolean) {
         if (el) {
           e.preventDefault();
           el.click();
+        }
+        return;
+      }
+      // round 31: U takes back the last choice (where a career allows it)
+      if (e.key.toLowerCase() === 'u' && game) {
+        const st = useStore.getState();
+        if (st.undo && canUndo(game)) {
+          e.preventDefault();
+          sfx('undo');
+          st.undoLast();
         }
         return;
       }

@@ -1,5 +1,5 @@
 // Round 26: the scouting report's freshman projection (capped at 99, refit to the harness), no
-// achievements from the starting draw, No Shortcuts (Reality, master mode, nothing simplified) and
+// achievements from the starting draw, Rough Road (Reality, master mode, nothing simplified) and
 // the last possession's timed shot.
 
 import { describe, expect, it } from 'vitest';
@@ -83,7 +83,7 @@ describe('achievements', () => {
   });
 });
 
-describe('No Shortcuts', () => {
+describe('Rough Road', () => {
   it('is a Reality-only promise', () => {
     expect(make(6000, 'reality', { oath: true }).flags.oath).toBe(1);
     expect(make(6001, 'standard', { oath: true }).flags.oath).toBeUndefined();

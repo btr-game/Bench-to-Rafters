@@ -8,9 +8,8 @@
 
 import { createClient, type RealtimeChannel } from '@supabase/supabase-js';
 import type { CareerRecord } from '../engine/career/record';
-import type { Mode } from '../engine/balance';
 import { todayKey } from '../engine/mini/daily';
-import { BOARD_SIZE, STATUE, feedLine, hall99Ok, scoreOf, type Community, type FeedItem, type FeedbackRow, type ScoreRow, type StatueRow, type WriteResult } from './community';
+import { BOARD_SIZE, STATUE, feedLine, hall99Ok, scoreOf, type Board, type Community, type FeedItem, type FeedbackRow, type ScoreRow, type StatueRow, type WriteResult } from './community';
 
 const SECRET = 'btr-online-secret';
 function secretOf(): string {
@@ -52,8 +51,8 @@ export async function onlineCommunity(url: string, key: string): Promise<Communi
     if (r.error) return 'error';
     return r.data === 'ok' ? 'ok' : r.data === 'full' ? 'full' : r.data === 'denied' ? 'denied' : 'error';
   };
-  const rows = (mode: Mode, day: string, data: BoardRow[] | null): ScoreRow[] =>
-    (data ?? []).map((d) => ({ id: d.who, mode, day, score: d.score, rec: d.rec, mine: d.who === me, by: d.who }));
+  const rows = (board: Board, day: string, data: BoardRow[] | null): ScoreRow[] =>
+    (data ?? []).map((d) => ({ id: d.who, mode: board, day, score: d.score, rec: d.rec, mine: d.who === me, by: d.who }));
 
   // one presence channel for the visit, however many strips listen to it. Owner: "when the user
   // enters the game, they are no longer treated as being 'on the court'": the channel stays joined
@@ -78,15 +77,16 @@ export async function onlineCommunity(url: string, key: string): Promise<Communi
         if (i < 2) await wait(error ? 5000 : 16000);
       }
     },
-    async scores(mode, scope) {
+    async scores(board, scope) {
+      // the database files each career on its boards as it is posted (0003_challenge_boards.sql)
       const day = todayKey();
-      const q = scope === 'all' ? sb.from('best_all').select('who, score, rec').eq('mode', mode) : sb.from('best_day').select('who, score, rec').eq('mode', mode).eq('day', day);
+      const q = scope === 'all' ? sb.from('best_all').select('who, score, rec').eq('mode', board) : sb.from('best_day').select('who, score, rec').eq('mode', board).eq('day', day);
       const { data } = await q.order('score', { ascending: false }).limit(BOARD_SIZE);
-      return rows(mode, day, data as BoardRow[] | null);
+      return rows(board, day, data as BoardRow[] | null);
     },
     async hall() {
       const { data } = await sb.from('hall').select('rec_id, who, score, rec').order('score', { ascending: false }).limit(200);
-      return ((data ?? []) as (BoardRow & { rec_id: string })[]).map((d) => ({ id: d.rec_id, mode: 'reality' as Mode, day: todayKey(), score: d.score, rec: d.rec, mine: d.who === me, by: d.who })).filter((x) => hall99Ok(x.rec));
+      return ((data ?? []) as (BoardRow & { rec_id: string })[]).map((d) => ({ id: d.rec_id, mode: 'reality' as const, day: todayKey(), score: d.score, rec: d.rec, mine: d.who === me, by: d.who })).filter((x) => hall99Ok(x.rec));
     },
     async statues() {
       const [all, mine] = await Promise.all([

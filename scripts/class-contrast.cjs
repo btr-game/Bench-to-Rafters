@@ -34,7 +34,8 @@ function combos() {
 
 // combinations never drawn as they are: a base class that always comes with its colour modifier,
 // and buttons made for the dark boards and overlays
-const EXPECTED = [/^tier-badge$/, /^plan-tag$/, /^drama-tag tag-$/, /\bghost-dark\b/, /\bon-dark\b/];
+// (round 31: a postseason page's labels and W/L tags, only ever on the dark moment page, the tag inside a won or lost row)
+const EXPECTED = [/^tier-badge$/, /^plan-tag$/, /^drama-tag tag-$/, /\bghost-dark\b/, /\bon-dark\b/, /^rr-tag$/, /^mo-tag( champ)?$/];
 
 (async () => {
   const list = combos();

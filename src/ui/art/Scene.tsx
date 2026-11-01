@@ -17,7 +17,7 @@ import { awardKeyOf, awardPaths } from './Award';
 // room) and four big nights (draft night, a title, an award, a medal), with the player standing
 // in it in his team's colours.
 
-type SceneKind = 'arena' | 'gym' | 'night' | 'home' | 'office' | 'clinic' | 'press' | 'street' | 'locker' | 'draft' | 'title' | 'award' | 'medal'
+type SceneKind = 'arena' | 'gym' | 'night' | 'home' | 'office' | 'clinic' | 'press' | 'street' | 'locker' | 'draft' | 'title' | 'award' | 'medal' | 'playoffs' | 'cup'
   // round 25: where his staff work, the league's fine letter and a brand's billboard
   | 'kitchen' | 'club' | 'court' | 'study' | 'film' | 'bedroom' | 'fine' | 'billboard';
 
@@ -34,7 +34,9 @@ function sceneFor(title: string, kind?: string): SceneKind {
   if (kind === 'draft' || /draft/.test(t)) return 'draft';
   if (kind === 'title' || /champion|title|finals week/.test(t)) return 'title';
   if (kind === 'awards' || /mvp|award|of the year|all-star|all-nba/.test(t)) return 'award';
-  if (kind === 'tournament' || /olympic|world cup|medal|national team/.test(t)) return 'medal';
+  if (kind === 'medal' || /olympic|world cup|medal|national team|: silver|: bronze/.test(t)) return 'medal';
+  // round 31: a playoffs page or another tournament no longer hangs the Olympic gold-medal ribbon
+  if (kind === 'tournament') return /playoff|postseason|so close|march/.test(t) ? 'playoffs' : 'cup';
   if (kind === 'injury' || /ankle|knee|injur|hurt|goes down|wrong with|body choice|surgery|load management|rest night|extend your prime/.test(t)) return 'clinic';
   if (kind === 'camp' || /camp|gym|lab|program|5 a\.m|diet|boxing|footwork|handles|move|trainer|shooting form|corner three|off hand|weak spot|glass|explosive|growth spurt|touch|guru|pick-and-roll|study|film/.test(t)) return 'gym';
   if (/party|night out|celebrity|beef online|tempt/.test(t)) return 'night';
@@ -72,16 +74,18 @@ function paintScene(kind: SceneKind, accent: string): string[][] {
   switch (kind) {
     case 'arena':
     case 'title':
-    case 'medal': {
+    case 'medal':
+    case 'playoffs':
+    case 'cup': {
       paintCrowd(g, 44, kind.length);
-      paintRibbon(g, 42, kind === 'medal' ? 'GOLD MEDAL GAME  ' : kind === 'title' ? 'CHAMPIONS  CHAMPIONS  ' : 'TONIGHT  ');
+      paintRibbon(g, 42, kind === 'medal' ? 'MEDAL ROUND  ' : kind === 'title' ? 'CHAMPIONS  CHAMPIONS  ' : kind === 'playoffs' ? 'PLAYOFFS  ' : kind === 'cup' ? 'TOURNAMENT  ' : 'TONIGHT  ');
       paintFloor(g, 49);
       for (let x = 0; x < W; x++) g[49][x] = '#F4F1EA';
       // spotlights from the rafters
       for (const cx of [40, 150])
         for (let y = 0; y < 49; y++)
           for (let x = 0; x < W; x++) if (Math.abs(x - cx) < 4 + y * 0.35 && (x + y) % 2 === 0) g[y][x] = mix(g[y][x], '#FFF3BF', 0.25);
-      if (kind !== 'arena')
+      if (kind === 'title' || kind === 'medal')
         for (let k = 0; k < 140; k++) {
           const x = Math.floor(r() * W);
           const y = Math.floor(r() * 46);
@@ -453,7 +457,7 @@ function paintScene(kind: SceneKind, accent: string): string[][] {
 const POSES = { PG: LOWDRIBBLE, SG: DRIBBLE, SF: JUMPER, PF: TRIPLE, C: DUNK };
 const STANDING = noBall(DRIBBLE);
 const FIST_UP = noBall(JUMPER);
-const COURT: SceneKind[] = ['arena', 'street'];
+const COURT: SceneKind[] = ['arena', 'street', 'playoffs', 'cup'];
 
 type Cheer = { mode: 'cheer' | 'bite'; prize: string };
 

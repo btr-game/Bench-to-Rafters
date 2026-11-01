@@ -13,6 +13,7 @@ import type { HeroPose } from '../art/heroRows';
 import { genericKits, type Kit } from '../../content/teamStyle';
 import { team as teamOf } from '../selectors';
 import { Icon } from '../art/Icon';
+import { musicVolume } from '../sound';
 
 const W = 360;
 const H = 540;
@@ -270,7 +271,7 @@ export function beatLoop(bpm: number): () => void {
     return () => {};
   }
   const out = ctx.createGain();
-  out.gain.value = 0.7;
+  out.gain.value = 0.7 * musicVolume(); // round 31: the beat is Lockdown's music, at the music's level
   out.connect(ctx.destination);
   const k = kit(ctx, out);
   const beat = 60 / bpm;
@@ -332,14 +333,14 @@ function Stage({ chart, audio, muted, onDone }: { chart: Chart; audio: AudioCont
   const now = useCallback(() => (audio ? heard(audio) - st.current.start : performance.now() / 1000 - st.current.perf0) - RHYTHM.countIn * chart.beat, [audio, chart.beat]);
 
   useEffect(() => {
-    if (gain.current) gain.current.gain.value = muted ? 0 : 0.7;
+    if (gain.current) gain.current.gain.value = muted ? 0 : 0.7 * musicVolume();
   }, [muted]);
 
   useEffect(() => {
     const s = st.current;
     if (audio) {
       const g = audio.createGain();
-      g.gain.value = muted ? 0 : 0.7;
+      g.gain.value = muted ? 0 : 0.7 * musicVolume();
       g.connect(audio.destination);
       gain.current = g;
       s.start = audio.currentTime + 0.35;

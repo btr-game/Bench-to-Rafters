@@ -29,7 +29,8 @@ import {
 import { useState } from "react";
 import { ATTRS, LEVELS } from "../../engine/balance";
 import { NAMES, UI } from "../../content/strings";
-import { useStore } from "../../store";
+import { canUndo, useStore } from "../../store";
+import { sfx } from "../sound";
 import { LabCard } from "../components/Lab";
 import { MvpRace } from "../components/MvpRace";
 import { PlaybookArt } from "../art/Playbook";
@@ -42,6 +43,7 @@ import {
   MilestoneStrip,
   ReactionCard,
   Scoreboard,
+  StatStrip,
 } from "../components/bits";
 import { PlayerCard } from "../components/PlayerCard";
 import { ScoutCard } from "../components/ScoutCard";
@@ -274,6 +276,35 @@ function Reel({ items }: { items: NonNullable<GameState["reel"]> }) {
       </ul>
     </div>
   );
+}
+
+/** Round 31: one step back, with what it takes back (U on a keyboard). Not in Rough Road,
+ * Comet or the daily challenge, and not once the career has ended. */
+function UndoBar({ g }: { g: GameState }) {
+  const undo = useStore((s) => s.undo);
+  const undoLast = useStore((s) => s.undoLast);
+  if (!undo || !canUndo(g)) return null;
+  return (
+    <div className="undo-bar">
+      <button className="btn ghost small with-icon" data-tour="undo" onClick={() => (sfx("undo"), undoLast())} title="Undo (U)">
+        <Icon name="undo" size={18} /> Undo
+      </button>
+      <span className="small muted">Takes back: {undo.label}</span>
+    </div>
+  );
+}
+
+/** In simple text the season's write-up is hidden; its averages stay, in one line: the half so far,
+ * the season just ended, or the last one (fast break's recap already carries them). */
+function SimpleStats({ g }: { g: GameState }) {
+  const simple = useStore((s) => s.simple);
+  if (!simple) return null;
+  const s = g.season;
+  const half = g.step === "midseason" ? s?.halfLines[0] : undefined;
+  if (half?.gp) return <StatStrip line={half} label="First half" />;
+  const rec = g.step === "summary" ? s?.summary : g.lastSummary;
+  if (!rec) return null;
+  return <StatStrip line={rec.line} label={`${seasonLabel(rec.year)}${g.step === "summary" ? "" : " · last season"}`} />;
 }
 
 function FastRecap({ g }: { g: GameState }) {
@@ -602,6 +633,8 @@ function OffseasonMoves({ g }: { g: GameState }) {
   const focusDone = g.flags.focusYear === g.year;
   const rec = recruitInfo(g);
   const style = currentStyle(g);
+  // the talk with the coach lives here, not in the style card: setting the style closes the card
+  const [talk, setTalk] = useState<TeamStyle | null>(null);
   const tiles: {
     id: "focus" | Move;
     label: string;
@@ -726,7 +759,8 @@ function OffseasonMoves({ g }: { g: GameState }) {
           <TradeCard g={g} />
         )}
       {open === "roster" && <RecruitCard g={g} />}
-      {open === "style" && canSetStyle(g) && <StyleCard g={g} />}
+      {open === "style" && canSetStyle(g) && <StyleCard g={g} onTalk={setTalk} />}
+      {talk && <CoachTalk g={g} style={talk} onClose={() => setTalk(null)} />}
     </section>
   );
 }
@@ -894,17 +928,16 @@ function TradeCard({ g }: { g: GameState }) {
   );
 }
 
-function StyleCard({ g }: { g: GameState }) {
+function StyleCard({ g, onTalk }: { g: GameState; onTalk: (k: TeamStyle) => void }) {
   const mutate = useStore((s) => s.mutate);
   const master = useStore((s) => s.master);
   const now = currentStyle(g);
-  // round 28: the new style comes out of a talk with the coach (not in fast break or sim mode)
-  const [talk, setTalk] = useState<TeamStyle | null>(null);
+  // the new style comes out of a talk with the coach (not in fast break or sim mode)
   const quick = !!g.flags.fast || !!g.flags.sim;
   const choose = (k: TeamStyle) => {
     if (k === now) return;
     mutate((x) => setStyle(x, k));
-    if (!quick) setTalk(k);
+    if (!quick) onTalk(k);
   };
   return (
     <section className="card stack">
@@ -956,7 +989,6 @@ function StyleCard({ g }: { g: GameState }) {
             </button>
           ))}
       </div>
-      {talk && <CoachTalk g={g} style={talk} onClose={() => setTalk(null)} />}
     </section>
   );
 }
@@ -1015,6 +1047,7 @@ export function Home({ g }: { g: GameState }) {
       <div className="stack home-center">
         <section className="card stack o-main">
           <SeasonHeader g={g} />
+          <UndoBar g={g} />
           {g.result ? (
             <div
               className={`result-card${g.result.tierKey ? ` tier-${g.result.tierKey}` : ""}`}
@@ -1044,7 +1077,7 @@ export function Home({ g }: { g: GameState }) {
           )}
           {g.simCalls?.length ? <SimCalls calls={g.simCalls} /> : null}
           {g.reel?.length ? <Reel items={g.reel} /> : null}
-          {g.flags.fast ? <FastRecap g={g} /> : null}
+          {g.flags.fast ? <FastRecap g={g} /> : <SimpleStats g={g} />}
           <GuideSpotWrap g={g} spot="main">
             <div
               className="stack fade-in"

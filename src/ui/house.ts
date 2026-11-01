@@ -6,8 +6,7 @@
 
 import HOUSE from '../content/house.json';
 import type { CareerRecord } from '../engine/career/record';
-import type { Mode } from '../engine/balance';
-import { scoreOf, type ScoreRow, type StatueRow } from './community';
+import { onBoard, scoreOf, type Board, type ScoreRow, type StatueRow } from './community';
 import { todayKey } from '../engine/mini/daily';
 
 const RECS = HOUSE as unknown as CareerRecord[];
@@ -22,12 +21,12 @@ function hash(s: string): number {
 /** Every house career (the dev deck's Catalog lists them). */
 export const houseRecords = (): CareerRecord[] => RECS;
 
-/** House rows for a board: all of a difficulty's for all time; four of them, changing daily, for today. */
-export function houseScores(mode: Mode, scope: 'day' | 'all'): ScoreRow[] {
+/** House rows for a board: all of its own for all time; four of them, changing daily, for today. */
+export function houseScores(board: Board, scope: 'day' | 'all'): ScoreRow[] {
   const day = todayKey();
-  let recs = RECS.filter((r) => r.mode === mode);
+  let recs = RECS.filter((r) => onBoard(r, board));
   if (scope === 'day') recs = [...recs].sort((a, b) => hash(day + a.id) - hash(day + b.id)).slice(0, 4);
-  return recs.map((rec) => ({ id: rec.id, mode, day, score: scoreOf(rec), rec, mine: false, house: true }));
+  return recs.map((rec) => ({ id: rec.id, mode: board, day, score: scoreOf(rec), rec, mine: false, house: true }));
 }
 
 /** House statues: a few small bronze ones, so the plaza is not bare. Their respects are made up and fixed. */

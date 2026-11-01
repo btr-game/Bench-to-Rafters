@@ -8,7 +8,7 @@ import { recruitPlayer, takePayCut } from './engine/career/recruit';
 import { canClaimMini, claimMini, type MiniResult } from './engine/career/miniBonus';
 import { create } from 'zustand';
 import type { AttrKey, GameLog, GameState, Pos } from './engine/types';
-import { advance as engineAdvance, changeFocus, changeNumber, changePosition, choose as engineChoose, dismissMoment, newGame, retireByChoice, spendCredits, type CreateInput } from './engine/flow';
+import { advance as engineAdvance, changeFocus, changeNumber, changePosition, choose as engineChoose, dismissMoment, newGame, prompt, retireByChoice, spendCredits, type CreateInput } from './engine/flow';
 import { seasonLabel } from './ui/format';
 import { tabKey } from './ui/selectors';
 import { weightOf } from './engine/player/weight';
@@ -18,7 +18,7 @@ import { negotiate, type Ask } from './engine/career/negotiate';
 import type { WearSlot } from './content/shop';
 import { careerRecord } from './engine/career/record';
 import { logCareer, type LogResult } from './ui/careerLog';
-import { checkAch, countCareer } from './ui/achievements';
+import { checkAch, countCareer, recordUndo } from './ui/achievements';
 import { community } from './ui/community';
 import { importCode, newSlotId, readSlot, writeSlot } from './ui/saves';
 import { isDev } from './dev/mode';
@@ -31,6 +31,8 @@ export type Tab = 'home' | 'season' | 'player' | 'records' | 'extras';
 export type Theme = 'auto' | 'light' | 'dark';
 /** The page background: plain, a hardwood floor or streetball asphalt (round 17). */
 export type Court = 'classic' | 'hardwood' | 'street';
+/** Round 31: the text size, a multiplier on every font size (tokens.css, --ts). */
+export type TextSize = 'm' | 'l' | 'xl';
 type Page = 'log' | 'achievements' | 'community';
 export type Mini = 'hub' | 'office' | 'threes' | 'legends' | 'lab' | 'dunk' | 'street' | 'rhythm' | 'daily';
 
@@ -67,6 +69,9 @@ interface Store {
   toggleFast: () => void;
   toggleSim: () => void;
   requestTrade: (aim?: import('./engine/career/team').TradeAim) => void;
+  /** Round 31: the career as it was before his last choice (one step), with what that choice was. */
+  undo: { game: GameState; label: string } | null;
+  undoLast: () => void;
   /** Runs an engine change on a copy of the game (round 13: one action instead of one per feature). */
   mutate: (fn: (g: GameState) => void) => void;
   changeNumber: (n: number) => void;
@@ -87,6 +92,8 @@ interface Store {
   setTheme: (t: Theme) => void;
   court: Court;
   setCourt: (c: Court) => void;
+  text: TextSize;
+  setText: (t: TextSize) => void;
   simple: boolean; // simple text: fewer words, just the choices (round 11)
   toggleSimple: () => void;
   guide: boolean; // guide mode: highlights what to do next (round 13)
@@ -223,6 +230,15 @@ function loadCourt(): Court {
   }
 }
 
+function loadText(): TextSize {
+  try {
+    const t = localStorage.getItem('btr-text');
+    return t === 'l' || t === 'xl' ? t : 'm';
+  } catch {
+    return 'm';
+  }
+}
+
 function loadTheme(): Theme {
   try {
     const t = localStorage.getItem('btr-theme');
@@ -230,6 +246,31 @@ function loadTheme(): Theme {
   } catch {
     return 'auto';
   }
+}
+
+// ---------- undo (round 31, owner: "undo last choice is great. It would be off for Rough Road
+// and Comet so leaderboards stay fair") ----------
+
+/** Whether this career can step back: not a challenge (Rough Road, Comet), not the daily
+ * challenge, and not once it has ended (it is logged and posted by then). */
+export const canUndo = (g: GameState | null): boolean => !!g && !g.flags.oath && !g.flags.comet && !g.flags.daily && g.step !== 'retired';
+
+/** Keeps the career as it was before a choice (the old state is never changed: every action works on a copy). */
+function remember(g: GameState, label: string): { undo: Store['undo'] } {
+  return { undo: canUndo(g) ? { game: g, label } : null };
+}
+
+/** "Free agency: Dallas Mavericks", or both plans of a half. */
+function choiceLabel(g: GameState, id: string): string {
+  const p = prompt(g);
+  if (p.type !== 'decision') return 'Your choice';
+  const names = id.split('+').map((x) => p.decision.choices.find((c) => c.id === x)?.label ?? x);
+  return `${p.decision.title}: ${names.join(' + ')}`;
+}
+
+function stepLabel(g: GameState): string {
+  const p = prompt(g);
+  return p.type === 'advance' ? p.label : 'The next step';
 }
 
 const top = () => {
@@ -250,7 +291,7 @@ function linkedPage(): Page | null {
   }
 }
 
-/** A No Shortcuts career (round 25) plays in master mode, whatever the switch said before it opened;
+/** A Rough Road career (round 25) plays in master mode, whatever the switch said before it opened;
  * the switch stays put until it closes. (Round 27, owner: "simple text could be allowed in harder
  * road reality": Simple text is free now.) */
 function oathLock(g: GameState): Partial<Pick<Store, 'master'>> {
@@ -292,6 +333,7 @@ export const useStore = create<Store>((set, get) => ({
   tab: 'home',
   theme: loadTheme(),
   court: loadCourt(),
+  text: loadText(),
   simple: loadFlag('btr-simple'),
   toggleSimple: () => {
     const simple = !get().simple;
@@ -300,7 +342,7 @@ export const useStore = create<Store>((set, get) => ({
   },
   master: loadFlag('btr-master'),
   toggleMaster: () => {
-    if (get().game?.flags.oath) return; // No Shortcuts: master mode for the whole career
+    if (get().game?.flags.oath) return; // Rough Road: master mode for the whole career
     const master = !get().master;
     saveFlag('btr-master', master);
     set({ master });
@@ -340,6 +382,14 @@ export const useStore = create<Store>((set, get) => ({
       set({ game, slot: newSlotId(), tab: 'home', transition: null, mini: null, seen: allSeen(game), ...oathLock(game) });
     }),
   seen: {},
+  undo: null,
+  undoLast: () => {
+    const u = get().undo;
+    if (!u || !canUndo(get().game)) return;
+    set({ game: { ...u.game, achN: get().game?.achN }, undo: null, transition: null, tab: 'home' });
+    recordUndo();
+    top();
+  },
   saving: 'ok',
   // round 26 (owner: "just give me the link to the community page"): #community opens it
   page: linkedPage(),
@@ -394,7 +444,7 @@ export const useStore = create<Store>((set, get) => ({
       engineChoose(next, choiceId);
       const before = next.step;
       fastForward(next);
-      set({ game: next });
+      set({ game: next, ...remember(g, 'A new position'), ...remember(g, 'A trade request'), ...remember(g, 'A staff move'), ...remember(g, 'A contract ask'), ...remember(g, 'A new jersey number'), ...remember(g, 'Spending lab credits'), ...remember(g, 'Taking a pay cut'), ...remember(g, 'Recruiting a starter'), ...remember(g, 'New focus stats'), ...remember(g, stepLabel(g)), ...remember(g, choiceLabel(g, choiceId)) });
       if (next.flags.fast && next.step !== before) top();
     }),
   advance: () =>
@@ -548,7 +598,7 @@ export const useStore = create<Store>((set, get) => ({
       if (!g) return;
       const next = structuredClone(g);
       retireByChoice(next);
-      set({ game: next, tab: 'home', transition: null });
+      set({ game: next, tab: 'home', transition: null, undo: null });
       top();
     }),
   dismissMoment: () => {
@@ -577,7 +627,7 @@ export const useStore = create<Store>((set, get) => ({
     if (!g || !canClaimMini(g, r.game)) return '';
     const next = structuredClone(g);
     const text = claimMini(next, r);
-    set({ game: next });
+    set({ game: next, undo: null }); // a bonus claimed is kept: no stepping back past a mini-game
     return text;
   },
   setMini: (mini) =>
@@ -611,6 +661,15 @@ export const useStore = create<Store>((set, get) => ({
       /* storage can be unavailable; the theme still applies for this visit */
     }
     set({ theme });
+  },
+  setText: (text) => {
+    try {
+      if (text === 'm') localStorage.removeItem('btr-text');
+      else localStorage.setItem('btr-text', text);
+    } catch {
+      /* the size still applies for this visit */
+    }
+    set({ text });
   },
   setCourt: (court) => {
     try {
@@ -665,6 +724,13 @@ useStore.subscribe((now, before) => {
   void community().then((c) => c.postCareer(rec));
 });
 
+// round 31: the step back belongs to the career it was taken in; another career on screen (a new
+// one, a save picked up, the daily challenge) drops it
+useStore.subscribe((now) => {
+  const u = now.undo;
+  if (u && (!now.game || now.game.seed !== u.game.seed || now.game.player.name !== u.game.player.name)) useStore.setState({ undo: null });
+});
+
 // round 24: achievements, checked a moment after each change; a career that ends counts first
 let achTimer: ReturnType<typeof setTimeout> | null = null;
 useStore.subscribe((now, before) => {
@@ -677,8 +743,11 @@ useStore.subscribe((now, before) => {
 
 /** Checks the book now and raises a toast for anything new (also after a mini-game run, round 27). */
 export function achievementsNow(): void {
-  const fresh = checkAch(useStore.getState().game);
+  const g = useStore.getState().game;
+  const fresh = checkAch(g);
   if (!fresh.length) return;
+  // the career keeps count, for the Extras tab's dot (round 31)
+  if (g && g.step !== 'retired') useStore.setState({ game: { ...g, achN: (g.achN ?? 0) + fresh.length } });
   // a flood (an old save, a long career at once) shows three and a count of the rest
   const shown: Store['toasts'] = fresh.slice(0, 3).map((a) => ({ id: a.id, name: a.name, tier: a.tier }));
   if (fresh.length > 3) shown[2] = { ...shown[2], more: fresh.length - 3 };
@@ -689,7 +758,7 @@ export function achievementsNow(): void {
  * The theme and the court are left out, since the deck shares them with the game. */
 export type View = Partial<Store>;
 export function viewNow(): View {
-  return Object.fromEntries(Object.entries(useStore.getState()).filter(([k, v]) => typeof v !== 'function' && k !== 'theme' && k !== 'court' && k !== 'loading')) as View;
+  return Object.fromEntries(Object.entries(useStore.getState()).filter(([k, v]) => typeof v !== 'function' && k !== 'theme' && k !== 'court' && k !== 'text' && k !== 'loading')) as View;
 }
 /** The start page as the game's own storage has it (the deck was opened before the game was). */
 export function startView(): View {

@@ -8,6 +8,7 @@ import { NAMES } from '../content/strings';
 import { seasonLabel } from './format';
 import { tabKey } from './selectors';
 import { MINI_NAMES } from '../engine/career/miniBonus';
+import { earnedIn } from './achievements';
 
 type NewsTab = 'home' | 'season' | 'player' | 'records' | 'extras';
 
@@ -77,6 +78,11 @@ export function tabNews(g: GameState, tab: NewsTab, before: string | undefined):
     case 'extras': {
       const opened = (g.miniOpen ?? []).slice(Number(was[0]) || 0);
       if (opened.length) out.push({ sel: [D('minis'), '.page .card'], text: `Mini-game unlocked: ${opened.map((id) => MINI_NAMES[id]).join(', ')}. Play it for a rating bonus.` });
+      const got = (g.achN ?? 0) - (Number(was[1]) || 0);
+      if (got > 0) {
+        const names = earnedIn(g).slice(0, Math.min(got, 3)).map((a) => a.name);
+        out.push({ sel: [D('run-ach'), '.page .card'], text: `${plural(got, 'achievement')} earned: ${names.join(', ')}${got > 3 ? ` and ${got - 3} more` : ''}. The book opens on them.` });
+      }
       break;
     }
     default:

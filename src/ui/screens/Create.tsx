@@ -188,7 +188,7 @@ export function Create() {
   const [hand, setHand] = useState<'R' | 'L'>('R');
   const [mode, setMode] = useState<Mode>('standard');
   const [country, setCountry] = useState(''); // '' = the game decides, by real-world odds
-  const [oath, setOath] = useState(false); // round 25: No Shortcuts, offered with Reality
+  const [oath, setOath] = useState(false); // round 25: Rough Road, offered with Reality
   const [comet, setComet] = useState(false); // round 30: Comet, offered with Shoot for the stars
   // round 27: his look (the parts every avatar is built from) and a plain practice jersey
   const [look, setLook] = useState<ChosenLook>(() => randomLook());
@@ -219,7 +219,7 @@ export function Create() {
     setFocus([]);
   };
   const reroll = () => setCands(ARCHETYPES[pos].map((a) => rerollAttrs(uiRng, a.attrs)));
-  // rolls every pick at once: the No Shortcuts road (round 28, owner: the button at the top went,
+  // rolls every pick at once: the rough road (round 28, owner: the button at the top went,
   // "when there's already randomizers" beside each pick)
   const randomAll = () => {
     const p = pick(POSITIONS);
@@ -235,7 +235,7 @@ export function Create() {
     setLook(randomLook());
   };
   // round 27 (owner: "for harder road of reality, make the position, country, archetype, focus
-  // stats, basically the whole intro random"): No Shortcuts skips the picking. The road rolls the
+  // stats, basically the whole intro random"): Rough Road skips the picking. The road rolls the
   // player, country by real-world odds, and shows him on the last step, with no reroll.
   const road = mode === 'reality' && oath;
   const rollRoad = () => {
@@ -323,11 +323,13 @@ export function Create() {
           </div>
           {/* round 25 (owner): Reality, played the hardest way, asks once and is honoured for it */}
           {mode === 'reality' && (
-            <div className={`card oath-card${oath ? ' on' : ''}`} role="group" aria-label="The No Shortcuts challenge">
+            <div className={`card oath-card${oath ? ' on' : ''}`} role="group" aria-label="The Rough Road challenge">
               <Icon name="oath" size={48} />
               <div className="stack" style={{ gap: 6 }}>
-                <div className="sec-title">Take the harder road? No Shortcuts</div>
-                <p className="small muted">The road picks your player at random: position, archetype, focus, country, hand and name, with no reroll. Then master mode, with no recommendations anywhere, and no Fast break or Sim mode, locked for the whole career (Simple text is allowed). Take it and the career carries the No Shortcuts mark on its card, the leaderboards and the career log, with achievements of its own.</p>
+                <div className="sec-title">Take the rough road?</div>
+                <p className="small muted">
+                  The road picks your whole player at random, with no reroll: position, archetype, focus stats, country, hand, name, number <b>and his look</b>, so you don&rsquo;t choose how your avatar looks (skin, hair and face are rolled too). Then master mode, with no recommendations anywhere, and no Fast break or Sim mode, locked for the whole career (Simple text is allowed). Take it and the career carries the Rough Road mark on its card, the leaderboards and the career log, with achievements of its own.
+                </p>
                 <div className="row" style={{ gap: 8 }}>
                   <button className={`btn small${oath ? '' : ' ghost'}`} aria-pressed={oath} onClick={() => (oath || sfx('oath'), setOath(true))}>
                     {oath ? 'Challenge accepted' : 'Accept the challenge'}
@@ -615,7 +617,7 @@ export function Create() {
             {road && (
               <span className="oath-rolled with-icon">
                 <Icon name="oath" size={18} />
-                No Shortcuts: the road picked all of this for you. No rerolls.{' '}
+                Rough Road: the road picked all of this for you, his look included. No rerolls.{' '}
               </span>
             )}
             Focus: {focus.map((k) => NAMES.attr[k]).join(' and ')}. Height: still growing, most end up {ht(hMin + (archetype.height ?? 0))}–{ht(hMax + (archetype.height ?? 0))}, some well outside it. This card is a typical {archetype.name.toLowerCase()}; your real starting level is set at tryouts. {UI.create.assignedText}

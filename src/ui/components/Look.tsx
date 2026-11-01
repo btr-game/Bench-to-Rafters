@@ -11,6 +11,7 @@ const HOST_THEME = typeof document !== 'undefined' ? document.documentElement.ge
 export function Look() {
   const theme = useStore((s) => s.theme);
   const court = useStore((s) => s.court);
+  const text = useStore((s) => s.text);
   useEffect(() => {
     const root = document.documentElement;
     // "Auto" goes back to whatever the host page set (or the OS setting if nothing)
@@ -19,6 +20,11 @@ export function Look() {
       else root.removeAttribute('data-theme');
     } else root.setAttribute('data-theme', theme);
   }, [theme]);
+  // round 31: the text size (tokens.css, --ts)
+  useEffect(() => {
+    if (text === 'm') document.documentElement.removeAttribute('data-text');
+    else document.documentElement.setAttribute('data-text', text);
+  }, [text]);
   useEffect(() => {
     if (court === 'classic') document.documentElement.removeAttribute('data-court');
     else document.documentElement.setAttribute('data-court', court);

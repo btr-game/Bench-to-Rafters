@@ -45,7 +45,7 @@ export function ModesCard({ g }: { g: GameState }) {
       {oath && (
         <p className="small oath-note with-icon">
           <Icon name="oath" size={20} />
-          No Shortcuts: a player the road picked, master mode and every season played, for the whole career.
+          Rough Road: a player the road picked, master mode and every season played, for the whole career.
         </p>
       )}
       {notes.length > 0 && (

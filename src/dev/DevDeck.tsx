@@ -154,7 +154,8 @@ export function DevDeck() {
       }
       setOpen(c);
       window.scrollTo(0, 0);
-      if (c.press) window.setTimeout(() => press(c.press!), 450);
+      // a list of controls is pressed one after another
+      if (c.press) [c.press].flat().forEach((sel, i) => window.setTimeout(() => press(sel), 450 + i * 200));
     }, 40);
   }, []);
   const back = () => {

@@ -37,7 +37,7 @@ function career(seed: number, mode: Mode): CareerRecord | null {
 // stall, and the weakest are kept: ten a board, six bronze statues.
 const pool: CareerRecord[] = [];
 const names = new Set<string>();
-for (let seed = 7000; pool.length < 36 && seed < 9000; seed++) {
+for (let seed = 7000; pool.length < 56 && seed < 9000; seed++) {
   const rec = career(seed, 'reality');
   if (!rec || names.has(rec.name) || rec.peak >= 70 || rec.titles > 0 || scoreOf(rec) < 0.5 || scoreOf(rec) > 25) continue;
   names.add(rec.name);
@@ -45,9 +45,17 @@ for (let seed = 7000; pool.length < 36 && seed < 9000; seed++) {
 }
 pool.sort((a, b) => scoreOf(a) - scoreOf(b) || a.peak - b.peak);
 const out: CareerRecord[] = [];
-(['standard', 'reality', 'stars'] as Mode[]).forEach((mode, k) => {
-  for (const rec of pool.filter((_, i) => i % 3 === k).slice(0, 10)) out.push({ ...rec, mode, id: `house-${mode}-${rec.id.split('-').pop()}` });
+// ten for each board (round 31: the Rough Road and Comet boards too, marked as those challenges)
+const BOARDS: [string, Mode, Partial<CareerRecord>][] = [
+  ['standard', 'standard', {}],
+  ['reality', 'reality', {}],
+  ['stars', 'stars', {}],
+  ['rough', 'reality', { oath: true }],
+  ['comet', 'stars', { comet: true }],
+];
+BOARDS.forEach(([board, mode, mark], k) => {
+  for (const rec of pool.filter((_, i) => i % BOARDS.length === k).slice(0, 10)) out.push({ ...rec, mode, ...mark, id: `house-${board}-${rec.id.split('-').pop()}` });
 });
-for (const rec of pool.slice(30, 36)) out.push({ ...rec, mode: 'standard', id: `house-statue-${rec.id.split('-').pop()}` });
+for (const rec of pool.slice(50, 56)) out.push({ ...rec, mode: 'standard', id: `house-statue-${rec.id.split('-').pop()}` });
 writeFileSync('src/content/house.json', JSON.stringify(out));
 console.log(`${out.length} house careers; peaks and scores`, out.map((r) => `${Math.round(r.peak)}/${scoreOf(r).toFixed(1)}`).join(' '));

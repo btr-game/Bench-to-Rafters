@@ -592,6 +592,21 @@ export const NICKNAME = { rep: 55, noise: 0.2 };
 // round 25: a visit to something he owns (content/visits.ts). Round 28: as often as he likes; the
 // first of a season lifts morale and takes `rest` off his body wear
 export const VISIT = { morale: 3, rest: 1 };
+
+/**
+ * The shop (round 31, owner: "prices of shopping items should be way more inflated as the player's
+ * salary gets higher... get rid of the limit, extend the number of items in the shop to 6, and just
+ * make them expensive enough for the user to barely purchase 2~3. but dont inflate prices too much.
+ * if the player is getting like 50 or above million a year, price of items shouldnt be a problem").
+ * Income is his salary and his brand deal, in $M a year.
+ * - inflate: prices are x1 up to `from` a year and rise on a log scale to x`max` at `to` and above.
+ * - share: the six are drawn around this share of his bank each, so two or three fit (three of
+ *   them come to about his whole bank); from `rich.from` a year the share falls, on a log scale,
+ *   to `rich.share` at `rich.to`, where all six fit with money to spare.
+ * - spread: how far from that price the draw strays (the sd of the log of price over target).
+ * - wear: the chance one of the six is an accessory (cheap at any price level, for the wardrobe).
+ */
+export const SHOP = { stock: 6, inflate: { from: 1, to: 50, max: 3 }, share: 0.42, rich: { from: 20, to: 50, share: 0.03 }, spread: 0.45, wear: 0.4 };
 // round 25: personal staff (career/staff.ts). Pay and benefit by level (a raise moves him up one);
 // benefits a season at level 1, times `effect[level - 1]`; a talk once a season lifts morale and
 // (round 28) does `talkShare` of his season's benefit on the spot.

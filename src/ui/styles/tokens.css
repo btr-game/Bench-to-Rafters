@@ -85,3 +85,8 @@
   --scrim: rgba(0, 0, 0, 0.66);
   color-scheme: dark;
 }
+
+/* round 31 (owner): text size, a multiplier on every font size in app.css (Settings, Text size) */
+:root { --ts: 1; }
+:root[data-text='l'] { --ts: 1.15; }
+:root[data-text='xl'] { --ts: 1.3; }

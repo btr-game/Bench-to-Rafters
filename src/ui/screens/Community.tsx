@@ -8,13 +8,12 @@ import { DevDoor } from '../components/FootBar';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import type { CareerRecord } from '../../engine/career/record';
-import { MODES, type Mode } from '../../engine/balance';
 import { ARCHETYPES } from '../../engine/player/archetypes';
 import { dailyInput, todayKey } from '../../engine/mini/daily';
 import { NAMES } from '../../content/strings';
 import { useStore } from '../../store';
 import { PageTop } from '../components/PageTop';
-import { SCORE_NOTE, BOARD_SIZE, STATUE, canComment, community, openCommentBox, hall99Ok, scoreOf, statueOk, type Community as Api, type FeedItem, type ScoreRow, type StatueRow, type WriteResult } from '../community';
+import { SCORE_NOTE, BOARD_SIZE, STATUE, BOARDS, boardName, canComment, community, homeBoard, openCommentBox, hall99Ok, scoreOf, statueOk, type Board, type Community as Api, type FeedItem, type ScoreRow, type StatueRow, type WriteResult } from '../community';
 import { drawCareerCard } from '../share';
 import { StatueArt } from '../art/Statue';
 import { PlayerArt } from '../art/Player';
@@ -156,8 +155,15 @@ function CardPop({ rec, label, tone, head, onClose }: { rec: CareerRecord; label
   );
 }
 
-function Board({ c }: { c: Api }) {
-  const [mode, setMode] = useState<Mode>('standard');
+/** What each challenge board holds, under its tabs. */
+const BOARD_NOTE: Partial<Record<Board, string>> = {
+  reality: 'Rough Road careers rank here too, marked: they are Reality careers played the hard way.',
+  rough: 'Rough Road careers only: Reality hits hard in master mode, the whole player picked at random, nothing simplified, no undo. They rank on the Reality board too.',
+  comet: 'Comet careers only: Shoot for the stars at hyper speed, with fast break and sim for the whole career. They rank here and not on the Shoot for the stars board, which keeps careers played by hand.',
+};
+
+function Boards({ c }: { c: Api }) {
+  const [board, setBoard] = useState<Board>('standard');
   const [scope, setScope] = useState<'day' | 'all'>('day');
   const [rows, setRows] = useState<ScoreRow[] | null>(null);
   rows?.forEach((r) => chooseLook(r.rec.name, r.rec.look)); // round 27: each career in the look he chose
@@ -165,16 +171,17 @@ function Board({ c }: { c: Api }) {
   useEffect(() => {
     setRows(null);
     // round 27: the house players keep the boards from looking empty; real careers rank among them
-    const withHouse = (real: ScoreRow[]) => setRows([...real, ...houseScores(mode, scope)].sort((a, b) => b.score - a.score).slice(0, BOARD_SIZE));
-    void c.scores(mode, scope).then(withHouse, () => withHouse([]));
-  }, [c, mode, scope]);
+    const withHouse = (real: ScoreRow[]) => setRows([...real, ...houseScores(board, scope)].sort((a, b) => b.score - a.score).slice(0, BOARD_SIZE));
+    void c.scores(board, scope).then(withHouse, () => withHouse([]));
+  }, [c, board, scope]);
   return (
     <div className="stack">
       <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-        <div className="seg">
-          {(['standard', 'reality', 'stars'] as Mode[]).map((m) => (
-            <button key={m} aria-pressed={mode === m} onClick={() => setMode(m)}>
-              {MODES[m].name}
+        <div className="seg board-tabs" data-tour="board-tabs">
+          {BOARDS.map((b) => (
+            <button key={b} data-board={b} aria-pressed={board === b} onClick={() => setBoard(b)}>
+              {b === 'rough' || b === 'comet' ? <Icon name={b === 'rough' ? 'oath' : 'comet'} size={18} /> : null}
+              {boardName(b)}
             </button>
           ))}
         </div>
@@ -190,6 +197,7 @@ function Board({ c }: { c: Api }) {
       <p className="small muted">
         {c.kind === 'shared' ? `The top ${BOARD_SIZE} players, each at their best career.` : 'Offline: your own best careers on this device.'} {SCORE_NOTE}
       </p>
+      {BOARD_NOTE[board] && <p className="small">{BOARD_NOTE[board]}</p>}
       <p className="small muted">House players (marked) are careers the game played itself, here to keep the boards warm until real ones push them down.</p>
       {rows === null ? (
         <p className="muted">Loading…</p>
@@ -611,7 +619,7 @@ export function CommunityPage() {
         {!c ? (
           <p className="muted">Connecting…</p>
         ) : tab === 'boards' ? (
-          <Board c={c} />
+          <Boards c={c} />
         ) : tab === 'hall' ? (
           <Hall c={c} />
         ) : tab === 'plaza' ? (
@@ -630,7 +638,8 @@ export function CommunityPage() {
  * and this player's own entries aside. */
 async function rankOn(c: Api, rec: CareerRecord, scope: 'day' | 'all'): Promise<number> {
   const s = scoreOf(rec);
-  const rows = [...(await c.scores(rec.mode, scope).catch(() => [] as ScoreRow[])), ...houseScores(rec.mode, scope)];
+  const b = homeBoard(rec);
+  const rows = [...(await c.scores(b, scope).catch(() => [] as ScoreRow[])), ...houseScores(b, scope)];
   return rows.filter((r) => !r.mine && r.rec.id !== rec.id && r.score > s).length + 1;
 }
 
@@ -664,8 +673,8 @@ export function CommunityNote({ rec }: { rec: CareerRecord }) {
     setBuilt('busy');
     setBuilt(await c.buildStatue(rec));
   };
-  const mode = MODES[rec.mode].name;
-  const onBoard = (n: number) => n <= BOARD_SIZE;
+  const mode = boardName(homeBoard(rec));
+  const ranked = (n: number) => n <= BOARD_SIZE;
   return (
     <section className="card community-note stack" data-tour="community-note" aria-live="polite">
       <div className="sec-title with-icon">
@@ -678,8 +687,8 @@ export function CommunityNote({ rec }: { rec: CareerRecord }) {
           <b>
             {!rank
               ? `Career index ${scoreOf(rec).toFixed(1)}: checking the ${mode} boards…`
-              : onBoard(rank.day) || onBoard(rank.all)
-                ? `On the ${mode} leaderboard: ${[onBoard(rank.day) ? `#${rank.day} today` : '', onBoard(rank.all) ? `#${rank.all} all time` : ''].filter(Boolean).join(', ')}`
+              : ranked(rank.day) || ranked(rank.all)
+                ? `On the ${mode} leaderboard: ${[ranked(rank.day) ? `#${rank.day} today` : '', ranked(rank.all) ? `#${rank.all} all time` : ''].filter(Boolean).join(', ')}`
                 : `Career index ${scoreOf(rec).toFixed(1)}: outside the ${mode} top ${BOARD_SIZE} this time`}
           </b>
           <small className="muted">

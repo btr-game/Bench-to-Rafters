@@ -8,7 +8,7 @@ import { MINI_TOTALS_ONLY } from '../../engine/achievementsMini';
 import { useStore } from '../../store';
 import type { GameState } from '../../engine/types';
 import { PageTop } from '../components/PageTop';
-import { loadAch, runOf } from '../achievements';
+import { earnedIn, loadAch, runOf } from '../achievements';
 import { Badge } from '../art/Badge';
 
 const tierOf = (k: AchTier) => ACH_TIERS.find((t) => t.key === k)!;
@@ -44,21 +44,12 @@ export function AchToasts() {
   );
 }
 
-/** What one career earned (round 28), newest first. */
-export function earnedIn(g: GameState): { id: string; name: string; tier: AchTier }[] {
-  const run = runOf(g);
-  const got = loadAch().got;
-  return ACHIEVEMENTS.filter((a) => got[a.id]?.run === run)
-    .sort((a, b) => (got[a.id].at < got[b.id].at ? 1 : -1))
-    .map((a) => ({ id: a.id, name: a.name, tier: a.tier }));
-}
-
-/** The entry on the start page, and on the Extras tab of a career (with what that career earned; on
- * the Records tab and a top-bar button in round 28). */
+/** The entry on the start page, and on the Extras tab of a career (with how many that career earned:
+ * the book opens on them). */
 export function AchievementsCard({ g }: { g?: GameState }) {
   const setPage = useStore((s) => s.setPage);
   const [got] = useState(() => Object.keys(loadAch().got).length);
-  const mine = useMemo(() => (g ? earnedIn(g) : []), [g]);
+  const mine = useMemo(() => (g ? earnedIn(g).length : 0), [g]);
   return (
     <section className="card stack" data-tour={g ? 'run-ach' : undefined}>
       <div className="sec-title with-icon">
@@ -68,22 +59,7 @@ export function AchievementsCard({ g }: { g?: GameState }) {
       <p className="small muted">
         {got} of {ACHIEVEMENTS.length} earned, over every career on this device. The rest are riddles.
       </p>
-      {g && (
-        <div className="run-ach">
-          <div className="kicker">{mine.length ? `This career: ${mine.length} earned` : 'This career: none yet'}</div>
-          {mine.length > 0 && (
-            <div className="run-ach-list">
-              {mine.slice(0, 8).map((a) => (
-                <span key={a.id} className="run-ach-chip" style={{ ['--tier' as string]: tierOf(a.tier).color }} title={tierOf(a.tier).name}>
-                  <Badge tier={a.tier} size={20} />
-                  {a.name}
-                </span>
-              ))}
-              {mine.length > 8 && <span className="small muted">and {mine.length - 8} more</span>}
-            </div>
-          )}
-        </div>
-      )}
+      {g && <div className="kicker">{mine ? `This career: ${mine} earned, at the top of the book` : 'This career: none yet'}</div>}
       <button className="btn ghost" data-tour="ach" onClick={() => setPage('achievements')}>
         Open the achievement book
       </button>
@@ -91,11 +67,38 @@ export function AchievementsCard({ g }: { g?: GameState }) {
   );
 }
 
-type Filter = 'all' | 'run' | 'got' | 'open' | 'arcade' | 'minicareer' | AchTier;
+type Filter = 'all' | 'got' | 'open' | 'arcade' | 'minicareer' | AchTier;
 
 // round 27: the mini-game achievements, in the arcade and in a career (engine/achievementsMini.ts)
 const ARCADE = new Set(MINI_TOTALS_ONLY);
 const isMini = (id: string) => id.startsWith('mg-') || id === 'side';
+
+type Got = ReturnType<typeof loadAch>['got'][string];
+
+/** One page of the book: how it was earned, when and by whom, or its name alone as a riddle. */
+function AchCard({ a, g, here }: { a: (typeof ACHIEVEMENTS)[number]; g?: Got; here: boolean }) {
+  const t = tierOf(a.tier);
+  return (
+    <div className={`ach-card${g ? ' got' : ''}${here ? ' this-run' : ''}`} style={{ ['--tier' as string]: t.color }}>
+      <Badge tier={a.tier} locked={!g} size={38} />
+      <div>
+        <b>{a.name}</b>
+        <small className="achv-tier-name">{t.name}</small>
+        {g ? (
+          <p className="small">
+            {a.how}{' '}
+            <span className="muted">
+              {new Date(g.at).toLocaleDateString()}
+              {g.who ? ` · ${g.who}` : ''}
+            </span>
+          </p>
+        ) : (
+          <p className="small muted keep">???</p>
+        )}
+      </div>
+    </div>
+  );
+}
 
 /** The book: every achievement by tier; the ones not earned yet keep their secret. */
 export function AchievementBook() {
@@ -103,28 +106,26 @@ export function AchievementBook() {
   const game = useStore((s) => s.game);
   const [saved] = useState(loadAch);
   const got = saved.got;
-  // round 28: from a career, the book opens on what this career has earned (when it has earned any)
+  // from a career, the book opens on what this career has earned, newest first, above the rest
   const run = game ? runOf(game) : null;
-  const ran = run ? ACHIEVEMENTS.filter((a) => got[a.id]?.run === run).length : 0;
-  const [filter, setFilter] = useState<Filter>(() => (ran ? 'run' : 'all'));
+  const mine = useMemo(() => (run ? ACHIEVEMENTS.filter((a) => got[a.id]?.run === run).sort((a, b) => (got[a.id].at < got[b.id].at ? 1 : -1)) : []), [got, run]);
+  const [filter, setFilter] = useState<Filter>('all');
   const list = useMemo(
     () =>
       ACHIEVEMENTS.filter((a) =>
         filter === 'all'
           ? true
-          : filter === 'run'
-            ? got[a.id]?.run === run
-            : filter === 'got'
-              ? !!got[a.id]
-              : filter === 'open'
-                ? !got[a.id]
-                : filter === 'arcade'
-                  ? ARCADE.has(a.id)
-                  : filter === 'minicareer'
-                    ? isMini(a.id) && !ARCADE.has(a.id)
-                    : a.tier === filter,
+          : filter === 'got'
+            ? !!got[a.id]
+            : filter === 'open'
+              ? !got[a.id]
+              : filter === 'arcade'
+                ? ARCADE.has(a.id)
+                : filter === 'minicareer'
+                  ? isMini(a.id) && !ARCADE.has(a.id)
+                  : a.tier === filter,
       ),
-    [filter, got, run],
+    [filter, got],
   );
   const total = Object.keys(got).length;
   return (
@@ -141,6 +142,20 @@ export function AchievementBook() {
           </h1>
           <p className="prose">Every milestone you reach, in any career, stays here for good. Ones you haven’t earned show only their name: work out the riddle.</p>
         </div>
+        {game && (
+          <section className="card stack ach-mine" aria-label="Earned this career">
+            <div className="sec-title">{mine.length ? `Earned this career: ${mine.length}` : 'Earned this career: none yet'}</div>
+            {mine.length ? (
+              <div className="ach-grid">
+                {mine.map((a) => (
+                  <AchCard key={a.id} a={a} g={got[a.id]} here />
+                ))}
+              </div>
+            ) : (
+              <p className="small muted">What {game.player.name} earns shows up here first, and in gold in the book below.</p>
+            )}
+          </section>
+        )}
         <div className="achv-tiers">
           {ACH_TIERS.map((t) => {
             const all = ACHIEVEMENTS.filter((a) => a.tier === t.key);
@@ -162,7 +177,6 @@ export function AchievementBook() {
         <div className="seg">
           {(
             [
-              ...(run ? ([['run', `This career (${ran})`]] as [Filter, string][]) : []),
               ['all', 'All'],
               ['got', 'Earned'],
               ['open', 'Still a riddle'],
@@ -176,32 +190,9 @@ export function AchievementBook() {
           ))}
         </div>
         <div className="ach-grid">
-          {list.map((a) => {
-            const g = got[a.id];
-            const t = tierOf(a.tier);
-            const here = !!g && !!run && g.run === run;
-            return (
-              <div key={a.id} className={`ach-card${g ? ' got' : ''}${here ? ' this-run' : ''}`} style={{ ['--tier' as string]: t.color }}>
-                <Badge tier={a.tier} locked={!g} size={38} />
-                <div>
-                  <b>{a.name}</b>
-                  <small className="achv-tier-name">{t.name}</small>
-                  {here && <small className="this-run-tag">This career</small>}
-                  {g ? (
-                    <p className="small">
-                      {a.how}{' '}
-                      <span className="muted">
-                        {new Date(g.at).toLocaleDateString()}
-                        {g.who ? ` · ${g.who}` : ''}
-                      </span>
-                    </p>
-                  ) : (
-                    <p className="small muted keep">???</p>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+          {list.map((a) => (
+            <AchCard key={a.id} a={a} g={got[a.id]} here={!!run && got[a.id]?.run === run} />
+          ))}
         </div>
       </section>
       <FootBar where="achievement book" />

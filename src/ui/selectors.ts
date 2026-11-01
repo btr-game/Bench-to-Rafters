@@ -57,8 +57,8 @@ export function tabKey(g: GameState, tab: 'home' | 'season' | 'player' | 'record
     case 'records':
       return `${g.history.length}:${g.awards.length}:${g.tournaments.length}`;
     case 'extras':
-      // round 29: a mini-game that opens is news
-      return `${(g.miniOpen ?? []).length}`;
+      // a mini-game that opens is news (round 29), and so is an achievement this career earns (round 31)
+      return `${(g.miniOpen ?? []).length}:${g.achN ?? 0}`;
     default:
       return '';
   }

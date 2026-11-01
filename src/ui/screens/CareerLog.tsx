@@ -12,12 +12,13 @@ import { useStore } from '../../store';
 import { PageTop } from '../components/PageTop';
 import { LOCK_MAX, LOG_MAX, LOG_WARN, deleteCard, lockCard, logCards, logLocks, nextOut } from '../careerLog';
 import { sfx } from '../sound';
-import { recordLocks } from '../achievements';
+import { recordCompare, recordLocks } from '../achievements';
 import { achievementsNow } from '../../store';
 import { canShareFiles, downloadCareerCard, drawCareerCard, shareCareerCard } from '../share';
 import { PlayerArt } from '../art/Player';
 import { Icon } from '../art/Icon';
 import { CometMark, OathMark } from '../components/OathMark';
+import { compareRows, compareScore } from '../compare';
 
 /** Download (and on phones, share) the career card. */
 export function CardActions({ rec }: { rec: CareerRecord }) {
@@ -100,7 +101,62 @@ export function CareerLogCard() {
   );
 }
 
-function LogEntry({ rec, locked, canLock, live, onDelete, onLock }: { rec: CareerRecord; locked: boolean; canLock: boolean; live: boolean; onDelete: () => void; onLock: () => void }) {
+/** Two cards side by side: the better number in each row in bold with a ▲, not by colour alone. */
+function Compare({ a, b, onClear }: { a: CareerRecord; b: CareerRecord; onClear: () => void }) {
+  const rows = compareRows(a, b);
+  const score = compareScore(rows);
+  const head = (r: CareerRecord, n: number) => (
+    <th scope="col">
+      <span className="cmp-who">
+        <PlayerArt name={r.name} number={r.number} pos={r.pos} color={r.team?.color} team={r.team?.name ?? ''} size={56} />
+        <span>
+          <b>{r.name}</b>
+          <small>{n} row{n === 1 ? '' : 's'} ahead</small>
+        </span>
+      </span>
+    </th>
+  );
+  return (
+    <section className="card stack cmp" data-tour="log-compare" aria-label={`${a.name} and ${b.name} side by side`}>
+      <div className="row">
+        <div className="sec-title with-icon">
+          <Icon name="compare" size={26} />
+          Side by side
+        </div>
+        <span className="spacer" />
+        <button className="btn ghost small" onClick={onClear}>
+          Clear
+        </button>
+      </div>
+      <div className="cmp-scroll">
+        <table className="cmp-table">
+          <thead>
+            <tr>
+              <td />
+              {head(a, score.a)}
+              {head(b, score.b)}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.label}>
+                <th scope="row">{r.label}</th>
+                {(['a', 'b'] as const).map((k) => (
+                  <td key={k} className={r.better === k ? 'better' : undefined}>
+                    {r.better === k ? <b>▲ {r[k]}</b> : r[k]}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="small muted">▲ marks the better of the two. Retiring age and the difficulty are facts, not scores.</p>
+    </section>
+  );
+}
+
+function LogEntry({ rec, locked, canLock, live, onDelete, onLock, picked, canPick, onPick }: { rec: CareerRecord; locked: boolean; canLock: boolean; live: boolean; onDelete: () => void; onLock: () => void; picked: boolean; canPick: boolean; onPick: () => void }) {
   const [img, setImg] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [armed, setArmed] = useState(false);
@@ -154,6 +210,9 @@ function LogEntry({ rec, locked, canLock, live, onDelete, onLock }: { rec: Caree
           {open ? 'Hide the card' : 'Show the card'}
         </button>
         <CardActions rec={rec} />
+        <button className={`btn small${picked ? '' : ' ghost'}`} data-tour="log-pick" aria-pressed={picked} disabled={!picked && !canPick} onClick={onPick} title={picked ? 'Take it out of the comparison' : 'Compare it with another card'}>
+          {picked ? 'Comparing' : 'Compare'}
+        </button>
         <span className="spacer" />
         <button
           className={`btn small with-icon${locked ? '' : ' ghost'}`}
@@ -183,6 +242,8 @@ export function CareerLog() {
   const live = useStore((s) => !!s.game && s.game.step !== 'retired');
   const [cards, setCards] = useState(logCards);
   const [locks, setLocks] = useState(logLocks);
+  const [pick, setPick] = useState<string[]>([]);
+  const picked = pick.map((id) => cards.find((c) => c.id === id)).filter((c): c is CareerRecord => !!c);
   const warn = fullness(cards.length);
   return (
     <div className="wrap">
@@ -207,6 +268,11 @@ export function CareerLog() {
           </div>
         )}
         {warn && <div className="log-warn">{warn}</div>}
+        {picked.length === 2 ? (
+          <Compare a={picked[0]} b={picked[1]} onClear={() => setPick([])} />
+        ) : cards.length > 1 ? (
+          <p className="small muted keep">{picked.length === 1 ? `Comparing ${picked[0].name}: pick one more card.` : 'Pick two cards with Compare to see them side by side.'}</p>
+        ) : null}
         {cards.length === 0 && <p className="muted">No cards yet. Finish a career and its card lands here.</p>}
         {cards.map((c) => (
           <LogEntry
@@ -215,6 +281,18 @@ export function CareerLog() {
             live={live}
             locked={locks.includes(c.id)}
             canLock={locks.length < LOCK_MAX}
+            picked={pick.includes(c.id)}
+            canPick={pick.length < 2}
+            onPick={() => {
+              const next = pick.includes(c.id) ? pick.filter((x) => x !== c.id) : [...pick, c.id];
+              setPick(next);
+              if (next.length === 2) {
+                sfx('confirm');
+                recordCompare();
+                achievementsNow();
+              }
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
             onLock={() => {
               const on = !locks.includes(c.id);
               if (lockCard(c.id, on)) sfx(on ? 'lock' : 'unlock');
@@ -224,6 +302,7 @@ export function CareerLog() {
             }}
             onDelete={() => {
               deleteCard(c.id);
+              setPick(pick.filter((x) => x !== c.id));
               setCards(logCards());
               setLocks(logLocks());
             }}

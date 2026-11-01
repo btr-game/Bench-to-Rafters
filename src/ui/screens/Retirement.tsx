@@ -195,9 +195,9 @@ export function Retirement({ g }: { g: GameState }) {
         {g.flags.oath ? (
           <div className="oath-honour">
             {/* round 27 (owner): its own banner for the rafters */}
-            <BannerArt kind="oath" color="#7A1E1E" trim="#C9CFDA" lines={['NO', 'SHORT', 'CUTS']} size={132} />
+            <BannerArt kind="oath" color="#7A1E1E" trim="#C9CFDA" lines={['ROUGH', 'ROAD']} size={132} />
             <span>
-              <b>No Shortcuts, kept to the end</b>
+              <b>Rough Road, kept to the end</b>
               <small className="muted">Reality hits hard, master mode, every season played in full. Nobody handed this career anything.</small>
             </span>
           </div>

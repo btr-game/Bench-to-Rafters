@@ -1,7 +1,7 @@
-// Offseason shop: a random stock of about six items, up to three purchases per summer.
+// Offseason shop: six things a summer, priced for his income (round 31), as many as he can pay for.
 
-import { ATTR_MAX, ATTRS, LONGEVITY, VISIT, WEAR } from '../balance';
-import { clamp, pick, shuffle, weightedIndex } from '../rng';
+import { ATTR_MAX, ATTRS, LONGEVITY, SHOP, VISIT, WEAR } from '../balance';
+import { chance, clamp, pick, weightedIndex } from '../rng';
 import { VISITS } from '../../content/visits';
 import type { Decision, GameState } from '../types';
 import { SHOP_ITEMS, type ShopItem, type WearSlot } from '../../content/shop';
@@ -9,8 +9,32 @@ import { logDecision, pushDecision } from '../career/common';
 import { fmtMoney } from './salary';
 import { changeWeight, idealWeight, weightOf } from '../player/weight';
 
-const MAX_PURCHASES = 3;
-const STOCK = { size: 6, afford: 5 };
+/** His income, $M a year: salary and brand deal. */
+const incomeOf = (s: GameState): number => (s.contract?.salary ?? 0) + (s.player.brand?.perYear ?? 0);
+
+/** Log-scale step from a to b as x goes from x0 to x1 (clamped at both ends). */
+const logLerp = (x: number, x0: number, x1: number, a: number, b: number): number => {
+  const t = clamp(Math.log(Math.max(x, x0) / x0) / Math.log(x1 / x0), 0, 1);
+  return a + (b - a) * t;
+};
+
+/** What the shop charges him: more as he earns more, up to three times the sticker at $50M a year. */
+export function priceMult(s: GameState): number {
+  return logLerp(incomeOf(s), SHOP.inflate.from, SHOP.inflate.to, 1, SHOP.inflate.max);
+}
+
+/** A price as a shop writes it: two significant figures. */
+const nice = (x: number): number => {
+  const e = 10 ** (Math.floor(Math.log10(x)) - 1);
+  return Math.round(x / e) * e;
+};
+export const priceFor = (s: GameState, it: ShopItem): number => nice(it.price * priceMult(s));
+
+/** The price the six are drawn around: about a third of his bank, much less once he is very rich. */
+function target(s: GameState): number {
+  const share = SHOP.share * (SHOP.rich.share / SHOP.share) ** ((logLerp(incomeOf(s), SHOP.rich.from, SHOP.rich.to, 0, 1)));
+  return Math.max(s.player.bank, 0.00005) * share;
+}
 
 const HELPS: Record<string, string> = {
   SHT: 'your shooting',
@@ -43,56 +67,63 @@ function describeItem(it: ShopItem): string {
 }
 
 /**
- * About six things, different every summer (round 8): five he can afford, drawn at random
- * with things worth his money weighted up (a rich player rarely sees the $40 sleeve; round 25: a
- * thing costing 1% of his bank or more comes up most), and one to save up for; one from each
- * shelf at most (round 25).
+ * Six things, different every summer (round 8), drawn around a price that lets him buy two or three
+ * (round 31; things he bought before come up less). One from each shelf (round 25, the owner),
+ * unless the other shelves have nothing near his price: then a shelf may show two. Accessories
+ * stay cheap and come up on some visits as one of the six.
  */
 function stock(s: GameState): string[] {
-  const bank = s.player.bank;
   const bought = new Set(s.purchases);
   // an accessory is kept in the wardrobe, so it is never sold twice
   const owned = new Set(s.player.wardrobe?.owned ?? []);
-  const forSale = SHOP_ITEMS.filter((i) => !(i.wear && owned.has(i.id)));
-  const weight = (i: ShopItem) => (i.price >= bank * 0.01 ? 1.5 : i.price >= bank * 0.002 ? 1 : 0.2) * (bought.has(i.id) ? 0.5 : 1);
-  // round 25 (the owner): never two things from the same shelf in one visit
-  const picks: ShopItem[] = [];
-  let pool = forSale.filter((i) => i.price <= bank);
-  while (picks.length < STOCK.afford && pool.length > 0) {
-    const it = pool[weightedIndex(s.rng, pool.map(weight))];
-    picks.push(it);
-    pool = pool.filter((x) => x.category !== it.category);
+  const t = target(s);
+  const near = (i: ShopItem) => Math.exp(-((Math.log(priceFor(s, i) / t) / SHOP.spread) ** 2) / 2);
+  const weight = (i: ShopItem) => near(i) * (bought.has(i.id) ? 0.5 : 1) * (priceFor(s, i) > s.player.bank ? 0.3 : 1);
+  // an accessory costs next to nothing at any price level: one of the six on some visits, so the
+  // wardrobe keeps filling; the rest are drawn around his price
+  const wear = SHOP_ITEMS.filter((i) => i.wear && !owned.has(i.id));
+  const picks: ShopItem[] = wear.length && chance(s.rng, SHOP.wear) ? [pick(s.rng, wear)] : [];
+  let pool = SHOP_ITEMS.filter((i) => !i.wear);
+  // first one a shelf, among things near his price; then the nearest of the rest, any shelf
+  for (const oneShelf of [true, false]) {
+    let left = pool.filter((i) => !oneShelf || (near(i) > 0.05 && !picks.some((x) => x.category === i.category)));
+    while (picks.length < SHOP.stock && left.length > 0) {
+      const it = left[weightedIndex(s.rng, left.map((x) => weight(x) + 1e-9))];
+      picks.push(it);
+      left = left.filter((x) => x !== it && (!oneShelf || x.category !== it.category));
+    }
+    pool = pool.filter((x) => !picks.includes(x));
   }
-  const shelves = new Set(picks.map((i) => i.category));
-  const dream = shuffle(s.rng, forSale.filter((i) => i.price > bank && i.price < Math.max(0.002, bank * 40) && !shelves.has(i.category)));
-  return [...picks, ...dream].slice(0, STOCK.size).sort((a, b) => a.price - b.price).map((i) => i.id);
+  return picks.sort((a, b) => a.price - b.price).map((i) => i.id);
 }
 
-export function pushShop(s: GameState, ids?: string[], bought = 0): void {
+export function pushShop(s: GameState, ids?: string[], prices?: number[], bought = 0): void {
   const list = (ids ?? stock(s)).map((id) => SHOP_ITEMS.find((i) => i.id === id)!).filter(Boolean);
   if (list.length === 0) return;
+  const cost = list.map((it, k) => prices?.[k] ?? priceFor(s, it));
+  const rich = cost.reduce((a, b) => a + b, 0) <= s.player.bank;
   pushDecision(s, {
     kind: 'shop',
     title: 'The shop',
-    text: `Bank: ${fmtMoney(s.player.bank)}. Buy up to ${MAX_PURCHASES - bought} more thing${MAX_PURCHASES - bought === 1 ? '' : 's'} this summer.`,
+    text: `Bank: ${fmtMoney(s.player.bank)}. ${rich ? 'Buy whatever you like: money is no object now.' : 'Buy as many as you can pay for. Prices follow what you earn.'}`,
     choices: [
-      ...list.map((it) => ({
+      ...list.map((it, k) => ({
         id: it.id,
-        label: `${it.name} · ${fmtMoney(it.price)}`,
+        label: `${it.name} · ${fmtMoney(cost[k])}`,
         detail: describeItem(it),
-        disabled: it.price > s.player.bank,
+        disabled: cost[k] > s.player.bank,
         tags: [it.category],
-        meta: { price: it.price },
+        meta: { price: cost[k] },
       })),
       { id: 'leave', label: 'Leave the shop', detail: 'Save the money.' },
     ],
-    data: { ids: list.map((i) => i.id), bought },
+    data: { ids: list.map((i) => i.id), prices: cost, bought },
   });
 }
 
-export function applyItem(s: GameState, it: ShopItem): void {
+export function applyItem(s: GameState, it: ShopItem, price = it.price): void {
   const p = s.player;
-  p.bank -= it.price;
+  p.bank -= price;
   if (it.attrs) for (const k of ATTRS) if (it.attrs[k]) p.attrs[k] = clamp(p.attrs[k] + it.attrs[k]!, 15, ATTR_MAX);
   if (it.focus) for (const k of p.focus) p.attrs[k] = clamp(p.attrs[k] + it.focus, 15, ATTR_MAX);
   if (it.range) p.range = clamp(p.range + it.range, 0, 99);
@@ -130,13 +161,20 @@ export function wearItem(s: GameState, slot: WearSlot, id: string | null): void 
 export function resolveShop(s: GameState, d: Decision, id: string): string | null {
   if (id === 'leave') return null;
   const it = SHOP_ITEMS.find((i) => i.id === id);
-  if (!it || it.price > s.player.bank) return null;
-  applyItem(s, it);
-  logDecision(s, 'shop', `Bought: ${it.name} (${fmtMoney(it.price)}).`);
+  const ids = (d.data?.ids as string[]) ?? [];
+  // the price on the tag when the shop opened (a save from before round 31 has none: today's price)
+  const prices = (d.data?.prices as number[] | undefined) ?? ids.map((x) => priceFor(s, SHOP_ITEMS.find((i) => i.id === x)!));
+  const price = prices[ids.indexOf(id)] ?? (it ? priceFor(s, it) : 0);
+  if (!it || price > s.player.bank) return null;
+  applyItem(s, it, price);
+  logDecision(s, 'shop', `Bought: ${it.name} (${fmtMoney(price)}).`);
+  // no limit (round 31): the shop stays open while something is left in it; the most bought in
+  // one visit is kept (Shopping Spree, Cleaned Out)
   const bought = ((d.data?.bought as number) ?? 0) + 1;
-  const rest = ((d.data?.ids as string[]) ?? []).filter((x) => x !== id);
-  if (bought < MAX_PURCHASES && rest.length > 0) {
-    pushShop(s, rest, bought);
+  s.flags.spree = Math.max(s.flags.spree ?? 0, bought);
+  const rest = ids.map((x, k) => [x, prices[k]] as const).filter(([x]) => x !== id);
+  if (rest.length > 0) {
+    pushShop(s, rest.map(([x]) => x), rest.map(([, v]) => v), bought);
     // keep the shop at the front of the queue
     s.pending.unshift(s.pending.pop()!);
   }

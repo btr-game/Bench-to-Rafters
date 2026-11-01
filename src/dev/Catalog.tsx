@@ -513,17 +513,17 @@ const CATEGORIES: Category[] = [
           ] as [string, string][],
         };
       }).concat([
-        // the two challenges a difficulty can carry (round 25 No Shortcuts, round 30 Comet)
+        // the two challenges a difficulty can carry (round 25 Rough Road, round 30 Comet)
         {
           key: 'oath',
-          title: 'No Shortcuts',
+          title: 'Rough Road',
           sub: 'with Reality hits hard',
           group: 'Challenges',
           text: 'The road rolls the player; master mode, no Fast break or Sim, for the whole career.',
           art: () => <Icon name="oath" size={44} />,
           facts: [
             ['Locked', 'Master mode on; Fast break and Sim off'],
-            ['Mark', 'No Shortcuts'],
+            ['Mark', 'Rough Road'],
           ] as [string, string][],
         },
         {

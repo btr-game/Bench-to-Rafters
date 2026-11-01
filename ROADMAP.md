@@ -68,3 +68,14 @@ Ideas the owner has asked to keep for later. Not started unless marked.
 - A real stopwatch for the playtime model: time a few people through a Comet career and replace
   the per-screen prices in `scripts/playtime.ts` with what they measure.
 - Comet's own banner on the end-of-career page, as No Shortcuts has.
+
+## Kept for later (round 31)
+
+- **Next generation** (owner: "i like this, but let's develop this later. i have plans"): after he
+  retires, a new career as his child, with part of his build, the famous surname and more media
+  pressure from day one.
+- Offered and not picked yet: season goals set by the coach each preseason; trade-deadline
+  rumours and a call to stay or go; an adjustment between playoff games; a Hall of Fame speech
+  that thanks people and writes the career card's epilogue.
+- The undo could keep more than one step, for players who want to walk back a whole summer.
+- Compare could take a card from the community boards, not just the log.

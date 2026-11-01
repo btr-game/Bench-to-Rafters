@@ -389,13 +389,13 @@ export const ACHIEVEMENTS_25: Ach25[] = [
   A('w-500', 'Five Hundred Wins', 'allstar', 'Win 500 NBA regular-season games.', (f) => f.nba.reduce((a, h) => a + h.w, 0) >= 500),
   A('w-900', 'Win Machine', 'hof', 'Win 900 NBA regular-season games.', (f) => f.nba.reduce((a, h) => a + h.w, 0) >= 900),
   A('w-finals5', 'June Is Busy', 'hof', 'Reach the NBA Finals five times.', (f) => f.nba.filter((h) => /Champion|Finals/i.test(h.result)).length >= 5),
-  // ---- No Shortcuts (round 25, owner: honour the players who take Reality the hardest way) ----
-  A('ns-season', 'No Shortcuts', 'starter', 'Finish a season of a No Shortcuts career: Reality hits hard, a random player, master mode, no fast break or sim.', (f) => !!f.g.flags.oath && f.g.history.length > 0),
-  A('ns-nba', 'The Hard Way', 'allstar', 'Reach the NBA in a No Shortcuts career.', (f) => !!f.g.flags.oath && f.nba.length > 0),
-  A('ns-allstar', 'Earned, Not Given', 'hof', 'Make an All-Star team in a No Shortcuts career.', (f) => !!f.g.flags.oath && won(f, 'ALLSTAR') > 0),
-  A('ns-ring', 'Iron Crown', 'hof', 'Win an NBA title in a No Shortcuts career.', (f) => !!f.g.flags.oath && f.nbaTitlesYears.length > 0),
-  A('ns-mvp', 'Nobody Handed It Over', 'hof', 'Win an MVP in a No Shortcuts career.', (f) => !!f.g.flags.oath && won(f, 'MVP') > 0),
-  A('ns-hof', 'Rafters the Hard Way', 'hof', 'Make the Hall of Fame in a No Shortcuts career.', (f) => !!f.g.flags.oath && f.retired && !!hallOfFame(f.g)),
+  // ---- Rough Road (round 25, owner: honour the players who take Reality the hardest way) ----
+  A('ns-season', 'Rough Road', 'starter', 'Finish a season of a Rough Road career: Reality hits hard, a random player, master mode, no fast break or sim.', (f) => !!f.g.flags.oath && f.g.history.length > 0),
+  A('ns-nba', 'The Hard Way', 'allstar', 'Reach the NBA in a Rough Road career.', (f) => !!f.g.flags.oath && f.nba.length > 0),
+  A('ns-allstar', 'Earned, Not Given', 'hof', 'Make an All-Star team in a Rough Road career.', (f) => !!f.g.flags.oath && won(f, 'ALLSTAR') > 0),
+  A('ns-ring', 'Iron Crown', 'hof', 'Win an NBA title in a Rough Road career.', (f) => !!f.g.flags.oath && f.nbaTitlesYears.length > 0),
+  A('ns-mvp', 'Nobody Handed It Over', 'hof', 'Win an MVP in a Rough Road career.', (f) => !!f.g.flags.oath && won(f, 'MVP') > 0),
+  A('ns-hof', 'Rafters the Hard Way', 'hof', 'Make the Hall of Fame in a Rough Road career.', (f) => !!f.g.flags.oath && f.retired && !!hallOfFame(f.g)),
   // round 30: Comet, Shoot for the stars at hyper speed
   A('comet1', 'Shooting Star', 'rotation', 'Finish a Comet career: Shoot for the stars with Fast break and Sim, about five minutes.', (f) => !!f.g.flags.comet && f.retired),
   A('comet-mvp', 'Light Speed', 'allstar', 'Win an MVP in a Comet career.', (f) => !!f.g.flags.comet && won(f, 'MVP') > 0),

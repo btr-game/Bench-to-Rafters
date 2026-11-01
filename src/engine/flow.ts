@@ -87,7 +87,7 @@ export function newGame(seed: number, input: CreateInput): GameState {
     schoolColor: '',
   };
   if (input.fast || input.mode === 'fast' || input.mode === 'lab') s.flags.fast = 1;
-  // round 25 (owner): No Shortcuts, the hardest way to play, kept for the whole career
+  // round 25 (owner): Rough Road, the hardest way to play, kept for the whole career
   if (input.oath && s.mode === 'reality' && !s.flags.fast) s.flags.oath = 1;
   // round 30 (owner): Comet, Shoot for the stars at hyper speed: fast break and sim, locked on
   if (input.comet && s.mode === 'stars') s.flags.comet = s.flags.fast = s.flags.sim = 1;

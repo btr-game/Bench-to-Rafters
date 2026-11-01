@@ -98,7 +98,8 @@ describe('flow', () => {
   it('a season stays a manageable number of clicks', () => {
     const r = runCareer(3, 'smart');
     const seasons = r.paths.length > 0 ? r.retireAge - 14 : 1;
-    expect(r.steps / seasons).toBeLessThan(14);
+    // round 31: the shop has no limit now (owner), so a buyer clicks a little more (seed 3: 14.1364)
+    expect(r.steps / seasons).toBeLessThan(15);
   });
 });
 

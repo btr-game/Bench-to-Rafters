@@ -51,7 +51,7 @@ import { smartChoice } from '../scripts/harness';
 import { makeRng } from '../src/engine/rng';
 import { claimMini } from '../src/engine/career/miniBonus';
 import HOUSE from '../src/content/house.json';
-import { scoreOf } from '../src/ui/community';
+import { BOARDS, onBoard, scoreOf } from '../src/ui/community';
 import type { CareerRecord } from '../src/engine/career/record';
 
 describe('an icon of its own (owner: "injuries, events, and some of levels and leagues have the exact same icon")', () => {
@@ -131,7 +131,7 @@ describe('mini-game achievements (owner: "outside of the main game and based on 
 describe('the house players (owner: "the dummies should have very low stats so that the users can quickly dominate")', () => {
   const recs = HOUSE as unknown as CareerRecord[];
   it('are small careers on every board, and a few bronze statues', () => {
-    for (const mode of ['standard', 'reality', 'stars'] as const) expect(recs.filter((r) => r.mode === mode && !r.id.startsWith('house-statue')).length).toBe(10);
+    for (const b of BOARDS) expect(recs.filter((r) => onBoard(r, b) && !r.id.startsWith('house-statue') && r.id.startsWith(`house-${b}-`)).length, b).toBe(10);
     expect(recs.filter((r) => r.id.startsWith('house-statue')).length).toBeGreaterThan(0);
     for (const r of recs) {
       expect(scoreOf(r), r.name).toBeLessThan(25);
