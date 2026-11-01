@@ -20,7 +20,7 @@ import { StatueArt } from '../art/Statue';
 import { PlayerArt } from '../art/Player';
 import { Icon } from '../art/Icon';
 import { PixelX } from '../art/PixelX';
-import { OathMark } from '../components/OathMark';
+import { CometMark, OathMark } from '../components/OathMark';
 import { sfx } from '../sound';
 import { houseScores, houseStatues } from '../house';
 
@@ -208,6 +208,7 @@ function Board({ c }: { c: Api }) {
                     {r.mine ? <span className="you"> you</span> : null}
                     {r.house ? <HouseTag /> : null}
                     {r.rec.oath ? <OathMark size={16} /> : null}
+                    {r.rec.comet ? <CometMark size={16} /> : null}
                   </b>
                   <small>
                     {NAMES.pos[r.rec.pos]} · {r.rec.tier} · peak {Math.round(r.rec.peak)} · {r.rec.titles} title{r.rec.titles === 1 ? '' : 's'}
@@ -391,6 +392,7 @@ function Hall({ c }: { c: Api }) {
                 <b className="hall-story-name">
                   {picked.rec.name}
                   {picked.rec.oath ? <OathMark size={16} /> : null}
+                  {picked.rec.comet ? <CometMark size={16} /> : null}
                 </b>
                 <div className="small muted">
                   {picked.rec.country} · {NAMES.pos[picked.rec.pos]} · {picked.rec.tier}

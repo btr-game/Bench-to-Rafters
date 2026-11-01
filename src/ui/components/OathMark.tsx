@@ -9,3 +9,13 @@ export function OathMark({ size = 18 }: { size?: number }) {
     </span>
   );
 }
+
+/** Round 30: the Comet mark (Shoot for the stars at hyper speed, about five minutes a career). */
+export function CometMark({ size = 18 }: { size?: number }) {
+  return (
+    <span className="oath-mark comet-mark" title="Comet: Shoot for the stars at hyper speed, Fast break and Sim for the whole career">
+      <Icon name="comet" size={size} />
+      <span>Comet</span>
+    </span>
+  );
+}

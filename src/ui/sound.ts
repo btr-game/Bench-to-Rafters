@@ -58,6 +58,8 @@ export const SFX = [
   // round 29: the career log's locks
   ['lock', 'Locking a card in the career log'],
   ['unlock', 'Unlocking a card in the career log'],
+  // round 30
+  ['comet', 'Riding the comet: the Comet challenge taken'],
 ] as const;
 type Sfx = (typeof SFX)[number][0];
 
@@ -333,6 +335,11 @@ export function sfx(name: Sfx, always = false): void {
       noise(t, 0.03, 0.35);
       tone(N(2), t + 0.03, 0.08, 'square', 0.5);
       tone(N(-5), t + 0.09, 0.1, 'triangle', 0.6);
+      break;
+    case 'comet': // a streak across the sky: a rising run, then a sparkle
+      seq([12, 16, 19, 24, 28, 31, 36], 0.035, 'square', 0.45);
+      noise(t + 0.2, 0.35, 0.12);
+      tone(N(43), t + 0.3, 0.25, 'triangle', 0.35);
       break;
     case 'unlock': // the shackle springs up
       noise(t, 0.03, 0.3);

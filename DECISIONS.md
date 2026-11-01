@@ -2164,3 +2164,46 @@ multiple times."
   the playoffs) and the project summary.
 - **Balance:** no engine change this round beyond the unlock note's wording, so the numbers stand
   as round 28 measured them (the balance tests run in the full check).
+
+## Round 30 (owner requests)
+
+- **Sim mode makes the turning-point calls** (owner: "for sim mode, can we even skip turning
+  points?"). It takes the first choice that is not high risk. Four ways of choosing were played
+  over 300 Shoot-for-the-stars sim careers each (the harness's smart player, the safest choice,
+  the first not high risk, the first listed): mean peak 70.4337, 69.9237, 70.3369 and 70.2118,
+  all within noise (SD about 11, standard error about 0.65); the one picked is the closest to the
+  smart player. A sim career averages about 33 turning points it no longer stops for. Home lists
+  each call since the last move, with how it went, in the result card's style; the player's own
+  outcome keeps the main card. The list clears with the next move.
+- **Comet** (owner: "for stars, can you make a hyper-fast mode (let's call it comet)? this
+  employs fastbreak and sim ... 5~10 minutes, more towards the 5 minute bound", then "make
+  balance changes or additional features to fastbreak and sim to achieve the 5 minute goal"):
+  offered with Shoot for the stars, like No Shortcuts with Reality. Fast break and Sim locked on.
+  A playtime model (`scripts/playtime.ts`) plays careers the way the game does and prices what
+  reaches the screen: creating the player 75 s; team offers 12 s, the draft 8 s, a brand deal 6 s,
+  retiring 6 s, any other decision 8 s; a stop between seasons 8 s; a story page 6 s; a list on
+  Home 4 s; the end of the career 30 s. Plain sim on Shoot for the stars came to 7.8585 minutes
+  (offseason stops 7.92, offers 4.68, brand deals 2.20 and 25.68 story pages a career). The steps
+  tried, each over 200 to 1,000 careers:
+  - auto brand deals, no stops between seasons, only intro, draft, finals and MVP pages: 3.7175
+    minutes, too short;
+  - plus award nights, breakthroughs and the logo as pages: 4.3714;
+  - plus the brand deal back to the player and a stop for new focus stats: 6.6423 (a breakthrough
+    opens new focus stats in 5.7 summers a career), too long;
+  - without that stop: 4.9262;
+  - plus storyline chapters as pages: **5.1875 minutes over 1,000 careers (SD 0.6977, median
+    5.1167, 80% between 4.3167 and 6.0833)**, kept.
+  So a Comet stops for where he plays (4.77 a career), the draft (about 1), brand deals (2.16) and
+  retiring (1); the game takes the youth academy's call and never stops between seasons; draft
+  night, award nights, finals, breakthrough seasons, storyline chapters, the nickname and its logo
+  keep a page (14.37 a career); college commitments, tournaments and injuries go into a list of
+  highlights on Home. Mean peak 87.9397, the same as plain sim's 88.2213. The career carries the
+  Comet mark (top bar, career log, leaderboards), with four achievements: Shooting Star, Light
+  Speed, Tail of Fire, Hall of Comets (564 in all).
+- **End of the round:** the comet icon on the offer, the mark, the badge and the highlights; a
+  comet sound for taking it; the guide (Sim, Comet, the quick-start line), Guide mode (Comet's
+  offer, Sim's calls, the highlights; the No Shortcuts step no longer matches Comet's card), What's
+  new, the dev deck (87 cards: Comet offered, a Comet career, Sim made the call; its fixtures can
+  play as sim or as a Comet), the Catalog's challenges, the project summary. Settings' keyboard
+  line said L for a tab that left in round 29; it says E now. No new decision kinds for the
+  harness; the balance tests do not play sim, so their numbers stand.

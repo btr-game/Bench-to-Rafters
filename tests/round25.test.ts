@@ -178,7 +178,12 @@ describe('press conferences', () => {
     sim.flags.fast = 1;
     sim.flags.sim = 1;
     fastForward(sim);
-    expect(sim.log.slice(before).filter((x) => x.kind === 'press' && /humble/.test(x.text)).length).toBe(PRESS.bigQuestions);
+    // round 30: sim mode no longer stops at the next turning point, so the run can reach a later
+    // conference too; each one it meets is answered for him, humbly, every question
+    const press = sim.log.slice(before).filter((x) => x.kind === 'press');
+    expect(press.filter((x) => /humble/.test(x.text)).length).toBeGreaterThanOrEqual(PRESS.bigQuestions);
+    expect(press.every((x) => /humble/.test(x.text))).toBe(true);
+    expect(sim.pending.some((x) => x.kind === 'press')).toBe(false);
   });
 });
 

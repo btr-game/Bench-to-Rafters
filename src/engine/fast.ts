@@ -12,7 +12,7 @@
 // - only the big story pages are shown;
 // - on screen, every tab folds its extra cards away behind one button (round 25, App.tsx).
 
-import type { Decision, GameState, Moment } from './types';
+import type { Decision, EventResult, GameState, Moment } from './types';
 import { advance, canChangeFocus, choose, heightMismatch, prompt } from './flow';
 import { pushPlanDecision } from './career/season';
 
@@ -26,6 +26,30 @@ function isBig(m: Moment): boolean {
   if (m.kind === 'injury') return /season|ACL|Everything/i.test(m.title + m.text);
   if (m.kind === 'commit') return /Sangmu|NBA|commits/i.test(m.text) || m.lines?.some((l) => /NBA/.test(l)) === true;
   return m.kind === 'event' && BIG_EVENT.test(m.title);
+}
+
+/**
+ * Comet (round 30, owner: "for stars, can you make a hyper-fast mode (let's call it comet)? this
+ * employs fastbreak and sim ... an estimate playtime of 5~10 minutes, more towards the 5 minute
+ * bound"; then "make balance changes or additional features to fastbreak and sim to achieve the 5
+ * minute goal"): on top of sim, the game takes the brand deal (a signature line for a big name,
+ * the sure deal otherwise) and the youth academy's call, and never stops between seasons. What is
+ * left is his: where to play, the draft, and when to retire. Only the career's biggest days get a
+ * page of their own (cometPage); the rest of the story goes into a list of highlights on Home.
+ */
+function cometChoice(d: Decision): string | null {
+  const open = d.choices.filter((c) => !c.disabled).map((c) => c.id);
+  if (d.kind === 'youth') return open.includes('promote') ? 'promote' : open.includes('move') ? 'move' : (open[0] ?? null);
+  return null;
+}
+
+/** The days a Comet career stops for: the first page, draft night, a final, award nights, a
+ * breakthrough season, a chapter of a storyline, the nickname and its logo. College commitments,
+ * tournaments and injuries go into the list of highlights instead (scripts/playtime.ts prices
+ * the choice). */
+function cometPage(m: Moment): boolean {
+  if (m.kind === 'intro' || m.kind === 'draft' || m.kind === 'title' || m.kind === 'awards' || m.nick || m.logo || m.arc) return true;
+  return m.kind === 'event' && /Breakthrough season|The leap/i.test(m.title);
 }
 
 /** A decision fast break makes for the player, or null when it is the player's call. */
@@ -50,8 +74,12 @@ function autoChoice(s: GameState, d: Decision): string | null {
  * Sim mode (round 25, the owner: "sim to the next decision"): fast break, and the routine calls it
  * still leaves to him are made for him too: the season plan (the training group of his first
  * focus stat, or recovery when hurt or low), the summer program, the national team call-up, the
- * G League assignment and the press conference (humble, round 25). It stops for the decisions that shape a career: turning points, offers,
+ * G League assignment and the press conference (humble, round 25). It stops for the decisions that shape a career: offers,
  * the draft, contracts, brands, storylines, retirement.
+ * Round 30 (owner: "for sim mode, can we even skip turning points?"): turning points too, taking
+ * the first choice that is not high risk. Five ways of choosing were played over 300 sim careers
+ * each, and all landed within noise of each other (mean peak 69.9 to 70.4, SE about 0.65); this
+ * one is the closest to the balance harness's smart player. Home lists the calls it made.
  */
 function simChoice(s: GameState, d: Decision): string | null {
   const open = d.choices.filter((c) => !c.disabled).map((c) => c.id);
@@ -72,6 +100,8 @@ function simChoice(s: GameState, d: Decision): string | null {
       return has('go') ?? open[0] ?? null;
     case 'press':
       return has('humble') ?? open[0] ?? null;
+    case 'event':
+      return (d.choices.find((c) => !c.disabled && c.risk !== 'High') ?? d.choices.find((c) => !c.disabled))?.id ?? null;
     default:
       return null;
   }
@@ -84,6 +114,7 @@ function simChoice(s: GameState, d: Decision): string | null {
  * the moves could not be reached at all.
  */
 function worthStopping(s: GameState): boolean {
+  if (s.flags.comet) return false; // Comet: no stop between seasons
   // sim mode only stops for a move he has to make
   if (s.flags.sim) return canChangeFocus(s) || heightMismatch(s) !== null;
   return s.stage !== 'HS' || canChangeFocus(s) || heightMismatch(s) !== null;
@@ -96,13 +127,17 @@ export function fastForward(s: GameState): void {
   // keep the outcome of the choice just made on screen while the game runs on
   const result = s.result;
   const toast = s.toast;
+  // round 30: the turning points sim mode decided on its own, for Home to list
+  const calls: EventResult[] = [];
   for (let i = 0; i < 400; i++) {
     const pr = prompt(s);
     if (pr.type === 'retired') break;
     if (pr.type === 'decision') {
-      const auto = autoChoice(s, pr.decision) ?? (s.flags.sim ? simChoice(s, pr.decision) : null);
+      const sim = s.flags.sim ? simChoice(s, pr.decision) : null;
+      const auto = autoChoice(s, pr.decision) ?? sim ?? (s.flags.comet ? cometChoice(pr.decision) : null);
       if (auto === null) break;
       choose(s, auto);
+      if (pr.decision.kind === 'event' && s.result) calls.push(s.result);
       continue;
     }
     if (s.step === 'offseason' && worthStopping(s) && s.flags.fastStop !== s.year) {
@@ -112,8 +147,22 @@ export function fastForward(s: GameState): void {
     advance(s);
   }
   s.moments = s.moments.filter(isBig);
-  s.result ??= result;
-  s.toast ??= toast;
+  if (s.flags.comet) {
+    // Comet: the biggest days keep a page; the rest of the story is a list on Home
+    const reel = s.moments.filter((m) => !cometPage(m));
+    s.moments = s.moments.filter(cometPage);
+    if (reel.length) s.reel = [...(s.reel ?? []), ...reel.map((m) => ({ title: m.title, line: m.lines?.[0] ?? '' }))];
+  }
+  if (calls.length) {
+    // the player's own outcome stays on the main card; sim's calls go in a list of their own
+    s.result = result;
+    s.toast = toast;
+  } else {
+    s.result ??= result;
+    s.toast ??= toast;
+  }
+  if (calls.length) s.simCalls = calls;
+  else delete s.simCalls;
 }
 
 /**
@@ -124,6 +173,7 @@ export function fastForward(s: GameState): void {
  */
 export function setFast(s: GameState, on: boolean): void {
   if (on && s.flags.oath) return; // No Shortcuts (round 25): no quick pace, for the whole career
+  if (!on && s.flags.comet) return; // Comet (round 30): the quick pace, for the whole career
   s.flags.fast = on ? 1 : 0;
   if (!on) {
     s.flags.simPostseason = 0;
@@ -141,6 +191,7 @@ export function setFast(s: GameState, on: boolean): void {
 /** Sim mode on or off (round 25). It turns fast break on with it; turning fast break off ends it. */
 export function setSim(s: GameState, on: boolean): void {
   if (on && s.flags.oath) return;
+  if (!on && s.flags.comet) return;
   s.flags.sim = on ? 1 : 0;
   if (on) setFast(s, true);
 }

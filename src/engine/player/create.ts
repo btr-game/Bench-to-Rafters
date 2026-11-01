@@ -43,6 +43,7 @@ export interface CreateInput {
   country?: string; // assigned by the game when omitted
   highSchool?: string;
   fast?: boolean; // fast break: the speed mode (engine/fast.ts)
+  comet?: boolean; // round 30: Comet (Shoot for the stars only): fast break and sim for the whole career, about five minutes
   oath?: boolean; // round 25: No Shortcuts (Reality only): master mode, no fast break or sim (round 27: simple text allowed, a random player)
   look?: import('../../content/looks').ChosenLook; // round 27: the look he picked (from his name if not)
 }

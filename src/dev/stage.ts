@@ -4,6 +4,7 @@
 import { advance, choose, newGame, prompt, type Prompt } from '../engine/flow';
 import { smartChoice } from '../../scripts/harness';
 import { makeRng } from '../engine/rng';
+import { fastForward, setSim } from '../engine/fast';
 import { ARCHETYPES } from '../engine/player/archetypes';
 import { POSITIONS, type Mode } from '../engine/balance';
 import type { Decision, GameState, Moment, Pos } from '../engine/types';
@@ -18,13 +19,16 @@ export interface PlayOpts {
   pick?: (s: GameState, d: Decision) => string | undefined;
   seed?: number;
   tries?: number;
+  /** Round 30: played as the game plays it, each move followed by fast break's run to the next
+   * stop: in sim mode, or as a Comet. */
+  quick?: 'sim' | 'comet';
 }
 
 const NAMES = ['Jordan Vale', 'Marcus Reed', 'Theo Grant', 'Andre Lucas', 'Caleb Stone', 'Isaiah Moore'];
 
 function input(seed: number, o: PlayOpts) {
   const pos = o.pos ?? POSITIONS[seed % POSITIONS.length];
-  return { name: NAMES[seed % NAMES.length], number: (seed % 54) + 1, pos, archetype: seed % ARCHETYPES[pos].length, focus: pos === 'C' || pos === 'PF' ? (['INT', 'REB'] as const) : (['SHT', 'PLY'] as const), mode: o.mode ?? 'standard', fast: o.fast };
+  return { name: NAMES[seed % NAMES.length], number: (seed % 54) + 1, pos, archetype: seed % ARCHETYPES[pos].length, focus: pos === 'C' || pos === 'PF' ? (['INT', 'REB'] as const) : (['SHT', 'PLY'] as const), mode: o.mode ?? 'standard', fast: o.fast, comet: o.quick === 'comet' };
 }
 
 /** Plays careers until `until` holds (checked before every step); null if no career gets there. */
@@ -33,6 +37,8 @@ export function play(until: (s: GameState, p: Prompt) => boolean, o: PlayOpts = 
     const seed = 101 + (o.seed ?? 0) + k * 37;
     const s = newGame(seed, { ...input(seed, o), focus: [...input(seed, o).focus] });
     if (!o.live) s.flags.simPostseason = 1;
+    if (o.quick === 'sim') setSim(s, true);
+    else if (o.quick) fastForward(s);
     const r = makeRng(seed ^ 0x51ed);
     for (let i = 0; i < 6000; i++) {
       const p = prompt(s);
@@ -42,6 +48,7 @@ export function play(until: (s: GameState, p: Prompt) => boolean, o: PlayOpts = 
       s.moments = [];
       if (p.type === 'decision') choose(s, o.pick?.(s, p.decision) ?? smartChoice(s, p.decision, r));
       else advance(s);
+      if (o.quick) fastForward(s);
     }
   }
   return null;

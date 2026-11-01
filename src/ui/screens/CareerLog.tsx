@@ -17,7 +17,7 @@ import { achievementsNow } from '../../store';
 import { canShareFiles, downloadCareerCard, drawCareerCard, shareCareerCard } from '../share';
 import { PlayerArt } from '../art/Player';
 import { Icon } from '../art/Icon';
-import { OathMark } from '../components/OathMark';
+import { CometMark, OathMark } from '../components/OathMark';
 
 /** Download (and on phones, share) the career card. */
 export function CardActions({ rec }: { rec: CareerRecord }) {
@@ -125,6 +125,7 @@ function LogEntry({ rec, locked, canLock, live, onDelete, onLock }: { rec: Caree
           </div>
           <b className="log-name">{rec.name}</b>
           {rec.oath && <OathMark />}
+          {rec.comet && <CometMark />}
           {locked && (
             <span className="log-lock-tag with-icon">
               <Icon name="lock" size={16} />

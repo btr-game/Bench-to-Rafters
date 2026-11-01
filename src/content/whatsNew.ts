@@ -16,6 +16,14 @@ interface News {
 
 export const NEWS: News[] = [
   {
+    id: '2026-11-01-r30',
+    date: '1 November 2026',
+    items: [
+      { icon: 'comet', text: 'Comet: pick Shoot for the stars and ride the comet, the stars at hyper speed. Fast break and Sim for the whole career, about five minutes from the first page to the last.' },
+      { icon: 'sim', text: 'Sim mode makes the turning-point calls too, and lists each call it made, with how it went, on Home.' },
+    ],
+  },
+  {
     id: '2026-11-01-r29',
     date: '1 November 2026',
     items: [

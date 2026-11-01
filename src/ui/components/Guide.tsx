@@ -24,7 +24,7 @@ const SECTIONS: { title: string; where: string; items: [string, string[]][] }[] 
       ['To do', ['The top of Home: what the game is waiting for now.', 'Also lists anything new worth a look. Tap to jump to it.']],
       ['Saving', ['Up to ten careers save on this device, each after every move.', 'The start page lists them: Continue, Code and Delete. An eleventh replaces the oldest.', 'Code copies a career as text; paste it on any other browser to carry it over.']],
       ['Settings', ['Theme, court background, sound effects and music, then New career (the career you leave stays in Your careers).', 'Switches: Fast break, playable playoff games, Simple text, Guide mode, Master mode.']],
-      ['How you play', ['A card on Home with every mode as a switch.', 'Sim: makes the routine calls (plans, summers, call-ups, press) and stops only for the big ones.', 'Fast break: quick seasons; each tab folds its extra cards behind "Show everything".', 'Simple text: hides the explanations on every tab.']],
+      ['How you play', ['A card on Home with every mode as a switch.', 'Sim: makes the routine calls (plans, summers, call-ups, press) and the turning points (the first choice that is not high risk), and lists the calls it made on Home. It stops for the big ones: offers, the draft, contracts, brands, storylines, retiring.', 'Fast break: quick seasons; each tab folds its extra cards behind "Show everything".', 'Simple text: hides the explanations on every tab.']],
       ['Guide mode', ['Walks you through every button once, step by step.', 'New things get their step the first time they unlock.', 'Then it highlights the next thing to do. Turn it on here, in Settings or on How you play.']],
       ['Master mode', ['No recommendations anywhere: no scouts’ calls, fit tags, suggested deals or hints.', 'In Settings or on How you play.']],
       ['Pages', ['The career log, the achievement book, the community and the mini-games open as pages of their own (in a career, from the Extras tab).', 'Top left says where Back goes; next to it, where you are. Escape goes back too.']],
@@ -39,6 +39,7 @@ const SECTIONS: { title: string; where: string; items: [string, string[]][] }[] 
     items: [
       ['Difficulty', ['Regular guy, Reality hits hard or Shoot for the stars.', 'Fixed for the whole career, and always shown by the game’s name.']],
       ['No Shortcuts', ['Picking Reality hits hard offers the hardest way to play: the road picks your player at random (position, archetype, focus, country, hand, name), then master mode with no Fast break or Sim mode, locked for the whole career. Simple text is allowed.', 'Such a career carries the mark in the top bar, on the leaderboards, the career log and its own banner when it ends, with achievements of its own.']],
+      ['Comet', ['Picking Shoot for the stars offers Comet: the stars at hyper speed, about five minutes a career.', 'Fast break and Sim stay on for the whole career; the game also takes the youth academy\u2019s call and never stops between seasons. You choose where you play, the draft, brand deals and when to retire.', 'Draft night, award nights, finals, breakthroughs, storylines and the nickname get a page; the rest is a list of highlights on Home. The career carries the Comet mark, with achievements of its own.']],
       ['Your look', ['On the identity step: skin tone, hair, hair colour and facial hair, shown on your player in a plain white or black jersey with your number; beside him, the back of the jersey with your name and number as you type them.', 'No accessories to start: the wardrobe adds what you buy.']],
       ['Where you start', ['Pick a country for its road to the pros, or Surprise me.', 'Hometown and first school are revealed when the career starts.']],
       ['Position, hand and archetype', ['Pick each yourself, or tap Random next to it.', 'Each archetype has its own traced action pose.']],
@@ -152,7 +153,7 @@ const QUICK: [string, string][] = [
   ['2', 'Answer turning points.'],
   ['3', 'Between seasons, check Offseason moves.'],
   ['4', 'Raise ratings to unlock mini-games (on the Extras tab).'],
-  ['5', 'Want it quicker? Fast break or Sim, on How you play.'],
+  ['5', 'Want it quicker? Fast break or Sim, on How you play; or a five-minute Comet career with Shoot for the stars.'],
 ];
 
 const SEEN = 'btr-guide-seen';

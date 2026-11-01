@@ -89,6 +89,8 @@ export function newGame(seed: number, input: CreateInput): GameState {
   if (input.fast || input.mode === 'fast' || input.mode === 'lab') s.flags.fast = 1;
   // round 25 (owner): No Shortcuts, the hardest way to play, kept for the whole career
   if (input.oath && s.mode === 'reality' && !s.flags.fast) s.flags.oath = 1;
+  // round 30 (owner): Comet, Shoot for the stars at hyper speed: fast break and sim, locked on
+  if (input.comet && s.mode === 'stars') s.flags.comet = s.flags.fast = s.flags.sim = 1;
   if (s.mode === 'lab') labState(player);
   // the game assigns his country, where he grows up and where he plays as a teenager
   assignOrigin(s);
@@ -154,6 +156,9 @@ function chooseInner(s: GameState, choiceId: string): void {
   }
   s.toast = null;
   s.result = null;
+  // round 30: sim mode's calls and a Comet's highlights last until the next move
+  delete s.simCalls;
+  delete s.reel;
   switch (d.kind) {
     case 'plan':
       s.season!.plan = ids[0] as HalfPlan;
@@ -214,6 +219,8 @@ function advanceInner(s: GameState): void {
   if (s.pending.length > 0 || s.step === 'retired') return;
   s.toast = null;
   s.result = null;
+  delete s.simCalls;
+  delete s.reel;
   switch (s.step) {
     case 'preseason':
     case 'firstHalf':

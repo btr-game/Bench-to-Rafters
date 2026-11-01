@@ -189,6 +189,7 @@ export function Create() {
   const [mode, setMode] = useState<Mode>('standard');
   const [country, setCountry] = useState(''); // '' = the game decides, by real-world odds
   const [oath, setOath] = useState(false); // round 25: No Shortcuts, offered with Reality
+  const [comet, setComet] = useState(false); // round 30: Comet, offered with Shoot for the stars
   // round 27: his look (the parts every avatar is built from) and a plain practice jersey
   const [look, setLook] = useState<ChosenLook>(() => randomLook());
   const [jersey, setJersey] = useState<Jersey>('white');
@@ -264,6 +265,7 @@ export function Create() {
       mode,
       country: country || undefined,
       oath: mode === 'reality' && oath,
+      comet: mode === 'stars' && comet,
       look,
     });
 
@@ -332,6 +334,24 @@ export function Create() {
                   </button>
                   <button className="btn small ghost" aria-pressed={!oath} onClick={() => setOath(false)}>
                     Just Reality
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+          {/* round 30 (owner): Shoot for the stars at hyper speed, about five minutes a career */}
+          {mode === 'stars' && (
+            <div className={`card oath-card comet-card${comet ? ' on' : ''}`} role="group" aria-label="The Comet challenge">
+              <Icon name="comet" size={48} />
+              <div className="stack" style={{ gap: 6 }}>
+                <div className="sec-title">Ride the comet? About five minutes a career</div>
+                <p className="small muted">Comet is Shoot for the stars at hyper speed: Fast break and Sim stay on for the whole career. The seasons play themselves and the game makes the routine calls and the turning points; you choose where you play, the draft, your brand deals and when to retire, and the biggest nights (draft night, awards, finals, breakthroughs) get a page of their own. The rest waits for you in a list of highlights. The career carries the Comet mark.</p>
+                <div className="row" style={{ gap: 8 }}>
+                  <button className={`btn small${comet ? '' : ' ghost'}`} aria-pressed={comet} onClick={() => (comet || sfx('comet'), setComet(true))}>
+                    {comet ? 'Comet away' : 'Ride the comet'}
+                  </button>
+                  <button className="btn small ghost" aria-pressed={!comet} onClick={() => setComet(false)}>
+                    Just the stars
                   </button>
                 </div>
               </div>

@@ -532,6 +532,8 @@ export interface GameState {
   nbaSnapshot: { leader: number; over25: number; best: number; worst: number } | null;
   toast: string | null; // outcome of the last event choice, shown once by the UI
   result?: EventResult | null; // the last event's outcome with what changed
+  simCalls?: EventResult[]; // round 30: the turning points sim mode decided since the player's last move
+  reel?: { title: string; line: string }[]; // round 30, Comet: the story pages folded into a list since his last move
   moments: Moment[]; // story pages waiting to be shown
   purchases: string[]; // shop item ids ever bought
   tournaments: TourneyRecord[];

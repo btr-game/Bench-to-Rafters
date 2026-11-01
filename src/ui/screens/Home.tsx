@@ -1,4 +1,4 @@
-import type { AttrKey, GameState, SeasonRecord } from "../../engine/types";
+import type { AttrKey, EventResult, GameState, SeasonRecord } from "../../engine/types";
 import { GuideSpotWrap } from "../components/Guide";
 import { tourKind } from "../components/GuideTour";
 import {
@@ -225,6 +225,57 @@ function SeasonHeader({ g }: { g: GameState }) {
 }
 
 /** Fast break skips the season summary page; this line keeps the story readable. */
+/** Round 30: the turning points sim mode decided on its own since the last move, each like the
+ * result card of a call you made yourself. */
+function SimCalls({ calls }: { calls: EventResult[] }) {
+  return (
+    <div className="sim-calls" data-tour="sim-calls">
+      <div className="kicker with-icon">
+        <Icon name="sim" size={18} />
+        {calls.length === 1 ? "Sim made a call for you" : `Sim made ${calls.length} calls for you`}
+      </div>
+      {calls.map((c, i) => (
+        <div key={i} className={`result-card sim-call${c.tierKey ? ` tier-${c.tierKey}` : ""}`}>
+          <div className="kicker">
+            {c.title} · {c.choice}
+          </div>
+          {c.tier && <span className="result-tier">{c.tier}</span>}
+          <p className="small prose">{c.text}</p>
+          {c.changes.length > 0 && (
+            <div className="result-chips">
+              {c.changes.map((x, j) => (
+                <span key={j} className={`result-chip ${x.good ? "up" : "down"}`}>
+                  {x.good ? "▲" : "▼"} {x.label} <b>{x.value}</b>
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** Round 30, Comet: the story since his last move that did not get a page of its own. */
+function Reel({ items }: { items: NonNullable<GameState["reel"]> }) {
+  return (
+    <div className="comet-reel" data-tour="comet-reel">
+      <div className="kicker with-icon">
+        <Icon name="comet" size={18} />
+        On the way here
+      </div>
+      <ul>
+        {items.map((x, i) => (
+          <li key={i}>
+            <b>{x.title}</b>
+            {x.line && <span className="small muted"> · {x.line}</span>}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 function FastRecap({ g }: { g: GameState }) {
   const r = g.lastSummary;
   if (!r) return null;
@@ -991,6 +1042,8 @@ export function Home({ g }: { g: GameState }) {
           ) : (
             g.toast && <div className="toast">{g.toast}</div>
           )}
+          {g.simCalls?.length ? <SimCalls calls={g.simCalls} /> : null}
+          {g.reel?.length ? <Reel items={g.reel} /> : null}
           {g.flags.fast ? <FastRecap g={g} /> : null}
           <GuideSpotWrap g={g} spot="main">
             <div

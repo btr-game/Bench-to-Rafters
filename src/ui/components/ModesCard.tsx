@@ -15,7 +15,7 @@ function Chip({ icon, label, on, onClick, tour, disabled }: { icon: string; labe
 }
 
 const NOTE: [string, string][] = [
-  ['sim', 'Sim: the season plays itself; it stops for turning points, offers, the draft and contracts.'],
+  ['sim', 'Sim: the season plays itself, turning points included (it lists the calls it made); it stops for offers, the draft and contracts.'],
   ['fast', 'Fast break: quick seasons; you still make every real call.'],
   ['simple', 'Simple text: just the choices.'],
   ['master', 'Master: no recommendations anywhere.'],
@@ -24,10 +24,13 @@ const NOTE: [string, string][] = [
 
 export function ModesCard({ g }: { g: GameState }) {
   const st = useStore();
-  const locked = g.mode === 'lab' || g.step === 'retired' || !!g.flags.daily || !!g.flags.oath;
+  // round 30: a Comet keeps Fast break and Sim on for the whole career
+  const locked = g.mode === 'lab' || g.step === 'retired' || !!g.flags.daily || !!g.flags.oath || !!g.flags.comet;
   const oath = !!g.flags.oath;
   const on: Record<string, boolean> = { sim: !!g.flags.sim, fast: !!g.flags.fast, simple: st.simple, master: st.master, guide: st.guide && !st.master };
   const notes = NOTE.filter(([k]) => on[k] && !(k === 'fast' && on.sim)).map(([, t]) => t);
+  // round 30: a Comet says why the two are locked on
+  if (g.flags.comet) notes.unshift('Comet: Fast break and Sim stay on for the whole career, and only the biggest nights get a page.');
   return (
     <section className="card stack modes-card" data-tour="modes">
       <div className="kicker">How you play</div>

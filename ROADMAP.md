@@ -62,3 +62,9 @@ Ideas the owner has asked to keep for later. Not started unless marked.
   Passport now; a short sting when the loop changes between screens.
 - The Extras tab could carry a career's own leaderboard standing (where it would rank if it ended
   today).
+
+## Kept for later (round 30)
+
+- A real stopwatch for the playtime model: time a few people through a Comet career and replace
+  the per-screen prices in `scripts/playtime.ts` with what they measure.
+- Comet's own banner on the end-of-career page, as No Shortcuts has.

@@ -2401,3 +2401,14 @@ input[type='range'] { width: 100%; min-height: 32px; accent-color: var(--accent)
 .series-all { display: grid; gap: 10px; }
 .series-all > summary { cursor: pointer; padding-block: 6px; }
 .series-all[open] > summary { margin-bottom: 4px; }
+
+/* round 30: the turning points sim mode decided, under the main result */
+.sim-calls { display: grid; gap: 8px; }
+.sim-call { padding-block: 8px; }
+.sim-call .result-tier { font-size: 12.5px; padding: 2px 8px; }
+
+/* round 30: Comet, Shoot for the stars at hyper speed */
+.comet-card.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--surface)); }
+.comet-mark { border-color: var(--accent); color: var(--ink); }
+.comet-reel { display: grid; gap: 6px; padding: 10px 12px; border-radius: 10px; border: 1px dashed var(--line); background: var(--surface-2); }
+.comet-reel ul { margin: 0; padding-left: 18px; display: grid; gap: 3px; }

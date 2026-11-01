@@ -494,7 +494,7 @@ const CATEGORIES: Category[] = [
     // mini-game, so neither is a difficulty)
     blurb: 'The three difficulties a career can start at, and the dials each one sets.',
     entries: () =>
-      DIFFICULTIES.map((k) => {
+      DIFFICULTIES.map((k): Entry => {
         const m = MODES[k];
         return {
           key: k,
@@ -512,7 +512,34 @@ const CATEGORIES: Category[] = [
             ...(m.teamFx !== undefined ? ([['Team factors', `×${m.teamFx}`]] as [string, string][]) : []),
           ] as [string, string][],
         };
-      }),
+      }).concat([
+        // the two challenges a difficulty can carry (round 25 No Shortcuts, round 30 Comet)
+        {
+          key: 'oath',
+          title: 'No Shortcuts',
+          sub: 'with Reality hits hard',
+          group: 'Challenges',
+          text: 'The road rolls the player; master mode, no Fast break or Sim, for the whole career.',
+          art: () => <Icon name="oath" size={44} />,
+          facts: [
+            ['Locked', 'Master mode on; Fast break and Sim off'],
+            ['Mark', 'No Shortcuts'],
+          ] as [string, string][],
+        },
+        {
+          key: 'comet',
+          title: 'Comet',
+          sub: 'with Shoot for the stars',
+          group: 'Challenges',
+          text: 'Hyper speed: the game plays the seasons and makes every call but where he plays, the draft, brand deals and retiring. Only the biggest nights get a page; the rest is a list of highlights.',
+          art: () => <Icon name="comet" size={44} />,
+          facts: [
+            ['Locked', 'Fast break and Sim on'],
+            ['Playtime (model, 1,000 careers)', 'mean 5.19 min; 80% within 4.32–6.08'],
+            ['Mark', 'Comet'],
+          ] as [string, string][],
+        },
+      ]),
   },
   {
     key: 'styles',

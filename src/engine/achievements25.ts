@@ -396,5 +396,10 @@ export const ACHIEVEMENTS_25: Ach25[] = [
   A('ns-ring', 'Iron Crown', 'hof', 'Win an NBA title in a No Shortcuts career.', (f) => !!f.g.flags.oath && f.nbaTitlesYears.length > 0),
   A('ns-mvp', 'Nobody Handed It Over', 'hof', 'Win an MVP in a No Shortcuts career.', (f) => !!f.g.flags.oath && won(f, 'MVP') > 0),
   A('ns-hof', 'Rafters the Hard Way', 'hof', 'Make the Hall of Fame in a No Shortcuts career.', (f) => !!f.g.flags.oath && f.retired && !!hallOfFame(f.g)),
+  // round 30: Comet, Shoot for the stars at hyper speed
+  A('comet1', 'Shooting Star', 'rotation', 'Finish a Comet career: Shoot for the stars with Fast break and Sim, about five minutes.', (f) => !!f.g.flags.comet && f.retired),
+  A('comet-mvp', 'Light Speed', 'allstar', 'Win an MVP in a Comet career.', (f) => !!f.g.flags.comet && won(f, 'MVP') > 0),
+  A('comet-ring', 'Tail of Fire', 'allstar', 'Win an NBA title in a Comet career.', (f) => !!f.g.flags.comet && f.nbaTitlesYears.length > 0),
+  A('comet-hof', 'Hall of Comets', 'hof', 'Make the Hall of Fame in a Comet career.', (f) => !!f.g.flags.comet && f.retired && !!hallOfFame(f.g)),
   A('w-lose3f', 'Always the Bridesmaid', 'allstar', 'Lose three NBA Finals.', (f) => f.nba.filter((h) => /Lost (in )?(the )?(NBA )?Finals/i.test(h.result)).length >= 3),
 ];

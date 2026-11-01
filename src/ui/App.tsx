@@ -81,6 +81,12 @@ function ModeBadge({ g }: { g: GameState }) {
           <Icon name="oath" size={14} />
           No Shortcuts
         </b>
+      ) : g.flags.comet ? (
+        <b className="oath-badge with-icon">
+          {' · '}
+          <Icon name="comet" size={14} />
+          Comet
+        </b>
       ) : (
         master && <b> · Master</b>
       )}

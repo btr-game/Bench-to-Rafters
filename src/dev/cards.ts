@@ -342,6 +342,9 @@ export const CARDS: DevCard[] = [
   // modes
   // round 26-27: No Shortcuts, from the offer to the banner
   { id: 'oath-offer', title: 'No Shortcuts: the offer', group: 'Modes', icon: 'oath', blurb: 'Picking Reality asks once: take the hardest way to play?', open: () => void useStore.setState({ game: null, page: null, mini: null }), press: '.modes .mode-card:nth-child(2)' },
+  { id: 'comet-offer', title: 'Comet, offered', group: 'Modes', icon: 'comet', blurb: 'Round 30: Shoot for the stars at hyper speed, offered on the start page with the stars.', open: () => void useStore.setState({ game: null, page: null, mini: null }), press: '.modes .mode-card:nth-child(3)' },
+  { id: 'comet-career', title: 'Comet career', group: 'Modes', icon: 'comet', blurb: 'Fast break and Sim locked on; the story it did not stop for, in a list of highlights; the Comet mark.', open: () => show(at('comet', (s, p) => s.stage === 'NBA' && !!s.reel?.length && p.type === 'decision', { quick: 'comet' }), 'home', {}, true) },
+  { id: 'sim-calls', title: 'Sim made the call', group: 'Modes', icon: 'sim', blurb: 'Round 30: sim mode makes the turning points too, and lists each call with how it went.', open: () => show(at('sim-calls', (s) => !!s.simCalls?.length, { quick: 'sim' }), 'home') },
   { id: 'oath-career', title: 'No Shortcuts career', group: 'Modes', icon: 'oath', blurb: 'Master mode on, Fast break and Sim locked off; the mark in the top bar.', open: () => oath(hsStart('reality')) },
   { id: 'oath-retired', title: 'No Shortcuts, kept to the end', group: 'Modes', icon: 'oath', blurb: 'Its own banner on the retirement page.', open: () => oath(retired(3)), press: 'text=See the whole career' },
   { id: 'mode-reality', title: 'Reality hits hard', group: 'Modes', icon: 'reality', blurb: 'Most careers end short of the NBA.', open: () => show(hsStart('reality')) },
