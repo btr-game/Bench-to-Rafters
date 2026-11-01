@@ -347,3 +347,54 @@ describe('round 32: achievements and events', () => {
     }
   });
 });
+
+describe('round 32: the live strip carries house players', () => {
+  it('the court moves between a few hundred and the low thousands; careers ended never go down and stay below it', async () => {
+    const { HOUSE_COURT, houseEnded, houseOnCourt } = await import('../src/ui/houseLive');
+    const t0 = Date.UTC(2026, 10, 1, 0, 0, 0);
+    let lo = Infinity;
+    let hi = 0;
+    for (let t = t0; t < t0 + 2 * 86_400_000; t += 60_000) {
+      const v = houseOnCourt(t);
+      lo = Math.min(lo, v);
+      hi = Math.max(hi, v);
+    }
+    expect(lo).toBeGreaterThanOrEqual(HOUSE_COURT.low);
+    expect(hi).toBeLessThanOrEqual(HOUSE_COURT.high);
+    expect(hi - lo).toBeGreaterThan(700); // it really moves over a day
+    // it fluctuates from one 4-second tick to the next, but not wildly
+    let moved = 0;
+    for (let t = t0; t < t0 + 3_600_000; t += 4000) {
+      const d = Math.abs(houseOnCourt(t + 4000) - houseOnCourt(t));
+      if (d > 0) moved++;
+      expect(d).toBeLessThan(80);
+    }
+    expect(moved).toBeGreaterThan(400);
+    for (const opened of [t0, t0 + 5 * 3_600_000, t0 + 13 * 3_600_000]) {
+      let last = 0;
+      for (let m = 0; m <= 240; m++) {
+        const now = opened + m * 60_000;
+        const e = houseEnded(opened, now);
+        expect(e).toBeGreaterThanOrEqual(last);
+        expect(e).toBeLessThan(houseOnCourt(now));
+        if (m === 5) expect(e).toBeGreaterThan(15); // meaningful within minutes
+        if (m === 60) expect(e).toBeGreaterThan(100);
+        last = Math.max(last, e);
+      }
+    }
+    expect(houseEnded(t0, t0)).toBe(0);
+  });
+});
+
+describe('the dev deck’s project summary', () => {
+  it('every block has the shape the deck draws (a crash here kept the whole deck from opening)', () => {
+    const d = JSON.parse(readFileSync('src/dev/summary.json', 'utf8')) as { chapters: { title: string; blocks: Record<string, unknown>[] }[] };
+    for (const c of d.chapters) {
+      for (const b of c.blocks) {
+        if (b.t === 'ul') for (const it of b.items as unknown[]) expect(Array.isArray(it) && (it as unknown[]).every((x) => typeof x === 'string'), `${c.title}: ${JSON.stringify(it).slice(0, 60)}`).toBe(true);
+        else if (b.t === 'table') for (const r of b.rows as unknown[][]) expect(r.length, `${c.title}: ${String(r[0])}`).toBe((b.head as string[]).length);
+        else expect(typeof b.text).toBe('string');
+      }
+    }
+  });
+});
