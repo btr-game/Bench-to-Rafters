@@ -2,6 +2,7 @@
 // season, a set number of NBA seasons, the systems each level holds, and the All-Star goal.
 
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
 import { advance, choose, newGame, prompt } from '../src/engine/flow';
 import { fastForward } from '../src/engine/fast';
 import { smartChoice } from '../scripts/harness';
@@ -179,5 +180,35 @@ describe('the goal', () => {
       if (i % 4 === 0) await breathe();
     }
     expect(star / n).toBeGreaterThanOrEqual(0.7);
+  });
+});
+
+describe('the road map on this device', () => {
+  it('opens the levels in order, and shows each level its own tabs', async () => {
+    const { nextLevel, levelOpen, levelTabs } = await import('../src/ui/road');
+    const road = { passed: {}, minis: {} };
+    expect(nextLevel(road)).toBe('beginner');
+    expect(levelOpen(road, 'intermediate')).toBe(false);
+    const after = { passed: { beginner: { star: true } }, minis: {} };
+    expect(nextLevel(after)).toBe('intermediate');
+    expect(levelOpen(after, 'intermediate')).toBe(true);
+    expect(levelOpen(after, 'advanced')).toBe(false);
+    expect(levelTabs(newGame(5, { ...input, level: 'beginner' }))).toEqual(['home', 'player']);
+    expect(levelTabs(newGame(5, { ...input, level: 'advanced' }))).toEqual(['home', 'season', 'player']);
+    expect(levelTabs(newGame(5, { ...input, mode: 'standard' }))).toBeNull();
+  });
+
+  it('takes the exit code the graduation page shows, and the code is never spelled out in the source', async () => {
+    const { exitCode, revealCode } = await import('../src/ui/road');
+    const code = revealCode();
+    expect(code).toMatch(/^[a-z]{7}$/);
+    expect(exitCode(code)).toBe(true);
+    expect(exitCode(` ${code.toUpperCase()} `)).toBe(true);
+    expect(exitCode('btrdev')).toBe(false);
+    expect(exitCode('')).toBe(false);
+    const { readdirSync, statSync } = await import('node:fs');
+    const { join } = await import('node:path');
+    const walk = (d: string): string[] => readdirSync(d).flatMap((f) => (statSync(join(d, f)).isDirectory() ? walk(join(d, f)) : [join(d, f)]));
+    for (const f of walk('src')) expect(readFileSync(f, 'utf8').includes(code), f).toBe(false);
   });
 });

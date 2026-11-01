@@ -25,7 +25,7 @@ import { bankGains, isLab, labState } from './career/lab';
 import { prepareRecruit } from './career/recruit';
 import { resolveBrand } from './career/nickname';
 import { resolvePress } from './career/press';
-import { LEVEL_IDS, allows, levelChoice, levelDone, madeAllStar } from './levels';
+import { LEVEL_IDS, allows, inLevel, levelChoice, levelDone, madeAllStar } from './levels';
 
 export type Prompt =
   | { type: 'decision'; decision: Decision }
@@ -325,7 +325,8 @@ export function changeNumber(s: GameState, n: number): void {
 /** Retiring by choice: possible between any two seasons (season summary or offseason). */
 export function canRetire(s: GameState): boolean {
   // once his playing days are a job (after high school or a youth academy)
-  return (s.step === 'summary' || s.step === 'offseason') && s.stage !== 'HS';
+  // round 33: a level is played to its end (owner: "they also cant quit")
+  return (s.step === 'summary' || s.step === 'offseason') && s.stage !== 'HS' && !inLevel(s);
 }
 
 export function retireByChoice(s: GameState): void {

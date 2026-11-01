@@ -25,7 +25,9 @@ import { canPlayChild, childGame, childLegacy, childSeed } from './engine/nextGe
 import { attachChild, logCareer, type LogResult } from './ui/careerLog';
 import { checkAch, countCareer, earnedIn, recordUndo } from './ui/achievements';
 import { community } from './ui/community';
-import { importCode, newSlotId, readSlot, writeSlot } from './ui/saves';
+import { dropRun, importCode, newSlotId, readRun, readSlot, writeRun, writeSlot } from './ui/saves';
+import { exitCode, levelTabs, loadRoad, saveRoad, type Road } from './ui/road';
+import { levelOf, type Level } from './engine/levels';
 import { isDev } from './dev/mode';
 import { chooseLook } from './content/looks';
 import { NEWS } from './content/whatsNew';
@@ -143,6 +145,15 @@ interface Store {
   daily: { day: string; stash: GameState | null; simple: boolean } | null;
   startDaily: () => void;
   endDaily: () => void;
+  /** Round 33: the road map's progress on this device (ui/road.ts). */
+  road: Road;
+  /** The level whose career is being set up (the create page in level mode). */
+  creating: Level | null;
+  setCreating: (l: Level | null) => void;
+  /** The exit code: true when it was right, and the full game opens. */
+  skipTutorial: (code: string) => boolean;
+  /** A level career has ended and its last page was read: the level is passed, back to the road. */
+  endLevel: () => void;
 }
 
 // ---------- autosave (round 14; round 25: ten slots, ui/saves.ts) ----------
@@ -270,7 +281,7 @@ function loadTheme(): Theme {
 
 /** Whether this career can step back: not a challenge (Rough Road, Comet), not the daily
  * challenge, and not once it has ended (it is logged and posted by then). */
-export const canUndo = (g: GameState | null): boolean => !!g && !g.flags.oath && !g.flags.comet && !g.flags.daily && g.step !== 'retired';
+export const canUndo = (g: GameState | null): boolean => !!g && !g.flags.oath && !g.flags.comet && !g.flags.daily && !g.flags.level && g.step !== 'retired';
 
 /** Keeps the career as it was before a choice (the old state is never changed: every action works on a copy). */
 function remember(g: GameState, label: string): { undo: Store['undo'] } {
@@ -311,9 +322,14 @@ function linkedPage(): Page | null {
 /** A Rough Road career (round 25) plays in master mode, whatever the switch said before it opened;
  * the switch stays put until it closes. (Round 27, owner: "simple text could be allowed in harder
  * road reality": Simple text is free now.) */
-function oathLock(g: GameState): Partial<Pick<Store, 'master'>> {
+function oathLock(g: GameState): Partial<Pick<Store, 'master' | 'simple' | 'guide'>> {
+  // round 33: a level career shows the game as it is (Simple text, Master mode and Guide mode come
+  // in the closing tour; the tutorial guide does Guide mode's job), whatever the switches say
+  if (g.flags.level) return { master: false, simple: false, guide: false };
   return g.flags.oath ? { master: true } : {};
 }
+/** The switches as this device keeps them, for the way out of a level career. */
+const savedSwitches = (): Pick<Store, 'simple' | 'master' | 'guide'> => ({ simple: loadFlag('btr-simple'), master: loadFlag('btr-master'), guide: loadFlag('btr-guide-mode') });
 
 // Round 27 (owner: "there's small lags here and there; when pages lag, add a small loading pop
 // out"). The steps that run the engine or swap a whole page wait one frame, so the pop-out is on
@@ -396,7 +412,8 @@ export const useStore = create<Store>((set, get) => ({
       const s = seed ?? Math.floor(Math.random() * 2 ** 31);
       const game = newGame(s, input);
       fastForward(game);
-      set({ game, slot: newSlotId(), tab: 'home', transition: null, mini: null, seen: allSeen(game), ...oathLock(game) });
+      // round 33: a level career has a save of its own (ui/saves.ts writeRun), not a slot
+      set({ game, slot: input.level ? null : newSlotId(), creating: null, tab: 'home', transition: null, mini: null, seen: allSeen(game), ...oathLock(game) });
     }),
   seen: {},
   undo: null,
@@ -437,6 +454,34 @@ export const useStore = create<Store>((set, get) => ({
       set({ daily: null, game: d.stash, simple: d.simple, tab: 'home', transition: null, mini: null, seen: d.stash ? allSeen(d.stash) : {} });
       top();
     }),
+  road: loadRoad(),
+  creating: null,
+  setCreating: (creating) =>
+    later(() => {
+      set({ creating });
+      top();
+    }),
+  skipTutorial: (code) => {
+    if (!exitCode(code)) return false;
+    const road = { ...get().road, free: 1 as const };
+    saveRoad(road);
+    dropRun();
+    const g = get().game;
+    set({ road, creating: null, page: null, mini: null, ...(g?.flags.level ? { game: null, tab: 'home' as Tab, transition: null, ...savedSwitches() } : {}) });
+    top();
+    return true;
+  },
+  endLevel: () => {
+    const g = get().game;
+    const level = g && levelOf(g);
+    if (!g || !level || g.step !== 'retired') return;
+    const road = { ...get().road, passed: { ...get().road.passed, [level]: { star: g.flags.levelEnd === 2 } }, ...(g.player.look ? { look: g.player.look } : {}) };
+    saveRoad(road);
+    dropRun();
+    // the thank-you page, then the road map (owner: "still include thank you for playing")
+    set({ road, game: null, thanks: g, tab: 'home', transition: null, undo: null, ...savedSwitches() });
+    top();
+  },
   slot: null,
   resume: async (id) => {
     const game = await readSlot(id);
@@ -708,6 +753,8 @@ export const useStore = create<Store>((set, get) => ({
   setTab: (tab) =>
     later(() => {
       const g = get().game;
+      // round 33: a level shows only its own tabs
+      if (g && !(levelTabs(g) ?? [tab]).includes(tab as never)) return;
       // what the tab's dot was about, read before the tab counts as seen
       const list = g && tab !== get().tab ? tabNews(g, tab, get().seen[tab]) : [];
       // leaving a tab and opening one both count as having seen them
@@ -765,6 +812,10 @@ function flushSave() {
   saveTimer = null;
   const st = useStore.getState();
   if (!st.game || st.daily) return;
+  if (st.game.flags.level) {
+    void writeRun(st.game);
+    return;
+  }
   let slot = st.slot;
   if (!slot) {
     slot = newSlotId();
@@ -786,6 +837,8 @@ useStore.subscribe((now, before) => {
   const g = now.game;
   if (!g || !before.game || g === before.game || g.step !== 'retired' || before.game.step === 'retired') return;
   if (now.daily || g.flags.daily || g.mode === 'lab') return;
+  // round 33: the levels count nowhere (owner: "dont count in any community"; no achievements)
+  if (g.flags.level) return;
   // round 32: the career's last achievements first, so its card carries all of them
   achievementsNow();
   // round 32: a child's career is never logged or posted on its own: a share of it goes to his
@@ -818,7 +871,7 @@ let achTimer: ReturnType<typeof setTimeout> | null = null;
 useStore.subscribe((now, before) => {
   if (now.game === before.game) return;
   const g = now.game;
-  if (g && before.game && g !== before.game && g.step === 'retired' && before.game.step !== 'retired' && g.mode !== 'lab') countCareer(g, now.master);
+  if (g && before.game && g !== before.game && g.step === 'retired' && before.game.step !== 'retired' && g.mode !== 'lab' && !g.flags.level) countCareer(g, now.master);
   if (achTimer) clearTimeout(achTimer);
   achTimer = setTimeout(achievementsNow, 400);
 });
@@ -826,6 +879,8 @@ useStore.subscribe((now, before) => {
 /** Checks the book now and raises a toast for anything new (also after a mini-game run, round 27). */
 export function achievementsNow(): void {
   const g = useStore.getState().game;
+  // round 33: no achievements in the levels
+  if (g?.flags.level) return;
   const fresh = checkAch(g);
   if (!fresh.length) return;
   // the career keeps count, for the Extras tab's dot (round 31)
@@ -855,6 +910,13 @@ export function settle(flush: boolean): void {
   if (saveTimer) clearTimeout(saveTimer);
   saveTimer = null;
 }
+
+// round 33: a level career in progress comes straight back after a reload (owner: "they also cant
+// quit"); the deck keeps storage of its own and never picks one up
+if (typeof window !== 'undefined' && !isDev())
+  void readRun().then((g) => {
+    if (g && !useStore.getState().game) useStore.setState({ game: g, slot: null, tab: 'home', intro: false, seen: allSeen(g), ...oathLock(g) });
+  });
 
 // closing the tab inside the half second still keeps the last move
 if (typeof window !== 'undefined') window.addEventListener('pagehide', () => saveTimer && flushSave());

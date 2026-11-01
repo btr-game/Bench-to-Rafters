@@ -6,6 +6,8 @@ import { useEffect, useRef, useState } from 'react';
 import type { GameState } from '../../engine/types';
 import { prompt } from '../../engine/flow';
 import { canUndo, useStore, type Court, type Tab, type TextSize, type Theme } from '../../store';
+import { inTutorial } from '../road';
+import { allows } from '../../engine/levels';
 import { setMusic, setSfx, setVolume, sfx, soundSettings } from '../sound';
 import { announce, announcerOn, setAnnouncer } from '../announcer';
 
@@ -68,6 +70,12 @@ export function SettingsMenu({ g }: { g: GameState | null }) {
   const reset = useStore((s) => s.reset);
   const saving = useStore((s) => s.saving);
   const master = useStore((s) => s.master);
+  // round 33: in the tutorial and inside a level, only what the level has (owner: beginner's
+  // settings are "theme/sound/music/text size"); Simple text, Guide and Master mode come in the
+  // closing tour, and a level is played to its end
+  const tut = useStore((s) => inTutorial(s.road));
+  const level = !!g?.flags.level;
+  const lite = tut || level;
 
   useEffect(() => {
     if (!open) return;
@@ -114,6 +122,7 @@ export function SettingsMenu({ g }: { g: GameState | null }) {
               ))}
             </div>
           </div>
+          {g?.flags.level !== 1 && (
           <div className="set-row" data-tour="set-court">
             <b>Court</b>
             <div className="seg small-seg">
@@ -124,6 +133,7 @@ export function SettingsMenu({ g }: { g: GameState | null }) {
               ))}
             </div>
           </div>
+          )}
           <div className="set-row" data-tour="set-text">
             <b className="with-icon">
               <Icon name="textsize" size={18} />
@@ -140,7 +150,7 @@ export function SettingsMenu({ g }: { g: GameState | null }) {
           {/* round 24 (owner): New career sits right under the court, not at the bottom of the menu */}
           {/* round 25 (owner: no confirmation text, small and easy to miss): a full-size button, then
               a plain question with its answer spelled out */}
-          {g && (
+          {g && !level && (
             <div className="set-new" data-tour="set-new">
               {armed && !retired ? (
                 <div className="set-confirm" role="group" aria-label="Start a new career?">
@@ -169,8 +179,8 @@ export function SettingsMenu({ g }: { g: GameState | null }) {
           )}
           {g && !retired && !g.flags.daily && (
             <>
-              <Toggle label="Fast break" note="Quick seasons; you still make every real call." on={!!g.flags.fast} onClick={toggleFast} tour="set-fast" locked={!!g.flags.oath || !!g.flags.comet} />
-              <Toggle label="Playable playoff games" note="Off: postseason games are simulated." on={!g.flags.simPostseason} onClick={togglePlayoffs} tour="set-playoffs" />
+              {allows(g, 'fast') && <Toggle label="Fast break" note="Quick seasons; you still make every real call." on={!!g.flags.fast} onClick={toggleFast} tour="set-fast" locked={!!g.flags.oath || !!g.flags.comet} />}
+              {!level && <Toggle label="Playable playoff games" note="Off: postseason games are simulated." on={!g.flags.simPostseason} onClick={togglePlayoffs} tour="set-playoffs" />}
             </>
           )}
           <Toggle label="Sound effects" note="Chiptune sounds for clicks, wins, titles and the rest." on={snd.sfx} onClick={() => (setSfx(!snd.sfx), setSnd(soundSettings()))} tour="set-sfx" />
@@ -179,9 +189,13 @@ export function SettingsMenu({ g }: { g: GameState | null }) {
           <Toggle label="Announcer" note="A booming voice for the big plays: blocks, dunks, threes, buzzer beaters, titles." on={voiceOn && snd.sfx} locked={!snd.sfx} why="On with the sound effects" onClick={() => (setAnnouncer(!voiceOn), setVoiceOn(!voiceOn), !voiceOn && announce('Let’s go!'))} tour="set-announcer" />
           <Toggle label="Music" note="A loop for each part of the game: every level and league, the offseason, the mini-games." on={snd.music} onClick={() => (setMusic(!snd.music), setSnd(soundSettings()))} tour="set-music" />
           <Volume label="Music" value={snd.musicVol} disabled={!snd.music} onChange={(v) => (setVolume('music', v), setSnd(soundSettings()))} />
-          <Toggle label="Simple text" note="Hide descriptions, keep the choices." on={simple} onClick={toggleSimple} tour="set-simple" />
-          <Toggle label="Guide mode" note={master ? 'Off while Master mode is on.' : 'Highlights the next thing to do.'} on={guide && !master} onClick={toggleGuide} tour="set-guide" />
-          <Toggle label="Master mode" note="No recommendations: no scouts' calls, fit tags, suggested deals or guide hints. You read the game yourself." on={master} onClick={toggleMaster} tour="set-master" locked={!!g?.flags.oath} />
+          {!lite && (
+            <>
+              <Toggle label="Simple text" note="Hide descriptions, keep the choices." on={simple} onClick={toggleSimple} tour="set-simple" />
+              <Toggle label="Guide mode" note={master ? 'Off while Master mode is on.' : 'Highlights the next thing to do.'} on={guide && !master} onClick={toggleGuide} tour="set-guide" />
+              <Toggle label="Master mode" note="No recommendations: no scouts' calls, fit tags, suggested deals or guide hints. You read the game yourself." on={master} onClick={toggleMaster} tour="set-master" locked={!!g?.flags.oath} />
+            </>
+          )}
           <div className="set-keys hide-touch">
             <b>Keyboard</b>
             <span>

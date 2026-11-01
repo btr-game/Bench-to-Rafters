@@ -10,6 +10,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useStore } from '../../store';
+import { inTutorial } from '../road';
 
 interface Step {
   id: string;
@@ -194,7 +195,8 @@ const shown = (el: HTMLElement) => {
 
 export function GuideTour() {
   // round 27: not over the intro page, nor while a tab's news is up (TabNews)
-  const on = useStore((s) => s.guide && !s.master && !s.intro && !s.thanks && !s.spots);
+  // round 33: never in the tutorial, which has its own guide (Guide mode stays for after it)
+  const on = useStore((s) => s.guide && !s.master && !s.intro && !s.thanks && !s.spots && !inTutorial(s.road) && !s.game?.flags.level);
   const [seen, setSeen] = useState(loadSeen);
   const [cur, setCur] = useState<{ step: Step; el: HTMLElement } | null>(null);
   const [box, setBox] = useState<{ x: number; y: number; w: number; h: number } | null>(null);

@@ -196,3 +196,15 @@ no statue or hall.
 - **No achievements** in the levels; **advanced counts nowhere** in the community either; a saved
   career from before waits until the full game opens; the full start page keeps a **Levels** card to
   replay any level.
+
+## Round 34 (planned): simplification
+
+Owner, during round 33: "for round 34, the theme is simplification. we're gonna make most in-game
+cards foldable."
+
+- Most in-game cards fold: a card shows its title (and a line of what matters most) and opens on a
+  tap. Fast break's "Show everything" folding (round 25) and the Season tab's foldable Around the
+  league (round 15) are the starting points.
+- To settle with the owner when the round starts: which cards stay open (the main card at Home,
+  the decision on screen), whether a card remembers being opened, and whether the levels and the
+  tutorial guide follow the same folding.

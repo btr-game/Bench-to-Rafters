@@ -1652,6 +1652,21 @@ export const ICONS: Record<string, string[]> = {
     '...OgggggggggO..',
     '...OOOOOOOOOOO..',
   ],
+  // round 33: the road map (a folded map, a dotted road, a pin)
+  map: [
+    '..OOOO.OOOO.OOO.',
+    '.OLLLLOwwwwOLLLO',
+    '.OLGGLOwBBwOLGLO',
+    '.OLGYLOwBwYOLLLO',
+    '.OLLLYOwwYwOLYLO',
+    '.OLLLLYwYwwOYLLO',
+    '.OGLLLOYwwwYLLRO',
+    '.OGGLLOwwwwOLRRR',
+    '.OLLLLOwBBwOLLRO',
+    '.OLGLLOwBwwOLLLO',
+    '.OLLLLOwwwwOLGLO',
+    '..OOOO.OOOO.OOO.',
+  ],
   door: [
     '..OOOOOOOOOO....',
     '..OTTTTTTTTO....',
