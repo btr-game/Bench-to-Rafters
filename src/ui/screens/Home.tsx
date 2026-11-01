@@ -1,4 +1,5 @@
 import type { AttrKey, EventResult, GameState, SeasonRecord } from "../../engine/types";
+import { CoachCard } from '../components/CoachCard';
 import { GuideSpotWrap } from "../components/Guide";
 import { tourKind } from "../components/GuideTour";
 import {
@@ -1093,6 +1094,7 @@ export function Home({ g }: { g: GameState }) {
           <Todo g={g} />
         </div>
         <PlayerCard g={g} />
+        <CoachCard g={g} />
         <Extra>
           <ScoutCard g={g} compact />
           <section className="card stack">

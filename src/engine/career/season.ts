@@ -82,6 +82,7 @@ import { rollFine } from './fines';
 import { payStaff } from './staff';
 import { updateRivalry } from './rivalry';
 import { writeNews } from './news';
+import { coachOfYear, temperFx, temperNote } from './coach';
 
 /** What he adds to winning beyond his OVR, scaled by his share of the game (career/team.ts). */
 const edgeFor = (a: Attrs, ovr: number, share: number, post: boolean): number => {
@@ -154,7 +155,10 @@ export function beginSeason(s: GameState): void {
       const d = duoEffect(s);
       // round 32: a farewell season, and the team plays the playoffs for him
       const bye = s.flags.farewell === s.year && level === 'NBA' ? FAREWELL.post : 0;
-      return { teamBonus: f.bonus, teamNotes: bye ? [...f.notes, `Farewell tour: the team wants one last run for you in the playoffs (+${bye})`] : f.notes, teamFx: f.items, postBonus: f.post + bye, styleFx: f.fx, duoFx: d ? { perf: d.perf, ast: d.ast, usage: d.usage } : undefined };
+      // round 32: the head coach's temperament (a loose room, a playoff plan, the grind)
+      const fx = temperFx(s);
+      const notes = [...f.notes, ...(bye ? [`Farewell tour: the team wants one last run for you in the playoffs (+${bye})`] : []), ...(fx ? [temperNote(s, fx)] : [])];
+      return { teamBonus: f.bonus + (fx?.chem ?? 0), teamNotes: notes, teamFx: f.items, postBonus: f.post + bye + (fx?.post ?? 0), styleFx: f.fx, duoFx: d ? { perf: d.perf, ast: d.ast, usage: d.usage } : undefined };
     })(),
     halfLines: [],
     injuredGames: 0,
@@ -504,6 +508,7 @@ function growthAfterHalf(s: GameState, acc: HalfAcc, level: LevelKey, ovr: numbe
   if (outcome.key === 'breakthrough' && (season.plan === 'grind' || season.plan2 === 'grind')) p.growthRate = Math.min(GROWTH_RATE.max, rate * 1.02);
   const before = ovrOf(p.attrs, p.pos);
   const plan = blendPlans(season.plan, season.plan2, p.age);
+  const coach = temperFx(s); // round 32: the head coach's temperament
   const attrs0 = { ...p.attrs };
   applyHalfGrowth(s.rng, p, {
     minutesShare: share,
@@ -514,7 +519,7 @@ function growthAfterHalf(s: GameState, acc: HalfAcc, level: LevelKey, ovr: numbe
     plan: season.plan,
     planDef: plan,
     outMost: acc.injuredGames > acc.games / 2,
-    extraMult: outcome.growth * p.growthMultNext * MODES[s.mode ?? 'standard'].growth * youthGrowthMult(s) * eliteMult(s.mode ?? 'standard', before) * (s.flags.fast && s.mode !== 'lab' && s.mode !== 'fast' ? FAST_GROWTH : 1),
+    extraMult: outcome.growth * p.growthMultNext * MODES[s.mode ?? 'standard'].growth * youthGrowthMult(s) * eliteMult(s.mode ?? 'standard', before) * (s.flags.fast && s.mode !== 'lab' && s.mode !== 'fast' ? FAST_GROWTH : 1) * (coach && (season.plan === 'grind' || season.plan2 === 'grind') ? coach.grind : 1),
     morale: p.morale,
     lab: s.mode === 'lab',
   });
@@ -558,8 +563,8 @@ function growthAfterHalf(s: GameState, acc: HalfAcc, level: LevelKey, ovr: numbe
           ? 'The work did not show up in games yet.'
           : 'The plan did what it said.';
   (season.outcomes ??= []).push({ half: season.half + 1, plan: season.plan, plan2: season.plan2 ?? null, outcome: outcome.label, text: text + swingText, ovrGain: gain });
-  p.morale = adjust(p.morale, plan.morale + outcome.morale + (season.role === 'deep' ? -4 : season.role === 'key' ? 3 : 0) + (perf - 1) * 30);
-  p.trust = adjust(p.trust, plan.trust + outcome.trust + (perf - 1) * 30 + (p.attrs.IQ - L.avg) * 0.04);
+  p.morale = adjust(p.morale, plan.morale + outcome.morale + (season.role === 'deep' ? -4 : season.role === 'key' ? 3 : 0) + (perf - 1) * 30 + (coach?.morale ?? 0));
+  p.trust = adjust(p.trust, (plan.trust + outcome.trust + (perf - 1) * 30 + (p.attrs.IQ - L.avg) * 0.04) * (coach?.trustMul ?? 1));
   const repGain = plan.rep[1] > 0 ? range(s.rng, plan.rep[0], plan.rep[1]) : 0;
   const v = acc.line.gp > 0 ? valuePerGame(acc.line) : 0;
   const levelW: Record<LevelKey, number> = { HSJV: 0.2, HSV: 0.5, NCAA: 1, GL: 0.6, EU: 0.8, INT: 0.5, NBA: 1.4 };
@@ -708,6 +713,7 @@ function finishSeason(s: GameState): void {
     aw.wins = aw.wins.filter((w) => w.key !== 'ALLSTAR');
     if (season.allStar) aw.wins.push({ key: 'ALLSTAR', label: 'All-Star' });
     recordNbaYear(s, league, aw, s.year);
+    coachOfYear(s, league); // round 32
   }
   else aw = simpleAwards(league, cands, level === 'NCAA' ? team.conf : null);
   const labels: string[] = aw.wins.map((w) => w.label);

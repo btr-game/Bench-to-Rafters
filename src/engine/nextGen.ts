@@ -16,6 +16,7 @@ import { FIRST_NAMES } from '../content/names';
 import { LOOK_STYLES } from '../content/looks';
 import { chance, clamp, int, makeRng, normal, pick } from './rng';
 import { newGame } from './flow';
+import { count, nbaTitles } from './awards/legacy';
 import type { AttrKey, ChildLegacy, GameState, Pos } from './types';
 import type { CareerRecord } from './career/record';
 
@@ -74,7 +75,7 @@ export function childGame(father: GameState, seed: number, recId: string, legacy
   g.flags.fast = 1;
   g.flags.sim = 1;
   g.flags.comet = 1;
-  g.parent = { name: fp.name, recId, legacy, ...(slot ? { slot } : {}) };
+  g.parent = { name: fp.name, recId, legacy, ...(slot ? { slot } : {}), peak: Math.round(fp.peakOvr), titles: nbaTitles(father), mvps: count(father, 'MVP') };
   return g;
 }
 

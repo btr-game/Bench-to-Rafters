@@ -8,7 +8,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { GameState } from '../../engine/types';
 import { LOCKER } from '../../engine/balance';
-import { PERSONA, TEMPER, canFireCoach, lockerRoom, talkFor, talked, type Room } from '../../engine/career/locker';
+import { PERSONA, canFireCoach, lockerRoom, talkFor, talked, type Room } from '../../engine/career/locker';
+import { TEMPER } from '../../engine/career/coach';
+import { CoachArt } from '../art/Coach';
 import { useStore } from '../../store';
 import { PlayerArt, styleLeague } from '../art/Player';
 import { RUN_A, RUN_B } from '../art/sprite';
@@ -249,7 +251,7 @@ export function LockerRoom({ g }: { g: GameState }) {
           );
         })}
         <button className={`lk-who coach${done('coach') ? ' done' : ''}${near?.who === 'coach' ? ' near' : ''}`} style={{ left: `${(coachSpot.x / W) * 100}%` }} onClick={() => talkTo('coach')} tabIndex={-1} aria-label={`Talk to coach ${room.coach.name}`}>
-          <PlayerArt name={room.coach.name} number={0} pos="PG" color="#343A40" team="COACH" league={league} size={size} noBall mirror />
+          <CoachArt coach={room.coach} color={room.team.color} size={size} mirror />
           <span className="lk-tag">
             Coach<span className="lk-role"> · {TEMPER[room.coach.temper]}</span>
             {done('coach') ? ' ✓' : ''}

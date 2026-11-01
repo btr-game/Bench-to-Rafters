@@ -12,6 +12,7 @@ import { ACH_TIERS } from '../engine/achievements';
 import { ICONS, PAL } from './art/icons';
 import { NAMES } from '../content/strings';
 import { NBA_TEAMS } from '../content/teams';
+import { recordCard } from './achievements';
 
 const W = 1080;
 const H = 1850;
@@ -344,6 +345,7 @@ export async function downloadCareerCard(r: CareerRecord): Promise<string> {
   if (dl) {
     try {
       await dl.save({ filename: fileName(r), data: blob });
+      recordCard();
       return 'Career card saved as a PNG.';
     } catch (e) {
       const code = (e as { code?: string })?.code;
@@ -361,6 +363,7 @@ export async function downloadCareerCard(r: CareerRecord): Promise<string> {
   a.click();
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 2000);
+  recordCard();
   return 'Career card saved as a PNG.';
 }
 
@@ -372,6 +375,7 @@ export async function shareCareerCard(r: CareerRecord): Promise<boolean> {
   if (!nav.share || !nav.canShare?.({ files: [file] })) return false;
   try {
     await nav.share({ files: [file], title: `${r.name}: ${r.tier}` });
+    recordCard();
   } catch {
     // the player closed the share sheet
   }

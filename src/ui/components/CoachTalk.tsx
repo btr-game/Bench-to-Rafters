@@ -9,8 +9,9 @@ import { createPortal } from 'react-dom';
 import { TEAM_STYLES, type TeamStyle } from '../../engine/career/identity';
 import type { GameState } from '../../engine/types';
 import { team as teamOf } from '../selectors';
-import { coachOf } from '../../engine/career/locker';
+import { coachOf } from '../../engine/career/coach';
 import { PlayerArt, styleLeague } from '../art/Player';
+import { CoachArt } from '../art/Coach';
 import { PlaybookArt } from '../art/Playbook';
 import { PixelX } from '../art/PixelX';
 import { sfx } from '../sound';
@@ -68,7 +69,7 @@ export function CoachTalk({ g, style, onClose }: { g: GameState; style: TeamStyl
             {step >= 3 && <p className="bubble me">{lines[2]}</p>}
           </div>
           <div className="coach-who coach">
-            <PlayerArt name={coach?.name ?? 'Head Coach'} number={0} pos="PG" color="#343A40" team="COACH" league={styleLeague(g.stage)} size={118} noBall mirror />
+            <CoachArt coach={coach ?? { name: 'Head Coach', temper: 'tactician' }} color={color} size={118} mirror />
             <span>{coach ? `Coach ${coach.name.split(' ').slice(-1)[0]}` : 'Coach'}</span>
           </div>
         </div>

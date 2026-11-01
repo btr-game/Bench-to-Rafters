@@ -57,6 +57,9 @@ import { NickLogo } from '../ui/art/NickLogo';
 import { LegendBust } from '../ui/art/Legend';
 import { PlaybookArt } from '../ui/art/Playbook';
 import { StaffScene } from '../ui/art/Scene';
+import { CoachArt } from '../ui/art/Coach';
+import { TEMPER, TEMPER_FX, coachOf } from '../engine/career/coach';
+import type { Team } from '../engine/types';
 import { hash } from '../ui/art/color';
 import type { KitLeague } from '../content/teamStyle';
 import { LOOK_FACES, LOOK_HAIRS, LOOK_STYLES, type ChosenLook } from '../content/looks';
@@ -674,6 +677,28 @@ const CATEGORIES: Category[] = [
         art: () => <StaffScene name={st.title} role={st.role} place={st.place} title={st.title} />,
         lines: [`The pitch: ${st.pitch}`, ...st.talk.slice(0, 2).map((t) => `Says: ${t}`)],
       })),
+  },
+  {
+    // round 32 (owner: "add coach designs into the devdeck catalog"): every NBA team's head coach
+    // as a new game has him, and the man who would replace him, by temperament
+    key: 'coaches',
+    name: 'Coaches',
+    icon: 'whistle',
+    blurb: 'The head coaches: each team’s first and the next in line, in their own pixel art, by temperament.',
+    entries: () =>
+      NBA_TEAMS.flatMap((t) =>
+        [0, 1].map((n) => {
+          const c = coachOf({ id: t.abbr, coachN: n } as Team);
+          return {
+            key: `${t.abbr}-${n}`,
+            title: c.name,
+            sub: `${t.city} ${t.nick} · ${n ? 'next in line' : 'head coach'}`,
+            group: TEMPER[c.temper],
+            text: TEMPER_FX[c.temper],
+            art: () => <CoachArt coach={c} color={t.color} size={72} />,
+          };
+        }),
+      ),
   },
   {
     key: 'legends',

@@ -16,6 +16,7 @@ import { visitItem, wearItem } from './engine/economy/shop';
 import { letGo, raiseStaff, talkStaff } from './engine/career/staff';
 import { negotiate, type Ask } from './engine/career/negotiate';
 import { fireCoach, lockerTalk } from './engine/career/locker';
+import { askRole } from './engine/career/coach';
 import { announceFarewell } from './engine/career/farewell';
 import { chaseRecord } from './engine/career/records';
 import type { WearSlot } from './content/shop';
@@ -97,6 +98,8 @@ interface Store {
   chase: () => void;
   /** Round 32: after a career with a child, the child's own (Comet speed, a slot of his own). */
   playChild: () => void;
+  /** Round 32: once a season, ask the head coach for a bigger role. */
+  askRole: () => void;
   endTransition: () => void;
   reset: () => void;
   mini: Mini | null;
@@ -532,6 +535,13 @@ export const useStore = create<Store>((set, get) => ({
     const next = structuredClone(g);
     chaseRecord(next);
     set({ game: next, ...remember(g, 'Chasing a record') });
+  },
+  askRole: () => {
+    const g = get().game;
+    if (!g) return;
+    const next = structuredClone(g);
+    askRole(next);
+    set({ game: next, ...remember(g, 'Asking the coach for a bigger role') });
   },
   playChild: () =>
     later(() => {

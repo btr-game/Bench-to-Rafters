@@ -540,7 +540,7 @@ export interface GameState {
   reel?: { title: string; line: string }[]; // round 30, Comet: the story pages folded into a list since his last move
   achN?: number; // round 31: how many achievements this career has earned (the Extras tab's dot)
   locker?: { phase: string; done: string[]; year: number; chem: number }; // round 32: talks in the locker room this half, and the chemistry they built this season
-  parent?: { name: string; recId: string; legacy: number; slot?: string }; // round 32: a second-generation career: whose child he is (his log card's id, his save)
+  parent?: { name: string; recId: string; legacy: number; slot?: string; peak?: number; titles?: number; mvps?: number }; // round 32: a second-generation career: whose child he is (his log card's id, his save, and how good he was)
   kid?: ChildLegacy; // round 32: the father's side: how his child's career went (a share of its legacy points counts for him)
   moments: Moment[]; // story pages waiting to be shown
   purchases: string[]; // shop item ids ever bought

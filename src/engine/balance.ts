@@ -915,6 +915,31 @@ export const LOCKER = {
   fireRepCost: 2,
 };
 
+/**
+ * The head coach's bigger role (round 32, owner: "can we give the coach a slightly bigger role?";
+ * career/coach.ts). Temperament nudges a season a little; a role talk once a season; NBA teams
+ * that lose badly may fire their coach; a losing team at midseason puts its coach on the hot seat;
+ * a Coach of the Year.
+ */
+export const COACH = {
+  temper: {
+    players: { chem: 0.1, post: 0, morale: 1, trustMul: 0.8, grind: 1 },
+    tactician: { chem: 0, post: 0.15, morale: 0, trustMul: 1, grind: 1 },
+    hardliner: { chem: 0, post: 0, morale: -1, trustMul: 1.25, grind: 1.05 },
+  },
+  // the role talk: a base chance, + per point of trust over 50, by temperament, + near the top of the roster
+  ask: { base: 0.3, trust: 0.012, temper: { players: 0.15, tactician: 0, hardliner: -0.1 }, top: 0.15, min: 0.05, max: 0.9, yesMorale: 3, noTrust: 3, noTrustHard: 6, noMorale: 3 },
+  newTrust: 50, // a new coach starts here
+  hire: 0, // a new NBA coach's factor, on average
+  fireBelow: 0.35, // an NBA team under this win share may fire its coach in the offseason
+  fireChance: 0.45,
+  hotSeat: 0.4, // the hot seat: his team under this win share at midseason (12 games or more)
+  backSave: { base: 0.25, rep: 0.005 }, // backing him in public: the chance he keeps his job
+  backTrust: 8, // what backing him is worth if he stays
+  letGoRep: 60, // reputation needed to tell the front office to let him go
+  coyTrust: 3, // his coach named Coach of the Year
+};
+
 // Reputation
 export const REP = {
   decay: 0.9,

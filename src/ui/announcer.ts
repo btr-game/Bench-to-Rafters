@@ -4,6 +4,7 @@
 // follows the sound effects: off with them, at their volume. A switch in Settings turns it off.
 
 import { soundSettings } from './sound';
+import { recordCall } from './achievements';
 
 const KEY = 'btr-announcer';
 let on = (() => {
@@ -45,6 +46,7 @@ export function announce(words: string): void {
     u.volume = Math.min(1, s.sfxVol + 0.15);
     speechSynthesis.cancel();
     speechSynthesis.speak(u);
+    recordCall();
   } catch {
     // no speech on this device: the game goes on without the voice
   }

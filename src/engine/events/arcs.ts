@@ -182,6 +182,7 @@ const ARCS: ArcDef[] = [
       if (!a.v.stage) {
         if ((a.v.wait ?? 0) >= 2) {
           morale(s, -6);
+          s.flags.breakup = 1;
           return { title: 'Separate ways', text: 'You waited too long, and they stopped waiting. It ends quietly, and it hurts more than you let on.', done: true };
         }
         morale(s, 3);
@@ -193,6 +194,7 @@ const ARCS: ArcDef[] = [
       }
       if (a.v.stage === 1) {
         a.v.stage = 2;
+        s.flags.wed = s.year;
         morale(s, 8);
         s.player.bank = Math.max(0, s.player.bank - (s.stage === 'NBA' ? (who === 2 ? 1.5 : 0.4) : 0.02));
         if (who === 2) rep(s, 2);
@@ -629,6 +631,7 @@ export const ARC_EVENTS: EventDef[] = [
         detail: 'They knew you before any of this',
         resolve: (s) => {
           startArc(s, 'love', { who: 1, fresh: 1 });
+          s.flags.love = 1;
           morale(s, 4);
           return ok('You call after all these years. They pick up on the first ring.', 'Started dating his high school sweetheart.');
         },
@@ -638,6 +641,7 @@ export const ARC_EVENTS: EventDef[] = [
         detail: 'Cameras everywhere you go',
         resolve: (s) => {
           startArc(s, 'love', { who: 2, fresh: 1 });
+          s.flags.love = 2;
           morale(s, 3);
           rep(s, 2);
           return ok('Your first dinner is on every gossip site by morning.', 'Started dating a celebrity.');
@@ -648,6 +652,7 @@ export const ARC_EVENTS: EventDef[] = [
         detail: 'A quiet life away from the arena',
         resolve: (s) => {
           startArc(s, 'love', { who: 3, fresh: 1 });
+          s.flags.love = 3;
           morale(s, 5);
           return ok('Nobody at the coffee shop knows who you are. You like that.', 'Started dating someone outside the game.');
         },

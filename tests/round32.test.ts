@@ -67,7 +67,7 @@ describe('round 32: the next generation', () => {
     expect(k.player.name.endsWith(' Hale')).toBe(true);
     expect(k.player.name).not.toBe('Marcus Hale');
     expect(k.player.country).toBe(f.player.country);
-    expect(k.parent).toEqual({ name: 'Marcus Hale', recId: 'rec-1', legacy: 120, slot: 'slot-1' });
+    expect(k.parent).toMatchObject({ name: 'Marcus Hale', recId: 'rec-1', legacy: 120, slot: 'slot-1', peak: Math.round(f.player.peakOvr), titles: 0, mvps: 0 });
     // the same son every time his father's save is looked at
     expect(childGame(f, childSeed(f), 'rec-1', 120).player.name).toBe(k.player.name);
     // and never a third generation

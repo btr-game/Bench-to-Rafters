@@ -9,7 +9,7 @@ import { LEGENDS } from '../../content/legends';
 import { RECORD_CHASE as R } from '../balance';
 import { nbaCareerPoints } from '../awards/legacy';
 import type { GameState, HighKey } from '../types';
-import { logDecision } from './common';
+import { logDecision, tally } from './common';
 
 /** The league's single-game records. */
 export const GAME_RECORDS: Record<HighKey, { v: number; what: string }> = {
@@ -70,6 +70,7 @@ export function chaseRecord(s: GameState): void {
   if (!canChase(s)) return;
   const w = recordWatch(s).find((x) => x.kind === 'list')!;
   s.flags.chase = s.year;
+  tally(s, 'chases');
   if (s.season) s.season.teamBonus = Math.round(((s.season.teamBonus ?? 0) - R.chem) * 100) / 100;
   logDecision(s, 'record', `Chasing ${w.name} on the all-time scoring list this season: more shots, a little more risk.`);
   s.toast = `Chasing ${w.name}: a few more shots your way this season.`;

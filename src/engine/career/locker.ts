@@ -10,42 +10,12 @@
 // chemistry (season.teamBonus, capped for the season), his mood, the coach's trust, sometimes a
 // rating or his reputation. A hothead sometimes starts a feud for him to settle.
 
-import { FIRST_NAMES, LAST_NAMES } from '../../content/names';
-import { COACHING, LOCKER as L } from '../balance';
-import { chance, clamp, normal } from '../rng';
+import { LOCKER as L } from '../balance';
+import { chance, clamp } from '../rng';
 import type { GameState, GenPlayer, Pos, Team } from '../types';
-import { adjust, logDecision, teamById, userOvr } from './common';
+import { adjust, logDecision, tally, userOvr } from './common';
+import { TEMPER, changeCoach, coachOf, h32, myTeam, type Coach } from './coach';
 import { benchOf, fiveOf } from './roster';
-import { nbaStrength } from '../world/nbaWorld';
-
-/** A small stable number from a string (names, characters, who feuds). */
-function h32(str: string): number {
-  let h = 2166136261;
-  for (let i = 0; i < str.length; i++) h = Math.imul(h ^ str.charCodeAt(i), 16777619);
-  return h >>> 0;
-}
-
-// ---------- the head coach ----------
-
-export type Temper = 'players' | 'tactician' | 'hardliner';
-export const TEMPER: Record<Temper, string> = { players: 'Players’ coach', tactician: 'Tactician', hardliner: 'Hardliner' };
-
-export interface Coach {
-  name: string;
-  temper: Temper;
-  /** How good he is, in words (NBA only: the team's coaching factor); empty below the NBA. */
-  grade: string;
-}
-
-/** The team's head coach: a name and a temperament of his own, a new man each time one is fired. */
-export function coachOf(team: Team): Coach {
-  const k = h32(`${team.id}#${team.coachN ?? 0}`);
-  const name = `${FIRST_NAMES[k % FIRST_NAMES.length]} ${LAST_NAMES[(k >>> 9) % LAST_NAMES.length]}`;
-  const temper = (['players', 'tactician', 'hardliner'] as Temper[])[(k >>> 20) % 3];
-  const f = team.coach;
-  const grade = f === undefined ? '' : f >= 1 ? 'Elite' : f >= 0.3 ? 'Good' : f > -0.3 ? 'Average' : f > -1 ? 'Shaky' : 'On the hot seat';
-  return { name, temper, grade };
-}
 
 // ---------- who is in the room ----------
 
@@ -69,8 +39,6 @@ export interface Room {
   feud: [number, number] | null;
   phase: string;
 }
-
-const myTeam = (s: GameState): Team | null => teamById(s.stage === 'NBA' ? s.nba : s.league, s.teamId);
 
 /** The half the room is open for (a talk each a half), or null when there is no season on. */
 export function lockerPhase(s: GameState): string | null {
@@ -190,6 +158,7 @@ export function lockerTalk(s: GameState, who: string, opt: string): string | nul
   if (!s.locker || s.locker.year !== s.year) s.locker = { phase: room.phase, done: [], year: s.year, chem: 0 };
   if (s.locker.phase !== room.phase) s.locker = { ...s.locker, phase: room.phase, done: [] };
   s.locker.done.push(who);
+  tally(s, 'lkTalk');
   const p = s.player;
   let out = '';
   const c = (d: number) => {
@@ -198,6 +167,7 @@ export function lockerTalk(s: GameState, who: string, opt: string): string | nul
   };
   switch (`${who === 'coach' || who === 'feud' ? who : room.mates.find((m) => String(m.id) === who)!.persona}:${opt}`) {
     case 'rookie:mentor':
+      tally(s, 'lkMentor');
       p.morale = adjust(p.morale, 1);
       p.trust = adjust(p.trust, 1);
       out = `He hangs on every word. ${fx([c(L.rookie.mentor), 'coach trust +1'])}.`;
@@ -207,6 +177,7 @@ export function lockerTalk(s: GameState, who: string, opt: string): string | nul
       out = `He nods and goes quiet. ${fx([c(L.rookie.tough), 'reputation +1'])}.`;
       break;
     case 'vet:advice':
+      tally(s, 'lkVet');
       p.morale = adjust(p.morale, 2);
       p.longevity = (p.longevity ?? 0) + 1;
       out = 'Sleep, cold tubs, and never skip the boring work. You feel a little more like him. Morale +2, and something for later.';
@@ -219,15 +190,18 @@ export function lockerTalk(s: GameState, who: string, opt: string): string | nul
     case 'star:twoman': {
       const m = room.mates.find((x) => String(x.id) === who)!;
       const close = Math.abs(m.ovr - userOvr(s)) <= L.star.close;
+      if (close) tally(s, 'lkTwoMan');
       out = close ? `He’s in. Pick-and-roll all night. ${fx([c(L.star.twoman)])}.` : `He shrugs: sure, sometimes. ${fx([c(L.star.twomanFar)])}.`;
       break;
     }
     case 'star:alpha':
+      tally(s, 'lkAlpha');
       p.rep = adjust(p.rep, 2);
       p.morale = adjust(p.morale, 2);
       out = `The room goes quiet. ${fx([c(L.star.alpha), 'reputation +2', 'morale +2'])}.`;
       break;
     case 'joker:laugh':
+      tally(s, 'lkLaugh');
       p.morale = adjust(p.morale, 4);
       out = 'The whole room cracks up. Morale +4.';
       break;
@@ -237,6 +211,7 @@ export function lockerTalk(s: GameState, who: string, opt: string): string | nul
       out = `He peels the chicken off, a little sheepish. ${fx([c(L.joker.focus), 'coach trust +1', 'morale -1'])}.`;
       break;
     case 'quiet:film':
+      tally(s, 'lkFilm');
       p.attrs.IQ = clamp(p.attrs.IQ + L.quiet.film, 15, 99);
       out = `He shows you how the defense tips its rotations. ${fx(['basketball IQ +0.3', c(L.quiet.filmChem)])}.`;
       break;
@@ -246,18 +221,23 @@ export function lockerTalk(s: GameState, who: string, opt: string): string | nul
       break;
     case 'hothead:calm': {
       const ok = chance(s.rng, L.hothead.calm);
+      if (ok) tally(s, 'lkCalm');
       if (!ok) p.morale = adjust(p.morale, -2);
       out = ok ? `He breathes out and sits down. ${fx([c(L.hothead.calmWin)])}.` : `He shrugs you off and storms out. ${fx([c(L.hothead.calmLose), 'morale -2'])}.`;
       break;
     }
     case 'hothead:square': {
       const ok = chance(s.rng, L.hothead.square);
-      if (ok) p.rep = adjust(p.rep, 2);
+      if (ok) {
+        p.rep = adjust(p.rep, 2);
+        tally(s, 'lkSquare');
+      }
       else p.morale = adjust(p.morale, -2);
       out = ok ? `He backs off, and respects you for it. ${fx([c(L.hothead.squareWin), 'reputation +2'])}.` : `It gets loud, then ugly. ${fx([c(L.hothead.squareLose), 'morale -2'])}.`;
       break;
     }
     case 'feud:breakup':
+      tally(s, 'lkFeud');
       p.trust = adjust(p.trust, 2);
       out = `You step in between them and it ends there. ${fx([c(L.feud.breakup), 'coach trust +2'])}.`;
       break;
@@ -279,6 +259,7 @@ export function lockerTalk(s: GameState, who: string, opt: string): string | nul
       out = `You trade ideas at the whiteboard. Coach trust +2, ${room.coach.temper === 'tactician' ? 'basketball IQ +0.2' : 'morale +2'}.`;
       break;
     case 'coach:gripe': {
+      tally(s, 'lkGripe');
       const cost = room.coach.temper === 'hardliner' ? 6 : room.coach.temper === 'players' ? 2 : 4;
       p.trust = adjust(p.trust, -cost);
       p.morale = adjust(p.morale, 2);
@@ -303,17 +284,15 @@ export function fireCoach(s: GameState): string | null {
   const team = myTeam(s);
   if (!team || !canFireCoach(s)) return null;
   const old = coachOf(team);
-  team.coachN = (team.coachN ?? 0) + 1;
-  team.coach = normal(s.rng, L.newCoach, COACHING.sd);
-  team.strength = nbaStrength(team);
+  // the man he wanted, a little better than an average hire
+  const now = changeCoach(s, team, L.fireTrust, L.newCoach);
   s.flags.coachFired = s.year;
+  tally(s, 'coachFires');
   // the room splits over it (straight off this season's chemistry, past the talks' cap)
   if (s.season) s.season.teamBonus = Math.round(((s.season.teamBonus ?? 0) - L.fireChem) * 100) / 100;
   const p = s.player;
   p.morale = adjust(p.morale, L.fireMorale);
-  p.trust = L.fireTrust;
   p.rep = adjust(p.rep, -L.fireRepCost);
-  const now = coachOf(team);
   const text = `${team.name} fire ${old.name}; ${now.name} (${TEMPER[now.temper].toLowerCase()}, ${now.grade.toLowerCase()}) takes over. You got your way: morale +${L.fireMorale}, the new coach starts at trust ${L.fireTrust}. The room is split (chemistry -${L.fireChem}), and the papers call you a coach killer (reputation -${L.fireRepCost}).`;
   logDecision(s, 'coach', text, team.id);
   s.toast = `${old.name} is out. ${now.name} is the new head coach.`;

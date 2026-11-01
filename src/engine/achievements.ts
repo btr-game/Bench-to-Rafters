@@ -40,6 +40,10 @@ export interface CareerTotals {
   heard?: string[]; // round 29: the music loops heard (ui/tracks.ts)
   undone?: number; // round 31: choices taken back
   compared?: number; // round 31: pairs of career log cards set side by side
+  called?: number; // round 32: plays the announcer called
+  cards?: number; // round 32: career cards saved or shared
+  farewells?: number; // round 32: careers ended on a farewell tour
+  sons?: number; // round 32: sons' careers played to the end (the next generation)
 }
 
 /** Round 29: how many music loops the game has (ui/tracks.ts; a test keeps the two in step). */

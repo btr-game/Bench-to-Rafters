@@ -1244,6 +1244,25 @@ export const ICONS: Record<string, string[]> = {
     '..OOOOOOOOOOO...',
     '................',
   ],
+  // round 32: the head coach (his whistle, on a lanyard)
+  whistle: [
+    '................',
+    '.....RRRR.......',
+    '....R....R......',
+    '...R......R.....',
+    '...R......R.....',
+    '....R....R......',
+    '.....RRRR.......',
+    '......OO........',
+    '...OOOwwOOOOOOOO',
+    '..OwWWWWwWWWWWWO',
+    '..OWWOOWWWWWWWMO',
+    '..OWWOOWwOOOOOOO',
+    '..OwWWWWwO......',
+    '...OwWWwO.......',
+    '....OOOO........',
+    '................',
+  ],
   // round 31: undo, compare two careers, text size
   undo: [
     '................',
