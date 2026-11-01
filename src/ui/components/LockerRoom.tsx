@@ -262,7 +262,13 @@ export function LockerRoom({ g }: { g: GameState }) {
           <span className="lk-tag you" aria-hidden="true">You</span>
           <span className="lk-you">You</span>
         </div>
-        {!active && <div className="lk-hint">Click to walk in · A and D to walk, Space to talk</div>}
+        {/* on a touch screen the keys are not there (the buttons below are), so the hint is just the tap */}
+        {!active && (
+          <div className="lk-hint">
+            <span className="hide-touch">Click to walk in · A and D to walk, Space to talk</span>
+            <span className="show-touch">Tap to walk in, then use the buttons</span>
+          </div>
+        )}
         {active && near && !open && <div className="lk-hint">{near.who === 'feud' ? 'Space: step into the argument' : `Space: talk to ${near.who === 'coach' ? 'the coach' : room.mates.find((m) => String(m.id) === near.who)?.name.split(' ')[0]}`}</div>}
       </div>
       <div className="lk-pad" aria-label="Walk and talk">

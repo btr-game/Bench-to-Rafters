@@ -956,7 +956,8 @@ button.scout-row { text-align: left; background: var(--surface); color: inherit;
   .hide-narrow { display: none; }
   .next-step { position: fixed; left: 12px; right: 12px; bottom: calc(var(--tabbar-h) + 10px + env(safe-area-inset-bottom, 0px)); max-width: none; z-index: 19; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18); }
 }
-@media (hover: none) { .hide-touch { display: none; } }
+.show-touch { display: none; }
+@media (hover: none) { .hide-touch { display: none; } .show-touch { display: inline; } }
 @media (min-width: 900px) {
   .tabbar { display: none; }
   .wrap { padding-bottom: 40px; }
@@ -2481,7 +2482,7 @@ input[type='range'] { width: 100%; min-height: 32px; accent-color: var(--accent)
 .lk-tag { order: 2; padding: 1px 6px; border-radius: 4px; background: rgba(12, 14, 18, 0.82); color: #fff; font-size: calc(12px * var(--ts)); font-weight: 600; white-space: nowrap; }
 .lk-alert { position: absolute; top: -4px; left: 50%; transform: translateX(-50%); padding: 0 5px; border-radius: 4px; background: #c92a2a; color: #fff; font-weight: 900; font-size: calc(13px * var(--ts)); animation: lk-bob 0.8s steps(2) infinite; }
 @keyframes lk-bob { 50% { transform: translate(-50%, -3px); } }
-.lk-hint { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); padding: 3px 10px; border-radius: 6px; background: rgba(12, 14, 18, 0.85); color: #fff; font-size: calc(13.5px * var(--ts)); white-space: nowrap; pointer-events: none; }
+.lk-hint { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); width: max-content; max-width: calc(100% - 16px); padding: 3px 10px; border-radius: 6px; background: rgba(12, 14, 18, 0.85); color: #fff; font-size: calc(13.5px * var(--ts)); text-align: center; pointer-events: none; }
 .lk-pad { display: flex; justify-content: center; gap: 8px; }
 .lk-pad .btn { min-width: 72px; touch-action: none; user-select: none; }
 .lk-talk { display: grid; gap: 8px; padding: 12px 14px; border-radius: 8px; border: 2px solid var(--team, var(--accent)); background: var(--surface-2); }

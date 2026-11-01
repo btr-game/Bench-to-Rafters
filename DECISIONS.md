@@ -2454,6 +2454,9 @@ multiple times."
   then, never above 299, over about forty minutes (7 after a minute, 35 after five, about 230 after
   an hour), so they never go down and always stay below the court. The dev deck's header shows the
   real numbers: on the court now, careers ended since the deck opened, and the last 24 hours.
+- **The locker room's hint on a phone**: the visual check found "Click to walk in · A and D to
+  walk, Space to talk" cut off on a phone with extra-large text. A touch screen has no keys there,
+  so it now reads "Tap to walk in, then use the buttons", and the hint wraps when it must.
 - **The dev deck would not open** once the summary had been rebuilt: the knock-on list's items were
   written as plain strings where the deck expects label-and-text pairs. Fixed, with a test on the
   summary's shape.
