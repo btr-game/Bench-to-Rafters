@@ -227,7 +227,7 @@ const TUTORIAL: DevCard[] = [
   { id: 'lesson', title: 'A lesson on screen', group: 'Tutorial', icon: 'guide', blurb: 'The tutorial guide: the page shaded but for one control, the note beside it, Got it or Your turn, and the exit code for anyone who has it.', open: () => onRoad([], {}, 'lesson') },
   { id: 'closing-tour', title: 'The closing tour', group: 'Tutorial', icon: 'arena', blurb: 'After the levels: a star’s career, stop by stop, for every system no level has; the bar says which stop, Next stop goes on once its lessons are done.', open: () => (onRoad(LEVEL_IDS, { minis: ALL_C }, 'lesson'), useStore.getState().startClosing()) },
   { id: 'recommended', title: 'The full game, first look', group: 'Tutorial', icon: 'door', blurb: 'Just after graduation: the start page with Regular guy recommended and its own few lessons.', open: () => onRoad(LEVEL_IDS, { minis: ALL_C, toured: 1, free: 1 }, 'lesson', { recommend: true }) },
-  { id: 'skip-door', title: 'The Skip door', group: 'Tutorial', icon: 'lock', blurb: 'At the foot of every tutorial page: the exit code (shown at graduation) opens the full game on this device for good.', open: () => onRoad(['beginner']), press: '[data-tour="skip-door"]' },
+  { id: 'skip-door', title: 'The Skip button', group: 'Tutorial', icon: 'lock', blurb: 'Beside Share at the top of every tutorial page: the exit code (shown at graduation) opens the full game on this device for good.', open: () => onRoad(['beginner']), press: '[data-tour="skip-door"]' },
 ];
 
 // ---------- the deck ----------

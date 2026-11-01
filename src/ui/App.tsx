@@ -241,7 +241,7 @@ export function App() {
   );
 
   if (thanks && !game) return <Thanks g={thanks} />;
-  if (intro && !game) return <Intro />;
+  if (intro) return <Intro />;
   // round 33: the tutorial, until the full game opens on this device: the beginner career first,
   // then the road map; none of the start page's pages
   if (inTutorial(road) && !game) {

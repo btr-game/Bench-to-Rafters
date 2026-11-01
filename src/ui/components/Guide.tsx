@@ -42,7 +42,7 @@ const SECTIONS: { title: string; where: string; items: [string, string[]][] }[] 
       ['Lessons', ['The tutorial guide shades the page but for one control and says what it does: Got it (Enter or Space) to read on, or use the control.', 'One lesson at a time, none skipped.']],
       ['The island', ['Every mini-game once, with a C or better in each: the mark to beat is on its card. Any time between levels.']],
       ['The closing tour', ['After the levels: a star’s career, stop by stop, for everything no level has (the locker room, duos, the press, love, the farewell tour and more).', 'Next stop goes on once a stop’s lessons are done.']],
-      ['Graduation', ['The diploma shows the exit code, and the full game opens on this device for good.', 'Skip the tutorial, at the foot of every tutorial page, takes the code: for another device, or anyone who has played before.']],
+      ['Graduation', ['The diploma shows the exit code, and the full game opens on this device for good.', 'Skip tutorial, beside Share at the top of every tutorial page, takes the code: for another device, or anyone who has played before.']],
       ['Levels card', ['In the full game, the Levels card on the start page brings the road map back: play any level again.', 'Level careers count nowhere: no save slot, career log, achievements or leaderboards.']],
     ],
   },

@@ -43,7 +43,6 @@ const EXPECTED = [/^tier-badge$/, /^plan-tag$/, /^drama-tag tag-$/, /\bghost-dar
   const bad = [];
   for (const scheme of ['light', 'dark']) {
     const p = await (await b.newContext({ viewport: { width: 1280, height: 900 }, colorScheme: scheme })).newPage();
-    await p.addInitScript(() => localStorage.setItem('btr-intro-seen', 'true'));
     await p.goto(URL);
     await p.waitForTimeout(1500);
     const found = await p.evaluate((list) => {

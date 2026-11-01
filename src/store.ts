@@ -55,7 +55,7 @@ interface Store {
   tab: Tab;
   theme: Theme;
   transition: Transition | null;
-  /** The intro page is up (round 27): a first visit, until Start. */
+  /** The intro page is up (round 27; round 34: every visit), until Start. */
   intro: boolean;
   endIntro: () => void;
   showIntro: () => void;
@@ -256,14 +256,6 @@ function newsDue(): boolean {
   }
   return true;
 }
-/** Round 27 (owner: "for first starters, an intro page"): once, before anything is on the device. */
-function firstIntro(): boolean {
-  try {
-    return localStorage.getItem('btr-intro-seen') === null && noRecord();
-  } catch {
-    return false;
-  }
-}
 
 function loadCourt(): Court {
   try {
@@ -403,11 +395,10 @@ export const useStore = create<Store>((set, get) => ({
     set({ guide });
   },
   transition: null,
-  intro: firstIntro(),
-  endIntro: () => {
-    saveFlag('btr-intro-seen', true);
-    set({ intro: false });
-  },
+  // round 34 (owner: "the intro page should always appear before anything"): every visit opens on
+  // the intro, a career resumed from a reload included; the dev deck has a card for it instead
+  intro: !isDev(),
+  endIntro: () => set({ intro: false }),
   showIntro: () => set({ intro: true }),
   news: newsDue(),
   showNews: () => {
@@ -992,7 +983,7 @@ export function settle(flush: boolean): void {
 // quit"); the deck keeps storage of its own and never picks one up
 if (typeof window !== 'undefined' && !isDev())
   void readRun().then((g) => {
-    if (g && !useStore.getState().game) useStore.setState({ game: g, slot: null, tab: 'home', intro: false, seen: allSeen(g), ...oathLock(g) });
+    if (g && !useStore.getState().game) useStore.setState({ game: g, slot: null, tab: 'home', seen: allSeen(g), ...oathLock(g) });
   });
 
 // closing the tab inside the half second still keeps the last move

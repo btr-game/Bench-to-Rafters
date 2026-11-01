@@ -21,7 +21,6 @@ const { chromium } = require('playwright');
   ctx.on('page', () => pages++);
   await p.addInitScript(() => {
     try {
-      localStorage.setItem('btr-intro-seen', '1');
       // round 33: a player who has finished the tutorial (the full game is open on this device)
       if (!localStorage.getItem('btr-road-v1')) localStorage.setItem('btr-road-v1', JSON.stringify({ free: 1, passed: {}, minis: {} }));
     } catch {}
