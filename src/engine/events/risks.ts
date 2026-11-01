@@ -459,7 +459,7 @@ export const RISK_EVENTS: EventDef[] = [
     stages: ADULT,
     phase: 'off',
     // round 32: a family comes through the Love storyline now, so this is a second child, a
-    // daughter, a couple of years after the first (the son who may play his own career)
+    // daughter, a couple of years after the first
     when: (s) => s.player.age >= 23 && !!s.flags.wed && !!s.flags.child && s.year >= s.flags.child + 2 && !s.flags.gen2,
     weight: 0.5,
     cooldownSeasons: 6,

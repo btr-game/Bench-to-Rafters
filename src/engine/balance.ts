@@ -683,7 +683,8 @@ export const RECORD_CHASE = { games: 72, near: 0.8, usage: 0.05, injury: 0.1, ch
  * `potSd`, and a `potJump` chance of `potJumpSize` points (up only `potUp` of the time). The child's
  * legacy adds `share` of itself to his.
  */
-export const NEXT_GEN = { heightSd: 1.2, jump: 0.06, jumpIn: [3, 6], potShift: -3, potSd: 3.5, potJump: 0.06, potJumpSize: [7, 12], potUp: 0.35, share: 0.25 };
+// girl: the chance the first child is a daughter (owner: "make the first child half-half boy and girl"); only a son plays a career
+export const NEXT_GEN = { heightSd: 1.2, jump: 0.06, jumpIn: [3, 6], potShift: -3, potSd: 3.5, potJump: 0.06, potJumpSize: [7, 12], potUp: 0.35, share: 0.25, girl: 0.5 };
 export const STAFF_PAY = { pay: [1, 1.7, 2.6], effect: [1, 1.5, 2], talk: 1, talkShare: 0.35, afford: 4, max: 6 };
 // round 25: fines, rolled like injuries, game by game in a pro league. `perGame` is the chance a
 // game; low morale and a big name make it likelier; at most `maxSeason` a season. Amounts in $M

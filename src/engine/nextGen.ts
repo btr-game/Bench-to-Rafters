@@ -20,8 +20,9 @@ import { count, nbaTitles } from './awards/legacy';
 import type { AttrKey, ChildLegacy, GameState, Pos } from './types';
 import type { CareerRecord } from './career/record';
 
-/** A finished career whose child's career has not been played yet. */
-export const canPlayChild = (g: GameState): boolean => g.step === 'retired' && !!g.flags.child && !g.flags.gen2 && !g.flags.childPlayed;
+/** A finished career whose son's career has not been played yet (a first child who is a daughter
+ * plays none). */
+export const canPlayChild = (g: GameState): boolean => g.step === 'retired' && !!g.flags.child && !g.flags.childGirl && !g.flags.gen2 && !g.flags.childPlayed;
 
 /** The child's seed, from his father's (the same child every time the father's save is looked at). */
 export const childSeed = (father: GameState): number => (Math.imul(father.seed ^ 0x5bd1e995, 0x27d4eb2d) >>> 1) % 2 ** 31;

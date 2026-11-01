@@ -3,7 +3,7 @@
 // one per offseason (career/offseason.ts), as a story page with what changed, and sometimes
 // with another choice. Outcomes are rolled, so the same start can end very differently.
 
-import { ATTR_MAX, GROWTH_RATE } from '../balance';
+import { ATTR_MAX, GROWTH_RATE, NEXT_GEN } from '../balance';
 import { chance, clamp, range, type Rng } from '../rng';
 import type { AttrKey, Decision, GameState, Stage } from '../types';
 import { adjust, logDecision, pushDecision, pushMoment, userOvr } from '../career/common';
@@ -177,7 +177,7 @@ const ARCS: ArcDef[] = [
     id: 'love',
     title: 'Love',
     color: '#C2255C',
-    next: (s, a) => {
+    next: (s, a, rng) => {
       const who = a.v.who;
       if (!a.v.stage) {
         if ((a.v.wait ?? 0) >= 2) {
@@ -209,8 +209,10 @@ const ARCS: ArcDef[] = [
         morale(s, 2);
         return { title: 'Another summer', text: 'Life is good. The house is quiet.', ask: { text: 'Start a family?', choices: [{ id: 'family', label: 'Start a family' }, { id: 'later', label: 'Not yet' }] } };
       }
-      // a baby on the way: Fatherhood takes it from here
+      // a baby on the way: Fatherhood takes it from here. Round 32 (owner: "make the first child
+      // half-half boy and girl"): a girl half the time, so a son, and his career, comes half as often
       s.flags.child = s.year + 1;
+      if (chance(rng, NEXT_GEN.girl)) s.flags.childGirl = 1;
       startArc(s, 'baby', { help: s.player.bank >= 1 ? 1 : 0, fresh: 1 });
       morale(s, 6);
       return { title: 'Big news', text: 'You are going to be a parent. The baby is due during next season.', done: true };
@@ -241,11 +243,12 @@ const ARCS: ArcDef[] = [
       if (a.chapter === 0) {
         morale(s, 10);
         if (!a.v.help) s.player.growthMultNext *= 0.94;
-        return { title: 'Born', text: a.v.help ? 'A healthy baby, and help at home so you can still sleep before game days.' : 'A healthy baby. You have never been this tired or this happy. Film sessions happen at 3 a.m. with a bottle in your hand.' };
+        const baby = s.flags.childGirl ? 'baby girl' : 'baby boy';
+        return { title: 'Born', text: a.v.help ? `A healthy ${baby}, and help at home so you can still sleep before game days.` : `A healthy ${baby}. You have never been this tired or this happy. Film sessions happen at 3 a.m. with a bottle in your hand.` };
       }
       morale(s, 6);
       s.player.growthMultNext *= 1.03;
-      return { title: 'Something to play for', text: 'Your kid comes to games now, in a tiny jersey with your number. You play a little harder when you see it.', done: true };
+      return { title: 'Something to play for', text: `Your ${s.flags.childGirl ? 'daughter' : 'son'} comes to games now, in a tiny jersey with your number. You play a little harder when you see it.`, done: true };
     },
   },
   {

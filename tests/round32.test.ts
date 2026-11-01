@@ -46,7 +46,8 @@ describe('round 32: the next generation', () => {
       expect(g.step).toBe('retired');
       if (g.flags.child) {
         kids++;
-        expect(canPlayChild(g)).toBe(true);
+        // a son plays his own career; a first child who is a daughter does not
+        expect(canPlayChild(g)).toBe(!g.flags.childGirl);
       }
     }
     expect(kids).toBeGreaterThan(0);
@@ -396,5 +397,28 @@ describe('the dev deck’s project summary', () => {
         else expect(typeof b.text).toBe('string');
       }
     }
+  });
+});
+
+describe('round 32: the first child is a boy or a girl, half and half', () => {
+  it('about half the babies are girls, and only a son can play his own career', async () => {
+    const { processArcs, startArc } = await import('../src/engine/events/arcs');
+    let girls = 0;
+    const N = 400;
+    for (let i = 0; i < N; i++) {
+      const g = newGame(33000 + i, { ...input, mode: 'standard' });
+      startArc(g, 'love', { who: 1, stage: 3 });
+      processArcs(g); // "Big news": the baby on the way
+      expect(g.flags.child).toBe(g.year + 1);
+      expect(g.arcs?.some((a) => a.id === 'baby')).toBe(true);
+      if (g.flags.childGirl) girls++;
+      g.step = 'retired';
+      g.stage = 'RETIRED';
+      expect(canPlayChild(g)).toBe(!g.flags.childGirl);
+    }
+    // 50% of 400: a standard error of 2.5 points, so 40% to 60% is four of them
+    expect(girls / N).toBeGreaterThan(0.4);
+    expect(girls / N).toBeLessThan(0.6);
+    expect(NEXT_GEN.girl).toBe(0.5);
   });
 });
