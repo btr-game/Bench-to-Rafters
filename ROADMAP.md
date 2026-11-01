@@ -151,6 +151,33 @@ no statue or hall.
   community, so that by the end the player knows every function as if they had read the project
   summary. Its steps cannot be skipped: while it asks for something, nothing else on the page
   responds.
+- **What each level holds** (owner's final call):
+
+  | | Beginner (5–10 min) | Intermediate (~10 min) | Advanced (~15 min) |
+  |---|---|---|---|
+  | Creation | name, number, position, look | + archetype, focus | + country (its road), hand |
+  | Path | 1 high school, 1 college, draft, several NBA seasons | + a college from offers | + G League and overseas offers |
+  | Plans | 1 a season, from 6 | 1 or 2 a season, all 12 | 1 or 2 a half (the full system) |
+  | Turning points | 1 hand-picked a season | 1 a season, from the full pool | the full pool, and storylines |
+  | Shop | 3 items, 1 purchase | the normal shop | + staff, wardrobe, collection |
+  | Contracts | set for him | contract talks on the first NBA deal | every deal, and trade requests |
+  | Season | results | standings, leaders, the bracket | + the coach card (role talk, hot seat), team style |
+  | Playoffs | one last shot | playable games | + crunch time and the action cam |
+  | NBA life | none | nickname, brands, rival (few choices each) | + starting five, body and weight |
+  | Modes | none | Fast break | + Sim |
+  | Goal | an All-Star team | an All-Star team | an All-Star team |
+
+- **The closing tour**, after advanced, on a prepared star career, each step asking the player to
+  do the thing: the locker room, Around the league with city and fans, duos and the Big Three, press
+  conferences, the record watch, the farewell tour, the ring-chaser role, Love and the next
+  generation, the Records and Extras tabs, undo, Simple text, Master mode and Settings. It ends on
+  the full start page with "Start a Regular guy career (recommended)" lit up.
+- **Missing the All-Star goal still passes the level** (the sad ending card, then on to the next).
+- **Mini-games**: played from the levels page at any time after beginner, in any order; Front
+  Office's C is making the playoffs once; the C marks for the three-point contest, the dunk contest,
+  3-on-3, Legends and the lab come from test runs, for the owner to approve.
+- **No stuck steps**: no emergency skip; instead every tutorial step is checked by a test that plays
+  all three levels and the closing tour start to finish, on a computer and a phone, before release.
 - **No achievements** in the levels; **advanced counts nowhere** in the community either; a saved
   career from before waits until the full game opens; the full start page keeps a **Levels** card to
   replay any level.
