@@ -251,14 +251,26 @@ export const CARDS: DevCard[] = [
   { id: 'look', title: 'Your look', group: 'Start', icon: 'jersey', blurb: 'The identity step: skin, hair colour, hair and facial hair on the player, in a plain white or black jersey with his number, and the back of the jersey with his name.', open: () => void useStore.setState({ game: null, page: null, mini: null }), press: '[data-tour="create-next"]' },
   {
     id: 'saves',
-    title: 'Ten save slots and career codes',
+    title: 'Careers in the career log, and their codes',
     group: 'Start',
     icon: 'disk',
-    blurb: 'In the career log: every career on this device, newest first: continue, look back, copy its code, delete; paste a code to import. The start page keeps a Continue card for the latest.',
+    blurb: 'One list of every career on this device: those in progress first (continue, copy a code, delete), then a card for each finished one (look back, the card, its code). Paste a code to import. The start page keeps a Continue card for the latest.',
     open: () => {
       const g = loaded();
       if (!g) return false;
       void writeSlot(newSlotId(), g).then(() => useStore.setState({ game: null, page: 'log', mini: null }));
+    },
+  },
+  {
+    id: 'look-back',
+    title: 'Looking back at a finished career',
+    group: 'Start',
+    icon: 'cards',
+    blurb: 'Look back from the career log opens a finished career on its Home, with a bar at the top saying so and the way back to the log.',
+    open: () => {
+      const g = at('look-back', (s) => s.step === 'retired', { mode: 'stars', fast: true });
+      if (!g) return false;
+      return show(g, 'home', { lookBack: true }, true);
     },
   },
   { id: 'daily', title: 'Daily challenge', group: 'Start', icon: 'calendar', blurb: "Today's prospect, the same for everyone. Mini-games locked.", open: () => void (useStore.setState({ game: null, mini: null, page: null }), useStore.getState().startDaily()) },

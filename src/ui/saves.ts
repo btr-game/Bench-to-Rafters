@@ -1,4 +1,4 @@
-import type { GameState } from '../engine/types';
+import type { GameState, Pos } from '../engine/types';
 
 // Save slots (round 25, the owner: ten of them, and a code to export or import a career). Each
 // career in progress has a slot on this device; the index lists them, newest first, and every
@@ -10,7 +10,7 @@ const INDEX = 'btr-saves-v2';
 const DATA = (id: string) => `btr-slot-${id}`;
 const OLD = 'btr-save-v1'; // the single save before round 25
 
-interface SlotMeta {
+export interface SlotMeta {
   id: string;
   name: string;
   year: number;
@@ -18,9 +18,29 @@ interface SlotMeta {
   retired: boolean;
   mode: string;
   at: number; // last saved (ms)
+  // round 34: enough to show a career in progress as a card in the career log
+  pos?: Pos;
+  number?: number;
+  age?: number;
+  team?: { name: string; color: string };
 }
 
-const metaOf = (id: string, g: GameState): SlotMeta => ({ id, name: g.player.name, year: g.year, ovr: Math.round(g.player.peakOvr), retired: g.step === 'retired', mode: g.mode ?? 'standard', at: Date.now() });
+const metaOf = (id: string, g: GameState): SlotMeta => {
+  const last = g.history[g.history.length - 1];
+  return {
+    id,
+    name: g.player.name,
+    year: g.year,
+    ovr: Math.round(g.player.peakOvr),
+    retired: g.step === 'retired',
+    mode: g.mode ?? 'standard',
+    at: Date.now(),
+    pos: g.player.pos,
+    number: g.player.number,
+    age: g.player.age,
+    team: last ? { name: last.teamName, color: last.teamColor } : { name: g.player.highSchool, color: g.schoolColor || '#2A2F36' },
+  };
+};
 
 function readIndex(): SlotMeta[] {
   try {
@@ -76,14 +96,16 @@ async function unpack(text: string): Promise<string> {
   return new Response(stream).text();
 }
 
-/** Save a career into its slot; a new slot past the tenth replaces the oldest. */
+/** Save a career into its slot; a new slot past the tenth replaces the oldest finished one (round
+ * 34: a finished career's save is its career log card's Look back), else the oldest. */
 export async function writeSlot(id: string, g: GameState): Promise<boolean> {
   try {
     const data = await pack(JSON.stringify(g));
     let list = readIndex().filter((x) => x.id !== id);
     list.sort((a, b) => b.at - a.at);
     while (list.length >= MAX_SLOTS) {
-      const gone = list.pop()!;
+      const done = list.map((x) => x.retired).lastIndexOf(true);
+      const gone = list.splice(done >= 0 ? done : list.length - 1, 1)[0];
       localStorage.removeItem(DATA(gone.id));
     }
     localStorage.setItem(DATA(id), data);

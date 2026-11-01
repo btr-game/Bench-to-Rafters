@@ -37,6 +37,8 @@ export interface CareerRecord {
   rankBehind: string | null;
   hof: 'first' | 'hof' | null;
   team: { name: string; color: string } | null; // the team he gave the most seasons to
+  /** Round 34: the save slot he was finished in, so the career log's card can open it again (Look back). */
+  slot?: string;
   nbaSeasons: number;
   nbaPoints: number;
   nbaGames: number;

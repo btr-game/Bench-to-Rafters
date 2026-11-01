@@ -1906,7 +1906,7 @@ td .art-team { display: inline-block; vertical-align: middle; margin: -3px 8px -
 .place-night { background: linear-gradient(#0b1020 0%, #1b2a4a 60%, #10151f 61%, #05070b 100%); }
 
 /* round 25: ten save slots on the start page */
-.saves-card { border-top: 4px solid var(--accent); margin-bottom: 8px; }
+.save-entry.going { border-top: 4px solid var(--good); }
 .save-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;

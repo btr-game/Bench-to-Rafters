@@ -72,6 +72,27 @@ function TabBar({ g, top = false }: { g: GameState; top?: boolean }) {
   );
 }
 
+/** Round 34 (owner: "if i am looking back, i should have easier access to leave that career"): a
+ * finished career opened from the career log says so at the top, with the way out beside it. */
+function LookBackBar({ g }: { g: GameState }) {
+  const lookBack = useStore((s) => s.lookBack);
+  const leave = useStore((s) => s.leaveLookBack);
+  if (!lookBack || g.step !== 'retired') return null;
+  return (
+    <div className="daily-strip look-back-bar" role="region" aria-label="Looking back">
+      <Icon name="cards" size={22} />
+      <b>Looking back</b>
+      <span className="small">
+        {g.player.name}, retired at {g.player.age}
+      </span>
+      <span className="spacer" />
+      <button className="btn small" onClick={() => (sfx('page'), leave())}>
+        Leave: back to the career log
+      </button>
+    </div>
+  );
+}
+
 /** Round 33: the closing tour's bar: the stop on screen, and on to the next once its lessons are done. */
 function TourBar() {
   const closing = useStore((s) => s.closing);
@@ -278,6 +299,7 @@ export function App() {
           </div>
         </header>
         {game.flags.daily ? <DailyStrip g={game} /> : null}
+        <LookBackBar g={game} />
         {game.flags.tour ? <TourBar /> : null}
         <TabView key={tab} fast={fast}>
           {tab === 'home' && (retired ? game.flags.level ? <LevelEnd g={game} /> : <Retirement g={game} /> : <Home g={game} />)}

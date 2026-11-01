@@ -23,7 +23,7 @@ const D = (id: string) => `[data-tour="${id}"]`;
 
 // in order: the start page, the top bar, Home, the decisions, the offseason, the tabs, the end
 const TOUR: Step[] = [
-  T('start-continue', '.continue-card .btn', 'Your latest career: pick it up where you left it. Every saved career is in the career log.'),
+  T('start-continue', '.continue-card .btn', 'Your latest career: pick it up where you left it. Every career, in progress or finished, is in the career log.'),
   T('guide-btn', D('guide-btn'), 'The manual: every feature in a few short points. Guide mode switches on and off there too.'),
   T('intro-btn', D('intro-btn'), 'Intro plays the opening again.'),
   T('whats-new', D('whats-new'), 'What’s new: the latest changes to the game. It opens by itself once after each update; this opens it again.'),
@@ -34,7 +34,7 @@ const TOUR: Step[] = [
   T('minis', D('minis'), 'Mini-games. Free from the start page; in a career each one opens with your ratings and pays a rating bonus.'),
   T('levels', D('levels-card'), 'With Regular guy: the road map, to play any of the three levels again. Level careers count nowhere.'),
   T('log', D('log'), 'The career log: the cards of your last ten finished careers. Lock up to five to keep them for good.'),
-  T('log-saves', '.saves-card', 'Every career saved on this device: continue one, look back, copy its code to play it somewhere else, or import one.'),
+  T('log-saves', '.save-entry', 'A career in progress: continue it, or copy its code to play it in another browser. Finished careers below open again with Look back.'),
   T('log-lock', D('log-lock'), 'Lock a card: a new career never replaces it, and it can’t be deleted until you unlock it. Five at most.'),
   T('log-pick', D('log-pick'), 'Compare: pick two cards to see them side by side.'),
   T('log-compare', D('log-compare'), 'Two careers side by side: the better of each row in bold with a ▲.'),

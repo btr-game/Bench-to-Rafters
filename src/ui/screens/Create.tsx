@@ -63,7 +63,7 @@ function ContinueCard() {
   return (
     <section className="card continue-card" data-tour="saves">
       <div style={{ minWidth: 0 }}>
-        <div className="kicker">{live ? 'Your career' : 'Saved on this device'}</div>
+        <div className="kicker">{live ? 'Your career' : 'Career log'}</div>
         {live ? (
           <>
             <b className="resume-name">{live.name}</b>
@@ -73,7 +73,7 @@ function ContinueCard() {
             {failed && <div className="small" style={{ color: 'var(--bad)' }}>That save could not be read.</div>}
           </>
         ) : (
-          <div className="small muted keep">{slots.length ? 'Every saved career, finished ones too, is in the career log.' : 'No career saved yet. Every career is saved after each move.'}</div>
+          <div className="small muted keep">{slots.length ? 'Every career, in progress or finished, is in the career log.' : 'No career yet. Every career is saved after each move, in the career log.'}</div>
         )}
       </div>
       <div className="row save-actions">
@@ -83,7 +83,7 @@ function ContinueCard() {
           </button>
         )}
         <button className="btn ghost small" onClick={() => setPage('log')}>
-          All saved careers
+          Open the career log
         </button>
       </div>
     </section>

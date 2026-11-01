@@ -25,7 +25,7 @@ import { canPlayChild, childGame, childLegacy, childSeed } from './engine/nextGe
 import { attachChild, logCareer, type LogResult } from './ui/careerLog';
 import { checkAch, countCareer, earnedIn, recordUndo } from './ui/achievements';
 import { community } from './ui/community';
-import { dropRun, importCode, newSlotId, readRun, readSlot, writeRun, writeSlot } from './ui/saves';
+import { deleteSlot, dropRun, importCode, newSlotId, readRun, readSlot, writeRun, writeSlot } from './ui/saves';
 import { bestGrade, exitCode, levelTabs, loadRoad, offRecord, roadGrade, saveRoad, type Road } from './ui/road';
 import { STOPS, stopsLeft } from './ui/tutorial/closing';
 import { levelOf, type Level } from './engine/levels';
@@ -130,6 +130,10 @@ interface Store {
   /** Round 25: the save slot of the career on screen (null until it is first saved). */
   slot: string | null;
   resume: (id: string) => Promise<boolean>;
+  /** Round 34: a finished career opened from the career log (Look back), with a bar to leave it. */
+  lookBack: boolean;
+  /** Leaves a looked-back career, back to the career log. */
+  leaveLookBack: () => void;
   importCareer: (code: string) => Promise<boolean>;
   /** Whether the autosave works here ('off' when the browser blocks storage or the save is too big). */
   saving: 'ok' | 'off';
@@ -420,7 +424,7 @@ export const useStore = create<Store>((set, get) => ({
       const game = newGame(s, input);
       fastForward(game);
       // round 33: a level career has a save of its own (ui/saves.ts writeRun), not a slot
-      set({ game, slot: input.level ? null : newSlotId(), creating: null, tab: 'home', transition: null, mini: null, seen: allSeen(game), ...oathLock(game) });
+      set({ game, slot: input.level ? null : newSlotId(), creating: null, tab: 'home', transition: null, mini: null, seen: allSeen(game), lookBack: false, ...oathLock(game) });
     }),
   seen: {},
   undo: null,
@@ -550,7 +554,10 @@ export const useStore = create<Store>((set, get) => ({
     const game = await readSlot(id);
     if (!game) return false;
     weightOf(game.player); // careers saved before round 20 get a weight
-    set({ game, slot: id, tab: 'home', transition: null, mini: null, seen: allSeen(game), daily: null, ...oathLock(game) });
+    // round 34 (owner: "when i look back or continue from the career log, it doesnt instantly direct
+    // me to the career's homepage"): straight to its Home, from wherever Continue was pressed
+    set({ game, slot: id, tab: 'home', page: null, transition: null, mini: null, seen: allSeen(game), daily: null, logged: null, lookBack: game.step === 'retired', ...oathLock(game) });
+    top();
     return true;
   },
   importCareer: async (code) => {
@@ -558,8 +565,14 @@ export const useStore = create<Store>((set, get) => ({
     if (!game) return false;
     weightOf(game.player);
     const slot = newSlotId();
-    set({ game, slot, tab: 'home', transition: null, mini: null, seen: allSeen(game), daily: null, ...oathLock(game) });
+    set({ game, slot, tab: 'home', page: null, transition: null, mini: null, seen: allSeen(game), daily: null, logged: null, lookBack: game.step === 'retired', ...oathLock(game) });
+    top();
     return true;
+  },
+  lookBack: false,
+  leaveLookBack: () => {
+    set({ game: null, slot: null, tab: 'home', transition: null, lookBack: false, page: 'log' });
+    top();
   },
   choose: (choiceId) =>
     later(() => {
@@ -797,7 +810,7 @@ export const useStore = create<Store>((set, get) => ({
     // everytime the user exits a career"): every time, not only the first
     const g = get().game;
     const thanks = g && !g.flags.daily && g.mode !== 'lab' ? g : null;
-    set({ game: null, slot: null, tab: 'home', transition: null, thanks });
+    set({ game: null, slot: null, tab: 'home', transition: null, thanks, lookBack: false });
   },
   mini: null,
   claimMini: (r) => {
@@ -919,8 +932,11 @@ useStore.subscribe((now, before) => {
   }
   const got = earnedIn(g);
   const order = (t: string) => ACH_TIERS.findIndex((x) => x.key === t);
-  const rec: CareerRecord = { ...careerRecord(g), ach: { n: got.length, top: [...got].sort((a, b) => order(b.tier) - order(a.tier)).slice(0, 10).map((a) => ({ name: a.name, tier: a.tier })) } };
-  useStore.setState({ logged: logCareer(rec) });
+  const rec: CareerRecord = { ...careerRecord(g), slot: now.slot ?? undefined, ach: { n: got.length, top: [...got].sort((a, b) => order(b.tier) - order(a.tier)).slice(0, 10).map((a) => ({ name: a.name, tier: a.tier })) } };
+  const logged = logCareer(rec);
+  // round 34: a card pushed out of the log takes its save with it (the log is the saved careers)
+  if (logged.dropped?.slot) deleteSlot(logged.dropped.slot);
+  useStore.setState({ logged });
   // round 24: onto the leaderboards (and the news feed) for everyone who shares this page
   void community().then((c) => c.postCareer(rec));
 });
@@ -967,7 +983,7 @@ export function viewNow(): View {
 /** The road as this storage has it, with nothing of the tutorial's on screen. */
 export const roadView = (): View => ({ road: loadRoad(), creating: null, closing: null, recommend: false, lessonUp: false });
 export function startView(): View {
-  return { game: null, tab: 'home', page: null, mini: null, transition: null, daily: null, toasts: [], thanks: null, spots: null, intro: false, news: false, slot: null, seen: {}, logged: null, tour: false, simple: loadFlag('btr-simple'), master: loadFlag('btr-master'), guide: loadFlag('btr-guide-mode'), ...roadView() };
+  return { game: null, tab: 'home', page: null, mini: null, transition: null, daily: null, toasts: [], thanks: null, spots: null, intro: false, news: false, slot: null, seen: {}, logged: null, tour: false, simple: loadFlag('btr-simple'), master: loadFlag('btr-master'), guide: loadFlag('btr-guide-mode'), lookBack: false, ...roadView() };
 }
 /** Settles what is waiting to be written as the deck opens (`flush`: the game's last move is
  * saved where it belongs) or closes (dropped: nothing of the deck's reaches the game). */
