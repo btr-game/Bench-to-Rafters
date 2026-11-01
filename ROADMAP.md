@@ -105,10 +105,19 @@ after the third.
 accessed the game but didnt properly play it"): devices that played before go through the levels
 too; their saves, log and achievements stay on the device and are there when the full game opens.
 
-**The way out**: an escape code beside the Developer door, for anyone who should skip the levels
-(owner's code; like the dev password, only a hash of it in the shipped code, and scripts take it
-from an environment variable). The Developer door and the feedback channel stay on every page,
-in the levels too.
+**The way out** (owner, revised during round 33: "anyone who goes into the browser automatically
+gets assigned to the tutorial, regardless of their data. but, at the end of the tutorial, the game
+reveals the exit password ... on one corner or the bottom of the tutorial, there's a skip button,
+where the user can insert the code to skip it. this allows old users to skip"):
+- Every device starts in the tutorial, whatever it has saved.
+- A Skip button sits in a corner of every tutorial page; it asks for the exit code, and the right
+  code opens the full game at once.
+- The graduation at the end of the tutorial shows the exit code, so a player who finished can skip
+  on another device, or after the device forgets.
+- Finishing the tutorial or entering the code opens the full game on that device for good.
+- The check uses a hash of the code. Because the game must show the code at the end, the code
+  itself is in the game too, lightly encoded so it does not appear as plain text in the page.
+- The Developer door and the feedback channel stay on every page, in the levels too.
 
 **The levels count nowhere in the community**: no boards, no feed, no live count of careers ended,
 no statue or hall.

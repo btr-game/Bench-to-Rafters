@@ -10,6 +10,7 @@ import { NAMES } from '../../content/strings';
 import { logDecision, userOvr } from './common';
 import { minSalary } from '../economy/salary';
 import { nbaOffer, offerChoice } from './offers';
+import { inLevel } from '../levels';
 
 interface ChaserRole {
   name: string;
@@ -46,6 +47,7 @@ export const chaserRoleFor = (s: GameState): ChaserRole => CHASER_ROLES[chaserRo
 
 /** Offered at the retirement prompt and with the last-chance offers, to former NBA players. */
 export function canChaseRing(s: GameState): boolean {
+  if (inLevel(s)) return false; // round 33: the closing tour shows the ring chase
   const ovr = userOvr(s);
   // round 22: a former star can still sell his experience a little below the usual bar
   const enough = ovr >= RC.minOvr || (s.player.peakOvr >= RC.starPeak && ovr >= RC.starMinOvr);

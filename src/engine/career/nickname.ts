@@ -13,6 +13,7 @@ import { idealWeight, weightOf } from '../player/weight';
 import { clamp, next, shuffle } from '../rng';
 import { pushDecision, pushMoment } from './common';
 import type { BrandDeal, Decision, GameState, Nickname } from '../types';
+import { allows } from '../levels';
 
 const c01 = (x: number) => clamp(x, 0, 1);
 
@@ -150,6 +151,7 @@ function pickNickname(s: GameState): Nickname {
 
 /** At season's end: a famous enough player gets his name. */
 export function awardNickname(s: GameState, color: string, teamName: string): void {
+  if (!allows(s, 'nickname')) return; // round 33: intermediate level and up
   const p = s.player;
   if (p.nickname || p.rep < NICKNAME.rep) return;
   p.nickname = pickNickname(s);

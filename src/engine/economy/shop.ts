@@ -8,6 +8,7 @@ import { SHOP_ITEMS, type ShopItem, type WearSlot } from '../../content/shop';
 import { logDecision, pushDecision } from '../career/common';
 import { fmtMoney } from './salary';
 import { changeWeight, idealWeight, weightOf } from '../player/weight';
+import { levelOf } from '../levels';
 
 /** His income, $M a year: salary and brand deal. */
 const incomeOf = (s: GameState): number => (s.contract?.salary ?? 0) + (s.player.brand?.perYear ?? 0);
@@ -98,14 +99,18 @@ function stock(s: GameState): string[] {
 }
 
 export function pushShop(s: GameState, ids?: string[], prices?: number[], bought = 0): void {
-  const list = (ids ?? stock(s)).map((id) => SHOP_ITEMS.find((i) => i.id === id)!).filter(Boolean);
+  // round 33: the beginner level's shop: three of the six (a cheap one, a middle one, a dear one)
+  // and one purchase (owner: "leave the shop, but 1 purchase and 3 items")
+  const lite = levelOf(s) === 'beginner';
+  const fresh = ids ?? stock(s);
+  const list = (ids ?? (lite ? fresh.filter((_, k) => k % 2 === 0).slice(0, 3) : fresh)).map((id) => SHOP_ITEMS.find((i) => i.id === id)!).filter(Boolean);
   if (list.length === 0) return;
   const cost = list.map((it, k) => prices?.[k] ?? priceFor(s, it));
   const rich = cost.reduce((a, b) => a + b, 0) <= s.player.bank;
   pushDecision(s, {
     kind: 'shop',
     title: 'The shop',
-    text: `Bank: ${fmtMoney(s.player.bank)}. ${rich ? 'Buy whatever you like: money is no object now.' : 'Buy as many as you can pay for. Prices follow what you earn.'}`,
+    text: lite ? `Bank: ${fmtMoney(s.player.bank)}. Three things this summer, and you can buy one.` : `Bank: ${fmtMoney(s.player.bank)}. ${rich ? 'Buy whatever you like: money is no object now.' : 'Buy as many as you can pay for. Prices follow what you earn.'}`,
     choices: [
       ...list.map((it, k) => ({
         id: it.id,
@@ -173,7 +178,8 @@ export function resolveShop(s: GameState, d: Decision, id: string): string | nul
   const bought = ((d.data?.bought as number) ?? 0) + 1;
   s.flags.spree = Math.max(s.flags.spree ?? 0, bought);
   const rest = ids.map((x, k) => [x, prices[k]] as const).filter(([x]) => x !== id);
-  if (rest.length > 0) {
+  // round 33: one purchase in the beginner level's shop
+  if (rest.length > 0 && levelOf(s) !== 'beginner') {
     pushShop(s, rest.map(([x]) => x), rest.map(([, v]) => v), bought);
     // keep the shop at the front of the queue
     s.pending.unshift(s.pending.pop()!);

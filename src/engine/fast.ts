@@ -11,10 +11,13 @@
 //   retirement age);
 // - only the big story pages are shown;
 // - on screen, every tab folds its extra cards away behind one button (round 25, App.tsx).
+// The road map's levels (round 33) play at this pace too, but keep their own season plans, their
+// shop and, where the level has them, playable playoff games.
 
 import type { Decision, EventResult, GameState, Moment } from './types';
 import { advance, canChangeFocus, choose, heightMismatch, prompt } from './flow';
 import { pushPlanDecision } from './career/season';
+import { allows, inLevel } from './levels';
 
 /** Story pages worth stopping for in fast break. */
 const BIG_EVENT = /Breakthrough season|The leap|Everything changes|Exempted|rafters/i;
@@ -54,7 +57,7 @@ function cometPage(m: Moment): boolean {
 
 /** A decision fast break makes for the player, or null when it is the player's call. */
 function autoChoice(s: GameState, d: Decision): string | null {
-  if (d.kind === 'shop') return d.choices.find((c) => c.id === 'leave')?.id ?? null;
+  if (d.kind === 'shop' && !s.flags.level) return d.choices.find((c) => c.id === 'leave')?.id ?? null;
   // a press conference: the first answer's tone carries through a second question
   if (d.kind === 'press' && typeof d.data?.last === 'string') return d.data.last;
   // a notice with a single button
@@ -62,7 +65,7 @@ function autoChoice(s: GameState, d: Decision): string | null {
   if (d.kind === 'info' && open.length === 1) return open[0].id;
   // injured: recovery is the only plan
   if (d.kind === 'plan' && open.length === 1) return open[0].id;
-  if (d.kind === 'plan' && (d.data?.half as number) === 2 && s.season) {
+  if (d.kind === 'plan' && (d.data?.half as number) === 2 && s.season && !inLevel(s)) {
     const open = d.choices.filter((c) => !c.disabled).map((c) => c.id);
     const want = [s.season.plan, s.season.plan2].filter((x): x is NonNullable<typeof x> => !!x && open.includes(x));
     return want.length ? want.join('+') : open[0] ?? null;
@@ -123,7 +126,8 @@ function worthStopping(s: GameState): boolean {
 /** Runs the game forward until the next real choice. */
 export function fastForward(s: GameState): void {
   if (!s.flags.fast) return;
-  s.flags.simPostseason = 1;
+  // the road map's levels keep their playable playoffs at this pace (round 33)
+  if (!inLevel(s) || !allows(s, 'live')) s.flags.simPostseason = 1;
   // keep the outcome of the choice just made on screen while the game runs on
   const result = s.result;
   const toast = s.toast;

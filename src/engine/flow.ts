@@ -25,6 +25,7 @@ import { bankGains, isLab, labState } from './career/lab';
 import { prepareRecruit } from './career/recruit';
 import { resolveBrand } from './career/nickname';
 import { resolvePress } from './career/press';
+import { LEVEL_IDS, allows, levelChoice, levelDone, madeAllStar } from './levels';
 
 export type Prompt =
   | { type: 'decision'; decision: Decision }
@@ -93,6 +94,15 @@ export function newGame(seed: number, input: CreateInput): GameState {
   // round 30 (owner): Comet, Shoot for the stars at hyper speed: fast break and sim, locked on
   if (input.comet && s.mode === 'stars') s.flags.comet = s.flags.fast = s.flags.sim = 1;
   if (s.mode === 'lab') labState(player);
+  // round 33: a career on the road map (engine/levels.ts); beginner plays at fast break's pace
+  if (input.level) {
+    s.flags.level = LEVEL_IDS.indexOf(input.level) + 1;
+    // every level plays at fast break's pace (owner: beginner 5-10 minutes, intermediate about
+    // 10, advanced about 15); from intermediate on, the switch is his
+    s.flags.fast = 1;
+    // the road abroad is advanced's: below it he grows up in America
+    if (!allows(s, 'roads')) player.country = 'USA';
+  }
   // the game assigns his country, where he grows up and where he plays as a teenager
   assignOrigin(s);
   const intro = introText(s);
@@ -112,7 +122,43 @@ export function newGame(seed: number, input: CreateInput): GameState {
   pushMoment(s, { kind: 'intro', title: player.highSchool, text: intro.text, color: s.schoolColor, lines: intro.lines });
   logDecision(s, 'start', `Enrolled at ${player.highSchool} in ${player.hometown} as a ${input.pos}, ${player.archetype}.`);
   beginSeason(s);
+  if (s.flags.level) playEarlyYears(s);
   return s;
+}
+
+/** Round 33: a level starts as a high school senior. The first three years are played for him
+ * (plain, safe calls), and the career opens on the first page of his senior season. */
+function playEarlyYears(s: GameState): void {
+  for (let i = 0; i < 3000 && !(s.player.age >= 17 && s.step === 'preseason'); i++) {
+    const pr = prompt(s);
+    if (pr.type === 'retired') break;
+    if (pr.type === 'advance') {
+      advance(s);
+      continue;
+    }
+    const d = pr.decision;
+    const open = d.choices.filter((c) => !c.disabled);
+    const id =
+      d.kind === 'shop' ? 'leave'
+      : d.kind === 'plan' ? (open.find((c) => c.id === 'balanced') ?? open[0]).id
+      : d.kind === 'event' ? (open.find((c) => c.risk !== 'High') ?? open[0]).id
+      : (levelChoice(s, d) ?? open[0].id);
+    choose(s, id);
+  }
+  const p = s.player;
+  const ft = (x: number) => `${Math.floor(x / 12)}′${x % 12}″`;
+  s.moments = [];
+  s.toast = null;
+  s.result = null;
+  s.notes = [];
+  delete s.simCalls;
+  pushMoment(s, {
+    kind: 'intro',
+    title: p.highSchool,
+    color: s.schoolColor,
+    text: `Senior year. Three seasons at ${p.highSchool} are behind you, and this is the one the colleges are watching.`,
+    lines: [`${ft(p.height)} now; the doctors think he will reach about ${ft(p.heightProj)}`, `Recruiting: ${'★'.repeat(Math.max(1, s.stars))} so far`, 'One season of high school, one of college, then the draft'],
+  });
 }
 
 export function prompt(s: GameState): Prompt {
@@ -140,6 +186,7 @@ export function prompt(s: GameState): Prompt {
 export function choose(s: GameState, choiceId: string): void {
   const before = isLab(s) ? { ...s.player.attrs } : null;
   chooseInner(s, choiceId);
+  settleLevel(s);
   if (before) bankGains(s, before);
   prepareRecruit(s);
   syncMiniUnlocks(s);
@@ -211,6 +258,7 @@ function chooseInner(s: GameState, choiceId: string): void {
 export function advance(s: GameState): void {
   const before = isLab(s) ? { ...s.player.attrs } : null;
   advanceInner(s);
+  settleLevel(s);
   if (before) bankGains(s, before);
   prepareRecruit(s);
   syncMiniUnlocks(s);
@@ -233,6 +281,13 @@ function advanceInner(s: GameState): void {
       runPostseason(s);
       return;
     case 'summary': {
+      // round 33: a level's career ends once its NBA seasons are played
+      if (levelDone(s)) {
+        s.flags.levelEnd = madeAllStar(s) ? 2 : 1;
+        retireNow(s, madeAllStar(s) ? 'The level is done: an NBA All-Star, as the goal asked.' : 'The level is done, short of the All-Star goal.');
+        finishCareer(s);
+        return;
+      }
       // round 32: the last season of a farewell tour ends with its gifts, then he retires
       const bye = s.flags.farewell === s.year;
       if (bye) endFarewell(s);
@@ -278,6 +333,17 @@ export function retireByChoice(s: GameState): void {
   s.moments = [];
   retireNow(s, s.player.age < 30 ? 'Walked away early, on his own terms.' : 'Chose to call it a career.');
   finishCareer(s);
+}
+
+/** Round 33: the calls a level makes for him (levels.ts levelChoice), taken as soon as they
+ * reach the front of the queue, so they never wait on screen. */
+function settleLevel(s: GameState): void {
+  if (!s.flags.level) return;
+  for (let i = 0; i < 50 && s.pending.length > 0 && s.step !== 'retired'; i++) {
+    const id = levelChoice(s, s.pending[0]);
+    if (!id) return;
+    chooseInner(s, id);
+  }
 }
 
 function finishCareer(s: GameState): void {

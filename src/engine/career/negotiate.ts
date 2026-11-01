@@ -10,6 +10,7 @@ import { capFor, fmtMoney } from '../economy/salary';
 import { logDecision, userOvr } from './common';
 import { offerChoice } from './offers';
 import type { GameState, Offer } from '../types';
+import { talksOpen } from '../levels';
 
 export type Ask = 'money' | 'years' | 'role';
 
@@ -32,7 +33,7 @@ export function negotiate(s: GameState, offerId: string, ask: Ask): string | nul
   const d = s.pending[0];
   const offers = (d?.data?.offers as Offer[] | undefined) ?? [];
   const o = offers.find((x) => x.id === offerId);
-  if (!d || d.kind !== 'offers' || !o || !negotiable(o)) return null;
+  if (!d || d.kind !== 'offers' || !o || !negotiable(o) || !talksOpen(s)) return null;
   const avg = LEVELS[o.level].avg;
   const patience = clamp(NEGOTIATE.base + s.player.rep / NEGOTIATE.repPer + (userOvr(s) - avg) / NEGOTIATE.ovrPer - (o.asked ?? 0) * NEGOTIATE.perAsk, 0.05, 0.9);
   const roll = next(s.rng);

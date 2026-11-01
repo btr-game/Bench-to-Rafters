@@ -10,6 +10,7 @@ import { RECORD_CHASE as R } from '../balance';
 import { nbaCareerPoints } from '../awards/legacy';
 import type { GameState, HighKey } from '../types';
 import { logDecision, tally } from './common';
+import { inLevel } from '../levels';
 
 /** The league's single-game records. */
 export const GAME_RECORDS: Record<HighKey, { v: number; what: string }> = {
@@ -63,6 +64,7 @@ const ordinalOf = (n: number): string => {
 export const chasing = (s: GameState): boolean => s.flags.chase === s.year && s.stage === 'NBA';
 
 export function canChase(s: GameState): boolean {
+  if (inLevel(s)) return false; // round 33: the closing tour shows the record watch
   return !chasing(s) && !!s.season && s.step !== 'postseason' && s.step !== 'summary' && recordWatch(s).some((w) => w.kind === 'list');
 }
 

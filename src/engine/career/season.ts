@@ -29,6 +29,7 @@ import {
   RECORD_CHASE } from '../balance';
 import { chance, clamp, int, normal, range, weightedIndex, type Rng } from '../rng';
 import type { Attrs, GameLog, GameState, HalfPlan, League, LevelKey, RoleKey, SeasonRecord, SeasonState, StatLine, Team } from '../types';
+import { inLevel, levelGrowth, planStyle, shotDue } from '../levels';
 import { ovrOf } from '../player/ovr';
 import { applyHalfGrowth, eliteMult, perfFactor } from '../player/growth';
 import { healDays, rollInjury } from '../player/injury';
@@ -205,11 +206,32 @@ const LAB_PLANS: PlanText[] = [
   { id: 'teamfirst', label: 'Team first', detail: 'Make the right play. Fewer shots, the team plays better all season, fewer injuries, the coach loves it.' },
 ];
 
+/** Round 33: the beginner level's six plans (owner: "balanced, grind, shooting lab, weight room,
+ * film and reads, and lockdown"), picked once a season. */
+const SIX_PLANS: HalfPlan[] = ['balanced', 'grind', 'shooting', 'strength', 'playmaking', 'defense'];
+
 export function pushPlanDecision(s: GameState, half: 1 | 2): void {
   const injured = !!s.player.injury && s.player.injury.key !== 'dtd';
+  // round 33: the road map's levels pick a plan once a season (levels.ts planStyle)
+  const style = planStyle(s);
+  if (style !== 'half') {
+    const list = style === 'six' ? (injured ? [...SIX_PLANS, 'recovery' as HalfPlan] : SIX_PLANS).map((id) => PLAN_TEXT[id]) : PLAN_IDS.map((id) => PLAN_TEXT[id]);
+    pushDecision(s, {
+      kind: 'plan',
+      title: 'Season plan',
+      text: injured
+        ? 'You are injured. Recovery is the only plan available.'
+        : style === 'six'
+          ? 'Pick one plan for the whole season.'
+          : 'Pick one or two plans for the whole season. One plan alone works a little better than its listing; add a second and the first keeps most of its effect while the side plan adds a smaller boost.',
+      choices: list.map((p) => ({ id: p.id, label: p.label, detail: p.detail, disabled: injured && p.id !== 'recovery' })),
+      data: { half, ...(style === 'six' ? { single: true } : {}), season: true },
+    });
+    return;
+  }
   // fast break (round 8): one plan a season from five training groups; the lab has no
   // rating groups (the player buys ratings himself), so it picks how hard to work instead
-  const quick = s.flags.fast ? (s.mode === 'lab' ? LAB_PLANS : FAST_PLANS) : null;
+  const quick = s.flags.fast && !inLevel(s) ? (s.mode === 'lab' ? LAB_PLANS : FAST_PLANS) : null;
   if (quick) {
     const list = injured && !quick.some((p) => p.id === 'recovery') ? [...quick, PLAN_TEXT.recovery] : quick;
     pushDecision(s, {
@@ -277,7 +299,9 @@ function makeHook(s: GameState, league: League, level: LevelKey, acc: HalfAcc, s
     let liveResult: { us: number; them: number; win: boolean; lastShot?: string } | null = null;
     if (post && s.live && !(p.injury && p.injury.key !== 'dtd')) {
       const key = `${post}|${opp.id}`;
-      if (!s.live.simAll && s.live.simSeries !== key) {
+      // beginner's one last shot: the first game he plays, then the rest are simulated
+      if (s.live.shot) live = !s.flags.levelShot;
+      else if (!s.live.simAll && s.live.simSeries !== key) {
         const pick = nextPick(s, gameRequest(s, post, opp.name, home || level !== 'NBA', series));
         if (pick === 'play') live = true;
         else if (pick === 'series') s.live.simSeries = key;
@@ -446,7 +470,7 @@ export function playHalf(s: GameState): void {
 const LIVE_LEVELS = new Set<LevelKey>(['HSV', 'NCAA', 'GL', 'EU', 'INT', 'NBA']);
 
 function startPostseason(s: GameState): void {
-  if (!LIVE_LEVELS.has(s.season!.level) || s.flags.simPostseason) {
+  if (!LIVE_LEVELS.has(s.season!.level) || (s.flags.simPostseason && !shotDue(s))) {
     finishSeason(s);
     return;
   }
@@ -461,7 +485,7 @@ export function runPostseason(s: GameState): void {
   const ps = s.postSnap;
   if (!ps) return;
   const trial = structuredClone(ps.snap);
-  trial.live = { picks: ps.picks, i: 0, simAll: false, simSeries: null, recent: [] };
+  trial.live = { picks: ps.picks, i: 0, simAll: false, simSeries: null, recent: [], ...(shotDue(trial) ? { shot: true } : {}) };
   try {
     finishSeason(trial);
   } catch (e) {
@@ -519,7 +543,7 @@ function growthAfterHalf(s: GameState, acc: HalfAcc, level: LevelKey, ovr: numbe
     plan: season.plan,
     planDef: plan,
     outMost: acc.injuredGames > acc.games / 2,
-    extraMult: outcome.growth * p.growthMultNext * MODES[s.mode ?? 'standard'].growth * youthGrowthMult(s) * eliteMult(s.mode ?? 'standard', before) * (s.flags.fast && s.mode !== 'lab' && s.mode !== 'fast' ? FAST_GROWTH : 1) * (coach && (season.plan === 'grind' || season.plan2 === 'grind') ? coach.grind : 1),
+    extraMult: outcome.growth * p.growthMultNext * MODES[s.mode ?? 'standard'].growth * youthGrowthMult(s) * eliteMult(s.mode ?? 'standard', before) * (s.flags.fast && s.mode !== 'lab' && s.mode !== 'fast' ? FAST_GROWTH : 1) * (coach && (season.plan === 'grind' || season.plan2 === 'grind') ? coach.grind : 1) * levelGrowth(s),
     morale: p.morale,
     lab: s.mode === 'lab',
   });
@@ -614,7 +638,16 @@ function beginMidseason(s: GameState, acc: HalfAcc): void {
       ],
     });
   }
-  pushPlanDecision(s, 2);
+  // round 33: a level's plan holds for the whole season (recovery if he is hurt now)
+  if (planStyle(s) !== 'half') {
+    const hurt = !!s.player.injury && s.player.injury.key !== 'dtd';
+    if (hurt) {
+      season.plan = 'recovery';
+      season.plan2 = null;
+    }
+    season.plans.push(season.plan);
+    if (season.plan2) season.plans.push(season.plan2);
+  } else pushPlanDecision(s, 2);
 }
 
 export function assignToGl(s: GameState): void {

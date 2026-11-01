@@ -18,6 +18,7 @@ import { strengthOf } from '../world/gen';
 import { rosterRank } from './team';
 import { meetRecruit } from './duo';
 import { fiveOf, rosterFit } from './roster';
+import { allows } from '../levels';
 
 export interface RecruitState {
   year: number;
@@ -107,6 +108,7 @@ function isFirstOption(s: GameState): boolean {
 }
 
 export function canRecruit(s: GameState): boolean {
+  if (!allows(s, 'recruit')) return false; // round 33: advanced level and up
   return s.step === 'offseason' && s.stage === 'NBA' && !!s.nba && !!s.contract && s.contract.years > 0 && s.contract.teamId === s.teamId && isFirstOption(s);
 }
 

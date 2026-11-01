@@ -21,6 +21,7 @@ import { syncWeight } from '../player/weight';
 import { recordInjury } from '../player/body';
 import { changes, snap, vary } from './outcome';
 import { rollTier, tierFactors, tierLine, TIERS, twists, type Tier } from './twists';
+import { BEGINNER_EVENTS, eventInLevel, levelOf } from '../levels';
 
 const EVENTS: EventDef[] = [...BASE_EVENTS, ...MORE_EVENTS, ...RISK_EVENTS, ...GROWTH_EVENTS, ...SKILL_EVENTS, ...ARC_EVENTS, ...ROUND9_EVENTS, ...ROUND13_EVENTS, ...ROUND15_EVENTS, ...WEIGHT_EVENTS, ...ROUND21_EVENTS, ...ROUND25_EVENTS, ...ROUND32_EVENTS];
 
@@ -32,6 +33,7 @@ function eligible(s: GameState, phase: 'mid' | 'off'): EventDef[] {
     const last = s.events.lastSeen[e.id];
     if (last !== undefined && s.year - last < e.cooldownSeasons) return false;
     if (s.pending.some((d) => d.kind === 'event' && d.data?.eventId === e.id)) return false;
+    if (!eventInLevel(s, e.id)) return false;
     return e.when ? e.when(s) : true;
   });
 }
@@ -77,6 +79,21 @@ export function offerEvent(s: GameState, id: string): boolean {
 }
 
 export function queueMidseasonEvents(s: GameState): void {
+  // round 33: beginner's hand-picked turning point, intermediate's one a season (levels.ts)
+  const level = levelOf(s);
+  if (level === 'beginner') {
+    const fit = eligible(s, 'mid');
+    const at = s.flags.levelEv ?? 0;
+    const id = BEGINNER_EVENTS.slice(at).find((x) => fit.some((e) => e.id === x)) ?? BEGINNER_EVENTS.find((x) => fit.some((e) => e.id === x));
+    const e = fit.find((x) => x.id === id);
+    if (e) push(s, e);
+    s.flags.levelEv = at + 1;
+    return;
+  }
+  if (level === 'intermediate') {
+    pickOne(s, 'mid');
+    return;
+  }
   if (!chance(s.rng, EV_RATES.midseasonChance)) return;
   pickOne(s, 'mid');
   // fast break: at most one turning point at a time
@@ -84,6 +101,8 @@ export function queueMidseasonEvents(s: GameState): void {
 }
 
 export function queueOffseasonEvent(s: GameState): void {
+  const level = levelOf(s);
+  if (level === 'beginner' || level === 'intermediate') return;
   if (EV_RATES.offseasonMax < 1 || !chance(s.rng, EV_RATES.offseasonChance)) return;
   pickOne(s, 'off');
   if (!s.flags.fast && EV_RATES.offseasonMax > 1 && chance(s.rng, 0.35)) pickOne(s, 'off');

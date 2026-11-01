@@ -17,6 +17,7 @@ import { DUO } from '../balance';
 import { chance, clamp, normal, pick, range, type Rng } from '../rng';
 import type { GameState, GenPlayer, Pos, SeasonRecord } from '../types';
 import { logDecision, note, pushMoment, teamById } from './common';
+import { inLevel } from '../levels';
 
 export interface Bond {
   id: number; // GenPlayer id
@@ -152,6 +153,7 @@ export function duoEffect(s: GameState): { team: number; perf: number; ast: numb
  * with no season at the start of the next one (so a duo split by a summer move ends then).
  */
 export function growBonds(s: GameState, last: SeasonRecord | null): void {
+  if (inLevel(s)) return; // round 33: duos belong to the closing tour, not the levels
   if (!s.bonds?.length) return;
   // careers saved before round 22 can hold two bonds with the same teammate: keep the further one
   s.bonds = s.bonds.filter((b, i, all) => !all.some((o, j) => o.id === b.id && j !== i && (o.formed !== undefined && b.formed === undefined ? true : o.bond > b.bond || (o.bond === b.bond && j < i))));

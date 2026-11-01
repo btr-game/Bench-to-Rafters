@@ -19,6 +19,7 @@ import { chance, clamp, normal } from '../rng';
 import type { GameState, League, Team } from '../types';
 import { adjust, logDecision, note, roleWithTrust, tally, teamById } from './common';
 import { nbaStrength } from '../world/nbaWorld';
+import { allows } from '../levels';
 
 /** A small stable number from a string (names, characters, who feuds). */
 export function h32(str: string): number {
@@ -99,6 +100,7 @@ export function temperNote(s: GameState, fx: TemperFx): string {
 
 /** Once a season, while it is on, unless he already has the biggest role. */
 export function canAskRole(s: GameState): boolean {
+  if (!allows(s, 'coach')) return false; // round 33: not in the road map's first two levels
   const season = s.season;
   if (!season || !myTeam(s) || s.flags.roleAsk === s.year || season.role === 'key') return false;
   return s.step === 'preseason' || s.step === 'firstHalf' || s.step === 'midseason' || s.step === 'secondHalf';
