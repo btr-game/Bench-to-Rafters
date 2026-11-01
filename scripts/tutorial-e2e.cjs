@@ -117,7 +117,8 @@ fs.rmSync(`${OUT}/live.txt`, { force: true });
       did = 'close settings';
     } else if (await click('.tour-bar .btn')) did = 'next stop';
     else if (await click('.level-end .btn')) did = 'level end';
-    else if (await click('.road-stop.next .btn')) did = 'road';
+    else if (await click('.road-pop .road-stop.next .btn')) did = 'road';
+    else if (await click('.road-spot.next:not(.on)')) did = 'road place';
     else if (await vis('.focus-grid') && (await p.locator('.focus-grid button[aria-pressed="true"]').count()) < 2) {
       await p.locator('.focus-grid button[aria-pressed="false"]').first().click();
       did = 'focus';

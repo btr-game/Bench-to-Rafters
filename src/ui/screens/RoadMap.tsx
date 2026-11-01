@@ -2,16 +2,19 @@
 // highschool as beginner, college as intermediate, nba as advanced, and the minigames as an oversea
 // league? the user's avatar will ride a car from those places, and ride a boat to the minigames. the
 // checklist appears on the top right corner like a bucket list, and once a goal is complete, a check
-// is on that part"). The page between the levels: a pixel map, the bucket list, a card for each stop.
+// is on that part"). The page between the levels: a pixel map and the bucket list. Round 34 (owner:
+// "instead of putting the cards bellow the map, make it so that when the user clicks on the
+// buildings, or use the arrow keys to move around, the cards pop out"): each place on the map is a
+// button, the arrow keys drive the car along the road, and the place's card pops out beside it.
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { useStore } from '../../store';
 import { Icon } from '../art/Icon';
 import { SKIN_COLORS, HAIR_COLORS } from '../art/Player';
 import { LEVEL_IDS, LEVEL_NAME, type Level } from '../../engine/levels';
 import { LEVEL_COPY, LEVEL_GOAL } from '../../content/roadmap';
 import { ROADMAP } from '../../engine/balance';
-import { ROAD_MINIS, ROAD_NEED, inTutorial, levelOpen, levelsDone, nextLevel, passGrade, type Road, type RoadMini } from '../road';
+import { ROAD_MINIS, ROAD_NEED, inTutorial, islandDone, levelOpen, levelsDone, nextLevel, passGrade, type Road, type RoadMini } from '../road';
 import { LevelAdds } from '../components/LevelAdds';
 import { Roll, Tick } from '../components/Scroll';
 import { SettingsMenu } from '../components/Settings';
@@ -19,6 +22,7 @@ import { ShareButton } from '../components/Share';
 import { FootBar } from '../components/FootBar';
 import { sfx } from '../sound';
 import { isDev } from '../../dev/mode';
+import { PixelX } from '../art/PixelX';
 
 // ---------- the map, on a 192 by 108 pixel grid ----------
 
@@ -34,6 +38,7 @@ const C = {
   arena: '#3C4250', ring: '#596173', lights: '#FFF3BF', orange: '#F76707',
   trunk: '#8B5A2B', leaf: '#2F9E44', leafD: '#1E7A32', court: '#C97B3B', plank: '#A0703C', plankD: '#7A5229',
   tire: '#18141C', glass: '#BFE3FF', hull: '#8B5A2B', sail: '#F8F9FA',
+  stage: '#5F3DC4', stageD: '#4527A0', gold: '#FCC419',
 };
 
 type Px = [number, number, number, number, string];
@@ -42,9 +47,18 @@ type Px = [number, number, number, number, string];
 const WAY: [number, number][] = [
   [22, 84], [58, 84], [58, 41], [106, 41], [106, 63], [146, 63],
 ];
-/** Where each stop sits on the road (beginner, intermediate, advanced, the dock). */
-const STOPS: [number, number][] = [[30, 84], [77, 41], [122, 63], [146, 63]];
 const ISLAND: [number, number] = [170, 87];
+
+type Place = Level | 'tour' | 'island';
+/** The places in the road's order: where the car stops for each, the building to click (x, y, w, h
+ * on the map), and the side its card pops out on. The island's stop is the dock. */
+const PLACES: { id: Place; stop: [number, number]; box: [number, number, number, number]; side: 'left' | 'right' }[] = [
+  { id: 'beginner', stop: [30, 84], box: [10, 50, 36, 32], side: 'right' },
+  { id: 'intermediate', stop: [77, 41], box: [60, 6, 36, 34], side: 'right' },
+  { id: 'advanced', stop: [122, 63], box: [106, 42, 36, 20], side: 'left' },
+  { id: 'tour', stop: [130, 63], box: [110, 66, 29, 27], side: 'left' },
+  { id: 'island', stop: [146, 63], box: [150, 72, 40, 26], side: 'left' },
+];
 
 const coast = (y: number) => 147 + Math.round(5 * Math.sin(y / 7) + 3 * Math.sin(y / 3.1));
 
@@ -90,7 +104,7 @@ function mapPixels(): Px[] {
   R(ix + 10, iy - 10, 3, 2, C.leafD);
   R(ix + 5, iy - 14, 4, 2, C.leaf);
   // trees on the land
-  for (const [x, y] of [[8, 18], [20, 30], [40, 12], [46, 54], [32, 44], [92, 72], [80, 92], [56, 97], [124, 86], [100, 96], [132, 18], [12, 96], [90, 10], [116, 26], [70, 64], [140, 40]]) {
+  for (const [x, y] of [[8, 18], [20, 30], [40, 12], [46, 54], [32, 44], [92, 72], [80, 92], [56, 97], [100, 96], [132, 18], [12, 96], [90, 10], [116, 26], [70, 64], [140, 40]]) {
     R(x, y + 3, 1, 2, C.trunk);
     R(x - 2, y, 5, 3, C.leaf);
     R(x - 1, y - 1, 3, 1, C.leaf);
@@ -150,14 +164,30 @@ function mapPixels(): Px[] {
   R(118, 53, 12, 4, C.orange);
   R(120, 54, 8, 2, C.white);
   R(122, 57, 4, 3, C.door);
+  // the closing tour: a stage with a gold star, two light towers and a plank floor
+  R(116, 70, 18, 14, C.stage);
+  R(116, 70, 18, 2, C.stageD);
+  R(124, 73, 2, 2, C.gold);
+  R(121, 75, 8, 2, C.gold);
+  R(122, 77, 6, 1, C.gold);
+  R(122, 78, 2, 2, C.gold);
+  R(126, 78, 2, 2, C.gold);
+  R(114, 84, 22, 4, C.plank);
+  R(114, 88, 22, 1, C.plankD);
+  R(115, 89, 1, 3, C.plankD);
+  R(134, 89, 1, 3, C.plankD);
+  R(113, 68, 1, 16, C.pole);
+  R(112, 67, 3, 2, C.lights);
+  R(136, 68, 1, 16, C.pole);
+  R(135, 67, 3, 2, C.lights);
   return px;
 }
 
-/** One place on the map, cropped from it: the level's school, the college, the arena, the island. */
-const PLACE_BOX: Record<Level | 'island', string> = { beginner: '6 48 44 36', intermediate: '56 4 44 36', advanced: '102 34 44 36', island: '148 66 44 36' };
+/** One place on the map, cropped from it: the level's school, the college, the arena, the stage, the island. */
+const PLACE_BOX: Record<Place, string> = { beginner: '6 48 44 36', intermediate: '56 4 44 36', advanced: '102 34 44 36', tour: '103 62 44 36', island: '148 66 44 36' };
 let MAP_PX: Px[] | null = null;
 const mapPx = () => (MAP_PX ??= mapPixels());
-export function PlaceArt({ place, size = 132 }: { place: Level | 'island'; size?: number }) {
+export function PlaceArt({ place, size = 132 }: { place: Place; size?: number }) {
   return (
     <svg className="place-art" viewBox={PLACE_BOX[place]} width={size} height={(size * 36) / 44} shapeRendering="crispEdges" aria-hidden="true">
       {mapPx().map(([x, y, w, h, c], i) => (
@@ -195,40 +225,22 @@ const stopAt = (s: [number, number]) => ROUTE.findIndex(([x, y]) => x === s[0] &
 
 const reduced = () => typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-/** The pixel map: the places, the road, the car at the next stop (it drives there the first time
- * the page opens after a level), and the boat at the dock or sailing to the island. */
-function MapArt({ road, sailing, onSailed }: { road: Road; sailing: boolean; onSailed: () => void }) {
+/** The pixel map: the places, the road, the car (it drives to the place on screen, a step at a time),
+ * and the boat at the dock or sailing to the island. */
+function MapArt({ road, first, goal, sailing, onSailed }: { road: Road; first: number; goal: number; sailing: boolean; onSailed: () => void }) {
   const px = mapPx();
-  const next = nextLevel(road);
-  const at = next ? LEVEL_IDS.indexOf(next) : 3;
-  const target = stopAt(STOPS[at]);
-  const from = at > 0 ? stopAt(STOPS[at - 1]) : target;
-  // the deck keeps a mark of its own, so its look at the map never stops the game's car
-  const key = `${isDev() ? 'btr-dev:' : ''}btr-road-drove-${at}`;
-  const [step, setStep] = useState(() => {
-    try {
-      return sessionStorage.getItem(key) || reduced() ? target : from;
-    } catch {
-      return target;
-    }
-  });
-  // the engine starts when the car has somewhere to go (once, as the page opens)
-  const [moving] = useState(step < target);
+  const [step, setStep] = useState(first);
+  // the engine starts when the car has somewhere to go as the page opens
+  const [moving] = useState(first !== goal);
   useEffect(() => {
     if (moving) sfx('drive');
   }, [moving]);
   useEffect(() => {
-    if (step >= target) {
-      try {
-        sessionStorage.setItem(key, '1');
-      } catch {
-        /* it drives again next time */
-      }
-      return;
-    }
-    const t = setTimeout(() => setStep((s) => Math.min(target, s + 2)), 45);
+    if (step === goal) return;
+    if (reduced()) return setStep(goal);
+    const t = setTimeout(() => setStep((s) => (s < goal ? Math.min(goal, s + 3) : Math.max(goal, s - 3))), 30);
     return () => clearTimeout(t);
-  }, [step, target, key]);
+  }, [step, goal]);
   // the boat: at the dock, or on its way across in steps
   const [sail, setSail] = useState(0);
   useEffect(() => {
@@ -385,7 +397,7 @@ function TourStop({ road }: { road: Road }) {
   return (
     <section className={`card stack road-stop${open && !road.toured ? ' next' : ''}${open ? '' : ' locked'}`} data-tour={open && !road.toured ? 'tour-stop' : undefined}>
       <div className="row road-stop-head">
-        <Icon name="stars" size={40} />
+        <PlaceArt place="tour" size={88} />
         <div style={{ minWidth: 0 }}>
           <div className="kicker">The last stop</div>
           <div className="sec-title">The closing tour</div>
@@ -432,12 +444,85 @@ export function LevelsCard() {
   );
 }
 
+/** Where the road map opens: the next level, else the island or the closing tour still to do. */
+function firstPlace(road: Road): number {
+  const next = nextLevel(road);
+  if (next) return LEVEL_IDS.indexOf(next);
+  if (!islandDone(road)) return PLACES.findIndex((p) => p.id === 'island');
+  if (!road.toured) return PLACES.findIndex((p) => p.id === 'tour');
+  return 0;
+}
+
+const PLACE_NAME: Record<Place, string> = { beginner: 'Beginner · High school', intermediate: 'Intermediate · College', advanced: 'Advanced · NBA arena', tour: 'The closing tour', island: 'The island of mini-games' };
+
+/** Each place's state, for its pin on the map: done, the next thing to do, open, or locked. */
+function placeState(road: Road, id: Place): 'done' | 'next' | 'open' | 'locked' {
+  if (id === 'island') return !road.passed.beginner ? 'locked' : islandDone(road) ? 'done' : levelsDone(road) ? 'next' : 'open';
+  if (id === 'tour') return !levelsDone(road) ? 'locked' : road.toured ? 'done' : islandDone(road) ? 'next' : 'open';
+  return road.passed[id] ? 'done' : nextLevel(road) === id ? 'next' : levelOpen(road, id) ? 'open' : 'locked';
+}
+const PIN: Record<ReturnType<typeof placeState>, string> = { done: 'checklist', next: 'arrow', open: 'map', locked: 'lock' };
+
 export function RoadMap() {
   const road = useStore((s) => s.road);
   const setMini = useStore((s) => s.setMini);
   const setPage = useStore((s) => s.setPage);
   const [sailing, setSailing] = useState(false);
   const tut = inTutorial(road);
+  const [sel, setSel] = useState(() => firstPlace(road));
+  // the map opens clear, the next place's pin hopping; a card pops out when a place is picked
+  const [open, setOpen] = useState(false);
+  const pop = useRef<HTMLDivElement>(null);
+  // the first time the page opens after a level, the car drives on from the place before
+  const [first] = useState(() => {
+    const goal = stopAt(PLACES[sel].stop);
+    const next = nextLevel(road);
+    const at = next ? LEVEL_IDS.indexOf(next) : -1;
+    if (at < 1 || reduced()) return goal;
+    // the deck keeps a mark of its own, so its look at the map never stops the game's car
+    const key = `${isDev() ? 'btr-dev:' : ''}btr-road-drove-${at}`;
+    try {
+      if (sessionStorage.getItem(key)) return goal;
+      sessionStorage.setItem(key, '1');
+    } catch {
+      return goal;
+    }
+    return stopAt(PLACES[at - 1].stop);
+  });
+  const go = (i: number, keys = false) => {
+    if (sailing) return;
+    if (i !== sel) sfx('tick');
+    setSel(i);
+    setOpen(true);
+    // from the keyboard, the focus follows the car: the card's main button (Enter plays it), or the
+    // place itself when its card has nothing to press (a locked place)
+    if (keys)
+      requestAnimationFrame(() => (pop.current?.querySelector<HTMLElement>('.btn') ?? document.querySelectorAll<HTMLElement>('.road-spot')[i])?.focus({ preventScroll: true }));
+  };
+  // the arrow keys drive along the road; Escape folds the card away
+  useEffect(() => {
+    const key = (e: KeyboardEvent) => {
+      if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey) return;
+      const t = e.target as HTMLElement;
+      if (/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || document.querySelector('[aria-modal="true"], .set-menu')) return;
+      const d = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 0;
+      if (d) {
+        e.preventDefault();
+        go(Math.max(0, Math.min(PLACES.length - 1, sel + d)), true);
+      } else if (e.key === 'Escape' && open) setOpen(false);
+      // Enter opens the card of the place the car is at (a focused button keeps its own Enter)
+      else if (e.key === 'Enter' && !open && !t.closest('button, a')) {
+        e.preventDefault();
+        go(sel, true);
+      }
+    };
+    window.addEventListener('keydown', key);
+    return () => window.removeEventListener('keydown', key);
+  });
+  const place = PLACES[sel];
+  const [bx, by, bw, bh] = place.box;
+  const cy = ((by + bh / 2) / H) * 100;
+  const popAt: CSSProperties = { [place.side === 'right' ? 'left' : 'right']: `${(place.side === 'right' ? (bx + bw) / W : (W - bx) / W) * 100 + 1}%`, top: `${cy}%`, transform: `translateY(-${cy}%)` };
   return (
     <div className="wrap no-tabs roadmap-page">
       <header className="top">
@@ -458,17 +543,43 @@ export function RoadMap() {
         <div className="kicker">The road map</div>
         <h1>Your road</h1>
         <p className="lede">Three levels and an island of mini-games. Finish them all and the full game opens.</p>
+        <p className="small muted road-hint">
+          Tap a place on the map<span className="hide-touch">, or drive along the road with the arrow keys (Enter opens where you are)</span>.
+        </p>
       </section>
       <div className="roadmap">
-        <MapArt road={road} sailing={sailing} onSailed={() => setMini('hub')} />
+        <div className="roadmap-stage">
+          <MapArt road={road} first={first} goal={stopAt(place.stop)} sailing={sailing} onSailed={() => setMini('hub')} />
+          <div className="road-spots">
+            {PLACES.map((p, i) => {
+              const st = placeState(road, p.id);
+              const [x, y, w, h] = p.box;
+              return (
+                <button
+                  key={p.id}
+                  className={`road-spot ${st}${i === sel && open ? ' on' : ''}`}
+                  style={{ left: `${(x / W) * 100}%`, top: `${(y / H) * 100}%`, width: `${(w / W) * 100}%`, height: `${(h / H) * 100}%` }}
+                  aria-label={`${PLACE_NAME[p.id]}: ${st === 'next' ? 'next' : st}`}
+                  aria-pressed={i === sel && open}
+                  onClick={() => go(i)}
+                >
+                  <span className="road-pin">
+                    <Icon name={PIN[st]} size={16} />
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          {open && (
+            <div className={`road-pop ${place.side}`} style={popAt} ref={pop} key={place.id}>
+              <button className="pop-x road-pop-x" aria-label="Close" onClick={() => setOpen(false)}>
+                <PixelX />
+              </button>
+              {place.id === 'island' ? <IslandStop road={road} onSail={() => (sfx('sail'), setSailing(true))} /> : place.id === 'tour' ? <TourStop road={road} /> : <LevelStop level={place.id} road={road} />}
+            </div>
+          )}
+        </div>
         <BucketList road={road} />
-      </div>
-      <div className="road-stops">
-        {LEVEL_IDS.map((l) => (
-          <LevelStop key={l} level={l} road={road} />
-        ))}
-        <IslandStop road={road} onSail={() => (sfx('sail'), setSailing(true))} />
-        <TourStop road={road} />
       </div>
       <FootBar where="road map" />
     </div>

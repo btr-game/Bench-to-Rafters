@@ -2579,9 +2579,31 @@ input[type='range'] { width: 100%; min-height: 32px; accent-color: var(--accent)
 @media (max-width: 720px) {
   .bucket { position: static; width: auto; margin-top: 10px; }
 }
-.road-stops { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; margin-top: 14px; }
-.road-stop.next { grid-column: 1 / -1; border-top: 4px solid var(--accent); }
-.road-stop.locked { opacity: 0.72; }
+.road-stop.next { border-top: 4px solid var(--accent); }
+.road-stop.locked .road-stop-head, .road-stop.locked > p { opacity: 0.8; }
+/* round 34: the places on the map are buttons, each with a pin (done, next, open, locked); the
+   chosen place's card pops out beside it (under the map on a phone) */
+.roadmap-stage { position: relative; }
+.road-spots { position: absolute; left: 0; top: 0; width: 100%; aspect-ratio: 192 / 108; pointer-events: none; z-index: 1; }
+.road-spot { position: absolute; pointer-events: auto; padding: 0; background: transparent; border: 3px dashed transparent; border-radius: 6px; cursor: pointer; }
+.road-spot:hover, .road-spot:focus-visible, .road-spot.on { border-color: #FFFFFF; box-shadow: 0 0 0 2px rgba(24, 20, 28, 0.75); outline: none; }
+.road-pin { position: absolute; left: 50%; top: 0; transform: translate(-50%, -70%); display: grid; place-items: center; width: 28px; height: 28px; border-radius: 6px; border: 2px solid #18141C; background: #FFFFFF; box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.35); }
+.road-spot.next .road-pin { background: #FCC419; animation: pin-hop 0.9s steps(2, jump-none) infinite; }
+.road-spot.done .road-pin { background: #B2F2BB; }
+.road-spot.locked .road-pin { background: #DEE2E6; }
+@keyframes pin-hop { 50% { transform: translate(-50%, -100%); } }
+.road-hint { margin: 0; }
+.road-pop { position: absolute; z-index: 3; width: min(400px, 46%); max-height: 100%; overflow-y: auto; border-radius: 10px; animation: road-pop-in 0.2s steps(3, jump-none) both; }
+.road-pop > .card { box-shadow: 0 14px 34px rgba(0, 0, 0, 0.38); }
+.road-pop-x { position: absolute; top: 8px; right: 8px; z-index: 1; }
+.road-pop .road-stop-head { padding-right: 44px; }
+.road-pop .adds-grid { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 6px; }
+.road-pop .adds-grid li { padding: 8px 4px 6px; font-size: calc(13px * var(--ts)); }
+@keyframes road-pop-in { from { opacity: 0; scale: 0.9; } to { opacity: 1; scale: 1; } }
+@media (max-width: 720px) {
+  .road-pop { position: relative; left: auto !important; right: auto !important; top: auto !important; transform: none !important; width: auto; max-height: none; overflow: visible; margin-top: 10px; }
+}
+@media (prefers-reduced-motion: reduce) { .road-spot.next .road-pin, .road-pop { animation: none; } }
 .road-stop-head { gap: 12px; align-items: center; flex-wrap: wrap; }
 /* the end of a level career */
 .level-end-card.won { border-top: 4px solid var(--gold); }
