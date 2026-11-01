@@ -150,7 +150,10 @@ function seedCommunity(): void {
 }
 
 function seedLog(locks = false): void {
-  for (const r of records()) logCareer(r);
+  // round 32: the newest two show the card's challenge badges and achievement medals
+  const tiers = ['hof', 'allstar', 'allstar', 'starter', 'starter', 'starter', 'rotation', 'rotation', 'bench', 'bench'] as const;
+  const ach = (n: number) => ({ n, top: ACHIEVEMENTS.filter((a) => a.tier === 'hof' || a.tier === 'allstar').slice(0, 1).concat(ACHIEVEMENTS.slice(40, 49)).map((a, i) => ({ name: a.name, tier: tiers[i] })) });
+  records().forEach((r, i, all) => logCareer(i === all.length - 1 ? { ...r, comet: true, mode: 'stars', ach: ach(41) } : i === all.length - 2 ? { ...r, oath: true, mode: 'reality', ach: ach(27) } : r));
   // round 29: lock the oldest two, so the page shows both kinds
   if (locks) for (const c of logCards().slice(-2)) lockCard(c.id, true);
 }

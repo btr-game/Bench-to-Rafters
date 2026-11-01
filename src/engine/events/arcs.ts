@@ -171,6 +171,67 @@ const ARCS: ArcDef[] = [
     },
   },
   {
+    // round 32: Love, one step a summer: a proposal, the wedding, then whether to start a family
+    // (a "not yet" waits a year; twice at the proposal and it ends). A child leads to Fatherhood
+    // and, after his career, to the child's own (career/nextGen.ts).
+    id: 'love',
+    title: 'Love',
+    color: '#C2255C',
+    next: (s, a) => {
+      const who = a.v.who;
+      if (!a.v.stage) {
+        if ((a.v.wait ?? 0) >= 2) {
+          morale(s, -6);
+          return { title: 'Separate ways', text: 'You waited too long, and they stopped waiting. It ends quietly, and it hurts more than you let on.', done: true };
+        }
+        morale(s, 3);
+        return {
+          title: a.v.wait ? 'Another year together' : 'Two summers together',
+          text: who === 2 ? 'Red carpets, courtside seats, a photographer at every corner, and somehow it works.' : who === 1 ? 'Like no time passed. They still laugh at the same bad jokes.' : 'Quiet dinners, long walks, nobody asking about your shooting.',
+          ask: { text: 'Is it time?', choices: [{ id: 'propose', label: 'Propose' }, { id: 'wait', label: 'Not yet' }] },
+        };
+      }
+      if (a.v.stage === 1) {
+        a.v.stage = 2;
+        morale(s, 8);
+        s.player.bank = Math.max(0, s.player.bank - (s.stage === 'NBA' ? (who === 2 ? 1.5 : 0.4) : 0.02));
+        if (who === 2) rep(s, 2);
+        return {
+          title: 'The wedding',
+          text: who === 2 ? 'A wedding the magazines call the event of the year. Your teammates dance badly on the cover.' : who === 1 ? 'Back home, in the gym where you met, with the whole town there.' : 'A small wedding by the water. No cameras. Perfect.',
+          ask: { text: 'Start a family?', choices: [{ id: 'family', label: 'Start a family' }, { id: 'later', label: 'Not yet' }] },
+        };
+      }
+      if (a.v.stage === 2) {
+        if ((a.v.wait2 ?? 0) >= 3) return { title: 'Just the two of you', text: 'You talk about it every summer, and decide every summer that the two of you are enough.', done: true };
+        morale(s, 2);
+        return { title: 'Another summer', text: 'Life is good. The house is quiet.', ask: { text: 'Start a family?', choices: [{ id: 'family', label: 'Start a family' }, { id: 'later', label: 'Not yet' }] } };
+      }
+      // a baby on the way: Fatherhood takes it from here
+      s.flags.child = s.year + 1;
+      startArc(s, 'baby', { help: s.player.bank >= 1 ? 1 : 0, fresh: 1 });
+      morale(s, 6);
+      return { title: 'Big news', text: 'You are going to be a parent. The baby is due during next season.', done: true };
+    },
+    answer: (s, a, id) => {
+      if (id === 'propose') {
+        a.v.stage = 1;
+        morale(s, 4);
+        return 'They say yes before you finish the question.';
+      }
+      if (id === 'wait') {
+        a.v.wait = (a.v.wait ?? 0) + 1;
+        return 'You say there is no rush. They smile, but it fades a little.';
+      }
+      if (id === 'family') {
+        a.v.stage = 3;
+        return 'You both want it. Next summer, maybe, there will be news.';
+      }
+      a.v.wait2 = (a.v.wait2 ?? 0) + 1;
+      return 'Not yet. There is time.';
+    },
+  },
+  {
     id: 'baby',
     title: 'Fatherhood',
     color: '#8A6D1F',
@@ -552,34 +613,46 @@ export const ARC_EVENTS: EventDef[] = [
     ],
   },
   {
-    id: 'arc-baby',
-    stages: PRO,
+    // round 32 (owner: "dating (highschool crush/celebrity/...) to wedding to having a child ... the
+    // user should have a choice to deny it"): the start of Love, more often than other storylines
+    id: 'arc-love',
+    stages: ['NCAA', 'GL', 'EU', 'INT', 'NBA'],
     phase: 'off',
-    when: (s) => s.player.age >= 23 && s.player.age <= 34,
-    weight: 0.4,
-    cooldownSeasons: 99,
-    oncePerCareer: true,
-    title: 'Big news',
-    text: 'You are going to be a father. The baby is due during next season.',
+    when: (s) => s.player.age >= 20 && s.player.age <= 33 && !s.flags.gen2 && !s.flags.child && !s.arcs?.some((a) => a.id === 'love' || a.id === 'baby'),
+    weight: 1.1,
+    cooldownSeasons: 3,
+    title: 'Someone special',
+    text: 'There is someone you can’t stop thinking about.',
     choices: [
       {
-        label: 'Hire help at home',
-        detail: 'Costs money, saves sleep',
+        label: 'Your high school sweetheart',
+        detail: 'They knew you before any of this',
         resolve: (s) => {
-          s.player.bank = Math.max(0, s.player.bank - (s.stage === 'NBA' ? 0.2 : 0.02));
-          morale(s, 5);
-          startArc(s, 'baby', { help: 1, fresh: 1 });
-          return ok('A nanny, a night nurse, and a nursery painted in team colours.', 'Learned he would be a father.');
+          startArc(s, 'love', { who: 1, fresh: 1 });
+          morale(s, 4);
+          return ok('You call after all these years. They pick up on the first ring.', 'Started dating his high school sweetheart.');
         },
       },
       {
-        label: 'Do it all yourselves',
+        label: 'A celebrity you met at a gala',
+        detail: 'Cameras everywhere you go',
         resolve: (s) => {
-          morale(s, 6);
-          startArc(s, 'baby', { help: 0, fresh: 1 });
-          return ok('No help, no problem. Probably.', 'Learned he would be a father.');
+          startArc(s, 'love', { who: 2, fresh: 1 });
+          morale(s, 3);
+          rep(s, 2);
+          return ok('Your first dinner is on every gossip site by morning.', 'Started dating a celebrity.');
         },
       },
+      {
+        label: 'Someone outside the game',
+        detail: 'A quiet life away from the arena',
+        resolve: (s) => {
+          startArc(s, 'love', { who: 3, fresh: 1 });
+          morale(s, 5);
+          return ok('Nobody at the coffee shop knows who you are. You like that.', 'Started dating someone outside the game.');
+        },
+      },
+      { label: 'Not now: basketball first', resolve: () => ok('You keep your mind on the game. Maybe another time.') },
     ],
   },
   {

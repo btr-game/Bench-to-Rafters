@@ -12,7 +12,7 @@ import { Icon } from '../art/Icon';
 import { PlayerArt, kitFor, styleLeague, type KitName } from '../art/Player';
 import { JerseyArt } from '../art/Jersey';
 import { EvolutionArt } from '../art/Evolution';
-import { CareerTimeline } from '../components/Timeline';
+import { CareerJournal, CareerTimeline } from '../components/Timeline';
 import { cityCultureOf } from '../../engine/career/cityCulture';
 import { fanCultureOf } from '../../engine/career/fanCulture';
 import { BodyMap } from '../components/BodyMap';
@@ -26,6 +26,7 @@ import { FlagArt } from '../art/Flag';
 import { Badge } from '../art/Badge';
 import { MiniGamesCard } from '../mini/MiniGames';
 import { CareerLogCard } from './CareerLog';
+import { LockerRoom } from '../components/LockerRoom';
 import { AchievementsCard } from './Achievements';
 import { earnedIn } from '../achievements';
 import { CommunityCard } from './Community';
@@ -362,6 +363,12 @@ export function SeasonTab({ g }: { g: GameState }) {
             </div>
           )}
         </div>
+      )}
+      {/* round 32: the locker room, between the standings and the league's leaders */}
+      {t && (
+        <Extra>
+          <LockerRoom g={g} />
+        </Extra>
       )}
       {view && leaders && (
         <Card title="League leaders" kicker="Per game, ten games or more" tour="season-leaders">
@@ -835,10 +842,6 @@ export function RecordsTab({ g }: { g: GameState }) {
       <Extra>
         <CareerTimeline g={g} />
       </Extra>
-      <Card title="Season by season" tour="season-log">
-        {g.history.length === 0 ? <p className="muted">Your seasons show up here after the first one.</p> : <HistoryTable rows={g.history} />}
-        <p className="muted small">High school and college seasons are listed but do not count toward pro career totals.</p>
-      </Card>
       <Extra>
       {championships(g).length > 0 && (
         <Card title="Banners and rings" kicker="Every title hangs in the rafters">
@@ -873,8 +876,33 @@ export function RecordsTab({ g }: { g: GameState }) {
         </Card>
       </div>
       <Extra>
-      <div className="page-grid two">
         <CareerHighs g={g} />
+      </Extra>
+      {g.player.gifts?.length ? (
+        <Card title="The farewell tour" kicker="What the road arenas gave you" tour="gifts">
+          <ul className="gift-list">
+            {g.player.gifts.map((x) => (
+              <li key={x.team} style={{ ['--team' as string]: x.color }}>
+                <Icon name="gift" size={28} />
+                <span>
+                  <b>{x.team}</b>
+                  <small>{x.gift}</small>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      ) : null}
+      {/* round 32 (owner): the season-by-season table and the journal sit below the honours now */}
+      <Card title="Season by season" tour="season-log">
+        {g.history.length === 0 ? <p className="muted">Your seasons show up here after the first one.</p> : <HistoryTable rows={g.history} />}
+        <p className="muted small">High school and college seasons are listed but do not count toward pro career totals.</p>
+      </Card>
+      <Extra>
+        <CareerJournal g={g} />
+      </Extra>
+      <Extra>
+      <div className="page-grid two">
         {g.tournaments.length > 0 && (
           <Card title="Tournaments" kicker="Tap an event to see every game" tour="tournaments">
             <div className="stack" style={{ gap: 6 }}>

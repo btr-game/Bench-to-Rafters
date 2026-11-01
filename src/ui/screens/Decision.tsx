@@ -1,5 +1,6 @@
 // Renders whatever decision is at the front of the queue.
 
+import { announce, callFor } from '../announcer';
 import { Icon } from '../art/Icon';
 import { HeroArt, archPose } from '../art/Hero';
 import { team as teamOf } from '../selectors';
@@ -203,6 +204,9 @@ function LiveView({ g, d }: { g: GameState; d: Decision }) {
     if (!r.last) sfx(r.ot ? 'buzzer' : 'clutch');
     else if (!r.last.good) sfx('rim');
     else sfx(r.last.word === 'STEAL' || r.last.word === 'BLOCK' || r.last.word === 'STOP' ? 'block' : 'swish');
+    // round 32: the announcer
+    const say = r.last && callFor(r.last.word, r.last.good, r.last.text);
+    if (say) announce(say);
   }, [d.id, crunch, r.last, r.ot]);
   const opp = lg?.teams.find((t) => t.name === r.opp);
   return (

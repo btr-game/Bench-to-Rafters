@@ -24,7 +24,9 @@ import {
   RECRUIT,
   ROLE_MINUTES,
   TEAM_FACTORS,
-  LONGEVITY } from '../balance';
+  LONGEVITY,
+  FAREWELL,
+  RECORD_CHASE } from '../balance';
 import { chance, clamp, int, normal, range, weightedIndex, type Rng } from '../rng';
 import type { Attrs, GameLog, GameState, HalfPlan, League, LevelKey, RoleKey, SeasonRecord, SeasonState, StatLine, Team } from '../types';
 import { ovrOf } from '../player/ovr';
@@ -150,7 +152,9 @@ export function beginSeason(s: GameState): void {
     ...(() => {
       const f = startTeamFactors(s, team, league);
       const d = duoEffect(s);
-      return { teamBonus: f.bonus, teamNotes: f.notes, teamFx: f.items, postBonus: f.post, styleFx: f.fx, duoFx: d ? { perf: d.perf, ast: d.ast, usage: d.usage } : undefined };
+      // round 32: a farewell season, and the team plays the playoffs for him
+      const bye = s.flags.farewell === s.year && level === 'NBA' ? FAREWELL.post : 0;
+      return { teamBonus: f.bonus, teamNotes: bye ? [...f.notes, `Farewell tour: the team wants one last run for you in the playoffs (+${bye})`] : f.notes, teamFx: f.items, postBonus: f.post + bye, styleFx: f.fx, duoFx: d ? { perf: d.perf, ast: d.ast, usage: d.usage } : undefined };
     })(),
     halfLines: [],
     injuredGames: 0,
@@ -296,7 +300,7 @@ function makeHook(s: GameState, league: League, level: LevelKey, acc: HalfAcc, s
       if (minutes > 0) {
         const duo = season.duoFx;
         const moraleMult = MORALE_PERF(p.morale) * (1 + (form - 1) * FORM.shootingShare) * (season.styleFx?.perf ?? 1) * (duo?.perf ?? 1);
-        const usage = (usageWeight(p.attrs) / usageMean) * (season.fuel ? 1.06 : 1) * plan.usage * Math.pow(form, 0.8) * (season.styleFx?.usage ?? 1) * (duo?.usage ?? 1);
+        const usage = (usageWeight(p.attrs) / usageMean) * (season.fuel ? 1.06 : 1) * plan.usage * Math.pow(form, 0.8) * (season.styleFx?.usage ?? 1) * (duo?.usage ?? 1) * (s.flags.chase === s.year ? 1 + RECORD_CHASE.usage : 1);
         const e = expected(userProfile(s), level, minutes, usage, moraleMult);
         if (duo) e.ast *= duo.ast;
         const started = season.role === 'key' || season.role === 'starter';
@@ -321,7 +325,7 @@ function makeHook(s: GameState, league: League, level: LevelKey, acc: HalfAcc, s
         acc.minutes += minutes;
         acc.played++;
         addLine(acc.line, line);
-        const inj = rollInjury(rng, p, plan, minutes);
+        const inj = rollInjury(rng, p, plan, s.flags.chase === s.year ? minutes * (1 + RECORD_CHASE.injury) : minutes);
         if (inj) recordInjury(p, inj, s.year);
         rollFine(s, season, rng, opp.short);
         if (inj && (inj.key === 'major' || inj.key === 'season')) {

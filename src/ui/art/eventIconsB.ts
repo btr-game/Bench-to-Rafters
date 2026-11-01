@@ -363,7 +363,7 @@ export const EVENT_ICONS_B: Record<string, string[]> = {
     '....OBBOOBBO....',
     '.....OO..OO.....',
   ],
-  'ev-arc-baby': [
+  'ev-arc-love': [
     '....OOO.........',
     '..OOBBBO........',
     '.OBBBBBBO.......',

@@ -12,6 +12,7 @@
 //   broken     an image that did not load
 //   buried     the card to act on starts more than a screen and a bit down the page
 //   covered    at the bottom of the page, the last content sits under a bar fixed to the screen's foot
+//   stuck      a full-screen layer that can't scroll, with text or a control past its top or foot (round 32)
 // Usage (the dev server running, `npx vite --port 5179`):
 //   node scripts/visual.cjs <out dir> [--only id,id] [--configs desktop-light,phone-dark] [--url http://localhost:5179/]
 // Then `python3 scripts/visual-diff.py <old out dir> <new out dir>` lists the screens that changed.
@@ -243,6 +244,23 @@ function inspect([phone, W]) {
         break;
       }
     }
+  }
+  // round 32 (owner: "i cant scroll in the day one screen"): a layer that fills the screen but
+  // can't scroll (its overflow hidden by a stray rule), with text or a control past its top or
+  // foot. Scripts can still scroll such a layer (Guide mode scrolled to Continue), so what is
+  // above the fold is lost too.
+  for (const el of document.querySelectorAll('body *')) {
+    const s = getComputedStyle(el);
+    if (s.position !== 'fixed' || /auto|scroll/.test(s.overflowY) || !shown(el)) continue;
+    const r = el.getBoundingClientRect();
+    if (r.width < innerWidth * 0.9 || r.height < innerHeight * 0.9) continue;
+    const out = [...el.querySelectorAll('button, a, input, h1, h2, h3, p, .moment-title')].find((c) => {
+      if (!shown(c) || c.closest('[aria-hidden="true"]')) return false;
+      for (let e = c.parentElement; e && e !== el; e = e.parentElement) if (/auto|scroll/.test(getComputedStyle(e).overflowY)) return false;
+      const cr = c.getBoundingClientRect();
+      return cr.bottom > Math.min(r.bottom, innerHeight) + 2 || cr.top < Math.max(r.top, 0) - 2;
+    });
+    if (out) add('stuck', out, `in ${el.tagName.toLowerCase()}.${String(el.className).trim().split(/\s+/).slice(0, 3).join('.')}, overflow ${s.overflowY}`);
   }
   return found;
 }

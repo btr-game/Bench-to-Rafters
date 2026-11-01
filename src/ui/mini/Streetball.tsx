@@ -3,6 +3,7 @@
 // the other crew on defense. Round 24: six cute sprites on the court, none holding a ball; the
 // one ball goes where the play's words say: handler, pass, shooter, rim.
 
+import { announce, callFor } from '../announcer';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from '../../store';
 import { GUARDS, MOVES, STREET, TIMED, newStreet, runDefense, runOffense, streetResult, type Baller, type Guard, type Move, type Play, type StreetState, type Timing } from '../../engine/mini/streetball';
@@ -289,6 +290,13 @@ export function StreetballGame() {
     setView({ spots, ball: hand(x.ourBall ? (spots.get(x.me.name) ?? OFF[0]) : OFF[0]), shooter: null, inside: false, highlight: play?.highlight ? { key: x.plays.length, text: play.highlight } : null, call: play ? { key: x.plays.length, ...callOf(play) } : null });
     // round 27: the play's sound as it lands
     if (play) sfx(play.made ? 'swish' : play.steal || play.blocked ? 'block' : 'rim');
+    // round 32: the announcer, for the plays worth shouting about (ours)
+    if (play) {
+      const c = callOf(play);
+      const hl = play.highlight ?? '';
+      const say = !c.good ? null : hl === 'AND ONE!' ? 'And one!' : hl.startsWith('ALLEY') ? 'Alley-oop!' : hl.startsWith('POSTER') ? 'Posterized!' : callFor(c.word, c.good, play.pts >= 2 && play.made && !play.dunk ? 'three' : '');
+      if (say) announce(say);
+    }
     setBusy(false);
     force((n) => n + 1);
   }, []);

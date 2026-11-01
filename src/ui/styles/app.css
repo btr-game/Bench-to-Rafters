@@ -2466,3 +2466,56 @@ input[type='range'] { width: 100%; min-height: 32px; accent-color: var(--accent)
 @media (max-width: 599px) { :root[data-text] .brand-wrap { flex: 0 1 auto; max-width: 100%; } }
 :root[data-text] .nation-grid { grid-template-columns: repeat(auto-fill, minmax(calc(130px * var(--ts)), 1fr)); }
 @media (max-width: 599px) { :root[data-text] .lab-row { grid-template-columns: auto 52px auto auto; } :root[data-text] .lab-name { grid-column: 1 / -1; } }
+
+/* round 32: the locker room on the Season tab (components/LockerRoom.tsx) */
+.lk-scene { position: relative; width: 100%; aspect-ratio: 1000 / 270; min-height: 200px; overflow: hidden; border-radius: 8px; background: #1b1d22; outline-offset: 3px; cursor: pointer; }
+.lk-scene.on { cursor: default; box-shadow: 0 0 0 3px var(--accent); }
+.lk-bg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.lk-who, .lk-me { position: absolute; bottom: 6%; transform: translateX(-50%); display: grid; justify-items: center; gap: 2px; padding: 0; border: 0; background: none; color: inherit; }
+.lk-who { cursor: pointer; }
+.lk-who.done .art-player { opacity: 0.75; }
+.lk-who.near .lk-tag { background: var(--accent); color: var(--accent-ink); }
+.lk-me { z-index: 2; pointer-events: none; }
+.lk-tag { order: 2; padding: 1px 6px; border-radius: 4px; background: rgba(12, 14, 18, 0.82); color: #fff; font-size: calc(12px * var(--ts)); font-weight: 600; white-space: nowrap; }
+.lk-alert { position: absolute; top: -4px; left: 50%; transform: translateX(-50%); padding: 0 5px; border-radius: 4px; background: #c92a2a; color: #fff; font-weight: 900; font-size: calc(13px * var(--ts)); animation: lk-bob 0.8s steps(2) infinite; }
+@keyframes lk-bob { 50% { transform: translate(-50%, -3px); } }
+.lk-hint { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); padding: 3px 10px; border-radius: 6px; background: rgba(12, 14, 18, 0.85); color: #fff; font-size: calc(13.5px * var(--ts)); white-space: nowrap; pointer-events: none; }
+.lk-pad { display: flex; justify-content: center; gap: 8px; }
+.lk-pad .btn { min-width: 72px; touch-action: none; user-select: none; }
+.lk-talk { display: grid; gap: 8px; padding: 12px 14px; border-radius: 8px; border: 2px solid var(--team, var(--accent)); background: var(--surface-2); }
+.lk-line { margin: 0; font-size: calc(17px * var(--ts)); font-weight: 600; }
+.lk-opts { display: flex; flex-wrap: wrap; gap: 8px; }
+.lk-opts kbd { margin-right: 4px; }
+.lk-close { justify-self: start; }
+@media (min-width: 900px) { .lk-pad { display: none; } }
+@media (prefers-reduced-motion: reduce) { .lk-alert { animation: none; } }
+.lk-tag.you { visibility: hidden; }
+.lk-you { position: absolute; top: -18px; left: 50%; transform: translateX(-50%); padding: 0 6px; border-radius: 4px; background: var(--accent); color: var(--accent-ink); font-size: calc(12px * var(--ts)); font-weight: 700; white-space: nowrap; }
+.lk-me { bottom: calc(6% + 2px); }
+@media (max-width: 640px) { .lk-tag { font-size: calc(10.5px * var(--ts)); padding: 0 4px; } .lk-role { display: none; } .lk-who.near .lk-role { display: inline; } .lk-who.near { z-index: 1; } }
+
+/* round 32: the farewell tour: the banner on Home in the last season, the gifts on Records */
+.farewell-bar { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 8px; border: 2px solid var(--gold); background: var(--surface); font-size: calc(15px * var(--ts)); }
+.gift-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); }
+.gift-list li { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; background: var(--surface-2); border-left: 4px solid var(--team); }
+.gift-list li > span { display: grid; gap: 2px; min-width: 0; }
+.gift-list small { color: var(--muted); }
+/* round 32: a record within reach, on Home */
+.record-watch { display: flex; align-items: flex-start; gap: 10px; padding: 8px 12px; border-radius: 8px; border: 1px dashed var(--accent); background: var(--surface); }
+.record-watch .btn { justify-self: start; align-self: flex-start; }
+/* round 32: the start page's Continue (every save lives in the career log now) */
+.continue-card { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; }
+
+/* round 32: the next generation (the son's career, on the father's page and log card) */
+.ng-row { display: flex; gap: 14px; align-items: center; }
+.ng-row > :first-child { flex: none; }
+.ng-name { font-family: var(--f-display); font-weight: 800; font-size: calc(26px * var(--ts)); line-height: 1; text-transform: uppercase; overflow-wrap: anywhere; }
+.ng-facts { display: grid; gap: 10px; }
+.ng-head { display: grid; gap: 4px; }
+.ng-nums { display: grid; grid-template-columns: repeat(auto-fit, minmax(calc(96px * var(--ts)), 1fr)); gap: 8px; margin: 0; }
+.ng-nums > div { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; background: var(--surface-2); min-width: 0; }
+.ng-nums dt { font-family: var(--f-mono); font-size: calc(12px * var(--ts)); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.ng-nums dd { margin: 2px 0 0; font-family: var(--f-display); font-weight: 800; font-size: calc(22px * var(--ts)); }
+.ng-adds { justify-self: start; font-family: var(--f-mono); font-size: calc(14px * var(--ts)); font-weight: 600; letter-spacing: 0.04em; padding: 4px 10px; border-radius: 6px; border: 1px solid color-mix(in srgb, var(--gold) 55%, var(--line)); background: color-mix(in srgb, var(--gold) 14%, var(--surface)); color: var(--ink); }
+.ng-end { display: grid; gap: 6px; justify-items: start; padding: 10px 12px; border-radius: 8px; border-left: 4px solid var(--team, var(--accent)); background: var(--surface-2); }
+.log-child { color: var(--ink); }

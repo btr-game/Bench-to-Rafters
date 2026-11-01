@@ -8,11 +8,13 @@ import type { CareerRecord } from '../engine/career/record';
 import { PlayerArt } from './art/Player';
 import { seasonLabel } from './format';
 import { MODES } from '../engine/balance';
+import { ACH_TIERS } from '../engine/achievements';
+import { ICONS, PAL } from './art/icons';
 import { NAMES } from '../content/strings';
 import { NBA_TEAMS } from '../content/teams';
 
 const W = 1080;
-const H = 1350;
+const H = 1850;
 const DISPLAY = "'Big Shoulders Display', 'Arial Narrow', Impact, sans-serif";
 const BODY = "'Archivo', system-ui, sans-serif";
 const MONO = "'IBM Plex Mono', Menlo, monospace";
@@ -33,6 +35,48 @@ async function portrait(r: CareerRecord, color: string, teamName: string): Promi
   } catch {
     return null;
   }
+}
+
+/** A pixel bitmap (rows of palette letters, '.' empty) at `scale` canvas pixels a pixel. */
+function pixels(ctx: CanvasRenderingContext2D, rows: string[], pal: Record<string, string>, x: number, y: number, scale: number): void {
+  rows.forEach((row, j) =>
+    [...row].forEach((ch, i) => {
+      const f = pal[ch];
+      if (!f) return;
+      ctx.fillStyle = f;
+      ctx.fillRect(x + i * scale, y + j * scale, scale, scale);
+    }),
+  );
+}
+
+// round 32: a medal for each achievement on the card, in its tier's colour
+const MEDAL = ['.RR...RR.', '..RR.RR..', '...RRR...', '..DDDDD..', '.DMMMMMD.', 'DMLLMMMMD', 'DMLMMMMMD', 'DMMMMMMMD', 'DMMMMMMSD', '.DMMMMSD.', '..DDDDD..'];
+const darker = (hex: string, t: number) => `#${[1, 3, 5].map((i) => Math.round(parseInt(hex.slice(i, i + 2), 16) * (1 - t)).toString(16).padStart(2, '0')).join('')}`;
+const medalPal = (c: string) => ({ R: darker(c, 0.35), D: '#18141C', M: c, L: '#FFFFFF', S: darker(c, 0.25) });
+
+// round 32 (owner: "put the difficulty and challenge more deliberately"): each difficulty's badge colour
+const MODE_COLOR: Record<string, string> = { standard: '#3B5BDB', reality: '#C92A2A', stars: '#C99A06', fast: '#2F9E44', lab: '#7048E8' };
+
+/** A badge at the right edge ending at `right`: its colour, text and an optional pixel icon. Returns its left edge. */
+function badge(ctx: CanvasRenderingContext2D, right: number, y: number, text: string, color: string, icon?: string[]): number {
+  ctx.font = `800 30px ${DISPLAY}`;
+  const iw = icon ? 16 * 3 + 12 : 0;
+  const w = ctx.measureText(text).width + 36 + iw;
+  const x = right - w;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.roundRect?.(x, y, w, 58, 10);
+  if (!ctx.roundRect) ctx.rect(x, y, w, 58);
+  ctx.fill();
+  if (icon) {
+    ctx.fillStyle = 'rgba(255,255,255,0.92)';
+    ctx.fillRect(x + 10, y + 5, 16 * 3, 16 * 3);
+    pixels(ctx, icon, PAL, x + 10, y + 5, 3);
+  }
+  ctx.fillStyle = '#ffffff';
+  ctx.textAlign = 'left';
+  ctx.fillText(text, x + 18 + iw, y + 41);
+  return x;
 }
 
 function wrap(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, max: number, lh: number): number {
@@ -87,10 +131,11 @@ export async function drawCareerCard(rec: CareerRecord): Promise<HTMLCanvasEleme
   const bw = ctx.measureText('BENCH TO ').width;
   ctx.fillStyle = accent;
   ctx.fillText('RAFTERS', 60 + bw, 82);
-  ctx.fillStyle = '#9aa0a6';
-  ctx.font = `500 22px ${MONO}`;
-  ctx.textAlign = 'right';
-  ctx.fillText(`${MODES[rec.mode].name.toUpperCase()}`, W - 60, 82);
+  // the difficulty, and the challenge he took, as badges along the top
+  let bx = W - 60;
+  if (rec.comet) bx = badge(ctx, bx, 36, 'COMET', '#D9480F', ICONS.comet) - 12;
+  if (rec.oath) bx = badge(ctx, bx, 36, 'ROUGH ROAD', '#5F1D1D', ICONS.oath) - 12;
+  badge(ctx, bx, 36, MODES[rec.mode].name.toUpperCase(), MODE_COLOR[rec.mode] ?? '#495057');
   ctx.textAlign = 'left';
 
   // identity and peak OVR
@@ -137,7 +182,7 @@ export async function drawCareerCard(rec: CareerRecord): Promise<HTMLCanvasEleme
   y += 40;
   ctx.fillStyle = '#9aa0a6';
   ctx.font = `500 24px ${MONO}`;
-  ctx.fillText(`${rec.legacy} LEGACY POINTS${rec.rankBehind ? ` · BEHIND ${rec.rankBehind.toUpperCase()}` : ''}`, 60, y);
+  ctx.fillText(`${rec.legacy} LEGACY POINTS${rec.index ? ` · CAREER INDEX ${rec.index.score.toFixed(1)}` : ''}${rec.rankBehind ? ` · BEHIND ${rec.rankBehind.toUpperCase()}` : ''}`, 60, y);
   y += 40;
 
   // the numbers, in tiles (round 15)
@@ -160,7 +205,24 @@ export async function drawCareerCard(rec: CareerRecord): Promise<HTMLCanvasEleme
     ctx.font = `500 18px ${MONO}`;
     ctx.fillText(k, tx + 16, y + 90);
   });
-  y += 104 + 64;
+  y += 104 + 30;
+
+  // round 32: the career's achievements, as medals in their tiers' colours, the best named
+  if (rec.ach && rec.ach.n > 0) {
+    ctx.fillStyle = '#9aa0a6';
+    ctx.font = `500 22px ${MONO}`;
+    ctx.fillText(`ACHIEVEMENTS · ${rec.ach.n} EARNED`, 60, y + 4);
+    y += 20;
+    rec.ach.top.forEach((a, i) => {
+      const color = ACH_TIERS.find((t) => t.key === a.tier)?.color ?? '#9aa0a6';
+      pixels(ctx, MEDAL, medalPal(color), 60 + i * 56, y, 5);
+    });
+    y += 11 * 5 + 34;
+    ctx.fillStyle = '#c9c4ba';
+    ctx.font = `500 24px ${BODY}`;
+    y = wrap(ctx, rec.ach.top.slice(0, 3).map((a) => a.name).join(' · '), 60, y, W - 120, 30);
+    y += 34;
+  } else y += 34;
 
   // honours: S and A tier first
   const chips = rec.honours;
@@ -216,6 +278,33 @@ export async function drawCareerCard(rec: CareerRecord): Promise<HTMLCanvasEleme
   ctx.fillStyle = '#9aa0a6';
   ctx.font = `400 24px ${BODY}`;
   y = wrap(ctx, rec.teams.join(' · ') || rec.highSchool, 60, y, W - 120, 30);
+  // round 32: his son's career (the next generation): peak, biggest honour, the five big numbers
+  const kid = rec.child;
+  if (kid) {
+    y += 34;
+    const top = y;
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.06)';
+    ctx.fillRect(60, top, W - 120, 196);
+    ctx.fillStyle = tc;
+    ctx.fillRect(60, top, 8, 196);
+    ctx.fillStyle = '#9aa0a6';
+    ctx.font = `500 22px ${MONO}`;
+    ctx.fillText('THE NEXT GENERATION', 92, top + 38);
+    ctx.fillStyle = '#f4f1ea';
+    ctx.font = `800 40px ${DISPLAY}`;
+    ctx.fillText(kid.name.toUpperCase(), 92, top + 86);
+    ctx.fillStyle = '#ffd76a';
+    ctx.font = `700 30px ${DISPLAY}`;
+    const add = `+${kid.adds} LEGACY`;
+    ctx.fillText(add, W - 92 - ctx.measureText(add).width, top + 86);
+    ctx.fillStyle = '#c9c4ba';
+    ctx.font = `500 24px ${BODY}`;
+    ctx.fillText(`Peak ${kid.peak} · ${kid.best}`, 92, top + 126, W - 184);
+    ctx.font = `500 22px ${MONO}`;
+    const n = (k: number, one: string) => `${k} ${one}${k === 1 ? '' : 'S'}`;
+    ctx.fillText(`${n(kid.nbaSeasons, 'NBA SEASON')} · ${kid.nbaPoints.toLocaleString()} PTS · ${n(kid.mvps, 'MVP')} · ${n(kid.titles, 'TITLE')} · ${n(kid.allStars, 'ALL-STAR')}`, 92, top + 166, W - 184);
+    y = top + 196;
+  }
   const height = Math.min(H, Math.max(900, y + 40));
   const out = document.createElement('canvas');
   out.width = W;

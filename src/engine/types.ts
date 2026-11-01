@@ -138,6 +138,7 @@ export interface UserPlayer {
   growthRate: number; // hidden: how fast he improves (see GROWTH_RATE)
   wear: number; // body wear 0-100 (see WEAR)
   longevity?: number; // round 24: hidden, built by looking after the body (see LONGEVITY)
+  gifts?: { team: string; color: string; gift: string }[]; // round 32: what the road arenas gave him on his farewell tour
   lab?: { credits: number; earned: number; spent: Partial<Record<AttrKey, number>> }; // built in a lab
   nickname?: Nickname; // round 25: what the media calls him (career/nickname.ts)
   look?: import('../content/looks').ChosenLook; // round 27: the look he picked at the start
@@ -219,6 +220,7 @@ export interface Team {
   roster: GenPlayer[];
   tier?: NcaaTier;
   coach?: number; // NBA only: persistent team factor added to roster strength
+  coachN?: number; // round 32: which head coach this is (a new one each time one is fired); names him
 }
 
 export interface SeriesResult {
@@ -537,6 +539,9 @@ export interface GameState {
   simCalls?: EventResult[]; // round 30: the turning points sim mode decided since the player's last move
   reel?: { title: string; line: string }[]; // round 30, Comet: the story pages folded into a list since his last move
   achN?: number; // round 31: how many achievements this career has earned (the Extras tab's dot)
+  locker?: { phase: string; done: string[]; year: number; chem: number }; // round 32: talks in the locker room this half, and the chemistry they built this season
+  parent?: { name: string; recId: string; legacy: number; slot?: string }; // round 32: a second-generation career: whose child he is (his log card's id, his save)
+  kid?: ChildLegacy; // round 32: the father's side: how his child's career went (a share of its legacy points counts for him)
   moments: Moment[]; // story pages waiting to be shown
   purchases: string[]; // shop item ids ever bought
   tournaments: TourneyRecord[];
@@ -561,4 +566,19 @@ export interface GameState {
   /** Round 27: every mini-game bonus claimed, with the OVR (and range) it added. */
   miniLog?: { game: import('./career/miniBonus').MiniId; year: number; gain: number; range?: number }[];
   schoolColor: string;
+}
+
+/** Round 32: what a father's card shows of his child's career (the next generation). */
+export interface ChildLegacy {
+  name: string;
+  peak: number;
+  best: string; // the biggest honour, or how far he got
+  nbaSeasons: number;
+  nbaPoints: number;
+  mvps: number;
+  titles: number;
+  allStars: number;
+  legacy: number;
+  /** What it added to the father's legacy points. */
+  adds: number;
 }

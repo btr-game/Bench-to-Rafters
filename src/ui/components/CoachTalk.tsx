@@ -9,6 +9,7 @@ import { createPortal } from 'react-dom';
 import { TEAM_STYLES, type TeamStyle } from '../../engine/career/identity';
 import type { GameState } from '../../engine/types';
 import { team as teamOf } from '../selectors';
+import { coachOf } from '../../engine/career/locker';
 import { PlayerArt, styleLeague } from '../art/Player';
 import { PlaybookArt } from '../art/Playbook';
 import { PixelX } from '../art/PixelX';
@@ -26,6 +27,7 @@ export const COACH_LINES: Record<TeamStyle, [string, string, string]> = {
 export function CoachTalk({ g, style, onClose }: { g: GameState; style: TeamStyle; onClose: () => void }) {
   const [step, setStep] = useState(0); // 0..3 the bubbles, 4 the playbook
   const t = teamOf(g);
+  const coach = t ? coachOf(t) : null; // round 32: the team's own head coach, his name and face
   const color = t?.color ?? '#1F5FBF';
   const lines = COACH_LINES[style];
   useEffect(() => {
@@ -66,8 +68,8 @@ export function CoachTalk({ g, style, onClose }: { g: GameState; style: TeamStyl
             {step >= 3 && <p className="bubble me">{lines[2]}</p>}
           </div>
           <div className="coach-who coach">
-            <PlayerArt name="Head Coach" number={0} pos="PG" color="#343A40" team="COACH" league={styleLeague(g.stage)} size={118} noBall mirror />
-            <span>Coach</span>
+            <PlayerArt name={coach?.name ?? 'Head Coach'} number={0} pos="PG" color="#343A40" team="COACH" league={styleLeague(g.stage)} size={118} noBall mirror />
+            <span>{coach ? `Coach ${coach.name.split(' ').slice(-1)[0]}` : 'Coach'}</span>
           </div>
         </div>
         {step >= 4 && (

@@ -2,7 +2,7 @@
 // a finished career. The career log keeps these (not whole saves), and the card is drawn from one,
 // so a logged career can be looked at and downloaded long after its save is gone.
 
-import type { GameState, Pos } from '../types';
+import type { ChildLegacy, GameState, Pos } from '../types';
 import { careerIndex, championships, count, hallOfFame, nbaCareerPoints, nbaTitles, raftersTeams, verdictFor } from '../awards/legacy';
 import { NBA_TEAMS } from '../../content/teams';
 import { TIERS, legacyRank, tierCounts } from '../awards/tiers';
@@ -31,6 +31,8 @@ export interface CareerRecord {
   oath?: boolean; // round 25: played Rough Road (Reality, master mode, nothing simplified)
   comet?: boolean; // round 30: played as a Comet (Shoot for the stars at hyper speed)
   look?: import('../../content/looks').ChosenLook; // round 27: the look he picked
+  ach?: { n: number; top: { name: string; tier: import('../achievements').AchTier }[] }; // round 32: what the career earned (its best ten), for the card
+  child?: ChildLegacy; // round 32: his child's career (the next generation), on his card
   rank: number; // all-time legacy rank (101 = outside the top 100)
   rankBehind: string | null;
   hof: 'first' | 'hof' | null;
@@ -101,6 +103,7 @@ export function careerRecord(g: GameState, now = new Date()): CareerRecord {
     ...(g.flags.oath ? { oath: true } : {}),
     ...(g.flags.comet ? { comet: true } : {}),
     ...(g.player.look ? { look: g.player.look } : {}),
+    ...(g.kid ? { child: g.kid } : {}),
     name: p.name,
     number: p.number,
     pos: p.pos,

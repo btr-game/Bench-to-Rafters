@@ -12,6 +12,7 @@ import { ovrOf } from './player/ovr';
 import { BASE_YEAR } from './economy/salary';
 import { activeLeague, assignToGl, beginSeason, playHalf, runPostseason } from './career/season';
 import { beginOffseason, resolveOffseasonDecision, retireNow } from './career/offseason';
+import { endFarewell } from './career/farewell';
 import { runWorldDraft } from './career/nbaYear';
 import { resolveEvent } from './events/resolver';
 import { resolveShop } from './economy/shop';
@@ -231,10 +232,15 @@ function advanceInner(s: GameState): void {
     case 'postseason':
       runPostseason(s);
       return;
-    case 'summary':
+    case 'summary': {
+      // round 32: the last season of a farewell tour ends with its gifts, then he retires
+      const bye = s.flags.farewell === s.year;
+      if (bye) endFarewell(s);
       beginOffseason(s);
+      if (bye && (s.step as Step) !== 'retired') retireNow(s, 'Said goodbye on a farewell tour, every arena on its feet.');
       if ((s.step as Step) === 'retired') finishCareer(s);
       return;
+    }
     case 'offseason':
       if (s.nba && s.worldYearDone !== s.year) {
         runWorldDraft(s, null);

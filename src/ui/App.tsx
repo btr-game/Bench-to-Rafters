@@ -1,3 +1,4 @@
+import { announce } from './announcer';
 import { GuideButton } from './components/Guide';
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import type { GameState } from '../engine/types';
@@ -177,6 +178,9 @@ export function App() {
         if (!fresh) return;
         if (fresh.logo || fresh.nick) sfx('nickname');
         else if (fresh.kind === 'title') sfx(fresh.mood === 'champion' ? 'title' : 'lose');
+        // round 32: the announcer for the biggest pages
+        if (fresh.kind === 'title' && fresh.mood === 'champion') announce('Champions!');
+        else if (fresh.title === 'Breakthrough season') announce('Breakthrough!');
         else if (fresh.lostFinal) sfx('lose');
         else if (fresh.kind === 'awards' || fresh.kind === 'draft') sfx('award');
         else if (fresh.kind === 'injury') sfx('injury');

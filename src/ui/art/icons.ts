@@ -1225,6 +1225,25 @@ export const ICONS: Record<string, string[]> = {
     '.OWOWOWOWWWOOBBO',
     '..OOOOOOOOO..OO.',
   ],
+  // round 32: a farewell gift
+  gift: [
+    '................',
+    '...OO....OO.....',
+    '..ORRO..ORRO....',
+    '..ORRROORRRO....',
+    '...OORRRROO.....',
+    '.OOOOOROOOOOOO..',
+    '.OYYYYRRYYYYYO..',
+    '.OYYYYRRYYYYYO..',
+    '.OOOOORROOOOOO..',
+    '..OYYYRRYYYYO...',
+    '..OYYYRRYYYYO...',
+    '..OYYYRRYYYYO...',
+    '..OYYYRRYYYYO...',
+    '..OYYYRRYYYYO...',
+    '..OOOOOOOOOOO...',
+    '................',
+  ],
   // round 31: undo, compare two careers, text size
   undo: [
     '................',

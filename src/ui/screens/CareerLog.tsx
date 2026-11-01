@@ -19,6 +19,7 @@ import { PlayerArt } from '../art/Player';
 import { Icon } from '../art/Icon';
 import { CometMark, OathMark } from '../components/OathMark';
 import { compareRows, compareScore } from '../compare';
+import { SavedCareers } from '../components/SavedCareers';
 
 /** Download (and on phones, share) the career card. */
 export function CardActions({ rec }: { rec: CareerRecord }) {
@@ -91,7 +92,7 @@ export function CareerLogCard() {
         Career log
       </div>
       <p className="small muted">
-        The career cards of your last {LOG_MAX} finished careers, kept on this device. {n[0] ? `${n[0]} saved${n[1] ? `, ${n[1]} locked` : ''}.` : 'Finish a career to start it.'}
+        Your saved careers (continue, look back, a code to move one) and the cards of your last {LOG_MAX} finished careers, on this device. {n[0] ? `${n[0]} card${n[0] === 1 ? '' : 's'}${n[1] ? `, ${n[1]} locked` : ''}.` : 'Finish a career for its first card.'}
         {live ? ' During a career you can look, download and lock; deleting waits for the start page.' : ` Lock up to ${LOCK_MAX} to keep them for good.`}
       </p>
       <button className="btn ghost" data-tour="log" onClick={() => setPage('log')}>
@@ -192,6 +193,12 @@ function LogEntry({ rec, locked, canLock, live, onDelete, onLock, picked, canPic
             {NAMES.pos[rec.pos]} · {rec.role} · retired at {rec.retiredAt}
           </div>
           <div className="small muted">{rec.tier}</div>
+          {/* round 32: his son's career, and what it added */}
+          {rec.child && (
+            <div className="small log-child">
+              Son {rec.child.name}: peak {rec.child.peak} · +{rec.child.adds} legacy
+            </div>
+          )}
         </div>
         <div className="log-nums">
           <div>
@@ -258,7 +265,7 @@ export function CareerLog() {
             Career log
           </h1>
           <p className="prose">
-            Every career you finish leaves its card here. The log keeps {LOG_MAX}: when it is full, a new career replaces the oldest card that is not locked. Lock up to {LOCK_MAX} you never want to lose; a locked card can't be replaced or deleted until you unlock it.
+            Your saved careers come first: continue one, look back at a finished one, or copy its code to carry it to another browser. Then the cards: every career you finish leaves one here. The log keeps {LOG_MAX}: when it is full, a new career replaces the oldest card that is not locked. Lock up to {LOCK_MAX} you never want to lose; a locked card can't be replaced or deleted until you unlock it.
           </p>
         </div>
         {live && (
@@ -267,6 +274,8 @@ export function CareerLog() {
             <span>You are in a career: look, download and lock the cards here. Deleting waits for the start page.</span>
           </div>
         )}
+        <SavedCareers live={live} />
+        <div className="sec-title">Career cards</div>
         {warn && <div className="log-warn">{warn}</div>}
         {picked.length === 2 ? (
           <Compare a={picked[0]} b={picked[1]} onClear={() => setPick([])} />
