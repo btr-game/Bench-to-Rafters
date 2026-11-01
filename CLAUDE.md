@@ -26,10 +26,12 @@ the owner when the work looks close to the end of the round**.
    ones that shape a career; simple text hides its descriptions).
 4. **Contrast and keyboard**: new UI readable in both themes and usable with the keyboard; the
    visual check (below) runs clean on every screen, and its diff shows only the changes meant.
-5. **Achievements** for the new systems.
-6. **Events and pathways** that bring the new features into the story where it makes sense (as
-   events about weight did when weight came in): new random events, choices or career paths
-   that touch the new systems. Not required for every feature.
+5. **Achievements** for the new systems, and more besides: players earn them quickly, so every
+   round adds a good batch (owner, round 32: "we might run out of them quickly. add more").
+6. **Events, storylines, pathways and shop items** that bring the new features into the game
+   (owner, round 32, extending the round 25 rule): new random events, storyline chapters, choices
+   or career paths, and shop items that touch the new systems, as events about weight did when
+   weight came in. Every round adds some; not every feature needs all four.
 7. **Harness**: `smartChoice` in `scripts/harness.ts` handles every new decision kind.
 8. **Dead code**: unused functions, exports, imports, CSS rules, leftovers of replaced features.
 9. **Tests** for new engine logic, then the full checks below (tsc, vitest, build).
@@ -56,7 +58,11 @@ Other preferences:
 - **Every graphic is pixel art** (owner, after round 27: "for every graphic you make, make them
   pixelated. this includes the intro and thank you page"): drawn on a pixel grid with square pixels
   (`shapeRendering="crispEdges"`, hard colour stops), never smooth gradients, curves or blurs for
-  the art itself; animations move in steps where it helps the look.
+  the art itself; animations move in steps where it helps the look. The one exception is a
+  **gradient background** behind the art, such as a moment page's (owner, round 32: "for gradient
+  backgrounds (for example, the marraige page background) they can be left unpixelated. it's
+  actually one of the things i enjoyed before the game"): those stay smooth. Meters, bars and
+  objects drawn in CSS (a plank, a plinth, a court's horizon) stay banded.
 
 - The owner is an IB DP student. Documents for people (reports, summaries) are Word files
   unless asked otherwise.

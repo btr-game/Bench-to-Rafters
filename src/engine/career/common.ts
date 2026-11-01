@@ -77,6 +77,11 @@ export function pushDecision(s: GameState, d: Omit<Decision, 'id'>): void {
 
 export const adjust = (x: number, d: number): number => clamp(x + d, 0, 100);
 
+/** Round 32: counts something the career did, for its achievements (s.flags[key] += n). */
+export function tally(s: GameState, key: string, n = 1): void {
+  s.flags[key] = (s.flags[key] ?? 0) + n;
+}
+
 export function teamById(league: League | null, id: string | null): Team | null {
   if (!league || !id) return null;
   return league.teams.find((t) => t.id === id) ?? null;

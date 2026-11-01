@@ -1,4 +1,4 @@
-import { CAREER_INDEX, LEGACY } from '../balance';
+import { CAREER_INDEX, FAREWELL, LEGACY } from '../balance';
 import { RIVALS } from '../../content/teams';
 import type { GameState } from '../types';
 
@@ -52,6 +52,8 @@ function awardPoints(key: string): number {
       return 0.5;
     case 'ASIANMEDAL':
       return 0.25;
+    case 'FAREWELL':
+      return FAREWELL.legacy;
     default:
       return 0;
   }

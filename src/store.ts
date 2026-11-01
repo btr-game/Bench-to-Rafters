@@ -15,17 +15,22 @@ import { weightOf } from './engine/player/weight';
 import { visitItem, wearItem } from './engine/economy/shop';
 import { letGo, raiseStaff, talkStaff } from './engine/career/staff';
 import { negotiate, type Ask } from './engine/career/negotiate';
+import { fireCoach, lockerTalk } from './engine/career/locker';
+import { askRole } from './engine/career/coach';
+import { announceFarewell } from './engine/career/farewell';
+import { chaseRecord } from './engine/career/records';
 import type { WearSlot } from './content/shop';
-import { careerRecord } from './engine/career/record';
-import { logCareer, type LogResult } from './ui/careerLog';
-import { checkAch, countCareer, recordUndo } from './ui/achievements';
+import { careerRecord, type CareerRecord } from './engine/career/record';
+import { canPlayChild, childGame, childLegacy, childSeed } from './engine/nextGen';
+import { attachChild, logCareer, type LogResult } from './ui/careerLog';
+import { checkAch, countCareer, earnedIn, recordUndo } from './ui/achievements';
 import { community } from './ui/community';
 import { importCode, newSlotId, readSlot, writeSlot } from './ui/saves';
 import { isDev } from './dev/mode';
 import { chooseLook } from './content/looks';
 import { NEWS } from './content/whatsNew';
 import { tabNews, type Spot } from './ui/tabNews';
-import type { AchTier } from './engine/achievements';
+import { ACH_TIERS, type AchTier } from './engine/achievements';
 
 export type Tab = 'home' | 'season' | 'player' | 'records' | 'extras';
 export type Theme = 'auto' | 'light' | 'dark';
@@ -83,6 +88,18 @@ interface Store {
   labSpend: (k: AttrKey, points: number) => void;
   recruit: (id: number) => void;
   payCut: () => void;
+  /** Round 32: a word with someone in the locker room; what came of it. */
+  lockerTalk: (who: string, opt: string) => string | null;
+  /** Round 32: a star of the league has the coach fired. */
+  fireCoach: () => string | null;
+  /** Round 32: the next season is his last. */
+  farewell: () => void;
+  /** Round 32: chase the next name on the all-time scoring list this season. */
+  chase: () => void;
+  /** Round 32: after a career with a child, the child's own (Comet speed, a slot of his own). */
+  playChild: () => void;
+  /** Round 32: once a season, ask the head coach for a bigger role. */
+  askRole: () => void;
   endTransition: () => void;
   reset: () => void;
   mini: Mini | null;
@@ -444,7 +461,7 @@ export const useStore = create<Store>((set, get) => ({
       engineChoose(next, choiceId);
       const before = next.step;
       fastForward(next);
-      set({ game: next, ...remember(g, 'A new position'), ...remember(g, 'A trade request'), ...remember(g, 'A staff move'), ...remember(g, 'A contract ask'), ...remember(g, 'A new jersey number'), ...remember(g, 'Spending lab credits'), ...remember(g, 'Taking a pay cut'), ...remember(g, 'Recruiting a starter'), ...remember(g, 'New focus stats'), ...remember(g, stepLabel(g)), ...remember(g, choiceLabel(g, choiceId)) });
+      set({ game: next, ...remember(g, choiceLabel(g, choiceId)) });
       if (next.flags.fast && next.step !== before) top();
     }),
   advance: () =>
@@ -480,7 +497,7 @@ export const useStore = create<Store>((set, get) => ({
         fastForward(next);
         transition = null;
       }
-      set({ game: next, tab: 'home', transition });
+      set({ game: next, tab: 'home', transition, ...remember(g, stepLabel(g)) });
       top();
     }),
   changeFocus: (keys) => {
@@ -488,35 +505,86 @@ export const useStore = create<Store>((set, get) => ({
     if (!g) return;
     const next = structuredClone(g);
     changeFocus(next, keys);
-    set({ game: next });
+    set({ game: next, ...remember(g, 'New focus stats') });
   },
   recruit: (id) => {
     const g = get().game;
     if (!g) return;
     const next = structuredClone(g);
     recruitPlayer(next, id);
-    set({ game: next });
+    set({ game: next, ...remember(g, 'Recruiting a starter') });
   },
   payCut: () => {
     const g = get().game;
     if (!g) return;
     const next = structuredClone(g);
     takePayCut(next);
-    set({ game: next });
+    set({ game: next, ...remember(g, 'Taking a pay cut') });
+  },
+  lockerTalk: (who, opt) => {
+    const g = get().game;
+    if (!g) return null;
+    const next = structuredClone(g);
+    const text = lockerTalk(next, who, opt);
+    if (text) set({ game: next, ...remember(g, 'A word in the locker room') });
+    return text;
+  },
+  chase: () => {
+    const g = get().game;
+    if (!g) return;
+    const next = structuredClone(g);
+    chaseRecord(next);
+    set({ game: next, ...remember(g, 'Chasing a record') });
+  },
+  askRole: () => {
+    const g = get().game;
+    if (!g) return;
+    const next = structuredClone(g);
+    askRole(next);
+    set({ game: next, ...remember(g, 'Asking the coach for a bigger role') });
+  },
+  playChild: () =>
+    later(() => {
+      const g = get().game;
+      if (!g || !canPlayChild(g)) return;
+      // the father's save remembers that his child's career has started
+      const father: GameState = { ...g, flags: { ...g.flags, childPlayed: 1 } };
+      const slot = get().slot;
+      if (slot) void writeSlot(slot, father);
+      const rec = careerRecord(father);
+      const kid = childGame(father, childSeed(father), rec.id, rec.legacy, slot ?? undefined);
+      fastForward(kid);
+      set({ game: kid, slot: newSlotId(), tab: 'home', transition: null, mini: null, seen: allSeen(kid), undo: null, logged: null, ...oathLock(kid) });
+      top();
+    }),
+  farewell: () => {
+    const g = get().game;
+    if (!g) return;
+    const next = structuredClone(g);
+    announceFarewell(next);
+    set({ game: next, ...remember(g, 'Announcing a farewell tour') });
+  },
+  fireCoach: () => {
+    const g = get().game;
+    if (!g) return null;
+    const next = structuredClone(g);
+    const text = fireCoach(next);
+    if (text) set({ game: next, ...remember(g, 'Firing the coach') });
+    return text;
   },
   labSpend: (k, points) => {
     const g = get().game;
     if (!g) return;
     const next = structuredClone(g);
     spendCredits(next, k, points);
-    set({ game: next });
+    set({ game: next, ...remember(g, 'Spending lab credits') });
   },
   changeNumber: (n) => {
     const g = get().game;
     if (!g) return;
     const next = structuredClone(g);
     changeNumber(next, n);
-    set({ game: next });
+    set({ game: next, ...remember(g, 'A new jersey number') });
   },
   wear: (slot, id) => {
     const g = get().game;
@@ -538,7 +606,7 @@ export const useStore = create<Store>((set, get) => ({
     if (!g) return null;
     const next = structuredClone(g);
     const text = negotiate(next, offerId, ask);
-    if (text) set({ game: next });
+    if (text) set({ game: next, ...remember(g, 'A contract ask') });
     return text;
   },
   staffAct: (id, act) => {
@@ -546,7 +614,7 @@ export const useStore = create<Store>((set, get) => ({
     if (!g) return null;
     const next = structuredClone(g);
     const text = act === 'talk' ? talkStaff(next, id) : act === 'raise' ? (raiseStaff(next, id) ? 'raised' : null) : (letGo(next, id), 'gone');
-    if (text) set({ game: next });
+    if (text) set({ game: next, ...remember(g, 'A staff move') });
     return text;
   },
   requestTrade: (aim) => {
@@ -554,7 +622,7 @@ export const useStore = create<Store>((set, get) => ({
     if (!g) return;
     const next = structuredClone(g);
     requestTrade(next, aim);
-    set({ game: next });
+    set({ game: next, ...remember(g, 'A trade request') });
   },
   mutate: (fn) => {
     const g = get().game;
@@ -590,7 +658,7 @@ export const useStore = create<Store>((set, get) => ({
     if (!g) return;
     const next = structuredClone(g);
     changePosition(next, pos);
-    set({ game: next });
+    set({ game: next, ...remember(g, 'A new position') });
   },
   retire: () =>
     later(() => {
@@ -718,7 +786,21 @@ useStore.subscribe((now, before) => {
   const g = now.game;
   if (!g || !before.game || g === before.game || g.step !== 'retired' || before.game.step === 'retired') return;
   if (now.daily || g.flags.daily || g.mode === 'lab') return;
-  const rec = careerRecord(g);
+  // round 32: the career's last achievements first, so its card carries all of them
+  achievementsNow();
+  // round 32: a child's career is never logged or posted on its own: a share of it goes to his
+  // father, on his card in the log and in his save
+  if (g.flags.gen2 && g.parent) {
+    const kid = childLegacy(careerRecord(g));
+    attachChild(g.parent.recId, kid);
+    const fs = g.parent.slot;
+    if (fs) void readSlot(fs).then((f) => (f && !f.kid ? writeSlot(fs, { ...f, kid }) : false));
+    useStore.setState({ logged: null });
+    return;
+  }
+  const got = earnedIn(g);
+  const order = (t: string) => ACH_TIERS.findIndex((x) => x.key === t);
+  const rec: CareerRecord = { ...careerRecord(g), ach: { n: got.length, top: [...got].sort((a, b) => order(b.tier) - order(a.tier)).slice(0, 10).map((a) => ({ name: a.name, tier: a.tier })) } };
   useStore.setState({ logged: logCareer(rec) });
   // round 24: onto the leaderboards (and the news feed) for everyone who shares this page
   void community().then((c) => c.postCareer(rec));

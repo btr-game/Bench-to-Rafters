@@ -137,15 +137,17 @@ function Row({ m }: { m: TimelineMark }) {
   );
 }
 
-export function CareerTimeline({ g }: { g: GameState }) {
+/** The career timeline: the OVR line with the big moments. Tapping a season lists its moments
+ * under the chart. `journal` (the retirement page) keeps the whole journal in the same card; the
+ * Records tab shows it lower down, as its own card (round 32, owner: "the journal and season by
+ * season could go down. leave the career timeline at the top"). */
+export function CareerTimeline({ g, journal = false }: { g: GameState; journal?: boolean }) {
   const { seasons, marks } = useMemo(() => careerTimeline(g), [g]);
-  const [filter, setFilter] = useState<Filter>('all');
   const [picked, setPicked] = useState<number | null>(null);
-  const kinds = FILTERS.find((f) => f.key === filter)!.kinds;
-  const shown = marks.filter((m) => kinds.includes(m.kind) && (picked === null || m.year === picked));
-  const years = [...new Set([...seasons.map((x) => x.year), ...shown.map((m) => m.year)])].filter((y) => picked === null || y === picked).sort((a, b) => b - a);
+  const ss = picked === null ? null : seasons.find((x) => x.year === picked);
+  const list = picked === null ? [] : marks.filter((m) => m.year === picked);
   return (
-    <Card title="Career timeline" kicker="OVR at the end of each season, with the big moments. Tap a season to see only that year.">
+    <Card title="Career timeline" kicker="OVR at the end of each season, with the big moments. Tap a season to see that year.">
       <Chart g={g} pick={(y) => setPicked(picked === y ? null : y)} picked={picked} />
       <div className="tl-legend small">
         {(['legend', 'title', 'award', 'duo', 'move', 'injury', 'event'] as MarkKind[]).map((k) => (
@@ -155,9 +157,44 @@ export function CareerTimeline({ g }: { g: GameState }) {
           </span>
         ))}
       </div>
-      <div className="sec-title" style={{ marginTop: 6 }}>
-        Journal
-      </div>
+      {picked !== null && !journal && (
+        <section className="tl-season" style={{ borderLeftColor: ss?.color ?? 'var(--line)' }}>
+          <header>
+            <b className="num">{seasonLabel(picked)}</b>
+            {ss && (
+              <span className="small muted">
+                Age {ss.age} · {ss.team} ({LEVELS[ss.level].short}) · OVR {Math.round(ss.ovrStart)} → {Math.round(ss.ovrEnd)}
+              </span>
+            )}
+            <button className="btn ghost small" onClick={() => setPicked(null)}>
+              Close
+            </button>
+          </header>
+          {list.length ? <ul>{list.map((m, i) => <Row key={i} m={m} />)}</ul> : <p className="small muted keep">A quiet season.</p>}
+        </section>
+      )}
+      {journal && <JournalBody g={g} picked={picked} onClear={() => setPicked(null)} />}
+    </Card>
+  );
+}
+
+/** The journal on its own card (the Records tab). */
+export function CareerJournal({ g }: { g: GameState }) {
+  return (
+    <Card title="Journal" kicker="Every season's big moments, newest first" tour="journal">
+      <JournalBody g={g} picked={null} onClear={() => undefined} />
+    </Card>
+  );
+}
+
+function JournalBody({ g, picked, onClear }: { g: GameState; picked: number | null; onClear: () => void }) {
+  const { seasons, marks } = useMemo(() => careerTimeline(g), [g]);
+  const [filter, setFilter] = useState<Filter>('all');
+  const kinds = FILTERS.find((f) => f.key === filter)!.kinds;
+  const shown = marks.filter((m) => kinds.includes(m.kind) && (picked === null || m.year === picked));
+  const years = [...new Set([...seasons.map((x) => x.year), ...shown.map((m) => m.year)])].filter((y) => picked === null || y === picked).sort((a, b) => b - a);
+  return (
+    <>
       <div className="seg small-seg">
         {FILTERS.map((f) => (
           <button key={f.key} aria-pressed={filter === f.key} onClick={() => setFilter(f.key)}>
@@ -165,7 +202,7 @@ export function CareerTimeline({ g }: { g: GameState }) {
           </button>
         ))}
         {picked !== null && (
-          <button aria-pressed onClick={() => setPicked(null)}>
+          <button aria-pressed onClick={onClear}>
             {seasonLabel(picked)} ✕
           </button>
         )}
@@ -192,6 +229,6 @@ export function CareerTimeline({ g }: { g: GameState }) {
           );
         })}
       </div>
-    </Card>
+    </>
   );
 }

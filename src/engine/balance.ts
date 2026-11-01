@@ -658,6 +658,33 @@ export const NEGOTIATE = { asks: 2, base: 0.35, repPer: 220, ovrPer: 45, perAsk:
 export const PRESS = { gap: 2, questions: 1, bigQuestions: 2, big: ['title', 'lost-final', 'award'], humble: { trust: 2, rep: 0.5, chem: 0.1 }, confident: { rep: 1.5, morale: 2 }, fiery: { rep: 2.5, trust: -2, fire: 0.15 }, fineChance: 0.2, fans: 1 };
 // round 25: a legacy project funded in an event (events/round25.ts) adds legacy points
 export const LEGACY_PROJECT = { points: 3 };
+/**
+ * The farewell tour (round 32, career/farewell.ts): from `age`, in the NBA, he can say in the
+ * offseason that the next season is his last. Saying it lifts his mood and his name; in that season
+ * the team rallies in the playoffs (`post` team strength) and six road arenas give him a gift; it
+ * adds `legacy` points, and he retires when it ends.
+ */
+export const FAREWELL = { age: 32, morale: 10, rep: 2, post: 0.5, legacy: 2, gifts: 6 };
+/**
+ * Record chases (round 32, owner: "this could work as a simple warning system. sure, embed it, but
+ * dont make it influence the game too much"; career/records.ts). The all-time scoring list counts a
+ * legend at about `games` games a season; a single-game career high from `near` of a league record
+ * is worth a mention. Chasing the scoring record for a season takes a few more shots (`usage`), a
+ * little more risk of getting hurt (`injury`, on his minutes) and a little chemistry (`chem`).
+ */
+export const RECORD_CHASE = { games: 72, near: 0.8, usage: 0.05, injury: 0.1, chem: 0.1 };
+/**
+ * The next generation (round 32, owner: "similar height (... variance, and also like the low-chance
+ * breakthroughs, they might be significantly taller/shorter than the father), similar potential
+ * (same with height, variance and breakthrough), and similar looks ... make the chances that the
+ * child is worse than the father more dominant ... their legacy points count towards the father's
+ * legacy points, but not fully"). engine/nextGen.ts. Height: his, with an sd of `heightSd` inches,
+ * and a `jump` chance of `jumpIn` inches either way. Potential: his plus `potShift`, an sd of
+ * `potSd`, and a `potJump` chance of `potJumpSize` points (up only `potUp` of the time). The child's
+ * legacy adds `share` of itself to his.
+ */
+// girl: the chance the first child is a daughter (owner: "make the first child half-half boy and girl"); only a son plays a career
+export const NEXT_GEN = { heightSd: 1.2, jump: 0.06, jumpIn: [3, 6], potShift: -3, potSd: 3.5, potJump: 0.06, potJumpSize: [7, 12], potUp: 0.35, share: 0.25, girl: 0.5 };
 export const STAFF_PAY = { pay: [1, 1.7, 2.6], effect: [1, 1.5, 2], talk: 1, talkShare: 0.35, afford: 4, max: 6 };
 // round 25: fines, rolled like injuries, game by game in a pro league. `perGame` is the chance a
 // game; low morale and a big name make it likelier; at most `maxSeason` a season. Amounts in $M
@@ -863,6 +890,56 @@ export const GEN_GROWTH = {
 // A persistent, slowly drifting team factor (coaching, system, front office) added to roster
 // strength so good and bad franchises persist. AR(1): c' = keep·c + N(0, sd).
 export const COACHING = { initSd: 1.2, keep: 0.85, sd: 0.6 };
+
+/**
+ * The locker room and the head coach (round 32, career/locker.ts). One talk with each person each
+ * half; the chemistry they build or burn (team strength for the rest of the season) is capped at
+ * `cap` a season either way. A star of the league (reputation `fireRep`, NBA only, once a season)
+ * can have the coach fired: the new one's strength factor is drawn around `newCoach`, the room
+ * splits (`fireChem` off this season's chemistry), he gets his way (`fireMorale`), the new coach
+ * starts at `fireTrust` and the papers call him a coach killer (`fireRepCost`).
+ */
+export const LOCKER = {
+  cap: 0.6,
+  rookie: { mentor: 0.15, tough: -0.05 },
+  star: { close: 5, twoman: 0.2, twomanFar: 0.1, alpha: -0.15 },
+  vet: { minutes: -0.1 },
+  joker: { focus: 0.05 },
+  quiet: { film: 0.3, filmChem: 0.05 },
+  hothead: { calm: 0.6, calmWin: 0.15, calmLose: -0.05, square: 0.5, squareWin: 0.1, squareLose: -0.2 },
+  feud: { breakup: 0.25, side: -0.1, out: -0.05 },
+  fireRep: 90,
+  newCoach: 0.2,
+  fireChem: 0.4,
+  fireMorale: 6,
+  fireTrust: 60,
+  fireRepCost: 2,
+};
+
+/**
+ * The head coach's bigger role (round 32, owner: "can we give the coach a slightly bigger role?";
+ * career/coach.ts). Temperament nudges a season a little; a role talk once a season; NBA teams
+ * that lose badly may fire their coach; a losing team at midseason puts its coach on the hot seat;
+ * a Coach of the Year.
+ */
+export const COACH = {
+  temper: {
+    players: { chem: 0.1, post: 0, morale: 1, trustMul: 0.8, grind: 1 },
+    tactician: { chem: 0, post: 0.15, morale: 0, trustMul: 1, grind: 1 },
+    hardliner: { chem: 0, post: 0, morale: -1, trustMul: 1.25, grind: 1.05 },
+  },
+  // the role talk: a base chance, + per point of trust over 50, by temperament, + near the top of the roster
+  ask: { base: 0.3, trust: 0.012, temper: { players: 0.15, tactician: 0, hardliner: -0.1 }, top: 0.15, min: 0.05, max: 0.9, yesMorale: 3, noTrust: 3, noTrustHard: 6, noMorale: 3 },
+  newTrust: 50, // a new coach starts here
+  hire: 0, // a new NBA coach's factor, on average
+  fireBelow: 0.35, // an NBA team under this win share may fire its coach in the offseason
+  fireChance: 0.45,
+  hotSeat: 0.4, // the hot seat: his team under this win share at midseason (12 games or more)
+  backSave: { base: 0.25, rep: 0.005 }, // backing him in public: the chance he keeps his job
+  backTrust: 8, // what backing him is worth if he stays
+  letGoRep: 60, // reputation needed to tell the front office to let him go
+  coyTrust: 3, // his coach named Coach of the Year
+};
 
 // Reputation
 export const REP = {

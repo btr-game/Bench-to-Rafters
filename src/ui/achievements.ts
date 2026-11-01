@@ -75,6 +75,9 @@ export function countCareer(g: GameState, master: boolean): void {
   t.mvps += count(g, 'MVP');
   if (g.flags.fast) t.fast += 1;
   if (master) t.master += 1;
+  // round 32: a farewell tour seen through, a son's career played
+  if (g.awards.some((a) => a.key === 'FAREWELL')) t.farewells = (t.farewells ?? 0) + 1;
+  if (g.flags.gen2) t.sons = (t.sons ?? 0) + 1;
   saveAch(d);
 }
 
@@ -96,6 +99,20 @@ export function recordShare(): void {
 export function recordUndo(): void {
   const d = loadAch();
   d.totals.undone = (d.totals.undone ?? 0) + 1;
+  saveAch(d);
+}
+
+/** Round 32: a play the announcer called. */
+export function recordCall(): void {
+  const d = loadAch();
+  d.totals.called = (d.totals.called ?? 0) + 1;
+  saveAch(d);
+}
+
+/** Round 32: a career card saved or shared. */
+export function recordCard(): void {
+  const d = loadAch();
+  d.totals.cards = (d.totals.cards ?? 0) + 1;
   saveAch(d);
 }
 

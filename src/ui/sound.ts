@@ -62,6 +62,8 @@ export const SFX = [
   ['comet', 'Riding the comet: the Comet challenge taken'],
   // round 31
   ['undo', 'Undo: a choice taken back'],
+  ['knock', 'Knocking on the coach’s door: asking for a bigger role'],
+  ['family', 'The next generation: your son’s career begins'],
 ] as const;
 type Sfx = (typeof SFX)[number][0];
 
@@ -221,6 +223,12 @@ export function sfx(name: Sfx, always = false): void {
       break;
     case 'chime':
       seq([24, 31], 0.08, 'triangle', 0.6);
+      break;
+    case 'knock':
+      seq([0, 0], 0.07, 'square', 0.45);
+      break;
+    case 'family':
+      seq([12, 16, 19, 24, 19, 24, 28], 0.11, 'triangle', 0.6);
       break;
     case 'visit':
       seq([19, 23, 26, 31], 0.09, 'triangle', 0.7);

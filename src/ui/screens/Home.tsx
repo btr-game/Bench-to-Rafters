@@ -1,4 +1,5 @@
 import type { AttrKey, EventResult, GameState, SeasonRecord } from "../../engine/types";
+import { CoachCard } from '../components/CoachCard';
 import { GuideSpotWrap } from "../components/Guide";
 import { tourKind } from "../components/GuideTour";
 import {
@@ -26,7 +27,9 @@ import {
   positionOptions,
   prompt,
 } from "../../engine/flow";
-import { useState } from "react";
+import { canFarewell, isFarewellSeason } from "../../engine/career/farewell";
+import { canChase, chasing, recordWatch } from "../../engine/career/records";
+import { useMemo, useState } from "react";
 import { ATTRS, LEVELS } from "../../engine/balance";
 import { NAMES, UI } from "../../content/strings";
 import { canUndo, useStore } from "../../store";
@@ -305,6 +308,33 @@ function SimpleStats({ g }: { g: GameState }) {
   const rec = g.step === "summary" ? s?.summary : g.lastSummary;
   if (!rec) return null;
   return <StatStrip line={rec.line} label={`${seasonLabel(rec.year)}${g.step === "summary" ? "" : " · last season"}`} />;
+}
+
+/** Round 32: a record within reach, said quietly; the scoring list can be chased for a season. */
+function RecordWatch({ g }: { g: GameState }) {
+  const chase = useStore((s) => s.chase);
+  const watch = useMemo(() => recordWatch(g), [g]);
+  if (!watch.length) return null;
+  return (
+    <div className="record-watch" data-tour="record-watch">
+      <Icon name="record" size={22} />
+      <div className="stack" style={{ gap: 4, minWidth: 0 }}>
+        <span className="kicker">Record watch</span>
+        {watch.map((w) => (
+          <span key={w.text} className="small">
+            {w.text}
+          </span>
+        ))}
+        {chasing(g) ? (
+          <span className="small muted keep">Chasing it this season: a few more shots, a little more risk.</span>
+        ) : canChase(g) ? (
+          <button className="btn ghost small" onClick={() => (sfx("clutch"), chase())}>
+            Chase it this season
+          </button>
+        ) : null}
+      </div>
+    </div>
+  );
 }
 
 function FastRecap({ g }: { g: GameState }) {
@@ -620,7 +650,7 @@ function FocusCard({ g }: { g: GameState }) {
 }
 
 /** Everything he can change between seasons, in one place near the top of the screen. */
-type Move = "position" | "number" | "retire" | "trade" | "roster" | "style";
+type Move = "position" | "number" | "retire" | "trade" | "roster" | "style" | "farewell";
 
 function OffseasonMoves({ g }: { g: GameState }) {
   const focusOpen = canChangeFocus(g);
@@ -723,6 +753,14 @@ function OffseasonMoves({ g }: { g: GameState }) {
       state: "ready",
       show: canRetire(g),
     },
+    {
+      // round 32: say the next season is the last, and go out on a tour
+      id: "farewell",
+      label: "Farewell tour",
+      sub: g.flags.farewell ? "Announced: next season is your last" : "Make next season your last",
+      state: canFarewell(g) ? "hot" : "locked",
+      show: g.stage === "NBA" && (canFarewell(g) || !!g.flags.farewell),
+    },
   ];
   return (
     <section className="card stack moves">
@@ -754,6 +792,7 @@ function OffseasonMoves({ g }: { g: GameState }) {
       {open === "position" && canChangePosition(g) && <PositionCard g={g} />}
       {open === "number" && <NumberCard g={g} />}
       {open === "retire" && canRetire(g) && <RetireCard g={g} />}
+      {open === "farewell" && canFarewell(g) && <FarewellCard />}
       {open === "trade" &&
         (canRequestTrade(g) || g.tradeResult?.year === g.year) && (
           <TradeCard g={g} />
@@ -993,6 +1032,25 @@ function StyleCard({ g, onTalk }: { g: GameState; onTalk: (k: TeamStyle) => void
   );
 }
 
+/** Round 32: the farewell tour, said once: the next season is his last. */
+function FarewellCard() {
+  const farewell = useStore((s) => s.farewell);
+  const [armed, setArmed] = useState(false);
+  return (
+    <section className="card stack">
+      <div className="sec-title">Farewell tour</div>
+      <p className="small muted">
+        Tell the world next season is your last. Every arena gets to say goodbye: a lift for your mood
+        and your name now, the team rallying for one last playoff run, a gift from road arenas and a
+        place in your legacy. When it ends, you retire.
+      </p>
+      <button className={`btn ${armed ? "danger" : ""}`} onClick={() => (armed ? (sfx("respect"), farewell()) : setArmed(true))} onBlur={() => setArmed(false)}>
+        {armed ? "Tap again: next season is my last" : "Announce the farewell tour"}
+      </button>
+    </section>
+  );
+}
+
 function RetireCard({ g }: { g: GameState }) {
   const retire = useStore((s) => s.retire);
   const [armed, setArmed] = useState(false);
@@ -1036,6 +1094,7 @@ export function Home({ g }: { g: GameState }) {
           <Todo g={g} />
         </div>
         <PlayerCard g={g} />
+        <CoachCard g={g} />
         <Extra>
           <ScoutCard g={g} compact />
           <section className="card stack">
@@ -1048,6 +1107,15 @@ export function Home({ g }: { g: GameState }) {
         <section className="card stack o-main">
           <SeasonHeader g={g} />
           <UndoBar g={g} />
+          <RecordWatch g={g} />
+          {isFarewellSeason(g) && (
+            <div className="farewell-bar with-icon">
+              <Icon name="gift" size={22} />
+              <span>
+                <b>Farewell tour.</b> Your last season: every arena is saying goodbye, and the team wants one more run for you.
+              </span>
+            </div>
+          )}
           {g.result ? (
             <div
               className={`result-card${g.result.tierKey ? ` tier-${g.result.tierKey}` : ""}`}

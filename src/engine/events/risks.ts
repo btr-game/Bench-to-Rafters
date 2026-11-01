@@ -1,10 +1,11 @@
 // Risks that are not injuries (playtest round 3): burnout, illness, legal trouble, money
 // trouble, academics, locker-room conflict. Plus a few new turning points.
 
-import { ATTR_MAX } from '../balance';
+import { ATTR_MAX, COACH } from '../balance';
 import { chance, clamp, int, range } from '../rng';
 import type { AttrKey, GameState, Stage } from '../types';
-import { adjust } from '../career/common';
+import { adjust, tally } from '../career/common';
+import { TEMPER, changeCoach, coachOf, myTeam, onHotSeat } from '../career/coach';
 import { fmtMoney } from '../economy/salary';
 import type { EventDef } from './defs';
 import { positionOptions, setPosition } from '../career/position';
@@ -281,32 +282,73 @@ export const RISK_EVENTS: EventDef[] = [
     ],
   },
   {
+    // round 32 (owner: "you might want to fix or edit the original coach fired event"): the hot
+    // seat. Only when his team is losing, his coach by name, and a firing really changes the coach
+    // (a new name and face, and in the NBA a new coaching factor). He can back him, stay out of
+    // it, or (a name in the league) tell the front office it is time.
     id: 'coachfired',
     stages: ['NCAA', 'GL', 'EU', 'INT', 'NBA'],
     phase: 'mid',
-    weight: 0.6,
+    when: (s) => onHotSeat(s),
+    weight: 1,
     cooldownSeasons: 3,
-    title: 'Coach fired',
-    text: 'The losing streak cost the head coach his job. The new coach has never seen you play.',
-    choices: [
+    title: 'Hot seat',
+    text: (s) => {
+      const t = myTeam(s);
+      if (!t) return 'The front office is out of patience with the coach.';
+      const c = coachOf(t);
+      return `${t.w}–${t.l}, and the front office is out of patience. ${c.name}’s job is on the line, and the reporters want to know where you stand.`;
+    },
+    choices: (s) => [
       {
-        label: 'Earn it all over again in practice',
-        shownOdds: 0.6,
-        detail: 'Trust resets; you might win him over fast',
+        label: 'Back him in public',
+        detail: 'He might keep his job, and remember who stood up for him',
         resolve: (s, rng) => {
-          s.player.trust = chance(rng, 0.6) ? 62 : 42;
-          return ok(s.player.trust > 50 ? 'He likes what he sees right away.' : 'He has his own guys. You are starting over.', 'Played for a new coach after a mid-season firing.');
+          const t = myTeam(s);
+          if (!t) return ok('By the time it is settled, you have moved on.');
+          const c = coachOf(t);
+          if (chance(rng, COACH.backSave.base + s.player.rep * COACH.backSave.rep)) {
+            s.player.trust = adjust(s.player.trust, COACH.backTrust);
+            morale(s, 2);
+            tally(s, 'hotSaved');
+            return ok(`${c.name} keeps his job. After practice he pulls you aside: he won’t forget it. Coach trust +${COACH.backTrust}.`, `Backed ${c.name} on the hot seat; he kept his job.`);
+          }
+          const now = changeCoach(s, t, COACH.newTrust - 5);
+          return ok(`They fire him anyway. ${now.name} takes over, and he has heard what you said about the last guy. Coach trust ${s.player.trust}.`, `Backed ${c.name} on the hot seat; they fired him anyway.`);
         },
       },
       {
-        label: 'Lean on the veterans for advice',
-        detail: 'Steady, a little less trust',
-        resolve: (s) => {
-          s.player.trust = 50;
-          morale(s, 3);
-          return ok('A clean slate.');
+        label: 'Stay out of it',
+        detail: 'The front office decides',
+        resolve: (s, rng) => {
+          const t = myTeam(s);
+          if (!t) return ok('By the time it is settled, you have moved on.');
+          const c = coachOf(t);
+          if (chance(rng, 0.6)) {
+            const now = changeCoach(s, t);
+            return ok(`${c.name} is fired. ${now.name} (${TEMPER[now.temper].toLowerCase()}) takes over, and coach trust starts over at ${COACH.newTrust}.`, `${c.name} was fired midseason; ${now.name} took over.`);
+          }
+          return ok(`${c.name} survives the week, and the next. For now.`);
         },
       },
+      ...(s.player.rep >= COACH.letGoRep
+        ? [
+            {
+              label: 'Tell them it is time for a change',
+              detail: 'He goes; some of the room liked him',
+              resolve: (s: GameState) => {
+                const t = myTeam(s);
+                if (!t) return ok('By the time it is settled, you have moved on.');
+                const c = coachOf(t);
+                const now = changeCoach(s, t, COACH.newTrust + 5);
+                if (s.season) s.season.teamBonus = Math.round(((s.season.teamBonus ?? 0) - 0.1) * 100) / 100;
+                s.player.rep = adjust(s.player.rep, -1);
+                tally(s, 'hotPushed');
+                return ok(`${c.name} is fired the next morning. ${now.name} takes over, and he knows who has the front office’s ear. Some teammates liked the old coach (chemistry -0.1, reputation -1).`, `Told the front office to fire ${c.name}; ${now.name} took over.`);
+              },
+            },
+          ]
+        : []),
     ],
   },
   {
@@ -416,11 +458,14 @@ export const RISK_EVENTS: EventDef[] = [
     id: 'newborn',
     stages: ADULT,
     phase: 'off',
-    when: (s) => s.player.age >= 23,
+    // round 32: a family comes through the Love storyline now, so this is a second child, a
+    // daughter, a couple of years after the first
+    when: (s) => s.player.age >= 23 && !!s.flags.wed && !!s.flags.child && s.year >= s.flags.child + 2 && !s.flags.gen2,
     weight: 0.5,
     cooldownSeasons: 6,
+    oncePerCareer: true,
     title: 'A new baby',
-    text: 'Your partner is due in the middle of summer workouts.',
+    text: 'Your partner is due again, in the middle of summer workouts.',
     choices: [
       {
         label: 'Take the summer off',

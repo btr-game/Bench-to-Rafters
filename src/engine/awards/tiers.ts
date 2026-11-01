@@ -106,7 +106,8 @@ export function tierCounts(s: GameState): Record<string, number> {
 export function legacyIndex(s: GameState): number {
   const hof = s.stage === 'RETIRED' ? hallOfFame(s) : null;
   const rafters = s.stage === 'RETIRED' ? Math.min(HONOR_PTS.raftersMax, raftersTeams(s).length) : 0;
-  const pts = legacyScore(s) + (hof === 'first' ? HONOR_PTS.firstBallot : hof ? HONOR_PTS.hof : 0) + rafters * HONOR_PTS.rafters;
+  // round 32: a share of his child's legacy (the next generation)
+  const pts = legacyScore(s) + (hof === 'first' ? HONOR_PTS.firstBallot : hof ? HONOR_PTS.hof : 0) + rafters * HONOR_PTS.rafters + (s.kid?.adds ?? 0);
   return Math.round(pts * 10) / 10;
 }
 

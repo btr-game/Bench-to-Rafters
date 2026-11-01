@@ -7,6 +7,7 @@ import { playoffMvps, recordNbaYear } from '../awards/playoffs';
 import { nbaPlayoffs, playRounds } from '../sim/leagueSim';
 import { boardScore, draftOrder, generateClass, mockRange, runDraft, type DraftPickResult, type Prospect } from '../world/draft';
 import { nbaOffseason } from '../world/nbaWorld';
+import { offseasonCoaching } from './coach';
 import { scoutEstimate } from '../player/create';
 import { ovrOf } from '../player/ovr';
 import { DRAFT } from '../balance';
@@ -103,6 +104,7 @@ export function runWorldDraft(s: GameState, user: { cls: Prospect[]; user: UserP
       mockRange: user.mock,
     };
   }
+  offseasonCoaching(s, nba); // round 32: losing teams may fire their coach (before records reset)
   nbaOffseason(s, nba, picks, year);
   if (userPick) return userPick.pick;
   return null;

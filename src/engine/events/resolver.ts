@@ -14,6 +14,7 @@ import { ROUND15_EVENTS } from './round15';
 import { WEIGHT_EVENTS } from './weightEvents';
 import { ROUND21_EVENTS } from './round21';
 import { ROUND25_EVENTS } from './round25';
+import { ROUND32_EVENTS } from './round32';
 import { ripple } from './ripples';
 import { fitOf, needs } from './director';
 import { syncWeight } from '../player/weight';
@@ -21,7 +22,7 @@ import { recordInjury } from '../player/body';
 import { changes, snap, vary } from './outcome';
 import { rollTier, tierFactors, tierLine, TIERS, twists, type Tier } from './twists';
 
-const EVENTS: EventDef[] = [...BASE_EVENTS, ...MORE_EVENTS, ...RISK_EVENTS, ...GROWTH_EVENTS, ...SKILL_EVENTS, ...ARC_EVENTS, ...ROUND9_EVENTS, ...ROUND13_EVENTS, ...ROUND15_EVENTS, ...WEIGHT_EVENTS, ...ROUND21_EVENTS, ...ROUND25_EVENTS];
+const EVENTS: EventDef[] = [...BASE_EVENTS, ...MORE_EVENTS, ...RISK_EVENTS, ...GROWTH_EVENTS, ...SKILL_EVENTS, ...ARC_EVENTS, ...ROUND9_EVENTS, ...ROUND13_EVENTS, ...ROUND15_EVENTS, ...WEIGHT_EVENTS, ...ROUND21_EVENTS, ...ROUND25_EVENTS, ...ROUND32_EVENTS];
 
 function eligible(s: GameState, phase: 'mid' | 'off'): EventDef[] {
   return EVENTS.filter((e) => {
@@ -64,6 +65,15 @@ function pickOne(s: GameState, phase: 'mid' | 'off'): void {
   const fits = list.map((e) => fitOf(s, e, n));
   const i = weightedIndex(s.rng, list.map((e, j) => e.weight * fits[j].mult));
   push(s, list[i], fits[i].reason);
+}
+
+/** The dev deck (round 32): one event in front of the player, whatever its conditions. */
+export function offerEvent(s: GameState, id: string): boolean {
+  const e = EVENTS.find((x) => x.id === id);
+  if (!e) return false;
+  push(s, e);
+  s.pending.unshift(s.pending.pop()!);
+  return true;
 }
 
 export function queueMidseasonEvents(s: GameState): void {

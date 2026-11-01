@@ -19,7 +19,9 @@ import { awardKeyOf, awardPaths } from './Award';
 
 type SceneKind = 'arena' | 'gym' | 'night' | 'home' | 'office' | 'clinic' | 'press' | 'street' | 'locker' | 'draft' | 'title' | 'award' | 'medal' | 'playoffs' | 'cup'
   // round 25: where his staff work, the league's fine letter and a brand's billboard
-  | 'kitchen' | 'club' | 'court' | 'study' | 'film' | 'bedroom' | 'fine' | 'billboard';
+  | 'kitchen' | 'club' | 'court' | 'study' | 'film' | 'bedroom' | 'fine' | 'billboard'
+  // round 32: Love, a garden wedding
+  | 'wedding';
 
 const W = 192;
 const H = 72;
@@ -39,6 +41,9 @@ function sceneFor(title: string, kind?: string): SceneKind {
   if (kind === 'tournament') return /playoff|postseason|so close|march/.test(t) ? 'playoffs' : 'cup';
   if (kind === 'injury' || /ankle|knee|injur|hurt|goes down|wrong with|body choice|surgery|load management|rest night|extend your prime/.test(t)) return 'clinic';
   if (kind === 'camp' || /camp|gym|lab|program|5 a\.m|diet|boxing|footwork|handles|move|trainer|shooting form|corner three|off hand|weak spot|glass|explosive|growth spurt|touch|guru|pick-and-roll|study|film/.test(t)) return 'gym';
+  // round 32: the Love storyline's chapters, and The protégé's summers in the gym
+  if (/^love:|wedding|someone special/.test(t)) return 'wedding';
+  if (/protégé|kid who looks up/.test(t)) return 'gym';
   if (/party|night out|celebrity|beef online|tempt/.test(t)) return 'night';
   if (/family|baby|sibling|homesick|grades|parent|home$/.test(t)) return 'home';
   if (/agent|contract|deal|nil|sneaker|investment|envelope|booster|bet on yourself|traded|trade|superteam|powerhouse|offer/.test(t)) return 'office';
@@ -129,6 +134,35 @@ function paintScene(kind: SceneKind, accent: string): string[][] {
       text(g, 'OPEN', 120, 34, '#3BE3FF');
       rect(g, 0, 56, W, 16, '#1B1C26');
       for (let x2 = 0; x2 < W; x2 += 12) rect(g, x2, 63, 6, 1, '#F5C542');
+      break;
+    }
+    case 'wedding': {
+      // a garden wedding: blue sky, a hedge, a white arch of flowers over him, chairs either side
+      rect(g, 0, 0, W, 50, '#9CD3F5');
+      rect(g, 0, 30, W, 6, '#B5DFF8');
+      for (let x = 0; x < W; x += 12) rect(g, x, 34, 11, 16, '#2F7A3C');
+      for (let x = 4; x < W; x += 12) rect(g, x, 34, 3, 2, '#3D9149');
+      rect(g, 0, 50, W, 22, '#5DAA4A');
+      for (let y = 52; y < H; y += 5) for (let x = (y * 7) % 9; x < W; x += 9) g[y][x] = '#4E9A3D';
+      rect(g, 84, 50, 24, 22, '#F4F1EA');
+      // the arch, a ribbon in the team colour, flowers along it
+      rect(g, 74, 10, 4, 42, '#FFFFFF');
+      rect(g, 114, 10, 4, 42, '#FFFFFF');
+      rect(g, 74, 8, 44, 4, '#FFFFFF');
+      rect(g, 74, 12, 44, 1, accent);
+      const petals = ['#F06595', '#FCC419', '#E03131', '#FFFFFF'];
+      for (let k = 0; k < 22; k++) {
+        const along = k < 6 ? [76 + k * 7, 7] : k < 14 ? [72, 14 + (k - 6) * 5] : [116, 14 + (k - 14) * 5];
+        rect(g, along[0], along[1], 3, 3, petals[k % petals.length]);
+      }
+      // the guests' chairs, white, in rows either side of the aisle
+      for (const y of [54, 61, 68])
+        for (const x of [10, 22, 34, 46, 58, 124, 136, 148, 160, 172]) {
+          rect(g, x, y - 4, 7, 2, '#E6E8EC');
+          rect(g, x, y - 2, 7, 2, '#FFFFFF');
+          rect(g, x, y, 1, 3, '#C9CFDA');
+          rect(g, x + 6, y, 1, 3, '#C9CFDA');
+        }
       break;
     }
     case 'home': {

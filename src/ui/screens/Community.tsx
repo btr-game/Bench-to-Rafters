@@ -22,6 +22,7 @@ import { PixelX } from '../art/PixelX';
 import { CometMark, OathMark } from '../components/OathMark';
 import { sfx } from '../sound';
 import { houseScores, houseStatues } from '../house';
+import { houseEnded, houseOnCourt } from '../houseLive';
 
 const OPENED = Date.now();
 
@@ -48,31 +49,45 @@ const ago = (at: number) => {
   return m < 1 ? 'just now' : m < 60 ? `${m} min ago` : m < 1440 ? `${Math.round(m / 60)} h ago` : `${Math.round(m / 1440)} d ago`;
 };
 
-/** The live strip: who is here now, what just happened, and today's theme. */
-export function LiveStrip() {
+/** The real numbers behind the strip: who is here now and the careers ended since `opened`. */
+export function useRealLive(opened: number): { here: number; since: number; items: FeedItem[] } {
   const c = useCommunity();
-  const [n, setN] = useState(1);
+  const [here, setHere] = useState(1);
   const [items, setItems] = useState<FeedItem[]>([]);
   useEffect(() => {
     if (!c) return;
-    const a = c.presence(setN);
+    const a = c.presence(setHere);
     const b = c.feed(setItems);
     return () => {
       a();
       b();
     };
   }, [c]);
-  const since = items.filter((x) => x.at >= OPENED).length;
+  return { here, since: items.filter((x) => x.at >= opened).length, items };
+}
+
+/** The live strip: who is here now, what just happened, and today's theme. Round 32 (owner): the
+ * numbers carry the house players (ui/houseLive.ts) and say so in the bottom-right corner; the dev deck has the
+ * real ones. */
+export function LiveStrip() {
+  const { here, since, items } = useRealLive(OPENED);
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), 4000);
+    return () => window.clearInterval(id);
+  }, []);
+  const n = here + houseOnCourt(now);
+  const ended = since + houseEnded(OPENED, now);
   return (
-    <section className="live-strip" aria-live="polite">
+    <section className="live-strip">
       <div className="live-nums">
         <Icon name="live" size={40} />
         <div>
-          <b>{n}</b>
-          <small>{n === 1 ? 'player on the court right now' : 'players on the court right now'}</small>
+          <b>{n.toLocaleString('en-US')}</b>
+          <small>players on the court right now</small>
         </div>
         <div>
-          <b>{since}</b>
+          <b>{ended.toLocaleString('en-US')}</b>
           <small>careers ended since you opened this page</small>
         </div>
       </div>
@@ -80,12 +95,13 @@ export function LiveStrip() {
         <span className="live-chip">Today’s theme</span> <b>{theme()}</b> <span className="muted">· the daily challenge’s prospect</span>
       </div>
       {items[0] && (
-        <div className="live-feed">
+        <div className="live-feed" aria-live="polite">
           <i className="live-dot" />
           <span>{items[0].t}</span>
           <small>{ago(items[0].at)}</small>
         </div>
       )}
+      <small className="live-house">House players included</small>
     </section>
   );
 }

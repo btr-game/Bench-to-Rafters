@@ -7,6 +7,7 @@ import type { GameState } from '../../engine/types';
 import { prompt } from '../../engine/flow';
 import { canUndo, useStore, type Court, type Tab, type TextSize, type Theme } from '../../store';
 import { setMusic, setSfx, setVolume, sfx, soundSettings } from '../sound';
+import { announce, announcerOn, setAnnouncer } from '../announcer';
 
 /** A switch row: label, short note, on/off button. */
 /** Round 31 (owner: "volume sliders"): a channel's level, under its switch; arrow keys step it by 5%. */
@@ -20,8 +21,8 @@ function Volume({ label, value, onChange, disabled }: { label: string; value: nu
   );
 }
 
-function Toggle({ label, note, on, onClick, tour, locked }: { label: string; note: string; on: boolean; onClick: () => void; tour: string; locked?: boolean }) {
-  const icon = /fast/i.test(label) ? 'fast' : /simple/i.test(label) ? 'simple' : /guide/i.test(label) ? 'guide' : /master/i.test(label) ? 'master' : /playoff/i.test(label) ? 'bracket' : /sound|music/i.test(label) ? 'live' : '';
+function Toggle({ label, note, on, onClick, tour, locked, why = 'Locked for this career’s challenge' }: { label: string; note: string; on: boolean; onClick: () => void; tour: string; locked?: boolean; why?: string }) {
+  const icon = /fast/i.test(label) ? 'fast' : /simple/i.test(label) ? 'simple' : /guide/i.test(label) ? 'guide' : /master/i.test(label) ? 'master' : /playoff/i.test(label) ? 'bracket' : /announcer/i.test(label) ? 'mic' : /sound|music/i.test(label) ? 'live' : '';
   return (
     <div className="set-row" data-tour={tour}>
       <Icon name={icon} size={26} />
@@ -29,7 +30,7 @@ function Toggle({ label, note, on, onClick, tour, locked }: { label: string; not
         <b>{label}</b>
         <small>{note}</small>
       </div>
-      <button className={`switch${on ? ' on' : ''}`} role="switch" aria-checked={on} aria-label={label} onClick={onClick} disabled={locked} title={locked ? 'Locked for this career’s challenge' : undefined}>
+      <button className={`switch${on ? ' on' : ''}`} role="switch" aria-checked={on} aria-label={label} onClick={onClick} disabled={locked} title={locked ? why : undefined}>
         <span />
       </button>
     </div>
@@ -49,6 +50,7 @@ export function SettingsMenu({ g }: { g: GameState | null }) {
   const [open, setOpen] = useState(false);
   const [armed, setArmed] = useState(false);
   const [snd, setSnd] = useState(soundSettings);
+  const [voiceOn, setVoiceOn] = useState(announcerOn);
   const box = useRef<HTMLDivElement>(null);
   const theme = useStore((s) => s.theme);
   const setTheme = useStore((s) => s.setTheme);
@@ -167,6 +169,8 @@ export function SettingsMenu({ g }: { g: GameState | null }) {
           )}
           <Toggle label="Sound effects" note="Chiptune sounds for clicks, wins, titles and the rest." on={snd.sfx} onClick={() => (setSfx(!snd.sfx), setSnd(soundSettings()))} tour="set-sfx" />
           <Volume label="Effects" value={snd.sfxVol} disabled={!snd.sfx} onChange={(v) => (setVolume('sfx', v), setSnd(soundSettings()))} />
+          {/* round 32: the booming voice for the big plays (with the effects, at their volume) */}
+          <Toggle label="Announcer" note="A booming voice for the big plays: blocks, dunks, threes, buzzer beaters, titles." on={voiceOn && snd.sfx} locked={!snd.sfx} why="On with the sound effects" onClick={() => (setAnnouncer(!voiceOn), setVoiceOn(!voiceOn), !voiceOn && announce('Let’s go!'))} tour="set-announcer" />
           <Toggle label="Music" note="A loop for each part of the game: every level and league, the offseason, the mini-games." on={snd.music} onClick={() => (setMusic(!snd.music), setSnd(soundSettings()))} tour="set-music" />
           <Volume label="Music" value={snd.musicVol} disabled={!snd.music} onChange={(v) => (setVolume('music', v), setSnd(soundSettings()))} />
           <Toggle label="Simple text" note="Hide descriptions, keep the choices." on={simple} onClick={toggleSimple} tour="set-simple" />

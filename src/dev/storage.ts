@@ -9,7 +9,7 @@ import { isDev } from './mode';
 
 const PREFIX = 'btr-dev:';
 /** Keys the deck shares with the game, never prefixed. */
-const SHARED = new Set(['btr-theme', 'btr-court', 'btr-text', 'btr-sfx-vol', 'btr-music-vol']);
+const SHARED = new Set(['btr-theme', 'btr-court', 'btr-text', 'btr-sfx-vol', 'btr-music-vol', 'btr-announcer']);
 const own = (k: string) => (!isDev() || SHARED.has(k) || k.startsWith(PREFIX) ? k : PREFIX + k);
 const realGet = typeof Storage === 'undefined' ? null : Storage.prototype.getItem;
 const realSet = typeof Storage === 'undefined' ? null : Storage.prototype.setItem;

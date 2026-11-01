@@ -9,6 +9,7 @@
 
 import { chooseLook } from '../content/looks';
 import type { CareerRecord } from '../engine/career/record';
+import type { ChildLegacy } from '../engine/types';
 
 const KEY = 'btr-log-v1';
 export const LOG_MAX = 10;
@@ -97,4 +98,14 @@ export function deleteCard(id: string): void {
   if (d.locked.includes(id)) return;
   d.cards = d.cards.filter((c) => c.id !== id);
   save(d);
+}
+
+/** Round 32: his child's career on his card, with its share of legacy points (once; false if the card is gone). */
+export function attachChild(recId: string, child: ChildLegacy): boolean {
+  const d = load();
+  const c = d.cards.find((x) => x.id === recId);
+  if (!c || c.child) return false;
+  c.child = child;
+  c.legacy = Math.round((c.legacy + child.adds) * 10) / 10;
+  return save(d);
 }

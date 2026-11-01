@@ -21,6 +21,7 @@ import { LegendarySeasons } from '../components/Legendary';
 import { CareerTimeline } from '../components/Timeline';
 import { DailyResult } from '../mini/Daily';
 import { BannerArt } from '../art/Trophy';
+import { ChildEnd, NextGen } from '../components/NextGen';
 
 function CareerAnalysis({ g }: { g: GameState }) {
   const c = compareCareer(g);
@@ -202,17 +203,19 @@ export function Retirement({ g }: { g: GameState }) {
             </span>
           </div>
         ) : null}
-        <LoggedNote />
+        {/* round 32: a son's career has no card of its own: it goes onto his father's */}
+        {g.flags.gen2 ? <ChildEnd g={g} /> : <LoggedNote />}
         {hof && <div className="toast">{hof === 'first' ? 'Inducted into the Hall of Fame on the first ballot.' : 'Inducted into the Hall of Fame.'}</div>}
         <div className="row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-          <CardActions rec={rec} />
+          {!g.flags.gen2 && <CardActions rec={rec} />}
           <button className="btn ghost" data-tour="retire-new" onClick={reset}>
             {UI.newCareer}
           </button>
         </div>
       </section>
       {/* round 28: what the career means for the community, as a card of its own right under the verdict */}
-      {!g.flags.daily && g.mode !== 'lab' && <CommunityNote rec={rec} />}
+      {!g.flags.daily && !g.flags.gen2 && g.mode !== 'lab' && <CommunityNote rec={rec} />}
+      <NextGen g={g} />
       <NbaTeams g={g} />
       <RaftersSummary
         g={g}
@@ -271,7 +274,7 @@ export function Retirement({ g }: { g: GameState }) {
           <ReactionCard r={g.feed[0]} />
         </Card>
       )}
-      <CareerTimeline g={g} />
+      <CareerTimeline g={g} journal />
       <Card title="Season by season">
         <HistoryTable rows={g.history} />
       </Card>

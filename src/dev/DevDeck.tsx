@@ -21,6 +21,7 @@ import { todayKey } from '../engine/mini/daily';
 import { Catalog } from './Catalog';
 import { Inbox } from './Inbox';
 import { MusicBoard, SoundBoard } from './SoundBoard';
+import { useRealLive } from '../ui/screens/Community';
 import './dev.css';
 
 const groupOf = (g: Group) => GROUPS.find((x) => x.key === g)!;
@@ -83,6 +84,23 @@ function press(sel: string): void {
  * (round 27, owner: "when i go into dev deck and reset, can you activate the guide automatically"). */
 function resetGame(): boolean {
   return writeReal(ACH_KEY, JSON.stringify(emptyAch(todayKey()))) && writeReal('btr-guide-mode', '1') && writeReal('btr-tour-seen', '[]');
+}
+
+const DECK_OPENED = Date.now();
+
+/** Round 32 (owner: "to track the real amount of people, put the real values in the dev deck so
+ * that only the devs can see it"): the live strip's numbers without the house players. */
+function RealLive() {
+  const { here, since, items } = useRealLive(DECK_OPENED);
+  const day = items.filter((x) => x.at >= Date.now() - 86_400_000).length;
+  return (
+    <p className="dk-real small" aria-label="Real live numbers">
+      <Icon name="live" size={20} />
+      <span>
+        Real numbers (the strip players see adds the house players): <b>{here}</b> on the court right now · <b>{since}</b> {since === 1 ? 'career' : 'careers'} ended since this deck opened · <b>{day}</b> in the last 24 hours (the feed keeps the latest 30).
+      </span>
+    </p>
+  );
 }
 
 function ResetAch() {
@@ -237,6 +255,7 @@ export function DevDeck() {
           <p className="prose">
             Every function in the game, one card each ({CARDS.length} in all): open one and the game itself takes over with that function on screen, everything unlocked (cards that need a career play one first, so a few take a second or two). The Catalog shows everything the game draws from, Sounds plays every sound, and the project summary and the feedback Inbox are here too.
           </p>
+          <RealLive />
         </div>
         <div className="dk-tools">
           <div className="seg dk-sections">

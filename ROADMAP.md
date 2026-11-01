@@ -79,3 +79,62 @@ Ideas the owner has asked to keep for later. Not started unless marked.
   that thanks people and writes the career card's epilogue.
 - The undo could keep more than one step, for players who want to walk back a whole summer.
 - Compare could take a card from the community boards, not just the log.
+
+## Kept for later (round 32)
+
+- **Next generation**: built this round (the son's career at Comet speed, a share of his legacy on
+  his father's card). A son played by hand (not as a Comet), and media pressure from the famous
+  surname, are left for later.
+- **The coach**: lines in the team style talk that change with his temperament; coaches at high
+  school and college with faces of their own (offered this round and not picked); assistant coaches
+  in the locker room.
+- **The sim's best shooting nights**: the league record for threes in a game (14) fell in 6 of 30
+  test careers. A rarer tail for threes in a game would make the record watch and the record
+  achievements mean more; the owner decides.
+- The locker room could remember: a hothead you calmed twice, a rookie you mentored all season,
+  as relationships that carry over between seasons.
+
+## Round 33 (planned): three levels before the full game
+
+Owner, after round 32: "from now on, the users have to play three levels to access the full game
+(main homepage)". Beginner, then intermediate, then advanced; the full start page (every
+difficulty, the challenges, the mini-games, the career log, the book, the community) opens only
+after the third.
+
+**Everyone** (owner: "every device from now on have to do it, since there were users who already
+accessed the game but didnt properly play it"): devices that played before go through the levels
+too; their saves, log and achievements stay on the device and are there when the full game opens.
+
+**The way out**: an escape code beside the Developer door, for anyone who should skip the levels
+(owner's code; like the dev password, only a hash of it in the shipped code, and scripts take it
+from an environment variable). The Developer door and the feedback channel stay on every page,
+in the levels too.
+
+**The levels count nowhere in the community**: no boards, no feed, no live count of careers ended,
+no statue or hall.
+
+**Beginner** (decided):
+- After the intro, the beginner career starts: no start page, no difficulty choice.
+- The player picks a name, number, position and appearance; the rest is set (an archetype for the
+  position, two focus ratings, USA).
+- A difficulty a little easier than Regular guy, not as easy as Shoot for the stars; potential
+  high enough that every beginner reaches the NBA.
+- One high school season, one college season, draft night, then several NBA seasons (as many as
+  fit in 5 to 10 minutes), then a graduation page.
+- One plan a season (not a half), from six: Balanced, Grind, Shooting lab, Weight room, Film and
+  reads, Lockdown.
+- One hand-picked turning point a season, each teaching one thing (the risk tag, morale, coach
+  trust, fame).
+- The shop, cut down: three items a summer, one purchase.
+- One playable last shot in his first NBA playoffs (the timing meter); the rest is simulated.
+- Left out: staff, brands, press, nickname, rival, duos, team style, trades, the locker room, the
+  coach's role talk, the farewell tour, the record watch, Love, mini-games, the Extras tab,
+  community, Fast break, Sim and Master mode. Tabs: Home and Player. Settings: theme, sound, music,
+  text size.
+- No quitting: no New career, no Back to start, no Retire before the graduation page; a reload
+  goes back into it.
+- The graduation page leads to the levels page (intermediate and advanced), not the full start
+  page.
+
+**Intermediate and advanced**: being discussed with the owner (advanced "very similar to regular
+mode").

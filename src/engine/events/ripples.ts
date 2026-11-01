@@ -198,14 +198,12 @@ export const RIPPLES: Record<string, Record<string, Ripple>> = {
     },
   },
   coachfired: {
-    'Earn it all over again in practice': (s) => {
-      wear(s, 2);
-      bump(s, 'IQ', 0.4);
-    },
-    'Lean on the veterans for advice': (s) => {
-      chem(s, 0.4);
-      bump(s, 'IQ', 0.3);
+    'Back him in public': (s) => {
+      chem(s, 0.2);
       return closer(s, 3).trim() || undefined;
+    },
+    'Stay out of it': (s) => {
+      bump(s, 'IQ', 0.3);
     },
   },
   psychologist: {
