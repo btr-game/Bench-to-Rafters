@@ -26,6 +26,8 @@ export interface Road {
   toured?: 1;
   /** The look of the last level's player, for the car on the map. */
   look?: ChosenLook;
+  /** The tutorial guide's lessons done (tutorial/lessons.ts). */
+  lessons?: string[];
 }
 
 const KEY = 'btr-road-v1';
@@ -118,6 +120,9 @@ export const ROAD_NEED: Record<RoadMini, string> = {
   rhythm: 'half the plays on time',
   office: 'make the playoffs once',
 };
+
+/** A career kept nowhere: a level, or a closing-tour stop (no save slot, log, community or achievements). */
+export const offRecord = (g: GameState): boolean => !!(g.flags.level || g.flags.tour);
 
 /** All three levels are passed. */
 export const levelsDone = (r: Road): boolean => LEVEL_IDS.every((l) => !!r.passed[l]);

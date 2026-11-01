@@ -2614,3 +2614,14 @@ input[type='range'] { width: 100%; min-height: 32px; accent-color: var(--accent)
 .diploma-code small { font-size: calc(13px * var(--ts)); color: #5A4229; max-width: 34ch; }
 .mode-card.recommended { box-shadow: 0 0 0 3px var(--accent); }
 .mode-card.recommended .tag { margin-left: 6px; }
+/* the tutorial guide: the page shaded around one control, which alone responds */
+.lesson-layer { position: fixed; inset: 0; z-index: 1200; pointer-events: none; }
+.lesson-shade { position: fixed; background: rgba(12, 14, 22, 0.58); pointer-events: auto; }
+.lesson-shade.clear { background: transparent; }
+.lesson-ring { z-index: 1201; }
+.lesson-tip { z-index: 1202; pointer-events: auto; }
+.lesson-turn { font-weight: 700; color: var(--accent); }
+.lesson-exit { gap: 6px; flex-wrap: wrap; }
+.lesson-exit input { width: 9em; min-width: 0; }
+/* the closing tour's bar */
+.tour-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; border-left: 4px solid var(--accent); margin-bottom: 12px; }

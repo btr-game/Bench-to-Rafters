@@ -29,6 +29,7 @@ import { recordHeard } from './achievements';
 import { trackOf } from './tracks';
 import { inTutorial, levelTabs, nextLevel, roadDone } from './road';
 import { Graduation } from './screens/Graduation';
+import { STOPS } from './tutorial/closing';
 import { LEVEL_NAME, levelOf } from '../engine/levels';
 import { RoadMap } from './screens/RoadMap';
 import { LevelEnd } from './screens/LevelEnd';
@@ -68,6 +69,38 @@ function TabBar({ g, top = false }: { g: GameState; top?: boolean }) {
         );
       })}
     </nav>
+  );
+}
+
+/** Round 33: the closing tour's bar: the stop on screen, and on to the next once its lessons are done. */
+function TourBar() {
+  const closing = useStore((s) => s.closing);
+  const up = useStore((s) => s.lessonUp);
+  const nextStop = useStore((s) => s.nextStop);
+  // a moment for the stop's first lesson to show before Next stop can be pressed
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    setReady(false);
+    const t = setTimeout(() => setReady(true), 1500);
+    return () => clearTimeout(t);
+  }, [closing?.i]);
+  if (!closing) return null;
+  const stop = STOPS.find((x) => x.id === closing.ids[closing.i]);
+  const last = closing.i >= closing.ids.length - 1;
+  return (
+    <div className="card tour-bar" data-tour="tour-bar">
+      <Icon name="map" size={28} />
+      <div style={{ minWidth: 0 }}>
+        <div className="kicker">
+          Closing tour · stop {closing.i + 1} of {closing.ids.length}
+        </div>
+        <b>{stop?.title}</b>
+      </div>
+      <div className="spacer" />
+      <button className="btn" disabled={up || !ready} onClick={nextStop}>
+        {last ? 'Finish the tour' : 'Next stop'}
+      </button>
+    </div>
   );
 }
 
@@ -245,6 +278,7 @@ export function App() {
           </div>
         </header>
         {game.flags.daily ? <DailyStrip g={game} /> : null}
+        {game.flags.tour ? <TourBar /> : null}
         <TabView key={tab} fast={fast}>
           {tab === 'home' && (retired ? game.flags.level ? <LevelEnd g={game} /> : <Retirement g={game} /> : <Home g={game} />)}
           {tab === 'season' && <SeasonTab g={game} />}

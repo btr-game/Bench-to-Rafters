@@ -236,3 +236,39 @@ describe('the island', () => {
     expect(roadDone({ passed, minis: { ...all, dunk: 'D' }, toured: 1 })).toBe(false);
   });
 });
+
+describe('the tutorial guide', () => {
+  it('has one lesson per id, chains that point at real lessons, and every closing-tour lesson in a stop', async () => {
+    const { LESSONS } = await import('../src/ui/tutorial/lessons');
+    const { STOPS } = await import('../src/ui/tutorial/closing');
+    const ids = LESSONS.map((l) => l.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    for (const l of LESSONS) {
+      if (l.after) expect(ids, `${l.id} waits for ${l.after}`).toContain(l.after);
+      expect(l.sel.length).toBeGreaterThan(0);
+      expect(l.text.length).toBeGreaterThan(5);
+    }
+    const inStops = new Set(STOPS.flatMap((s) => s.lessons));
+    for (const id of inStops) expect(ids, `stop lesson ${id}`).toContain(id);
+    for (const l of LESSONS.filter((x) => x.at === 'tour')) expect(inStops.has(l.id), `${l.id} has a stop`).toBe(true);
+    expect(new Set(STOPS.map((s) => s.id)).size).toBe(STOPS.length);
+  });
+
+  it('never leaves out the achievements, the career log or the community by accident: none of them is taught', async () => {
+    const { LESSONS } = await import('../src/ui/tutorial/lessons');
+    for (const l of LESSONS) expect(l.sel, l.id).not.toMatch(/data-tour="(ach|log|community|log-lock|log-pick|comm-tabs)"/);
+  });
+
+  it('stages its stops on real careers, kept nowhere', async () => {
+    const { STOPS, stopsLeft } = await import('../src/ui/tutorial/closing');
+    for (const id of ['prime', 'press', 'farewell', 'duo', 'player']) {
+      const g = STOPS.find((s) => s.id === id)!.build();
+      expect(g, id).toBeTruthy();
+      expect(g!.flags.level).toBeFalsy();
+      await breathe();
+    }
+    const all = STOPS.flatMap((s) => s.lessons);
+    expect(stopsLeft(all)).toHaveLength(0);
+    expect(stopsLeft([]).length).toBe(STOPS.length);
+  });
+});

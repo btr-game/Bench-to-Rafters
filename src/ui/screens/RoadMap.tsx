@@ -11,7 +11,7 @@ import { SKIN_COLORS, HAIR_COLORS } from '../art/Player';
 import { LEVEL_IDS, LEVEL_NAME, type Level } from '../../engine/levels';
 import { LEVEL_COPY, LEVEL_GOAL } from '../../content/roadmap';
 import { ROADMAP } from '../../engine/balance';
-import { ROAD_MINIS, ROAD_NEED, inTutorial, levelOpen, nextLevel, passGrade, type Road, type RoadMini } from '../road';
+import { ROAD_MINIS, ROAD_NEED, inTutorial, levelOpen, levelsDone, nextLevel, passGrade, type Road, type RoadMini } from '../road';
 import { LevelAdds } from '../components/LevelAdds';
 import { Roll, Tick } from '../components/Scroll';
 import { SettingsMenu } from '../components/Settings';
@@ -358,6 +358,43 @@ function IslandStop({ road, onSail }: { road: Road; onSail: () => void }) {
   );
 }
 
+/** The last stop: the closing tour, once advanced is passed. */
+function TourStop({ road }: { road: Road }) {
+  const start = useStore((s) => s.startClosing);
+  const open = levelsDone(road);
+  return (
+    <section className={`card stack road-stop${open && !road.toured ? ' next' : ''}${open ? '' : ' locked'}`} data-tour={open && !road.toured ? 'tour-stop' : undefined}>
+      <div className="row road-stop-head">
+        <Icon name="stars" size={40} />
+        <div style={{ minWidth: 0 }}>
+          <div className="kicker">The last stop</div>
+          <div className="sec-title">The closing tour</div>
+        </div>
+        <div className="spacer" />
+        {road.toured ? (
+          <span className="tag good with-icon">
+            <Icon name="checklist" size={18} />
+            Done
+          </span>
+        ) : !open ? (
+          <span className="tag with-icon">
+            <Icon name="lock" size={18} />
+            Locked
+          </span>
+        ) : null}
+      </div>
+      <p className="small">{open ? 'A star’s career, already under way: the rest of the game, stop by stop. About ten minutes.' : 'Opens after advanced.'}</p>
+      {open && !road.toured && (
+        <div className="row-end">
+          <button className="btn" onClick={() => (sfx('confirm'), start())}>
+            Start the closing tour
+          </button>
+        </div>
+      )}
+    </section>
+  );
+}
+
 /** The start page's Levels card, once the full game is open: the road map, to play a level again. */
 export function LevelsCard() {
   const setPage = useStore((s) => s.setPage);
@@ -411,6 +448,7 @@ export function RoadMap() {
           <LevelStop key={l} level={l} road={road} />
         ))}
         <IslandStop road={road} onSail={() => (sfx('page'), setSailing(true))} />
+        <TourStop road={road} />
       </div>
       <FootBar where="road map" />
     </div>
