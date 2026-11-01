@@ -36,7 +36,7 @@ import { LEVEL_COPY, LEVEL_GOAL } from '../../content/roadmap';
 import { ROADMAP } from '../../engine/balance';
 import { FootBar } from '../components/FootBar';
 import { LevelAdds } from '../components/LevelAdds';
-import { LevelsCard, PlaceArt } from './RoadMap';
+import { PlaceArt } from './RoadMap';
 
 const pick = <T,>(a: readonly T[]): T => a[Math.floor(Math.random() * a.length)];
 const uiRng = makeRng(Math.floor(Math.random() * 2 ** 31));
@@ -135,6 +135,7 @@ export function Create({ level }: { level?: Level } = {}) {
   const start = useStore((s) => s.start);
   const showIntro = useStore((s) => s.showIntro);
   const setCreating = useStore((s) => s.setCreating);
+  const setPage = useStore((s) => s.setPage);
   // round 33: right after graduation, a Regular guy career is suggested (owner: "highly suggested, but not necessary")
   const recommend = useStore((s) => s.recommend);
   const [step, setStep] = useState(0);
@@ -336,6 +337,22 @@ export function Create({ level }: { level?: Level } = {}) {
               </button>
             ))}
           </div>
+          {/* round 34 (owner: "put the levels (tutorial) card on the main page as a pop out challenge for
+              regular"): Regular guy's own challenge is the road map, every level to play again */}
+          {mode === 'standard' && !level && (
+            <div className="card oath-card levels-card" role="group" aria-label="The road map">
+              <PlaceArt place="advanced" size={96} />
+              <div className="stack" style={{ gap: 6 }}>
+                <div className="sec-title">Back on the road map?</div>
+                <p className="small muted">The tutorial’s three levels, beginner, intermediate and advanced: short careers at fast break’s pace with one goal, an NBA All-Star team. Play any of them again; they count nowhere (no save, career log, achievements or leaderboards).</p>
+                <div className="row" style={{ gap: 8 }}>
+                  <button className="btn small ghost" data-tour="levels-card" onClick={() => (sfx('page'), setPage('road'))}>
+                    Open the road map
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
           {/* round 25 (owner): Reality, played the hardest way, asks once and is honoured for it */}
           {mode === 'reality' && (
             <div className={`card oath-card${oath ? ' on' : ''}`} role="group" aria-label="The Rough Road challenge">
@@ -376,7 +393,6 @@ export function Create({ level }: { level?: Level } = {}) {
           )}
           <p className="muted small">The league is the same at every difficulty. What changes is your potential, how fast you grow and how often you get hurt. Want it quicker? Flip the Fast break switch inside the game, any time.</p>
           <div className="start-cards">
-            <LevelsCard />
             <MiniGamesCard />
             <CareerLogCard />
             <AchievementsCard />

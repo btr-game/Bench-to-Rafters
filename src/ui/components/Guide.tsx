@@ -36,14 +36,14 @@ const SECTIONS: { title: string; where: string; items: [string, string[]][] }[] 
   },
   {
     title: 'The road map',
-    where: 'The tutorial, then the Levels card on the start page',
+    where: 'The tutorial, then Regular guy’s card on the start page',
     items: [
       ['Three levels', ['Every device starts on the road map: beginner (high school), intermediate (college), advanced (the NBA arena).', 'Each is a short career at fast break’s pace with one goal: an NBA All-Star team, in 5, 6 and then 7 NBA seasons.', 'Each level opens more of the game, shown as icons on its start page. Goal or not, the level is passed.']],
       ['Lessons', ['The tutorial guide shades the page but for one control and says what it does: Got it (Enter or Space) to read on, or use the control.', 'One lesson at a time, none skipped.']],
       ['The island', ['Every mini-game once, with a C or better in each: the mark to beat is on its card. Any time between levels.']],
       ['The closing tour', ['After the levels: a star’s career, stop by stop, for everything no level has (the locker room, duos, the press, love, the farewell tour and more).', 'Next stop goes on once a stop’s lessons are done.']],
       ['Graduation', ['The diploma shows the exit code, and the full game opens on this device for good.', 'Skip tutorial, beside Share at the top of every tutorial page, takes the code: for another device, or anyone who has played before.']],
-      ['Levels card', ['In the full game, the Levels card on the start page brings the road map back: play any level again.', 'Level careers count nowhere: no save slot, career log, achievements or leaderboards.']],
+      ['Back on the road map', ['In the full game, picking Regular guy on the start page pops out a card for the road map: play any level again.', 'Level careers count nowhere: no save slot, career log, achievements or leaderboards.']],
     ],
   },
   {
@@ -174,7 +174,7 @@ const QUICK: [string, string][] = [
   ['4', 'Raise ratings to unlock mini-games (on the Extras tab).'],
   ['5', 'Want it quicker? Fast break or Sim, on How you play; or a five-minute Comet career with Shoot for the stars.'],
   ['6', 'Changed your mind? Undo (U) takes back the last choice.'],
-  ['7', 'Want the basics again? The Levels card replays the road map.'],
+  ['7', 'Want the basics again? Pick Regular guy: its card opens the road map.'],
 ];
 
 const SEEN = 'btr-guide-seen';

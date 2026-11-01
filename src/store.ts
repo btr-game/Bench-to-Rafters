@@ -465,7 +465,7 @@ export const useStore = create<Store>((set, get) => ({
   creating: null,
   setCreating: (creating) =>
     later(() => {
-      // back from a level's start page: the road map (from the start page's Levels card, once the
+      // back from a level's start page: the road map (from Regular guy's card on the start page, once the
       // full game is open; the tutorial shows it anyway)
       set({ creating, page: creating ? null : get().road.free ? 'road' : null });
       top();

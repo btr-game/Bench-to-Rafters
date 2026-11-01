@@ -306,7 +306,7 @@ export function trackOf(s: { game: GameState | null; thanks: unknown; intro: boo
   if (s.thanks && !g) return 'thanks';
   if (s.intro && !g) return 'intro';
   if (s.mini) return s.mini === 'rhythm' ? null : s.mini === 'hub' || s.mini === 'daily' ? 'hub' : s.mini in TRACKS ? (s.mini as TrackId) : 'hub';
-  // round 33: the road map (in the tutorial, or opened from the start page's Levels card)
+  // round 33: the road map (in the tutorial, or opened from the start page: Regular guy's card)
   if (!g && !s.creating && (s.page === 'road' || (s.road && inTutorial(s.road) && nextLevel(s.road) !== 'beginner'))) return 'road';
   if (!g) return 'start';
   if (g.step === 'retired') return g.flags.level && g.flags.levelEnd !== 2 ? 'sad' : 'retired';

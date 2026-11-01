@@ -427,23 +427,6 @@ function TourStop({ road }: { road: Road }) {
   );
 }
 
-/** The start page's Levels card, once the full game is open: the road map, to play a level again. */
-export function LevelsCard() {
-  const setPage = useStore((s) => s.setPage);
-  return (
-    <section className="card stack">
-      <div className="sec-title with-icon">
-        <Icon name="map" size={28} />
-        Levels
-      </div>
-      <p className="small muted">The road map: beginner, intermediate and advanced. Play any of them again; they count nowhere.</p>
-      <button className="btn ghost" data-tour="levels-card" onClick={() => setPage('road')}>
-        Open the road map
-      </button>
-    </section>
-  );
-}
-
 /** Where the road map opens: the next level, else the island or the closing tour still to do. */
 function firstPlace(road: Road): number {
   const next = nextLevel(road);
