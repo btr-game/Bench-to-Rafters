@@ -45,7 +45,7 @@ export function AchToasts() {
 }
 
 /** What one career earned (round 28), newest first. */
-function earnedIn(g: GameState): { id: string; name: string; tier: AchTier }[] {
+export function earnedIn(g: GameState): { id: string; name: string; tier: AchTier }[] {
   const run = runOf(g);
   const got = loadAch().got;
   return ACHIEVEMENTS.filter((a) => got[a.id]?.run === run)
@@ -53,7 +53,8 @@ function earnedIn(g: GameState): { id: string; name: string; tier: AchTier }[] {
     .map((a) => ({ id: a.id, name: a.name, tier: a.tier }));
 }
 
-/** The entry on the start page, and on the Records tab of a career (with what that career earned). */
+/** The entry on the start page, and on the Extras tab of a career (with what that career earned; on
+ * the Records tab and a top-bar button in round 28). */
 export function AchievementsCard({ g }: { g?: GameState }) {
   const setPage = useStore((s) => s.setPage);
   const [got] = useState(() => Object.keys(loadAch().got).length);
@@ -91,20 +92,6 @@ export function AchievementsCard({ g }: { g?: GameState }) {
 }
 
 type Filter = 'all' | 'run' | 'got' | 'open' | 'arcade' | 'minicareer' | AchTier;
-
-/** The book from the top bar of a career (round 28, owner: "make the achievement book able to access
- * in-game as well"): a badge and the count this career has earned. */
-export function AchButton({ g }: { g: GameState }) {
-  const setPage = useStore((s) => s.setPage);
-  const n = useMemo(() => earnedIn(g).length, [g]);
-  return (
-    <button className="icon-btn ach-btn" data-tour="ach-btn" aria-label={`Achievement book: ${n} earned this career`} title="Achievement book" onClick={() => setPage('achievements')}>
-      <Badge tier="starter" size={18} />
-      <span className="share-word">Achievements</span>
-      {n > 0 && <span className="ach-btn-n">{n}</span>}
-    </button>
-  );
-}
 
 // round 27: the mini-game achievements, in the arcade and in a career (engine/achievementsMini.ts)
 const ARCADE = new Set(MINI_TOTALS_ONLY);

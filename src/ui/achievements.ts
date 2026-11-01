@@ -85,6 +85,22 @@ export function recordShare(): void {
   saveAch(d);
 }
 
+/** Round 29: cards locked in the career log right now (the most at once is kept). */
+export function recordLocks(n: number): void {
+  const d = loadAch();
+  d.totals.locked = Math.max(d.totals.locked ?? 0, n);
+  saveAch(d);
+}
+
+/** Round 29: a music loop was heard; true the first time. */
+export function recordHeard(id: string): boolean {
+  const d = loadAch();
+  if (d.totals.heard?.includes(id)) return false;
+  d.totals.heard = [...(d.totals.heard ?? []), id];
+  saveAch(d);
+  return true;
+}
+
 /** Checks everything against the career on screen; returns what is new (and keeps it). */
 export function checkAch(g: GameState | null): Achievement[] {
   const d = loadAch();

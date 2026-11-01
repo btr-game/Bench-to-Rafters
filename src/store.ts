@@ -27,7 +27,7 @@ import { NEWS } from './content/whatsNew';
 import { tabNews, type Spot } from './ui/tabNews';
 import type { AchTier } from './engine/achievements';
 
-export type Tab = 'home' | 'season' | 'player' | 'league' | 'records';
+export type Tab = 'home' | 'season' | 'player' | 'records' | 'extras';
 export type Theme = 'auto' | 'light' | 'dark';
 /** The page background: plain, a hardwood floor or streetball asphalt (round 17). */
 export type Court = 'classic' | 'hardwood' | 'street';
@@ -128,8 +128,8 @@ interface Store {
 const allSeen = (g: GameState): Partial<Record<Tab, string>> => ({
   season: tabKey(g, 'season'),
   player: tabKey(g, 'player'),
-  league: tabKey(g, 'league'),
   records: tabKey(g, 'records'),
+  extras: tabKey(g, 'extras'),
 });
 
 const loadFlag = (key: string): boolean => {

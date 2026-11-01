@@ -55,3 +55,10 @@ Ideas the owner has asked to keep for later. Not started unless marked.
   playable postseason).
 - Events about the round's systems: a coach who will not change the style, a teammate who asks to
   be traded away from the Big Three.
+
+## Kept for later (round 29)
+
+- Music: a loop of its own for each overseas league (the NBL, the CBA, the KBL...), which share
+  Passport now; a short sting when the loop changes between screens.
+- The Extras tab could carry a career's own leaderboard standing (where it would rank if it ended
+  today).

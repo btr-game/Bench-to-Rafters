@@ -54,8 +54,12 @@ function inspect([phone, W]) {
   const modal = [...document.querySelectorAll('[aria-modal="true"], .overlay')].pop();
   const shown = (el) => {
     if (modal && !modal.contains(el)) return false;
-    const closed = el.closest('details:not([open])');
-    if (closed && !el.closest('summary')) return false;
+    // inside a closed fold, only its own summary shows (round 29: folds inside folds, like every
+    // series under the bracket, each series a fold of its own)
+    for (let d = el.closest('details:not([open])'); d; d = d.parentElement?.closest('details:not([open])')) {
+      const own = [...d.children].find((c) => c.tagName === 'SUMMARY');
+      if (!own || !own.contains(el)) return false;
+    }
     for (let e = el; e && e !== document.documentElement; e = e.parentElement) {
       const s = getComputedStyle(e);
       if (s.display === 'none' || s.visibility === 'hidden' || +s.opacity === 0) return false;

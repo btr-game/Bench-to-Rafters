@@ -13,6 +13,7 @@
   --good: #18703e; /* round 27: darker, so good-news text clears 4.5:1 on every light surface */
   --bad: #be3328;
   --bad-ink: #ffffff; /* letters on a red fill */
+  --good-ink: #ffffff; /* round 29: letters on a green fill */
   --warn: #8a5d0c;
   --gold: #b8860b;
   --gold-ink: #17130a; /* text on gold and amber */
@@ -46,6 +47,8 @@
     --good: #45b975;
     --bad: #f06b60;
     --bad-ink: #1a0806;
+  --good-ink: #06190d;
+    --good-ink: #06190d;
     --warn: #e2aa3c;
     --gold: #e7b93f;
     --gold-text: #e7b93f;
@@ -71,6 +74,7 @@
   --good: #45b975;
   --bad: #f06b60;
   --bad-ink: #1a0806;
+  --good-ink: #06190d;
   --warn: #e2aa3c;
   --gold: #e7b93f;
   --gold-text: #e7b93f;

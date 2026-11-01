@@ -7,8 +7,9 @@ import type { GameState } from '../engine/types';
 import { NAMES } from '../content/strings';
 import { seasonLabel } from './format';
 import { tabKey } from './selectors';
+import { MINI_NAMES } from '../engine/career/miniBonus';
 
-type NewsTab = 'home' | 'season' | 'player' | 'league' | 'records';
+type NewsTab = 'home' | 'season' | 'player' | 'records' | 'extras';
 
 /** One change on a tab: the card to take the player to (the first that is on the page) and a line about it. */
 export interface Spot {
@@ -29,8 +30,12 @@ export function tabNews(g: GameState, tab: NewsTab, before: string | undefined):
   switch (tab) {
     case 'season': {
       const s = g.season;
+      // round 29: the League tab's champions moved here
+      const fresh = g.nbaHistory.slice(Number(was[2]) || 0);
+      const champ = fresh[fresh.length - 1];
+      if (champ && was.length > 2) out.push({ sel: [D('champions'), D('record-book'), D('season-post'), '.page .card'], text: `${seasonLabel(champ.year)} is in the books: the ${champ.champion} won the title${champ.finals ? ` (${champ.finals})` : ''}.` });
       if (was[0] !== is[0]) {
-        out.push({ sel: [D('season-games'), '.page .card'], text: `A new season: ${seasonLabel(g.year)}. Its games and standings are here.` });
+        out.push({ sel: [D('season-standings'), '.page .card'], text: `A new season: ${seasonLabel(g.year)}. The standings start again, and its games are here.` });
         break;
       }
       const n = Number(is[1]) - Number(was[1]);
@@ -39,7 +44,7 @@ export function tabNews(g: GameState, tab: NewsTab, before: string | undefined):
         const recent = [...(s.preGames ?? []), ...s.games, ...(s.cupGames ?? []), ...s.postGames].slice(-n);
         const w = recent.filter((x) => x.res === 'W').length;
         out.push({
-          sel: post ? [D('season-post'), D('season-games')] : [D('season-games'), '.page .card'],
+          sel: post ? [D('season-post'), D('season-games')] : [D('season-standings'), D('season-games'), '.page .card'],
           text: `${plural(n, 'new game')} since you last looked: ${w}–${n - w}.`,
         });
       }
@@ -56,12 +61,6 @@ export function tabNews(g: GameState, tab: NewsTab, before: string | undefined):
       else if (was.length > 3 && nick && was[3] === '0' && is[3] === '1') out.push({ sel: [D('name-card'), '.page .card'], text: `Your logo is out, with your first brand deal: see it on your name card.` });
       break;
     }
-    case 'league': {
-      const fresh = g.nbaHistory.slice(Number(was[0]) || 0);
-      const last = fresh[fresh.length - 1];
-      if (last) out.push({ sel: [D('record-book'), '.page .card'], text: `${seasonLabel(last.year)} is in the books: the ${last.champion} won the title${last.finals ? ` (${last.finals})` : ''}.` });
-      break;
-    }
     case 'records': {
       const [h0, a0, t0] = was.map(Number);
       const newAwards = g.awards.slice(a0 || 0);
@@ -73,6 +72,11 @@ export function tabNews(g: GameState, tab: NewsTab, before: string | undefined):
         const lastH = g.history[g.history.length - 1];
         out.push({ sel: [D('season-log'), '.page .card'], text: `Your ${seasonLabel(lastH.year)} season is in the book.` });
       }
+      break;
+    }
+    case 'extras': {
+      const opened = (g.miniOpen ?? []).slice(Number(was[0]) || 0);
+      if (opened.length) out.push({ sel: [D('minis'), '.page .card'], text: `Mini-game unlocked: ${opened.map((id) => MINI_NAMES[id]).join(', ')}. Play it for a rating bonus.` });
       break;
     }
     default:

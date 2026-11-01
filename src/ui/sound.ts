@@ -4,6 +4,7 @@
 // switch for the effects and one for the music, kept on this device.
 
 import { isDev } from '../dev/mode';
+import { TRACKS, parseVoice, type NoteEvent, type Track, type TrackId, type Wave } from './tracks';
 
 /** Every sound effect and when the game plays it (round 26: the dev deck's sound board lists them). */
 export const SFX = [
@@ -54,6 +55,9 @@ export const SFX = [
   ['slam', 'Dunk contest: a dunk landed'],
   ['judges', 'Dunk contest: the judges hold up their cards'],
   ['clutch', 'The finals: your play in the last minutes'],
+  // round 29: the career log's locks
+  ['lock', 'Locking a card in the career log'],
+  ['unlock', 'Unlocking a card in the career log'],
 ] as const;
 type Sfx = (typeof SFX)[number][0];
 
@@ -95,11 +99,29 @@ function audio(): AudioContext | null {
   return ctx;
 }
 
-function tone(freq: number, at: number, len: number, type: OscillatorType = 'square', vol = 1): void {
+// round 29: the thin pulse waves of old consoles (a quarter and an eighth of the cycle up), for the music
+const pulses = new Map<number, PeriodicWave>();
+function pulse(duty: number): PeriodicWave {
+  const hit = pulses.get(duty);
+  if (hit) return hit;
+  const n = 32;
+  const re = new Float32Array(n);
+  const im = new Float32Array(n);
+  for (let k = 1; k < n; k++) {
+    re[k] = Math.sin(2 * Math.PI * k * duty) / (Math.PI * k);
+    im[k] = (2 * Math.sin(Math.PI * k * duty) ** 2) / (Math.PI * k);
+  }
+  const w = ctx!.createPeriodicWave(re, im);
+  pulses.set(duty, w);
+  return w;
+}
+
+function tone(freq: number, at: number, len: number, type: OscillatorType | Wave = 'square', vol = 1): void {
   const c = ctx!;
   const o = c.createOscillator();
   const g = c.createGain();
-  o.type = type;
+  if (type === 'pulse25' || type === 'pulse12') o.setPeriodicWave(pulse(type === 'pulse25' ? 0.25 : 0.125));
+  else o.type = type;
   o.frequency.setValueAtTime(freq, at);
   g.gain.setValueAtTime(vol, at);
   g.gain.exponentialRampToValueAtTime(0.001, at + len);
@@ -307,45 +329,124 @@ export function sfx(name: Sfx, always = false): void {
       seq([7, 12, 16], 0.05, 'square', 0.4);
       noise(t + 0.1, 0.25, 0.18);
       break;
+    case 'lock': // a padlock: the shackle clicks down, a low thunk
+      noise(t, 0.03, 0.35);
+      tone(N(2), t + 0.03, 0.08, 'square', 0.5);
+      tone(N(-5), t + 0.09, 0.1, 'triangle', 0.6);
+      break;
+    case 'unlock': // the shackle springs up
+      noise(t, 0.03, 0.3);
+      seq([7, 14], 0.05, 'triangle', 0.5);
+      break;
   }
 }
 
-// ---------- music: a soft four-bar loop everywhere but the mini-games, from the first click or key ----------
+// ---------- music (round 29: a loop for each part of the game, tracks.ts), from the first click or key ----------
 
-const BASS = [0, 0, 7, 7, 5, 5, 7, 7, 0, 0, 7, 7, 5, 5, 3, 7];
-const LEAD = [12, -1, 16, -1, 19, -1, 16, 14, 12, -1, 16, -1, 17, 16, 14, -1];
+interface Compiled {
+  step: number;
+  length: number;
+  voices: { at: (NoteEvent | null)[]; wave: Wave; vol: number; every?: 2 }[];
+  drums: string;
+}
 
-function startMusic(force = false): void {
-  if (musicTimer || (!musicOn && !force) || !audio()) return;
+const compiled = new Map<TrackId, Compiled>();
+function compile(id: TrackId): Compiled {
+  const hit = compiled.get(id);
+  if (hit) return hit;
+  const tr: Track = TRACKS[id];
+  const voices = tr.voices.map((v) => ({ at: parseVoice(v.notes), wave: v.wave, vol: v.vol, every: v.every }));
+  const c = { step: tr.step, length: Math.max(...voices.map((v) => v.at.length), tr.drums?.length ?? 0), voices, drums: tr.drums ?? '' };
+  compiled.set(id, c);
+  return c;
+}
+
+/** A kick: a short sine sweep down. */
+function kick(at: number): void {
+  const c = ctx!;
+  const o = c.createOscillator();
+  const g = c.createGain();
+  o.type = 'sine';
+  o.frequency.setValueAtTime(140, at);
+  o.frequency.exponentialRampToValueAtTime(45, at + 0.12);
+  g.gain.setValueAtTime(0.7, at);
+  g.gain.exponentialRampToValueAtTime(0.001, at + 0.14);
+  o.connect(g).connect(master!);
+  o.start(at);
+  o.stop(at + 0.16);
+}
+
+function playStep(c: Compiled, i: number, t: number): void {
+  const slot = i % c.length;
+  const pass = Math.floor(i / c.length);
+  for (const v of c.voices) {
+    if (v.every === 2 && pass % 2 === 0) continue;
+    const e = v.at[i % v.at.length];
+    if (!e) continue;
+    const vol = v.vol / Math.sqrt(e.semis.length);
+    for (const n of e.semis) tone(N(n), t, c.step * e.len * 0.92, v.wave, vol);
+  }
+  const d = c.drums[slot % (c.drums.length || 1)];
+  if (d === 'k' || d === 'K') kick(t);
+  if (d === 's' || d === 'S') {
+    noise(t, 0.1, 0.2);
+    tone(185, t, 0.05, 'triangle', 0.25);
+  }
+  if (d === 'h' || d === 'K' || d === 'S') noise(t, 0.025, 0.07);
+}
+
+// the loop the screen asks for, and the one playing
+let wanted: TrackId | null = null;
+let playing: TrackId | null = null;
+// round 29: told when a loop is first heard (for the Mixtape and Full Album achievements)
+let heardHook: ((id: TrackId) => void) | null = null;
+export function onHeard(fn: (id: TrackId) => void): void {
+  heardHook = fn;
+}
+
+function startMusic(id: TrackId): void {
+  if (playing === id && musicTimer) return;
+  stopMusic();
+  if (!audio()) return;
   if (ctx!.state === 'suspended') void ctx!.resume();
+  const c = compile(id);
   let i = 0;
-  const step = 0.22;
+  let next = ctx!.currentTime + 0.05;
+  playing = id;
+  // a little ahead of the clock, so the beat stays even when the page is busy
   musicTimer = setInterval(() => {
     if (!ctx || ctx.state !== 'running') return;
-    const t = ctx.currentTime + 0.02;
-    tone(N(BASS[i % 16] - 12), t, step * 0.9, 'triangle', 0.35);
-    if (LEAD[i % 16] >= 0 && Math.floor(i / 16) % 2 === 1) tone(N(LEAD[i % 16]), t, step * 0.7, 'square', 0.12);
-    if (i % 4 === 0) noise(t, 0.04, 0.12);
-    i++;
-  }, step * 1000);
+    if (next < ctx.currentTime - 0.05) next = ctx.currentTime + 0.02;
+    while (next < ctx.currentTime + 0.12) {
+      if (i === 0) heardHook?.(id);
+      playStep(c, i, next);
+      i++;
+      next += c.step;
+    }
+  }, 25);
 }
 
 function stopMusic(): void {
   if (musicTimer) clearInterval(musicTimer);
   musicTimer = null;
+  playing = null;
 }
 
-/** Music on or off with what is on screen (a mini-game has its own sound). */
-export function music(playing: boolean): void {
-  if (playing && musicOn) startMusic();
+/** The loop for what is on screen (null: none, as in Lockdown, which has its own beat). */
+export function music(track: TrackId | null): void {
+  wanted = track;
+  if (track && musicOn) startMusic(track);
   else stopMusic();
 }
 
-/** The sound board's music button: the loop on or off, whatever the switch says. */
-export function previewMusic(on: boolean): void {
-  if (on) startMusic(true);
+/** The dev deck's Music tab: a loop on or off, whatever the switch says. */
+export function previewMusic(track: TrackId | null): void {
+  if (track) startMusic(track);
   else stopMusic();
 }
+
+/** Whether music can be heard right now (the intro's button asks before the first click). */
+export const musicAudible = (): boolean => musicOn && !!musicTimer && ctx?.state === 'running';
 
 export const soundSettings = () => ({ sfx: sfxOn, music: musicOn });
 /** Reads the switches again as the dev deck opens or closes (each keeps its own); the loop stops
@@ -359,10 +460,10 @@ export function setSfx(on: boolean): void {
   sfxOn = on;
   write('btr-sfx', on);
 }
-export function setMusic(on: boolean, playing: boolean): void {
+export function setMusic(on: boolean): void {
   musicOn = on;
   write('btr-music', on);
-  music(playing);
+  music(wanted);
 }
 
 /** The first click or key wakes the audio up, so the music starts with it (browsers keep sound

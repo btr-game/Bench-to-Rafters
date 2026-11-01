@@ -78,3 +78,47 @@ export function polyCells(poly: Pt[], cell: number, mode: 'fill' | 'edge'): stri
   }
   return d;
 }
+
+/**
+ * A line through `pts` on a grid of `cell`-sized squares, as an SVG path of square runs (round 29:
+ * the timeline's OVR line runs straight from season to season again, as it did before round 28's
+ * steps, drawn in square pixels). Each segment walks the squares it crosses one step at a time,
+ * across or down, so the line has no gaps at any slope.
+ */
+export function lineCells(pts: Pt[], cell: number, brush = 1): string {
+  const rows = new Map<number, Set<number>>();
+  // a square brush of `brush` cells, so the line is as thick across a steep stretch as a flat one
+  const put = (cx: number, cy: number) => {
+    for (let dy = 0; dy < brush; dy++) for (let dx = 0; dx < brush; dx++) (rows.get(cy + dy) ?? rows.set(cy + dy, new Set()).get(cy + dy)!).add(cx + dx);
+  };
+  for (let i = 1; i < pts.length; i++) {
+    let x = Math.floor(pts[i - 1][0] / cell);
+    let y = Math.floor(pts[i - 1][1] / cell);
+    const nx = Math.abs(Math.floor(pts[i][0] / cell) - x);
+    const ny = Math.abs(Math.floor(pts[i][1] / cell) - y);
+    const sx = pts[i][0] >= pts[i - 1][0] ? 1 : -1;
+    const sy = pts[i][1] >= pts[i - 1][1] ? 1 : -1;
+    put(x, y);
+    for (let ix = 0, iy = 0; ix < nx || iy < ny; ) {
+      if ((0.5 + ix) / nx < (0.5 + iy) / ny) {
+        x += sx;
+        ix++;
+      } else {
+        y += sy;
+        iy++;
+      }
+      put(x, y);
+    }
+  }
+  let d = '';
+  for (const [cy, xs] of rows) {
+    const sorted = [...xs].sort((a, b) => a - b);
+    for (let k = 0; k < sorted.length; ) {
+      let n = 1;
+      while (sorted[k + n] === sorted[k] + n) n++;
+      d += `M${sorted[k] * cell} ${cy * cell}h${n * cell}v${cell}h${-n * cell}Z`;
+      k += n;
+    }
+  }
+  return d;
+}

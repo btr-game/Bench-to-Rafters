@@ -36,7 +36,12 @@ export interface CareerTotals {
   daily: number; // days the daily challenge was played
   mini?: MiniTotals; // round 27: every mini-game run on this device (achievementsMini.ts)
   shared?: number; // round 28: times the game's link went out (Share the game)
+  locked?: number; // round 29: the most career log cards locked at once
+  heard?: string[]; // round 29: the music loops heard (ui/tracks.ts)
 }
+
+/** Round 29: how many music loops the game has (ui/tracks.ts; a test keeps the two in step). */
+export const MUSIC_LOOPS = 18;
 export const NO_TOTALS: CareerTotals = { finished: 0, byMode: {}, titles: 0, mvps: 0, fast: 0, master: 0, daily: 0 };
 
 /** Everything the checks read, worked out once per look. */
@@ -372,6 +377,11 @@ export const ACHIEVEMENTS: Achievement[] = [
   A('crunch5', 'Ice Water', 'hof', 'Win five finals in crunch time over a career.', (f) => (f.g.flags.crunchWon ?? 0) >= 5),
   A('logo', 'Brand New Look', 'rotation', 'Have your nickname’s logo drawn for your first brand deal.', (f) => !!f.g.player.nickname?.logo),
   A('chalk', 'Chalk Talk', 'bench', 'Sit down with the coach and set the team’s style.', (f) => !!f.g.teamStyle),
+  // round 29: locks in the career log, and the music
+  A('lock1', 'Under Lock and Key', 'bench', 'Lock a card in the career log, so it is never replaced.', (f) => (f.t.locked ?? 0) >= 1),
+  A('lock5', 'The Vault', 'rotation', 'Have five career log cards locked at once.', (f) => (f.t.locked ?? 0) >= 5),
+  A('mixtape', 'Mixtape', 'bench', 'Hear five different music loops.', (f) => (f.t.heard?.length ?? 0) >= 5),
+  A('album', 'Full Album', 'allstar', `Hear all ${MUSIC_LOOPS} music loops: every level and league, the offseason, the mini-games, the intro and the curtain call.`, (f) => (f.t.heard?.length ?? 0) >= MUSIC_LOOPS),
   // round 25: the book past 500 (achievements25.ts)
   ...ACHIEVEMENTS_25,
   // round 27: the mini-games, in the arcade and in a career (achievementsMini.ts)
@@ -379,7 +389,7 @@ export const ACHIEVEMENTS: Achievement[] = [
 ];
 
 // the ones that only read the totals kept across careers (they can be checked with no career open)
-const TOTALS_ONLY = new Set(['c1', 'c3', 'c5', 'c10', 'c25', 'c50', 'c100', 'allmodes', 'fastdone', 'masterdone', 'titles10', 'mvp10', 'daily1', 'daily7', 'daily30', 'share1', ...MINI_TOTALS_ONLY]);
+const TOTALS_ONLY = new Set(['c1', 'c3', 'c5', 'c10', 'c25', 'c50', 'c100', 'allmodes', 'fastdone', 'masterdone', 'titles10', 'mvp10', 'daily1', 'daily7', 'daily30', 'share1', 'lock1', 'lock5', 'mixtape', 'album', ...MINI_TOTALS_ONLY]);
 
 /** The achievements this career (and the totals) have earned, by id. */
 export function earnedNow(g: GameState | null, t: CareerTotals): string[] {

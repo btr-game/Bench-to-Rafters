@@ -140,7 +140,7 @@ export function SettingsMenu({ g }: { g: GameState | null }) {
             </>
           )}
           <Toggle label="Sound effects" note="Chiptune sounds for clicks, wins, titles and the rest." on={snd.sfx} onClick={() => (setSfx(!snd.sfx), setSnd(soundSettings()))} tour="set-sfx" />
-          <Toggle label="Music" note="A soft loop while you play." on={snd.music} onClick={() => (setMusic(!snd.music, true), setSnd(soundSettings()))} tour="set-music" />
+          <Toggle label="Music" note="A loop for each part of the game: every level and league, the offseason, the mini-games." on={snd.music} onClick={() => (setMusic(!snd.music), setSnd(soundSettings()))} tour="set-music" />
           <Toggle label="Simple text" note="Hide descriptions, keep the choices." on={simple} onClick={toggleSimple} tour="set-simple" />
           <Toggle label="Guide mode" note={master ? 'Off while Master mode is on.' : 'Highlights the next thing to do.'} on={guide && !master} onClick={toggleGuide} tour="set-guide" />
           <Toggle label="Master mode" note="No recommendations: no scouts' calls, fit tags, suggested deals or guide hints. You read the game yourself." on={master} onClick={toggleMaster} tour="set-master" locked={!!g?.flags.oath} />
@@ -180,7 +180,7 @@ export function NextStep({ g }: { g: GameState }) {
   );
 }
 
-const TAB_KEYS: Record<string, Tab> = { h: 'home', s: 'season', p: 'player', l: 'league', r: 'records' };
+const TAB_KEYS: Record<string, Tab> = { h: 'home', s: 'season', p: 'player', r: 'records', e: 'extras' };
 // choices 1-9, then 0, - and = for the 10th to 12th (twelve plans fit on the number row)
 const CHOICE_KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '='];
 

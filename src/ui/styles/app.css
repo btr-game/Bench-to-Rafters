@@ -417,7 +417,7 @@ table.quarters td, table.quarters th { text-align: center; }
 .nb-team.lost { opacity: 0.55; }
 .nb-team.me { box-shadow: inset 3px 0 0 var(--accent); }
 .nb-seed { font-family: var(--f-mono); font-size: 11.5px; color: #9aa0a6; text-align: right; }
-.nb-mark { display: inline-grid; place-items: center; height: 24px; min-width: 40px; border-radius: 4px; font-family: var(--f-display); font-weight: 800; font-size: 12.5px; color: #fff; letter-spacing: 0.02em; }
+.nb-mark { display: inline-grid; place-items: center; height: 24px; min-width: 40px; border-radius: 4px; font-family: var(--f-display); font-weight: 800; font-size: 12.5px; letter-spacing: 0.02em; /* colours: badge() in art/color.ts */ }
 .nb-mark.big { width: 64px; height: 44px; font-size: 22px; border-radius: 8px; }
 .nb-mark.dim { opacity: 0.6; }
 .nb-wins { font-family: var(--f-display); font-size: 17px; font-weight: 900; }
@@ -425,8 +425,8 @@ table.quarters td, table.quarters th { text-align: center; }
 .nb-final .kicker { color: #c9c4ba; }
 .nb-final-score { display: flex; align-items: center; gap: 10px; }
 .nb-final-score b { font-family: var(--f-display); font-size: 34px; font-weight: 900; white-space: nowrap; }
-.nb-champ { display: grid; justify-items: center; gap: 2px; padding: 10px 14px; border-radius: 10px; color: #fff; width: 100%; box-shadow: 0 0 0 2px #B8860B; }
-.nb-champ small { font-family: var(--f-mono); font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; color: #ffd76a; }
+.nb-champ { display: grid; justify-items: center; gap: 2px; padding: 10px 14px; border-radius: 10px; width: 100%; box-shadow: 0 0 0 2px #B8860B; }
+.nb-champ small { font-family: var(--f-mono); font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; }
 .nb-champ b { font-family: var(--f-display); font-weight: 900; font-size: 24px; text-transform: uppercase; line-height: 1; }
 .nb-rounds { grid-row: 3; grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, minmax(84px, 1fr)) minmax(150px, 1.4fr) repeat(3, minmax(84px, 1fr)); gap: 10px; font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #9aa0a6; text-align: center; }
 
@@ -1038,8 +1038,8 @@ button.todo-now { width: 100%; text-align: left; border: 0; font: inherit; color
 }
 .form-strip { display: flex; gap: 4px; margin-top: 10px; }
 .form-strip span { width: 22px; height: 22px; border-radius: 4px; display: grid; place-items: center; font-family: var(--f-mono); font-size: 11.5px; font-weight: 700; color: #fff; }
-.form-strip .w { background: var(--good); }
-.form-strip .l { background: var(--bad); }
+.form-strip .w { background: var(--good); color: var(--good-ink); }
+.form-strip .l { background: var(--bad); color: var(--bad-ink); }
 .pts-chart { margin: 0 0 12px; display: grid; gap: 6px; }
 .pts-chart svg { width: 100%; height: 84px; display: block; background: var(--surface-2); border-radius: 6px; }
 .pts-chart rect.w { fill: var(--good); }
@@ -1389,7 +1389,7 @@ td .art-team { display: inline-block; vertical-align: middle; margin: -3px 8px -
 .tl-col:hover rect { opacity: 0.18; }
 .tl-grid line { stroke: var(--line); stroke-dasharray: 3 4; }
 .tl-grid text { fill: var(--muted); font-family: var(--f-mono); font-size: 12px; }
-.tl-line { fill: none; stroke: var(--ink); stroke-width: 3; stroke-linejoin: miter; shape-rendering: crispEdges; }
+.tl-line { fill: var(--ink); shape-rendering: crispEdges; }
 .tl-dot { fill: var(--surface); stroke: var(--ink); stroke-width: 2.5; shape-rendering: crispEdges; }
 .tl-age { fill: var(--muted); font-family: var(--f-mono); font-size: 12px; }
 .tl-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; }
@@ -2318,11 +2318,8 @@ input[type='range'] { width: 100%; min-height: 32px; accent-color: var(--accent)
 @media (prefers-reduced-motion: reduce) { .share-card { animation: none; } }
 
 
-/* round 28: achievements in a career: the top-bar button (with this career's count), the Records
-   card's list, and the book's "This career" mark */
-@media (max-width: 640px) { .top .ach-btn .share-word { display: none; } }
-.ach-btn { position: relative; }
-.ach-btn-n { min-width: 20px; padding: 1px 5px; border-radius: 4px; background: var(--accent); color: var(--accent-ink); font-size: 13px; font-weight: 700; line-height: 18px; text-align: center; }
+/* round 28: achievements in a career: the card's list of what this career earned (on the Extras tab
+   since round 29), and the book's "This career" mark */
 .run-ach { display: grid; gap: 8px; }
 .run-ach-list { display: flex; flex-wrap: wrap; gap: 6px; }
 .run-ach-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px 4px 5px; border: 2px solid var(--tier); border-radius: 6px; background: var(--surface-2); color: var(--ink); font-size: 14.5px; font-weight: 600; }
@@ -2384,3 +2381,23 @@ input[type='range'] { width: 100%; min-height: 32px; accent-color: var(--accent)
 .lg-champs { display: flex; flex-wrap: wrap; gap: 12px; }
 .lg-champ { margin: 0; display: grid; justify-items: center; gap: 2px; }
 .lg-champ figcaption { display: grid; justify-items: center; font-size: 13px; }
+
+/* round 29: the intro's music button, light on the dark court in both themes */
+.intro .intro-music { position: absolute; z-index: 2; top: max(12px, env(safe-area-inset-top, 0px)); right: max(12px, env(safe-area-inset-right, 0px)); color: #f4f1ea; border-color: rgba(244, 241, 234, 0.7); background: rgba(11, 13, 20, 0.7); }
+.intro .intro-music:hover, .intro .intro-music:focus-visible { background: rgba(244, 241, 234, 0.14); }
+
+/* round 29: the Season tab's standings, both conferences side by side; the Extras tab */
+.lg-confs { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 16px; }
+.extras-art { display: grid; grid-template-columns: repeat(2, auto); gap: 6px; padding: 8px; background: rgba(11, 13, 20, 0.55); box-shadow: 0 0 0 3px #f4f1ea; }
+.extras-limits { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; align-items: start; }
+.extras-limits ul { margin: 0; padding-left: 18px; display: grid; gap: 2px; }
+
+/* round 29: a locked card in the career log */
+.log-entry.locked { border-color: var(--accent); box-shadow: inset 4px 0 0 var(--accent); }
+.log-lock-tag { display: inline-flex; align-items: center; gap: 4px; margin-left: 6px; padding: 1px 7px; border-radius: 4px; background: var(--accent); color: var(--accent-ink); font-size: 12.5px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; vertical-align: middle; }
+.log-who .log-lock-tag { justify-self: start; width: max-content; margin-left: 0; }
+.extras-cards > .card { display: flex; flex-direction: column; }
+.extras-cards > .card > .btn:last-child { margin-top: auto; }
+.series-all { display: grid; gap: 10px; }
+.series-all > summary { cursor: pointer; padding-block: 6px; }
+.series-all[open] > summary { margin-bottom: 4px; }

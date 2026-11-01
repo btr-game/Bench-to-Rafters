@@ -7,6 +7,7 @@ import { careerTimeline, type MarkKind, type TimelineMark } from '../../engine/c
 import { LEVELS } from '../../engine/balance';
 import { seasonLabel } from '../format';
 import { Card } from './bits';
+import { lineCells, type Pt } from '../art/pixel';
 
 const KIND: Record<MarkKind, { name: string; color: string }> = {
   legend: { name: 'Legendary season', color: '#B8860B' },
@@ -70,9 +71,10 @@ function Chart({ g, pick, picked }: { g: GameState; pick: (year: number) => void
   const colW = (W - PAD.l - PAD.r) / n;
   const xOf = (i: number) => PAD.l + colW * (i + 0.5);
   const yOf = (v: number) => PAD.t + (1 - (v - lo) / (hi - lo)) * (H - PAD.t - PAD.b);
-  // round 28: the OVR line in pixel steps: across to each season, then up or down to its OVR
-  const pts: [number, number][] = [[PAD.l + 2, yOf(seasons[0].ovrStart)], ...seasons.map((x, i): [number, number] => [xOf(i), yOf(x.ovrEnd)])].map(([a, b]) => [Math.round(a), Math.round(b)]);
-  const line = pts.flatMap(([x, y], i) => (i === 0 ? [`${x},${y}`] : [`${x},${pts[i - 1][1]}`, `${x},${y}`])).join(' ');
+  // round 29 (owner: "the career timeline is now stair shaped? ... i liked the one before better"):
+  // straight from season to season again, as before round 28's steps: fine square pixels, two to a
+  // side (so the line is as thick as the old one), small enough to read as a slope, not a staircase
+  const line = lineCells([[PAD.l, yOf(seasons[0].ovrStart) - 2], ...seasons.map((x, i): Pt => [xOf(i) - 2, yOf(x.ovrEnd) - 2])], 2, 2);
   const grid = [30, 40, 50, 60, 70, 80, 90].filter((v) => v > lo && v < hi);
   // the NBA scale's landmarks, as coloured lines
   const bands = ([[72, 'Rotation'], [80, 'All-Star'], [90, 'All-NBA 1st'], [95, 'MVP']] as [number, string][]).filter(([v]) => v > lo && v < hi);
@@ -101,7 +103,7 @@ function Chart({ g, pick, picked }: { g: GameState; pick: (year: number) => void
           </text>
         </g>
       ))}
-      <polyline points={line} className="tl-line" />
+      <path d={line} className="tl-line" />
       {seasons.map((x, i) => (
         <rect key={x.year} x={Math.round(xOf(i)) - 4} y={Math.round(yOf(x.ovrEnd)) - 4} width={8} height={8} className="tl-dot" />
       ))}

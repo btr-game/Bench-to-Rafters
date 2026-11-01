@@ -43,6 +43,7 @@ import { FRANCHISE_FIVES } from '../content/franchiseFives';
 import { VISITS } from '../content/visits';
 import { NAMES } from '../content/strings';
 import { fmtMoney, signed } from '../ui/format';
+import { TRACKS, parseVoice, type TrackId } from '../ui/tracks';
 import { Icon } from '../ui/art/Icon';
 import { BrandLogo, SEV_COLOR, SEV_NAME, eventIcon, injuryIcon, leagueIcon, levelIcon } from '../ui/art/careerArt';
 import { ICON_FOR, SHIFT_COLOR, shopIcon, shopShift } from '../ui/art/icons';
@@ -723,6 +724,30 @@ const CATEGORIES: Category[] = [
           </div>
         ),
       })),
+  },
+  {
+    // round 29: the music, a loop for each part of the game (ui/tracks.ts; play them on the Music tab)
+    key: 'music',
+    name: 'Music loops',
+    icon: 'note',
+    blurb: 'A loop for each part of the game: the intro and the curtain call, every level and league, the offseason, each mini-game but Lockdown. Play them on the Music tab.',
+    entries: () =>
+      (Object.keys(TRACKS) as TrackId[]).map((id) => {
+        const t = TRACKS[id];
+        const steps = Math.max(...t.voices.map((v) => parseVoice(v.notes).length), t.drums?.length ?? 0);
+        return {
+          key: id,
+          title: t.name,
+          sub: t.where,
+          group: ['hub', 'office', 'threes', 'dunk', 'lab', 'street', 'legends'].includes(id) ? 'Mini-games' : ['intro', 'thanks', 'start'].includes(id) ? 'Pages' : 'In a career',
+          art: () => <Icon name={t.icon} size={44} />,
+          facts: [
+            ['Tempo', `${Math.round(30 / t.step)} bpm`],
+            ['Loop', `${steps / 8} bars, ${(steps * t.step).toFixed(1)} s`],
+            ['Voices', t.voices.map((v) => v.wave).join(', ') + (t.drums ? ', drums' : '')],
+          ] as [string, string][],
+        };
+      }),
   },
   {
     key: 'house',

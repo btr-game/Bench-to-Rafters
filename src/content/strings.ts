@@ -58,7 +58,7 @@ export const NAMES = {
 export const UI = {
   appName: 'Bench to Rafters',
   tagline: 'From a freshman nobody knows to a jersey in the rafters.',
-  tabs: { home: 'Home', season: 'Season', player: 'Player', league: 'League', records: 'Records' },
+  tabs: { home: 'Home', season: 'Season', player: 'Player', records: 'Records', extras: 'Extras' },
   create: {
     steps: ['Difficulty', 'Identity', 'Archetype', 'Focus', 'Confirm'],
     random: 'Random',

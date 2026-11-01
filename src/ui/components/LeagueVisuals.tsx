@@ -1,4 +1,4 @@
-// The League tab as pictures (round 28, owner: "in the league tab, can you make it much more visual?
+// The League tab as pictures (round 28; on the Season tab since round 29, owner: "in the league tab, can you make it much more visual?
 // use lots of graphs, icons, ... it's too text heavy now"): standings as win bars with each crest
 // and the playoff line, the leaders in points, rebounds and assists as bar charts, the award
 // voting as bars, and the champions as their title banners. Every bar is a row of pixel cells.

@@ -2104,3 +2104,63 @@ multiple times."
   - Dev deck: 82 cards (crunch time, achievements in a career, a Big Three ends); the Catalog has
     the crunch-time calls, the coach's lines for each style, the age edges on plans and each
     archetype's ceiling bonus.
+
+## Round 29 (owner requests)
+
+- **Season and League in one tab** (owner: "not much incentive to using the season tab and league
+  tab. combine them. just make sure the ones that are actually worth noticing are towards the
+  top"). The order, most worth a look first: the team banner (place, record, streak, his numbers,
+  the last ten as a form strip); the playoff bracket while there is one, with every series folded
+  under it so the standings stay near the top; the standings as round 28's win bars, his
+  conference first, beside the team's strength and its city and fans; the league leaders; his
+  games; then last season's award voting, the champions' banners and the record book. The two old
+  standings tables and the Season/Postseason switch are gone. The tab's dot also moves for a new
+  NBA champion. Showing the bracket on the tab itself brought the visual check to its team marks:
+  white letters on mid reds, oranges and silver read 1.6–4.3:1, so the marks and the champions'
+  banner now take `badge()` (art/color.ts), the readable ink with the team colour nudged just enough
+  for 4.5:1; the form strip's letters take a per-theme ink (`--good-ink`).
+- **Extras tab** (owner: "let them view the four additional cards in the homepage (minigames,
+  career logs, achievements, community). try to limit access to some (such as going into career
+  log and continuing a career mid-career) to prevent bugs. this also means getting rid of
+  minigames in home tab"). A fifth tab (key E) with the start page's four cards, under a banner of
+  the mini-games open, what this career earned, and the log's cards and locks. Each page opens as it
+  does from the start page and Back returns to the career. Kept for the start page while a career
+  is on, and said so on the tab: the daily challenge (already shut in a career: it is a career of
+  its own), deleting log cards (the log is for looking, downloading and locking from a career), and
+  starting, continuing or importing another career (only the start page has Your careers). A dot on
+  the tab when a mini-game opens, and the unlock note says to play it from there. The Mini-games
+  card left Home; round 28's Achievements button in the top bar gave way to the tab (its card lists
+  what this career earned), and so did the Records tab's copy of that card.
+- **Career timeline:** round 28's pixel pass had drawn the OVR line as steps (across to each
+  season, then up or down), and the owner liked the old line better. It runs straight from season
+  to season again, drawn in fine square pixels (2 units, a 2-by-2 brush, as thick as the old 3-unit
+  stroke) so it stays pixel art without the staircase (`lineCells` in art/pixel.ts).
+- **Career log locks** (owner: "let him lock it so that we exclude that career from getting
+  deleted. however, limit the number of locks to 5"): a locked card is never pushed out by a new
+  career (the oldest unlocked one goes) and can't be deleted until unlocked. Five at most, so ten
+  cards always leave five a new career can replace. The full-log warning names the card that would
+  go. A padlock sound locks and unlocks.
+- **Music** (owner, mid-round: "add more loop music to the game. especially for intro and thank
+  you page, i want bright, cheerful music. minigames can each have one (except for lockdown), the
+  offseason could have a different one from mid-season, high school, college, and each league can
+  have one too"): 18 loops written note by note (`ui/tracks.ts`), played on pulse waves (a quarter
+  and an eighth of the cycle, the old consoles' sound), triangle and sawtooth, with a kick, snare and
+  hat, scheduled a little ahead of the audio clock so the beat stays even. Intro: Tip-off (C major,
+  160 bpm); thank-you page: Curtain call (G major, 140); the start page keeps the round 25 loop
+  (Locker room); high school, college (a fight song), the G League, Europe (a waltz), the leagues
+  around the world (pentatonic) and the NBA each have one; Summer league plays in every offseason
+  and in free agency at any level; Jersey night at the end of a career; the hub and the daily
+  challenge's page share Arcade, and each mini-game but Lockdown has its own. Pages of their own
+  (the log, the book, the community) keep the loop under them. Browsers stay quiet until the first
+  click, so the intro has a Play the music button. The dev deck has a Music tab of its own, every
+  loop with the icon of where it plays (owner: "add some icons to the music tab as well for
+  distinction"), and the Catalog lists them with tempo, length and voices.
+- **End of the round:** pixel icons for the Extras tab, its banner and the lock tag; the lock and
+  unlock sounds and the loops; simple text hides the Extras tab's note; four achievements (Under
+  Lock and Key, The Vault, Mixtape, Full Album; 560 in all); no new decision kinds for the harness
+  and no new events (the round is screens and sound); the guide, Guide mode (113 steps: Extras,
+  this career's achievements, the start page's keepers, the log's lock, the standings and
+  leaders), What's new, the dev deck (84 cards: Extras, the log from a career, the Season tab in
+  the playoffs) and the project summary.
+- **Balance:** no engine change this round beyond the unlock note's wording, so the numbers stand
+  as round 28 measured them (the balance tests run in the full check).

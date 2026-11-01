@@ -20,7 +20,7 @@ import { ACH_KEY, emptyAch } from '../ui/achievements';
 import { todayKey } from '../engine/mini/daily';
 import { Catalog } from './Catalog';
 import { Inbox } from './Inbox';
-import { SoundBoard } from './SoundBoard';
+import { MusicBoard, SoundBoard } from './SoundBoard';
 import './dev.css';
 
 const groupOf = (g: Group) => GROUPS.find((x) => x.key === g)!;
@@ -114,7 +114,7 @@ export function DevDeck() {
   const [group, setGroup] = useState<Group | 'all'>('all');
   const [q, setQ] = useState('');
   const [results, setResults] = useState(false);
-  const [section, setSection] = useState<'cards' | 'catalog' | 'sounds' | 'summary' | 'inbox'>(() => (location.hash === '#inbox' ? 'inbox' : 'cards'));
+  const [section, setSection] = useState<'cards' | 'catalog' | 'sounds' | 'music' | 'summary' | 'inbox'>(() => (location.hash === '#inbox' ? 'inbox' : 'cards'));
   const [chapter, setChapter] = useState(0);
   const [focus, setFocus] = useState<number | null>(null);
   const [view, setView] = useState<'deck' | 'grid'>('deck');
@@ -248,6 +248,9 @@ export function DevDeck() {
             <button aria-pressed={section === 'sounds' && !results} onClick={() => (setSection('sounds'), setResults(false))}>
               Sounds
             </button>
+            <button aria-pressed={section === 'music' && !results} onClick={() => (setSection('music'), setResults(false))}>
+              Music
+            </button>
             <button aria-pressed={section === 'summary' && !results} onClick={() => openChapter(chapter)}>
               Project summary
             </button>
@@ -323,6 +326,8 @@ export function DevDeck() {
         <Inbox />
       ) : section === 'sounds' ? (
         <SoundBoard />
+      ) : section === 'music' ? (
+        <MusicBoard />
       ) : section === 'summary' ? (
         <SummaryPage chapter={chapter} setChapter={(n) => (setChapter(n), setFocus(null))} focus={focus} q={q} />
       ) : (

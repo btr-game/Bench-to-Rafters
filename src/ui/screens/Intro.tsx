@@ -7,12 +7,14 @@
 // 5 by 7 pixel font, the venues are drawn on a 160 by 90 grid, the players are the game's sprites.
 // Shown once to someone with nothing on this device yet, and any time from the start page.
 
-import { useEffect, useMemo, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useStore } from '../../store';
 import { PlayerArt, withoutBall } from '../art/Player';
 import { CHEER, DRIBBLE, JUMPER, LOWDRIBBLE, RUN_A, RUN_B, type Pose } from '../art/sprite';
 import { toPaths } from '../art/pixel';
 import { PixelWord } from '../art/PixelText';
+import { Icon } from '../art/Icon';
+import { musicAudible, setMusic, soundSettings } from '../sound';
 
 // ---------- the venues, a career in order ----------
 type Px = [number, number, number, number, string];
@@ -229,6 +231,28 @@ function IntroCourt() {
   );
 }
 
+/** Round 29: the intro has a tune of its own (tracks.ts), but browsers stay quiet until the first
+ * click; this button is that click (or turns the music off). */
+function MusicButton() {
+  const [, redraw] = useState(0);
+  const audible = musicAudible();
+  return (
+    <button
+      className="btn ghost intro-music with-icon"
+      aria-pressed={audible}
+      onClick={() => {
+        if (audible) setMusic(false);
+        else if (!soundSettings().music) setMusic(true);
+        // the first click wakes the audio a moment later
+        setTimeout(() => redraw((n) => n + 1), 200);
+      }}
+    >
+      <Icon name="note" size={20} />
+      {audible ? 'Music off' : 'Play the music'}
+    </button>
+  );
+}
+
 export function Intro() {
   const end = useStore((s) => s.endIntro);
   useEffect(() => {
@@ -239,6 +263,7 @@ export function Intro() {
   return (
     <main className="intro">
       <IntroCourt />
+      <MusicButton />
       <div className="intro-front">
         <h1 className="in-title">
           <PixelWord text="BENCH" color="#F4F1EA" shade="#1B1820" />

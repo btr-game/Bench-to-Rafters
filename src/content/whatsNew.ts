@@ -16,6 +16,17 @@ interface News {
 
 export const NEWS: News[] = [
   {
+    id: '2026-11-01-r29',
+    date: '1 November 2026',
+    items: [
+      { icon: 'calendar', text: 'Season and League are one tab now, with what is worth a look first: your team and form, the bracket in the playoffs, the standings beside your team’s strength, then the leaders and the league’s history.' },
+      { icon: 'controller', text: 'A new Extras tab inside every career: the mini-games, the career log, the achievement book and the community, one tap away. The mini-games left Home for it.' },
+      { icon: 'lock', text: 'Lock up to five cards in the career log: a locked career is never replaced by a new one, and can’t be deleted until you unlock it.' },
+      { icon: 'note', text: 'Music for every part of the game: bright tunes for the intro and the thank-you page, one for high school, college and each league, a laid-back one for the offseason, and one for each mini-game.' },
+      { icon: 'chart', text: 'The career timeline’s line runs straight from season to season again.' },
+    ],
+  },
+  {
     id: '2026-10-31-r28',
     date: '31 October 2026',
     items: [

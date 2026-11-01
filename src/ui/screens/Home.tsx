@@ -32,7 +32,6 @@ import { NAMES, UI } from "../../content/strings";
 import { useStore } from "../../store";
 import { LabCard } from "../components/Lab";
 import { MvpRace } from "../components/MvpRace";
-import { MiniGamesCard } from "../mini/MiniGames";
 import { PlaybookArt } from "../art/Playbook";
 import { DuoCard, RecruitCard, StoriesCard } from "../components/Roster";
 import { canRecruit, recruitInfo } from "../../engine/career/recruit";
@@ -1042,7 +1041,6 @@ export function Home({ g }: { g: GameState }) {
           <DuoCard g={g} />
           <RivalCard g={g} />
           <StoriesCard g={g} />
-          <MiniGamesCard />
           {g.feed[0] && (
             <section className="card prose">
               <ReactionCard r={g.feed[0]} />

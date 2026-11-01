@@ -4,6 +4,7 @@
 
 import type { Bracket, League, SeriesResult } from '../../engine/types';
 import { TeamArt } from '../art/Crest';
+import { badge } from '../art/color';
 
 interface Props {
   bracket: Bracket;
@@ -18,7 +19,7 @@ function Side({ x, id, wins, seed, league, me }: { x: SeriesResult; id: string; 
     <div className={`nb-team${won ? ' won' : ' lost'}${me ? ' me' : ''}`} title={t?.name}>
       <span className="nb-seed">{seed ?? ''}</span>
       {t && <TeamArt name={t.name} abbr={t.abbr} color={t.color} league="NBA" size={20} />}
-      <span className="nb-mark" style={{ background: t?.color ?? '#555' }}>
+      <span className="nb-mark" style={badge(t?.color ?? '#555555')}>
         {t?.abbr ?? id.slice(0, 3)}
       </span>
       <b className="nb-wins">{wins}</b>
@@ -77,17 +78,17 @@ export function NbaBracket(p: Props) {
         <div className="nb-final">
           <div className="kicker">NBA Finals</div>
           <div className="nb-final-score">
-            <span className="nb-mark big" style={{ background: champ?.color }}>
+            <span className="nb-mark big" style={badge(champ?.color ?? '#555555')}>
               {champ?.abbr}
             </span>
             <b>
               {champW}–{loserW}
             </b>
-            <span className="nb-mark big dim" style={{ background: loser?.color }}>
+            <span className="nb-mark big dim" style={badge(loser?.color ?? '#555555')}>
               {loser?.abbr}
             </span>
           </div>
-          <div className="nb-champ" style={{ background: champ?.color ?? 'var(--accent)' }}>
+          <div className="nb-champ" style={badge(champ?.color ?? '#555555')}>
             {champ && <TeamArt name={champ.name} abbr={champ.abbr} color={champ.color} league="NBA" size={40} />}
             <small>Champions</small>
             <b>{champ?.name ?? p.bracket.champion}</b>

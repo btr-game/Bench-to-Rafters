@@ -6,24 +6,26 @@ import { ovrOf } from '../engine/player/ovr';
 import { NextStep, SettingsMenu, useKeys } from './components/Settings';
 import { ShareButton } from './components/Share';
 import { tabKey } from './selectors';
-import { useStore, type Tab } from '../store';
+import { achievementsNow, useStore, type Tab } from '../store';
 import { UI } from '../content/strings';
 import { Create } from './screens/Create';
 import { Home } from './screens/Home';
-import { LeagueTab, PlayerTab, RecordsTab, SeasonTab } from './screens/Tabs';
+import { ExtrasTab, PlayerTab, RecordsTab, SeasonTab } from './screens/Tabs';
 import { Retirement } from './screens/Retirement';
 import { DailyStrip } from './mini/Daily';
 import { Overlays } from './components/Overlays';
 import { MiniGames } from './mini/MiniGames';
 import { Icon } from './art/Icon';
 import { CareerLog } from './screens/CareerLog';
-import { AchButton, AchievementBook } from './screens/Achievements';
+import { AchievementBook } from './screens/Achievements';
 import { CommunityPage } from './screens/Community';
 import { FootBar } from './components/FootBar';
 import { Intro } from './screens/Intro';
 import { Thanks } from './screens/Thanks';
 import { ICON_FOR } from './art/icons';
-import { music, sfx, wakeOnClick } from './sound';
+import { music, onHeard, sfx, wakeOnClick } from './sound';
+import { recordHeard } from './achievements';
+import { trackOf } from './tracks';
 
 
 // round 28 (owner: "any graphic that isnt pixels, change them"): the tab icons on a 12x12 pixel
@@ -32,8 +34,9 @@ const ICON_ROWS: Record<Tab, string[]> = {
   home: ['.....##.....', '....####....', '...##..##...', '..##....##..', '.##......##.', '##........##', '.#........#.', '.#..####..#.', '.#..#..#..#.', '.#..#..#..#.', '.#..#..#..#.', '.####..####.'],
   season: ['..#.....#...', '.#########..', '.#.......#..', '.#########..', '.#.......#..', '.#.#.#.#.#..', '.#.......#..', '.#.#.#.#.#..', '.#.......#..', '.#########..', '............', '............'],
   player: ['....####....', '...#....#...', '...#....#...', '...#....#...', '....####....', '............', '...######...', '..#......#..', '.#........#.', '.#........#.', '.#........#.', '.##########.'],
-  league: ['.......##...', '.......##...', '.......##...', '..##...##...', '..##...##...', '..##...##.##', '..##...##.##', '..##.#.##.##', '..##.#.##.##', '..##.#.##.##', '############', '............'],
   records: ['.##########.', '#.#......#.#', '#.#......#.#', '.##......##.', '..#......#..', '...#....#...', '....####....', '.....##.....', '.....##.....', '....####....', '...######...', '............'],
+  // round 29: the four cards of the start page, two by two
+  extras: ['#####..#####', '#...#..#...#', '#.#.#..#.#.#', '#...#..#...#', '#####..#####', '............', '............', '#####..#####', '#...#..#...#', '#.#.#..#.#.#', '#...#..#...#', '#####..#####'],
 };
 const ICONS: Record<Tab, ReactNode> = Object.fromEntries(
   (Object.keys(ICON_ROWS) as Tab[]).map((t) => [t, ICON_ROWS[t].flatMap((row, y) => [...row].map((c, x) => (c === '#' ? <rect key={`${x}-${y}`} x={x} y={y} width={1} height={1} /> : null)))]),
@@ -132,10 +135,12 @@ export function App() {
 
   useKeys(!mini && !!game);
   // round 25: sound. The first click or key wakes the audio; the music plays from the start (owner:
-  // "the background music should be playing from the very start of the game"), everywhere but the
-  // mini-games, which have their own; what happens in the game has its own sounds
+  // "the background music should be playing from the very start of the game"); what happens in the
+  // game has its own sounds. Round 29: the loop follows the screen
+  const track = useStore(trackOf);
   useEffect(() => wakeOnClick(), []);
-  useEffect(() => music(!mini), [mini]);
+  useEffect(() => onHeard((id) => recordHeard(id) && achievementsNow()), []);
+  useEffect(() => music(track), [track]);
   useEffect(
     () =>
       useStore.subscribe((now, before) => {
@@ -196,7 +201,6 @@ export function App() {
           <TabBar g={game} top />
           <div className="top-right">
             <NextStep g={game} />
-            <AchButton g={game} />
             <ShareButton />
             <GuideButton />
             <SettingsMenu g={game} />
@@ -207,8 +211,8 @@ export function App() {
           {tab === 'home' && (retired ? <Retirement g={game} /> : <Home g={game} />)}
           {tab === 'season' && <SeasonTab g={game} />}
           {tab === 'player' && <PlayerTab g={game} />}
-          {tab === 'league' && <LeagueTab g={game} />}
           {tab === 'records' && <RecordsTab g={game} />}
+          {tab === 'extras' && <ExtrasTab g={game} />}
         </TabView>
         <FootBar where={`${tab} tab, ${MODES[game.mode]?.name ?? game.mode}, age ${game.player.age}`} />
       </div>

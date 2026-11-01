@@ -19,7 +19,7 @@ const SECTIONS: { title: string; where: string; items: [string, string[]][] }[] 
     title: 'Getting around',
     where: 'The top bar',
     items: [
-      ['Tabs', ['Home, Season, Player, League and Records.', 'Along the top on a computer, at the bottom on a phone.', 'A dot means something new is there: opening the tab takes you to it, rings it and waits for Got it (Enter or Space).']],
+      ['Tabs', ['Home, Season, Player, Records and Extras.', 'Along the top on a computer, at the bottom on a phone.', 'A dot means something new is there: opening the tab takes you to it, rings it and waits for Got it (Enter or Space).']],
       ['Next step', ['On any other tab, this button carries the game on.', 'Looking around never stops the game.']],
       ['To do', ['The top of Home: what the game is waiting for now.', 'Also lists anything new worth a look. Tap to jump to it.']],
       ['Saving', ['Up to ten careers save on this device, each after every move.', 'The start page lists them: Continue, Code and Delete. An eleventh replaces the oldest.', 'Code copies a career as text; paste it on any other browser to carry it over.']],
@@ -27,10 +27,9 @@ const SECTIONS: { title: string; where: string; items: [string, string[]][] }[] 
       ['How you play', ['A card on Home with every mode as a switch.', 'Sim: makes the routine calls (plans, summers, call-ups, press) and stops only for the big ones.', 'Fast break: quick seasons; each tab folds its extra cards behind "Show everything".', 'Simple text: hides the explanations on every tab.']],
       ['Guide mode', ['Walks you through every button once, step by step.', 'New things get their step the first time they unlock.', 'Then it highlights the next thing to do. Turn it on here, in Settings or on How you play.']],
       ['Master mode', ['No recommendations anywhere: no scouts’ calls, fit tags, suggested deals or hints.', 'In Settings or on How you play.']],
-      ['Achievements', ['The Achievements button in the top bar opens the book from inside a career, with a count of what this career has earned.', 'Those earned in this career are highlighted in gold and listed first.']],
-      ['Pages', ['The career log, the achievement book, the community and the mini-games open as pages of their own.', 'Top left says where Back goes; next to it, where you are. Escape goes back too.']],
-      ['Keyboard', ['Enter: the main button (skips a final to the buzzer first).', '1–9, 0, - and =: pick a choice. Space: stop a timing meter.', 'H S P L R: tabs. Esc: back from a page, or close a menu.']],
-      ['Sound', ['Chiptune sound effects and a soft music loop, both on from your first click or key (browsers keep sound off until then).', 'The music rests in the mini-games, which have their own. Both switch in Settings.']],
+      ['Pages', ['The career log, the achievement book, the community and the mini-games open as pages of their own (in a career, from the Extras tab).', 'Top left says where Back goes; next to it, where you are. Escape goes back too.']],
+      ['Keyboard', ['Enter: the main button (skips a final to the buzzer first).', '1–9, 0, - and =: pick a choice. Space: stop a timing meter.', 'H S P R E: tabs. Esc: back from a page, or close a menu.']],
+      ['Sound', ['Chiptune sound effects, and music on from your first click or key (browsers keep sound off until then; the intro has a Play the music button).', 'A loop for each part of the game: bright ones for the intro and the thank-you page, the start page, high school, college, each league, a laid-back one for every offseason, one for the end of a career, and one for each mini-game (Lockdown keeps its own beat).', 'Both switch in Settings.']],
       ['Loading', ['When a step takes a moment, your player dribbles in the corner until it is ready.']],
     ],
   },
@@ -94,7 +93,7 @@ const SECTIONS: { title: string; where: string; items: [string, string[]][] }[] 
   },
   {
     title: 'Mini-games',
-    where: 'The Mini-games card on Home, or the start page',
+    where: 'The Mini-games card on the Extras tab, or the start page',
     items: [
       ['Unlocking them', ['Free from the start page.', 'In a career, each opens when a rating reaches its mark, and stays open.']],
       ['Career bonus', ['A good result gives your player a real rating bonus.', 'Two a season: the second at half value.']],
@@ -105,17 +104,17 @@ const SECTIONS: { title: string; where: string; items: [string, string[]][] }[] 
       ['Built in a lab', ['Design a player and spend credits on his ratings, season by season.', 'His art evolves as his OVR climbs.']],
       ['3-on-3 streetball', ['One game to 11 against the crew that holds the court.', 'Drives and pull-ups ask for a timing tap and play out on the action cam.', 'Pays finishing.']],
       ['Lockdown', ['A rhythm game on defense: A blocks, S steals, on the beat.', 'Every run deals 30 to 60 seconds of their sets in a new order; hold the long notes.', 'Pays perimeter and interior defense.']],
-      ['Daily challenge', ['The same prospect for everyone, every day.', 'Fast break and simple text stay on, and mini-games are locked, so a run stays quick.']],
+      ['Daily challenge', ['The same prospect for everyone, every day, from the start page (not during a career: it is a career of its own).', 'Fast break and simple text stay on, and mini-games are locked, so a run stays quick.']],
     ],
   },
   {
     title: 'Tabs',
     where: 'Each opens with a banner of the numbers that matter',
     items: [
-      ['Season', ['Your team, record, game log, standings, city and fans, the bracket.']],
+      ['Season', ['Your season and the league in one, the most worth a look first.', 'Your team, record and form; the playoff bracket while there is one (every series folds out below it).', 'Standings as win bars with every crest and the playoff line, your conference first, beside your team’s strength and its city and fans.', 'The league leaders, your games, last season’s award voting, the champions’ banners and the record book.']],
       ['Player', ['Ratings (shape and bars), status, kits, scouting (the projected peak stays a rough range until college).', 'Your name card (nickname and brand), then staff, wardrobe and collection side by side.', 'The body map: muscles training built, and every injury (hover or tap a red spot to see it).', 'The roster: the five, the bench, the system and how they fit.']],
-      ['League', ['Standings as win bars with every crest and the playoff line.', 'The leaders in points, rebounds and assists as bar charts, award voting as bars, the last champions’ banners, the record book.']],
-      ['Records', ['The career timeline and journal, season by season, trophies, totals, highs.']],
+      ['Records', ['The career timeline (OVR season to season, with the big moments) and journal, season by season, trophies, totals, highs.']],
+      ['Extras', ['The start page’s four cards, inside a career: the mini-games, the career log, the achievement book (with what this career has earned, in gold) and the community.', 'A dot when a mini-game opens.', 'While a career is on, the start page keeps a few things: the daily challenge, deleting log cards, and starting, continuing or importing another career.']],
     ],
   },
   {
@@ -135,7 +134,7 @@ const SECTIONS: { title: string; where: string; items: [string, string[]][] }[] 
     title: 'Beyond one career',
     where: 'The start page',
     items: [
-      ['Career log', ['The career cards of your last 10 finished careers.', 'A warning at 9; when full, a new career replaces the oldest.', 'Show, download or delete any card.']],
+      ['Career log', ['The career cards of your last 10 finished careers.', 'A warning at 9; when full, a new career replaces the oldest card that is not locked.', 'Lock up to 5 to keep them for good: a locked card is never replaced or deleted until you unlock it.', 'Show, download, lock or delete any card (from a career: no deleting).']],
       ['Achievements', ['More than 500 milestones in five tiers, kept for good across careers.', 'Mini-games have their own: for the arcade itself, and for what the bonuses did for your career.', 'A banner drops in when you earn one; tap it away.', 'Ones you haven’t earned show only their name: a riddle.']],
       ['Thank you for playing', ['Every time you leave a career: your player with the trophy, and the career’s honours around the title.']],
       ['What it qualifies for', ['The end-of-career page says where the career stands: its place on today’s and the all-time board, the Reality 99 hall, a statue (with the button to raise it) or how much legacy a statue still needs.']],
@@ -152,7 +151,7 @@ const QUICK: [string, string][] = [
   ['1', 'Pick a plan for each half.'],
   ['2', 'Answer turning points.'],
   ['3', 'Between seasons, check Offseason moves.'],
-  ['4', 'Raise ratings to unlock mini-games.'],
+  ['4', 'Raise ratings to unlock mini-games (on the Extras tab).'],
   ['5', 'Want it quicker? Fast break or Sim, on How you play.'],
 ];
 

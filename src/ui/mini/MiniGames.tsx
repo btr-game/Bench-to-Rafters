@@ -146,10 +146,11 @@ export function MiniGames() {
   );
 }
 
-/** The entry button used on the start page and at the bottom of Home. */
+/** The entry on the start page and on a career's Extras tab (round 29; at the foot of Home before). */
 export function MiniGamesCard() {
   const setMini = useStore((s) => s.setMini);
   const daily = useStore((s) => !!s.game?.flags.daily);
+  const live = useStore((s) => !!s.game && s.game.step !== 'retired');
   return (
     <section className={`card stack${daily ? ' mini-locked' : ''}`}>
       <div className="sec-title with-icon">
@@ -160,7 +161,11 @@ export function MiniGamesCard() {
         <p className="small muted">Locked during the daily challenge, so a run stays quick. They open again when you go back to your career.</p>
       ) : (
         <>
-          <p className="small muted">Front Office, the three-point and dunk contests, 3-on-3 streetball, Lockdown, Built in a lab, the legends showdown and the daily challenge. With a career, each opens when your ratings reach it.</p>
+          <p className="small muted">
+            {live
+              ? 'Front Office, the three-point and dunk contests, 3-on-3 streetball, Lockdown, Built in a lab and the legends showdown. Each opens when your ratings reach it, and a good result pays a rating bonus. The daily challenge waits for the start page.'
+              : 'Front Office, the three-point and dunk contests, 3-on-3 streetball, Lockdown, Built in a lab, the legends showdown and the daily challenge. With a career, each opens when your ratings reach it.'}
+          </p>
           <button className="btn ghost" data-tour="minis" onClick={() => setMini('hub')}>
             Play a mini-game
           </button>

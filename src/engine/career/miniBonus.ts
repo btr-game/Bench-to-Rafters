@@ -54,11 +54,11 @@ export function syncMiniUnlocks(s: GameState): string[] {
       fresh.push(MINI_NAMES[id]);
     }
   }
-  if (fresh.length && s.history.length > 0) s.toast = `Mini-game unlocked: ${fresh.join(', ')}. Play it from Home for a career bonus.`;
+  if (fresh.length && s.history.length > 0) s.toast = `Mini-game unlocked: ${fresh.join(', ')}. Play it from the Extras tab for a career bonus.`;
   return fresh;
 }
 
-const MINI_NAMES: Record<MiniId, string> = { threes: 'Three-point contest', dunk: 'Dunk contest', office: 'Front Office', lab: 'Built in a lab', legends: 'Legends showdown', street: '3-on-3 streetball', rhythm: 'Lockdown' };
+export const MINI_NAMES: Record<MiniId, string> = { threes: 'Three-point contest', dunk: 'Dunk contest', office: 'Front Office', lab: 'Built in a lab', legends: 'Legends showdown', street: '3-on-3 streetball', rhythm: 'Lockdown' };
 
 export type MiniResult =
   | { game: 'threes'; score: number; won: boolean; own: boolean }

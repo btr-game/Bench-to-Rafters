@@ -1,11 +1,11 @@
-// Season, Player, League and Records tabs.
+// Season (with the league, round 29), Player and Records tabs.
 
 import { LegacyTierList } from '../components/Legacy';
 import { BannersAndRings, TrophyCabinet, trophyItems } from '../components/Trophies';
 import { CareerHighs } from '../components/Highs';
 import { NbaBracket } from '../components/NbaBracket';
 import { TextBracket } from '../components/TextBracket';
-import { useState, type ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { VenueArt, arenaOf, placeOf, venueOf, type VenueKind } from '../art/Venue';
 import { TeamArt } from '../art/Crest';
 import { Icon } from '../art/Icon';
@@ -22,13 +22,19 @@ import { WardrobeCard } from '../components/Wardrobe';
 import { StaffCard } from '../components/StaffCard';
 import { StrengthCard } from '../components/StrengthCard';
 import { CollectionCard } from '../components/Collection';
-import { AchievementsCard } from './Achievements';
 import { FlagArt } from '../art/Flag';
-import type { GameLog, GameState, League, SeasonRecord, SeriesResult, StatLine, Team } from '../../engine/types';
+import { Badge } from '../art/Badge';
+import { MiniGamesCard } from '../mini/MiniGames';
+import { CareerLogCard } from './CareerLog';
+import { AchievementsCard, earnedIn } from './Achievements';
+import { CommunityCard } from './Community';
+import { LOCK_MAX, LOG_MAX, logCards, logLocks } from '../careerLog';
+import { MINI_NAMES } from '../../engine/career/miniBonus';
+import type { GameLog, GameState, League, SeasonRecord, SeriesResult, StatLine } from '../../engine/types';
 import { ATTRS, LEVELS } from '../../engine/balance';
 import { ovrOf } from '../../engine/player/ovr';
 import { standings } from '../../engine/sim/leagueSim';
-import { addLine, emptyLine, perGame } from '../../engine/sim/statModel';
+import { addLine, emptyLine } from '../../engine/sim/statModel';
 import { careerIndex, championships, count, legacyScore, nbaTitles, verdictFor } from '../../engine/awards/legacy';
 import { NAMES } from '../../content/strings';
 import { Card, Extra, Meter, Scoreboard } from '../components/bits';
@@ -110,60 +116,6 @@ function GameLogTable({ g }: { g: GameState }) {
   );
 }
 
-function StandingsTable({ lg, teams, userId, title }: { lg: League; teams: Team[]; userId: string | null; title?: string }) {
-  return (
-    <div className="stack" style={{ gap: 6 }}>
-      {title && <div className="kicker">{title}</div>}
-      <div className="tbl-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th className="l">Team</th>
-              <th>W</th>
-              <th>L</th>
-              <th>PCT</th>
-            </tr>
-          </thead>
-          <tbody>
-            {standings(teams).map((t, i) => (
-              <tr key={t.id} className={t.id === userId ? 'me' : ''}>
-                <td>{i + 1}</td>
-                <td className="l">
-                  <TeamArt name={t.name} abbr={t.abbr || t.short} color={t.color} league={styleLeague(lg.level)} size={24} />
-                  {lg.level === 'NBA' ? t.name : t.short}
-                </td>
-                <td>{t.w}</td>
-                <td>{t.l}</td>
-                <td>{t.w + t.l > 0 ? (t.w / (t.w + t.l)).toFixed(3).replace(/^0/, '') : '—'}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
-
-function Standings({ g }: { g: GameState }) {
-  const lg = leagueOf(g);
-  if (!lg) return <p className="muted">No league right now.</p>;
-  const userTeam = lg.teams.find((t) => t.id === g.teamId);
-  if (lg.level === 'NBA') {
-    return (
-      <div className="stack">
-        {['East', 'West'].map((c) => (
-          <StandingsTable key={c} lg={lg} teams={lg.teams.filter((t) => t.conf === c)} userId={g.teamId} title={`${c}ern Conference`} />
-        ))}
-      </div>
-    );
-  }
-  if (lg.level === 'NCAA' && userTeam) {
-    return <StandingsTable lg={lg} teams={lg.teams.filter((t) => t.conf === userTeam.conf)} userId={g.teamId} title={userTeam.conf} />;
-  }
-  return <StandingsTable lg={lg} teams={lg.teams} userId={g.teamId} />;
-}
-
 function SeriesRow({ x, name, me, label }: { x: SeriesResult; name: (id: string) => string; me: boolean; label?: string }) {
   const games = x.games ?? [];
   const head = (
@@ -201,25 +153,6 @@ function BracketView({ g }: { g: GameState }) {
   return (
     <div className="bracket">
       {graphic ? <NbaBracket bracket={b} league={lg} userTeamId={g.teamId} /> : <TextBracket b={b} league={lg} userTeamId={g.teamId} />}
-      <div className="sec-title">Every {lg.level === 'NBA' ? 'series' : 'game'}</div>
-      {b.playIn && b.playIn.length > 0 && (
-        <div className="round">
-          <div className="kicker">Play-In Tournament</div>
-          {b.playIn.map((x, i) => (
-            <SeriesRow key={i} x={x} name={name} me={mine(x)} label={x.label} />
-          ))}
-        </div>
-      )}
-      {rounds.map((r) => (
-        <div className="round" key={r.name}>
-          <div className="kicker">{r.name}</div>
-          {r.series
-            .filter((x) => lg.level !== 'NCAA' || r.series.length <= 16 || mine(x))
-            .map((x, i) => (
-              <SeriesRow key={i} x={x} name={name} me={mine(x)} />
-            ))}
-        </div>
-      ))}
       <div className="kicker">Champion: {name(b.champion)}</div>
       {b.mvps && b.mvps.length > 0 && (
         <div className="mvp-list">
@@ -230,7 +163,29 @@ function BracketView({ g }: { g: GameState }) {
           ))}
         </div>
       )}
-      <p className="muted small">Tap a series to see every game.</p>
+      {/* round 29: on the Season tab the list folds away, so the standings stay near the top */}
+      <details className="series-all">
+        <summary className="sec-title">Every {lg.level === 'NBA' ? 'series' : 'game'}</summary>
+        {b.playIn && b.playIn.length > 0 && (
+          <div className="round">
+            <div className="kicker">Play-In Tournament</div>
+            {b.playIn.map((x, i) => (
+              <SeriesRow key={i} x={x} name={name} me={mine(x)} label={x.label} />
+            ))}
+          </div>
+        )}
+        {rounds.map((r) => (
+          <div className="round" key={r.name}>
+            <div className="kicker">{r.name}</div>
+            {r.series
+              .filter((x) => lg.level !== 'NCAA' || r.series.length <= 16 || mine(x))
+              .map((x, i) => (
+                <SeriesRow key={i} x={x} name={name} me={mine(x)} />
+              ))}
+          </div>
+        ))}
+        <p className="muted small">Tap a series to see every game.</p>
+      </details>
     </div>
   );
 }
@@ -289,28 +244,6 @@ function PointsChart({ games }: { games: GameLog[] }) {
   );
 }
 
-/** Standings for his conference (or the other one), compact enough for a side column. */
-function ConfStandings({ g }: { g: GameState }) {
-  const lg = leagueOf(g);
-  const mine = lg?.teams.find((t) => t.id === g.teamId);
-  const [conf, setConf] = useState(mine?.conf ?? 'East');
-  if (!lg) return <p className="muted">No league right now.</p>;
-  if (lg.level === 'NBA')
-    return (
-      <div className="stack" style={{ gap: 8 }}>
-        <div className="subtabs">
-          {['East', 'West'].map((c) => (
-            <button key={c} aria-pressed={conf === c} onClick={() => setConf(c)}>
-              {c}
-            </button>
-          ))}
-        </div>
-        <StandingsTable lg={lg} teams={lg.teams.filter((t) => t.conf === conf)} userId={g.teamId} />
-      </div>
-    );
-  return <Standings g={g} />;
-}
-
 /** The team's second colour (its kit trim), for the stripe under the banner's top edge. */
 function trimOf(g: GameState): string | undefined {
   const t = teamOf(g);
@@ -341,8 +274,42 @@ function PageHero({ art, venue, place, arena, stripe, kicker, title, sub, color,
   );
 }
 
+/** Round 29: the standings as win bars (round 28's League tab), his own conference first. */
+function StandingsCard({ g, lg }: { g: GameState; lg: League }) {
+  const mine = lg.teams.find((t) => t.id === g.teamId);
+  if (lg.level === 'NBA') {
+    const confs = mine?.conf === 'West' ? ['West', 'East'] : ['East', 'West'];
+    return (
+      <Card title="Standings" kicker="Top six to the playoffs, seven to ten to the play-in" tour="season-standings">
+        <div className="lg-confs">
+          {confs.map((c) => (
+            <div key={c} className="stack" style={{ gap: 6 }}>
+              <div className="kicker">{c}ern Conference</div>
+              <StandingsBars lg={lg} teams={lg.teams.filter((t) => t.conf === c)} userId={g.teamId} cut={6} />
+            </div>
+          ))}
+        </div>
+      </Card>
+    );
+  }
+  const conf = lg.level === 'NCAA' && mine ? mine.conf : null;
+  return (
+    <Card title="Standings" kicker={conf ?? lg.label ?? LEVELS[lg.level].name} tour="season-standings">
+      <StandingsBars lg={lg} teams={conf ? lg.teams.filter((t) => t.conf === conf) : lg.teams} userId={g.teamId} />
+    </Card>
+  );
+}
+
+/**
+ * Season and League in one tab (round 29, owner: "not much incentive to using the season tab and
+ * league tab. combine them. just make sure the ones that are actually worth noticing are towards
+ * the top"): his team and form, then the bracket while there is one, the standings beside the
+ * team's strength, the league leaders, his games, and the league's history last.
+ */
 export function SeasonTab({ g }: { g: GameState }) {
   const lg = leagueOf(g);
+  // after retirement there is no league of his own: the NBA's stands in
+  const view = lg ?? g.nba;
   const t = teamOf(g);
   const s = g.season;
   const games = realGames(g);
@@ -351,9 +318,9 @@ export function SeasonTab({ g }: { g: GameState }) {
   const avg = (k: 'pts' | 'reb' | 'ast') => (played.length ? (played.reduce((a, x) => a + x.line![k], 0) / played.length).toFixed(1) : '—');
   const confTeams = lg && t ? standings(lg.level === 'NBA' || lg.level === 'NCAA' ? lg.teams.filter((x) => x.conf === t.conf) : lg.teams) : [];
   const place = t ? confTeams.findIndex((x) => x.id === t.id) + 1 : 0;
-  const [view, setView] = useState<'season' | 'bracket'>('season');
-  const hasBracket = !!lg?.bracket;
-  // after retirement there is no team: the last season stands in
+  const leaders = !!view?.teams.some((x) => x.roster.some((p) => p.s && p.s.gp >= 10));
+  const races = g.lastSummary?.races ?? [];
+  // the last season stands in for the team after retirement
   const last = !t ? g.lastSummary : null;
   return (
     <div className="page">
@@ -377,39 +344,53 @@ export function SeasonTab({ g }: { g: GameState }) {
       >
         <FormStrip games={games} />
       </PageHero>
-      {hasBracket && (
-        <div className="subtabs">
-          <button aria-pressed={view === 'season'} onClick={() => setView('season')}>
-            Season
-          </button>
-          <button aria-pressed={view === 'bracket'} onClick={() => setView('bracket')}>
-            Postseason bracket
-          </button>
-        </div>
-      )}
-      {view === 'bracket' && hasBracket ? (
-        <Card title="Postseason" tour="season-post">
+      {lg?.bracket && (
+        <Card title="Postseason" kicker={`${seasonLabel(g.year)} · ${lg.level === 'NBA' ? 'the playoffs' : 'the postseason'}`} tour="season-post">
           <BracketView g={g} />
         </Card>
-      ) : (
-        <div className="page-grid wide-side">
-          <Extra>
-            <Card title="Games" kicker={`${all.length} played`} tour="season-games">
-              <PointsChart games={all} />
-              <GameLogTable g={g} />
-            </Card>
-          </Extra>
-          <div className="stack">
-            <StrengthCard g={g} />
-            <Extra>
-              <CityCard g={g} />
-            </Extra>
-            <Card title="Standings">
-              <ConfStandings g={g} />
-            </Card>
-          </div>
+      )}
+      {view && (
+        <div className={t ? 'page-grid wide-side' : 'stack'}>
+          <StandingsCard g={g} lg={view} />
+          {t && (
+            <div className="stack">
+              <StrengthCard g={g} />
+              <Extra>
+                <CityCard g={g} />
+              </Extra>
+            </div>
+          )}
         </div>
       )}
+      {view && leaders && (
+        <Card title="League leaders" kicker="Per game, ten games or more" tour="season-leaders">
+          <div className="lg-leader-grid">
+            {(['pts', 'reb', 'ast'] as const).map((k) => (
+              <LeaderBars key={k} lg={view} stat={k} userName={g.player.name} />
+            ))}
+          </div>
+        </Card>
+      )}
+      <Extra>
+        <Card title="Your games" kicker={`${all.length} played`} tour="season-games">
+          <PointsChart games={all} />
+          <GameLogTable g={g} />
+        </Card>
+      </Extra>
+      <Extra>
+        {races.length > 0 && (
+          <Card title="Last season's award voting" tour="season-votes">
+            <VoteBars races={races} />
+            {races.map((r) => (r.userRank && r.userRank > 5 ? <p key={r.award} className="small muted">{r.award === 'MVP' ? 'MVP' : r.award}: you finished {ordinal(r.userRank)}.</p> : null))}
+          </Card>
+        )}
+        {g.nbaHistory.length > 0 && (
+          <Card title="Champions" kicker="The last NBA titles, newest first" tour="champions">
+            <ChampionStrip g={g} />
+          </Card>
+        )}
+        {g.nbaHistory.length > 0 && <NbaHistoryCard g={g} />}
+      </Extra>
     </div>
   );
 }
@@ -708,7 +689,7 @@ export function PlayerTab({ g }: { g: GameState }) {
   );
 }
 
-// ---------- League ----------
+// ---------- League history (on the Season tab since round 29) ----------
 
 function NbaHistoryCard({ g }: { g: GameState }) {
   const [all, setAll] = useState(false);
@@ -757,77 +738,6 @@ function NbaHistoryCard({ g }: { g: GameState }) {
         )}
       </div>
     </Card>
-  );
-}
-
-export function LeagueTab({ g }: { g: GameState }) {
-  const lg = leagueOf(g) ?? g.nba;
-  if (!lg) return <Card title="League">No league data yet.</Card>;
-  const players = lg.teams.flatMap((t) => t.roster.map((p) => ({ p, t })));
-  const withLines = players.filter((x) => x.p.s && x.p.s.gp >= 10);
-  const leaders = withLines.length
-    ? [...withLines].sort((a, b) => perGame(b.p.s!, 'pts') - perGame(a.p.s!, 'pts')).slice(0, 15)
-    : [...players].sort((a, b) => b.p.ovr - a.p.ovr).slice(0, 15);
-  const races = g.lastSummary?.races ?? [];
-  const best = standings(lg.teams)[0];
-  const mine = lg.teams.find((t) => t.id === g.teamId);
-  const last = g.nbaHistory[g.nbaHistory.length - 1];
-  const conf = lg.level === 'NBA' ? ['East', 'West'] : [];
-  return (
-    <div className="page">
-      <PageHero
-        venue={venueOf(g)}
-        arena={arenaOf(g)}
-        place={placeOf(g)}
-        stripe={trimOf(g)}
-        kicker={seasonLabel(g.year)}
-        title={lg.label ?? LEVELS[lg.level].name}
-        sub={mine ? `Your team: ${mine.name}, ${mine.w}–${mine.l}` : 'Fictional players and teams'}
-        color={mine?.color}
-        stats={[
-          { k: 'Best record', v: best && best.w + best.l > 0 ? `${best.short} ${best.w}–${best.l}` : '—' },
-          { k: 'Scoring leader', v: withLines.length ? `${leaders[0].p.name.split(' ').slice(-1)[0]} ${perGame(leaders[0].p.s!, 'pts').toFixed(1)}` : '—' },
-          ...(last ? [{ k: 'Last champion', v: last.champion }] : []),
-        ]}
-      />
-      {/* round 28 (owner: "make it much more visual"): the standings as win bars, the playoff line drawn */}
-      {conf.length ? (
-        <div className="page-grid two">
-          {conf.map((c) => (
-            <Card key={c} title={`${c}ern Conference`} kicker="Top six to the playoffs, seven to ten to the play-in">
-              <StandingsBars lg={lg} teams={lg.teams.filter((t) => t.conf === c)} userId={g.teamId} cut={6} />
-            </Card>
-          ))}
-        </div>
-      ) : (
-        <Card title="Standings">
-          <Standings g={{ ...g, league: lg, stage: g.stage }} />
-        </Card>
-      )}
-      {withLines.length > 0 && (
-        <Card title="League leaders" kicker="Per game, ten games or more">
-          <div className="lg-leader-grid">
-            {(['pts', 'reb', 'ast'] as const).map((k) => (
-              <LeaderBars key={k} lg={lg} stat={k} userName={g.player.name} />
-            ))}
-          </div>
-        </Card>
-      )}
-      {g.nbaHistory.length > 0 && (
-        <Card title="Champions" kicker="The last NBA titles, newest first">
-          <ChampionStrip g={g} />
-        </Card>
-      )}
-      <Extra>
-        {races.length > 0 && (
-          <Card title="Last season's award voting">
-            <VoteBars races={races} />
-            {races.map((r) => (r.userRank && r.userRank > 5 ? <p key={r.award} className="small muted">{r.award === 'MVP' ? 'MVP' : r.award}: you finished {ordinal(r.userRank)}.</p> : null))}
-          </Card>
-        )}
-        {g.nbaHistory.length > 0 && <NbaHistoryCard g={g} />}
-      </Extra>
-    </div>
   );
 }
 
@@ -924,9 +834,6 @@ export function RecordsTab({ g }: { g: GameState }) {
       <Extra>
         <CareerTimeline g={g} />
       </Extra>
-      <div className="start-cards">
-        <AchievementsCard g={g} />
-      </div>
       <Card title="Season by season" tour="season-log">
         {g.history.length === 0 ? <p className="muted">Your seasons show up here after the first one.</p> : <HistoryTable rows={g.history} />}
         <p className="muted small">High school and college seasons are listed but do not count toward pro career totals.</p>
@@ -1003,6 +910,72 @@ export function RecordsTab({ g }: { g: GameState }) {
       </div>
       <LegacyTierList g={g} />
       </Extra>
+    </div>
+  );
+}
+
+// ---------- Extras (round 29) ----------
+
+/**
+ * The start page's four cards inside a career (round 29, owner: "let them view the four additional
+ * cards in the homepage (minigames, career logs, achievements, community). try to limit access to
+ * some (such as going into career log and continuing a career mid-career) to prevent bugs"). Each
+ * opens as it does from the start page, less what belongs to the start page alone: the daily
+ * challenge (a career of its own), deleting log cards, and starting, continuing or importing
+ * another career, which the start page keeps.
+ */
+export function ExtrasTab({ g }: { g: GameState }) {
+  const t = teamOf(g);
+  const live = g.step !== 'retired';
+  const minis = Object.keys(MINI_NAMES).length;
+  const open = (g.miniOpen ?? []).length;
+  const earned = useMemo(() => earnedIn(g).length, [g]);
+  const [log] = useState(() => ({ n: logCards().length, locked: logLocks().length }));
+  return (
+    <div className="page">
+      <PageHero
+        venue={venueOf(g)}
+        arena={arenaOf(g)}
+        place={placeOf(g)}
+        stripe={trimOf(g)}
+        color={t?.color}
+        art={
+          <span className="extras-art" aria-hidden="true">
+            <Icon name="controller" size={44} />
+            <Icon name="cards" size={44} />
+            <Badge tier="starter" size={44} />
+            <Icon name="crowd" size={44} />
+          </span>
+        }
+        kicker="Beside the career"
+        title="Extras"
+        sub="The mini-games, your career log, the achievement book and the community, one tap from the career and back."
+        stats={[
+          { k: 'Mini-games', v: g.flags.daily ? 'Locked' : `${open} of ${minis}`, tone: g.flags.daily ? 'bad' : undefined },
+          { k: 'Earned this career', v: earned },
+          { k: 'Career log', v: `${log.n} of ${LOG_MAX}` },
+          { k: 'Locked', v: `${log.locked} of ${LOCK_MAX}` },
+        ]}
+      />
+      <div className="start-cards extras-cards">
+        <MiniGamesCard />
+        <CareerLogCard />
+        <AchievementsCard g={g} />
+        <CommunityCard />
+      </div>
+      {live && (
+        <section className="card extras-limits prose" data-tour="extras-limits">
+          <Icon name="lock" size={28} />
+          <div className="stack" style={{ gap: 4 }}>
+            <b>Kept for the start page while a career is on</b>
+            <ul className="small">
+              <li>The daily challenge: it is a career of its own.</li>
+              <li>Deleting career log cards (looking, downloading and locking are fine).</li>
+              <li>Starting, continuing or importing another career.</li>
+            </ul>
+          </div>
+        </section>
+      )}
     </div>
   );
 }

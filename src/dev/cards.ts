@@ -16,7 +16,7 @@ import { SHOP_ITEMS } from '../content/shop';
 import { newSlotId, writeSlot } from '../ui/saves';
 import { todayKey } from '../engine/mini/daily';
 import { ATTRS } from '../engine/balance';
-import { logCareer } from '../ui/careerLog';
+import { lockCard, logCards, logCareer } from '../ui/careerLog';
 import { runOf } from '../ui/achievements';
 import { resetTour } from '../ui/components/GuideTour';
 import { decision, moment, onlyMoment, play, type PlayOpts } from './stage';
@@ -142,8 +142,10 @@ function seedCommunity(): void {
   }
 }
 
-function seedLog(): void {
+function seedLog(locks = false): void {
   for (const r of records()) logCareer(r);
+  // round 29: lock the oldest two, so the page shows both kinds
+  if (locks) for (const c of logCards().slice(-2)) lockCard(c.id, true);
 }
 
 /** Every achievement earned (so none pop up while you look around), or none. */
@@ -192,11 +194,12 @@ export const CARDS: DevCard[] = [
   // career hub
   { id: 'home-hs', title: 'Home: high school', group: 'Career hub', icon: 'house', blurb: 'The first season, the first plan.', open: () => show(hsStart()) },
   { id: 'home-nba', title: 'Home: an NBA star', group: 'Career hub', icon: 'stars', blurb: 'Third NBA season, MVP race, duo, stories.', open: () => show(nbaStar()) },
-  { id: 'season', title: 'Season tab', group: 'Career hub', icon: 'calendar', blurb: 'Games, splits, the season so far.', open: () => show(nbaStar(), 'season') },
+  { id: 'season', title: 'Season tab', group: 'Career hub', icon: 'calendar', blurb: 'Season and league in one (round 29): team and form, standings beside team strength, the league leaders, his games, award voting, champions, the record book.', open: () => show(nbaStar(), 'season') },
   { id: 'player', title: 'Player tab', group: 'Career hub', icon: 'person', blurb: 'Ratings, status, contract, profile, scouting, body map.', open: () => show(nbaStar(), 'player') },
   { id: 'roster', title: 'Team roster and fit', group: 'Career hub', icon: 'roster', blurb: 'The five, the bench, the system and the chemistry.', open: () => show(nbaStar(), 'player'), press: '[data-tour="roster"]' },
   { id: 'bodymap', title: 'Body map with an injury', group: 'Career hub', icon: 'health', blurb: 'The pixel body map, hurt.', open: () => show(at('injured', (s) => !!s.player.injury && s.stage === 'NBA'), 'player') },
-  { id: 'league', title: 'League tab and bracket', group: 'Career hub', icon: 'bracket', blurb: 'Standings as win bars with crests and the playoff line, the leaders and award voting as bar charts, the last champions’ banners, the bracket, the record book.', open: () => show(at('bracket', (s) => s.stage === 'NBA' && s.step === 'summary' && !!s.nba?.bracket), 'league') },
+  { id: 'season-post', title: 'Season tab in the playoffs', group: 'Career hub', icon: 'bracket', blurb: 'With a bracket out, it comes first: under the team and form, above the standings.', open: () => show(at('bracket', (s) => s.stage === 'NBA' && s.step === 'summary' && !!s.nba?.bracket), 'season') },
+  { id: 'extras', title: 'Extras tab', group: 'Career hub', icon: 'controller', blurb: 'The start page’s four cards inside a career (round 29): mini-games, career log, achievements, community, and what waits for the start page.', open: () => show(nbaStar(), 'extras') },
   { id: 'records', title: 'Records tab', group: 'Career hub', icon: 'chart', blurb: 'Trophies, banners, career highs, timeline.', open: () => show(at('late', (s) => s.stage === 'NBA' && s.player.age >= 31 && s.step === 'summary'), 'records') },
   { id: 'settings', title: 'Settings menu', group: 'Career hub', icon: 'dial', blurb: 'Theme, court, sound and music, new career, switches.', open: () => show(nbaStar()), press: '[data-tour="settings-btn"]' },
   { id: 'guide', title: 'The game guide', group: 'Career hub', icon: 'guide', blurb: 'The manual: big headers, expandable cards.', open: () => show(nbaStar()), press: '[data-tour="guide-btn"]' },
@@ -362,14 +365,15 @@ export const CARDS: DevCard[] = [
   },
 
   // records and community
-  { id: 'log', title: 'Career log', group: 'Records & community', icon: 'cards', blurb: 'The last ten career cards.', open: () => (seedLog(), useStore.setState({ game: null, mini: null, page: 'log' })) },
+  { id: 'log', title: 'Career log', group: 'Records & community', icon: 'cards', blurb: 'The last ten career cards, two of them locked.', open: () => (seedLog(true), useStore.setState({ game: null, mini: null, page: 'log' })) },
+  { id: 'log-live', title: 'Career log from a career', group: 'Records & community', icon: 'lock', blurb: 'Opened from the Extras tab: look, download and lock; no Delete until the start page.', open: () => (seedLog(true), show(nbaStar(), 'extras', { page: 'log' })) },
   { id: 'ach-all', title: 'Achievement book (all earned)', group: 'Records & community', icon: 'laurel', blurb: `Every one of the ${ACHIEVEMENTS.length}, with how it was earned.`, open: () => (setAchievements(true), useStore.setState({ game: null, mini: null, page: 'achievements' })) },
   {
     id: 'ach-run',
     title: 'Achievements in a career',
     group: 'Records & community',
     icon: 'laurel',
-    blurb: 'The book from the top bar inside a career: what this career earned comes first, in gold.',
+    blurb: 'The book from a career’s Extras tab: what this career earned comes first, in gold.',
     // a book where a third of the first forty were earned by this career
     open: () => {
       const g = nbaStar();
@@ -381,9 +385,9 @@ export const CARDS: DevCard[] = [
       } catch {
         // nothing kept: the book opens empty
       }
-      return show(g);
+      return show(g, 'extras');
     },
-    press: '[data-tour="ach-btn"]',
+    press: '[data-tour="ach"]',
   },
   { id: 'ach-none', title: 'Achievement book (new player)', group: 'Records & community', icon: 'lock', blurb: 'Every name a riddle.', open: () => (setAchievements(false), useStore.setState({ game: null, mini: null, page: 'achievements' })) },
   {

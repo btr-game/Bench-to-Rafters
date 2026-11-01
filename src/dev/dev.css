@@ -154,3 +154,6 @@
 .lp.dk-move { position: static; animation: none; margin: 0; width: auto; box-shadow: none; }
 .dk-reset { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .dk-reset small { color: var(--muted); }
+/* round 29: the Music tab: each loop with the icon of where it plays */
+.dk-track { grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 12px; }
+.dk-track > span { display: grid; gap: 2px; min-width: 0; }
