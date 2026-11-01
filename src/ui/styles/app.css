@@ -1012,7 +1012,6 @@ button.todo-now { width: 100%; text-align: left; border: 0; font: inherit; color
   .page-grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .page-grid.three { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .page-grid.three > :first-child { grid-row: span 2; }
-  .page-grid.wide-side { grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); }
 }
 @media (min-width: 1280px) {
   .page-grid.three { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1fr); }
@@ -1921,16 +1920,8 @@ td .art-team { display: inline-block; vertical-align: middle; margin: -3px 8px -
 .place-city { background: linear-gradient(#495057 0%, #868e96 55%, #343a40 56%, #212529 100%); }
 .place-night { background: linear-gradient(#0b1020 0%, #1b2a4a 60%, #10151f 61%, #05070b 100%); }
 
-/* round 25: ten save slots on the start page */
+/* round 25: ten save slots (round 34: each one a card in the career log) */
 .save-entry.going { border-top: 4px solid var(--good); }
-.save-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 8px 14px;
-  align-items: center;
-  padding: 10px 0;
-  border-top: 1px solid var(--line);
-}
 .save-actions { gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
 .save-code {
   width: 100%;
@@ -1947,7 +1938,6 @@ td .art-team { display: inline-block; vertical-align: middle; margin: -3px 8px -
 .save-import summary { cursor: pointer; font-weight: 600; }
 .btn.ghost.danger { background: transparent; color: var(--bad); border-color: var(--bad); } /* owner: "red letter is invisible" (.btn.danger's red fill came through) */
 @media (max-width: 640px) {
-  .save-row { grid-template-columns: 1fr; }
   .save-actions { justify-content: flex-start; }
 }
 

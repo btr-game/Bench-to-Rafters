@@ -165,6 +165,12 @@ export const SHOP_ITEMS: ShopItem[] = [
   { id: 'meditation', name: 'Meditation app', category: 'Lifestyle', price: 0.07 * K, blurb: 'Ten minutes a day. Breathe.', morale: 3 },
   { id: 'stream-setup', name: 'Streaming setup', category: 'Lifestyle', price: 2 * K, blurb: 'Fans watch you play video games. You gain followers.', rep: 3, morale: 2 },
   { id: 'team-dinner', name: 'Dinner for the whole team', category: 'Lifestyle', price: 4 * K, blurb: 'Steaks on you. The locker room remembers.', trust: 4, morale: 3 },
+  // round 34: simplification (the round's theme: fewer, better things)
+  { id: 'career-scrapbook', name: 'A career scrapbook', category: 'Lifestyle', price: 0.3 * K, blurb: 'Every clipping since high school, in one fat binder.', morale: 3, rep: 1 },
+  { id: 'one-move-coach', name: 'A one-move coach', category: 'Training', price: 3 * K, blurb: 'One move, a thousand times a day, until it is yours.', attrs: { FIN: 0.5 }, morale: 1 },
+  { id: 'fundamentals-camp', name: 'Fundamentals camp', category: 'Training', price: 5 * K, blurb: 'Pivots, footwork, bank shots. The boring things that win.', attrs: { IQ: 0.5, PER: 0.3 } },
+  { id: 'announcer-dinner', name: 'Dinner with the arena announcer', category: 'Lifestyle', price: 1 * K, blurb: 'He teaches you to say your own name the way he does.', rep: 2, morale: 2 },
+  { id: 'minimal-locker', name: 'A minimalist locker', category: 'Lifestyle', price: 0.5 * K, blurb: 'One hook, one shelf, one pair of shoes. The room follows.', morale: 2, trust: 1 },
   // round 33: efficiency, and the nights that go wrong (the round's achievements)
   { id: 'shot-chart-wall', name: 'Your shot chart, poster size', category: 'Training', price: 0.15 * K, blurb: 'Green where you make them. Red where you should stop.', attrs: { IQ: 0.5 } },
   { id: 'ft-routine-coach', name: 'Free-throw routine specialist', category: 'Training', price: 4 * K, blurb: 'Same breath, same dribbles, same spin. Underhand, if you dare.', attrs: { SHT: 0.5 }, morale: 1 },

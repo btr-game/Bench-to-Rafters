@@ -8,7 +8,8 @@
 // button, the arrow keys drive the car along the road, and the place's card pops out beside it.
 
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
-import { useStore } from '../../store';
+import { achievementsNow, useStore } from '../../store';
+import { recordRoad } from '../achievements';
 import { Icon } from '../art/Icon';
 import { SKIN_COLORS, HAIR_COLORS } from '../art/Player';
 import { LEVEL_IDS, LEVEL_NAME, type Level } from '../../engine/levels';
@@ -477,6 +478,8 @@ export function RoadMap() {
     if (i !== sel) sfx('tick');
     setSel(i);
     setOpen(true);
+    // round 34: after the tutorial, the book keeps which places' cards were opened (Every Stop on the Line)
+    if (!tut && recordRoad(PLACES[i].id)) achievementsNow();
     // from the keyboard, the focus follows the car: the card's main button (Enter plays it), or the
     // place itself when its card has nothing to press (a locked place)
     if (keys)

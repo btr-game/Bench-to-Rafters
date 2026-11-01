@@ -4,6 +4,8 @@
 
 import { useEffect, useReducer } from 'react';
 import { sfx } from './sound';
+import { recordFolds } from './achievements';
+import { achievementsNow } from '../store';
 
 const KEY = 'btr-fold-v1';
 
@@ -39,8 +41,22 @@ export function useFold(id: string | null): [boolean, () => void] {
       /* the fold lasts for the visit */
     }
     subs.forEach((f) => f());
+    // the book keeps the most cards folded at once (Origami, Neatly Pressed, Less Is More)
+    recordFolds(folded.size);
+    achievementsNow();
   };
   return [!!id && folded.has(id), toggle];
+}
+
+/** The dev deck: sets exactly these cards folded (none, before each card it deals). */
+export function setFolds(ids: string[]): void {
+  folded = new Set(ids);
+  try {
+    localStorage.setItem(KEY, JSON.stringify(ids));
+  } catch {
+    /* the deck's folds last for the visit */
+  }
+  subs.forEach((f) => f());
 }
 
 /** The storage key changed under us (the dev deck's storage switch): read the folds again. */

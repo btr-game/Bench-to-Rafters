@@ -23,7 +23,7 @@ import type { WearSlot } from './content/shop';
 import { careerRecord, type CareerRecord } from './engine/career/record';
 import { canPlayChild, childGame, childLegacy, childSeed } from './engine/nextGen';
 import { attachChild, logCareer, type LogResult } from './ui/careerLog';
-import { checkAch, countCareer, earnedIn, recordUndo } from './ui/achievements';
+import { checkAch, countCareer, earnedIn, recordOpened, recordUndo, recordVisit } from './ui/achievements';
 import { community } from './ui/community';
 import { deleteSlot, dropRun, importCode, newSlotId, readRun, readSlot, writeRun, writeSlot } from './ui/saves';
 import { bestGrade, exitCode, levelTabs, loadRoad, offRecord, roadGrade, saveRoad, type Road } from './ui/road';
@@ -402,7 +402,12 @@ export const useStore = create<Store>((set, get) => ({
   // round 34 (owner: "the intro page should always appear before anything"): every visit opens on
   // the intro, a career resumed from a reload included; the dev deck has a card for it instead
   intro: !isDev(),
-  endIntro: () => set({ intro: false }),
+  endIntro: () => {
+    set({ intro: false });
+    // round 34: each visit counts toward the book's visit achievements
+    recordVisit();
+    achievementsNow();
+  },
   showIntro: () => set({ intro: true }),
   news: newsDue(),
   showNews: () => {
@@ -557,6 +562,8 @@ export const useStore = create<Store>((set, get) => ({
     // round 34 (owner: "when i look back or continue from the career log, it doesnt instantly direct
     // me to the career's homepage"): straight to its Home, from wherever Continue was pressed
     set({ game, slot: id, tab: 'home', page: null, transition: null, mini: null, seen: allSeen(game), daily: null, logged: null, lookBack: game.step === 'retired', ...oathLock(game) });
+    // round 34: Look back and Continue count in the book (Rewind, Where We Left Off)
+    recordOpened(game.step === 'retired');
     top();
     return true;
   },

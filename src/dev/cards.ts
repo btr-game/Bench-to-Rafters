@@ -2,6 +2,7 @@
 // mini-game, an overlay) so that clicking it opens that function with everything unlocked.
 
 import { useStore, type Tab } from '../store';
+import { setFolds } from '../ui/fold';
 import type { GameState, Moment } from '../engine/types';
 import { ACHIEVEMENTS, ACH_TIERS } from '../engine/achievements';
 import { careerRecord, type CareerRecord } from '../engine/career/record';
@@ -265,7 +266,7 @@ export const CARDS: DevCard[] = [
     id: 'look-back',
     title: 'Looking back at a finished career',
     group: 'Start',
-    icon: 'cards',
+    icon: 'rewind',
     blurb: 'Look back from the career log opens a finished career on its Home, with a bar at the top saying so and the way back to the log.',
     open: () => {
       const g = at('look-back', (s) => s.step === 'retired', { mode: 'stars', fast: true });
@@ -283,6 +284,18 @@ export const CARDS: DevCard[] = [
   { id: 'roster', title: 'Team roster and fit', group: 'Career hub', icon: 'roster', blurb: 'The five, the bench, the system and the chemistry.', open: () => show(nbaStar(), 'player'), press: '[data-tour="roster"]' },
   { id: 'bodymap', title: 'Body map with an injury', group: 'Career hub', icon: 'health', blurb: 'The pixel body map, hurt.', open: () => show(at('injured', (s) => !!s.player.injury && s.stage === 'NBA'), 'player') },
   { id: 'season-post', title: 'Season tab in the playoffs', group: 'Career hub', icon: 'bracket', blurb: 'With a bracket out, it comes first: under the team and form, above the standings.', open: () => show(at('bracket', (s) => s.stage === 'NBA' && s.step === 'summary' && !!s.nba?.bracket), 'season') },
+  {
+    id: 'folds',
+    title: 'Cards folded on Home',
+    group: 'Career hub',
+    icon: 'fold',
+    blurb: 'Round 34: most cards fold, from their title or the tab on their top edge, to a one-line strip; folds stay on the device. Here the scouting report, Milestones, the MVP race and the fan talk are folded.',
+    open: () => {
+      const ok = show(nbaStar());
+      setFolds(['box:scout', 'card:Milestones', 'box:mvp', 'box:reaction']);
+      return ok;
+    },
+  },
   { id: 'extras', title: 'Extras tab', group: 'Career hub', icon: 'controller', blurb: 'The start page’s four cards inside a career (round 29): mini-games, career log, achievements, community, and what waits for the start page.', open: () => show(nbaStar(), 'extras') },
   { id: 'records', title: 'Records tab', group: 'Career hub', icon: 'chart', blurb: 'Trophies, banners, career highs, timeline.', open: () => show(at('late', (s) => s.stage === 'NBA' && s.player.age >= 31 && s.step === 'summary'), 'records') },
   { id: 'settings', title: 'Settings menu', group: 'Career hub', icon: 'dial', blurb: 'Theme, court, sound and music, new career, switches.', open: () => show(nbaStar()), press: '[data-tour="settings-btn"]' },

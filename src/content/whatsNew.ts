@@ -16,6 +16,18 @@ interface News {
 
 export const NEWS: News[] = [
   {
+    id: '2026-11-01-r34',
+    date: '1 November 2026',
+    items: [
+      { icon: 'fold', text: 'Simpler pages: most cards fold. Tap a card’s title, or the small tab on its top edge, to fold it to one line; it stays folded on this device until you open it again. Every card starts open.' },
+      { icon: 'cards', text: 'One career log: careers in progress and finished careers in one list. Continue and Look back go straight to the career’s Home, and a bar along the top takes you out of a career you are looking back at.' },
+      { icon: 'map', text: 'The road map: click a place, or drive there with the arrow keys, and its card pops out of the map. The closing tour has a stage of its own. Back on the road map? Pick Regular guy on the start page.' },
+      { icon: 'mic', text: 'A bigger announcer: the deepest voice your device has, slower, with a breath before the big word and the arena’s thump under every call.' },
+      { icon: 'door', text: 'The intro opens every visit, and Skip tutorial sits beside Share at the top of the tutorial’s pages.' },
+      { icon: 'laurel', text: 'Thirty achievements: simple math (your age or your jersey number in points, a career total that reads the same both ways), clean fundamentals, and the new pages. 710 in all. Five new turning points and five new things in the shop.' },
+    ],
+  },
+  {
     id: '2026-11-01-r33',
     date: '1 November 2026',
     items: [

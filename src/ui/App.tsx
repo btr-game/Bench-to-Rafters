@@ -80,7 +80,7 @@ function LookBackBar({ g }: { g: GameState }) {
   if (!lookBack || g.step !== 'retired') return null;
   return (
     <div className="daily-strip look-back-bar" role="region" aria-label="Looking back">
-      <Icon name="cards" size={22} />
+      <Icon name="rewind" size={22} />
       <b>Looking back</b>
       <span className="small">
         {g.player.name}, retired at {g.player.age}

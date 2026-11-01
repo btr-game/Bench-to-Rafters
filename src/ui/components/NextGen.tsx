@@ -61,7 +61,7 @@ export function NextGen({ g }: { g: GameState }) {
   if (g.flags.childPlayed && !g.flags.gen2)
     return (
       <Card title="The next generation" kicker="Your son">
-        <p className="small">His career is under way in a save of its own (the career log, under Saved on this device). When it ends, {SHARE}% of his legacy points join yours.</p>
+        <p className="small">His career is under way in a save of its own (the career log, under In progress). When it ends, {SHARE}% of his legacy points join yours.</p>
       </Card>
     );
   if (!son) return null;

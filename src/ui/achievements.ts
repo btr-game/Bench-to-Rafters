@@ -123,6 +123,38 @@ export function recordCompare(): void {
   saveAch(d);
 }
 
+/** Round 34: cards folded right now (the most at once is kept). */
+export function recordFolds(n: number): void {
+  const d = loadAch();
+  if (n <= (d.totals.folded ?? 0)) return;
+  d.totals.folded = n;
+  saveAch(d);
+}
+
+/** Round 34: a career opened from the career log, finished (Look back) or in progress (Continue). */
+export function recordOpened(finished: boolean): void {
+  const d = loadAch();
+  if (finished) d.totals.lookedBack = (d.totals.lookedBack ?? 0) + 1;
+  else d.totals.resumed = (d.totals.resumed ?? 0) + 1;
+  saveAch(d);
+}
+
+/** Round 34: a road map place's card opened after the tutorial; true the first time. */
+export function recordRoad(place: string): boolean {
+  const d = loadAch();
+  if (d.totals.roadSeen?.includes(place)) return false;
+  d.totals.roadSeen = [...(d.totals.roadSeen ?? []), place];
+  saveAch(d);
+  return true;
+}
+
+/** Round 34: a visit to the game (the intro passed). */
+export function recordVisit(): void {
+  const d = loadAch();
+  d.totals.visits = (d.totals.visits ?? 0) + 1;
+  saveAch(d);
+}
+
 /** Round 29: cards locked in the career log right now (the most at once is kept). */
 export function recordLocks(n: number): void {
   const d = loadAch();

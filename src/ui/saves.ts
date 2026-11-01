@@ -5,7 +5,7 @@ import type { GameState, Pos } from '../engine/types';
 // slot holds its career compressed (gzip, then base64), so ten long careers still fit in the
 // browser's storage. The same packing makes the export code: a career copied as text.
 
-export const MAX_SLOTS = 10;
+const MAX_SLOTS = 10;
 const INDEX = 'btr-saves-v2';
 const DATA = (id: string) => `btr-slot-${id}`;
 const OLD = 'btr-save-v1'; // the single save before round 25

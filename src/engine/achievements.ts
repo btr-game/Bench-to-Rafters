@@ -15,6 +15,7 @@ import { ovrOf } from './player/ovr';
 import { weightOf } from './player/weight';
 import { ACHIEVEMENTS_32, R32_TOTALS_ONLY } from './achievements32';
 import { ACHIEVEMENTS_33 } from './achievements33';
+import { ACHIEVEMENTS_34, R34_TOTALS_ONLY } from './achievements34';
 import { ACHIEVEMENTS_25 } from './achievements25';
 import { ACHIEVEMENTS_MINI, MINI_TOTALS_ONLY, type MiniTotals } from './achievementsMini';
 
@@ -46,6 +47,11 @@ export interface CareerTotals {
   cards?: number; // round 32: career cards saved or shared
   farewells?: number; // round 32: careers ended on a farewell tour
   sons?: number; // round 32: sons' careers played to the end (the next generation)
+  folded?: number; // round 34: the most cards folded at once
+  lookedBack?: number; // round 34: finished careers opened from the career log (Look back)
+  resumed?: number; // round 34: careers in progress continued from the career log
+  roadSeen?: string[]; // round 34: road map places whose card was opened after the tutorial
+  visits?: number; // round 34: visits to the game (the intro passed)
 }
 
 /** Round 29: how many music loops the game has (ui/tracks.ts; a test keeps the two in step). */
@@ -403,10 +409,12 @@ export const ACHIEVEMENTS: Achievement[] = [
   ...ACHIEVEMENTS_32,
   // round 33: efficiency, and the bad nights that are hard to have (achievements33.ts)
   ...ACHIEVEMENTS_33,
+  // round 34: simple math, the fundamentals, and the round's new pages (achievements34.ts)
+  ...ACHIEVEMENTS_34,
 ];
 
 // the ones that only read the totals kept across careers (they can be checked with no career open)
-const TOTALS_ONLY = new Set(['c1', 'c3', 'c5', 'c10', 'c25', 'c50', 'c100', 'allmodes', 'fastdone', 'masterdone', 'titles10', 'mvp10', 'daily1', 'daily7', 'daily30', 'share1', 'lock1', 'lock5', 'mixtape', 'album', 'undo1', 'cmp1', ...MINI_TOTALS_ONLY, ...R32_TOTALS_ONLY]);
+const TOTALS_ONLY = new Set(['c1', 'c3', 'c5', 'c10', 'c25', 'c50', 'c100', 'allmodes', 'fastdone', 'masterdone', 'titles10', 'mvp10', 'daily1', 'daily7', 'daily30', 'share1', 'lock1', 'lock5', 'mixtape', 'album', 'undo1', 'cmp1', ...MINI_TOTALS_ONLY, ...R32_TOTALS_ONLY, ...R34_TOTALS_ONLY]);
 
 /** The achievements this career (and the totals) have earned, by id. */
 export function earnedNow(g: GameState | null, t: CareerTotals): string[] {
