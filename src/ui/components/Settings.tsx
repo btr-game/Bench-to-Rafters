@@ -89,6 +89,8 @@ export function SettingsMenu({ g }: { g: GameState | null }) {
   }, [open]);
 
   const retired = g?.step === 'retired';
+  // round 33: where the career goes when he leaves it (every career is saved but a daily challenge)
+  const keepNote = g?.flags.daily ? 'Today’s challenge is not saved: leaving ends this run.' : 'This career stays saved in the career log: continue it there any time.';
   return (
     <div className="set-wrap" ref={box}>
       <button className="icon-btn" data-tour="settings-btn" aria-expanded={open} aria-haspopup="true" onClick={() => setOpen(!open)}>
@@ -143,7 +145,7 @@ export function SettingsMenu({ g }: { g: GameState | null }) {
               {armed && !retired ? (
                 <div className="set-confirm" role="group" aria-label="Start a new career?">
                   <b>Leave this career and start a new one?</b>
-                  <small>It stays in Your careers on the start page: pick it up again any time.</small>
+                  <small>{keepNote}</small>
                   <div className="set-confirm-row">
                     <button className="btn" onClick={() => (reset(), setOpen(false), setArmed(false))} autoFocus>
                       Yes, new career
@@ -154,10 +156,14 @@ export function SettingsMenu({ g }: { g: GameState | null }) {
                   </div>
                 </div>
               ) : (
-                <button className="btn block with-icon set-new-btn" onClick={() => (retired ? (reset(), setOpen(false)) : setArmed(true))}>
-                  <Icon name="door" size={24} />
-                  New career
-                </button>
+                <>
+                  <button className="btn block with-icon set-new-btn" onClick={() => (retired ? (reset(), setOpen(false)) : setArmed(true))}>
+                    <Icon name="door" size={24} />
+                    New career
+                  </button>
+                  {/* round 33 (owner: "users might be hesitant to leave if they arent aware"): said before the tap, not only after */}
+                  {!retired && <small className="set-new-note">{keepNote}</small>}
+                </>
               )}
             </div>
           )}

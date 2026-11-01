@@ -1585,6 +1585,7 @@ td .art-team { display: inline-block; vertical-align: middle; margin: -3px 8px -
 .scout-head .kicker { overflow-wrap: anywhere; }
 .set-new { padding: 10px 0; border-bottom: 1px solid var(--line); }
 .set-new-btn { justify-content: center; }
+.set-new-note { display: block; margin-top: 6px; color: var(--muted); font-size: calc(13px * var(--ts)); text-align: center; }
 .set-confirm { display: grid; gap: 6px; padding: 12px; border-radius: 10px; border: 2px solid var(--bad); background: color-mix(in srgb, var(--bad) 10%, var(--surface)); }
 .set-confirm small { color: var(--ink); font-size: calc(15px * var(--ts)); }
 .set-confirm-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }

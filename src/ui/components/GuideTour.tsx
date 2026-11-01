@@ -97,7 +97,7 @@ const TOUR: Step[] = [
   T('set-theme', D('set-theme'), 'Light, dark, or follow your device.'),
   T('set-court', D('set-court'), 'The page background.'),
   T('set-text', D('set-text'), 'Text size: Large and Extra large make every word bigger.'),
-  T('set-new', D('set-new'), 'Ends this career. Tap twice to be sure.'),
+  T('set-new', D('set-new'), 'Leaves this career for a new one (it asks first). The career stays saved in the career log, ready to continue.'),
   T('set-fast', D('set-fast'), 'Fast break, also here.'),
   T('set-playoffs', D('set-playoffs'), 'Off: postseason games are simulated.'),
   T('set-simple', D('set-simple'), 'Simple text, also here.'),
