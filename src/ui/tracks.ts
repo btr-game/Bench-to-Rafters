@@ -205,7 +205,7 @@ export const TRACKS = {
     name: 'So close',
     where: 'The end of a level that missed its All-Star goal',
     icon: 'morale',
-    step: bpm(70),
+    step: bpm(76),
     voices: [
       { wave: 'pulse25', vol: 0.09, notes: 'A4 - - - C5 - B4 - | A4 - - - E4 - - - | F4 - - - A4 - G4 - | E4 - - - - - . . | A4 - - - C5 - D5 - | E5 - - - D5 - C5 - | B4 - - - G#4 - B4 - | A4 - - - - - . .' },
       { wave: 'triangle', vol: 0.28, notes: 'A2 - - - - - - - | E2 - - - - - - - | F2 - - - - - - - | C2 - - - - - - - | A2 - - - - - - - | C2 - - - - - - - | E2 - - - - - - - | A2 - - - - - - -' },

@@ -14,6 +14,7 @@ import { tabNews } from '../src/ui/tabNews';
 import { lineCells } from '../src/ui/art/pixel';
 import { TRACKS, parseVoice, trackOf, type TrackId } from '../src/ui/tracks';
 import { MUSIC_LOOPS, NO_TOTALS, earnedNow } from '../src/engine/achievements';
+import { TUTORIAL_LOOPS } from '../src/ui/achievements';
 import { MINI_NAMES, syncMiniUnlocks } from '../src/engine/career/miniBonus';
 import { CAREER_ICONS } from '../src/ui/art/careerIcons';
 import { ICONS } from '../src/ui/art/icons';
@@ -169,7 +170,8 @@ describe('the career timeline line', () => {
 describe('music', () => {
   const ids = Object.keys(TRACKS) as TrackId[];
   it('has every loop written out cleanly, each voice a whole number of times round the loop', () => {
-    expect(ids).toHaveLength(MUSIC_LOOPS);
+    // round 33: the tutorial's two loops are not part of Full Album
+    expect(ids.filter((x) => !TUTORIAL_LOOPS.includes(x))).toHaveLength(MUSIC_LOOPS);
     for (const id of ids) {
       const t = TRACKS[id];
       const lens = t.voices.map((v) => parseVoice(v.notes).length);
