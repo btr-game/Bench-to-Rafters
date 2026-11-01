@@ -2263,6 +2263,14 @@ export const SHIFT_COLOR = ['#E03131', '#F76707', '#FCC419', '#2F9E44', '#1C7ED6
 export function shopIcon(id: string, name: string): string {
   const t = `${id} ${name}`.toLowerCase();
   const rules: [RegExp, string][] = [
+    // round 32: the round's items
+    [/locker-speaker/, 'headphones'],
+    [/whistle/, 'whistle'],
+    [/coach-film-room/, 'tablet'],
+    [/farewell-jacket/, 'hanger'],
+    [/record-case/, 'laurel'],
+    [/engagement-ring/, 'gift'],
+    [/family-home/, 'house'],
     // round 25: items that had no icon of their own, ahead of the broad rules below
     [/pet-dog/, 'dog'],
     [/podcast|stream/, 'mic'],

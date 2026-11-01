@@ -203,6 +203,7 @@ export function coachOfYear(s: GameState, nba: League): { team: Team; coach: Coa
   note(s, `Coach of the Year: ${coach.name}, ${best.name} (${best.w}–${best.l}).`);
   if (best.id === s.teamId) {
     tally(s, 'coyMine');
+    s.flags.coyYear = s.year; // other teams come calling for him this offseason (events/round32.ts)
     s.player.trust = adjust(s.player.trust, C.coyTrust);
     logDecision(s, 'coach', `${coach.name} is Coach of the Year. He credits the room, and you. Coach trust +${C.coyTrust}.`, best.id);
   }

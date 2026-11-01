@@ -13,6 +13,7 @@ import { legendarySeasons } from './awards/legendary';
 import { activeDuo, activeTrio } from './career/duo';
 import { ovrOf } from './player/ovr';
 import { weightOf } from './player/weight';
+import { ACHIEVEMENTS_32, R32_TOTALS_ONLY } from './achievements32';
 import { ACHIEVEMENTS_25 } from './achievements25';
 import { ACHIEVEMENTS_MINI, MINI_TOTALS_ONLY, type MiniTotals } from './achievementsMini';
 
@@ -397,10 +398,12 @@ export const ACHIEVEMENTS: Achievement[] = [
   ...ACHIEVEMENTS_25,
   // round 27: the mini-games, in the arcade and in a career (achievementsMini.ts)
   ...ACHIEVEMENTS_MINI,
+  // round 32: the locker room, the coach, the farewell tour, record chases, love and the next generation, and more (achievements32.ts)
+  ...ACHIEVEMENTS_32,
 ];
 
 // the ones that only read the totals kept across careers (they can be checked with no career open)
-const TOTALS_ONLY = new Set(['c1', 'c3', 'c5', 'c10', 'c25', 'c50', 'c100', 'allmodes', 'fastdone', 'masterdone', 'titles10', 'mvp10', 'daily1', 'daily7', 'daily30', 'share1', 'lock1', 'lock5', 'mixtape', 'album', 'undo1', 'cmp1', ...MINI_TOTALS_ONLY]);
+const TOTALS_ONLY = new Set(['c1', 'c3', 'c5', 'c10', 'c25', 'c50', 'c100', 'allmodes', 'fastdone', 'masterdone', 'titles10', 'mvp10', 'daily1', 'daily7', 'daily30', 'share1', 'lock1', 'lock5', 'mixtape', 'album', 'undo1', 'cmp1', ...MINI_TOTALS_ONLY, ...R32_TOTALS_ONLY]);
 
 /** The achievements this career (and the totals) have earned, by id. */
 export function earnedNow(g: GameState | null, t: CareerTotals): string[] {

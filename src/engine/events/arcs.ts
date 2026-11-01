@@ -420,6 +420,36 @@ const ARCS: ArcDef[] = [
       return { title: 'Still in your corner', text: 'He stays, and you keep the six a.m. sessions going. Your feel for the game is the best it has ever been.', done: true };
     },
   },
+  {
+    // round 32 (checklist item 6, the locker room): the rookie he kept mentoring becomes his
+    // protégé over two summers
+    id: 'protege',
+    title: 'The protégé',
+    color: '#0B7285',
+    next: (s, a) => {
+      if (a.chapter === 0) {
+        morale(s, 3);
+        trust(s, 2);
+        return {
+          title: 'He made the rotation',
+          text: 'The summer of workouts paid off: he is in the rotation and won’t stop talking about you.',
+          ask: { text: 'He wants another summer with you.', choices: [{ id: 'keep', label: 'Another summer together' }, { id: 'cut', label: 'Let him find his own way' }] },
+        };
+      }
+      if (a.v.keep) {
+        rep(s, 3);
+        morale(s, 3);
+        bump(s, 'IQ', 0.5);
+        return { title: 'A starter now', text: 'He is starting now. In his first big interview he names you first, and teaching him the game taught you a little more of it.', done: true };
+      }
+      morale(s, 1);
+      return { title: 'His own way', text: 'He finds his own way, and still sends you a text before every big game.', done: true };
+    },
+    answer: (_s, a, id) => {
+      a.v.keep = id === 'keep' ? 1 : 0;
+      return id === 'keep' ? 'Same gym, same time, next summer.' : 'You tell him he is ready. He hopes you are right.';
+    },
+  },
 ];
 
 const defOf = (id: string) => ARCS.find((d) => d.id === id);
@@ -867,6 +897,31 @@ export const ARC_EVENTS: EventDef[] = [
         },
       },
       { label: 'You need your sleep', resolve: () => ok('He shrugs. The offer stands.') },
+    ],
+  },
+  {
+    // round 32: the start of The protégé (after a few talks with the rookies in the locker room)
+    id: 'arc-protege',
+    stages: ['GL', 'EU', 'INT', 'NBA'],
+    phase: 'off',
+    when: (s) => (s.flags.lkMentor ?? 0) >= 2 && s.player.age >= 25 && !s.arcs?.some((a) => a.id === 'protege'),
+    weight: 1,
+    cooldownSeasons: 4,
+    oncePerCareer: true,
+    title: 'A kid who looks up to you',
+    text: 'The rookie you keep taking aside in the locker room asks if he can train with you this summer.',
+    choices: [
+      {
+        label: 'Train with him all summer',
+        detail: 'Teaching the game sharpens your own',
+        resolve: (s) => {
+          startArc(s, 'protege', { fresh: 1 });
+          morale(s, 2);
+          bump(s, 'IQ', 0.3);
+          return ok('Six a.m., every day, all summer. He never misses one.', 'Took a young teammate under his wing for the summer.');
+        },
+      },
+      { label: 'Not this summer', resolve: () => ok('He nods. He will ask again.') },
     ],
   },
 ];
