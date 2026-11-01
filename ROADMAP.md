@@ -136,5 +136,21 @@ no statue or hall.
 - The graduation page leads to the levels page (intermediate and advanced), not the full start
   page.
 
-**Intermediate and advanced**: being discussed with the owner (advanced "very similar to regular
-mode").
+**Revised after round 32** (owner):
+- Intermediate is simpler than first proposed, and advanced only a step beyond it ("slightly more
+  complicated than intermediate"). After the levels, the guide leads the player to a Regular guy
+  career: highly suggested, not required.
+- **The goal of every level is an NBA All-Star team.** The levels' difficulty is set so that at
+  least 80% of careers make one (measured with the harness). A career that misses ends on a card of
+  its own with sad music, and still the thank-you page.
+- **Mini-games are not in the levels**, but passing the tutorial needs every mini-game played at
+  least once with a C or better. Lockdown and Front Office already grade A to D; the others get a
+  scale of their own.
+- **The tutorial guide**: separate from Guide mode, which stays as it is for players who forget
+  something. It covers everything the manual does except the achievements, the career log and the
+  community, so that by the end the player knows every function as if they had read the project
+  summary. Its steps cannot be skipped: while it asks for something, nothing else on the page
+  responds.
+- **No achievements** in the levels; **advanced counts nowhere** in the community either; a saved
+  career from before waits until the full game opens; the full start page keeps a **Levels** card to
+  replay any level.
