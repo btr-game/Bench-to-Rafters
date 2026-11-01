@@ -2302,3 +2302,176 @@ multiple times."
   errors), the NBA −1.5625 points, All-Stars −1.5000, MVPs +0.6875, the Hall of Fame +1.9375
   (+2.80) and titles −0.5000. The rise against the approved numbers is last round's easier
   ceilings, not the shop. For the owner to decide.
+
+## Round 32 (owner requests)
+
+- **The locker room** (owner: "make it like a small rpg(?), where the user can use keyboard a, d to
+  walk around and talk with the teammates and coach"): a pixel room on the Season tab (in Extras,
+  so fast break folds it away), the starting five, two from the bench and the head coach at his
+  door (`career/locker.ts`, `ui/components/LockerRoom.tsx`). A/D or the arrows walk, Space, Enter or
+  W talks, 1–3 answer, Escape leaves; on a phone, buttons. The keys work only while the room has
+  focus, so they never reach the rest of the page. Each teammate has a character from the roster
+  (the youngest a rookie, the oldest a veteran, the best a star, the rest a joker, a quiet pro or a
+  hothead) and two or three things to say; about half the halves a hothead starts a feud to settle.
+  Once a half each. Talks move chemistry (capped at ±0.6 a season), mood, coach trust, now and then
+  a rating or reputation.
+- **The head coach** (owner: "make avatars of them, be able to fire them if the player reaches some
+  amount of reputation"; then "can we give the coach a slightly bigger role?", picking temperament,
+  Home and a role talk, the hot seat and coaching changes, with "fix or edit the original coach
+  fired event", the avatars in the team style talk and the designs in the dev deck): every team's
+  coach has a name and a temperament from the team and how many coaches it has had
+  (`career/coach.ts`), and pixel art of his own (`ui/art/Coach.tsx`): a pose for each temperament
+  (the hardliner folds his arms, the tactician holds a clipboard, the players' coach has his hands
+  together), a suit with a tie in the team colour or a team tracksuit, grey hair or glasses on some.
+  He stands in the locker room, the team style talk and a Home card (his trust in words; the player
+  card keeps the number).
+  - Temperament (`COACH.temper`): a players' coach +0.1 chemistry, a point of morale a half, trust
+    swings ×0.8; a tactician +0.15 in the postseason; a hardliner growth ×1.05 in a half on the
+    grind, trust swings ×1.25, a point of morale less. Listed with the season's team factors.
+  - The role talk, once a season: yes lifts trust to the step where the role moves up; the chance
+    is 0.3 + 0.012 a point of trust over 50, +0.15 for a players' coach or −0.1 for a hardliner,
+    +0.15 near the top of the roster, between 0.05 and 0.9 (41.6% yes over 387 asks in 30 test
+    careers). No costs trust (6 with a hardliner) and morale.
+  - The old "Coach fired" event is the hot seat: only with his team under .400 after 12 games, the
+    coach by name, and a firing is real (a new name and face; in the NBA a new coaching factor and
+    team strength). Back him (he keeps the job with a chance of 0.25 + 0.005 a point of reputation,
+    and trust +8 if he does), stay out of it (fired 60% of the time), or at reputation 60, tell the
+    front office (trust starts at 55, chemistry −0.1, reputation −1).
+  - NBA teams under .350 may fire their coach in the offseason (45%), before records reset; a new
+    coach starts trust at 50. Coach of the Year: the team that beat its talent by the most (rank by
+    wins against rank by strength); his own coach winning it is +3 trust, and a bigger club may try
+    to hire him away (an event).
+  - Firing him from the locker room (reputation 90, NBA, once a season): the new man is a little
+    better than an average hire, trust 60, chemistry −0.4, morale +6, reputation −2.
+- **The farewell tour** (`career/farewell.ts`): from 32 in the NBA, an offseason move announces
+  next season as the last: morale +10, reputation +2, +0.5 in its postseason, six road arenas'
+  gifts, the FAREWELL honour (2 legacy points) and a page, then he retires. The Records tab lists
+  the gifts.
+- **Record chases** (owner: "this could work as a simple warning system ... dont make it influence
+  the game too much"; `career/records.ts`): Home warns when a season could carry him past a legend
+  on the all-time scoring list (ppg × seasons × 72 games) or a career high nears a league
+  single-game record. Chase it, once a season: usage ×1.05, injury minutes ×1.1, chemistry −0.1.
+- **The announcer** (owner: "a person with a booming voice shouting breakthrough, block, 3 point,
+  buzzer beater"): the browser's speech, pitched low and slowed down (`ui/announcer.ts`), for
+  steals, blocks, stops, dunks, and-ones, threes, buzzer beaters, alley-oops and posters on the
+  court, a title and a breakthrough on their pages. It follows the sound effects (off with them, at
+  their volume) and has its own switch in Settings.
+- **Love and the next generation** (owner: "dating (highschool crush/celebrity/...) to wedding to
+  having a child ... the child is going to have similar attributes to the father ... never let the
+  child have another generation ... a mini-addon to the father's player card ... their legacy
+  points count towards the father's legacy points, but not fully"):
+  - Love replaces the old baby event as a storyline (weight 1.1, a little above the others): a
+    sweetheart, a celebrity or someone outside the game, then a proposal, the wedding (on a pixel
+    garden scene) and a family, each step declinable (twice "not yet" at the proposal and it ends).
+    Measured over 400 Regular guy careers each: saying yes at every step, 19.5% end with a child
+    (Love starts in 22.5%, a wedding in 21.5%); answering at random, 8.25% (an early 40-career
+    check had said about 30%). Then (owner: "make the first child half-half boy and girl, so it
+    reduces the chances"): the first child is a girl half the time (`NEXT_GEN.girl`), and only a
+    son plays a career of his own: a son's career now comes in 10.5% (42 of 400) of the
+    yes-every-time careers and 3.75% (15 of 400) of the random ones. The birth says which.
+  - After that career, the retirement page offers the son's career (`engine/nextGen.ts`): Comet
+    speed, the father's difficulty (a lab father's son plays standard), number, hometown and
+    country, his look with a haircut of his own. Height: the father's ±1.2 in, 6% of the time 3–6 in
+    more or less. Potential: the father's −3 ±3.5, 6% of the time 7–12 off (up 35% of the time). In
+    40 test careers, the 12 sons came out 0.33 in shorter and 2.5 potential lower on average, worse
+    9 times and better 3 times. No third generation.
+  - The son's career is never logged or posted on its own: 25% of his legacy points join his
+    father's, on the father's log card (`attachChild`) and in his save (`kid`, counted in
+    `legacyIndex`). The online boards rank by career index and keep the father's post as it was.
+    The father's page, log card and career card show the son: peak, biggest honour, NBA seasons,
+    points, MVPs, titles, All-Stars, and what he added.
+- **The career card** (owner: "put the difficulty and challenge more deliberately, put in the icons
+  of achievements"): the difficulty and the challenge as badges, the career index, the career's
+  best ten achievements as medals in their tiers' colours, the best three by name, and the son.
+- **The Records tab** (owner): the timeline first, then banners and rings, trophies and totals,
+  career highs, the farewell gifts; season by season and the journal lower.
+- **Saved careers in the career log** (owner: "i think they're pretty much the same function"):
+  continue, look back, the career code, import and export moved from the start page to the career
+  log; the start page keeps a Continue card for the latest career.
+- **The Day one page could not scroll** (owner: "i cant scroll in the day one screen"): a moment's
+  kind was a bare class, and the Day one moment ("intro") picked up the intro page's `.intro` rule
+  (fixed, overflow hidden); Guide mode then scrolled it to its Continue button, out of reach of the
+  title. Kinds are classes of their own now (`mo-intro`). Shipped on its own, ahead of the round.
+  The visual check gained two checks: `stuck` (a full-screen layer that can't scroll with content
+  past its edge) and pop-ups shot at screen size (in a full-page shot a moment's page was missed:
+  none of them had been in the sheets).
+- **Undo for every move** (round 31's bug): every remember() sat in `choose`, so the offseason
+  moves had no undo; each move keeps its own now, with its label.
+- **Achievements and more** (owner: "we might run out of them quickly. add more", and the
+  checklist's items 5 and 6 as extended): 84 achievements (the book holds 652), counters for the
+  round's systems in `flags` and device totals for the announcer, career cards, farewell tours and
+  sons; nine events (a prank war, dinner at the coach's, a club after your Coach of the Year, the
+  record watch, two farewell moments, an anniversary, a child's first game, a thank-you on TV), The
+  protégé storyline after mentoring rookies, seven shop items, each event with a pixel icon.
+- **Breaking a league record**: the sim's best shooting nights run hot. The threes record (14) fell
+  in 6 of 30 test careers, so Record Breaker counts points, rebounds, assists, steals and blocks,
+  and the threes record has its own achievement a tier lower. The sim was left as it is; the owner
+  decides.
+- **Smooth gradient backgrounds again** (owner: "for gradient backgrounds (for example, the
+  marraige page background) they can be left unpixelated. it's actually one of the things i
+  enjoyed before the game"): the 26 backgrounds round 28 had cut into hard bands are smooth again,
+  as they were: the moment pages, the retirement stage, the position, archetype and lab stages,
+  the story and duo art glows, the legend cards, the Hall's pop-up, the statue plaza, the place
+  backdrops, the lifestyle visit and the thank-you page's text backing. The art on them stays pixel
+  art, and so do the meters (duo chemistry, the streetball shot meter) and objects drawn in CSS
+  (the Hall's plank, the statue plinth, the courts' horizons). CLAUDE.md's pixel rule names the
+  exception.
+- **A second child, not a stray baby:** the old "A new baby" event still came up for any player
+  from 23, partner or not, beside the new Love storyline. It is now a married player's second
+  child (a daughter), once a career, two years or more after the first.
+- **End of round** (the checklist):
+  - The coach events crashed the balance run: an event asked while he had a team is answered
+    after he has moved on, and its choices are worked out again then (`resolveEvent`), with no
+    team. Dinner at the coach's, the club after his Coach of the Year and the hot seat now answer
+    plainly when he is between teams (a test plays each one that way).
+  - Graphics: a pixel garden for the wedding; icons for the coach card, the locker room, the
+    record watch and the family; the coach in the team style talk. Sound: a knock on the coach's
+    door, a family chime. Fast break folds the locker room away; sim never stops for it; simple
+    text hides the coach's temperament line and the son's description.
+  - Guide: the locker room, the head coach, the record watch, Love, the farewell tour, the career
+    card, the next generation, the announcer, the Records tab's order, saved careers in the career
+    log, more than 650 achievements. Guide mode: steps for the locker room, the coach card, the
+    record watch, the farewell move, the son's offer, the announcer switch and the saved careers;
+    the start page's Continue step points at its new card.
+  - Dev deck: 13 new cards (109 in all); the Catalog lists the locker room's characters, the
+    league records and the all-time scoring list, and the farewell gifts beside the coaches (26
+    lists). The project summary has the round's systems in their chapters; its events chapter is
+    built again from the code (177 events) with the knock-on list.
+  - Tests: the round's engine logic (the coach, the role talk, the hot seat, coaching changes,
+    Coach of the Year, the locker room's cap, the farewell tour, record chases, every new event on
+    a real NBA season, the book's ids and names). Two old problems: the recruit test read a
+    scouting board from before an earlier recruit (it now reads the board as it is), and three
+    long tests held the worker for minutes, so vitest's own messages timed out and the run failed
+    with every test green (they now pause every few careers).
+- **The live strip carries house players** (owner: "i want the game to be more popular. to do that,
+  i want to make it seem popular"; asked for real visitors plus a random number, with the real
+  values in the dev deck): simulated players are added to the two numbers, the way the boards and
+  the plaza already carry house players, and the strip says "House players included" in its
+  bottom-right corner (owner's placement). A label-free version was declined: it would show every
+  visitor a count that is mostly made up. The court follows the clock (`ui/houseLive.ts`), the same
+  for everyone at a moment: about 300 to 1,500 over a day, lowest around 10:00 UTC and highest around
+  22:00, moving every four seconds. Careers ended since the page opened rise toward 0.6 of the court
+  then, never above 299, over about forty minutes (7 after a minute, 35 after five, about 230 after
+  an hour), so they never go down and always stay below the court. The dev deck's header shows the
+  real numbers: on the court now, careers ended since the deck opened, and the last 24 hours.
+- **The dev deck would not open** once the summary had been rebuilt: the knock-on list's items were
+  written as plain strings where the deck expects label-and-text pairs. Fixed, with a test on the
+  summary's shape.
+- **Balance** (1,600 careers, seeds 100003 to 101602, the smart player with casual mini-game play,
+  after every change above but the first child's sex, which adds one random draw to careers that
+  reach a baby and so moves them only by chance): the round moved nothing that can be told from
+  noise.
+
+  | Measure | Round 22 (approved) | Round 31 | Round 32 | Against round 22 |
+  |---|---|---|---|---|
+  | Mean peak OVR | 74.4923 | 74.8305 | 74.7118974 | +0.2196 (+0.75 SE) |
+  | Reached the NBA | 78.3% | 79.0625% | 78.5625000% | +0.2625 pts (+0.26) |
+  | All-Star | 35.8% | 39.6875% | 40.6250000% | +4.8250 pts (+3.93) |
+  | MVP | 11.9% | 13.6250% | 13.3125000% | +1.4125 pts (+1.66) |
+  | Hall of Fame | 11.2% | 17.3750% | 17.9375000% | +6.7375 pts (+7.02) |
+  | Won a title | 29.2% | 39.5625% | 41.6250000% | +12.4250 pts (+10.08) |
+
+  Against round 31 every line is within about one standard error (titles +2.0625 points, +1.18).
+  The second child's change alone, career by career against the run before it: peak −0.0366
+  (−0.82 SE), titles +1.0625 points (+1.04). The gap to the approved numbers is the earlier
+  rounds', as reported in round 31; the owner decides.
