@@ -28,6 +28,8 @@ export interface Road {
   look?: ChosenLook;
   /** The tutorial guide's lessons done (tutorial/lessons.ts). */
   lessons?: string[];
+  /** The dev deck's look at the tutorial's pages (with its lessons, or the pages alone); never saved. */
+  preview?: 'page' | 'lesson';
 }
 
 const KEY = 'btr-road-v1';
@@ -42,7 +44,7 @@ export function loadRoad(): Road {
   return { passed: {}, minis: {} };
 }
 
-export function saveRoad(r: Road): void {
+export function saveRoad({ preview: _, ...r }: Road): void {
   try {
     localStorage.setItem(KEY, JSON.stringify(r));
   } catch {
@@ -50,8 +52,9 @@ export function saveRoad(r: Road): void {
   }
 }
 
-/** The tutorial is on: the full game is not open on this device yet (the dev deck is never in it). */
-export const inTutorial = (r: Road): boolean => !r.free && !isDev();
+/** The tutorial is on: the full game is not open on this device yet (the dev deck is never in it,
+ * but for the cards that show its pages). */
+export const inTutorial = (r: Road): boolean => !r.free && (!isDev() || !!r.preview);
 
 /** The tabs a level career shows (owner: beginner "tabs Home + Player"), or null for all of them. */
 export function levelTabs(g: GameState): ('home' | 'season' | 'player')[] | null {

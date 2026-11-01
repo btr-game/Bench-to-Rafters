@@ -94,7 +94,7 @@ Ideas the owner has asked to keep for later. Not started unless marked.
 - The locker room could remember: a hothead you calmed twice, a rookie you mentored all season,
   as relationships that carry over between seasons.
 
-## Round 33 (planned): three levels before the full game
+## Round 33: three levels before the full game (built in round 33; DECISIONS.md has what was built)
 
 Owner, after round 32: "from now on, the users have to play three levels to access the full game
 (main homepage)". Beginner, then intermediate, then advanced; the full start page (every
@@ -196,6 +196,17 @@ no statue or hall.
 - **No achievements** in the levels; **advanced counts nowhere** in the community either; a saved
   career from before waits until the full game opens; the full start page keeps a **Levels** card to
   replay any level.
+
+## Kept for later (round 33)
+
+- **Out of reach in the book**: a 60-50-90 season, a season under 30% from the field, 95% from the
+  line and an OVR of 10 (the owner's example) never happened in 750 careers, so they are not
+  achievements. Wider tails in the game simulation (a hotter or colder night now and then) would
+  make them possible; the owner decides.
+- **The island's lessons**: the mini-games teach themselves today; a lesson or two inside each,
+  the first time it is played from the island, would match the levels.
+- **Replaying a level**: level careers count nowhere. A best time or a best peak for each level,
+  kept on the device, could give the Levels card a reason to come back.
 
 ## Round 34 (planned): simplification
 

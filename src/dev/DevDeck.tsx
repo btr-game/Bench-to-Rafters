@@ -9,8 +9,9 @@ import { App } from '../ui/App';
 import { GuideTour } from '../ui/components/GuideTour';
 import { TabNews } from '../ui/components/TabNews';
 import { AchToasts } from '../ui/screens/Achievements';
+import { Lessons } from '../ui/tutorial/Lessons';
 import { Icon } from '../ui/art/Icon';
-import { useStore } from '../store';
+import { roadView, useStore } from '../store';
 import { CARDS, GROUPS, setAchievements, type DevCard, type Group } from './cards';
 import { Marked, SUMMARY, SummaryPage, searchCards, searchSummary, snippet } from './Summary';
 import { leaveDev } from './devSwitch';
@@ -41,7 +42,7 @@ export function devSetup(): void {
 
 /** Back to a clean slate between cards: no game, no page, no switches left on. */
 function clean(): void {
-  useStore.setState({ game: null, slot: null, page: null, mini: null, transition: null, daily: null, tab: 'home', toasts: [], guide: false, master: false, simple: false, intro: false, news: false, thanks: null, spots: null, tour: false });
+  useStore.setState({ game: null, slot: null, page: null, mini: null, transition: null, daily: null, tab: 'home', toasts: [], guide: false, master: false, simple: false, intro: false, news: false, thanks: null, spots: null, tour: false, ...roadView() });
   setAchievements(true);
 }
 
@@ -257,6 +258,7 @@ export function DevDeck() {
             <GuideTour />
             <TabNews />
             <AchToasts />
+            <Lessons />
           </>
         )}
         <div className="dk-bar" role="toolbar" aria-label="Dev deck">

@@ -35,6 +35,18 @@ const SECTIONS: { title: string; where: string; items: [string, string[]][] }[] 
     ],
   },
   {
+    title: 'The road map',
+    where: 'The tutorial, then the Levels card on the start page',
+    items: [
+      ['Three levels', ['Every device starts on the road map: beginner (high school), intermediate (college), advanced (the NBA arena).', 'Each is a short career at fast break’s pace with one goal: an NBA All-Star team, in 5, 6 and then 7 NBA seasons.', 'Each level opens more of the game, shown as icons on its start page. Goal or not, the level is passed.']],
+      ['Lessons', ['The tutorial guide shades the page but for one control and says what it does: Got it (Enter or Space) to read on, or use the control.', 'One lesson at a time, none skipped.']],
+      ['The island', ['Every mini-game once, with a C or better in each: the mark to beat is on its card. Any time between levels.']],
+      ['The closing tour', ['After the levels: a star’s career, stop by stop, for everything no level has (the locker room, duos, the press, love, the farewell tour and more).', 'Next stop goes on once a stop’s lessons are done.']],
+      ['Graduation', ['The diploma shows the exit code, and the full game opens on this device for good.', 'Skip the tutorial, at the foot of every tutorial page, takes the code: for another device, or anyone who has played before.']],
+      ['Levels card', ['In the full game, the Levels card on the start page brings the road map back: play any level again.', 'Level careers count nowhere: no save slot, career log, achievements or leaderboards.']],
+    ],
+  },
+  {
     title: 'Starting a career',
     where: 'The start page',
     items: [
@@ -92,7 +104,7 @@ const SECTIONS: { title: string; where: string; items: [string, string[]][] }[] 
       ['Press conferences', ['After a big story, every two or three seasons: one question, two after a title, a lost final or a big award.', 'Humble earns trust, confident fame and mood, fiery the most fame and a risk of a fine.', 'Some crowds love fire, others humility.']],
       ['Contract talks', ['Under each pro offer: ask for more money, one more year or a bigger role.', 'Two asks an offer. Push too hard and they pull it.']],
       ['Brand deals', ['At Superstar reputation, two brands bid each summer.', 'A fixed deal, or your own signature line under your logo: an Icon gets a shoe every season.']],
-      ['Shop and summer', ['Six items each summer from about 190, priced for what you earn: two or three fit your bank. Buy as many as you can pay for.', 'Prices climb with your salary, up to three times the sticker; from about $50M a year, money stops mattering.', 'Then a summer program for next season.']],
+      ['Shop and summer', ['Six items each summer from about 210, priced for what you earn: two or three fit your bank. Buy as many as you can pay for.', 'Prices climb with your salary, up to three times the sticker; from about $50M a year, money stops mattering.', 'Then a summer program for next season.']],
       ['Accessories', ['Headbands, sleeves, wristbands and leg sleeves in ten colours, each with a tiny effect.', 'They go on your player at once; the wardrobe on the Player tab swaps or removes them.']],
       ['Collection', ['Everything you bought, by shelf, on the Player tab.', 'Take the car for a drive, fly the jet, go home, as often as you like.', 'The first visit each season gives a small edge: a little mood and rest (and fame for a public place).']],
     ],
@@ -142,7 +154,7 @@ const SECTIONS: { title: string; where: string; items: [string, string[]][] }[] 
     items: [
       ['Career log', ['The career cards of your last 10 finished careers, and your saved careers: continue one, look back, copy its code, or import one.', 'A warning at 9; when full, a new career replaces the oldest card that is not locked.', 'Lock up to 5 to keep them for good: a locked card is never replaced or deleted until you unlock it.', 'Show, download, lock or delete any card (from a career: no deleting).', 'Compare: pick two cards to see them side by side, peak to NBA points, the better of each marked ▲.']],
       ['Career card', ['Download or share it from the end of a career or the career log.', 'It shows the difficulty and any challenge (Comet, Rough Road) as badges, the career index, the best ten achievements as medals and the best three by name, and the son, if he played.']],
-      ['Achievements', ['More than 650 milestones in five tiers, kept for good across careers.', 'Mini-games have their own: for the arcade itself, and for what the bonuses did for your career.', 'A banner drops in when you earn one; tap it away.', 'Ones you haven’t earned show only their name: a riddle.']],
+      ['Achievements', ['More than 675 milestones in five tiers, kept for good across careers.', 'Some are for efficiency (a perfect night from the field, 50-40-90 at 25 a game), some for nights so bad they are hard to have (0 for 12, a team that wins 15).', 'Mini-games have their own: for the arcade itself, and for what the bonuses did for your career.', 'A banner drops in when you earn one; tap it away.', 'Ones you haven’t earned show only their name: a riddle.']],
       ['The next generation', ['A career whose first child is a son offers his career, at the foot of the retirement page: Comet speed, your difficulty, your number and hometown. The first child is a boy or a girl, half and half.', 'He takes after you, mostly a little shorter and a little less gifted, now and then far better or worse. No third generation.', 'He is never logged or ranked on his own: a quarter of his legacy joins yours, and your card shows him.']],
       ['Thank you for playing', ['Every time you leave a career: your player with the trophy, and the career’s honours around the title.']],
       ['What it qualifies for', ['The end-of-career page says where the career stands: its place on today’s and the all-time board, the Reality 99 hall, a statue (with the button to raise it) or how much legacy a statue still needs.']],
@@ -162,6 +174,7 @@ const QUICK: [string, string][] = [
   ['4', 'Raise ratings to unlock mini-games (on the Extras tab).'],
   ['5', 'Want it quicker? Fast break or Sim, on How you play; or a five-minute Comet career with Shoot for the stars.'],
   ['6', 'Changed your mind? Undo (U) takes back the last choice.'],
+  ['7', 'Want the basics again? The Levels card replays the road map.'],
 ];
 
 const SEEN = 'btr-guide-seen';

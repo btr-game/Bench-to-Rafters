@@ -3,6 +3,7 @@
 // sad music just for that (but still include thank you for playing)"); Continue goes on to the
 // thank-you page, then the road map.
 
+import { useEffect } from 'react';
 import type { GameState } from '../../engine/types';
 import { useStore } from '../../store';
 import { Icon } from '../art/Icon';
@@ -10,6 +11,7 @@ import { LEVEL_IDS, LEVEL_NAME, levelOf, nbaSeasons } from '../../engine/levels'
 import { LEVEL_COPY } from '../../content/roadmap';
 import { LevelAdds } from '../components/LevelAdds';
 import { sfx } from '../sound';
+import { PlaceArt } from './RoadMap';
 
 export function LevelEnd({ g }: { g: GameState }) {
   const endLevel = useStore((s) => s.endLevel);
@@ -20,11 +22,13 @@ export function LevelEnd({ g }: { g: GameState }) {
   const best = nba.reduce((m, h) => Math.max(m, h.line.gp ? h.line.pts / h.line.gp : 0), 0);
   const next = LEVEL_IDS[LEVEL_IDS.indexOf(level) + 1];
   const copy = LEVEL_COPY[level];
+  useEffect(() => sfx(star ? 'award' : 'lose'), [star]);
   return (
     <div className="stack level-end">
       <section className={`card stack level-end-card ${star ? 'won' : 'missed'}`} data-tour="level-end">
         <div className="row level-end-head">
-          <Icon name={star ? 'stars' : 'morale'} size={64} />
+          <PlaceArt place={level} size={120} />
+          <Icon name={star ? 'stars' : 'morale'} size={56} />
           <div style={{ minWidth: 0 }}>
             <div className="kicker">
               Level {copy.n} · {LEVEL_NAME[level]} · passed

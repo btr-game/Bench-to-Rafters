@@ -47,7 +47,7 @@ export function DevDoor() {
 /** Round 33 (owner: "on one corner or the bottom of the tutorial, there's a skip button, where the
  * user can insert the code to skip it. this allows old users to skip"): the exit code, on every
  * page of the tutorial. The graduation page shows the code. */
-export function SkipDoor() {
+function SkipDoor() {
   const road = useStore((s) => s.road);
   const skip = useStore((s) => s.skipTutorial);
   const [code, setCode] = useState('');

@@ -25,7 +25,7 @@ export function Tick({ on }: { on: boolean }) {
 // with a picture of a parchment rolled at both ends on wooden rods; then "make it more roughly
 // pixellated. less pixels"): chunky pixel art, every pixel four screen pixels wide: the rolls and
 // their knobs, the paper with specks and stains, ragged steps along its sides.
-const INK = { ink: '#3A2716', faded: '#6B5236', red: '#9B2C1A', light: '#F3E6C6' };
+const INK = { ink: '#3A2716', red: '#9B2C1A', light: '#F3E6C6' };
 const WOOD: Record<string, string> = { O: '#3B2414', T: '#9A6A3A', t: '#6E4826', L: '#C99A62' };
 /** A knob at the end of a roll, and the stub of its rod (drawn for the left end; the right is mirrored). */
 const KNOB = ['.OO...', 'OLTO..', 'OTTOOO', 'OTTOLL', 'OTTOtt', 'OTTOOO', 'OTtO..', '.OO...'];

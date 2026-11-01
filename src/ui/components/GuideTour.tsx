@@ -32,6 +32,7 @@ const TOUR: Step[] = [
   T('comet', '.comet-card', 'With Shoot for the stars: Comet, the stars at hyper speed. Fast break and Sim for the whole career, about five minutes.'),
   T('oath', '.oath-card:not(.comet-card)', 'With Reality hits hard: Rough Road, the hardest way to play. The road picks your player at random, then master mode with no Fast break or Sim, for the whole career, and a mark of honour for it.'),
   T('minis', D('minis'), 'Mini-games. Free from the start page; in a career each one opens with your ratings and pays a rating bonus.'),
+  T('levels', D('levels-card'), 'The road map: the three levels and the island, to play again. Level careers count nowhere.'),
   T('log', D('log'), 'The career log: the cards of your last ten finished careers. Lock up to five to keep them for good.'),
   T('log-saves', '.saves-card', 'Every career saved on this device: continue one, look back, copy its code to play it somewhere else, or import one.'),
   T('log-lock', D('log-lock'), 'Lock a card: a new career never replaces it, and it can’t be deleted until you unlock it. Five at most.'),

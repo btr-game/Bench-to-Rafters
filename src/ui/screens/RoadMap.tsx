@@ -4,7 +4,7 @@
 // checklist appears on the top right corner like a bucket list, and once a goal is complete, a check
 // is on that part"). The page between the levels: a pixel map, the bucket list, a card for each stop.
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useStore } from '../../store';
 import { Icon } from '../art/Icon';
 import { SKIN_COLORS, HAIR_COLORS } from '../art/Player';
@@ -18,6 +18,7 @@ import { SettingsMenu } from '../components/Settings';
 import { ShareButton } from '../components/Share';
 import { FootBar } from '../components/FootBar';
 import { sfx } from '../sound';
+import { isDev } from '../../dev/mode';
 
 // ---------- the map, on a 192 by 108 pixel grid ----------
 
@@ -152,6 +153,20 @@ function mapPixels(): Px[] {
   return px;
 }
 
+/** One place on the map, cropped from it: the level's school, the college, the arena, the island. */
+const PLACE_BOX: Record<Level | 'island', string> = { beginner: '6 48 44 36', intermediate: '56 4 44 36', advanced: '102 34 44 36', island: '148 66 44 36' };
+let MAP_PX: Px[] | null = null;
+const mapPx = () => (MAP_PX ??= mapPixels());
+export function PlaceArt({ place, size = 132 }: { place: Level | 'island'; size?: number }) {
+  return (
+    <svg className="place-art" viewBox={PLACE_BOX[place]} width={size} height={(size * 36) / 44} shapeRendering="crispEdges" aria-hidden="true">
+      {mapPx().map(([x, y, w, h, c], i) => (
+        <rect key={i} x={x} y={y} width={w} height={h} fill={c} />
+      ))}
+    </svg>
+  );
+}
+
 const CAR = ['...hh....', '..gssg...', '.RRRRRRR.', 'RRRRRRRRY', 'RRRRRRRRR', '.OO...OO.'];
 const BOAT = ['....S.....', '....SS....', '....SSS...', '..hhSSSS..', '..ss.S....', 'TTTTTTTTTT', '.TTTTTTTT.'];
 
@@ -183,12 +198,13 @@ const reduced = () => typeof matchMedia !== 'undefined' && matchMedia('(prefers-
 /** The pixel map: the places, the road, the car at the next stop (it drives there the first time
  * the page opens after a level), and the boat at the dock or sailing to the island. */
 function MapArt({ road, sailing, onSailed }: { road: Road; sailing: boolean; onSailed: () => void }) {
-  const px = useMemo(mapPixels, []);
+  const px = mapPx();
   const next = nextLevel(road);
   const at = next ? LEVEL_IDS.indexOf(next) : 3;
   const target = stopAt(STOPS[at]);
   const from = at > 0 ? stopAt(STOPS[at - 1]) : target;
-  const key = `btr-road-drove-${at}`;
+  // the deck keeps a mark of its own, so its look at the map never stops the game's car
+  const key = `${isDev() ? 'btr-dev:' : ''}btr-road-drove-${at}`;
   const [step, setStep] = useState(() => {
     try {
       return sessionStorage.getItem(key) || reduced() ? target : from;
@@ -196,6 +212,11 @@ function MapArt({ road, sailing, onSailed }: { road: Road; sailing: boolean; onS
       return target;
     }
   });
+  // the engine starts when the car has somewhere to go (once, as the page opens)
+  const [moving] = useState(step < target);
+  useEffect(() => {
+    if (moving) sfx('drive');
+  }, [moving]);
   useEffect(() => {
     if (step >= target) {
       try {
@@ -266,7 +287,6 @@ function BucketList({ road }: { road: Road }) {
   );
 }
 
-const PLACE_ICON: Record<Level, string> = { beginner: 'lvl-HSV', intermediate: 'lvl-NCAA', advanced: 'lvl-NBA' };
 
 /** A stop on the road: passed, next, or still locked. */
 function LevelStop({ level, road }: { level: Level; road: Road }) {
@@ -278,7 +298,7 @@ function LevelStop({ level, road }: { level: Level; road: Road }) {
   return (
     <section className={`card stack road-stop${next ? ' next' : ''}${open ? '' : ' locked'}`} data-tour={next ? 'road-next' : undefined}>
       <div className="row road-stop-head">
-        <Icon name={PLACE_ICON[level]} size={40} />
+        <PlaceArt place={level} size={88} />
         <div style={{ minWidth: 0 }}>
           <div className="kicker">
             Level {copy.n} · {copy.place}
@@ -325,7 +345,7 @@ function IslandStop({ road, onSail }: { road: Road; onSail: () => void }) {
   return (
     <section className={`card stack road-stop island${open ? '' : ' locked'}`}>
       <div className="row road-stop-head">
-        <Icon name="palm" size={40} />
+        <PlaceArt place="island" size={88} />
         <div style={{ minWidth: 0 }}>
           <div className="kicker">Overseas league · the island</div>
           <div className="sec-title">The mini-games</div>
@@ -336,7 +356,7 @@ function IslandStop({ road, onSail }: { road: Road; onSail: () => void }) {
           {open ? `${done}/${MINIS.length} at C or better` : 'Locked'}
         </span>
       </div>
-      <p className="small">{open ? 'Play each one once and get a C or better. Any time, between levels.' : 'Opens after beginner.'}</p>
+      <p className={open ? 'small prose' : 'small'}>{open ? 'Play each one once and get a C or better. Any time, between levels.' : 'Opens after beginner.'}</p>
       {open && (
         <ul className="island-grid">
           {MINIS.map((m) => (
@@ -383,7 +403,7 @@ function TourStop({ road }: { road: Road }) {
           </span>
         ) : null}
       </div>
-      <p className="small">{open ? 'A star’s career, already under way: the rest of the game, stop by stop. About ten minutes.' : 'Opens after advanced.'}</p>
+      <p className={open ? 'small prose' : 'small'}>{open ? 'A star’s career, already under way: the rest of the game, stop by stop. About ten minutes.' : 'Opens after advanced.'}</p>
       {open && !road.toured && (
         <div className="row-end">
           <button className="btn" onClick={() => (sfx('confirm'), start())}>
@@ -447,7 +467,7 @@ export function RoadMap() {
         {LEVEL_IDS.map((l) => (
           <LevelStop key={l} level={l} road={road} />
         ))}
-        <IslandStop road={road} onSail={() => (sfx('page'), setSailing(true))} />
+        <IslandStop road={road} onSail={() => (sfx('sail'), setSailing(true))} />
         <TourStop road={road} />
       </div>
       <FootBar where="road map" />

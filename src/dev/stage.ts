@@ -8,6 +8,7 @@ import { fastForward, setSim } from '../engine/fast';
 import { ARCHETYPES } from '../engine/player/archetypes';
 import { POSITIONS, type Mode } from '../engine/balance';
 import type { Decision, GameState, Moment, Pos } from '../engine/types';
+import type { Level } from '../engine/levels';
 
 export interface PlayOpts {
   mode?: Mode;
@@ -22,13 +23,15 @@ export interface PlayOpts {
   /** Round 30: played as the game plays it, each move followed by fast break's run to the next
    * stop: in sim mode, or as a Comet. */
   quick?: 'sim' | 'comet';
+  /** Round 33: a level career of the road map. */
+  level?: Level;
 }
 
 const NAMES = ['Jordan Vale', 'Marcus Reed', 'Theo Grant', 'Andre Lucas', 'Caleb Stone', 'Isaiah Moore'];
 
 function input(seed: number, o: PlayOpts) {
   const pos = o.pos ?? POSITIONS[seed % POSITIONS.length];
-  return { name: NAMES[seed % NAMES.length], number: (seed % 54) + 1, pos, archetype: seed % ARCHETYPES[pos].length, focus: pos === 'C' || pos === 'PF' ? (['INT', 'REB'] as const) : (['SHT', 'PLY'] as const), mode: o.mode ?? 'standard', fast: o.fast, comet: o.quick === 'comet' };
+  return { name: NAMES[seed % NAMES.length], number: (seed % 54) + 1, pos, archetype: seed % ARCHETYPES[pos].length, focus: pos === 'C' || pos === 'PF' ? (['INT', 'REB'] as const) : (['SHT', 'PLY'] as const), mode: o.mode ?? 'standard', fast: o.fast, comet: o.quick === 'comet', level: o.level };
 }
 
 /** Plays careers until `until` holds (checked before every step); null if no career gets there. */

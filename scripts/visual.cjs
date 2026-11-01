@@ -319,12 +319,14 @@ async function runConfig(browser, cfg) {
           const r = e.getBoundingClientRect();
           return r.height > 0 && r.bottom >= innerHeight - 2 && r.top > innerHeight / 2;
         });
-        if (!bars.length) return null;
         const top = Math.min(...bars.map((b) => b.getBoundingClientRect().top));
         const wrap = document.querySelector('.wrap');
         const last = wrap && [...wrap.children].filter((c) => c.getBoundingClientRect().height > 0).pop();
         const bottom = last ? last.getBoundingClientRect().bottom : 0;
+        // back to the top before the shot, bars or none (round 33: a page left at its foot put the
+        // sticky header across the middle of every tall desktop shot)
         window.scrollTo(0, 0);
+        if (!bars.length) return null;
         return bottom > top + 1 ? `${Math.round(bottom - top)}px of ${last.className || last.tagName} under the bar` : null;
       });
       if (covered) found.push({ kind: 'covered', el: '', detail: covered });

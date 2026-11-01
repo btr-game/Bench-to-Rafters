@@ -17,7 +17,10 @@ import { StreetballGame } from './Streetball';
 import { LockdownGame } from './Lockdown';
 import { DailyGame } from './Daily';
 
-const GAMES: { id: MiniId | 'daily'; name: string; text: string; tag: string; color: string }[] = [
+/** A mini-game's icon (the Catalog's island list uses it too). */
+export const miniIcon = (id: string): string => (id === 'office' ? 'office' : id === 'lab' ? 'lab' : id === 'daily' ? 'calendar' : id === 'rhythm' ? 'lockdown' : ICON_FOR[id] ?? '');
+
+export const GAMES: { id: MiniId | 'daily'; name: string; text: string; tag: string; color: string }[] = [
   { id: 'daily' as const, tag: 'Every day', color: '#0B7285', name: 'Daily challenge', text: 'One prospect a day, the same for everyone. A whole career with fast break and simple text, scored by the legacy he leaves. From the start page, when no career is in progress.' },
   { id: 'office' as const, tag: 'Strategy', color: '#1C7ED6', name: 'Front Office', text: 'Run an NBA franchise for three seasons. Scout the draft, trade, sign players from Europe and beyond, set the game plan, and win a title before the owner loses patience.' },
   { id: 'threes' as const, tag: 'Timing', color: '#E8590C', name: 'Three-point contest', text: 'Five racks, sixty seconds, a money-ball rack of your choice. Stop the meter in the green. Beat seven of the best shooters ever.' },
@@ -65,7 +68,7 @@ function Hub() {
                 {(pr || dailyShut) && <span className={`hub-state${locked ? '' : ' open'}`}>{locked ? 'Locked' : 'Unlocked'}</span>}
               </span>
               <b className="hub-name with-icon">
-                <Icon name={x.id === 'office' ? 'office' : x.id === 'lab' ? 'lab' : x.id === 'daily' ? 'calendar' : x.id === 'rhythm' ? 'lockdown' : ICON_FOR[x.id] ?? ''} size={34} />
+                <Icon name={miniIcon(x.id)} size={34} />
                 {x.name}
               </b>
               <small>{x.text}</small>

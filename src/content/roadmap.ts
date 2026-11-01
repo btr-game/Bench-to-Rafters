@@ -3,7 +3,7 @@
 
 import type { Level } from '../engine/levels';
 
-export interface LevelCopy {
+interface LevelCopy {
   n: number;
   place: string;
   /** What the level is about, in a sentence. */

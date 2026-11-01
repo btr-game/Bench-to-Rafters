@@ -2478,3 +2478,142 @@ multiple times."
   The second child's change alone, career by career against the run before it: peak −0.0366
   (−0.82 SE), titles +1.0625 points (+1.04). The gap to the approved numbers is the earlier
   rounds', as reported in round 31; the owner decides.
+
+
+## Round 33 (owner requests)
+
+- **New career says the career is kept** (owner: "on new career, can you add that the user can
+  continue that career in career log? i think users might be hesitant to leave if they arent
+  aware"): under the New career button in Settings, before any tap, "This career stays saved in the
+  career log: continue it there any time"; the confirmation says the same (it still pointed to "Your
+  careers on the start page", which round 32 moved into the career log). A daily challenge, which is
+  never saved, says so instead. Guide mode's step for the button says it too.
+- **What's new in the dev deck** (owner: "make the what's new accessible in the dev deck"): a
+  section of its own beside the Inbox, with every update players have been shown, newest first
+  (the start page shows only the latest), and a button that opens the pop-up as players see it.
+- **The announcer on the sound board** (owner: "the sounds from the announcer ... add that"): all
+  twelve lines, each with when he says it. The deck plays him even with the game's sound off, and
+  does not count those calls toward the device's total (the deck never touches the game's own
+  storage; scripts/dev-apart.cjs checked).
+- **The son's career, a heads-up** (owner: "give a quick warning that it will be played in sim &
+  fast break mode"): beside Play his career, shown in simple text too: Sim and Fast break locked
+  on; the game makes the routine calls and the turning points; he still picks where his son plays,
+  the draft and when he retires.
+- **The Season tab's order** (owner: "move up the locker room to the top ... the team strength and
+  team culture+fan culture side-by-side ... right below the locker room, and then the standings"):
+  the locker room, then team strength beside the city and its fans (one column on a phone or when
+  there is no city), then the playoff bracket while there is one, then the standings.
+- **The level engine** (engine/levels.ts, ROADMAP in balance.ts). One flag on the career says which
+  level it is; `allows` is asked wherever a system starts, so a career of the full game is
+  unchanged.
+  - Every level starts on the first page of a high school senior season (the first three years are
+    played for him with plain, safe calls) and ends after its NBA seasons: 5 in beginner, 6 in
+    intermediate, 7 in advanced.
+  - Below advanced, the player is American and only colleges and NBA teams call. If nobody else
+    calls, the G League; if not even that, anyone, so a career is never stuck.
+  - Every level plays at fast break's pace, but keeps its own season plans, its shop and, from
+    intermediate on, its playable playoff games. Without that pace, intermediate took about 15
+    minutes and advanced about 20.
+  - Contract talks: none in beginner; intermediate, its first NBA deal past the rookie scale;
+    advanced, every deal.
+  - Beginner's one playable moment: the last possession of the first NBA playoff game he plays, down
+    one with the ball if the game was not already close. 39 of 40 test careers got it; the other
+    never made the playoffs.
+  - Measured with the playtime model and the harness's smart player, 200 careers a level:
+
+    | Level | NBA seasons | Play time (mean, 10th–90th) | NBA All-Star | Mean peak |
+    |---|---|---|---|---|
+    | Beginner | 5 | 6.0510 min (5.7167–6.4167) | 85.5% | 83.5444 |
+    | Intermediate | 6 | 10.2490 min (9.6500–10.8500) | 87.0% | 85.8237 |
+    | Advanced | 7 | 13.0310 min (11.9500–14.0833) | 88.0% | 84.0029 |
+
+    Advanced leaves about two minutes of its fifteen for the tutorial guide.
+- **The way out** (owner, during the round): every device starts in the tutorial whatever it has
+  saved. A Skip button in a corner of the tutorial asks for the exit code (the owner changed it so
+  it does not hint at the dev password). The graduation page shows the code, so a graduate can
+  skip on another device. The check is against a hash; the code is in the game too, lightly
+  encoded, because the game has to show it.
+- **The tutorial's pages.** Every device opens on the beginner career (old saves wait). Then the
+  road map: a pixel map of high school, college, the NBA arena and an island across the sea, the
+  player's car driving to the next stop, a boat to the island, and the bucket list as a chunky
+  pixel scroll in the top-right corner (owner: "a more paper vibe ... more roughly pixellated").
+  Each level's start page has fewer steps, and intermediate and advanced show what they add as
+  big pixel icons with a word or two (owner: "use a lot of icons and little text"). A level's end
+  page: the goal reached or missed (the sad ending plays "So close"), then the thank-you page.
+- **The island.** Every mini-game once at C or better. The marks follow each game's career-bonus
+  tiers (C is the first score that earns a bonus): three-point contest 13 points, dunk contest a 35
+  dunk, the lab a peak of 80, Legends the conference finals, 3-on-3 a loss by 3 or less, Lockdown
+  its own C, Front Office one playoff trip (owner). Approved by the owner at the end of the round
+  ("yup"), with the device staying free for good once the tutorial is finished or the code entered.
+- **The tutorial guide** (tutorial/lessons.ts, 104 lessons): one control at a time, the rest of
+  the page shaded and deaf; a lesson to read waits for Got it, a lesson to do waits for its control;
+  no skipping, only the exit code. Guide mode stays as it was, for after the tutorial, and keeps out
+  of the tutorial.
+- **The closing tour** (tutorial/closing.ts): after advanced, careers staged by the dev deck's
+  player for every system no level has, and a catch-up for whatever the player's own levels never
+  showed; stops whose lessons are all done are skipped. Tour careers are kept nowhere. It ends on
+  the graduation page (the diploma shows the exit code), then the full start page with a Regular
+  guy career marked as recommended.
+- **The Levels card** on the full start page opens the road map to play a level again.
+- **Full Album** stays at 18 loops: the tutorial's two (Road trip, So close) are left out.
+- **End of round 33** (the checklist, in its order):
+  1. Graphics: each level's place cropped from the road map (its school, the college, the arena,
+     the island) on the level's start page, its stop on the map and its end card; a mortarboard for
+     graduation; five event icons and five shop icons.
+  2. Sound: the car's engine and horn, the boat's horn and the sea, a pencil tick for a lesson
+     done, a graduation fanfare; the exit code plays the unlock sound, a level's end card the award
+     or the loss.
+  3. Fast break, sim and simple text: the levels already play at fast break's pace and switch
+     Simple text off; outside the tutorial, Simple text hides the road map's explanations and keeps
+     what is locked.
+  4. Contrast and the visual check: every class combination passes AA in both themes (the bucket
+     list's tag got a paper background of its own). The visual check had a bug of its own: on a
+     computer it left the page scrolled to its foot before the shot, so a tall page's sticky header
+     sat across its middle. It now scrolls back first; round 32 was shot again the same way as the
+     baseline (110 screens in each of four set-ups, clean).
+  5. Achievements: 28 more (680 in all), on the owner's word: efficiency (a perfect night from the
+     field at 10, 13 and 15 shots, 15 free throws without a miss, 8 and 10 threes without a miss, 50
+     points on 20 shots or fewer, a triple-double without a miss, 50-40-90 at 25 a game, 70% and
+     74% true shooting, 50% from three on seven a game, 65% from the field) and nights so bad they
+     are hard to have (0 for 10, 12 and 15; 0 for 12 from three; 0 for 5 at the line; 12 and 13
+     turnovers; 35 minutes without a point; a season under 40% on ten shots a game; a team that
+     wins 15 or 10; an OVR of 25 or 18; retiring at a peak of 40 or lower; drafted and gone without
+     an NBA point). The book now keeps each career's single-game extremes (career/marks.ts). Every
+     mark was measured over 750 careers of the smart player first. Some ideas never happened in any
+     of them and stayed out: a 60-50-90 season, a season under 30% from the field, 95% from the
+     line, and 10 OVR (the owner's example; the lowest seen was 16.6).
+  6. Events and shop items: five turning points (a 1-for-14 night, the ball from a perfect night,
+     an underhand free-throw routine, the analytics report on his shot chart, a front office that
+     wants him to sit) and five items (a shot chart poster, a free-throw specialist, a
+     ball-security camp, a framed box score, a gold-painted brick).
+  7. Harness: no new kind of decision; the levels reuse the full game's.
+  8. Dead code: an unused lesson lookup, an unused ink colour and four exports nothing else used.
+  9. Tests for the marks, the new achievements, events and shop items; then the full checks.
+  10. Balance (1,600 careers, seeds 100003 to 101602, the smart player with casual mini-game
+      play):
+
+      | Measure | Round 22 (approved) | Round 32 | Round 33 | Against round 22 |
+      |---|---|---|---|---|
+      | Mean peak OVR | 74.4923 | 74.7118974 | 74.6172649 | +0.1249649 (+0.43 SE) |
+      | Reached the NBA | 78.3% | 78.5625% | 78.0625000% | −0.2375 pts (−0.23) |
+      | All-Star | 35.8% | 40.6250% | 40.0000000% | +4.2000 pts (+3.43) |
+      | MVP | 11.9% | 13.3125% | 13.0000000% | +1.1000 pts (+1.31) |
+      | Hall of Fame | 11.2% | 17.9375% | 16.2500000% | +5.0500 pts (+5.48) |
+      | Won a title | 29.2% | 41.6250% | 39.6875000% | +10.4875 pts (+8.57) |
+
+      Against round 32 every line is within about one standard error and every one moved a little
+      toward the approved numbers; career by career (the same seeds), the Hall of Fame moved most,
+      −1.6875 points (−2.38 SE), as the new turning points take turns from older ones. The gap to
+      the approved numbers is the earlier rounds'; the owner decides.
+  11. The manual has a chapter on the road map (the levels, lessons, the island, the closing tour,
+      graduation and the exit code, the Levels card), the achievement count and the new kinds, and
+      the shop's 208 items; Guide mode has a step for the Levels card.
+  12. Dev deck: a Tutorial suit of 17 cards (127 in all). The deck can now show the tutorial: a
+      card puts a road of the deck's own on screen, never saved, and three of them show the lessons
+      (the deck mounts the lesson layer, and its own bar stays above it). The Catalog has five more
+      lists (31): the road map's levels, the island's marks, every lesson, the closing tour's stops
+      and beginner's turning points; its events now include rounds 32 and 33.
+  13. The project summary has a new chapter 2 for the road map; the balance check, the turning
+      points (182), the shop, the achievements (with the marks and how often each happens), what a
+      device keeps and the dev deck are brought up to date.
+

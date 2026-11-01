@@ -1652,6 +1652,20 @@ export const ICONS: Record<string, string[]> = {
     '...OgggggggggO..',
     '...OOOOOOOOOOO..',
   ],
+  // round 33: graduation (a mortarboard and its tassel)
+  cap: [
+    '.......OO.......',
+    '.....OOKKOO.....',
+    '...OOKKKKKKOO...',
+    '.OOKKKKKKKKKKOO.',
+    'OKKKKKKKKKKKKKKO',
+    '.OOKKKKKKKKKKOOY',
+    '...OOKKKKKKOO.Y.',
+    '...OKOOKKOOKO.Y.',
+    '...OKKKOOKKKO.YY',
+    '...OKKKKKKKKO.YY',
+    '....OOOOOOOO....',
+  ],
   // round 33: the road map (a folded map, a dotted road, a pin)
   map: [
     '..OOOO.OOOO.OOO.',
@@ -2340,6 +2354,12 @@ export const SHIFT_COLOR = ['#E03131', '#F76707', '#FCC419', '#2F9E44', '#1C7ED6
 export function shopIcon(id: string, name: string): string {
   const t = `${id} ${name}`.toLowerCase();
   const rules: [RegExp, string][] = [
+    // round 33: the round's items
+    [/shot-chart/, 'chart'],
+    [/ft-routine/, 'shoot'],
+    [/ball-security/, 'playmake'],
+    [/box-score/, 'frame'],
+    [/gold-brick/, 'hammer'],
     // round 32: the round's items
     [/locker-speaker/, 'headphones'],
     [/whistle/, 'whistle'],

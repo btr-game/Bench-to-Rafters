@@ -272,3 +272,79 @@ describe('the tutorial guide', () => {
     expect(stopsLeft([]).length).toBe(STOPS.length);
   });
 });
+
+describe('the book: efficiency, and the bad nights that are hard to have', () => {
+  const line = (o: Partial<import('../src/engine/types').StatLine>) => ({ gp: 1, gs: 1, min: 34, pts: 0, reb: 0, ast: 0, stl: 0, blk: 0, tov: 0, fgm: 0, fga: 0, tpm: 0, tpa: 0, ftm: 0, fta: 0, ...o });
+  const game = (o: Partial<import('../src/engine/types').StatLine>, post?: string) => ({ n: 1, opp: 'BOS', home: true, res: 'W' as const, us: 110, them: 100, line: line(o), post });
+
+  it('keeps the extremes of his NBA games, and none from other levels or G League assignments', async () => {
+    const { markGames } = await import('../src/engine/career/marks');
+    const s = newGame(7, input);
+    markGames(s, [game({ fgm: 11, fga: 11, ftm: 6, fta: 6, pts: 28, reb: 10, ast: 11 }), game({ fga: 13, tpa: 9, fta: 5, tov: 12, min: 38 })], 'NBA');
+    expect(s.flags.gPerfFg).toBe(11);
+    expect(s.flags.gPerfFt).toBe(6);
+    expect(s.flags.gTdClean).toBe(1);
+    expect(s.flags.gBrick).toBe(13);
+    expect(s.flags.gBrick3).toBe(9);
+    expect(s.flags.gBrickFt).toBe(5);
+    expect(s.flags.gTov).toBe(12);
+    expect(s.flags.gBlank).toBe(38);
+    // a lesser night never lowers a mark; college and the G League never set one
+    markGames(s, [game({ fgm: 4, fga: 4 })], 'NBA');
+    markGames(s, [game({ fgm: 20, fga: 20 })], 'NCAA');
+    markGames(s, [game({ fgm: 18, fga: 18 }, 'G League')], 'NBA');
+    expect(s.flags.gPerfFg).toBe(11);
+  });
+
+  it('earns the good and the bad from real marks and seasons, and only once a career is retired for the career ones', async () => {
+    const { earnedNow, NO_TOTALS, ACHIEVEMENTS } = await import('../src/engine/achievements');
+    const s = newGame(9, input);
+    Object.assign(s.flags, { gPerfFg: 15, gBrick: 12, gTov: 13, gPerf3: 8 });
+    const nbaSeason = (o: Partial<import('../src/engine/types').StatLine>, w: number) => ({ year: 2030, age: 24, level: 'NBA' as const, stage: 'NBA' as const, teamId: 'BOS', teamName: 'Celtics', teamColor: '#000', role: 'starter' as const, line: line({ gp: 70, ...o }), post: line({ gp: 0 }), w, l: 82 - w, result: '', ovrStart: 80, ovrEnd: 24, awards: [], races: [], salary: 1, bestGame: null });
+    s.history.push(nbaSeason({ pts: 70 * 26, fgm: 70 * 9, fga: 70 * 17, tpm: 70 * 2, tpa: 70 * 4, ftm: 70 * 6, fta: 70 * 6.5 }, 14) as never);
+    const got = new Set(earnedNow(s, NO_TOTALS));
+    for (const id of ['e-perf10', 'e-perf13', 'e-perf15', 'b-brick12', 'b-tov13', 'e-3p8', 'e-504090-25', 'b-tank15', 'b-ovr25']) expect(got.has(id), id).toBe(true);
+    for (const id of ['b-brick15', 'b-tank10', 'b-ovr18', 'b-peak40', 'b-draft0', 'e-3p10']) expect(got.has(id), id).toBe(false);
+    // every one of them has a name of its own and says how it is earned
+    const r33 = ACHIEVEMENTS.filter((a) => /^(e|b)-/.test(a.id) && !a.id.startsWith('b-coach'));
+    expect(r33.length).toBeGreaterThanOrEqual(28);
+    for (const a of r33) expect(a.how.length).toBeGreaterThan(20);
+  });
+});
+
+describe('the round\'s events and shop items', () => {
+  it('can be offered and answered on a real NBA season, and the items have a picture of their own', async () => {
+    const { ROUND33_EVENTS } = await import('../src/engine/events/round33');
+    const { offerEvent } = await import('../src/engine/events/resolver');
+    const { SHOP_ITEMS } = await import('../src/content/shop');
+    const { shopIcon, ICONS } = await import('../src/ui/art/icons');
+    // an NBA offseason with nothing waiting, in a career of the full game
+    const g = newGame(33, { ...input, mode: 'stars' });
+    const r = makeRng(33);
+    for (let k = 0; k < 6000 && !(g.stage === 'NBA' && g.step === 'offseason' && !g.pending.length && g.history.some((h) => h.level === 'NBA')); k++) {
+      fastForward(g);
+      const pr = prompt(g);
+      if (pr.type === 'retired') break;
+      if (pr.type === 'decision') choose(g, smartChoice(g, pr.decision, r));
+      else advance(g);
+    }
+    expect(g.stage).toBe('NBA');
+    for (const e of ROUND33_EVENTS) {
+      const s = structuredClone(g);
+      s.flags.gPerfFg = 11;
+      expect(offerEvent(s, e.id)).toBe(true);
+      const d = s.pending[0];
+      expect(d.text.length).toBeGreaterThan(30);
+      for (const c of d.choices) {
+        const t = structuredClone(s);
+        expect(() => choose(t, c.id)).not.toThrow();
+        expect(t.result?.title).toBe(e.title);
+      }
+    }
+    for (const id of ['shot-chart-wall', 'ft-routine-coach', 'ball-security', 'box-score-frame', 'gold-brick']) {
+      const it33 = SHOP_ITEMS.find((x) => x.id === id)!;
+      expect(it33, id).toBeTruthy();
+      expect(ICONS[shopIcon(it33.id, it33.name)], id).toBeTruthy();
+    }
+  });
+});

@@ -19,7 +19,7 @@ export const LEVEL_NAME: Record<Level, string> = { beginner: 'Beginner', interme
 export const levelOf = (s: GameState): Level | null => (s.flags.level ? (LEVEL_IDS[s.flags.level - 1] ?? null) : null);
 
 /** The systems a level can leave out. A career of the full game has them all. */
-export type Feature =
+type Feature =
   | 'shop' // the summer shop (beginner: three items, one purchase)
   | 'offers' // choosing among offers (a college, a pro deal); otherwise the best is taken for him
   | 'roads' // a country's road to the pros, G League and overseas offers

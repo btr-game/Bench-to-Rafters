@@ -16,8 +16,8 @@ type St = ReturnType<typeof useStore.getState>;
 
 /** Which lessons fit the screen: a level (its create page too), a closing-tour stop, or the start page
  * just after graduation. None on the road map, in the mini-games, or outside the tutorial. */
-export function whereNow(st: St): Where | null {
-  if (isDev()) return null;
+function whereNow(st: St): Where | null {
+  if (isDev() && st.road.preview !== 'lesson') return null;
   if (st.recommend && !st.game && !st.page && !st.mini) return 'graduated';
   if (!inTutorial(st.road) || st.mini) return null;
   if (st.closing) return 'tour';

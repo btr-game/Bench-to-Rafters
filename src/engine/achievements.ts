@@ -14,6 +14,7 @@ import { activeDuo, activeTrio } from './career/duo';
 import { ovrOf } from './player/ovr';
 import { weightOf } from './player/weight';
 import { ACHIEVEMENTS_32, R32_TOTALS_ONLY } from './achievements32';
+import { ACHIEVEMENTS_33 } from './achievements33';
 import { ACHIEVEMENTS_25 } from './achievements25';
 import { ACHIEVEMENTS_MINI, MINI_TOTALS_ONLY, type MiniTotals } from './achievementsMini';
 
@@ -400,6 +401,8 @@ export const ACHIEVEMENTS: Achievement[] = [
   ...ACHIEVEMENTS_MINI,
   // round 32: the locker room, the coach, the farewell tour, record chases, love and the next generation, and more (achievements32.ts)
   ...ACHIEVEMENTS_32,
+  // round 33: efficiency, and the bad nights that are hard to have (achievements33.ts)
+  ...ACHIEVEMENTS_33,
 ];
 
 // the ones that only read the totals kept across careers (they can be checked with no career open)

@@ -146,4 +146,3 @@ export const LESSONS: Lesson[] = [
   L('graduated', 'g-regular', D('mode-regular'), 'The full game. Start a Regular guy career: recommended for your first one.'),
 ];
 
-export const lessonById = (id: string): Lesson | undefined => LESSONS.find((l) => l.id === id);

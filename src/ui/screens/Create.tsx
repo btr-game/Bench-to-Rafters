@@ -36,7 +36,7 @@ import { LEVEL_COPY, LEVEL_GOAL } from '../../content/roadmap';
 import { ROADMAP } from '../../engine/balance';
 import { FootBar } from '../components/FootBar';
 import { LevelAdds } from '../components/LevelAdds';
-import { LevelsCard } from './RoadMap';
+import { LevelsCard, PlaceArt } from './RoadMap';
 
 const pick = <T,>(a: readonly T[]): T => a[Math.floor(Math.random() * a.length)];
 const uiRng = makeRng(Math.floor(Math.random() * 2 ** 31));
@@ -285,6 +285,7 @@ export function Create({ level }: { level?: Level } = {}) {
       </header>
       {copy && level ? (
         <section className="hero level-hero">
+          <PlaceArt place={level} size={176} />
           <div className="kicker">
             Level {copy.n} of 3 · {copy.place}
           </div>

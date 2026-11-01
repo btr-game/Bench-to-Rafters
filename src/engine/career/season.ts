@@ -3,6 +3,7 @@
 import { midseasonSwing, startTeamFactors, winningEdge } from './team';
 
 import { evaluateBreakthrough, updateHighs } from './breakthrough';
+import { markGames } from './marks';
 import { edgeOf, youthGrowthMult } from './nationality';
 import {
   WEAR,
@@ -208,7 +209,7 @@ const LAB_PLANS: PlanText[] = [
 
 /** Round 33: the beginner level's six plans (owner: "balanced, grind, shooting lab, weight room,
  * film and reads, and lockdown"), picked once a season. */
-const SIX_PLANS: HalfPlan[] = ['balanced', 'grind', 'shooting', 'strength', 'playmaking', 'defense'];
+export const SIX_PLANS: HalfPlan[] = ['balanced', 'grind', 'shooting', 'strength', 'playmaking', 'defense'];
 
 export function pushPlanDecision(s: GameState, half: 1 | 2): void {
   const injured = !!s.player.injury && s.player.injury.key !== 'dtd';
@@ -858,6 +859,7 @@ function finishSeason(s: GameState): void {
   const breakthrough = evaluateBreakthrough(s, season);
   const allGames = [...season.games, ...season.postGames].filter((g) => g.line);
   const newHighs = updateHighs(s, allGames, level, team.name);
+  markGames(s, allGames, level);
   const bestGame = allGames.reduce<GameLog | null>((b, g) => (!b || gameScore(g.line!) > gameScore(b.line!) ? g : b), null);
   const rec: SeasonRecord = {
     year: s.year,

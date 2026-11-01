@@ -34,6 +34,7 @@ import { chooseLook } from './content/looks';
 import { NEWS } from './content/whatsNew';
 import { tabNews, type Spot } from './ui/tabNews';
 import { ACH_TIERS, type AchTier } from './engine/achievements';
+import { sfx } from './ui/sound';
 
 export type Tab = 'home' | 'season' | 'player' | 'records' | 'extras';
 export type Theme = 'auto' | 'light' | 'dark';
@@ -480,6 +481,7 @@ export const useStore = create<Store>((set, get) => ({
     }),
   skipTutorial: (code) => {
     if (!exitCode(code)) return false;
+    sfx('unlock');
     const road = { ...get().road, free: 1 as const };
     saveRoad(road);
     dropRun();
@@ -504,6 +506,7 @@ export const useStore = create<Store>((set, get) => ({
   doneLesson: (id) => {
     const road = get().road;
     if (road.lessons?.includes(id)) return;
+    sfx('lesson');
     const next = { ...road, lessons: [...(road.lessons ?? []), id] };
     saveRoad(next);
     set({ road: next });
@@ -970,8 +973,10 @@ export function viewNow(): View {
   return Object.fromEntries(Object.entries(useStore.getState()).filter(([k, v]) => typeof v !== 'function' && k !== 'theme' && k !== 'court' && k !== 'text' && k !== 'loading')) as View;
 }
 /** The start page as the game's own storage has it (the deck was opened before the game was). */
+/** The road as this storage has it, with nothing of the tutorial's on screen. */
+export const roadView = (): View => ({ road: loadRoad(), creating: null, closing: null, recommend: false, lessonUp: false });
 export function startView(): View {
-  return { game: null, tab: 'home', page: null, mini: null, transition: null, daily: null, toasts: [], thanks: null, spots: null, intro: false, news: false, slot: null, seen: {}, logged: null, tour: false, simple: loadFlag('btr-simple'), master: loadFlag('btr-master'), guide: loadFlag('btr-guide-mode') };
+  return { game: null, tab: 'home', page: null, mini: null, transition: null, daily: null, toasts: [], thanks: null, spots: null, intro: false, news: false, slot: null, seen: {}, logged: null, tour: false, simple: loadFlag('btr-simple'), master: loadFlag('btr-master'), guide: loadFlag('btr-guide-mode'), ...roadView() };
 }
 /** Settles what is waiting to be written as the deck opens (`flush`: the game's last move is
  * saved where it belongs) or closes (dropped: nothing of the deck's reaches the game). */

@@ -2575,7 +2575,7 @@ input[type='range'] { width: 100%; min-height: 32px; accent-color: var(--accent)
 .bucket li span { min-width: 0; overflow-wrap: anywhere; }
 .bucket li.done span { text-decoration: line-through; text-decoration-thickness: 3px; text-decoration-color: #9B2C1A; color: #6B5236; }
 .bucket-box { flex: none; }
-.bucket-tag { font-family: var(--f-mono); color: #9B2C1A; font-weight: 700; white-space: nowrap; }
+.bucket-tag { font-family: var(--f-mono); color: #9B2C1A; background: #F3E6C6; padding: 0 3px; font-weight: 700; white-space: nowrap; }
 @media (max-width: 720px) {
   .bucket { position: static; width: auto; margin-top: 10px; }
 }
@@ -2625,3 +2625,4 @@ input[type='range'] { width: 100%; min-height: 32px; accent-color: var(--accent)
 .lesson-exit input { width: 9em; min-width: 0; }
 /* the closing tour's bar */
 .tour-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; border-left: 4px solid var(--accent); margin-bottom: 12px; }
+.place-art { display: block; image-rendering: pixelated; border-radius: 6px; border: 2px solid var(--line); flex: none; max-width: 100%; height: auto; }

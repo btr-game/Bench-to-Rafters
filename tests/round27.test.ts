@@ -41,6 +41,7 @@ import { WEIGHT_EVENTS } from '../src/engine/events/weightEvents';
 import { ROUND21_EVENTS } from '../src/engine/events/round21';
 import { ROUND25_EVENTS } from '../src/engine/events/round25';
 import { ROUND32_EVENTS } from '../src/engine/events/round32';
+import { ROUND33_EVENTS } from '../src/engine/events/round33';
 import { INJURY_NAMES } from '../src/engine/player/injury';
 import { LEVELS } from '../src/engine/balance';
 import { INT_LEAGUES } from '../src/content/teams';
@@ -57,7 +58,7 @@ import type { CareerRecord } from '../src/engine/career/record';
 
 describe('an icon of its own (owner: "injuries, events, and some of levels and leagues have the exact same icon")', () => {
   const all = { ...ICONS, ...EVENT_ICONS_A, ...EVENT_ICONS_B, ...EVENT_ICONS_C, ...CAREER_ICONS };
-  const events = [BASE_EVENTS, MORE_EVENTS, RISK_EVENTS, GROWTH_EVENTS, SKILL_EVENTS, ARC_EVENTS, ROUND9_EVENTS, ROUND13_EVENTS, ROUND15_EVENTS, WEIGHT_EVENTS, ROUND21_EVENTS, ROUND25_EVENTS, ROUND32_EVENTS].flat();
+  const events = [BASE_EVENTS, MORE_EVENTS, RISK_EVENTS, GROWTH_EVENTS, SKILL_EVENTS, ARC_EVENTS, ROUND9_EVENTS, ROUND13_EVENTS, ROUND15_EVENTS, WEIGHT_EVENTS, ROUND21_EVENTS, ROUND25_EVENTS, ROUND32_EVENTS, ROUND33_EVENTS].flat();
   const keys = [
     ...events.map((e) => eventIcon(e.id)),
     ...Object.values(INJURY_NAMES).flat().map(injuryIcon),

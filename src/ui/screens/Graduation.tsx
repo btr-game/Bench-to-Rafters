@@ -35,6 +35,7 @@ export function Graduation() {
         </div>
       </header>
       <section className="hero level-hero">
+        <Icon name="cap" size={72} />
         <div className="kicker">The road map · done</div>
         <h1>Graduation</h1>
         <p className="lede">You played all three levels, every mini-game and the closing tour. The full game is yours.</p>
@@ -63,7 +64,7 @@ export function Graduation() {
         <Roll />
       </div>
       <div className="row-end">
-        <button className="btn with-icon" data-tour="graduate" onClick={() => (sfx('title'), graduate())}>
+        <button className="btn with-icon" data-tour="graduate" onClick={() => (sfx('graduate'), graduate())}>
           <Icon name="door" size={22} />
           Open the full game
         </button>
