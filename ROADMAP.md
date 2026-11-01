@@ -178,6 +178,12 @@ no statue or hall.
   3-on-3, Legends and the lab come from test runs, for the owner to approve.
 - **No stuck steps**: no emergency skip; instead every tutorial step is checked by a test that plays
   all three levels and the closing tour start to finish, on a computer and a phone, before release.
+- **The levels page is a road map** (owner: "i like the word road map a lot ... make a map"): a
+  pixel map with the high school (beginner), a college campus (intermediate) and an NBA arena
+  (advanced) on the land, joined by a road, and the mini-games as an overseas league on an island
+  across the water. His avatar drives a car between the places and takes a boat to the island. A
+  checklist in the top-right corner, like a bucket list, ticks each goal as it is done (the three
+  levels, then each mini-game at C or better).
 - **No achievements** in the levels; **advanced counts nowhere** in the community either; a saved
   career from before waits until the full game opens; the full start page keeps a **Levels** card to
   replay any level.
