@@ -636,8 +636,9 @@ function MomentPage({ m, g }: { m: Moment; g: GameState }) {
     if (ended) ref.current?.focus({ preventScroll: true });
   }, [m.id, ended]);
   const end = useCallback(() => setEnded(true), []);
+  // the kind as mo-<kind>: a bare "intro" picked up the intro page's .intro rule (overflow hidden), and the Day one page stopped scrolling
   return (
-    <div className={`overlay moment ${m.kind}${m.mood && ended ? ` mood-${m.mood}` : ''}`} style={{ ['--team' as string]: m.color }} role="dialog" aria-modal="true" aria-label={m.title}>
+    <div className={`overlay moment mo-${m.kind}${m.mood && ended ? ` mood-${m.mood}` : ''}`} style={{ ['--team' as string]: m.color }} role="dialog" aria-modal="true" aria-label={m.title}>
       {m.mood && ended && <MoodFx key={`fx-${m.id}`} mood={m.mood} color={m.color} />}
       <div className="overlay-inner" key={m.id}>
         {m.drama && m.game ? (

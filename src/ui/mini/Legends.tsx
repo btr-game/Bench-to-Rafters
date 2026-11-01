@@ -238,7 +238,7 @@ export function LegendsGame() {
       lostFinal: !f.won,
     };
     return (
-      <div className="overlay moment title" style={{ ['--team' as string]: me.color }}>
+      <div className="overlay moment mo-title" style={{ ['--team' as string]: me.color }}>
         <div className="overlay-inner">
           <FinalReel m={m} />
           <button className="btn moment-btn" onClick={() => setReel(false)}>
