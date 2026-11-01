@@ -2570,7 +2570,14 @@ multiple times."
      list's tag got a paper background of its own). The visual check had a bug of its own: on a
      computer it left the page scrolled to its foot before the shot, so a tall page's sticky header
      sat across its middle. It now scrolls back first; round 32 was shot again the same way as the
-     baseline (110 screens in each of four set-ups, clean).
+     baseline (110 screens in each of four set-ups, clean). The full run of round 33 (127 screens in
+     each) found one real fault and one of its own: a legendary season's band left white letters on
+     a mid red (Atlanta, Portland: 4.34:1), now darkened just enough the way the bracket's team marks
+     are; and the lesson layer's shade counted as a bar at the foot of the screen, now left out of
+     that check. The re-shot screens are clean. The screens that changed against round 32 are the
+     new ones, the start page (the Levels card), What's new, and careers that played out
+     differently with the new turning points. The storage check (dev-apart) now starts from a
+     device that has finished the tutorial, as an old player's would have: clean.
   5. Achievements: 28 more (680 in all), on the owner's word: efficiency (a perfect night from the
      field at 10, 13 and 15 shots, 15 free throws without a miss, 8 and 10 threes without a miss, 50
      points on 20 shots or fewer, a triple-double without a miss, 50-40-90 at 25 a game, 70% and

@@ -315,7 +315,7 @@ async function runConfig(browser, cfg) {
         window.scrollTo(0, document.documentElement.scrollHeight);
         const bars = [...document.querySelectorAll('body *')].filter((e) => {
           const s = getComputedStyle(e);
-          if (s.position !== 'fixed' || s.display === 'none' || s.visibility === 'hidden' || e.closest('[aria-modal="true"], .overlay, .dk-bar, .ach-toasts')) return false;
+          if (s.position !== 'fixed' || s.display === 'none' || s.visibility === 'hidden' || e.closest('[aria-modal="true"], .overlay, .dk-bar, .ach-toasts, .lesson-layer')) return false;
           const r = e.getBoundingClientRect();
           return r.height > 0 && r.bottom >= innerHeight - 2 && r.top > innerHeight / 2;
         });
