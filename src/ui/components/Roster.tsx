@@ -14,6 +14,7 @@ import { useStore } from '../../store';
 import { Icon } from '../art/Icon';
 import { STORY_ICON } from '../art/icons';
 import { TeamArt } from '../art/Crest';
+import { FoldMark } from './bits';
 import { styleLeague } from '../art/Player';
 import type { League, Team } from '../../engine/types';
 import type { LeagueStory } from '../../engine/world/stories';
@@ -286,7 +287,7 @@ export function StoriesCard({ g }: { g: GameState }) {
         <span className="sec-title">Around the league</span>
         <span className="spacer" />
         {left > 0 && <span className="small muted">Call it: {left} left</span>}
-        <span className="fold-arrow" aria-hidden="true">{open ? '▴' : '▾'}</span>
+        <FoldMark open={open} />
       </button>
       <AboutYou g={g} />
       {open && lg && lg.teams.length >= 6 && (

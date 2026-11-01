@@ -42,7 +42,9 @@ import { canRecruit, recruitInfo } from "../../engine/career/recruit";
 import { STARTERS_RECRUIT } from "../../engine/balance";
 import {
   Banners,
+  Card,
   Extra,
+  FoldBox,
   MilestoneStrip,
   ReactionCard,
   Scoreboard,
@@ -1094,13 +1096,16 @@ export function Home({ g }: { g: GameState }) {
           <Todo g={g} />
         </div>
         <PlayerCard g={g} />
-        <CoachCard g={g} />
+        <FoldBox id="coach" title="Head coach" icon="whistle">
+          <CoachCard g={g} />
+        </FoldBox>
         <Extra>
-          <ScoutCard g={g} compact />
-          <section className="card stack">
-            <div className="sec-title">Milestones</div>
+          <FoldBox id="scout" title="Scouting report" icon="scouts">
+            <ScoutCard g={g} compact />
+          </FoldBox>
+          <Card title="Milestones">
             <MilestoneStrip reached={g.milestones} />
-          </section>
+          </Card>
         </Extra>
       </div>
       <div className="stack home-center">
@@ -1179,26 +1184,35 @@ export function Home({ g }: { g: GameState }) {
         {g.mode === "lab" && <LabCard g={g} />}
         {g.step === "summary" && canRetire(g) && <RetireCard g={g} />}
         {last && g.step !== "summary" && !g.flags.fast && (
-          <section className="card stack prose">
-            <div className="kicker">Last season</div>
-            <div className="small">
+          <Card title="Last season">
+            <div className="small prose">
               {seasonLabel(last.year)} · {last.teamName}: {last.w}–{last.l},{" "}
               {last.result}. {perGame(last.line, "pts").toFixed(1)} PPG.
             </div>
-          </section>
+          </Card>
         )}
       </div>
       <div className="stack home-side">
-        <ModesCard g={g} />
+        <FoldBox id="modes" title="How you play" icon="dial">
+          <ModesCard g={g} />
+        </FoldBox>
         <Extra>
-          <MvpRace g={g} />
-          <DuoCard g={g} />
-          <RivalCard g={g} />
+          <FoldBox id="mvp" title="MVP race" icon="spotlight">
+            <MvpRace g={g} />
+          </FoldBox>
+          <FoldBox id="duo" title="Your duo" icon="teamfirst">
+            <DuoCard g={g} />
+          </FoldBox>
+          <FoldBox id="rival" title="Rivalry" icon="rival">
+            <RivalCard g={g} />
+          </FoldBox>
           <StoriesCard g={g} />
           {g.feed[0] && (
-            <section className="card prose">
-              <ReactionCard r={g.feed[0]} />
-            </section>
+            <FoldBox id="reaction" title="The talk" icon="news">
+              <section className="card prose">
+                <ReactionCard r={g.feed[0]} />
+              </section>
+            </FoldBox>
           )}
         </Extra>
       </div>

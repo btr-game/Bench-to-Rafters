@@ -39,7 +39,7 @@ import { standings } from '../../engine/sim/leagueSim';
 import { addLine, emptyLine } from '../../engine/sim/statModel';
 import { careerIndex, championships, count, legacyScore, nbaTitles, verdictFor } from '../../engine/awards/legacy';
 import { NAMES } from '../../content/strings';
-import { Card, Extra, Meter, Scoreboard } from '../components/bits';
+import { Card, Extra, FoldBox, Meter, Scoreboard } from '../components/bits';
 import { AttrRows } from '../components/PlayerCard';
 import { ScoutCard } from '../components/ScoutCard';
 import { fmtMoney, ht, pct, pg, seasonLabel } from '../format';
@@ -350,14 +350,18 @@ export function SeasonTab({ g }: { g: GameState }) {
           culture+fan culture side-by-side ... right below the locker room, and then the standings") */}
       {t && (
         <Extra>
-          <LockerRoom g={g} />
+          <FoldBox id="locker" title="Locker room" icon="locker">
+            <LockerRoom g={g} />
+          </FoldBox>
         </Extra>
       )}
       {t && (
         <div className="season-pair">
           <StrengthCard g={g} />
           <Extra>
-            <CityCard g={g} />
+            <FoldBox id="city" title="City and fans" icon="crowd">
+              <CityCard g={g} />
+            </FoldBox>
           </Extra>
         </div>
       )}

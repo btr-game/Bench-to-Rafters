@@ -1090,7 +1090,23 @@ button.todo-now { width: 100%; text-align: left; border: 0; font: inherit; color
 @media (min-width: 1600px) { .wrap { max-width: 1440px; } }
 @media (min-width: 1280px) { .home-grid { grid-template-columns: 300px minmax(0, 1fr) 340px; } }
 .fold-head { width: 100%; background: none; border: 0; padding: 0; text-align: left; color: inherit; }
-.fold-arrow { font-size: calc(14px * var(--ts)); color: var(--muted); margin-left: 6px; }
+/* round 34: cards that fold. A title that folds its card, the pixel chevron beside it, the small
+   tab on a hand-built card's top edge, and the one-line strip a folded card leaves */
+.fold-mark { flex: none; color: var(--muted); image-rendering: pixelated; }
+.fold-btn { display: inline-flex; align-items: center; gap: 8px; background: none; border: 0; padding: 0; margin: 0; font: inherit; letter-spacing: inherit; text-transform: inherit; color: inherit; text-align: left; cursor: pointer; min-height: 32px; }
+.fold-btn:hover .fold-mark, .fold-btn:focus-visible .fold-mark, .fold-head:hover .fold-mark { color: var(--accent); }
+.card.folded { padding-block: 10px; }
+.card.folded > .row { min-height: 32px; }
+.card.folded h2.title { font-size: calc(17px * var(--ts)); }
+.fold-box { position: relative; min-width: 0; }
+.fold-box:has(> .fold-body:empty) { display: none; }
+/* the tab sits astride the card's top edge, in its padding, so it never covers what the card shows */
+.fold-tab { position: absolute; top: -11px; right: 14px; z-index: 2; display: grid; place-items: center; width: 34px; height: 22px; padding: 0; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--muted); cursor: pointer; }
+.fold-tab .fold-mark { color: inherit; }
+.fold-box:hover > .fold-tab, .fold-tab:hover, .fold-tab:focus-visible { color: var(--accent); border-color: currentColor; }
+.fold-strip { padding-block: 10px; }
+.fold-strip-title { margin: 0; font-family: var(--f-display); font-weight: 800; font-size: calc(17px * var(--ts)); text-transform: uppercase; letter-spacing: 0.04em; }
+.fold-strip .fold-btn { width: 100%; }
 .story-lines { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: calc(15.5px * var(--ts)); }
 .story-lines li { display: flex; gap: 8px; align-items: baseline; min-width: 0; }
 .story-lines li.mine { font-weight: 700; }
@@ -2068,6 +2084,9 @@ td .art-team { display: inline-block; vertical-align: middle; margin: -3px 8px -
    under 32) */
 @media (pointer: coarse), (max-width: 640px) {
   .fold-head { min-height: 40px; }
+  .fold-box:has(> .fold-tab) { margin-top: 4px; }
+  .fold-tab { width: 44px; height: 32px; top: -16px; right: 12px; }
+  .fold-btn { min-height: 40px; }
   .todo-go { min-height: 36px; display: inline-flex; align-items: center; }
   .ward-swatch { width: 36px; height: 36px; }
   .switch { width: 54px; height: 32px; }

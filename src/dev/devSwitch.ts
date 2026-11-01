@@ -8,6 +8,7 @@
 import { settle, startView, useStore, viewNow, type View } from '../store';
 import { devPassword, isDev, setDev } from './mode';
 import { refreshSound } from '../ui/sound';
+import { reloadFolds } from '../ui/fold';
 import { joinCourt } from '../ui/community';
 import { devSetup } from './DevDeck';
 
@@ -21,6 +22,7 @@ export function enterDev(password: string): boolean {
   aside = viewNow();
   setDev(true);
   refreshSound();
+  reloadFolds();
   devSetup();
   window.scrollTo(0, 0);
   return true;
@@ -32,6 +34,7 @@ export function leaveDev(): void {
   settle(false);
   setDev(false);
   refreshSound();
+  reloadFolds();
   useStore.setState(aside ?? startView());
   // the career coming back was saved on the way in: nothing to write again
   settle(false);
