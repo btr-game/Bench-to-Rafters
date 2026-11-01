@@ -11,6 +11,7 @@ import { PixelX } from '../art/PixelX';
 import { sfx } from '../sound';
 import { recordShare } from '../achievements';
 import { achievementsNow } from '../../store';
+import { SkipButton } from './SkipTutorial';
 
 /** The game's address on the web (Netlify). Change it here if the game moves to a domain of its own. */
 export const GAME_URL = 'https://bench-to-rafters.netlify.app/';
@@ -129,6 +130,8 @@ export function ShareButton({ look = 'top' }: { look?: 'top' | 'foot' | 'big' })
   const cls = look === 'foot' ? 'card share-foot with-icon' : look === 'big' ? 'btn ghost with-icon share-big' : 'icon-btn share-btn';
   return (
     <>
+      {/* round 34: in a top bar, the tutorial's Skip button comes just before Share */}
+      {look === 'top' && <SkipButton />}
       <button className={cls} data-tour={look === 'top' ? 'share-btn' : undefined} aria-haspopup="dialog" aria-expanded={open} aria-label="Share the game" onClick={show}>
         <Icon name="share" size={look === 'top' ? 18 : 22} />
         <span className="share-word">{look === 'top' ? 'Share' : 'Share the game'}</span>

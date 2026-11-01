@@ -206,16 +206,18 @@ no statue or hall.
 - **The island's lessons**: the mini-games teach themselves today; a lesson or two inside each,
   the first time it is played from the island, would match the levels.
 - **Replaying a level**: level careers count nowhere. A best time or a best peak for each level,
-  kept on the device, could give the Levels card a reason to come back.
+  kept on the device, could give the road map card (Regular guy's, on the start page) a reason to
+  come back.
 
-## Round 34 (planned): simplification
+## Kept from round 34
 
-Owner, during round 33: "for round 34, the theme is simplification. we're gonna make most in-game
-cards foldable."
-
-- Most in-game cards fold: a card shows its title (and a line of what matters most) and opens on a
-  tap. Fast break's "Show everything" folding (round 25) and the Season tab's foldable Around the
-  league (round 15) are the starting points.
-- To settle with the owner when the round starts: which cards stay open (the main card at Home,
-  the decision on screen), whether a card remembers being opened, and whether the levels and the
-  tutorial guide follow the same folding.
+- **A recorded announcer**: the owner asked for a much more booming voice. Round 34 went as far as
+  the browser's own speech goes (the deepest voice on the device, slowed, a breath before the big
+  word, the arena under every call). A recorded voice would need a free speech engine (Kokoro, deep
+  male voices, Apache licence) downloaded into the game once to make the clips; that download needs
+  the owner's permission in the session that does it.
+- **What a folded strip says**: a folded card is its name today. A word of what matters most on the
+  strip (the MVP race's rank, the rivalry's head to head, the duo's strength) would keep the main
+  number in sight while the card is folded.
+- **Lessons and folded cards**: a lesson or a Guide mode step whose control sits in a folded card
+  waits until the card is opened. Opening the card for the lesson would keep the tutorial's order.

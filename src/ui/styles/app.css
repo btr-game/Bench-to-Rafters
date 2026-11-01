@@ -1012,7 +1012,6 @@ button.todo-now { width: 100%; text-align: left; border: 0; font: inherit; color
   .page-grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .page-grid.three { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .page-grid.three > :first-child { grid-row: span 2; }
-  .page-grid.wide-side { grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); }
 }
 @media (min-width: 1280px) {
   .page-grid.three { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1fr); }
@@ -1090,7 +1089,23 @@ button.todo-now { width: 100%; text-align: left; border: 0; font: inherit; color
 @media (min-width: 1600px) { .wrap { max-width: 1440px; } }
 @media (min-width: 1280px) { .home-grid { grid-template-columns: 300px minmax(0, 1fr) 340px; } }
 .fold-head { width: 100%; background: none; border: 0; padding: 0; text-align: left; color: inherit; }
-.fold-arrow { font-size: calc(14px * var(--ts)); color: var(--muted); margin-left: 6px; }
+/* round 34: cards that fold. A title that folds its card, the pixel chevron beside it, the small
+   tab on a hand-built card's top edge, and the one-line strip a folded card leaves */
+.fold-mark { flex: none; color: var(--muted); image-rendering: pixelated; }
+.fold-btn { display: inline-flex; align-items: center; gap: 8px; background: none; border: 0; padding: 0; margin: 0; font: inherit; letter-spacing: inherit; text-transform: inherit; color: inherit; text-align: left; cursor: pointer; min-height: 32px; }
+.fold-btn:hover .fold-mark, .fold-btn:focus-visible .fold-mark, .fold-head:hover .fold-mark { color: var(--accent); }
+.card.folded { padding-block: 10px; }
+.card.folded > .row { min-height: 32px; }
+.card.folded h2.title { font-size: calc(17px * var(--ts)); }
+.fold-box { position: relative; min-width: 0; }
+.fold-box:has(> .fold-body:empty) { display: none; }
+/* the tab sits astride the card's top edge, in its padding, so it never covers what the card shows */
+.fold-tab { position: absolute; top: -11px; right: 14px; z-index: 2; display: grid; place-items: center; width: 34px; height: 22px; padding: 0; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--muted); cursor: pointer; }
+.fold-tab .fold-mark { color: inherit; }
+.fold-box:hover > .fold-tab, .fold-tab:hover, .fold-tab:focus-visible { color: var(--accent); border-color: currentColor; }
+.fold-strip { padding-block: 10px; }
+.fold-strip-title { margin: 0; font-family: var(--f-display); font-weight: 800; font-size: calc(17px * var(--ts)); text-transform: uppercase; letter-spacing: 0.04em; }
+.fold-strip .fold-btn { width: 100%; }
 .story-lines { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: calc(15.5px * var(--ts)); }
 .story-lines li { display: flex; gap: 8px; align-items: baseline; min-width: 0; }
 .story-lines li.mine { font-weight: 700; }
@@ -1905,16 +1920,8 @@ td .art-team { display: inline-block; vertical-align: middle; margin: -3px 8px -
 .place-city { background: linear-gradient(#495057 0%, #868e96 55%, #343a40 56%, #212529 100%); }
 .place-night { background: linear-gradient(#0b1020 0%, #1b2a4a 60%, #10151f 61%, #05070b 100%); }
 
-/* round 25: ten save slots on the start page */
-.saves-card { border-top: 4px solid var(--accent); margin-bottom: 8px; }
-.save-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 8px 14px;
-  align-items: center;
-  padding: 10px 0;
-  border-top: 1px solid var(--line);
-}
+/* round 25: ten save slots (round 34: each one a card in the career log) */
+.save-entry.going { border-top: 4px solid var(--good); }
 .save-actions { gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
 .save-code {
   width: 100%;
@@ -1931,7 +1938,6 @@ td .art-team { display: inline-block; vertical-align: middle; margin: -3px 8px -
 .save-import summary { cursor: pointer; font-weight: 600; }
 .btn.ghost.danger { background: transparent; color: var(--bad); border-color: var(--bad); } /* owner: "red letter is invisible" (.btn.danger's red fill came through) */
 @media (max-width: 640px) {
-  .save-row { grid-template-columns: 1fr; }
   .save-actions { justify-content: flex-start; }
 }
 
@@ -2068,6 +2074,9 @@ td .art-team { display: inline-block; vertical-align: middle; margin: -3px 8px -
    under 32) */
 @media (pointer: coarse), (max-width: 640px) {
   .fold-head { min-height: 40px; }
+  .fold-box:has(> .fold-tab) { margin-top: 4px; }
+  .fold-tab { width: 44px; height: 32px; top: -16px; right: 12px; }
+  .fold-btn { min-height: 40px; }
   .todo-go { min-height: 36px; display: inline-flex; align-items: center; }
   .ward-swatch { width: 36px; height: 36px; }
   .switch { width: 54px; height: 32px; }
@@ -2579,9 +2588,31 @@ input[type='range'] { width: 100%; min-height: 32px; accent-color: var(--accent)
 @media (max-width: 720px) {
   .bucket { position: static; width: auto; margin-top: 10px; }
 }
-.road-stops { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; margin-top: 14px; }
-.road-stop.next { grid-column: 1 / -1; border-top: 4px solid var(--accent); }
-.road-stop.locked { opacity: 0.72; }
+.road-stop.next { border-top: 4px solid var(--accent); }
+.road-stop.locked .road-stop-head, .road-stop.locked > p { opacity: 0.8; }
+/* round 34: the places on the map are buttons, each with a pin (done, next, open, locked); the
+   chosen place's card pops out beside it (under the map on a phone) */
+.roadmap-stage { position: relative; }
+.road-spots { position: absolute; left: 0; top: 0; width: 100%; aspect-ratio: 192 / 108; pointer-events: none; z-index: 1; }
+.road-spot { position: absolute; pointer-events: auto; padding: 0; background: transparent; border: 3px dashed transparent; border-radius: 6px; cursor: pointer; }
+.road-spot:hover, .road-spot:focus-visible, .road-spot.on { border-color: #FFFFFF; box-shadow: 0 0 0 2px rgba(24, 20, 28, 0.75); outline: none; }
+.road-pin { position: absolute; left: 50%; top: 0; transform: translate(-50%, -70%); display: grid; place-items: center; width: 28px; height: 28px; border-radius: 6px; border: 2px solid #18141C; background: #FFFFFF; box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.35); }
+.road-spot.next .road-pin { background: #FCC419; animation: pin-hop 0.9s steps(2, jump-none) infinite; }
+.road-spot.done .road-pin { background: #B2F2BB; }
+.road-spot.locked .road-pin { background: #DEE2E6; }
+@keyframes pin-hop { 50% { transform: translate(-50%, -100%); } }
+.road-hint { margin: 0; }
+.road-pop { position: absolute; z-index: 3; width: min(400px, 46%); max-height: 100%; overflow-y: auto; border-radius: 10px; animation: road-pop-in 0.2s steps(3, jump-none) both; }
+.road-pop > .card { box-shadow: 0 14px 34px rgba(0, 0, 0, 0.38); }
+.road-pop-x { position: absolute; top: 8px; right: 8px; z-index: 1; }
+.road-pop .road-stop-head { padding-right: 44px; }
+.road-pop .adds-grid { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 6px; }
+.road-pop .adds-grid li { padding: 8px 4px 6px; font-size: calc(13px * var(--ts)); }
+@keyframes road-pop-in { from { opacity: 0; scale: 0.9; } to { opacity: 1; scale: 1; } }
+@media (max-width: 720px) {
+  .road-pop { position: relative; left: auto !important; right: auto !important; top: auto !important; transform: none !important; width: auto; max-height: none; overflow: visible; margin-top: 10px; }
+}
+@media (prefers-reduced-motion: reduce) { .road-spot.next .road-pin, .road-pop { animation: none; } }
 .road-stop-head { gap: 12px; align-items: center; flex-wrap: wrap; }
 /* the end of a level career */
 .level-end-card.won { border-top: 4px solid var(--gold); }

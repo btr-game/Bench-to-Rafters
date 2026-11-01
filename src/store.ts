@@ -23,9 +23,9 @@ import type { WearSlot } from './content/shop';
 import { careerRecord, type CareerRecord } from './engine/career/record';
 import { canPlayChild, childGame, childLegacy, childSeed } from './engine/nextGen';
 import { attachChild, logCareer, type LogResult } from './ui/careerLog';
-import { checkAch, countCareer, earnedIn, recordUndo } from './ui/achievements';
+import { checkAch, countCareer, earnedIn, recordOpened, recordUndo, recordVisit } from './ui/achievements';
 import { community } from './ui/community';
-import { dropRun, importCode, newSlotId, readRun, readSlot, writeRun, writeSlot } from './ui/saves';
+import { deleteSlot, dropRun, importCode, newSlotId, readRun, readSlot, writeRun, writeSlot } from './ui/saves';
 import { bestGrade, exitCode, levelTabs, loadRoad, offRecord, roadGrade, saveRoad, type Road } from './ui/road';
 import { STOPS, stopsLeft } from './ui/tutorial/closing';
 import { levelOf, type Level } from './engine/levels';
@@ -55,7 +55,7 @@ interface Store {
   tab: Tab;
   theme: Theme;
   transition: Transition | null;
-  /** The intro page is up (round 27): a first visit, until Start. */
+  /** The intro page is up (round 27; round 34: every visit), until Start. */
   intro: boolean;
   endIntro: () => void;
   showIntro: () => void;
@@ -130,6 +130,10 @@ interface Store {
   /** Round 25: the save slot of the career on screen (null until it is first saved). */
   slot: string | null;
   resume: (id: string) => Promise<boolean>;
+  /** Round 34: a finished career opened from the career log (Look back), with a bar to leave it. */
+  lookBack: boolean;
+  /** Leaves a looked-back career, back to the career log. */
+  leaveLookBack: () => void;
   importCareer: (code: string) => Promise<boolean>;
   /** Whether the autosave works here ('off' when the browser blocks storage or the save is too big). */
   saving: 'ok' | 'off';
@@ -255,14 +259,6 @@ function newsDue(): boolean {
     return false;
   }
   return true;
-}
-/** Round 27 (owner: "for first starters, an intro page"): once, before anything is on the device. */
-function firstIntro(): boolean {
-  try {
-    return localStorage.getItem('btr-intro-seen') === null && noRecord();
-  } catch {
-    return false;
-  }
 }
 
 function loadCourt(): Court {
@@ -403,10 +399,14 @@ export const useStore = create<Store>((set, get) => ({
     set({ guide });
   },
   transition: null,
-  intro: firstIntro(),
+  // round 34 (owner: "the intro page should always appear before anything"): every visit opens on
+  // the intro, a career resumed from a reload included; the dev deck has a card for it instead
+  intro: !isDev(),
   endIntro: () => {
-    saveFlag('btr-intro-seen', true);
     set({ intro: false });
+    // round 34: each visit counts toward the book's visit achievements
+    recordVisit();
+    achievementsNow();
   },
   showIntro: () => set({ intro: true }),
   news: newsDue(),
@@ -429,7 +429,7 @@ export const useStore = create<Store>((set, get) => ({
       const game = newGame(s, input);
       fastForward(game);
       // round 33: a level career has a save of its own (ui/saves.ts writeRun), not a slot
-      set({ game, slot: input.level ? null : newSlotId(), creating: null, tab: 'home', transition: null, mini: null, seen: allSeen(game), ...oathLock(game) });
+      set({ game, slot: input.level ? null : newSlotId(), creating: null, tab: 'home', transition: null, mini: null, seen: allSeen(game), lookBack: false, ...oathLock(game) });
     }),
   seen: {},
   undo: null,
@@ -474,7 +474,7 @@ export const useStore = create<Store>((set, get) => ({
   creating: null,
   setCreating: (creating) =>
     later(() => {
-      // back from a level's start page: the road map (from the start page's Levels card, once the
+      // back from a level's start page: the road map (from Regular guy's card on the start page, once the
       // full game is open; the tutorial shows it anyway)
       set({ creating, page: creating ? null : get().road.free ? 'road' : null });
       top();
@@ -559,7 +559,12 @@ export const useStore = create<Store>((set, get) => ({
     const game = await readSlot(id);
     if (!game) return false;
     weightOf(game.player); // careers saved before round 20 get a weight
-    set({ game, slot: id, tab: 'home', transition: null, mini: null, seen: allSeen(game), daily: null, ...oathLock(game) });
+    // round 34 (owner: "when i look back or continue from the career log, it doesnt instantly direct
+    // me to the career's homepage"): straight to its Home, from wherever Continue was pressed
+    set({ game, slot: id, tab: 'home', page: null, transition: null, mini: null, seen: allSeen(game), daily: null, logged: null, lookBack: game.step === 'retired', ...oathLock(game) });
+    // round 34: Look back and Continue count in the book (Rewind, Where We Left Off)
+    recordOpened(game.step === 'retired');
+    top();
     return true;
   },
   importCareer: async (code) => {
@@ -567,8 +572,14 @@ export const useStore = create<Store>((set, get) => ({
     if (!game) return false;
     weightOf(game.player);
     const slot = newSlotId();
-    set({ game, slot, tab: 'home', transition: null, mini: null, seen: allSeen(game), daily: null, ...oathLock(game) });
+    set({ game, slot, tab: 'home', page: null, transition: null, mini: null, seen: allSeen(game), daily: null, logged: null, lookBack: game.step === 'retired', ...oathLock(game) });
+    top();
     return true;
+  },
+  lookBack: false,
+  leaveLookBack: () => {
+    set({ game: null, slot: null, tab: 'home', transition: null, lookBack: false, page: 'log' });
+    top();
   },
   choose: (choiceId) =>
     later(() => {
@@ -806,7 +817,7 @@ export const useStore = create<Store>((set, get) => ({
     // everytime the user exits a career"): every time, not only the first
     const g = get().game;
     const thanks = g && !g.flags.daily && g.mode !== 'lab' ? g : null;
-    set({ game: null, slot: null, tab: 'home', transition: null, thanks });
+    set({ game: null, slot: null, tab: 'home', transition: null, thanks, lookBack: false });
   },
   mini: null,
   claimMini: (r) => {
@@ -928,8 +939,11 @@ useStore.subscribe((now, before) => {
   }
   const got = earnedIn(g);
   const order = (t: string) => ACH_TIERS.findIndex((x) => x.key === t);
-  const rec: CareerRecord = { ...careerRecord(g), ach: { n: got.length, top: [...got].sort((a, b) => order(b.tier) - order(a.tier)).slice(0, 10).map((a) => ({ name: a.name, tier: a.tier })) } };
-  useStore.setState({ logged: logCareer(rec) });
+  const rec: CareerRecord = { ...careerRecord(g), slot: now.slot ?? undefined, ach: { n: got.length, top: [...got].sort((a, b) => order(b.tier) - order(a.tier)).slice(0, 10).map((a) => ({ name: a.name, tier: a.tier })) } };
+  const logged = logCareer(rec);
+  // round 34: a card pushed out of the log takes its save with it (the log is the saved careers)
+  if (logged.dropped?.slot) deleteSlot(logged.dropped.slot);
+  useStore.setState({ logged });
   // round 24: onto the leaderboards (and the news feed) for everyone who shares this page
   void community().then((c) => c.postCareer(rec));
 });
@@ -976,7 +990,7 @@ export function viewNow(): View {
 /** The road as this storage has it, with nothing of the tutorial's on screen. */
 export const roadView = (): View => ({ road: loadRoad(), creating: null, closing: null, recommend: false, lessonUp: false });
 export function startView(): View {
-  return { game: null, tab: 'home', page: null, mini: null, transition: null, daily: null, toasts: [], thanks: null, spots: null, intro: false, news: false, slot: null, seen: {}, logged: null, tour: false, simple: loadFlag('btr-simple'), master: loadFlag('btr-master'), guide: loadFlag('btr-guide-mode'), ...roadView() };
+  return { game: null, tab: 'home', page: null, mini: null, transition: null, daily: null, toasts: [], thanks: null, spots: null, intro: false, news: false, slot: null, seen: {}, logged: null, tour: false, simple: loadFlag('btr-simple'), master: loadFlag('btr-master'), guide: loadFlag('btr-guide-mode'), lookBack: false, ...roadView() };
 }
 /** Settles what is waiting to be written as the deck opens (`flush`: the game's last move is
  * saved where it belongs) or closes (dropped: nothing of the deck's reaches the game). */
@@ -992,7 +1006,7 @@ export function settle(flush: boolean): void {
 // quit"); the deck keeps storage of its own and never picks one up
 if (typeof window !== 'undefined' && !isDev())
   void readRun().then((g) => {
-    if (g && !useStore.getState().game) useStore.setState({ game: g, slot: null, tab: 'home', intro: false, seen: allSeen(g), ...oathLock(g) });
+    if (g && !useStore.getState().game) useStore.setState({ game: g, slot: null, tab: 'home', seen: allSeen(g), ...oathLock(g) });
   });
 
 // closing the tab inside the half second still keeps the last move

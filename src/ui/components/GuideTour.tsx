@@ -23,7 +23,7 @@ const D = (id: string) => `[data-tour="${id}"]`;
 
 // in order: the start page, the top bar, Home, the decisions, the offseason, the tabs, the end
 const TOUR: Step[] = [
-  T('start-continue', '.continue-card .btn', 'Your latest career: pick it up where you left it. Every saved career is in the career log.'),
+  T('start-continue', '.continue-card .btn', 'Your latest career: pick it up where you left it. Every career, in progress or finished, is in the career log.'),
   T('guide-btn', D('guide-btn'), 'The manual: every feature in a few short points. Guide mode switches on and off there too.'),
   T('intro-btn', D('intro-btn'), 'Intro plays the opening again.'),
   T('whats-new', D('whats-new'), 'What’s new: the latest changes to the game. It opens by itself once after each update; this opens it again.'),
@@ -32,9 +32,9 @@ const TOUR: Step[] = [
   T('comet', '.comet-card', 'With Shoot for the stars: Comet, the stars at hyper speed. Fast break and Sim for the whole career, about five minutes.'),
   T('oath', '.oath-card:not(.comet-card)', 'With Reality hits hard: Rough Road, the hardest way to play. The road picks your player at random, then master mode with no Fast break or Sim, for the whole career, and a mark of honour for it.'),
   T('minis', D('minis'), 'Mini-games. Free from the start page; in a career each one opens with your ratings and pays a rating bonus.'),
-  T('levels', D('levels-card'), 'The road map: the three levels and the island, to play again. Level careers count nowhere.'),
+  T('levels', D('levels-card'), 'With Regular guy: the road map, to play any of the three levels again. Level careers count nowhere.'),
   T('log', D('log'), 'The career log: the cards of your last ten finished careers. Lock up to five to keep them for good.'),
-  T('log-saves', '.saves-card', 'Every career saved on this device: continue one, look back, copy its code to play it somewhere else, or import one.'),
+  T('log-saves', '.save-entry', 'A career in progress: continue it, or copy its code to play it in another browser. Finished careers below open again with Look back.'),
   T('log-lock', D('log-lock'), 'Lock a card: a new career never replaces it, and it can’t be deleted until you unlock it. Five at most.'),
   T('log-pick', D('log-pick'), 'Compare: pick two cards to see them side by side.'),
   T('log-compare', D('log-compare'), 'Two careers side by side: the better of each row in bold with a ▲.'),
@@ -82,6 +82,9 @@ const TOUR: Step[] = [
   T('skip-final', '[data-skip]', 'Or skip straight to the result.'),
   T('next-step', '.next-step', 'From any other tab, this carries the game on.'),
   T('modes', D('modes'), 'How you play: every mode in one place.'),
+  // round 34
+  T('fold', '.fold-tab, .fold-btn', 'Cards fold: this tab (or a card’s title) folds a card to one line, and it stays that way on this device. Tap again to open it.'),
+  T('look-back', '.look-back-bar .btn', 'You are looking back at a finished career. Leave takes you back to the career log.'),
   T('feedback-foot', '.feedback-foot > summary', 'Found a bug or have an idea? Open this, on any tab, to send it with the tab you are on.'),
   T('chip-sim', D('chip-sim'), 'Sim: the routine calls and the turning points are made for you; it stops only for the big ones.'),
   T('sim-calls', D('sim-calls'), 'The turning points Sim decided for you since your last move, and how each went.'),

@@ -92,12 +92,14 @@ export function logCareer(rec: CareerRecord): LogResult {
   return { added: ok, dropped: ok ? dropped : null, count: d.cards.length };
 }
 
-/** Deletes a card, unless it is locked. */
-export function deleteCard(id: string): void {
+/** Deletes a card, unless it is locked; returns the card deleted (its save goes with it). */
+export function deleteCard(id: string): CareerRecord | null {
   const d = load();
-  if (d.locked.includes(id)) return;
+  if (d.locked.includes(id)) return null;
+  const gone = d.cards.find((c) => c.id === id) ?? null;
   d.cards = d.cards.filter((c) => c.id !== id);
   save(d);
+  return gone;
 }
 
 /** Round 32: his child's career on his card, with its share of legacy points (once; false if the card is gone). */

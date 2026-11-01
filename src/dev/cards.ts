@@ -2,6 +2,7 @@
 // mini-game, an overlay) so that clicking it opens that function with everything unlocked.
 
 import { useStore, type Tab } from '../store';
+import { setFolds } from '../ui/fold';
 import type { GameState, Moment } from '../engine/types';
 import { ACHIEVEMENTS, ACH_TIERS } from '../engine/achievements';
 import { careerRecord, type CareerRecord } from '../engine/career/record';
@@ -211,9 +212,9 @@ const levelRun = (key: string, level: Level, until: Parameters<typeof play>[0], 
 const ended = (star: boolean) => (s: GameState) => s.step === 'retired' && s.flags.levelEnd === (star ? 2 : 1);
 
 const TUTORIAL: DevCard[] = [
-  { id: 'road-map', title: 'The road map', group: 'Tutorial', icon: 'map', blurb: 'The tutorial between levels: the pixel map with the car driving on to the next stop, the bucket list on a paper scroll, and the next level with what it adds.', open: () => onRoad(['beginner']) },
-  { id: 'road-late', title: 'The road map, near its end', group: 'Tutorial', icon: 'map', blurb: 'All three levels passed (one short of the All-Star goal): the island of mini-games with the grades so far, and the closing tour waiting.', open: () => onRoad(LEVEL_IDS, { minis: { threes: 'A', dunk: 'C', street: 'C', lab: 'B' } }) },
-  { id: 'road-free', title: 'The road map from the start page', group: 'Tutorial', icon: 'map', blurb: 'Once the full game is open, the Levels card brings the road back: every level to play again, kept nowhere.', open: () => onRoad(LEVEL_IDS, { minis: ALL_C, toured: 1, free: 1 }, 'page', { page: 'road' }) },
+  { id: 'road-map', title: 'The road map', group: 'Tutorial', icon: 'map', blurb: 'The tutorial between levels: the pixel map with the car driving on to the next stop, a pin on every place (the next one hops), the bucket list on a paper scroll. Click a place, or drive with the arrow keys, and its card pops out: here the next level, with what it adds.', open: () => onRoad(['beginner']), press: '.road-spot.next' },
+  { id: 'road-late', title: 'The road map, near its end', group: 'Tutorial', icon: 'map', blurb: 'All three levels passed (one short of the All-Star goal): the island’s card with the grades so far, and the closing tour waiting on its stage.', open: () => onRoad(LEVEL_IDS, { minis: { threes: 'A', dunk: 'C', street: 'C', lab: 'B' } }), press: '.road-spot.next' },
+  { id: 'road-free', title: 'The road map from the start page', group: 'Tutorial', icon: 'map', blurb: 'Once the full game is open, Regular guy’s card on the start page brings the road back: every level to play again, kept nowhere.', open: () => onRoad(LEVEL_IDS, { minis: ALL_C, toured: 1, free: 1 }, 'page', { page: 'road' }) },
   { id: 'level-1', title: 'Level 1: Beginner', group: 'Tutorial', icon: 'lvl-HSV', blurb: 'The first page of every device: the school on the map, the goal (an NBA All-Star team), a name, a number, a position and an archetype; the rest is chosen for him.', open: () => onRoad([]) },
   { id: 'level-2', title: 'Level 2: Intermediate', group: 'Tutorial', icon: 'lvl-NCAA', blurb: 'The level’s start page: the college on the map, the icons for what the level adds, and the focus to pick.', open: () => onRoad(['beginner'], {}, 'page', { creating: 'intermediate' }) },
   { id: 'level-3', title: 'Level 3: Advanced', group: 'Tutorial', icon: 'lvl-NBA', blurb: 'The last level’s start page: the arena on the map, the country and the shooting hand as well.', open: () => onRoad(['beginner', 'intermediate'], {}, 'page', { creating: 'advanced' }) },
@@ -227,7 +228,7 @@ const TUTORIAL: DevCard[] = [
   { id: 'lesson', title: 'A lesson on screen', group: 'Tutorial', icon: 'guide', blurb: 'The tutorial guide: the page shaded but for one control, the note beside it, Got it or Your turn, and the exit code for anyone who has it.', open: () => onRoad([], {}, 'lesson') },
   { id: 'closing-tour', title: 'The closing tour', group: 'Tutorial', icon: 'arena', blurb: 'After the levels: a star’s career, stop by stop, for every system no level has; the bar says which stop, Next stop goes on once its lessons are done.', open: () => (onRoad(LEVEL_IDS, { minis: ALL_C }, 'lesson'), useStore.getState().startClosing()) },
   { id: 'recommended', title: 'The full game, first look', group: 'Tutorial', icon: 'door', blurb: 'Just after graduation: the start page with Regular guy recommended and its own few lessons.', open: () => onRoad(LEVEL_IDS, { minis: ALL_C, toured: 1, free: 1 }, 'lesson', { recommend: true }) },
-  { id: 'skip-door', title: 'The Skip door', group: 'Tutorial', icon: 'lock', blurb: 'At the foot of every tutorial page: the exit code (shown at graduation) opens the full game on this device for good.', open: () => onRoad(['beginner']), press: '[data-tour="skip-door"]' },
+  { id: 'skip-door', title: 'The Skip button', group: 'Tutorial', icon: 'lock', blurb: 'Beside Share at the top of every tutorial page: the exit code (shown at graduation) opens the full game on this device for good.', open: () => onRoad(['beginner']), press: '[data-tour="skip-door"]' },
 ];
 
 // ---------- the deck ----------
@@ -251,14 +252,26 @@ export const CARDS: DevCard[] = [
   { id: 'look', title: 'Your look', group: 'Start', icon: 'jersey', blurb: 'The identity step: skin, hair colour, hair and facial hair on the player, in a plain white or black jersey with his number, and the back of the jersey with his name.', open: () => void useStore.setState({ game: null, page: null, mini: null }), press: '[data-tour="create-next"]' },
   {
     id: 'saves',
-    title: 'Ten save slots and career codes',
+    title: 'Careers in the career log, and their codes',
     group: 'Start',
     icon: 'disk',
-    blurb: 'In the career log: every career on this device, newest first: continue, look back, copy its code, delete; paste a code to import. The start page keeps a Continue card for the latest.',
+    blurb: 'One list of every career on this device: those in progress first (continue, copy a code, delete), then a card for each finished one (look back, the card, its code). Paste a code to import. The start page keeps a Continue card for the latest.',
     open: () => {
       const g = loaded();
       if (!g) return false;
       void writeSlot(newSlotId(), g).then(() => useStore.setState({ game: null, page: 'log', mini: null }));
+    },
+  },
+  {
+    id: 'look-back',
+    title: 'Looking back at a finished career',
+    group: 'Start',
+    icon: 'rewind',
+    blurb: 'Look back from the career log opens a finished career on its Home, with a bar at the top saying so and the way back to the log.',
+    open: () => {
+      const g = at('look-back', (s) => s.step === 'retired', { mode: 'stars', fast: true });
+      if (!g) return false;
+      return show(g, 'home', { lookBack: true }, true);
     },
   },
   { id: 'daily', title: 'Daily challenge', group: 'Start', icon: 'calendar', blurb: "Today's prospect, the same for everyone. Mini-games locked.", open: () => void (useStore.setState({ game: null, mini: null, page: null }), useStore.getState().startDaily()) },
@@ -271,6 +284,18 @@ export const CARDS: DevCard[] = [
   { id: 'roster', title: 'Team roster and fit', group: 'Career hub', icon: 'roster', blurb: 'The five, the bench, the system and the chemistry.', open: () => show(nbaStar(), 'player'), press: '[data-tour="roster"]' },
   { id: 'bodymap', title: 'Body map with an injury', group: 'Career hub', icon: 'health', blurb: 'The pixel body map, hurt.', open: () => show(at('injured', (s) => !!s.player.injury && s.stage === 'NBA'), 'player') },
   { id: 'season-post', title: 'Season tab in the playoffs', group: 'Career hub', icon: 'bracket', blurb: 'With a bracket out, it comes first: under the team and form, above the standings.', open: () => show(at('bracket', (s) => s.stage === 'NBA' && s.step === 'summary' && !!s.nba?.bracket), 'season') },
+  {
+    id: 'folds',
+    title: 'Cards folded on Home',
+    group: 'Career hub',
+    icon: 'fold',
+    blurb: 'Round 34: most cards fold, from their title or the tab on their top edge, to a one-line strip; folds stay on the device. Here the scouting report, Milestones, the MVP race and the fan talk are folded.',
+    open: () => {
+      const ok = show(nbaStar());
+      setFolds(['box:scout', 'card:Milestones', 'box:mvp', 'box:reaction']);
+      return ok;
+    },
+  },
   { id: 'extras', title: 'Extras tab', group: 'Career hub', icon: 'controller', blurb: 'The start page’s four cards inside a career (round 29): mini-games, career log, achievements, community, and what waits for the start page.', open: () => show(nbaStar(), 'extras') },
   { id: 'records', title: 'Records tab', group: 'Career hub', icon: 'chart', blurb: 'Trophies, banners, career highs, timeline.', open: () => show(at('late', (s) => s.stage === 'NBA' && s.player.age >= 31 && s.step === 'summary'), 'records') },
   { id: 'settings', title: 'Settings menu', group: 'Career hub', icon: 'dial', blurb: 'Theme, court, sound and music, new career, switches.', open: () => show(nbaStar()), press: '[data-tour="settings-btn"]' },

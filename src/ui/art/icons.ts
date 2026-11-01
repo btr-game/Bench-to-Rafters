@@ -30,6 +30,44 @@ export const PAL: Record<string, string> = {
 };
 
 export const ICONS: Record<string, string[]> = {
+  // round 34: Look back on a finished career
+  rewind: [
+    '................',
+    '................',
+    '.......O......O.',
+    '......OO.....OO.',
+    '.....OYO....OYO.',
+    '....OYYO...OYYO.',
+    '...OYYYO..OYYYO.',
+    '..OYYYYO.OYYYYO.',
+    '..OYYYYO.OYYYYO.',
+    '...OYYYO..OYYYO.',
+    '....OYYO...OYYO.',
+    '.....OYO....OYO.',
+    '......OO.....OO.',
+    '.......O......O.',
+    '................',
+    '................',
+  ],
+  // round 34: cards that fold
+  fold: [
+    '................',
+    '..OOOOOOOOOOOO..',
+    '..OWWWWWWWWWWO..',
+    '..OWKKKKKKKKWO..',
+    '..OWWWWWWWWWWO..',
+    '..OOOOOOOOOOOO..',
+    '..OwwwwwwwwwwO..',
+    '..OOOOOOOOOOOO..',
+    '................',
+    '....BB....BB....',
+    '.....BB..BB.....',
+    '......BBBB......',
+    '.......BB.......',
+    '................',
+    '................',
+    '................',
+  ],
   // ---- ratings ----
   shoot: [
     '......OOOO......',
@@ -2329,6 +2367,9 @@ export const GUIDE_ICON: Record<string, string> = {
   'Farewell tour': 'wave',
   'Career card': 'cards',
   'The next generation': 'family',
+  // round 34
+  'Folding cards': 'fold',
+  'Looking back': 'rewind',
 };
 
 /** The meters, by their label. */
@@ -2354,6 +2395,12 @@ export const SHIFT_COLOR = ['#E03131', '#F76707', '#FCC419', '#2F9E44', '#1C7ED6
 export function shopIcon(id: string, name: string): string {
   const t = `${id} ${name}`.toLowerCase();
   const rules: [RegExp, string][] = [
+    // round 34: the round's items
+    [/career-scrapbook/, 'book'],
+    [/one-move-coach/, 'finish'],
+    [/fundamentals-camp/, 'grind'],
+    [/announcer-dinner/, 'mic'],
+    [/minimal-locker/, 'locker'],
     // round 33: the round's items
     [/shot-chart/, 'chart'],
     [/ft-routine/, 'shoot'],

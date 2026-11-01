@@ -32,6 +32,7 @@ import { ROUND21_EVENTS } from '../engine/events/round21';
 import { ROUND25_EVENTS } from '../engine/events/round25';
 import { ROUND32_EVENTS } from '../engine/events/round32';
 import { ROUND33_EVENTS } from '../engine/events/round33';
+import { ROUND34_EVENTS } from '../engine/events/round34';
 import { BEGINNER_EVENTS, LEVEL_IDS, LEVEL_NAME } from '../engine/levels';
 import { ROADMAP, ROAD_GRADES } from '../engine/balance';
 import { SIX_PLANS } from '../engine/career/season';
@@ -177,6 +178,7 @@ const EVENT_SETS: [string, EventDef[]][] = [
   ['Round 25', ROUND25_EVENTS],
   ['Round 32', ROUND32_EVENTS],
   ['Round 33', ROUND33_EVENTS],
+  ['Round 34', ROUND34_EVENTS],
 ];
 
 function eventEntry(set: string, e: EventDef): Entry {

@@ -2625,3 +2625,93 @@ multiple times."
       points (182), the shop, the achievements (with the marks and how often each happens), what a
       device keeps and the dev deck are brought up to date.
 
+
+## Round 34 (owner requests): simplification
+
+- **The intro on every visit** (owner: "the intro page should always appear before anything"): it
+  plays before the start page or the road map on every visit, not only the first; Start, Enter or
+  Escape goes on, and the Intro button still plays it again. The dev deck skips it.
+- **Skip tutorial at the top** (owner: "put the skip the tutorial door on the top next to share
+  instead of the bottom. i want it the same as before (feedback-share-dev)"): a Skip tutorial
+  button beside Share in every top bar while the tutorial is on, opening a small pop-up for the
+  exit code; the foot of every page is feedback, share and the dev door again.
+- **The road map's cards pop out** (owner: "instead of putting the cards bellow the map, make it so
+  that when the user clicks on the buildings, or use the arrow keys to move around, the cards pop
+  out"): the map opens clear, a pixel pin on every place (done, next, open, locked; the next one
+  hops). Clicking a place or driving there with the arrow keys pops its card out beside it; Enter
+  opens the card where the car is, Escape folds it away; the focus follows the car. The closing
+  tour has a place of its own on the map, a stage. On a phone the card sits under the map.
+- **One career log** (owner: "integrate the saved career system into the career log and get rid of
+  it"): the separate saved-careers panel is gone. Every save is a card: in progress first
+  (Continue, Code, Delete), then the finished careers' cards (Look back while the save is still on
+  the device, Code). A career's card keeps the slot of its save, so the two are one entry; older
+  saves are matched by name and difficulty. Deleting a card deletes its save. With all ten slots
+  taken, a finished career's save makes room before one still going.
+- **Regular guy's challenge** (owner: "put the levels (tutorial) card on the main page as a pop out
+  challenge for regular instead of putting it next to minigames and career log"): picking Regular
+  guy on the start page pops out "Back on the road map?", which opens the road map; the Levels card
+  among the start page's four is gone.
+- **Continue and Look back land on Home** (owner: "when i look back or continue from the career log,
+  it doesnt instantly direct me to the career's homepage ... if i am looking back, i should have
+  easier access to leave that career"): both open the career on its Home tab, wherever they were
+  pressed; a career looked back on carries a bar along the top ("Looking back", whose career, and
+  Leave: back to the career log).
+- **A bigger announcer** (owner: "i dont really like the announcer voice. can you find a much more
+  booming one?"): the deepest English voice on the device, the natural (neural) male voices first;
+  a natural voice keeps its depth (pitch 0.55, rate 0.8), any other goes to the floor (pitch 0.1,
+  rate 0.78); a breath before the big word ("From... downtown!"); and under every call the arena
+  (sound.ts 'boom': two sine sweeps from 92 Hz down to 38 Hz, the second an echo at 0.32 s, and a
+  crowd swell). A recorded voice was the bigger step: a free speech engine (Kokoro, Apache) with deep
+  male voices, downloaded once to make the clips. This session's safety check refused the download,
+  so it waits for the owner's permission (ROADMAP).
+- **Cards that fold** (owner, round 33: "for round 34, the theme is simplification. we're gonna make
+  most in-game cards foldable"; round 34: "keep them all open by default, folds stick per device").
+  A card with a title folds from it (a button with a pixel chevron); a card built by hand (the
+  coach, the scouting report, How you play, the MVP race, the duo, the rivalry, the fan talk, the
+  locker room, the city and fans) has a small tab astride its top edge, placed in the card's padding
+  so it never covers what the card shows, and folds to a strip with its icon and name. A card that
+  has nothing to show leaves no strip. Always open: the main card, To do, the player card, the
+  offseason moves, the career card. Folds are one list on the device (`btr-fold-v1`); the dev deck
+  keeps its own and deals every card open. Around the league keeps its own fold (round 15), with
+  the same pixel chevron. The levels and the tutorial follow the same folding; a lesson whose
+  control is in a folded card waits until it is opened (ROADMAP).
+- **End of the round** (owner: "i think round 34 could end with this. do the end of round list.
+  because there arent any changes in game, dont run the balance check"; then "go all the way to
+  publishing"):
+  1. Graphics: pixel icons for the five new turning points (a chalkboard of four plays, a VHS tape,
+     the announcer's microphone, a taped box, a target), a rewind for Look back (its bar and the
+     manual), a folded card for the manual's folding section; the five shop items use existing
+     icons (a book, finishing, the grind, the microphone, the locker). The closing tour's stage on
+     the road map was drawn during the round.
+  2. Sound: the fold is a click, the road map's places a tick, the arena under the announcer
+     ('boom', on the sound board); Leave and Skip tutorial turn a page.
+  3. Fast break, sim mode and simple text: no new career screens; simple text hides the
+     explanations on the career log and Regular guy's road map card.
+  5. Achievements: 30 (710 in all). Twenty for a career (simple math: your age or your jersey
+     number in points, exactly 20.0 or 10.0, the same average twice, a palindrome or a round
+     career total, a 41–41 team, three seasons up or down; the fundamentals: Pure Scorer,
+     Selfless, Sure Grip, Line Dancer, Quiet Ring, Back to Basics), measured over 300 careers of
+     the smart player; the first tries for four of them never happened and were set again from the
+     spread of 1,332 NBA seasons. Ten for the round's pages (folds, Look back, Continue, every
+     stop on the road map after the tutorial, visits), from new totals the device keeps.
+  6. Five turning points (Four plays, The old tape, Your own call, Too much stuff, One move) and
+     five shop items (a career scrapbook, a one-move coach, fundamentals camp, dinner with the
+     arena announcer, a minimalist locker).
+  7. Harness: no new decision kind (the turning points are events, which smartChoice already
+     handles).
+  8. Dead code: the saved-careers row styles and a page-grid rule unused since round 33's Season
+     tab; two exports used only in their own files.
+  9. Tests: tests/round34.test.ts (the book's ids and names unique, the pages achievements from
+     the totals alone, simple math on a real NBA career, a palindrome and a round career total,
+     every new turning point offered and resolved, the shop items with icons, and the project
+     summary's blocks in the shape the dev deck reads: a list item written as plain text instead of a
+     label and its text stopped the whole deck from loading during this round's visual check).
+  10. Balance: not run, at the owner's word (no change to how careers play).
+  11. The manual: Saving, Folding cards (new), the road map's pop-out cards, Continue, the intro on
+      every visit, the announcer, the career log, Looking back (new), the book's size, and an
+      eighth quick tip; Guide mode has steps for the fold tab and the Look back bar.
+  12. Dev deck: a card for Home with cards folded, one for Look back (round 34, during the round);
+      the road map's cards press the next place; the Catalog lists round 34's events by theme.
+  13. The project summary: the road map's pop-out cards and the stage, the turning points (187),
+      the shop (213), the career log, the achievements (with how often each happens), cards that
+      fold, the announcer, the intro, what a device keeps and the dev deck (129 cards).

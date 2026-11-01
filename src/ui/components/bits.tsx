@@ -6,6 +6,7 @@ import type { ReactNode } from 'react';
 import type { Reaction, StatLine } from '../../engine/types';
 import { MILESTONES, UI } from '../../content/strings';
 import { pct, pg } from '../format';
+import { useFold } from '../fold';
 
 export function Scoreboard({ line, showGp = true }: { line: StatLine; showGp?: boolean }) {
   const has = line.gp > 0;
@@ -163,21 +164,75 @@ export function ReactionCard({ r }: { r: Reaction }) {
   );
 }
 
-export function Card({ title, kicker, children, right, tour }: { title?: string; kicker?: string; children: ReactNode; right?: ReactNode; tour?: string }) {
+/** A small pixel chevron: down when the card is open, right when it is folded. */
+export function FoldMark({ open }: { open: boolean }) {
   return (
-    <section className="card stack" data-tour={tour}>
+    <svg className="fold-mark" width={14} height={14} viewBox="0 0 7 7" shapeRendering="crispEdges" aria-hidden="true">
+      <path d={open ? 'M0 2h7v1h-1v1h-1v1h-1v1h-1v-1h-1v-1h-1v-1h-1z' : 'M2 0h1v1h1v1h1v1h1v1h-1v1h-1v1h-1v1h-1z'} fill="currentColor" />
+    </svg>
+  );
+}
+
+/** A card with a title (round 34: one that folds from its title, the fold kept on this device;
+ * `fold={false}` keeps a card open, `fold="id"` names it when titles repeat). */
+export function Card({ title, kicker, children, right, tour, fold }: { title?: string; kicker?: string; children: ReactNode; right?: ReactNode; tour?: string; fold?: string | false }) {
+  const id = fold === false || !title ? null : `card:${fold ?? title}`;
+  const [shut, toggle] = useFold(id);
+  return (
+    <section className={`card stack${shut ? ' folded' : ''}`} data-tour={tour}>
       {(title || kicker || right) && (
         <div className="row">
           <div>
             {kicker && <div className="kicker">{kicker}</div>}
-            {title && <h2 className="title">{title}</h2>}
+            {title && (
+              <h2 className="title">
+                {id ? (
+                  <button className="fold-btn" aria-expanded={!shut} onClick={toggle}>
+                    {title}
+                    <FoldMark open={!shut} />
+                  </button>
+                ) : (
+                  title
+                )}
+              </h2>
+            )}
           </div>
           <div className="spacer" />
-          {right}
+          {!shut && right}
         </div>
       )}
-      {children}
+      {!shut && children}
     </section>
+  );
+}
+
+/** Round 34: a card built by hand, made foldable from outside. Open, it is the card as it was with a
+ * small fold tab on its top edge; folded, a one-line strip with its name. A card that has nothing to
+ * show (it renders nothing) leaves no strip either. */
+export function FoldBox({ id, title, icon, children }: { id: string; title: string; icon?: string; children: ReactNode }) {
+  const [shut, toggle] = useFold(`box:${id}`);
+  return (
+    <div className={`fold-box${shut ? ' shut' : ''}`}>
+      {shut && (
+        <section className="card fold-strip">
+          <h2 className="fold-strip-title">
+            <button className="fold-btn" aria-expanded={false} onClick={toggle}>
+              {icon && <Icon name={icon} size={20} />}
+              {title}
+              <FoldMark open={false} />
+            </button>
+          </h2>
+        </section>
+      )}
+      <div className="fold-body" hidden={shut}>
+        {children}
+      </div>
+      {!shut && (
+        <button className="fold-tab" aria-expanded aria-label={`Fold ${title}`} title={`Fold ${title}`} onClick={toggle}>
+          <FoldMark open />
+        </button>
+      )}
+    </div>
   );
 }
 

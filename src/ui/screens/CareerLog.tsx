@@ -6,7 +6,7 @@
 import { FootBar } from '../components/FootBar';
 import { useEffect, useState } from 'react';
 import type { CareerRecord } from '../../engine/career/record';
-import { MODES } from '../../engine/balance';
+import { MODES, type Mode } from '../../engine/balance';
 import { NAMES } from '../../content/strings';
 import { useStore } from '../../store';
 import { PageTop } from '../components/PageTop';
@@ -19,7 +19,8 @@ import { PlayerArt } from '../art/Player';
 import { Icon } from '../art/Icon';
 import { CometMark, OathMark } from '../components/OathMark';
 import { compareRows, compareScore } from '../compare';
-import { SavedCareers } from '../components/SavedCareers';
+import { deleteSlot, exportCode, listSlots, readSlot, type SlotMeta } from '../saves';
+import { seasonLabel } from '../format';
 
 /** Download (and on phones, share) the career card. */
 export function CardActions({ rec }: { rec: CareerRecord }) {
@@ -157,10 +158,85 @@ function Compare({ a, b, onClear }: { a: CareerRecord; b: CareerRecord; onClear:
   );
 }
 
-function LogEntry({ rec, locked, canLock, live, onDelete, onLock, picked, canPick, onPick }: { rec: CareerRecord; locked: boolean; canLock: boolean; live: boolean; onDelete: () => void; onLock: () => void; picked: boolean; canPick: boolean; onPick: () => void }) {
+/** A save's code, copied where the browser allows (round 25: a career as text, to carry it over). */
+async function codeOf(id: string): Promise<string | null> {
+  const g = await readSlot(id);
+  if (!g) return null;
+  const text = await exportCode(g);
+  navigator.clipboard?.writeText(text).catch(() => undefined);
+  return text;
+}
+
+function CodeBox({ text }: { text: string }) {
+  return (
+    <div className="stack" style={{ gap: 4 }}>
+      <span className="small muted">This code is the whole career. Copied if your browser allows it; otherwise select it and copy. Paste it into another browser&rsquo;s career log, under Import.</span>
+      <textarea className="save-code" readOnly value={text} rows={3} onFocus={(e) => e.currentTarget.select()} />
+    </div>
+  );
+}
+
+/** A career saved on this device with no card yet: one in progress (or a finished one whose card has
+ * gone). Round 34 (owner: "integrate the saved career system into the career log and get rid of
+ * it"): it sits in the log as a card of its own. */
+function SaveEntry({ meta, live, onGone }: { meta: SlotMeta; live: boolean; onGone: () => void }) {
+  const resume = useStore((s) => s.resume);
+  const here = useStore((s) => s.slot === meta.id);
+  const [failed, setFailed] = useState(false);
+  const [code, setCode] = useState<string | null>(null);
+  const [armed, setArmed] = useState(false);
+  return (
+    <article className={`card log-entry save-entry${meta.retired ? '' : ' going'}`}>
+      <div className="log-head">
+        <PlayerArt name={meta.name} number={meta.number ?? 0} pos={meta.pos ?? 'SF'} color={meta.team?.color} team={meta.team?.name ?? ''} size={84} />
+        <div className="log-who">
+          <div className="kicker">
+            {MODES[meta.mode as Mode]?.name ?? meta.mode} · saved {new Date(meta.at).toLocaleDateString()}
+          </div>
+          <b className="log-name">{meta.name}</b>
+          <span className={`tag${meta.retired ? '' : ' good'}`}>{here ? 'This career' : meta.retired ? 'Finished' : 'In progress'}</span>
+          <div className="small">
+            {seasonLabel(meta.year)}
+            {meta.team ? ` · ${meta.team.name}` : ''}
+            {meta.age ? ` · age ${meta.age}` : ''}
+          </div>
+          {failed && <div className="small" style={{ color: 'var(--bad)' }}>That save could not be read.</div>}
+        </div>
+        <div className="log-nums">
+          <div>
+            <b>{meta.ovr ?? '–'}</b>
+            <small>peak</small>
+          </div>
+        </div>
+      </div>
+      {code && <CodeBox text={code} />}
+      <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+        {!live && (
+          <button className="btn" onClick={() => void resume(meta.id).then((ok) => !ok && setFailed(true))}>
+            {meta.retired ? 'Look back' : 'Continue'}
+          </button>
+        )}
+        <button className="btn ghost small" onClick={() => void codeOf(meta.id).then((t) => (t ? setCode(t) : setFailed(true)))}>
+          Code
+        </button>
+        <span className="spacer" />
+        {!live && (
+          <button className={`btn small ${armed ? 'danger' : 'ghost'}`} onClick={() => (armed ? (deleteSlot(meta.id), onGone()) : setArmed(true))} onBlur={() => setArmed(false)}>
+            {armed ? 'Tap again to delete' : 'Delete'}
+          </button>
+        )}
+      </div>
+    </article>
+  );
+}
+
+function LogEntry({ rec, save, locked, canLock, live, onDelete, onLock, picked, canPick, onPick }: { rec: CareerRecord; save?: SlotMeta; locked: boolean; canLock: boolean; live: boolean; onDelete: () => void; onLock: () => void; picked: boolean; canPick: boolean; onPick: () => void }) {
+  const resume = useStore((s) => s.resume);
   const [img, setImg] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [armed, setArmed] = useState(false);
+  const [code, setCode] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
   useEffect(() => {
     if (!open || img) return;
     let live = true;
@@ -199,6 +275,7 @@ function LogEntry({ rec, locked, canLock, live, onDelete, onLock, picked, canPic
               Son {rec.child.name}: peak {rec.child.peak} · +{rec.child.adds} legacy
             </div>
           )}
+          {failed && <div className="small" style={{ color: 'var(--bad)' }}>That save could not be read.</div>}
         </div>
         <div className="log-nums">
           <div>
@@ -212,11 +289,23 @@ function LogEntry({ rec, locked, canLock, live, onDelete, onLock, picked, canPic
         </div>
       </div>
       {open && (img === null ? <p className="small muted keep">Drawing the card…</p> : img ? <img className="log-card-img" src={img} alt={`Career card of ${rec.name}`} /> : <p className="small muted">This browser could not draw the card.</p>)}
+      {code && <CodeBox text={code} />}
       <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+        {/* round 34: the career itself, when its save is still on this device */}
+        {save && !live && (
+          <button className="btn" onClick={() => void resume(save.id).then((ok) => !ok && setFailed(true))}>
+            Look back
+          </button>
+        )}
         <button className="btn ghost" onClick={() => setOpen(!open)} aria-expanded={open}>
           {open ? 'Hide the card' : 'Show the card'}
         </button>
         <CardActions rec={rec} />
+        {save && (
+          <button className="btn ghost small" onClick={() => void codeOf(save.id).then((t) => (t ? setCode(t) : setFailed(true)))}>
+            Code
+          </button>
+        )}
         <button className={`btn small${picked ? '' : ' ghost'}`} data-tour="log-pick" aria-pressed={picked} disabled={!picked && !canPick} onClick={onPick} title={picked ? 'Take it out of the comparison' : 'Compare it with another card'}>
           {picked ? 'Comparing' : 'Compare'}
         </button>
@@ -242,51 +331,83 @@ function LogEntry({ rec, locked, canLock, live, onDelete, onLock, picked, canPic
   );
 }
 
-/** The page: every card, newest first. */
+/** A finished card's save: the one it was finished in, or (for cards from before round 34) a
+ * finished save of the same name and difficulty. */
+const saveOf = (rec: CareerRecord, slots: SlotMeta[]): SlotMeta | undefined =>
+  rec.slot ? slots.find((x) => x.id === rec.slot) : slots.find((x) => x.retired && x.name === rec.name && x.mode === rec.mode);
+
+/** Paste a code from another browser: the career opens at once. */
+function ImportBox() {
+  const importCareer = useStore((s) => s.importCareer);
+  const [paste, setPaste] = useState('');
+  const [bad, setBad] = useState(false);
+  return (
+    <details className="save-import">
+      <summary>Import a career from a code</summary>
+      <textarea className="save-code" rows={3} value={paste} placeholder="BTR1..." onChange={(e) => (setPaste(e.target.value), setBad(false))} />
+      <button className="btn small" disabled={!paste.trim()} onClick={() => void importCareer(paste).then((ok) => setBad(!ok))}>
+        Import and play
+      </button>
+      {bad && <span className="small" style={{ color: 'var(--bad)' }}>That code could not be read. Check that it was copied whole.</span>}
+    </details>
+  );
+}
+
+/** The page: the careers in progress, then every finished career's card, newest first. */
 export function CareerLog() {
   const setPage = useStore((s) => s.setPage);
   // round 29: opened from a career (its Extras tab), the log is for looking and locking
   const live = useStore((s) => !!s.game && s.game.step !== 'retired');
   const [cards, setCards] = useState(logCards);
   const [locks, setLocks] = useState(logLocks);
+  const [slots, setSlots] = useState(listSlots);
   const [pick, setPick] = useState<string[]>([]);
   const picked = pick.map((id) => cards.find((c) => c.id === id)).filter((c): c is CareerRecord => !!c);
   const warn = fullness(cards.length);
+  const linked = new Map(cards.map((c) => [c.id, saveOf(c, slots)]));
+  const taken = new Set([...linked.values()].filter(Boolean).map((x) => x!.id));
+  const going = slots.filter((x) => !x.retired);
+  // finished saves whose card has gone (or never came: a career finished before the log)
+  const loose = slots.filter((x) => x.retired && !taken.has(x.id));
   return (
     <div className="wrap">
       <PageTop trail={['Career log']} back={() => setPage(null)} />
       <section className="stack stage-in">
         <div>
           <div className="kicker">
-            {cards.length} of {LOG_MAX} cards · {locks.length} of {LOCK_MAX} locked · on this device
+            {going.length} in progress · {cards.length} of {LOG_MAX} finished · {locks.length} of {LOCK_MAX} locked · on this device
           </div>
           <h1 className="hub-title with-icon">
             <Icon name="cards" size={40} />
             Career log
           </h1>
           <p className="prose">
-            Your saved careers come first: continue one, look back at a finished one, or copy its code to carry it to another browser. Then the cards: every career you finish leaves one here. The log keeps {LOG_MAX}: when it is full, a new career replaces the oldest card that is not locked. Lock up to {LOCK_MAX} you never want to lose; a locked card can't be replaced or deleted until you unlock it.
+            Every career on this device. The ones in progress come first: continue one, or copy its code to carry it to another browser. Then a card for each finished career: look back at it, download or share the card, compare two side by side. The log keeps {LOG_MAX} finished careers: when it is full, a new one replaces the oldest card that is not locked. Lock up to {LOCK_MAX} you never want to lose.
           </p>
         </div>
         {live && (
           <div className="log-warn with-icon">
             <Icon name="lock" size={20} />
-            <span>You are in a career: look, download and lock the cards here. Deleting waits for the start page.</span>
+            <span>You are in a career: look, copy codes, download and lock here. Continuing another career, importing and deleting wait for the start page.</span>
           </div>
         )}
-        <SavedCareers live={live} />
-        <div className="sec-title">Career cards</div>
+        {going.length > 0 && <div className="sec-title">In progress</div>}
+        {going.map((x) => (
+          <SaveEntry key={x.id} meta={x} live={live} onGone={() => setSlots(listSlots())} />
+        ))}
+        <div className="sec-title">Finished careers</div>
         {warn && <div className="log-warn">{warn}</div>}
         {picked.length === 2 ? (
           <Compare a={picked[0]} b={picked[1]} onClear={() => setPick([])} />
         ) : cards.length > 1 ? (
           <p className="small muted keep">{picked.length === 1 ? `Comparing ${picked[0].name}: pick one more card.` : 'Pick two cards with Compare to see them side by side.'}</p>
         ) : null}
-        {cards.length === 0 && <p className="muted">No cards yet. Finish a career and its card lands here.</p>}
+        {cards.length === 0 && loose.length === 0 && <p className="muted">No cards yet. Finish a career and its card lands here.</p>}
         {cards.map((c) => (
           <LogEntry
             key={c.id}
             rec={c}
+            save={linked.get(c.id)}
             live={live}
             locked={locks.includes(c.id)}
             canLock={locks.length < LOCK_MAX}
@@ -310,13 +431,22 @@ export function CareerLog() {
               achievementsNow();
             }}
             onDelete={() => {
-              deleteCard(c.id);
+              // the card and its save go together
+              if (deleteCard(c.id)) {
+                const sv = linked.get(c.id);
+                if (sv) deleteSlot(sv.id);
+              }
               setPick(pick.filter((x) => x !== c.id));
               setCards(logCards());
               setLocks(logLocks());
+              setSlots(listSlots());
             }}
           />
         ))}
+        {loose.map((x) => (
+          <SaveEntry key={x.id} meta={x} live={live} onGone={() => setSlots(listSlots())} />
+        ))}
+        {!live && <ImportBox />}
       </section>
       <FootBar where={`career log page${live ? ', from a career' : ''}`} />
     </div>

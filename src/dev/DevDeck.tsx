@@ -4,6 +4,7 @@
 // game itself takes over with that function on screen; the bar at the bottom brings you back.
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { setFolds } from '../ui/fold';
 import { Dribbler, MOVES } from '../ui/components/Loading';
 import { App } from '../ui/App';
 import { GuideTour } from '../ui/components/GuideTour';
@@ -42,8 +43,10 @@ export function devSetup(): void {
 
 /** Back to a clean slate between cards: no game, no page, no switches left on. */
 function clean(): void {
-  useStore.setState({ game: null, slot: null, page: null, mini: null, transition: null, daily: null, tab: 'home', toasts: [], guide: false, master: false, simple: false, intro: false, news: false, thanks: null, spots: null, tour: false, ...roadView() });
+  useStore.setState({ game: null, slot: null, page: null, mini: null, transition: null, daily: null, tab: 'home', toasts: [], guide: false, master: false, simple: false, intro: false, news: false, thanks: null, spots: null, tour: false, lookBack: false, ...roadView() });
   setAchievements(true);
+  // round 34: every card the deck deals opens with every card open
+  setFolds([]);
 }
 
 /** One card face: the suit strip, the corner indices, the big icon, the function's name. */

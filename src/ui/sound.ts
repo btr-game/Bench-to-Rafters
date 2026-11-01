@@ -69,6 +69,7 @@ export const SFX = [
   ['sail', 'The road map: the boat to the island of mini-games'],
   ['lesson', 'The tutorial: a lesson done'],
   ['graduate', 'Graduation: the tutorial is done and the full game opens'],
+  ['boom', 'The announcer: the arena under his call (a deep thump, its echo, the crowd)'],
 ] as const;
 type Sfx = (typeof SFX)[number][0];
 
@@ -401,6 +402,33 @@ export function sfx(name: Sfx, always = false): void {
       tone(N(0), t, 0.7, 'triangle', 0.6);
       noise(t + 0.6, 0.5, 0.3);
       break;
+    case 'boom': {
+      // round 34 (owner: "a much more booming one"): the arena under the announcer, a sub-bass thump
+      // falling away, its echo off the far wall, and the crowd swelling under a low filter
+      const c = ctx!;
+      for (const [at, vol] of [[0, 1], [0.32, 0.38]] as const) {
+        const o = c.createOscillator();
+        const g = c.createGain();
+        o.type = 'sine';
+        o.frequency.setValueAtTime(92, t + at);
+        o.frequency.exponentialRampToValueAtTime(38, t + at + 0.7);
+        g.gain.setValueAtTime(vol * 1.4, t + at);
+        g.gain.exponentialRampToValueAtTime(0.001, t + at + 0.85);
+        o.connect(g).connect(sfxBus!);
+        o.start(t + at);
+        o.stop(t + at + 0.9);
+      }
+      const lp = c.createBiquadFilter();
+      lp.type = 'lowpass';
+      lp.frequency.value = 700;
+      const crowd = c.createGain();
+      crowd.gain.setValueAtTime(0.001, t);
+      crowd.gain.exponentialRampToValueAtTime(0.5, t + 0.35);
+      crowd.gain.exponentialRampToValueAtTime(0.001, t + 1.6);
+      lp.connect(crowd).connect(sfxBus!);
+      noise(t, 1.6, 1, lp);
+      break;
+    }
   }
 }
 

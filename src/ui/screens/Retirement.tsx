@@ -226,7 +226,7 @@ export function Retirement({ g }: { g: GameState }) {
       />
       <LegacyRankCard g={g} />
       <CareerAnalysis g={g} />
-      <Card title="Career card" kicker={`${NAMES.pos[p.pos]} · ${p.archetype}`}>
+      <Card title="Career card" kicker={`${NAMES.pos[p.pos]} · ${p.archetype}`} fold={false}>
         <div className="row">
           <div className="pc-name">{p.name}</div>
           <div className="spacer" />
