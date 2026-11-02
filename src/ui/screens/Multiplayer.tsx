@@ -581,7 +581,7 @@ export function MultiplayerPage() {
           <>
             {mp.kind === 'local' && <p className="small muted">Dev deck: a stand-in on this device with house players; nothing reaches the real server.</p>}
             <HandleBox onSet={setName} />
-            <div className="seg" role="group" aria-label="Kind of game">
+            <div className="seg" role="group" aria-label="Kind of game" data-tour="mp-tabs">
               <button className="with-icon" aria-pressed={tab === 'challenge'} onClick={() => (setTab('challenge'), openMp(null))}>
                 <Icon name="versus" size={20} />
                 Challenge a friend
@@ -675,7 +675,7 @@ export function RetirementMp({ g, rec }: { g: GameState; rec: CareerRecord }) {
                 <HandleBox onSet={setName} />
               ) : (
                 <div className="row" style={{ gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                  <button className="btn" disabled={busy} onClick={() => void make()}>
+                  <button className="btn" data-tour="mp-challenge" disabled={busy} onClick={() => void make()}>
                     Challenge a friend
                   </button>
                   <small className="muted">as {name}</small>
