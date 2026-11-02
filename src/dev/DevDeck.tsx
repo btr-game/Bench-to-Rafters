@@ -23,7 +23,7 @@ import { todayKey } from '../engine/mini/daily';
 import { Catalog } from './Catalog';
 import { Inbox } from './Inbox';
 import { MusicBoard, SoundBoard } from './SoundBoard';
-import { useRealLive } from '../ui/screens/Community';
+import { watchReal, type FeedItem, type RealWhere } from '../ui/community';
 import { NEWS } from '../content/whatsNew';
 import './dev.css';
 
@@ -131,16 +131,41 @@ function NewsHistory({ onOpen }: { onOpen: () => void }) {
 }
 
 /** Round 32 (owner: "to track the real amount of people, put the real values in the dev deck so
- * that only the devs can see it"): the live strip's numbers without the house players. */
+ * that only the devs can see it"): the live strip's numbers without the house players. Round 35
+ * (owner: "real numbers of user in the dev deck doesnt seem to work"): they came from the deck's own
+ * community, which is this device's, so they only ever counted the deck. They are read from the
+ * real one now (community.ts watchReal), without the deck joining the count. */
 function RealLive() {
-  const { here, since, items } = useRealLive(DECK_OPENED);
-  const day = items.filter((x) => x.at >= Date.now() - 86_400_000).length;
+  const [here, setHere] = useState<number | null>(null);
+  const [items, setItems] = useState<FeedItem[] | null>(null);
+  const [where, setWhere] = useState<RealWhere | null>(null);
+  useEffect(() => {
+    let stop = () => {};
+    let gone = false;
+    void watchReal(setHere, setItems).then((w) => {
+      if (gone) w.stop();
+      else {
+        stop = w.stop;
+        setWhere(w.where);
+      }
+    });
+    return () => {
+      gone = true;
+      stop();
+    };
+  }, []);
+  const since = items?.filter((x) => x.at >= DECK_OPENED).length ?? 0;
+  const day = items?.filter((x) => x.at >= Date.now() - 86_400_000).length ?? 0;
   return (
     <p className="dk-real small" aria-label="Real live numbers">
       <Icon name="live" size={20} />
-      <span>
-        Real numbers (the strip players see adds the house players): <b>{here}</b> on the court right now · <b>{since}</b> {since === 1 ? 'career' : 'careers'} ended since this deck opened · <b>{day}</b> in the last 24 hours (the feed keeps the latest 30).
-      </span>
+      {where === 'none' ? (
+        <span>Real numbers: this copy has no online community (the website and the claude.ai page do), so there is nothing real to count here.</span>
+      ) : (
+        <span>
+          Real numbers {where === 'online' ? 'from the website' : where === 'shared' ? 'from this page' : ''} (the strip players see adds the house players; the deck is never counted): <b>{here ?? '…'}</b> on the court right now · <b>{items ? since : '…'}</b> {since === 1 ? 'career' : 'careers'} ended since this deck opened · <b>{items ? day : '…'}</b> in the last 24 hours (the feed keeps the latest 30).
+        </span>
+      )}
     </p>
   );
 }

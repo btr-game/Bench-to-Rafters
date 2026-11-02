@@ -395,6 +395,46 @@ export async function readInbox(): Promise<{ rows: FeedbackRow[]; where: 'shared
   }
 }
 
+/** Where the dev deck's real numbers come from: the website's database, the claude.ai page's
+ * shared room, or nowhere (a copy with neither, such as a file opened on its own). */
+export type RealWhere = 'online' | 'shared' | 'none';
+
+/** Round 35: the real live numbers for the dev deck, read only (onlineCommunity.ts watchOnline on
+ * the website). On the claude.ai page the room counts the visits that joined the court (their
+ * presence says `here`), so the deck, which never joins, is not among them. */
+export async function watchReal(onCount: (n: number) => void, onFeed: (items: FeedItem[]) => void): Promise<{ where: RealWhere; stop: () => void }> {
+  if (import.meta.env.VITE_SB_URL && import.meta.env.VITE_SB_KEY) {
+    try {
+      const { watchOnline } = await import('./onlineCommunity');
+      return { where: 'online', stop: watchOnline(import.meta.env.VITE_SB_URL, import.meta.env.VITE_SB_KEY, onCount, onFeed) };
+    } catch {
+      return { where: 'none', stop: () => {} };
+    }
+  }
+  const host = (window as unknown as { claude?: ClaudeHost }).claude;
+  if (!host?.use) return { where: 'none', stop: () => {} };
+  try {
+    const [db, room] = (await Promise.all([host.use('db'), host.use('room')])) as [Db | null, RoomApi | null];
+    if (!db && !room) return { where: 'none', stop: () => {} };
+    const offFeed = db ? db.doc('feed/live').onSnapshot((s) => onFeed((s.data()?.items as FeedItem[] | undefined) ?? []), () => onFeed([])) : () => {};
+    const count = (peers: readonly unknown[]) => onCount(onCourt(peers));
+    if (room) count(room.peers());
+    const offPeers = room ? room.onPeers((c) => count(c.peers)) : () => {};
+    return {
+      where: 'shared',
+      stop: () => {
+        offFeed();
+        offPeers();
+      },
+    };
+  } catch {
+    return { where: 'none', stop: () => {} };
+  }
+}
+
+/** The room's visits that joined the court (joinCourt sets `here` in their presence). */
+export const onCourt = (peers: readonly unknown[]): number => peers.filter((p) => !!(p as { presence?: { here?: unknown } })?.presence?.here).length;
+
 /** Whether this is the online build (the website), which carries its database's address (.env.itch). */
 export const onlineBuild = (): boolean => !!(import.meta.env.VITE_SB_URL && import.meta.env.VITE_SB_KEY);
 

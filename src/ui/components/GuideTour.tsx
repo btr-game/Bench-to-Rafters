@@ -34,7 +34,7 @@ const TOUR: Step[] = [
   T('minis', D('minis'), 'Mini-games. Free from the start page; in a career each one opens with your ratings and pays a rating bonus.'),
   T('levels', D('levels-card'), 'With Regular guy: the road map, to play any of the three levels again. Level careers count nowhere.'),
   T('log', D('log'), 'The career log: the cards of your last ten finished careers. Lock up to five to keep them for good.'),
-  T('log-saves', '.save-entry', 'A career in progress: continue it, or copy its code to play it in another browser. Finished careers below open again with Look back.'),
+  T('log-saves', '.save-entry', 'A career in progress: continue it, or copy its code to send the maker with a bug report. Finished careers below open again with Look back.'),
   T('log-lock', D('log-lock'), 'Lock a card: a new career never replaces it, and it can’t be deleted until you unlock it. Five at most.'),
   T('log-pick', D('log-pick'), 'Compare: pick two cards to see them side by side.'),
   T('log-compare', D('log-compare'), 'Two careers side by side: the better of each row in bold with a ▲.'),

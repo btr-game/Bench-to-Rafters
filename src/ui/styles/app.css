@@ -2652,8 +2652,9 @@ input[type='range'] { width: 100%; min-height: 32px; accent-color: var(--accent)
 .lesson-ring { z-index: 1201; }
 .lesson-tip { z-index: 1202; pointer-events: auto; }
 .lesson-turn { font-weight: 700; color: var(--accent); }
-.lesson-exit { gap: 6px; flex-wrap: wrap; }
-.lesson-exit input { width: 9em; min-width: 0; }
+/* round 35: Skip tutorial over the lesson shade, and its pop-up above the lesson */
+.skip-float { position: fixed; top: calc(10px + env(safe-area-inset-top, 0px)); right: calc(12px + env(safe-area-inset-right, 0px)); z-index: 1203; pointer-events: auto; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35); }
+.skip-pop { z-index: 1300; }
 /* the closing tour's bar */
 .tour-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; border-left: 4px solid var(--accent); margin-bottom: 12px; }
 .place-art { display: block; image-rendering: pixelated; border-radius: 6px; border: 2px solid var(--line); flex: none; max-width: 100%; height: auto; }

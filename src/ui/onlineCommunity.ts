@@ -140,6 +140,29 @@ export async function onlineCommunity(url: string, key: string): Promise<Communi
   };
 }
 
+/** Round 35 (owner: "real numbers of user in the dev deck doesnt seem to work"): the dev deck's
+ * own community is this device's, so its "real numbers" only ever counted the deck. This watches
+ * the website's real ones, read only, on a connection of its own: who is on the court (the
+ * presence channel, watched without joining it, so the deck is never counted and never uses the
+ * player's identity) and the feed of careers ended. */
+export function watchOnline(url: string, key: string, onCount: (n: number) => void, onFeed: (items: FeedItem[]) => void): () => void {
+  const sb = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
+  let live = true;
+  const channel = sb.channel('court');
+  channel.on('presence', { event: 'sync' }, () => live && onCount(Object.keys(channel.presenceState()).length)).subscribe();
+  const pull = async () => {
+    const { data } = await sb.from('feed').select('t, at').order('at', { ascending: false }).limit(30);
+    if (live && data) onFeed((data as { t: string; at: string }[]).map((x): FeedItem => ({ t: x.t, at: Date.parse(x.at) })));
+  };
+  void pull();
+  const timer = window.setInterval(() => void pull(), 30000);
+  return () => {
+    live = false;
+    window.clearInterval(timer);
+    void sb.removeChannel(channel);
+  };
+}
+
 /** The maker's inbox (dev deck): every note sent from the website, for the holder of the inbox key
  * (supabase/migrations/0002_inbox.sql). 'denied' when the key is wrong. */
 export async function readOnlineInbox(url: string, key: string, inboxKey: string): Promise<FeedbackRow[] | 'denied' | 'error'> {

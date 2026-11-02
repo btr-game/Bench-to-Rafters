@@ -951,7 +951,7 @@ export function RecordsTab({ g }: { g: GameState }) {
  * cards in the homepage (minigames, career logs, achievements, community). try to limit access to
  * some (such as going into career log and continuing a career mid-career) to prevent bugs"). Each
  * opens as it does from the start page, less what belongs to the start page alone: the daily
- * challenge (a career of its own), deleting log cards, and starting, continuing or importing
+ * challenge (a career of its own), deleting log cards, and starting or continuing
  * another career, which the start page keeps.
  */
 export function ExtrasTab({ g }: { g: GameState }) {
@@ -1001,7 +1001,7 @@ export function ExtrasTab({ g }: { g: GameState }) {
             <ul className="small">
               <li>The daily challenge: it is a career of its own.</li>
               <li>Deleting career log cards (looking, downloading and locking are fine).</li>
-              <li>Starting, continuing or importing another career.</li>
+              <li>Starting or continuing another career.</li>
             </ul>
           </div>
         </section>

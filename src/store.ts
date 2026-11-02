@@ -568,6 +568,8 @@ export const useStore = create<Store>((set, get) => ({
     return true;
   },
   importCareer: async (code) => {
+    // round 35: the dev deck's alone (owner: "i dont want people abusing the export codes")
+    if (!isDev()) return false;
     const game = await importCode(code);
     if (!game) return false;
     weightOf(game.player);

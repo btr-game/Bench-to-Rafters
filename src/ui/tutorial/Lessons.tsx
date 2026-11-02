@@ -1,7 +1,7 @@
 // The tutorial guide on screen (round 33): one lesson at a time over the page. The rest of the page is
 // shaded and takes no clicks or keys; a lesson to read waits for Got it (Enter or Space), a lesson
 // to do waits for its control. No skipping (owner: "the guide steps are unskippable"); the exit code
-// is the only way out, and it is in the note for anyone who has it.
+// is the only way out. Round 35: its Skip tutorial button sits above the shade, in a corner.
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -11,6 +11,7 @@ import { levelOf, LEVEL_NAME } from '../../engine/levels';
 import { inTutorial, nextLevel } from '../road';
 import { LESSONS, type Lesson, type Where } from './lessons';
 import { STOPS } from './closing';
+import { SkipButton } from '../components/SkipTutorial';
 
 type St = ReturnType<typeof useStore.getState>;
 
@@ -63,7 +64,8 @@ export function Lessons() {
       raf = 0;
       const st = useStore.getState();
       const seen = st.road.lessons ?? [];
-      const modal = [...document.querySelectorAll('[aria-modal="true"]')].pop();
+      // round 35: the Skip tutorial pop-up is not a dialog the lesson waits behind
+      const modal = [...document.querySelectorAll('[aria-modal="true"]:not([data-lesson-free])')].pop();
       for (const lesson of pool(st, where)) {
         if (seen.includes(lesson.id) || (lesson.after && !seen.includes(lesson.after))) continue;
         const el = [...document.querySelectorAll<HTMLElement>(lesson.sel)].find((e) => shown(e) && (!modal || modal.contains(e)));
@@ -136,12 +138,12 @@ export function Lessons() {
   }, [cur, doneLesson]);
 
   // keys: only what the lesson allows. Reading: Enter or Space for Got it. Doing: keys inside the
-  // control. The note's own field (the exit code) always types.
+  // control. Skip tutorial and its pop-up (round 35) always take theirs.
   useEffect(() => {
     if (!cur) return;
     const key = (e: KeyboardEvent) => {
       const t = e.target as Node;
-      if (tip.current?.contains(t) && (e.target as HTMLElement).tagName === 'INPUT') return;
+      if ((e.target as HTMLElement | null)?.closest?.('[data-lesson-free]')) return;
       if (!cur.lesson.act) {
         e.preventDefault();
         e.stopImmediatePropagation();
@@ -184,6 +186,8 @@ export function Lessons() {
       <div className="lesson-shade" style={{ left: hole.x + hole.w, top: hole.y, width: Math.max(0, vw - hole.x - hole.w), height: hole.h }} />
       {!cur.lesson.act && <div className="lesson-shade clear" style={{ left: hole.x, top: hole.y, width: hole.w, height: hole.h }} />}
       <div className="tour-ring lesson-ring" style={{ left: hole.x, top: hole.y, width: hole.w, height: hole.h }} aria-hidden="true" />
+      {/* round 35: the way out, above the shade; in the top-right corner unless the control is there */}
+      <SkipButton float style={hole.y < 64 && hole.x + hole.w > vw - 220 ? { left: 12, right: 'auto' } : undefined} />
       <div className="tour-tip lesson-tip" ref={tip} role="dialog" aria-label="Tutorial" style={{ left, top, width: w }}>
         <div className="kicker">
           {part}
@@ -198,39 +202,9 @@ export function Lessons() {
               Got it <kbd className="tour-key">Enter</kbd>
             </button>
           )}
-          <ExitCode />
         </div>
       </div>
     </div>,
     document.body,
-  );
-}
-
-/** The way out, for a player who has the exit code (it is shown at graduation). */
-function ExitCode() {
-  const inTut = useStore((s) => inTutorial(s.road));
-  const skip = useStore((s) => s.skipTutorial);
-  const [open, setOpen] = useState(false);
-  const [code, setCode] = useState('');
-  const [wrong, setWrong] = useState(false);
-  if (!inTut) return null;
-  return open ? (
-    <form
-      className="row lesson-exit"
-      onSubmit={(e) => {
-        e.preventDefault();
-        setWrong(!skip(code));
-      }}
-    >
-      <input aria-label="Exit code" placeholder="Exit code" value={code} onChange={(e) => (setCode(e.target.value), setWrong(false))} autoComplete="off" autoCapitalize="off" spellCheck={false} autoFocus />
-      <button className="btn small ghost" disabled={!code.trim()}>
-        Skip
-      </button>
-      {wrong && <span className="small" style={{ color: 'var(--bad)' }}>Not the code.</span>}
-    </form>
-  ) : (
-    <button className="link-btn" onClick={() => setOpen(true)}>
-      Have the exit code?
-    </button>
   );
 }
