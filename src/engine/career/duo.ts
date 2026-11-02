@@ -18,6 +18,7 @@ import { chance, clamp, normal, pick, range, type Rng } from '../rng';
 import type { GameState, GenPlayer, Pos, SeasonRecord } from '../types';
 import { logDecision, note, pushMoment, teamById } from './common';
 import { inLevel } from '../levels';
+import { friendBonds } from './friends';
 
 export interface Bond {
   id: number; // GenPlayer id
@@ -29,6 +30,7 @@ export interface Bond {
   formed?: number; // year the duo formed
   nick?: string;
   trio?: boolean; // round 22: the third member of a Big Three
+  friend?: string; // round 35: a classmate on his team (career/friends.ts): the friend's name
 }
 
 const GROUP: Record<Pos, 'G' | 'W' | 'B'> = { PG: 'G', SG: 'G', SF: 'W', PF: 'B', C: 'B' };
@@ -66,17 +68,25 @@ const onTeam = (s: GameState, b: Bond): boolean => {
   return !!t && t.roster.some((x) => x.id === b.id);
 };
 
-/** The duo he has right now: formed, and everyone in it (a Big Three's third man too) still on his team. */
-export function activeDuo(s: GameState): Bond | null {
+/** His own duo (a recruit he clicked with), formed and with everyone still on his team. */
+function ownDuo(s: GameState): Bond | null {
   const f = formedOf(s);
   if (!f.length || f.some((b) => !onTeam(s, b))) return null;
   return f.find((b) => !b.trio) ?? f[0];
 }
 
-/** The third member of his Big Three, when all three are still together. */
+/** The duo he has right now: his own, or (round 35) a classmate on his team. */
+export function activeDuo(s: GameState): Bond | null {
+  return ownDuo(s) ?? friendBonds(s)[0] ?? null;
+}
+
+/** The third member of his Big Three, when all three are still together: his own duo's third
+ * man, or a classmate on his team; or, with a classmate as his duo, a second classmate. */
 export function activeTrio(s: GameState): Bond | null {
-  const d = activeDuo(s);
-  return d ? (formedOf(s).find((b) => b.id !== d.id) ?? null) : null;
+  const own = ownDuo(s);
+  const friends = friendBonds(s);
+  if (own) return formedOf(s).find((b) => b.id !== own.id) ?? (friends[0] ? { ...friends[0], trio: true } : null);
+  return friends[1] ?? null;
 }
 
 /** Someone in his duo or Big Three has gone (or he has): the group ends, all of it, with one page.

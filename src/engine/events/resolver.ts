@@ -19,6 +19,7 @@ import { ROUND33_EVENTS } from './round33';
 import { ROUND34_EVENTS } from './round34';
 import { ROUND35_EVENTS } from './round35';
 import { ROUND35B_EVENTS } from './round35b';
+import { FRIEND_EVENTS } from './friends';
 import { ripple } from './ripples';
 import { fitOf, needs } from './director';
 import { syncWeight } from '../player/weight';
@@ -27,7 +28,7 @@ import { changes, snap, vary } from './outcome';
 import { rollTier, tierFactors, tierLine, TIERS, twists, type Tier } from './twists';
 import { BEGINNER_EVENTS, eventInLevel, levelOf } from '../levels';
 
-const EVENTS: EventDef[] = [...BASE_EVENTS, ...MORE_EVENTS, ...RISK_EVENTS, ...GROWTH_EVENTS, ...SKILL_EVENTS, ...ARC_EVENTS, ...ROUND9_EVENTS, ...ROUND13_EVENTS, ...ROUND15_EVENTS, ...WEIGHT_EVENTS, ...ROUND21_EVENTS, ...ROUND25_EVENTS, ...ROUND32_EVENTS, ...ROUND33_EVENTS, ...ROUND34_EVENTS, ...ROUND35_EVENTS, ...ROUND35B_EVENTS];
+const EVENTS: EventDef[] = [...BASE_EVENTS, ...MORE_EVENTS, ...RISK_EVENTS, ...GROWTH_EVENTS, ...SKILL_EVENTS, ...ARC_EVENTS, ...ROUND9_EVENTS, ...ROUND13_EVENTS, ...ROUND15_EVENTS, ...WEIGHT_EVENTS, ...ROUND21_EVENTS, ...ROUND25_EVENTS, ...ROUND32_EVENTS, ...ROUND33_EVENTS, ...ROUND34_EVENTS, ...ROUND35_EVENTS, ...ROUND35B_EVENTS, ...FRIEND_EVENTS];
 
 function eligible(s: GameState, phase: 'mid' | 'off'): EventDef[] {
   return EVENTS.filter((e) => {
@@ -98,6 +99,9 @@ export function queueMidseasonEvents(s: GameState): void {
     pickOne(s, 'mid');
     return;
   }
+  // round 35: a rival night is never left to chance, once a season when the two teams meet
+  const rival = EVENTS.find((e) => e.id === 'rivalNight');
+  if (rival && eligible(s, 'mid').includes(rival)) push(s, rival);
   if (!chance(s.rng, EV_RATES.midseasonChance)) return;
   pickOne(s, 'mid');
   // fast break: at most one turning point at a time

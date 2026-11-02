@@ -429,6 +429,26 @@ export interface DraftPick {
   from: string;
 }
 
+/** Round 35: a classmate in a draft class, as his career sees him: the friend's name, his player
+ * and the lines of the seasons he has played so far. */
+export interface FriendLine {
+  id: string;
+  name: string; // the friend's name for friends
+  pn: string; // his player
+  pos: string;
+  seasons: { year: number; lv: string; team: string; ovr: number; pts: number }[];
+}
+
+/** Round 35: a rival night, his team against his rival classmate's. */
+export interface RivalMeet {
+  year: number;
+  won: boolean;
+  me: number; // his points
+  him: number; // the rival's points
+  score: string; // "112–104", his team first
+  how: string; // the choice he made
+}
+
 export interface Rivalry {
   level: 'draft' | 'starter' | 'mvp'; // it only ever goes up
   pid: number; // the rival, a generated NBA player
@@ -498,7 +518,17 @@ export interface GameState {
    * can hand a friend the same prospect. Careers from before round 35 have none. */
   start?: { seed: number; input: import('./player/create').CreateInput };
   /** Round 35, multiplayer: the challenge this career takes (its code), or the draft class it plays in. */
-  mp?: { challenge?: string; klass?: string; made?: string };
+  mp?: {
+    challenge?: string;
+    klass?: string;
+    made?: string;
+    /** Round 35: his classmates' season lines as the server had them (ui/multiplayer.ts copies them in before each season). */
+    friends?: FriendLine[];
+    /** The classmate he and his rival picked each other (a member id), once both have. */
+    rival?: string;
+    /** Rival nights: each meeting with the rival classmate's team. */
+    meets?: RivalMeet[];
+  };
   rng: Rng;
   nextId: number;
   year: number;

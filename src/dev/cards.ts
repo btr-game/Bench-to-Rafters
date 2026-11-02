@@ -18,7 +18,7 @@ import { newSlotId, writeSlot } from '../ui/saves';
 import { todayKey } from '../engine/mini/daily';
 import { ATTRS } from '../engine/balance';
 import { attachChild, lockCard, logCards, logCareer } from '../ui/careerLog';
-import { seedLocalMultiplayer, type MpLink } from '../ui/multiplayer';
+import { seasonLine, seedLocalMultiplayer, type ClassSeason, type MpLink } from '../ui/multiplayer';
 import { advance as step, choose as pickChoice, prompt as nextPrompt } from '../engine/flow';
 import { offerEvent } from '../engine/events/resolver';
 import { announceFarewell, canFarewell, isFarewellSeason } from '../engine/career/farewell';
@@ -171,6 +171,27 @@ function friendsCareer(mp: GameState['mp'], tab: Tab = 'home', event?: string): 
   c.mp = mp;
   if (event && !offerEvent(c, event)) return false;
   return show(c, tab);
+}
+
+/** Round 35: a draft class around the deck's NBA star: his rival classmate on another team (they
+ * picked each other), and, with `duo`, a classmate on his own team. */
+function classCareer(duo: boolean, event?: string): boolean {
+  const g = nbaStar();
+  if (!g?.nba) return false;
+  const c = structuredClone(g);
+  c.mode = 'standard';
+  const mine = c.nba!.teams.find((t) => t.id === c.teamId)!;
+  const other = c.nba!.teams.find((t) => t.id !== c.teamId && t.conf === mine.conf) ?? c.nba!.teams.find((t) => t.id !== c.teamId)!;
+  const line = (team: string, pn: string, pos: string, ovr: number, pts: number): ClassSeason => ({ year: c.year, age: c.player.age, lv: 'NBA', team, color: '#2b4c9b', ovr, gp: 70, pts, reb: 5, ast: 4, w: 44, l: 38, result: 'Lost in first round', aw: [], pn, pos });
+  const members = [
+    { id: 'me00000000', name: 'Deck', seasons: c.history.map((h) => seasonLine(h, c.player.name, c.player.pos)), rival: 'house00002', me: true },
+    { id: 'house00002', name: 'Dee', seasons: [line(other.name, 'Andre Cole', 'SG', 82, 24.1)], rival: 'me00000000' },
+    ...(duo ? [{ id: 'house00003', name: 'Big Tal', seasons: [line(mine.name, 'Luka Venn', 'C', 80, 17.4)], rival: null }] : []),
+  ];
+  seedLocalMultiplayer(records(), { code: 'FRIEND', name: 'The deck’s class', seed: c.seed, members });
+  c.mp = { klass: 'FRIEND', friends: members.filter((m) => !m.me).map((m) => ({ id: m.id, name: m.name, pn: m.seasons[0].pn, pos: m.seasons[0].pos ?? 'SF', seasons: m.seasons.map((x) => ({ year: x.year, lv: x.lv, team: x.team, ovr: x.ovr, pts: x.pts })) })), rival: 'house00002' };
+  if (event && !offerEvent(c, event)) return false;
+  return show(c, 'home');
 }
 /** The multiplayer page on the deck's stand-in, seeded with the deck's careers. */
 function mpPage(open: MpLink | null): boolean {
@@ -635,6 +656,8 @@ export const CARDS: DevCard[] = [
   { id: 'mp-board', title: 'A career with friends', group: 'Career hub', icon: 'draftclass', blurb: 'A draft-class career’s Home: the class’s board at the top of the side column, this career as it stands now; it never folds.', open: () => friendsCareer({ klass: 'CLASS2' }) },
   { id: 'mp-board-tab', title: 'The board beside every tab', group: 'Career hub', icon: 'versus', blurb: 'A challenge career on the Season tab: the challenge’s board beside the tab (above it on a phone), with this career so far.', open: () => friendsCareer({ challenge: 'HSE2AB' }, 'season') },
   { id: 'd-wager', title: 'A friendly wager', group: 'Decisions', icon: 'versus', blurb: 'A turning point only careers with friends have: nine of ten from the line, the odds from his shooting and his touch.', open: () => friendsCareer({ klass: 'CLASS2' }, 'home', 'friendWager') },
+  { id: 'mp-rival-night', title: 'Rival night', group: 'Decisions', icon: 'rival', blurb: 'His rival from the draft class (they sent each other the rivalry) plays for another team: once a season, how he plays the meeting, both players’ nights, and their record.', open: () => classCareer(false, 'rivalNight') },
+  { id: 'mp-friend-duo', title: 'A duo of friends', group: 'Career hub', icon: 'draftclass', blurb: 'A classmate on his NBA team this season: a duo of friends (two make a Big Three), on the board and in the duo card, with the duo bonus to team strength. The class chat under the board.', open: () => classCareer(true) },
   { id: 'mp', title: 'Play with friends', group: 'Records & community', icon: 'versus', blurb: 'Challenges and draft classes: a code, a link or quick match, your name for friends. Regular guy only.', open: () => mpPage(null) },
   { id: 'mp-challenge', title: 'A challenge', group: 'Records & community', icon: 'versus', blurb: 'One prospect, played again from the same start: every answer ranked by career index beside the one that set it.', open: () => mpPage({ kind: 'challenge', code: 'DECK22' }) },
   { id: 'mp-classes', title: 'Draft classes', group: 'Records & community', icon: 'draftclass', blurb: 'Start a class, open one by its code, yours, and the open ones with a seat left.', open: () => mpPage(null), press: '[data-mp-tab="class"]' },

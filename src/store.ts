@@ -26,7 +26,7 @@ import { canPlayChild, childGame, childLegacy, childSeed } from './engine/nextGe
 import { attachChild, logCareer, type LogResult } from './ui/careerLog';
 import { checkAch, countCareer, earnedIn, recordMp, recordOpened, recordUndo, recordVisit } from './ui/achievements';
 import { community } from './ui/community';
-import { cleanProspect, handle, pump, readLink, seasonLine, send, type Challenge, type MpLink } from './ui/multiplayer';
+import { cleanProspect, handle, multiplayer, pump, readLink, seasonLine, send, type Challenge, type MpLink } from './ui/multiplayer';
 import { deleteSlot, dropRun, importCode, newSlotId, readRun, readSlot, writeRun, writeSlot } from './ui/saves';
 import { bestGrade, exitCode, levelTabs, loadRoad, offRecord, roadGrade, saveRoad, type Road } from './ui/road';
 import { STOPS, stopsLeft } from './ui/tutorial/closing';
@@ -447,6 +447,8 @@ export const useStore = create<Store>((set, get) => ({
     if (!p || c.mine) return false;
     if (get().game) flushSave();
     get().start(p.input, p.seed, { challenge: c.code });
+    // round 35: he has taken it, so its chat is his too
+    void multiplayer().then((mp) => mp?.take(c.code, handle() || 'A friend'));
     return true;
   },
   draft: null,
@@ -990,7 +992,7 @@ useStore.subscribe((now, before) => {
   const g = now.game;
   const b = before.game;
   if (!g?.mp?.klass || !b || g === b || g.seed !== b.seed || g.player.name !== b.player.name || g.history.length <= b.history.length) return;
-  for (const h of g.history.slice(b.history.length)) send({ k: 'season', code: g.mp.klass, s: seasonLine(h, g.player.name) });
+  for (const h of g.history.slice(b.history.length)) send({ k: 'season', code: g.mp.klass, s: seasonLine(h, g.player.name, g.player.pos) });
 });
 // anything a closed page left unsent goes now
 setTimeout(() => void pump(), 4000);

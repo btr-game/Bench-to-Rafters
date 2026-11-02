@@ -78,6 +78,7 @@ import { changeWeight, halfPlanWeight, weightWear } from '../player/weight';
 import { recordInjury, trainMuscles } from '../player/body';
 import { cityHalf } from './cityCulture';
 import { duoEffect, growBonds } from './duo';
+import { meetFriends } from './friends';
 import { NAMES } from '../../content/strings';
 import { awardNickname, payBrand } from './nickname';
 import { rollFine } from './fines';
@@ -172,6 +173,7 @@ export function beginSeason(s: GameState): void {
   s.season = season;
   s.step = 'preseason';
   startStories(s, league);
+  meetFriends(s);
   pushPlanDecision(s, 1);
 }
 

@@ -4,6 +4,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { careerRecord, type CareerRecord } from '../../engine/career/record';
+import { friendsOnTeam, rivalRecord } from '../../engine/career/friends';
 import type { GameState } from '../../engine/types';
 import { ARCHETYPES } from '../../engine/player/archetypes';
 import { NAMES } from '../../content/strings';
@@ -29,11 +30,18 @@ import {
   linkFor,
   mpScore,
   multiplayer,
+  CHAT_MAX,
+  friendsOf,
+  mutualRival,
+  rivalRequests,
   seasonLine,
   setHandle,
   standings,
   type Challenge,
+  type ChatLine,
+  type ClassMember,
   type ClassSummary,
+  type Room,
   type DraftClass,
   type MpLink,
   type Multiplayer,
@@ -172,6 +180,69 @@ const prospectText = (c: Challenge): string => {
   return `${i.name}, #${i.number} · ${NAMES.pos[i.pos]} · ${arch} · focus ${i.focus.map((k) => NAMES.attr[k]).join(' and ')}`;
 };
 
+/** Round 35 (owner: "try to make a chat below the leaderboard so that the users can communicate"):
+ * a challenge's or a class's chat, for its people only (the server checks), the latest 50 lines,
+ * new ones every ten seconds. Lines are plain text. */
+export function MpChat({ mp, room, code, compact }: { mp: Multiplayer; room: Room; code: string; compact?: boolean }) {
+  const [lines, setLines] = useState<ChatLine[] | null | 'error' | undefined>(undefined);
+  const [text, setText] = useState('');
+  const [err, setErr] = useState('');
+  const [sending, setSending] = useState(false);
+  const box = useRef<HTMLOListElement>(null);
+  const pull = useMemo(() => () => mp.chat(room, code).then((x) => setLines((old) => (x === 'error' && old && old !== 'error' ? old : x))), [mp, room, code]);
+  useEffect(() => {
+    void pull();
+    const t = window.setInterval(() => void pull(), 10000);
+    return () => window.clearInterval(t);
+  }, [pull]);
+  useEffect(() => {
+    const el = box.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [lines]);
+  const say = async () => {
+    const body = text.trim();
+    if (!body || sending) return;
+    setSending(true);
+    const r = await mp.say(room, code, handle() || 'A friend', body);
+    setSending(false);
+    if (r === 'ok') {
+      setText('');
+      setErr('');
+      sfx('sent');
+      void pull();
+    } else setErr(r === 'busy' ? 'One line every few seconds.' : r === 'missing' ? 'Only the people in it can talk here.' : MP_FAIL[r]);
+  };
+  if (lines === null)
+    return <p className="small muted keep">{room === 'class' ? 'The class chat is for its members.' : 'The chat is for those who set or took this challenge.'}</p>;
+  return (
+    <div className={`mp-chat stack${compact ? ' compact' : ''}`}>
+      <div className="kicker">{room === 'class' ? 'Class chat' : 'Challenge chat'}</div>
+      <ol className="mp-chat-lines" ref={box} aria-live="polite" aria-label="Chat">
+        {lines === undefined ? (
+          <li className="muted">Loading…</li>
+        ) : lines === 'error' ? (
+          <li className="muted">{MP_FAIL.error}</li>
+        ) : lines.length === 0 ? (
+          <li className="muted">No one has said anything yet.</li>
+        ) : (
+          lines.map((l) => (
+            <li key={l.id} className={l.mine ? 'mine' : undefined}>
+              <b>{l.mine ? 'You' : l.name}</b> <span>{l.body}</span> <small className="muted">{ago(l.at)}</small>
+            </li>
+          ))
+        )}
+      </ol>
+      <div className="row mp-chat-say" style={{ gap: 6 }}>
+        <input aria-label="Say something" maxLength={CHAT_MAX} value={text} placeholder={handle() ? `Say something as ${handle()}` : 'Say something'} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && void say()} />
+        <button className="btn small" disabled={!text.trim() || sending} onClick={() => void say()}>
+          Send
+        </button>
+      </div>
+      {err && <small style={{ color: 'var(--bad)' }}>{err}</small>}
+    </div>
+  );
+}
+
 // ---------- challenges ----------
 
 function ChallengeView({ mp, code, back }: { mp: Multiplayer; code: string; back: () => void }) {
@@ -249,6 +320,9 @@ function ChallengeView({ mp, code, back }: { mp: Multiplayer; code: string; back
           </button>
         </div>
         {playable && career && <p className="small muted keep">Finish or leave the career you are playing first (New career in Settings), then come back.</p>}
+      </section>
+      <section className="card stack">
+        <MpChat mp={mp} room="challenge" code={c.code} />
       </section>
       <section className="card stack">
         <div className="sec-title">Send it on</div>
@@ -335,13 +409,24 @@ function ClassView({ mp, code, back }: { mp: Multiplayer; code: string; back: ()
   const setDraft = useStore((s) => s.setDraft);
   const career = useStore((s) => !!s.game && s.game.step !== 'retired');
   const [k, setK] = useState<DraftClass | null | 'error' | undefined>(undefined);
+  const [tick, setTick] = useState(0);
+  const [rivalErr, setRivalErr] = useState('');
   useEffect(() => {
     let live = true;
     void mp.draftClass(code).then((x) => live && setK(x));
     return () => {
       live = false;
     };
-  }, [mp, code]);
+  }, [mp, code, tick]);
+  // round 35 (owner: "each user can send a rivalry to one other, and if they accept, they become draft rivals")
+  const pickRival = async (to: string | null) => {
+    const r = await mp.setRival(code, to);
+    if (r === 'ok') {
+      sfx(to ? 'versus' : 'click');
+      setRivalErr('');
+      setTick((n) => n + 1);
+    } else setRivalErr(MP_FAIL[r]);
+  };
   const table = useMemo(() => (k && k !== 'error' ? standings(k) : []), [k]);
   // first in a class where two or more have played: once a class
   useEffect(() => {
@@ -386,7 +471,8 @@ function ClassView({ mp, code, back }: { mp: Multiplayer; code: string; back: ()
           <Icon name="podium" size={24} />
           Standings
         </div>
-        <p className="small muted desc">By the best rating so far, then the honours. A finished career counts its card.</p>
+        <p className="small muted desc">By the best rating so far, then the honours. A finished career counts its card. Send one classmate a rivalry; when he sends one back, you are rivals, and your teams’ meetings become rival nights.</p>
+        {rivalErr && <p className="small" style={{ color: 'var(--bad)' }}>{rivalErr}</p>}
         <div className="tbl-wrap">
           <table>
             <thead>
@@ -400,11 +486,14 @@ function ClassView({ mp, code, back }: { mp: Multiplayer; code: string; back: ()
                 <th>All-Star</th>
                 <th>MVP</th>
                 <th>Titles</th>
+                {me && <th className="l">Rival</th>}
               </tr>
             </thead>
             <tbody>
               {table.map((t, i) => {
                 const last = t.m.seasons[t.m.seasons.length - 1];
+                const picked = me?.rival === t.m.id;
+                const picksMe = !!me && t.m.rival === me.id;
                 return (
                   <tr key={t.m.id} className={t.m.mine ? 'me' : undefined}>
                     <td className="l">{i + 1}</td>
@@ -419,6 +508,25 @@ function ClassView({ mp, code, back }: { mp: Multiplayer; code: string; back: ()
                     <td>{t.allStars}</td>
                     <td>{t.mvps}</td>
                     <td>{t.titles}</td>
+                    {me && (
+                      <td className="l">
+                        {t.m.mine ? null : picked && picksMe ? (
+                          <span className="tag accent">Rivals</span>
+                        ) : picksMe ? (
+                          <button className="btn small" onClick={() => void pickRival(t.m.id)}>
+                            Accept the rivalry
+                          </button>
+                        ) : picked ? (
+                          <button className="btn ghost small" onClick={() => void pickRival(null)}>
+                            Sent · take back
+                          </button>
+                        ) : (
+                          <button className="btn ghost small" onClick={() => void pickRival(t.m.id)}>
+                            Send a rivalry
+                          </button>
+                        )}
+                      </td>
+                    )}
                   </tr>
                 );
               })}
@@ -470,6 +578,11 @@ function ClassView({ mp, code, back }: { mp: Multiplayer; code: string; back: ()
               </tbody>
             </table>
           </div>
+        </section>
+      )}
+      {me && (
+        <section className="card stack">
+          <MpChat mp={mp} room="class" code={k.code} />
         </section>
       )}
       <section className="card stack">
@@ -612,6 +725,46 @@ export function MultiplayerPage() {
 /** Round 35 (owner: "for the multiplayer, a leaderboard should always appear on the side"): the
  * challenge's or the class's board, beside every tab of a career played with friends, with this
  * career as it stands now (the server's copy of it lags a season behind). Never folds. */
+/** On the board: his rival in the class (and their rival nights), a request waiting for him, and
+ * friends on his team this season (a duo, or a Big Three). */
+function FriendsLine({ g, k }: { g: GameState; k: DraftClass }) {
+  const openMp = useStore((s) => s.openMp);
+  const rival = mutualRival(k);
+  const asks = rivalRequests(k);
+  const team = friendsOnTeam(g);
+  const rec = rivalRecord(g);
+  const pn = (m: ClassMember) => m.seasons[m.seasons.length - 1]?.pn ?? m.rec?.name ?? m.name;
+  if (!rival && !asks.length && !team.length) return null;
+  return (
+    <div className="mp-friends stack">
+      {rival && (
+        <p className="small keep with-icon">
+          <Icon name="rival" size={18} />
+          <span>
+            Rival: <b>{rival.name}</b> ({pn(rival)}) · {rec.w}–{rec.l} in rival nights
+          </span>
+        </p>
+      )}
+      {asks.map((m) => (
+        <p key={m.id} className="small keep">
+          <b>{m.name}</b> sent you a rivalry.{' '}
+          <button className="btn ghost small" onClick={() => openMp({ kind: 'class', code: k.code })}>
+            Answer it
+          </button>
+        </p>
+      ))}
+      {team.length > 0 && (
+        <p className="small keep with-icon">
+          <Icon name="draftclass" size={18} />
+          <span>
+            {team.length > 1 ? 'A Big Three' : 'A duo'} of friends: {team.map((x) => `${x.f.pn} (${x.f.name})`).join(' and ')}
+          </span>
+        </p>
+      )}
+    </div>
+  );
+}
+
 export function MpBoard({ g }: { g: GameState }) {
   const openMp = useStore((s) => s.openMp);
   const mp = useMp();
@@ -635,6 +788,17 @@ export function MpBoard({ g }: { g: GameState }) {
       window.clearInterval(t);
     };
   }, [mp, code, kind, seasons]);
+  // round 35: the class's lines, and his rival, copied into the career (engine/career/friends.ts)
+  useEffect(() => {
+    if (!k || !g.mp?.klass) return;
+    const friends = friendsOf(k);
+    const rival = mutualRival(k)?.id;
+    if (JSON.stringify(friends) !== JSON.stringify(g.mp.friends ?? []) || rival !== g.mp.rival) {
+      useStore.getState().mutate((x) => {
+        if (x.mp) x.mp = { ...x.mp, friends, rival };
+      });
+    }
+  }, [k, g.mp]);
   // this career so far: its card as if it ended today
   const now = useMemo(() => careerRecord(g), [seasons, g.step]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!code) return null;
@@ -687,10 +851,12 @@ export function MpBoard({ g }: { g: GameState }) {
           {!k && <li className="muted">Loading the class…</li>}
         </ol>
       )}
+      {kind === 'class' && k && <FriendsLine g={g} k={k} />}
       <p className="small muted keep">{kind === 'challenge' ? 'By career index. ' : 'By best rating so far, then honours. '}Careers with friends count here, not on the community’s leaderboards.</p>
       <button className="btn ghost small" onClick={() => openMp({ kind, code })}>
         The whole {kind === 'challenge' ? 'challenge' : 'class'}
       </button>
+      {mp && <MpChat mp={mp} room={kind} code={code} compact />}
     </section>
   );
 }

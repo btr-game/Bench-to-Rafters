@@ -2718,3 +2718,13 @@ td.mp-best .mp-cell small { color: var(--ink); }
 }
 @media (max-width: 1099px) { .mp-layout > .mp-aside { order: -1; } }
 @media (max-width: 899px) { .home-grid .mp-board { order: 4; } }
+/* round 35: friends in a career: the chat, the rival and duo lines on the board */
+.mp-chat { gap: 6px; }
+.mp-chat-lines { list-style: none; margin: 0; padding: 6px 8px; display: grid; gap: 4px; max-height: 260px; overflow-y: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2); font-size: calc(14px * var(--ts)); }
+.mp-chat.compact .mp-chat-lines { max-height: 180px; }
+.mp-chat-lines li { overflow-wrap: anywhere; }
+.mp-chat-lines li.mine b { text-decoration: underline; text-underline-offset: 2px; }
+.mp-chat-lines small { font-size: calc(12px * var(--ts)); white-space: nowrap; }
+.mp-chat-say input { flex: 1 1 140px; min-width: 0; }
+.mp-friends { gap: 4px; border-top: 1px solid var(--line); padding-top: 8px; }
+.mp-friends p { margin: 0; }

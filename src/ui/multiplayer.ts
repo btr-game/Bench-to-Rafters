@@ -14,7 +14,7 @@
 
 import type { CareerRecord } from '../engine/career/record';
 import type { CreateInput } from '../engine/player/create';
-import type { AttrKey, Attrs, GameState, Pos, SeasonRecord } from '../engine/types';
+import type { AttrKey, Attrs, FriendLine, GameState, Pos, SeasonRecord } from '../engine/types';
 import { ATTRS, POSITIONS } from '../engine/balance';
 import { ARCHETYPES } from '../engine/player/archetypes';
 import { ORIGINS } from '../content/origins';
@@ -52,7 +52,7 @@ export interface OpenChallenge {
   answers: number;
 }
 /** One season of a class member, a short line (the database takes 1.5 KB at most). */
-interface ClassSeason {
+export interface ClassSeason {
   year: number;
   age: number;
   lv: string; // LevelKey
@@ -68,15 +68,27 @@ interface ClassSeason {
   result: string;
   aw: string[];
   pn: string; // his name, so the class shows the player as well as the friend
+  pos?: string; // round 35: his position (a friend's duo or rival needs it)
 }
-interface ClassMember {
+export interface ClassMember {
   id: string;
   name: string;
   seasons: ClassSeason[];
   rec: CareerRecord | null;
   at: string;
   mine: boolean;
+  rival?: string | null; // round 35: the member he picked as his rival (a short id)
 }
+/** A line in a challenge's or a class's chat. */
+export interface ChatLine {
+  id: number;
+  name: string;
+  body: string;
+  at: string;
+  mine: boolean;
+}
+export type Room = 'challenge' | 'class';
+export const CHAT_MAX = 200;
 export interface DraftClass {
   code: string;
   name: string;
@@ -111,6 +123,12 @@ export interface Multiplayer {
   myClasses(): Promise<ClassSummary[] | 'error'>;
   postSeason(code: string, s: ClassSeason): Promise<'ok' | MpFail>;
   postCareer(code: string, rec: CareerRecord): Promise<'ok' | MpFail>;
+  /** Round 35: pick a classmate as a rival (null takes it back); two who pick each other are rivals. */
+  setRival(code: string, to: string | null): Promise<'ok' | MpFail>;
+  /** Round 35: he starts a friend's challenge (so he may talk in its chat). */
+  take(code: string, name: string): Promise<'ok' | MpFail>;
+  chat(room: Room, code: string): Promise<ChatLine[] | null | 'error'>;
+  say(room: Room, code: string, name: string, body: string): Promise<'ok' | MpFail>;
 }
 
 export const CLASS_MAX = 8;
@@ -208,7 +226,7 @@ export const linkFor = (l: MpLink): string => `${SITE}#${l.kind}-${l.code}`;
 // ---------- what a career sends ----------
 
 /** A season as the class sees it. */
-export function seasonLine(h: SeasonRecord, playerName: string): ClassSeason {
+export function seasonLine(h: SeasonRecord, playerName: string, pos?: string): ClassSeason {
   const gp = h.line.gp || 0;
   const per = (x: number) => (gp ? Math.round((x / gp) * 10) / 10 : 0);
   return {
@@ -227,8 +245,32 @@ export function seasonLine(h: SeasonRecord, playerName: string): ClassSeason {
     result: h.result.slice(0, 60),
     aw: h.awards.slice(0, 6).map((a) => a.slice(0, 40)),
     pn: playerName.slice(0, 40),
+    ...(pos ? { pos } : {}),
   };
 }
+
+// ---------- friends in a career (round 35) ----------
+
+/** The classmates as a career sees them (engine/career/friends.ts): every member but him. */
+export function friendsOf(k: DraftClass): FriendLine[] {
+  return k.members
+    .filter((m) => !m.mine)
+    .map((m) => {
+      const last = m.seasons[m.seasons.length - 1];
+      return { id: m.id, name: m.name, pn: m.rec?.name ?? last?.pn ?? m.name, pos: m.rec?.pos ?? last?.pos ?? 'SF', seasons: m.seasons.map((x) => ({ year: x.year, lv: x.lv, team: x.team, ovr: x.ovr, pts: x.pts })) };
+    });
+}
+/** His rival in the class: the member he picked who picked him back. */
+export function mutualRival(k: DraftClass): ClassMember | null {
+  const me = k.members.find((m) => m.mine);
+  if (!me?.rival) return null;
+  return k.members.find((m) => !m.mine && m.id === me.rival && m.rival === me.id) ?? null;
+}
+/** Members who picked him and wait for his answer. */
+export const rivalRequests = (k: DraftClass): ClassMember[] => {
+  const me = k.members.find((m) => m.mine);
+  return me ? k.members.filter((m) => !m.mine && m.rival === me.id && me.rival !== m.id) : [];
+};
 
 /** A career a challenge can be made from: Regular guy, its start kept, not a level or a child's. */
 export const canChallenge = (g: GameState): boolean => g.mode === 'standard' && !!g.start && !g.flags.level && !g.flags.daily && !g.flags.gen2;
@@ -357,6 +399,8 @@ export async function pump(): Promise<void> {
 
 interface LocalData {
   v: 1;
+  chat?: Record<string, (Omit<ChatLine, 'mine'> & { who: string })[]>;
+  takers?: Record<string, string[]>;
   challenges: (Omit<Challenge, 'mine' | 'answers'> & { who: string; answers: (Omit<Answer, 'mine'> & { who: string })[] })[];
   classes: (Omit<DraftClass, 'mine' | 'members'> & { who: string; members: (Omit<ClassMember, 'mine'> & { who: string })[] })[];
 }
@@ -417,11 +461,19 @@ function seed(recs: CareerRecord[]): LocalData {
     seed: 4242,
     at: ago(5),
     members: [
-      { id: 'house00002', who: 'house-2', name: HOUSE[1], seasons: houseSeasons(0, 12), rec: null, at: ago(5) },
+      { id: 'house00002', who: 'house-2', name: HOUSE[1], seasons: houseSeasons(0, 12), rec: null, at: ago(5), rival: 'me00000000' },
       { id: 'house00003', who: 'house-3', name: HOUSE[2], seasons: houseSeasons(1, 9), rec: null, at: ago(4) },
       { id: 'house00004', who: 'house-4', name: HOUSE[3], seasons: houseSeasons(2, 7), rec: null, at: ago(3) },
     ],
   });
+  d.chat = {
+    'class:CLASS2': [
+      { id: 1, who: 'house-2', name: HOUSE[1], body: 'Rookie of the Year is mine, just so everyone knows.', at: ago(2) },
+      { id: 2, who: 'house-3', name: HOUSE[2], body: 'Big words from a guy shooting 41%.', at: ago(1.9) },
+      { id: 3, who: 'house-4', name: HOUSE[3], body: 'Knicks drafted me. See you all in the Garden.', at: ago(1) },
+    ],
+    'challenge:DECK22': [{ id: 4, who: 'house-1', name: HOUSE[0], body: 'Beat your index on the first try. Your move.', at: ago(1) }],
+  };
   d.classes.push({ code: 'OPEN22', who: 'house-5', name: 'Late bloomers', seed: 777, at: ago(1), members: [{ id: 'house00005', who: 'house-5', name: HOUSE[4], seasons: houseSeasons(3, 3), rec: null, at: ago(1) }] });
   return d;
 }
@@ -443,9 +495,12 @@ function lsave(d: LocalData): void {
     // storage full or blocked: this visit only
   }
 }
-/** Puts the dev deck's stand-in back to its house players, with these careers for their cards. */
-export function seedLocalMultiplayer(recs: CareerRecord[]): void {
-  lsave(seed(recs));
+/** Puts the dev deck's stand-in back to its house players, with these careers for their cards,
+ * and (round 35) a class of its own around one of the deck's careers (`me` marks his seat). */
+export function seedLocalMultiplayer(recs: CareerRecord[], also?: { code: string; name: string; seed: number; members: { id: string; name: string; seasons: ClassSeason[]; rival?: string | null; me?: boolean }[] }): void {
+  const d = seed(recs);
+  if (also) d.classes.unshift({ code: also.code, name: also.name, seed: also.seed, who: ME, at: ago(3), members: also.members.map(({ me, ...m }, i) => ({ ...m, who: me ? ME : `house-x${i}`, rec: null, at: ago(3 - i * 0.1) })) });
+  lsave(d);
 }
 
 function localMultiplayer(): Multiplayer {
@@ -530,6 +585,39 @@ function localMultiplayer(): Multiplayer {
       const m = d.classes.find((x) => x.code === code)?.members.find((x) => x.who === ME);
       if (!m) return 'missing';
       m.rec = rec;
+      lsave(d);
+      return 'ok';
+    },
+    async setRival(code, to) {
+      const d = lload();
+      const k = d.classes.find((x) => x.code === code);
+      const m = k?.members.find((x) => x.who === ME);
+      if (!k || !m) return 'missing';
+      if (to && (to === m.id || !k.members.some((x) => x.id === to))) return 'denied';
+      m.rival = to;
+      lsave(d);
+      return 'ok';
+    },
+    async take(code) {
+      const d = lload();
+      if (!d.challenges.some((c) => c.code === code)) return 'missing';
+      d.takers = { ...d.takers, [code]: [...new Set([...(d.takers?.[code] ?? []), ME])] };
+      lsave(d);
+      return 'ok';
+    },
+    async chat(room, code) {
+      const d = lload();
+      const inRoom = room === 'class' ? !!d.classes.find((k) => k.code === code)?.members.some((m) => m.who === ME) : !!d.challenges.find((c) => c.code === code && (c.who === ME || c.answers.some((a) => a.who === ME))) || !!d.takers?.[code]?.includes(ME);
+      if (!inRoom) return null;
+      return (d.chat?.[`${room}:${code}`] ?? []).slice(-50).map((x) => ({ id: x.id, name: x.name, body: x.body, at: x.at, mine: x.who === ME }));
+    },
+    async say(room, code, name, body) {
+      const d = lload();
+      const b = body.replace(/[\u0000-\u001f]+/g, ' ').trim();
+      if (!b || b.length > CHAT_MAX) return 'denied';
+      const key = `${room}:${code}`;
+      const lines = d.chat?.[key] ?? [];
+      d.chat = { ...d.chat, [key]: [...lines, { id: (lines[lines.length - 1]?.id ?? 0) + 1, who: ME, name, body: b, at: new Date().toISOString() }].slice(-200) };
       lsave(d);
       return 'ok';
     },

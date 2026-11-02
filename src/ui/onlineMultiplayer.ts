@@ -5,7 +5,7 @@
 import { createClient } from '@supabase/supabase-js';
 import type { CareerRecord } from '../engine/career/record';
 import { secretOf } from './onlineCommunity';
-import type { Challenge, ClassSummary, DraftClass, Multiplayer, MpFail, OpenChallenge, Seat } from './multiplayer';
+import type { ChatLine, Challenge, ClassSummary, DraftClass, Multiplayer, MpFail, OpenChallenge, Seat } from './multiplayer';
 
 const FAILS: MpFail[] = ['missing', 'full', 'denied', 'busy'];
 const fail = (x: unknown): MpFail => (FAILS.includes(x as MpFail) ? (x as MpFail) : 'error');
@@ -48,5 +48,9 @@ export function onlineMultiplayer(url: string, key: string): Multiplayer {
     myClasses: () => call<ClassSummary[]>('mp_classes_mine', {}),
     postSeason: (code, s) => said('mp_class_season', { p_code: code, p_season: s }),
     postCareer: (code, rec) => said('mp_class_career', { p_code: code, p_rec: rec }),
+    setRival: (code, to) => said('mp_class_rival', { p_code: code, p_to: to }),
+    take: (code, name) => said('mp_challenge_take', { p_code: code, p_name: name }),
+    chat: (room, code) => call<ChatLine[] | null>('mp_chat_get', { p_kind: room, p_code: code }),
+    say: (room, code, name, body) => said('mp_chat_post', { p_kind: room, p_code: code, p_name: name, p_body: body }),
   };
 }
