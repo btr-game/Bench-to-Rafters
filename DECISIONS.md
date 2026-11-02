@@ -2942,3 +2942,16 @@ multiple times."
   the whole Settings menu stay. One rule (`leanLevel` in src/ui/road.ts) for both screens; the
   lessons follow: the milestones and fan-talk lessons are gone, the Player tab teaches the ratings
   and the status, and the scouts' lesson moves to Home. Intermediate and advanced are unchanged.
+- **Sim mode opens with the Grand Tour** (owner: "i think sim mode should be unlocked once the user
+  completes one full round (until retirement) of each difficulty"): Sim switches on only once this
+  device has a career finished at Regular guy, Reality hits hard and Shoot for the stars, the same
+  rule as the Grand Tour achievement (`grandTour`, `DIFFICULTIES` in src/engine/achievements.ts;
+  `simOpen`, `difficultiesLeft` in src/ui/achievements.ts). A Comet (a son's career is one) no longer
+  counts for its difficulty, since Sim plays it. Until then the Sim chip is grey with the
+  difficulties still to go; a career saved with Sim on can still switch it off. Comet keeps Sim on
+  by itself; the advanced practice level and the closing tour keep their own Sim, since they teach
+  it; the dev deck has it open (a card shows it shut). The rule lives on the device, not in the
+  engine, so careers and the harness play exactly as before.
+- **What's new for round 35**: play with friends, the class's league, reunion night, fair play, the
+  Sim unlock, free throws and aging shooting, the 50-40-90 Club, the shorter tutorial, the
+  achievement categories (776) and the shop prices.

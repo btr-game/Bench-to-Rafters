@@ -2,6 +2,9 @@ import type { GameState } from '../../engine/types';
 import { useStore } from '../../store';
 import { Icon } from '../art/Icon';
 import { allows } from '../../engine/levels';
+import { useState } from 'react';
+import { MODES } from '../../engine/balance';
+import { difficultiesLeft, simOpen } from '../achievements';
 
 // Every way to play, one tap away (round 25, the owner: easier access to all the modes, above
 // Around the league instead of in the top bar).
@@ -50,23 +53,28 @@ const NOTE: [string, string][] = [
 
 export function ModesCard({ g }: { g: GameState }) {
   const st = useStore();
+  // round 35: Sim opens once a career has been finished at every difficulty (read once a visit)
+  const [shut] = useState(() => !simOpen());
+  const [left] = useState(() => difficultiesLeft());
   // round 33: a level shows only its own switches (Fast break from intermediate, Sim in advanced);
   // beginner has none, so no card
   if (g.flags.level) return <LevelModes g={g} />;
   // round 30: a Comet keeps Fast break and Sim on for the whole career
   const locked = g.mode === 'lab' || g.step === 'retired' || !!g.flags.daily || !!g.flags.oath || !!g.flags.comet || !!g.flags.friends;
   const oath = !!g.flags.oath;
+  const simShut = !g.flags.sim && (st.simShut || shut);
   const on: Record<string, boolean> = { sim: !!g.flags.sim, fast: !!g.flags.fast, simple: st.simple, master: st.master, guide: st.guide && !st.master };
   const notes = NOTE.filter(([k]) => on[k] && !(k === 'fast' && on.sim)).map(([, t]) => t);
   // round 30: a Comet says why the two are locked on
   if (g.flags.comet) notes.unshift('Comet: Fast break and Sim stay on for the whole career, and only the biggest nights get a page.');
   // round 35: and a career with friends says why they are locked off
   if (g.flags.friends) notes.unshift('With friends: Fast break and Sim stay off, so everyone in the challenge or class plays every season the same way.');
+  if (simShut && !locked) notes.unshift(`Sim opens once you have played a career to retirement on every difficulty. Still to go: ${left.map((m) => MODES[m].name).join(', ')}.`);
   return (
     <section className="card stack modes-card" data-tour="modes">
       <div className="kicker">How you play</div>
       <div className="mode-chips">
-        <Chip icon="sim" label="Sim" on={on.sim} onClick={st.toggleSim} tour="chip-sim" disabled={locked} />
+        <Chip icon="sim" label="Sim" on={on.sim} onClick={st.toggleSim} tour="chip-sim" disabled={locked || simShut} />
         <Chip icon="fast" label="Fast break" on={on.fast} onClick={st.toggleFast} tour="chip-fast" disabled={locked} />
         <Chip icon="simple" label="Simple text" on={on.simple} onClick={st.toggleSimple} tour="chip-simple" />
         <Chip icon="guide" label="Guide" on={on.guide} onClick={st.toggleGuide} tour="chip-guide" disabled={st.master} />

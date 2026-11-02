@@ -60,6 +60,13 @@ export interface CareerTotals {
 
 /** Round 29: how many music loops the game has (ui/tracks.ts; a test keeps the two in step). */
 export const MUSIC_LOOPS = 19; // round 35: Play with friends has its own loop
+/** The three difficulties. Round 35 (owner: "sim mode should be unlocked once the user completes one
+ * full round (until retirement) of each difficulty"): a career finished at each opens Sim mode, as it
+ * earns the Grand Tour. */
+export const DIFFICULTIES: Mode[] = ['standard', 'reality', 'stars'];
+/** A career has been finished at every difficulty. */
+export const grandTour = (t: CareerTotals): boolean => DIFFICULTIES.every((m) => (t.byMode[m] ?? 0) > 0);
+
 export const NO_TOTALS: CareerTotals = { finished: 0, byMode: {}, titles: 0, mvps: 0, fast: 0, master: 0, daily: 0 };
 
 /** Everything the checks read, worked out once per look. */
@@ -377,7 +384,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   A('c25', 'Silver Anniversary', 'allstar', 'Finish 25 careers.', (f) => f.t.finished >= 25),
   A('c50', 'Golden Anniversary', 'hof', 'Finish 50 careers.', (f) => f.t.finished >= 50),
   A('c100', 'Centurion', 'hof', 'Finish 100 careers.', (f) => f.t.finished >= 100),
-  A('allmodes', 'Grand Tour', 'starter', 'Finish a career at every difficulty.', (f) => (['standard', 'reality', 'stars'] as Mode[]).every((m) => (f.t.byMode[m] ?? 0) > 0)),
+  A('allmodes', 'Grand Tour', 'starter', 'Finish a career at every difficulty (a Comet does not count). It opens Sim mode.', (f) => grandTour(f.t)),
   A('fastdone', 'Speed Reader', 'bench', 'Finish a career on Fast break.', (f) => f.t.fast > 0),
   A('masterdone', 'No Training Wheels', 'starter', 'Finish a career in Master mode.', (f) => f.t.master > 0),
   A('titles10', 'Ring Hoarder', 'allstar', 'Win ten NBA titles over all your careers.', (f) => f.t.titles >= 10),

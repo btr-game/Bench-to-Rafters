@@ -91,7 +91,7 @@ const TOUR: Step[] = [
   T('fold', '.fold-tab, .fold-btn', 'Cards fold: this tab (or a card’s title) folds a card to one line, and it stays that way on this device. Tap again to open it.'),
   T('look-back', '.look-back-bar .btn', 'You are looking back at a finished career. Leave takes you back to the career log.'),
   T('feedback-foot', '.feedback-foot > summary', 'Found a bug or have an idea? Open this, on any tab, to send it with the tab you are on.'),
-  T('chip-sim', D('chip-sim'), 'Sim: the routine calls and the turning points are made for you; it stops only for the big ones.'),
+  T('chip-sim', D('chip-sim'), 'Sim: the routine calls and the turning points are made for you; it stops only for the big ones. It opens after a full career on every difficulty.'),
   T('sim-calls', D('sim-calls'), 'The turning points Sim decided for you since your last move, and how each went.'),
   T('comet-reel', D('comet-reel'), 'A Comet career keeps a page only for the biggest nights; the rest of the story waits here.'),
   T('chip-fast', D('chip-fast'), 'Fast break: quick seasons, and each tab folds its extra cards. You still make every real call.'),

@@ -24,7 +24,7 @@ import type { WearSlot } from './content/shop';
 import { careerRecord, type CareerRecord } from './engine/career/record';
 import { canPlayChild, childGame, childLegacy, childSeed } from './engine/nextGen';
 import { attachChild, logCareer, type LogResult } from './ui/careerLog';
-import { checkAch, countCareer, earnedIn, recordMp, recordOpened, recordUndo, recordVisit } from './ui/achievements';
+import { checkAch, countCareer, earnedIn, recordMp, recordOpened, recordUndo, recordVisit, simOpen } from './ui/achievements';
 import { community } from './ui/community';
 import { cleanProspect, handle, multiplayer, pump, readLink, seasonLine, send, type Challenge, type MpLink } from './ui/multiplayer';
 import { deleteSlot, dropRun, importCode, newSlotId, readRun, readSlot, writeRun, writeSlot } from './ui/saves';
@@ -87,6 +87,8 @@ interface Store {
   togglePlayoffs: () => void;
   toggleFast: () => void;
   toggleSim: () => void;
+  /** Dev deck only (round 35): shows Sim as a player who has not opened it yet sees it. */
+  simShut: boolean;
   requestTrade: (aim?: import('./engine/career/team').TradeAim, to?: string) => void;
   /** Round 31: the career as it was before his last choice (one step), with what that choice was. */
   undo: { game: GameState; label: string } | null;
@@ -806,10 +808,13 @@ export const useStore = create<Store>((set, get) => ({
   toggleSim: () => {
     const g = get().game;
     if (!g || g.flags.daily || g.mode === 'lab') return;
+    // round 35: on only once a career has been finished at every difficulty (a level has its own rule)
+    if (!g.flags.sim && !g.flags.level && (get().simShut || !simOpen())) return;
     const next = structuredClone(g);
     setSim(next, !next.flags.sim);
     set({ game: next, transition: null });
   },
+  simShut: false,
   togglePlayoffs: () => {
     const g = get().game;
     if (!g || g.flags.daily) return;
