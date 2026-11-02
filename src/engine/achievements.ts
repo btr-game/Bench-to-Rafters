@@ -59,7 +59,7 @@ export interface CareerTotals {
 }
 
 /** Round 29: how many music loops the game has (ui/tracks.ts; a test keeps the two in step). */
-export const MUSIC_LOOPS = 18;
+export const MUSIC_LOOPS = 19; // round 35: Play with friends has its own loop
 export const NO_TOTALS: CareerTotals = { finished: 0, byMode: {}, titles: 0, mvps: 0, fast: 0, master: 0, daily: 0 };
 
 /** Everything the checks read, worked out once per look. */
