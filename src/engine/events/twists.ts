@@ -8,6 +8,7 @@ import { chance, clamp, pick, range, weightedIndex, type Rng } from '../rng';
 import type { AttrKey, GameState } from '../types';
 import { adjust } from '../career/common';
 import { NAMES } from '../../content/strings';
+import { addTouch } from '../player/touch';
 
 export type Tier = 'breakthrough' | 'better' | 'expected' | 'mixed' | 'backfired';
 
@@ -62,6 +63,8 @@ const GOOD: Twist[] = [
   { text: () => 'Somehow your weak hand came along too.', apply: (s, r) => (s.player.offhand = Math.min(99, s.player.offhand + range(r, 3, 6))) },
   { text: () => 'You started seeing the floor differently.', apply: (s, r) => bump(s, 'IQ', range(r, 1.5, 3)) },
   { text: () => 'You found a couple of extra feet of range.', apply: (s, r) => (s.player.range = Math.min(99, s.player.range + range(r, 3, 5))) },
+  // round 35: free-throw touch
+  { text: () => 'Your free throws started dropping too.', apply: (s, r) => addTouch(s.player, range(r, 2, 4)) },
   { text: () => 'A local business wants you in its next ad.', when: pro, apply: (s, r) => (s.player.bank += s.stage === 'NBA' ? range(r, 0.1, 0.4) : range(r, 0.01, 0.05)) },
   { text: () => 'It took less out of your body than you feared.', when: (s) => (s.player.wear ?? 0) > 6, apply: (s, r) => (s.player.wear = Math.max(0, (s.player.wear ?? 0) - range(r, 2, 4))) },
   { text: (_, k) => `Your ${attrName(k)} jumped in a way nobody can quite explain.`, apply: (s, r, k) => bump(s, k, range(r, 2.5, 4.5)) },

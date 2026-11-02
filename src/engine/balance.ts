@@ -250,6 +250,7 @@ export interface PlanDef {
   other?: number;
   rangeGain?: number;
   offhandGain?: number;
+  touchGain?: number; // round 35: free-throw touch each half (player/touch.ts)
   chem?: number; // round 20: team chemistry (team strength) added for the rest of the season
   swing?: { attrs: AttrKey[]; mean: number; sd: number }; // round 20: a gamble on these ratings each half
 }
@@ -324,6 +325,7 @@ export function blendPlans(a: HalfPlan, b?: HalfPlan | null, age?: number): Plan
       other: A.other !== undefined ? m(A.other) : undefined,
       rangeGain: A.rangeGain ? A.rangeGain * k : undefined,
       offhandGain: A.offhandGain ? A.offhandGain * k : undefined,
+      touchGain: A.touchGain ? A.touchGain * k : undefined,
       chem: A.chem ? A.chem * k : undefined,
       swing: A.swing ? { ...A.swing, mean: A.swing.mean * k, sd: A.swing.sd * k } : undefined,
     };
@@ -350,6 +352,7 @@ export function blendPlans(a: HalfPlan, b?: HalfPlan | null, age?: number): Plan
     other: keys.size ? mult(otherA, otherB) : undefined,
     rangeGain: add(A.rangeGain ?? 0, B.rangeGain ?? 0) || undefined,
     offhandGain: add(A.offhandGain ?? 0, B.offhandGain ?? 0) || undefined,
+    touchGain: add(A.touchGain ?? 0, B.touchGain ?? 0) || undefined,
     chem: add(A.chem ?? 0, B.chem ?? 0) || undefined,
     swing: A.swing ? { ...A.swing, mean: A.swing.mean * main, sd: A.swing.sd * main } : B.swing ? { ...B.swing, mean: B.swing.mean * side, sd: B.swing.sd * side } : undefined,
   };
@@ -364,7 +367,7 @@ export const HALF_PLANS: Record<HalfPlan, PlanDef> = {
   // the opposite: safer, a little IQ, a little chemistry for the rest of the season
   spotlight: { growth: 0.85, injury: 1.2, morale: 2, trust: -3, rep: [3, 8], usage: 1.15, teamBoost: -0.3, attrs: { IQ: 0.6 }, other: 1, chem: -0.15, swing: { attrs: ['SHT', 'FIN'], mean: 0.6, sd: 1.3 } },
   teamfirst: { growth: 0.95, injury: 0.85, morale: 2, trust: 6, rep: [0, 1], usage: 0.88, teamBoost: 0.7, attrs: { IQ: 1.4 }, other: 1, chem: 0.15 }, // round 15: a bigger lift to the team (was 0.6)
-  shooting: { growth: 1.0, injury: 0.95, morale: 0, trust: 0, rep: [0, 0], usage: 1.03, teamBoost: 0, attrs: { SHT: 2.05 }, other: 0.6, rangeGain: 2 },
+  shooting: { growth: 1.0, injury: 0.95, morale: 0, trust: 0, rep: [0, 0], usage: 1.03, teamBoost: 0, attrs: { SHT: 2.05 }, other: 0.6, rangeGain: 2, touchGain: 2.5 },
   strength: { growth: 1.0, injury: 1.2, morale: -1, trust: 0, rep: [0, 0], usage: 1, teamBoost: 0, attrs: { FIN: 2.1, REB: 2.15, ATH: 1.9, INT: 1.6 }, other: 0.55 },
   playmaking: { growth: 1.0, injury: 1.0, morale: 0, trust: 2, rep: [0, 0], usage: 0.97, teamBoost: 0.2, attrs: { PLY: 2.3, IQ: 1.5 }, other: 0.6 },
   defense: { growth: 1.0, injury: 1.05, morale: 0, trust: 3, rep: [0, 0], usage: 0.95, teamBoost: 0.3, attrs: { PER: 2.6, INT: 2.0 }, other: 0.6 },
@@ -543,7 +546,8 @@ export const STAT = {
   threeShare: { base: 0.04, range: 0.0078, sht: 0.0025, min: 0.01, max: 0.66 },
   two: { base: 0.515, rating: 0.0048, height: 0.0035, offhand: 0.0009, min: 0.36, max: 0.7 },
   ftRate: { base: 0.2, fin: 0.004, ath: 0.002, min: 0.06, max: 0.55 },
-  ft: { base: 0.76, sht: 0.0045, min: 0.42, max: 0.94 },
+  // round 35: free-throw touch adds `touch` per point over TOUCH.mid (player/touch.ts)
+  ft: { base: 0.76, sht: 0.0045, touch: 0.0015, min: 0.42, max: 0.94 },
   reb36: { base: 6.4, rating: 0.17, height: 0.33, wing: 0.12, min: 1.2, max: 16 },
   // round 7: elite playmakers can average 10+ (PLY 80 about 6 a game, 92 with high IQ about 10)
   ast36: { base: 4.2, rating: 0.2, iq: 0.065, eliteFrom: 80, elite: 0.045, min: 0.4, max: 14 },
@@ -551,6 +555,22 @@ export const STAT = {
   blk36: { base: 0.55, int: 0.035, height: 0.12, wing: 0.06, min: 0, max: 4.2 },
   tov36: { base: 1.0, fga: 0.055, ast: 0.16, iq: 0.02, min: 0.4, max: 5 },
   moraleSwing: 0.12,
+};
+
+/**
+ * Round 35: free-throw touch (player/touch.ts), a 0-99 feel at the line on top of the shooting
+ * rating: STAT.ft.touch per point over `mid`, which adds nothing (generated players sit there). It
+ * starts from his shooting card at 14 (`start`: base, plus `sht` per point of SHT over 40, plus up to
+ * `jitter` either way from his name and number), and every season of reps adds `season` (more while
+ * he is young). The shooting plan (HALF_PLANS.shooting.touchGain), the shooting summer (`summer`), a
+ * shooting coach on staff (`staff` at level 1), the round's turning points and the shop add more.
+ */
+export const TOUCH = {
+  mid: 50,
+  start: { base: 27, sht: 0.35, jitter: 6, min: 10, max: 60 },
+  season: { young: 1.6, youngTo: 24, prime: 0.8, primeTo: 30, late: 0.3 },
+  summer: 2,
+  staff: 0.5,
 };
 
 // §10 value score

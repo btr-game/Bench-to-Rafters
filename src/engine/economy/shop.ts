@@ -8,6 +8,7 @@ import { SHOP_ITEMS, type ShopItem, type WearSlot } from '../../content/shop';
 import { logDecision, pushDecision } from '../career/common';
 import { fmtMoney } from './salary';
 import { changeWeight, idealWeight, weightOf } from '../player/weight';
+import { addTouch } from '../player/touch';
 import { levelOf } from '../levels';
 
 /** His income, $M a year: salary and brand deal. */
@@ -56,6 +57,7 @@ function describeItem(it: ShopItem): string {
   if (it.focus) parts.push('Sharpens your focus skills');
   if (it.range) parts.push('Extends your range');
   if (it.offhand) parts.push('Builds your weak hand');
+  if (it.touch) parts.push('Steadies you at the free-throw line');
   if (it.growthMult) parts.push('Speeds up your development');
   if (it.injuryMult) parts.push('Keeps your body healthier');
   if (it.declineMult) parts.push('Slows down aging');
@@ -133,6 +135,7 @@ export function applyItem(s: GameState, it: ShopItem, price = it.price): void {
   if (it.focus) for (const k of p.focus) p.attrs[k] = clamp(p.attrs[k] + it.focus, 15, ATTR_MAX);
   if (it.range) p.range = clamp(p.range + it.range, 0, 99);
   if (it.offhand) p.offhand = clamp(p.offhand + it.offhand, 0, 99);
+  if (it.touch) addTouch(p, it.touch);
   if (it.growthMult) p.growthMultNext *= it.growthMult;
   if (it.injuryMult) p.injuryMultNext *= it.injuryMult;
   if (it.declineMult) p.declineMultNext *= it.declineMult;

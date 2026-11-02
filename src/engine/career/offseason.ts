@@ -6,7 +6,7 @@ import { playShowcase } from './culture';
 import { processArcs } from '../events/arcs';
 import { reclassify } from '../player/classify';
 import { pushMilitary } from './nationality';
-import { ATTR_MAX, GROWTH_RATE_AGE, MODES, POSITIONS, WEAR, FA_INTEREST, OVERSEAS_FA, TEAM_FACTORS, OFFSEASON_DAYS, REP, RETIRE, ATTRS, TEAM_OPTION, LONGEVITY } from '../balance';
+import { ATTR_MAX, GROWTH_RATE_AGE, MODES, POSITIONS, WEAR, FA_INTEREST, OVERSEAS_FA, TEAM_FACTORS, OFFSEASON_DAYS, REP, RETIRE, ATTRS, TEAM_OPTION, LONGEVITY, TOUCH } from '../balance';
 import { chance, clamp, int, logistic, range, shuffle } from '../rng';
 import type { Contract, Decision, GameState, Offer, RoleKey } from '../types';
 import { applyAging, growHeight, updateHeightProjection } from '../player/growth';
@@ -43,6 +43,7 @@ import { becomeRingChaser, canChaseRing, chaserRoleDecision, ringChaseChoice, ty
 import { rollSwings } from './swings';
 import { NAMES } from '../../content/strings';
 import { buildWord, driftWeight, idealWeight, weightOf } from '../player/weight';
+import { addTouch, seasonTouch } from '../player/touch';
 import { growBonds } from './duo';
 import { pushBrand } from './nickname';
 import { pushPress } from './press';
@@ -106,6 +107,8 @@ export function beginOffseason(s: GameState): void {
   if (aging.sudden) note(s, 'Your body is not bouncing back like it used to. A sudden decline.');
   else if (aging.change < -0.5) note(s, `Age is catching up: OVR ${aging.change.toFixed(1)} this summer.`);
   applyPrograms(s);
+  // round 35: a season of reps at the line builds his free-throw touch a little
+  addTouch(p, seasonTouch(p.age));
   updateScouting(s.rng, p);
   // the scouts re-read what kind of player he has become
   const read = reclassify(p);
@@ -192,7 +195,7 @@ function pushSummer(s: GameState): void {
     choices: [
       { id: 'skills', label: 'Skills camp', detail: 'Both focus stats up a little.' },
       { id: 'strength', label: 'Strength and conditioning', detail: 'Athleticism, rebounding and finishing.' },
-      { id: 'shooting', label: 'Shooting coach', detail: 'Shooting and range.' },
+      { id: 'shooting', label: 'Shooting coach', detail: 'Shooting, range and free throws.' },
       { id: 'film', label: 'Film room', detail: 'Basketball IQ and playmaking. Coaches notice.' },
       { id: 'rest', label: 'Rest and travel', detail: 'Morale up, fresher body next season, less wear on your body.' },
     ],
@@ -214,6 +217,7 @@ function resolveSummer(s: GameState, id: string): void {
   if (id === 'shooting') {
     bump('SHT', 0.9);
     p.range = clamp(p.range + 2 * k, 0, 99);
+    addTouch(p, TOUCH.summer * k);
   }
   if (id === 'film') {
     bump('IQ', 1.0);

@@ -8,6 +8,7 @@ import type { AttrKey, GameState, SeasonRecord, Stage } from '../types';
 import { adjust } from '../career/common';
 import { ATTR_MAX } from '../balance';
 import type { EventDef } from './defs';
+import { addTouch } from '../player/touch';
 
 const PRO: Stage[] = ['NCAA', 'GL', 'EU', 'INT', 'NBA'];
 
@@ -121,6 +122,7 @@ export const ROUND33_EVENTS: EventDef[] = [
         detail: 'It works; the crowds will laugh',
         resolve: (s) => {
           bump(s, 'SHT', 1);
+          addTouch(s.player, 6); // round 35: free-throw touch
           rep(s, -2);
           return ok('Granny style. The first road crowd howls; then you make twelve in a row.', 'Switched to underhand free throws.');
         },
@@ -130,6 +132,7 @@ export const ROUND33_EVENTS: EventDef[] = [
         detail: 'A slower fix, and he charges for it',
         resolve: (s) => {
           bump(s, 'SHT', 0.5);
+          addTouch(s.player, 4);
           s.player.bank = Math.max(0, s.player.bank - (s.stage === 'NBA' ? 0.05 : 0.002));
           return ok('Same breath, same dribbles, same spin, every time. It starts to feel like yours.', 'Rebuilt his free-throw routine.');
         },
