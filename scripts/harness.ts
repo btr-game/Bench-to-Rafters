@@ -72,6 +72,8 @@ export function smartChoice(s: GameState, d: Decision, r: Rng): string {
     case 'youth':
       return byId('promote') ?? byId('move') ?? ch[0].id;
     case 'live':
+      // round 35: the call before a series against his rival classmate has no 'all'; its first,
+      // guarding him, carries the best odds (RIVAL_SERIES.guard.edge)
       return byId('all') ?? ch[0].id;
     case 'national':
       return s.player.age < 32 ? 'accept' : 'decline';

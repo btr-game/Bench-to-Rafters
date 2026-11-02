@@ -28,6 +28,7 @@ export interface ShopItem {
   weight?: number; // lb on (or off)
   toIdeal?: number; // share of the way to his best playing weight
   wear?: { slot: WearSlot; color: string }; // an accessory: he wears it
+  klass?: boolean; // round 35: sold only in a draft-class career (economy/shop.ts stock leaves it out of any other)
 }
 
 const K = 0.001; // $1K in $M
@@ -175,6 +176,10 @@ export const SHOP_ITEMS: ShopItem[] = [
   { id: 'game-night', name: 'A game-night table for the old crew', category: 'Lifestyle', price: 0.8 * K, blurb: 'Cards on Thursdays, the same five friends since the eighth grade.', morale: 4 },
   { id: 'friends-cabin', name: 'A lake cabin for the summer crew', category: 'Lifestyle', price: 350 * K, blurb: 'Bunk beds for eight, a dock, and a hoop nailed to the boathouse.', morale: 8, rep: 1 },
   { id: 'release-coach', name: 'A shooting coach for older legs', category: 'Training', price: 80 * K, blurb: 'Less dip, less leg, the ball out a beat sooner. The jumper that ages well.', attrs: { SHT: 0.5 }, declineMult: 0.97 },
+  // round 35, later: only in a draft-class career, for the class itself (so no other career's shop draws change)
+  { id: 'class-jersey-art', name: 'Framed art of your draft class’s jerseys', category: 'Lifestyle', price: 15 * K, blurb: 'Your whole draft class in its college colors, one draft night, on one wall.', morale: 3, rep: 1, klass: true },
+  { id: 'class-trainer', name: 'A trainer you share with a classmate', category: 'Training', price: 20 * K, blurb: 'Two first-round picks, one trainer, every rep a race.', focus: 1, morale: 2, klass: true },
+  { id: 'reunion-suit', name: 'A stylist’s suit for reunion night', category: 'Lifestyle', price: 6 * K, blurb: 'Cut now, worn the night every career in the class is over.', rep: 2, morale: 2, klass: true },
   // round 34: simplification (the round's theme: fewer, better things)
   { id: 'career-scrapbook', name: 'A career scrapbook', category: 'Lifestyle', price: 0.3 * K, blurb: 'Every clipping since high school, in one fat binder.', morale: 3, rep: 1 },
   { id: 'one-move-coach', name: 'A one-move coach', category: 'Training', price: 3 * K, blurb: 'One move, a thousand times a day, until it is yours.', attrs: { FIN: 0.5 }, morale: 1 },

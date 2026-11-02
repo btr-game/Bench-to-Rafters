@@ -263,6 +263,8 @@ export function allStarWeekend(s: GameState, firstHalf: StatLine): void {
     season.midReport.push(who);
     // on his own page when there is one (a classmate's place is no page of his)
     if (lines.length > 0) lines.push(who);
+    // All-Star weekends he shared with a classmate (the book's All-Star Alumni reads it)
+    if (season.allStar) s.flags.asPal = (s.flags.asPal ?? 0) + 1;
   }
   if (lines.length > 0) {
     p.rep = clamp(p.rep + (season.allStar ? 4 : 2), 0, 100);

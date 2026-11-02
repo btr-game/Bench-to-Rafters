@@ -166,6 +166,10 @@ export function recordVisit(): void {
  * - 'beat': that answer beat the career that set the challenge (a higher career index)
  * - 'joined': a draft class made or joined (a seat in it taken)
  * - 'classTop': first in a draft class's standings, with two members or more
+ * - the class's pages (ui/screens/ClassNight.tsx): 'reunionMvp', 'reunion3' and 'reunionSweep'
+ *   (recordReunion), 'react' (a reaction on a classmate's season, once a season), 'crowned' (a
+ *   crown on one of his), 'dailyTop' (first on the friends' daily board, once a day), 'watched'
+ *   (a classmate's career opened, once a classmate)
  * With `code` (the challenge's or the class's), each one counts once however often it is seen; the
  * result is true when it counted.
  */
@@ -178,6 +182,13 @@ export function recordMp(kind: MpKind, code?: string): boolean {
   t.mp = { ...t.mp, [kind]: (t.mp?.[kind] ?? 0) + 1 };
   saveAch(d);
   return true;
+}
+
+/** Round 35: a class's reunion night seen to its last award (ui/screens/ClassNight.tsx): named
+ * Class MVP, `won` of its `of` awards. Each counts once a class; true when any of them counted. */
+export function recordReunion(code: string, won: number, of: number, mvp: boolean): boolean {
+  const got = [mvp && recordMp('reunionMvp', code), won >= 3 && recordMp('reunion3', code), won === of && recordMp('reunionSweep', code)];
+  return got.some(Boolean);
 }
 
 /** Round 29: cards locked in the career log right now (the most at once is kept). */

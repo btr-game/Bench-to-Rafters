@@ -9,8 +9,10 @@ import { CardActions } from './CareerLog';
 import { Icon } from '../art/Icon';
 import { ReunionArt } from '../art/Reunion';
 import { sfx } from '../sound';
-import { handle, LEVEL_SHORT, EMOTES, multiplayer, reunionAwards, reunionReady, REUNION_WAIT_DAYS, MP_FAIL, type ClassMember, type DailyRow, type DraftClass, type Emote, type Multiplayer } from '../multiplayer';
+import { handle, LEVEL_SHORT, EMOTES, multiplayer, reunionAwards, reunionReady, reunionWon, REUNION_WAIT_DAYS, MP_FAIL, type ClassMember, type DailyRow, type DraftClass, type Emote, type Multiplayer } from '../multiplayer';
 import { scoreOf } from '../community';
+import { recordMp, recordReunion } from '../achievements';
+import { achievementsNow } from '../../store';
 
 // ---------- reactions ----------
 
@@ -38,6 +40,7 @@ function ReactBar({ mp, code, m, year, done }: { mp: Multiplayer; code: string; 
     const r = await mp.react(code, m.id, year, mine === e ? null : e);
     if (r === 'ok') {
       sfx(mine === e ? 'click' : 'react');
+      if (mine !== e && recordMp('react', `${code}:${m.id}:${year}`)) achievementsNow();
       setErr('');
       done();
     } else setErr(r === 'busy' ? 'One at a time.' : MP_FAIL[r]);
@@ -68,6 +71,9 @@ export function FriendCareer({ mp, k, m, back, changed }: { mp: Multiplayer; k: 
   const ss = m.seasons;
   const last = ss[ss.length - 1];
   const W = Math.max(ss.length, 1);
+  useEffect(() => {
+    if (!m.mine && recordMp('watched', `${k.code}:${m.id}`)) achievementsNow();
+  }, [k.code, m.id, m.mine]);
   return (
     <section className="card stack mp-friend">
       <div className="row" style={{ justifyContent: 'space-between', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
@@ -147,6 +153,8 @@ export function ReunionNight({ k }: { k: DraftClass }) {
     setAt(n);
     // the class MVP gets the championship sound; every other award a toast
     sfx(n === awards.length - 1 ? 'title' : 'toast');
+    const won = reunionWon(awards);
+    if (n === awards.length - 1 && recordReunion(k.code, won.length, awards.length, won.includes('mvp'))) achievementsNow();
   };
   const shown = awards.slice(0, at + 1);
   const cur = at >= 0 ? awards[at] : null;
@@ -222,6 +230,7 @@ export function DailyFriends({ day, best }: { day: string; best: { points: numbe
       if (best && handle()) await mp.dailyPost(day, handle(), best.points, best.legacy, best.peak);
       const r = await mp.dailyFriends(day);
       if (live) setRows(r);
+      if (r !== 'error' && r.length >= 2 && r[0].mine && recordMp('dailyTop', day)) achievementsNow();
     })();
     return () => {
       live = false;

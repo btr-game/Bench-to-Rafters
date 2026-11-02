@@ -440,6 +440,10 @@ export function reunionAwards(k: DraftClass): ReunionAward[] {
   ];
 }
 
+/** The awards of the night he won outright: first in the class, with something to show for it
+ * (an award nobody has any of, such as MVPs in a class without one, goes to nobody). */
+export const reunionWon = (awards: ReunionAward[]): string[] => awards.filter((a) => a.rows[0]?.m.mine && a.rows[0].value > 0).map((a) => a.key);
+
 // ---------- which multiplayer this page has ----------
 
 let picked: Promise<Multiplayer | null> | null = null;

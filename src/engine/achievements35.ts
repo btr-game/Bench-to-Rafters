@@ -4,14 +4,21 @@
 // other modes, the free-throw touch that came in this round, the jump shot that now ages like the
 // rest of him, and a few more. Each career mark was measured over careers of the smart player
 // before it was set (DECISIONS.md, round 35). Same rules as the rest of the book: cosmetic, pun
-// names, conditions hidden.
+// names, conditions hidden. A later batch is for the draft class's own careers: draft night,
+// classmates in his league's races and on his team, the playoff series against his rival
+// classmate, and the class's pages (reunion night, reactions, the friends' daily board).
 
 import type { GameState, SeasonRecord } from './types';
 import type { AchTier, CareerTotals } from './achievements';
 import { count, hallOfFame } from './awards/legacy';
+import { friendName, friendNow } from './career/friends';
+import { TRADE_AIM } from './career/team';
 
-/** What a device has done with friends (ui/achievements.ts recordMp counts each). */
-export type MpKind = 'made' | 'answered' | 'beat' | 'joined' | 'classTop' | 'friendDuo' | 'friendTrio' | 'chat';
+/** What a device has done with friends (ui/achievements.ts recordMp counts each). The later ones
+ * come from the draft class's pages (ui/screens/ClassNight.tsx): reunion night's Class MVP, three
+ * of its awards and all of them, a reaction given, a crown received, first on the friends' daily
+ * board, a classmate's career watched. */
+export type MpKind = 'made' | 'answered' | 'beat' | 'joined' | 'classTop' | 'friendDuo' | 'friendTrio' | 'chat' | 'reunionMvp' | 'reunion3' | 'reunionSweep' | 'react' | 'crowned' | 'dailyTop' | 'watched';
 
 /** What these checks read (the book's facts, in part). */
 interface Facts35 {
@@ -51,6 +58,31 @@ const byYear = (f: Facts35, test: (h: SeasonRecord) => boolean) => {
 const mp = (f: Facts35, k: MpKind) => f.t.mp?.[k] ?? 0;
 /** A mode the road map has opened by clearing its stop (ui/road.ts Unlock). */
 const opened = (f: Facts35, u: 'reality' | 'stars' | 'minis') => !!f.t.unlocks?.includes(u);
+
+// ---- the draft class's careers (career/draftNight.ts, friendLeague.ts, rivalSeries.ts) ----
+const inClass = (f: Facts35) => !!f.g.mp?.klass;
+/** A career that opened on draft night: a draft class's, or a challenge set from one. */
+const draftNight = (f: Facts35) => f.g.start?.input.start === 'draft' && f.g.mode === 'standard' && !!f.g.draft?.userPick;
+const pickNo = (f: Facts35) => f.g.draft?.userPick ?? 0;
+const mockOf = (f: Facts35): [number, number] => f.g.draft?.mockRange ?? [0, 99];
+/** His classmates as the league names them (career/friends.ts friendName). */
+const pals = (f: Facts35) => new Set((f.g.mp?.friends ?? []).map(friendName));
+/** Playoff series against his rival classmate (a rival night has no round), oldest first. */
+const series = (f: Facts35) => (f.g.mp?.meets ?? []).filter((m) => !!m.series);
+const nights = (f: Facts35) => (f.g.mp?.meets ?? []).filter((m) => !m.series);
+/** An MVP he won in a season a classmate finished in the top five of the voting. */
+const mvpOverPal = (f: Facts35) => {
+  const ps = pals(f);
+  return f.g.awards.some((a) => a.key === 'MVP' && a.level === 'NBA' && f.nba.some((h) => h.year === a.year && h.races.some((r) => r.award === 'MVP' && r.top.some((x) => ps.has(x.name)))));
+};
+/** A title with a classmate on his team that season, where the class has him (or a season behind). */
+const ringWithPal = (f: Facts35) =>
+  f.nba.some((h) => champ(h) && (f.g.mp?.friends ?? []).some((x) => {
+    const line = friendNow(x, h.year);
+    return !!line && line.lv === 'NBA' && line.team === h.teamName;
+  }));
+/** A trade he asked for to a classmate's team, and got (career/team.ts requestTrade logs it). */
+const joinedPal = (f: Facts35) => f.g.log.some((e) => e.kind === 'trade' && e.text.includes(`at his request (${TRADE_AIM.friend.label.toLowerCase()})`));
 
 export const ACHIEVEMENTS_35: Ach35[] = [
   // ---- play with friends (a challenge, a draft class), kept across careers ----
@@ -116,7 +148,46 @@ export const ACHIEVEMENTS_35: Ach35[] = [
     const first = [...byYear(f, () => true).keys()].slice(0, 3);
     return first.length === 3 && first.every((y) => f.g.awards.some((a) => a.key === 'ALLSTAR' && a.year === y));
   }),
+  // ---- draft night (a draft class's start). Of 300 draft nights 1.333333% went first and
+  // 16.66667% in the top five; of 300 smart careers from draft night (no classmates in the league;
+  // 66.33333% made an All-Star team), 4.666667% slid past the mocks and made one, 1.000000% beat
+  // the mocks and made All-Rookie, 2.666667% went 30th and made an All-Star team, 0.3333333% were
+  // Rookie of the Year. The plain draft ones (pick1, d-slide...) count on draft night too ----
+  A('dn-pick1', 'First Chair', 'allstar', 'Go first overall on draft night, ahead of your whole draft class.', (f) => inClass(f) && draftNight(f) && pickNo(f) === 1),
+  A('dn-top5', 'Honor Roll', 'starter', 'Go in the top five on draft night with your draft class.', (f) => inClass(f) && draftNight(f) && pickNo(f) <= 5),
+  A('dn-slide', 'Chip on the Shoulder', 'starter', 'Fall past every mock draft on draft night, then make an All-Star team.', (f) => draftNight(f) && pickNo(f) > mockOf(f)[1] && count(f.g, 'ALLSTAR') > 0),
+  A('dn-rise', 'Believe the Hype', 'allstar', 'Go higher than any mock draft had you on draft night, then make an All-Rookie team.', (f) => draftNight(f) && pickNo(f) < mockOf(f)[0] && count(f.g, 'ALLROOKIE') + count(f.g, 'ROY') > 0),
+  A('dn-30', 'Thirty for Thirty', 'allstar', 'Go 30th on draft night, the last pick of the first round, and make an All-Star team.', (f) => draftNight(f) && pickNo(f) === 30 && count(f.g, 'ALLSTAR') > 0),
+  A('dn-roy', 'Pick of the Litter', 'hof', 'Win Rookie of the Year in a draft class, against classmates who are rookies too.', (f) => inClass(f) && draftNight(f) && count(f.g, 'ROY') > 0),
+  // ---- the playoff series against his rival classmate (career/rivalSeries.ts) ----
+  A('rs-win1', 'Best of Enemies', 'starter', 'Beat your rival classmate in a playoff series.', (f) => series(f).some((m) => m.won)),
+  A('rs-win3', 'Rent Free', 'allstar', 'Beat your rival classmate in three playoff series.', (f) => series(f).filter((m) => m.won).length >= 3),
+  A('rs-back', 'Revenge Tour', 'starter', 'Lose your first rival night, then beat him in a playoff series.', (f) => {
+    const first = nights(f)[0];
+    return !!first && !first.won && series(f).some((m) => m.won && m.year >= first.year);
+  }),
+  A('rs-final', 'Final Word', 'allstar', 'Beat your rival classmate in the NBA Finals.', (f) => series(f).some((m) => m.won && m.series === 'NBA Finals')),
+  A('rs-sweep', 'Brooms Out', 'allstar', 'Sweep your rival classmate in a playoff series.', (f) => series(f).some((m) => m.won && /^4–0$/.test(m.score))),
+  A('rs-double', 'Home and Away', 'starter', 'Beat your rival classmate on rival night and in a playoff series in the same season.', (f) => series(f).some((m) => m.won && nights(f).some((x) => x.won && x.year === m.year))),
+  A('rs-lost3', 'Same Time Next Year', 'allstar', 'Lose three playoff series to your rival classmate.', (f) => series(f).filter((m) => !m.won).length >= 3),
+  // ---- classmates in his league (career/friendLeague.ts) and on his team ----
+  A('fl-mvp-beat', 'Head of the Class', 'allstar', 'Win MVP in a season a classmate finished in the top five of the voting.', mvpOverPal),
+  A('fl-mvp-friend', 'Green with Envy', 'starter', 'Watch a classmate win MVP in your league.', (f) => {
+    const ps = pals(f);
+    return f.g.nbaHistory.some((y) => y.awards.some((a) => a.award === 'MVP' && ps.has(a.name)));
+  }),
+  A('fl-as-pal', 'All-Star Alumni', 'rotation', 'Make an All-Star team the same season as a classmate.', (f) => (f.g.flags.asPal ?? 0) > 0),
+  A('fl-join', 'Phone a Friend', 'rotation', 'Ask to join a classmate’s team, and get the trade.', joinedPal),
+  A('fl-ring-pal', 'Friendship Ring', 'allstar', 'Win an NBA title with a classmate on your team.', ringWithPal),
+  // ---- the class's pages (ui/screens/ClassNight.tsx), kept across careers ----
+  A('mp-rmvp', 'Homecoming King', 'allstar', 'Be named Class MVP on reunion night.', (f) => mp(f, 'reunionMvp') >= 1),
+  A('mp-r3', 'Superlatives', 'starter', 'Win three awards or more on one reunion night.', (f) => mp(f, 'reunion3') >= 1),
+  A('mp-rsweep', 'The Whole Yearbook', 'hof', 'Win every award on a reunion night.', (f) => mp(f, 'reunionSweep') >= 1),
+  A('mp-react10', 'Hype Man', 'bench', 'React to ten of your classmates’ seasons.', (f) => mp(f, 'react') >= 10),
+  A('mp-crown', 'Heavy Is the Head', 'rotation', 'Get a crown from a classmate on one of your seasons.', (f) => mp(f, 'crowned') >= 1),
+  A('mp-daily1', 'King of the Hill', 'rotation', 'Top your friends’ board for the daily challenge.', (f) => mp(f, 'dailyTop') >= 1),
+  A('mp-watch5', 'Binge Watcher', 'bench', 'Watch the careers of five classmates, season by season.', (f) => mp(f, 'watched') >= 5),
 ];
 
 /** The ones that only read the totals kept across careers (checked with no career open). */
-export const R35_TOTALS_ONLY = ['mp-made1', 'mp-made5', 'mp-ans1', 'mp-join1', 'mp-beat1', 'mp-beat5', 'mp-top1', 'mp-top3', 'mp-fduo', 'mp-ftrio', 'mp-chat1', 'un-real', 'un-stars', 'un-minis', 'un-all'];
+export const R35_TOTALS_ONLY = ['mp-made1', 'mp-made5', 'mp-ans1', 'mp-join1', 'mp-beat1', 'mp-beat5', 'mp-top1', 'mp-top3', 'mp-fduo', 'mp-ftrio', 'mp-chat1', 'un-real', 'un-stars', 'un-minis', 'un-all', 'mp-rmvp', 'mp-r3', 'mp-rsweep', 'mp-react10', 'mp-crown', 'mp-daily1', 'mp-watch5'];

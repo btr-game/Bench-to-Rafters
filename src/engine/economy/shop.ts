@@ -86,7 +86,9 @@ function stock(s: GameState): string[] {
   // wardrobe keeps filling; the rest are drawn around his price
   const wear = SHOP_ITEMS.filter((i) => i.wear && !owned.has(i.id));
   const picks: ShopItem[] = wear.length && chance(s.rng, SHOP.wear) ? [pick(s.rng, wear)] : [];
-  let pool = SHOP_ITEMS.filter((i) => !i.wear);
+  // round 35: the draft class's own things only in a class career (any other draws as before)
+  const klass = s.mode === 'standard' && !!s.mp?.klass;
+  let pool = SHOP_ITEMS.filter((i) => !i.wear && (!i.klass || klass));
   // first one a shelf, among things near his price; then the nearest of the rest, any shelf
   for (const oneShelf of [true, false]) {
     let left = pool.filter((i) => !oneShelf || (near(i) > 0.05 && !picks.some((x) => x.category === i.category)));

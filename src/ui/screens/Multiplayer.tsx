@@ -443,6 +443,8 @@ function ClassView({ mp, code, back }: { mp: Multiplayer; code: string; back: ()
   // first in a class where two or more have played: once a class
   useEffect(() => {
     if (k && k !== 'error' && table[0]?.m.mine && k.members.filter((m) => m.seasons.length || m.rec).length >= 2 && recordMp('classTop', k.code)) achievementsNow();
+    // a crown from a classmate on one of his seasons (he cannot react to his own): once a class
+    if (k && k !== 'error' && k.members.some((m) => m.mine && m.reacts?.some((r) => r.e === 'crown')) && recordMp('crowned', k.code)) achievementsNow();
   }, [k, table]);
   const years = useMemo(() => (k && k !== 'error' ? classYears(k) : []), [k]);
   if (k === undefined) return <p className="muted">Looking up {code}…</p>;

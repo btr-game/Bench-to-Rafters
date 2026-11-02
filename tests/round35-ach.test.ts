@@ -49,7 +49,7 @@ describe('the book: round 35', () => {
   it('keeps every id and every name unique across the whole book', () => {
     expect(new Set(ACHIEVEMENTS.map((a) => a.id)).size).toBe(ACHIEVEMENTS.length);
     expect(new Set(ACHIEVEMENTS.map((a) => a.name.toLowerCase())).size).toBe(ACHIEVEMENTS.length);
-    expect(ACHIEVEMENTS_35.length).toBe(41);
+    expect(ACHIEVEMENTS_35.length).toBe(66);
     for (const id of R35_TOTALS_ONLY) expect(ACHIEVEMENTS_35.some((a) => a.id === id), id).toBe(true);
     for (const a of ACHIEVEMENTS_35) expect(ACHIEVEMENTS, a.id).toContain(a);
   });
