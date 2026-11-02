@@ -12,7 +12,7 @@
 // come from the seed alone, so every classmate goes into the same draft: the same teams, lottery
 // and prospects around him.
 
-import { ARCH_CEILING, ATTR_GROWTH, ATTR_MAX, ATTRS, CAP_FROM_START, CAP_MAX, DRAFT_NIGHT as D, FOCUS_MULT, NON_FOCUS_MULT } from '../balance';
+import { ARCH_CEILING, ATTR_GROWTH, ATTR_MAX, ATTRS, CAP_FROM_START, CAP_MAX, DRAFT_NIGHT as D, FOCUS_MULT, GROWTH_RATE, NON_FOCUS_MULT } from '../balance';
 import { clamp, int, makeRng, normal, pick, range, weightedIndex, type Rng } from '../rng';
 import type { AttrKey, Attrs, GameState, UserPlayer } from '../types';
 import { updateScouting, type CreateInput } from '../player/create';
@@ -90,7 +90,8 @@ const ft = (x: number) => `${Math.floor(x / 12)}′${x % 12}″`;
 export function openOnDraftNight(s: GameState, input: CreateInput): void {
   const p = s.player;
   const r = ownRng(s.seed, input);
-  // a junior or a senior, done growing: the height he was always going to reach, the wingspan with it
+  // a freshman to a senior (balance.ts DRAFT_NIGHT.ages), done growing: the height he was always
+  // going to reach, the wingspan with it
   p.age = D.ages[weightedIndex(r, D.ages.map((a) => a[1]))][0];
   p.wingspan += p.fullHeight - p.height;
   p.height = p.heightProj = p.fullHeight;
@@ -99,7 +100,11 @@ export function openOnDraftNight(s: GameState, input: CreateInput): void {
   // growth curve gives a player that good at his age (give or take), or leaves him no room to grow
   const ovr = range(r, D.ovr[0], D.ovr[1]);
   const card = input.attrs ?? ARCHETYPES[input.pos][input.archetype].attrs;
-  p.potential = Math.min(99, Math.max(p.potential, ovr + D.potRoom, potentialFor(ovr, p.age) + (ARCH_CEILING[p.archetype] ?? 0) + normal(r, 0, D.potSd)));
+  // (lifted and spread for the stars, then never under his OVR plus the room to grow)
+  const drawn = Math.max(p.potential, potentialFor(ovr, p.age) + (ARCH_CEILING[p.archetype] ?? 0) + normal(r, 0, D.potSd)) + D.potLift + normal(r, 0, D.potSpread);
+  p.potential = Math.min(99, Math.max(ovr + D.potRoom, drawn));
+  // a first-round pick grew fast to get there: his hidden growth rate is raised to match
+  p.growthRate = clamp(p.growthRate + D.growthLift, GROWTH_RATE.min, GROWTH_RATE.max);
   for (const k of ATTRS) p.caps[k] = clamp(p.potential + (card[k] - 40) * CAP_FROM_START, 30, CAP_MAX);
   p.attrs = grownAttrs(p, ovr);
   p.startAttrs = { ...p.attrs };
@@ -130,20 +135,23 @@ export function openOnDraftNight(s: GameState, input: CreateInput): void {
   warmUpNba(s, 12);
   quickNbaSeason(s);
   const year = s.year + 1;
-  const senior = s.ncaaYear >= 4;
+  // his year at college, from his age: a freshman one-and-done to a senior
+  const yr = Math.max(1, Math.min(4, s.ncaaYear));
+  const cls = ['freshman', 'sophomore', 'junior', 'senior'][yr - 1];
+  const seasons = yr === 1 ? 'one season' : `${['two', 'three', 'four'][yr - 2]} seasons`;
   pushMoment(s, {
     kind: 'intro',
     title: college.name,
     color: college.color,
-    text: `Draft night. ${p.name} was the first option at ${college.name}, and after ${senior ? 'four' : 'three'} seasons there he has declared for the ${year} NBA Draft.`,
+    text: `Draft night. ${p.name} was the first option at ${college.name}, and after ${seasons} there he has declared for the ${year} NBA Draft.`,
     lines: [
       `Mock drafts have him going ${mock[0]}–${mock[1]}, in the first round`,
-      `A ${p.age}-year-old ${senior ? 'senior' : 'junior'} ${NAMES.pos[p.pos].toLowerCase()}, ${ft(p.height)}, OVR ${Math.round(ovr)}`,
+      `A ${p.age}-year-old ${cls} ${NAMES.pos[p.pos].toLowerCase()}, ${ft(p.height)}, OVR ${Math.round(ovr)}`,
       'The rest of your class is in this draft too, every one of them a first option projected in the first round',
       ...rareLines(p, true),
     ],
   });
-  logDecision(s, 'start', `Declared for the ${year} NBA Draft after ${senior ? 'four' : 'three'} seasons as the first option at ${college.name}, a ${input.pos}, ${p.archetype}.`);
+  logDecision(s, 'start', `Declared for the ${year} NBA Draft after ${seasons} as the first option at ${college.name}, a ${input.pos}, ${p.archetype}.`);
   doDraft(s, draftNightPreview(s, proj, mock, D.firstRound));
   // from the pick on, the career goes on with the stream it started with
   s.rng = career;

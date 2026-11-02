@@ -237,14 +237,18 @@ link, and quick match). Defaults proposed, for the owner to confirm or change:
 - **Challenges from the career log**: a challenge is set from a career's last page, since a career
   card does not keep its start. Keeping the start on the card (a few hundred bytes) would let any
   logged Regular guy career be sent.
-- **Friends in each other's leagues** (in part: rivals, rival nights and duos of friends were built
-  in round 35): the friends' players could also show in each other's box scores, team rosters and
-  award races, for the seasons already played.
-- **More class awards**: the best of the class each year today; a class MVP over the whole career,
-  a class All-Star game, or a class reunion page when everyone has retired.
+- **Friends in each other's leagues**: built in round 35 (game logs, award races, All-Star teams,
+  rival series, joining a friend). Still open: a classmate on your team's roster page, and in the
+  playoff bracket's MVP lists.
+- **More class awards**: reunion night was built in round 35 (owner: all the awards at once, at
+  the end). Still open: a class All-Star game, a shareable image of the night's awards.
 - **Multiplayer on the claude.ai page**: its shared database (the community's) could hold
   challenges too, with what it can check (each write is the player's own, but not validated as the
   website's functions validate it).
+
+- **Ideas the owner passed on** (round 35): a 3-on-3 against a friend's player ("no, too much").
+- **Shop items for careers with friends**, if the shop can offer them without changing its draws
+  for other careers.
 
 ## Kept from round 34
 

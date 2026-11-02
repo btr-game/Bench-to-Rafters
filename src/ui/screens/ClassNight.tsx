@@ -7,6 +7,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { CardActions } from './CareerLog';
 import { Icon } from '../art/Icon';
+import { ReunionArt } from '../art/Reunion';
 import { sfx } from '../sound';
 import { handle, LEVEL_SHORT, EMOTES, multiplayer, reunionAwards, reunionReady, REUNION_WAIT_DAYS, MP_FAIL, type ClassMember, type DailyRow, type DraftClass, type Emote, type Multiplayer } from '../multiplayer';
 import { scoreOf } from '../community';
@@ -36,7 +37,7 @@ function ReactBar({ mp, code, m, year, done }: { mp: Multiplayer; code: string; 
   const pick = async (e: Emote) => {
     const r = await mp.react(code, m.id, year, mine === e ? null : e);
     if (r === 'ok') {
-      sfx(mine === e ? 'click' : 'chime');
+      sfx(mine === e ? 'click' : 'react');
       setErr('');
       done();
     } else setErr(r === 'busy' ? 'One at a time.' : MP_FAIL[r]);
@@ -135,6 +136,7 @@ export function ReunionNight({ k }: { k: DraftClass }) {
           <Icon name="laurel" size={24} />
           Reunion night
         </div>
+        <ReunionArt seats={Math.max(2, ready.total)} />
         <p className="small muted desc">
           When every career in the class is over, the class meets one last time and the awards come out one by one, the class MVP last. {ready.done} of {ready.total || 'its'} careers are over; a friend who posts nothing for {REUNION_WAIT_DAYS} days counts as he stands.
         </p>
@@ -143,7 +145,8 @@ export function ReunionNight({ k }: { k: DraftClass }) {
   const next = () => {
     const n = at + 1;
     setAt(n);
-    sfx(n === awards.length - 1 ? 'title' : 'reveal');
+    // the class MVP gets the championship sound; every other award a toast
+    sfx(n === awards.length - 1 ? 'title' : 'toast');
   };
   const shown = awards.slice(0, at + 1);
   const cur = at >= 0 ? awards[at] : null;
@@ -155,6 +158,7 @@ export function ReunionNight({ k }: { k: DraftClass }) {
         <Icon name="laurel" size={28} />
         Reunion night
       </div>
+      <ReunionArt seats={awards[0]?.rows.length ?? 6} lit={at >= 0} />
       {at < 0 ? (
         <p className="prose">Every career in the class is over. {awards.length} awards tonight, one at a time, from the smallest to the one that matters most: the class MVP.</p>
       ) : (

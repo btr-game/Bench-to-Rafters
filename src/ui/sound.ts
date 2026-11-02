@@ -74,6 +74,9 @@ export const SFX = [
   ['versus', 'Play with friends: a challenge set, or taken up'],
   ['roll', 'Play with friends: a seat taken in a draft class'],
   ['opened', 'The road map: a stop cleared opens a difficulty or the mini-games'],
+  // round 35, the draft class: reunion night's awards, and a reaction on a friend's season
+  ['toast', 'Reunion night: an award read out (glasses clink, a cheer)'],
+  ['react', 'Play with friends: a reaction on a classmate’s season'],
 ] as const;
 type Sfx = (typeof SFX)[number][0];
 
@@ -408,6 +411,17 @@ export function sfx(name: Sfx, always = false): void {
       tone(N(12), t + 0.38, 0.22, 'square', 0.4);
       tone(N(24), t + 0.38, 0.22, 'square', 0.35);
       noise(t + 0.38, 0.08, 0.2);
+      break;
+    case 'toast': // reunion night: two glasses clink, then the room cheers the name
+      tone(N(43), t, 0.05, 'sine', 0.35);
+      tone(N(47), t + 0.06, 0.07, 'sine', 0.3);
+      seq([19, 24], 0.09, 'square', 0.35);
+      noise(t + 0.22, 0.25, 0.18);
+      break;
+    case 'react': // a pop and a bright note: one reaction on a friend's season
+      noise(t, 0.02, 0.2);
+      tone(N(31), t + 0.02, 0.06, 'triangle', 0.4);
+      tone(N(36), t + 0.08, 0.06, 'triangle', 0.3);
       break;
     case 'roll': // roll call: the class bell, three names read out
       seq([12, 16, 19], 0.1, 'triangle', 0.6);

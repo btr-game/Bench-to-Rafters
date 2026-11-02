@@ -2852,3 +2852,54 @@ multiple times."
   the accent at 1.09:1; it now takes the button's ink. class-contrast.cjs missed it, so it now also
   draws every tag the code puts inside a choice button in each state of the button, and fills in a
   class built as prefix-${...} (risk-${level}) from the stylesheets: 223 combinations, none under AA.
+- **The draft class, and fair play with friends** (owner: "for equality purposes, i think sim and
+  fastbreak should be locked in multiplayer. think of other ways to balance", and "here's the story
+  line. the 12 of you (max) were the first options of your colleges. you're going for the nba
+  draft, and all of you are predicted to be entering as a 1st round pick (1~30th). ovr starts at a
+  65~75 range. the rest is history").
+  - **Fair play**: in a challenge or class career Fast break and Sim are locked off (the engine
+    refuses them, as for Rough Road; the chips and Settings say why). Other balance, ours: a career
+    that ever ran Fast break or Sim is marked and cannot be sent as a challenge (the friend answers
+    at full pace); mini-games pay no rating bonus with friends (they still play, for fun); a season
+    once posted to a class stands (a career played again from an older save cannot replace it); and
+    a seat holds one career (its first line names its run; another run's lines and card are
+    refused, and the start page says so before a second career starts).
+  - **Draft night** (engine/career/draftNight.ts, a helper agent's work): a class career skips high
+    school and college. He was his college's first option (mostly the big programs), at OVR 65 to
+    75 drawn evenly, projected in the first round with a mock range, and picked there (1 to 30;
+    the 30th team takes him if he is still on the board). Age, OVR, college and projection come
+    from a stream of his own (seed and picks), the league and the draft from the seed alone, so the
+    whole class goes into the same draft. The intro page is on the draft stage, headed Draft night.
+    Classes seat 12. Careers outside a class are unchanged (60 careers' full states hashed the same).
+  - **Stars as often as a first-round pick** (owner: "potential so stars come up about as often as
+    for a normal first-round pick? yes"): see the tuning below.
+  - **Join a friend** (career/team.ts): a trade aim at a classmate's NBA team. The two salaries
+    against next season's cap set the odds (fit = 1 - 1.5 x (share - 0.10), at least 0.25; the
+    usual trade odds x 1.1 x fit, 5% to 85%); not offered past 60% of the cap together, or with the
+    team's payroll and both deals over 1.3 x the cap. Measured: about 66% for a cheap friend, 20%
+    when he takes half the cap.
+  - **Rival series** (career/rivalSeries.ts): when his team meets his rival classmate's in the NBA
+    playoffs, one call for the series (guard him +0.6 strength; outscore him, a hot hand; the team
+    game +0.3 and the coach's trust), asked whether the games are played or simulated. On a
+    coin-flip series, guarding makes it 57.24871% and the team game 53.64044%. Recorded with the
+    rival nights, counted apart on the side board.
+  - **Classmates in your league** (career/friendLeague.ts): a classmate on his NBA team that season
+    shows in the game log against that team (his line drawn around his averages, on a stream of its
+    own), in the award races (he can win MVP), and on the All-Star teams; his team is a little
+    stronger against you (+0.1 for each OVR point over 75, at most +1.0).
+  - **Reunion night**: once every career in the class is over (a friend quiet for 14 days counts as
+    he stands), eleven awards revealed one at a time, the least first: Iron Man (games), Journeyman
+    (teams), Glass Cleaner, Floor General, Moneybags (earnings), Bucket Getter, Highest Peak,
+    All-Star Regular, Hardware (MVPs), Ring Leader, then the Class MVP (career index when every card
+    is in). A pixel banquet over it (the class at a long table, the lights coming on, the trophy
+    raised); a toast for each award and the championship sound for the class MVP.
+  - **Watch a friend's career**: tap a name in the standings: his rating each season as a pixel
+    chart, every season's line and honours, his card once he retires. **Reactions**: on fire,
+    royalty, love it, ice cold, one each on a classmate's season (a pop when given).
+    **Class news**: the server writes a line to the class chat when a season changes something
+    (drafted, a move, leaving the NBA, Rookie of the Year, a first All-Star, an MVP, a title) or a
+    career ends. **Friends today**: the daily challenge among the players one shares a class or a
+    challenge with, on the daily pages.
+  - The server: supabase/migrations/0006_multiplayer_class.sql (12 seats; the first line stands;
+    the run; class news; reactions; the daily board), tested on a local Postgres with two players
+    and a stranger.

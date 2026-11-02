@@ -2744,6 +2744,7 @@ td > .link-btn { min-width: 44px; text-align: left; }
 .mp-friend-year { display: grid; }
 .mp-aw { color: var(--ink) !important; font-weight: 700; }
 .mp-reunion { border-color: var(--gold); }
+.reunion-art { width: 100%; max-width: 480px; height: auto; aspect-ratio: 96 / 36; border-radius: 6px; image-rendering: pixelated; }
 .mp-award { display: flex; gap: 14px; align-items: flex-start; padding: 12px; border: 2px solid var(--line); border-radius: 10px; background: var(--surface-2); animation: mp-award-in 0.5s steps(4) both; }
 .mp-award.mvp { border-color: var(--gold); }
 .mp-award > svg { flex: none; }

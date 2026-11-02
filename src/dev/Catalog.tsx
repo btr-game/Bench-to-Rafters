@@ -40,7 +40,7 @@ import { ACHIEVEMENTS } from '../engine/achievements';
 import { ACH_CATS, achCatOf } from '../engine/achievementCats';
 import { CLASS_MAX } from '../ui/multiplayer';
 import { BEGINNER_EVENTS, LEVEL_IDS, LEVEL_NAME } from '../engine/levels';
-import { ROADMAP, ROAD_GRADES } from '../engine/balance';
+import { DRAFT_NIGHT, JOIN_FRIEND, ROADMAP, ROAD_GRADES } from '../engine/balance';
 import { SIX_PLANS } from '../engine/career/season';
 import { LEVEL_COPY } from '../content/roadmap';
 import { ROAD_MINIS, ROAD_NEED, UNLOCK_FROM, UNLOCK_NAME, unlockHint, type Unlock } from '../ui/road';
@@ -1032,7 +1032,7 @@ const CATEGORIES: Category[] = [
     key: 'friends',
     name: 'Play with friends',
     icon: 'versus',
-    blurb: 'The two ways to play with friends (ui/multiplayer.ts), on the game’s database in the online build (supabase/migrations/0004_multiplayer.sql and 0005_multiplayer_friends.sql), with what friends bring into each other’s careers. Regular guy only.',
+    blurb: 'The two ways to play with friends (ui/multiplayer.ts), on the game’s database in the online build (supabase/migrations/0004 to 0006), with what friends bring into each other’s careers. Regular guy only; Fast break and Sim locked off.',
     entries: () => [
       {
         key: 'challenge',
@@ -1085,7 +1085,54 @@ const CATEGORIES: Category[] = [
           ['Line', '200 characters, no control characters'],
           ['Kept', 'the latest 200 lines, 50 shown'],
           ['Limits', 'a line every 3 s, 300 a day'],
+          ['News', 'drafted, traded, left the NBA, Rookie of the Year, first All-Star, MVP, a title, retired'],
         ] as [string, string][],
+      },
+      {
+        key: 'draft-night',
+        title: 'Draft night',
+        text: 'A draft class career opens on draft night (engine/career/draftNight.ts): his college’s first option, projected and picked in the first round, the whole class in the same draft.',
+        art: () => <Icon name="draftclass" size={44} />,
+        facts: [
+          ['OVR', `${DRAFT_NIGHT.ovr[0]} to ${DRAFT_NIGHT.ovr[1]}`],
+          ['Ages', DRAFT_NIGHT.ages.map(([a, w]) => `${a} (${w})`).join(', ')],
+          ['Pick', `1 to ${DRAFT_NIGHT.firstRound}, near the mock`],
+        ] as [string, string][],
+      },
+      {
+        key: 'league',
+        title: 'Classmates in your league',
+        text: 'A classmate on his NBA team this season is in your game log against that team, in the award races (he can win MVP) and on the All-Star teams (engine/career/friendLeague.ts).',
+        art: () => <Icon name="crown" size={44} />,
+        facts: [['Lift', 'his team a little stronger against you, at most about home court']] as [string, string][],
+      },
+      {
+        key: 'series',
+        title: 'Rival series',
+        text: 'When his team meets his rival classmate’s in the playoffs, one call for the whole series: guard him, outscore him, or the team game (engine/career/rivalSeries.ts).',
+        art: () => <Icon name="bracket" size={44} />,
+      },
+      {
+        key: 'join',
+        title: 'Join a friend',
+        text: 'A trade request aimed at a classmate’s NBA team, limited by the two salaries together against the cap.',
+        art: () => <Icon name="swap" size={44} />,
+        facts: [
+          ['Off', `over ${Math.round(JOIN_FRIEND.ceiling * 100)}% of the cap together`],
+          ['Payroll', `no more than ${JOIN_FRIEND.apron} × the cap with both`],
+        ] as [string, string][],
+      },
+      {
+        key: 'reunion',
+        title: 'Reunion night',
+        text: 'When every career in a class is over (or quiet for two weeks), eleven awards one at a time: most games, most teams, rebounds, assists, earnings, points, highest peak, All-Stars, MVPs, rings, then the class MVP.',
+        art: () => <Icon name="laurel" size={44} />,
+      },
+      {
+        key: 'reactions',
+        title: 'Reactions and the daily board',
+        text: 'Four reactions on a classmate’s season (on fire, royalty, love it, ice cold), one each; and the daily challenge among friends: everyone a player shares a class or a challenge with.',
+        art: () => <Icon name="flame" size={44} />,
       },
     ],
   },

@@ -895,8 +895,9 @@ export const DRAFT = {
  */
 export const DRAFT_NIGHT = {
   ovr: [65, 75] as [number, number], // his OVR on draft night, drawn evenly across the range
-  // a junior (three college seasons behind him) or a senior (four), as often as each other
-  ages: [[21, 1], [22, 1]] as [number, number][],
+  // a freshman one-and-done to a senior: the younger ones twice as often (round 35, with the stars
+  // below: a first-round pick of a career played from high school is usually 19 or 20)
+  ages: [[19, 2], [20, 2], [21, 1], [22, 1]] as [number, number][],
   // the mock drafts put the best of the range near the top pick and the least near the 30th,
   // give or take this many picks (redrawn, not clamped, so the ends do not pile up)
   pickSd: 4,
@@ -907,6 +908,16 @@ export const DRAFT_NIGHT = {
   // potRoom, so a first-round pick can still grow
   potSd: 3,
   potRoom: 2,
+  // Stars about as often as for a first-round pick of a career played from high school (owner,
+  // round 35: "potential so stars come up about as often as for a normal first-round pick? yes"):
+  // the potential moved by potLift and spread by potSpread (the best of them can become MVPs), and
+  // his hidden growth rate raised by growthLift (a first-round pick is one who grew fast). Over 200
+  // smart draft-night careers: mean peak 81.99957, All-Star 66.5%, MVP 9.5%, Hall of Fame 19.0%,
+  // against 80.60136, 60.49383%, 9.876543% and 23.45679% for the first-round picks of 150 Regular
+  // guy careers (before: 77.89626, 39.33333%, 0.6666667%, 2.000000%).
+  potLift: -3,
+  potSpread: 10,
+  growthLift: 0.3,
   // where a first option bound for the first round played: mostly the big programs
   tiers: [['blue', 5], ['power', 3], ['major', 1.5], ['mid', 0.5]] as [NcaaTier, number][],
   // his fame with a mock at the 30th pick and at the first, a straight line between: 32.3836 on

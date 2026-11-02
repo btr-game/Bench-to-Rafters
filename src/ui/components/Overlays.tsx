@@ -656,7 +656,7 @@ function MomentPage({ m, g }: { m: Moment; g: GameState }) {
                 <PixelWord text={m.nick} color="#FFD43B" shade="#5A4206" className="nick-word" />
               </div>
             ) : m.duo && activeDuo(g) ? <DuoArt g={g} b={activeDuo(g)!} third={activeTrio(g)} size={170} /> : <StoryScene g={g} title={m.title} kind={m.kind === 'tournament' && (m.mood === 'silver' || m.mood === 'bronze' || m.mood === 'out') ? 'medal' : m.kind} prize={m.kind === 'awards' ? m.lines?.[0] : m.kind === 'title' ? m.title : m.kind === 'tournament' ? `${m.title}. ${m.text}` : undefined} />}
-            <div className="kicker on-dark">{KICKER[m.kind]}</div>
+            <div className="kicker on-dark">{m.kind === 'intro' && g.start?.input.start === 'draft' ? KICKER.draft : KICKER[m.kind]}</div>
             {m.kind === 'injury' ? (
               <div className="title-with-icon">
                 <InjuryBadge name={m.title} sev={/^Season over/.test(m.text) ? 'season' : 'major'} size={56} />

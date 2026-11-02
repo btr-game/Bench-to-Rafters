@@ -54,7 +54,7 @@ describe('a draft class starts on draft night', () => {
     starts = Array.from({ length: 160 }, (_, i) => ({ s: newGame(9100 + Math.floor(i / 4), classmate(i)) }));
   }, 120_000);
 
-  it('as a grown college junior or senior at OVR 65 to 75, spread across the range', () => {
+  it('as a grown college player (freshman to senior) at OVR 65 to 75, spread across the range', () => {
     const ovrs = starts.map(({ s }) => ovrOf(s.player.attrs, s.player.pos));
     for (const { s } of starts) {
       const o = ovrOf(s.player.attrs, s.player.pos);
@@ -62,7 +62,7 @@ describe('a draft class starts on draft night', () => {
       expect(o).toBeLessThanOrEqual(HI + 1e-9);
       expect(ovrOf(s.player.startAttrs, s.player.pos)).toBeCloseTo(o, 9);
       expect(s.player.peakOvr).toBeCloseTo(o, 9);
-      expect([21, 22]).toContain(s.player.age);
+      expect([19, 20, 21, 22]).toContain(s.player.age);
       expect(s.player.height).toBe(s.player.fullHeight);
       expect(s.player.potential).toBeGreaterThanOrEqual(o + DRAFT_NIGHT.potRoom - 1e-9);
       for (const k of ATTRS) expect(s.player.attrs[k]).toBeLessThanOrEqual(99);
@@ -129,7 +129,7 @@ describe('a draft class starts on draft night', () => {
       const [intro, draft] = s.moments;
       expect(intro.kind).toBe('intro');
       expect(COLLEGES.some((c) => c.name === intro.title)).toBe(true);
-      expect(intro.text).toBe(`Draft night. ${s.player.name} was the first option at ${intro.title}, and after ${s.player.age === 22 ? 'four' : 'three'} seasons there he has declared for the ${s.draft!.year} NBA Draft.`);
+      expect(intro.text).toBe(`Draft night. ${s.player.name} was the first option at ${intro.title}, and after ${['one season', 'two seasons', 'three seasons', 'four seasons'][s.player.age - 19]} there he has declared for the ${s.draft!.year} NBA Draft.`);
       expect(intro.lines![0]).toBe(`Mock drafts have him going ${s.draft!.mockRange![0]}–${s.draft!.mockRange![1]}, in the first round`);
       expect(intro.lines!.some((l) => /rest of your class is in this draft too/.test(l))).toBe(true);
       expect(draft.kind).toBe('draft');
@@ -137,7 +137,7 @@ describe('a draft class starts on draft night', () => {
       // the night's own pages come first: the draft card, then the season plan
       expect(s.pending.map((d) => d.kind)).toEqual(['info', 'plan']);
       expect(s.log[0].kind).toBe('start');
-      expect(s.log[0].text).toMatch(/^Declared for the \d{4} NBA Draft after (three|four) seasons as the first option at /);
+      expect(s.log[0].text).toMatch(/^Declared for the \d{4} NBA Draft after (one season|two seasons|three seasons|four seasons) as the first option at /);
     }
   });
 
