@@ -47,4 +47,8 @@ export const VISITS: Record<string, Visit> = {
   'hometown-film': { verb: 'Watch your film again', place: 'night', lines: ['The kid who plays you is better at defense than you were.', 'You cry at the same scene. Every time.'] },
   'nba-stake': { verb: 'Sit in an owners’ meeting', place: 'city', lines: ['They talk about the salary cap for three hours. You know more about it now than you want to.', 'You vote on the new uniforms. You lose.'], rep: 1 },
   'sneaker-buyout': { verb: 'Visit the factory', place: 'city', lines: ['A line of your shoes runs past on the belt. Thousands of them.', 'You sign the first pair of the new model. And the second. And the five-hundredth.'], rep: 1 },
+  // round 35: friends
+  'gym-key': { verb: 'Run with your friends', place: 'court', lines: ['Ten guys, one ball, nobody calls fouls. You lose the last game to a dentist.', 'Your old coach unlocks the door and stays to watch. He still yells about your footwork.'] },
+  'game-night': { verb: 'Host game night', place: 'home', lines: ['You lose four hands in a row to a friend who has never seen you play. He wants to keep it that way.', 'Midnight, pizza boxes, the same argument about the best team ever. Nobody wins it.'] },
+  'friends-cabin': { verb: 'Go up to the cabin', place: 'field', lines: ['Eight friends, one dock, and a game of HORSE against the boathouse that lasts until dark.', 'No signal on the lake. Somebody brings a radio and you hear your own name on the sports news.'] },
 };

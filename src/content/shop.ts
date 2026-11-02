@@ -169,6 +169,12 @@ export const SHOP_ITEMS: ShopItem[] = [
   // round 35: free-throw touch (the round's theme: the line, and the 50-40-90)
   { id: 'ft-line-tape', name: 'A free-throw line taped on the garage floor', category: 'Gear', price: 0.03 * K, blurb: 'Fifteen feet from the door, measured twice. A hundred makes before dinner.', touch: 2.5 },
   { id: 'ft-shot-machine', name: 'A free-throw rebounding machine', category: 'Training', price: 9 * K, blurb: 'It catches every make and sends it back. It never gets tired; you do.', touch: 4, attrs: { SHT: 0.3 } },
+  // round 35, end of the round: friends (a draft class, a friend's challenge) and the jumper that ages
+  { id: 'gym-key', name: 'A gym key for Sunday runs with friends', category: 'Lifestyle', price: 2 * K, blurb: 'Your old high school gym, every Sunday at ten. Whoever shows up plays.', attrs: { FIN: 0.3, PER: 0.3 }, morale: 3 },
+  { id: 'rival-film', name: 'Film on every rival your age', category: 'Training', price: 15 * K, blurb: 'Every player from your draft class, every tendency, on one hard drive.', attrs: { IQ: 0.5, PER: 0.5 } },
+  { id: 'game-night', name: 'A game-night table for the old crew', category: 'Lifestyle', price: 0.8 * K, blurb: 'Cards on Thursdays, the same five friends since the eighth grade.', morale: 4 },
+  { id: 'friends-cabin', name: 'A lake cabin for the summer crew', category: 'Lifestyle', price: 350 * K, blurb: 'Bunk beds for eight, a dock, and a hoop nailed to the boathouse.', morale: 8, rep: 1 },
+  { id: 'release-coach', name: 'A shooting coach for older legs', category: 'Training', price: 80 * K, blurb: 'Less dip, less leg, the ball out a beat sooner. The jumper that ages well.', attrs: { SHT: 0.5 }, declineMult: 0.97 },
   // round 34: simplification (the round's theme: fewer, better things)
   { id: 'career-scrapbook', name: 'A career scrapbook', category: 'Lifestyle', price: 0.3 * K, blurb: 'Every clipping since high school, in one fat binder.', morale: 3, rep: 1 },
   { id: 'one-move-coach', name: 'A one-move coach', category: 'Training', price: 3 * K, blurb: 'One move, a thousand times a day, until it is yours.', attrs: { FIN: 0.5 }, morale: 1 },
