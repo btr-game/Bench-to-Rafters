@@ -2872,7 +2872,15 @@ multiple times."
     whole class goes into the same draft. The intro page is on the draft stage, headed Draft night.
     Classes seat 12. Careers outside a class are unchanged (60 careers' full states hashed the same).
   - **Stars as often as a first-round pick** (owner: "potential so stars come up about as often as
-    for a normal first-round pick? yes"): see the tuning below.
+    for a normal first-round pick? yes"). Entering at 21 or 22, the first draft-night careers
+    peaked at 77.89626 on average with 0.6666667% MVPs and 2.000000% Hall of Famers, against the
+    first-round picks of Regular guy careers played from high school (80.60136, 9.876543%,
+    23.45679%). A lift to the potential alone raised the mean but not the stars (MVPs come from the
+    top tail, the Hall of Fame from long, strong careers), so three things changed: the class is a
+    freshman one-and-done to a senior (19 to 22, the younger twice as often), his potential is
+    spread (sd 10, lifted -3, never under his OVR plus 2), and his hidden growth rate is raised by
+    0.3 (a first-round pick is one who grew fast). Over 200 smart careers: mean peak 82.40946,
+    All-Star 69.0%, MVP 9.5%, Hall of Fame 19.5% (titles 61.5%), 13.75 NBA seasons.
   - **Join a friend** (career/team.ts): a trade aim at a classmate's NBA team. The two salaries
     against next season's cap set the odds (fit = 1 - 1.5 x (share - 0.10), at least 0.25; the
     usual trade odds x 1.1 x fit, 5% to 85%); not offered past 60% of the cap together, or with the

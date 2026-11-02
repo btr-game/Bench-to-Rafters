@@ -912,7 +912,7 @@ export const DRAFT_NIGHT = {
   // round 35: "potential so stars come up about as often as for a normal first-round pick? yes"):
   // the potential moved by potLift and spread by potSpread (the best of them can become MVPs), and
   // his hidden growth rate raised by growthLift (a first-round pick is one who grew fast). Over 200
-  // smart draft-night careers: mean peak 81.99957, All-Star 66.5%, MVP 9.5%, Hall of Fame 19.0%,
+  // smart draft-night careers: mean peak 82.40946, All-Star 69.0%, MVP 9.5%, Hall of Fame 19.5%,
   // against 80.60136, 60.49383%, 9.876543% and 23.45679% for the first-round picks of 150 Regular
   // guy careers (before: 77.89626, 39.33333%, 0.6666667%, 2.000000%).
   potLift: -3,
