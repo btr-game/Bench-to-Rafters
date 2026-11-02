@@ -7,7 +7,9 @@ import type { GameState } from '../engine/types';
 import { isDev } from '../dev/mode';
 import { count, nbaTitles } from '../engine/awards/legacy';
 import { addMiniResult } from '../engine/achievementsMini';
+import type { MpKind } from '../engine/achievements35';
 import type { MiniResult } from '../engine/career/miniBonus';
+import { UNLOCK_FROM, islandDone, loadRoad, type Road, type Unlock } from './road';
 
 const KEY = 'btr-achv-v1';
 
@@ -155,6 +157,29 @@ export function recordVisit(): void {
   saveAch(d);
 }
 
+/**
+ * Round 35, Play with friends (ui/multiplayer.ts): one thing done with friends, counted for the book.
+ * Like the other recorders it only counts; the caller checks the book after (`achievementsNow()`).
+ * - 'made': a challenge set from a finished career (the retirement page's Challenge a friend, once
+ *   its code comes back)
+ * - 'answered': the answer to a friend's challenge posted (a challenge career finished)
+ * - 'beat': that answer beat the career that set the challenge (a higher career index)
+ * - 'joined': a draft class made or joined (a seat in it taken)
+ * - 'classTop': first in a draft class's standings, with two members or more
+ * With `code` (the challenge's or the class's), each one counts once however often it is seen; the
+ * result is true when it counted.
+ */
+export function recordMp(kind: MpKind, code?: string): boolean {
+  const d = loadAch();
+  const t = d.totals;
+  const key = code ? `${kind}:${code}` : '';
+  if (key && t.mpSeen?.includes(key)) return false;
+  if (key) t.mpSeen = [...(t.mpSeen ?? []), key];
+  t.mp = { ...t.mp, [kind]: (t.mp?.[kind] ?? 0) + 1 };
+  saveAch(d);
+  return true;
+}
+
 /** Round 29: cards locked in the career log right now (the most at once is kept). */
 export function recordLocks(n: number): void {
   const d = loadAch();
@@ -176,10 +201,21 @@ export function recordHeard(id: string): boolean {
   return true;
 }
 
+/** Round 35: the modes this road has opened by clearing their stops (not by `all`, the gift to a
+ * device that graduated before the locks, nor by the dev deck having everything). */
+const roadOpened = (r: Road): Unlock[] =>
+  (Object.keys(UNLOCK_FROM) as Unlock[]).filter((u) => {
+    const from = UNLOCK_FROM[u];
+    return from === 'island' ? islandDone(r) : !!r.passed[from];
+  });
+
 /** Checks everything against the career on screen; returns what is new (and keeps it). */
 export function checkAch(g: GameState | null): Achievement[] {
   const d = loadAch();
   d.totals.daily = Math.max(d.totals.daily, dailyDays(d.since));
+  // round 35: the road map's stops cleared (kept once seen, like the daily days)
+  const open = roadOpened(loadRoad()).filter((u) => !d.totals.unlocks?.includes(u));
+  if (open.length) d.totals.unlocks = [...(d.totals.unlocks ?? []), ...open];
   const fresh = earnedNow(g, d.totals).filter((id) => !d.got[id]);
   if (!fresh.length) return [];
   const at = new Date().toISOString();
