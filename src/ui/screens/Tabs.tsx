@@ -46,6 +46,7 @@ import { fmtMoney, ht, pct, pg, seasonLabel } from '../format';
 import { ordinal } from '../format';
 import { league as leagueOf, ovr, roleName, stageLine, team as teamOf } from '../selectors';
 import { buildWord, idealWeight, weightOf } from '../../engine/player/weight';
+import { touchOf } from '../../engine/player/touch';
 import { polyCells, type Pt } from '../art/pixel';
 import { ChampionStrip, LeaderBars, StandingsBars, VoteBars } from '../components/LeagueVisuals';
 
@@ -79,6 +80,7 @@ function GameLogTable({ g }: { g: GameState }) {
             <th>AST</th>
             <th>FG</th>
             <th>3P</th>
+            <th>FT</th>
           </tr>
         </thead>
         <tbody>
@@ -104,9 +106,12 @@ function GameLogTable({ g }: { g: GameState }) {
                   <td>
                     {x.line.tpm}-{x.line.tpa}
                   </td>
+                  <td>
+                    {x.line.ftm}-{x.line.fta}
+                  </td>
                 </>
               ) : (
-                <td colSpan={6} className="l muted">
+                <td colSpan={7} className="l muted">
                   DNP
                 </td>
               )}
@@ -534,6 +539,7 @@ export function PlayerTab({ g }: { g: GameState }) {
           <p className="muted small">● focus stat · the dashed shape is where you started the season.</p>
           <div className="meters">
             <Meter label="Range" value={p.range} tone="ink" />
+            <Meter label="Free-throw touch" value={touchOf(p)} tone="ink" />
             <Meter label={`${p.hand === 'L' ? 'Right' : 'Left'} hand (weak hand)`} value={p.offhand} tone="ink" />
           </div>
         </Card>
@@ -778,6 +784,7 @@ export function HistoryTable({ rows }: { rows: SeasonRecord[] }) {
             <th>AST</th>
             <th>FG%</th>
             <th>3P%</th>
+            <th>FT%</th>
             <th>OVR</th>
             <th className="l">Result</th>
           </tr>
@@ -800,6 +807,7 @@ export function HistoryTable({ rows }: { rows: SeasonRecord[] }) {
               <td>{pg(h.line, 'ast')}</td>
               <td>{pct(h.line.fgm, h.line.fga)}</td>
               <td>{pct(h.line.tpm, h.line.tpa)}</td>
+              <td>{pct(h.line.ftm, h.line.fta)}</td>
               <td>{Math.round(h.ovrEnd)}</td>
               <td className="l">
                 {h.result}

@@ -30,6 +30,43 @@ export const PAL: Record<string, string> = {
 };
 
 export const ICONS: Record<string, string[]> = {
+  // round 35: free-throw touch (the Player tab's meter, and the shop)
+  touch: [
+    '.....OOOOOO.....',
+    '....ONNNnNNO....',
+    '...ONNNNnNNNO...',
+    '..YONnnnnnnnOY..',
+    '...ONNNNnNNNO...',
+    '....ONNNnNNO....',
+    '.....OOOOOO.....',
+    '.......YY.......',
+    '......Y..Y......',
+    '................',
+    'OOOOOOOOOOOOOOOO',
+    'OWWWWWWWWWWWWWWO',
+    'OOOOOOOOOOOOOOOO',
+    '..ONNNNNNNNNNO..',
+    '..ONNNNNNNNNNO..',
+    '..OOOOOOOOOOOO..',
+  ],
+  rebounder: [
+    '.OOOOOOOOOOOOOO.',
+    '.OwWwWwWwWwWwWO.',
+    '..OwWwWwWwWwWO..',
+    '...OwWwWwWwWO...',
+    '....OwWwWwWO....',
+    '......OMMO......',
+    '......OMmO..OOO.',
+    '......OMmO.ONnNO',
+    '......OMmO.OnnnO',
+    '......OMmO.ONnNO',
+    '......OMmO..OOO.',
+    '......OMmO......',
+    '......OMmO......',
+    '...OOOOMMOOOO...',
+    '..OKKKKKKKKKKO..',
+    '..OOOOOOOOOOOO..',
+  ],
   // round 34: Look back on a finished career
   rewind: [
     '................',
@@ -2374,7 +2411,7 @@ export const GUIDE_ICON: Record<string, string> = {
 
 /** The meters, by their label. */
 export const meterIcon = (label: string) =>
-  /morale/i.test(label) ? 'morale' : /trust/i.test(label) ? 'trust' : /reputation/i.test(label) ? 'reputation' : /wear/i.test(label) ? 'wear' : /range/i.test(label) ? 'range' : /hand/i.test(label) ? 'offhand' : /health/i.test(label) ? 'health' : /scout/i.test(label) ? 'scouts' : /bank|money|earning/i.test(label) ? 'bank' : '';
+  /morale/i.test(label) ? 'morale' : /trust/i.test(label) ? 'trust' : /reputation/i.test(label) ? 'reputation' : /wear/i.test(label) ? 'wear' : /range/i.test(label) ? 'range' : /touch/i.test(label) ? 'touch' : /hand/i.test(label) ? 'offhand' : /health/i.test(label) ? 'health' : /scout/i.test(label) ? 'scouts' : /bank|money|earning/i.test(label) ? 'bank' : '';
 
 /** A choice's icon from its id ('balanced', 'style:pace', 'plan-shooting'...), if it has one. */
 export const choiceIcon = (id: string) => ICON_FOR[id] ?? ICON_FOR[id.split(/[:+\-_]/).pop() ?? ''] ?? '';
@@ -2395,6 +2432,9 @@ export const SHIFT_COLOR = ['#E03131', '#F76707', '#FCC419', '#2F9E44', '#1C7ED6
 export function shopIcon(id: string, name: string): string {
   const t = `${id} ${name}`.toLowerCase();
   const rules: [RegExp, string][] = [
+    // round 35: the round's items
+    [/ft-line-tape/, 'touch'],
+    [/ft-shot-machine/, 'rebounder'],
     // round 34: the round's items
     [/career-scrapbook/, 'book'],
     [/one-move-coach/, 'finish'],

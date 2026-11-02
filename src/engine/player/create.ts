@@ -25,6 +25,7 @@ import { ARCHETYPES } from './archetypes';
 import { ovrOf } from './ovr';
 import { rollAnomaly } from './anomaly';
 import { startWeight } from './weight';
+import { touchStart } from './touch';
 
 export function drawPotential(rng: Rng, d: SkewDist): number {
   return Math.round(clamp(d.base + Math.exp(normal(rng, d.mu, d.sigma)), d.min, d.max));
@@ -73,6 +74,7 @@ export function createPlayer(rng: Rng, input: CreateInput): UserPlayer {
   rollAnomaly(rng, p);
   startWeight(rng, p);
   p.startAttrs = { ...p.attrs };
+  p.touch = touchStart(p);
   return p;
 }
 

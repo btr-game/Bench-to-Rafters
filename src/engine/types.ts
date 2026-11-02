@@ -111,6 +111,7 @@ export interface UserPlayer {
   caps: Attrs;
   range: number;
   offhand: number; // skill with the weaker hand
+  touch?: number; // round 35: free-throw touch, 0-99 (player/touch.ts); missing in careers saved before round 35
   hand: 'R' | 'L'; // dominant hand
   focus: AttrKey[];
   focusChanges: number;

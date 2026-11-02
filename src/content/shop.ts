@@ -18,6 +18,7 @@ export interface ShopItem {
   focus?: number; // added to both focus stats
   range?: number;
   offhand?: number;
+  touch?: number; // round 35: free-throw touch (player/touch.ts)
   injuryMult?: number;
   declineMult?: number;
   growthMult?: number; // next season's growth
@@ -161,10 +162,13 @@ export const SHOP_ITEMS: ShopItem[] = [
   { id: 'physio-visits', name: 'Weekly physio visits', category: 'Recovery', price: 2 * K, blurb: 'Catch the small things before they turn big.', injuryMult: 0.93 },
   { id: 'nutritionist', name: 'Sports nutritionist', category: 'Recovery', price: 15 * K, blurb: 'Real food, on a plan.', attrs: { ATH: 0.5 }, injuryMult: 0.95, declineMult: 0.98 },
   { id: 'altitude-tent', name: 'Altitude sleeping tent', category: 'Recovery', price: 6 * K, blurb: 'Sleep at 9,000 feet, play at sea level.', attrs: { ATH: 0.5 }, morale: -1 },
-  { id: 'sports-psych', name: 'Sports psychologist', category: 'Recovery', price: 50 * K, blurb: 'Quiet mind at the free-throw line.', morale: 6, attrs: { SHT: 0.5 } },
+  { id: 'sports-psych', name: 'Sports psychologist', category: 'Recovery', price: 50 * K, blurb: 'Quiet mind at the free-throw line.', morale: 6, attrs: { SHT: 0.5 }, touch: 1.5 },
   { id: 'meditation', name: 'Meditation app', category: 'Lifestyle', price: 0.07 * K, blurb: 'Ten minutes a day. Breathe.', morale: 3 },
   { id: 'stream-setup', name: 'Streaming setup', category: 'Lifestyle', price: 2 * K, blurb: 'Fans watch you play video games. You gain followers.', rep: 3, morale: 2 },
   { id: 'team-dinner', name: 'Dinner for the whole team', category: 'Lifestyle', price: 4 * K, blurb: 'Steaks on you. The locker room remembers.', trust: 4, morale: 3 },
+  // round 35: free-throw touch (the round's theme: the line, and the 50-40-90)
+  { id: 'ft-line-tape', name: 'A free-throw line taped on the garage floor', category: 'Gear', price: 0.03 * K, blurb: 'Fifteen feet from the door, measured twice. A hundred makes before dinner.', touch: 2.5 },
+  { id: 'ft-shot-machine', name: 'A free-throw rebounding machine', category: 'Training', price: 9 * K, blurb: 'It catches every make and sends it back. It never gets tired; you do.', touch: 4, attrs: { SHT: 0.3 } },
   // round 34: simplification (the round's theme: fewer, better things)
   { id: 'career-scrapbook', name: 'A career scrapbook', category: 'Lifestyle', price: 0.3 * K, blurb: 'Every clipping since high school, in one fat binder.', morale: 3, rep: 1 },
   { id: 'one-move-coach', name: 'A one-move coach', category: 'Training', price: 3 * K, blurb: 'One move, a thousand times a day, until it is yours.', attrs: { FIN: 0.5 }, morale: 1 },
@@ -173,7 +177,7 @@ export const SHOP_ITEMS: ShopItem[] = [
   { id: 'minimal-locker', name: 'A minimalist locker', category: 'Lifestyle', price: 0.5 * K, blurb: 'One hook, one shelf, one pair of shoes. The room follows.', morale: 2, trust: 1 },
   // round 33: efficiency, and the nights that go wrong (the round's achievements)
   { id: 'shot-chart-wall', name: 'Your shot chart, poster size', category: 'Training', price: 0.15 * K, blurb: 'Green where you make them. Red where you should stop.', attrs: { IQ: 0.5 } },
-  { id: 'ft-routine-coach', name: 'Free-throw routine specialist', category: 'Training', price: 4 * K, blurb: 'Same breath, same dribbles, same spin. Underhand, if you dare.', attrs: { SHT: 0.5 }, morale: 1 },
+  { id: 'ft-routine-coach', name: 'Free-throw routine specialist', category: 'Training', price: 4 * K, blurb: 'Same breath, same dribbles, same spin. Underhand, if you dare.', attrs: { SHT: 0.5 }, touch: 4, morale: 1 },
   { id: 'ball-security', name: 'Ball-security camp with a retired point guard', category: 'Training', price: 6 * K, blurb: 'Two hands in traffic. Fewer giveaways.', attrs: { PLY: 0.5, IQ: 0.5 } },
   { id: 'box-score-frame', name: 'Your best box score, framed', category: 'Lifestyle', price: 0.4 * K, blurb: 'Every number from your best night, behind glass.', rep: 1, morale: 3 },
   { id: 'gold-brick', name: 'A gold-painted brick', category: 'Lifestyle', price: 0.05 * K, blurb: 'For the night nothing went in. You can laugh about it now.', morale: 4 },

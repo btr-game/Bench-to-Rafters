@@ -85,6 +85,7 @@ import { payStaff } from './staff';
 import { updateRivalry } from './rivalry';
 import { writeNews } from './news';
 import { coachOfYear, temperFx, temperNote } from './coach';
+import { addTouch, touchOf } from '../player/touch';
 
 /** What he adds to winning beyond his OVR, scaled by his share of the game (career/team.ts). */
 const edgeFor = (a: Attrs, ovr: number, share: number, post: boolean): number => {
@@ -99,7 +100,7 @@ export function activeLeague(s: GameState): League {
 export function userProfile(s: GameState): Profile {
   const p = s.player;
   // lefties get a small edge: defenders rarely see the left hand
-  return { attrs: p.attrs, height: p.height, wingspan: p.wingspan, range: p.range, offhand: p.offhand + (p.hand === 'L' ? 6 : 0) };
+  return { attrs: p.attrs, height: p.height, wingspan: p.wingspan, range: p.range, offhand: p.offhand + (p.hand === 'L' ? 6 : 0), touch: touchOf(p) };
 }
 
 // ---------- preseason ----------
@@ -181,7 +182,7 @@ const PLAN_TEXT: Record<HalfPlan, PlanText> = {
   recovery: { id: 'recovery', label: 'Recovery', detail: 'Ease off. Slower development, far fewer injuries, heal faster, feel better.' },
   spotlight: { id: 'spotlight', label: 'Spotlight', detail: 'Hunt shots and attention. Fame and money, and your shooting and finishing can jump, or slump. Less feel for the game, a more selfish locker room, more injury risk; coaches and teammates notice.' },
   teamfirst: { id: 'teamfirst', label: 'Team first', detail: 'Make the right play. Fewer shots for you, but the team plays better in your games and the chemistry lasts all season. A little more feel for the game, fewer injuries, and the coach loves it.' },
-  shooting: { id: 'shooting', label: 'Shooting lab', detail: 'Live in the gym with a shooting coach. Your jumper and range get the reps; the rest waits.' },
+  shooting: { id: 'shooting', label: 'Shooting lab', detail: 'Live in the gym with a shooting coach. Your jumper, your range and your free throws get the reps; the rest waits.' },
   strength: { id: 'strength', label: 'Weight room', detail: 'Get stronger and more explosive inside. A bit more injury risk.' },
   playmaking: { id: 'playmaking', label: 'Film and reads', detail: 'Study the game. Passing and feel improve; coaches trust you more.' },
   defense: { id: 'defense', label: 'Lockdown', detail: 'Make defense your identity. Coaches notice.' },
@@ -194,7 +195,7 @@ const PLAN_IDS = Object.keys(PLAN_TEXT) as HalfPlan[];
 const FAST_PLANS: PlanText[] = [
   { id: 'balanced', label: 'General', detail: 'A bit of everything. Every rating grows at a normal pace.' },
   { id: 'strength', label: 'Weight room', detail: 'Strength and explosiveness: finishing, rebounding, athleticism and rim protection. A bit more injury risk.' },
-  { id: 'shooting', label: 'Shooting', detail: 'Your jumper and your range get the reps; the rest waits.' },
+  { id: 'shooting', label: 'Shooting', detail: 'Your jumper, your range and your free throws get the reps; the rest waits.' },
   { id: 'defense', label: 'Defense', detail: 'Perimeter and interior defense. Coaches notice.' },
   { id: 'playmaking', label: 'IQ', detail: 'Film, reads and passing: playmaking and basketball IQ. Coaches trust you more.' },
 ];
@@ -561,6 +562,7 @@ function growthAfterHalf(s: GameState, acc: HalfAcc, level: LevelKey, ovr: numbe
   if (lb) changeWeight(p, lb, 0.3);
   if (plan.rangeGain) p.range = clamp(p.range + plan.rangeGain * outcome.growth, 0, 99);
   if (plan.offhandGain) p.offhand = clamp(p.offhand + plan.offhandGain * outcome.growth, 0, 99);
+  if (plan.touchGain) addTouch(p, plan.touchGain * outcome.growth);
   if (outcome.injury) p.injuryMultNext *= outcome.injury;
   // round 20: chemistry built (or burned) for the rest of the season
   if (plan.chem) season.teamBonus = Math.round(((season.teamBonus ?? 0) + plan.chem) * 100) / 100;

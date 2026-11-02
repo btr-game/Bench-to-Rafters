@@ -12,6 +12,7 @@ import { advance as engineAdvance, changeFocus, changeNumber, changePosition, ch
 import { seasonLabel } from './ui/format';
 import { tabKey } from './ui/selectors';
 import { weightOf } from './engine/player/weight';
+import { touchOf } from './engine/player/touch';
 import { visitItem, wearItem } from './engine/economy/shop';
 import { letGo, raiseStaff, talkStaff } from './engine/career/staff';
 import { negotiate, type Ask } from './engine/career/negotiate';
@@ -580,6 +581,7 @@ export const useStore = create<Store>((set, get) => ({
     const game = await readSlot(id);
     if (!game) return false;
     weightOf(game.player); // careers saved before round 20 get a weight
+    touchOf(game.player); // and before round 35 a free-throw touch
     // round 34 (owner: "when i look back or continue from the career log, it doesnt instantly direct
     // me to the career's homepage"): straight to its Home, from wherever Continue was pressed
     set({ game, slot: id, tab: 'home', page: null, transition: null, mini: null, seen: allSeen(game), daily: null, logged: null, lookBack: game.step === 'retired', ...oathLock(game) });

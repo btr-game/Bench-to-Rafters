@@ -18,6 +18,7 @@ export function Scoreboard({ line, showGp = true }: { line: StatLine; showGp?: b
     ['BLK', pg(line, 'blk')],
     ['FG%', pct(line.fgm, line.fga)],
     ['3P%', pct(line.tpm, line.tpa)],
+    ['FT%', pct(line.ftm, line.fta)],
     ['MIN', pg(line, 'min')],
   ];
   if (showGp) cells.push(['GP', String(line.gp)]);
@@ -45,6 +46,8 @@ export function StatStrip({ line, label }: { line: StatLine; label: string }) {
     [pg(line, 'stl'), 'STL'],
     [pg(line, 'blk'), 'BLK'],
     [pct(line.fgm, line.fga), 'FG%'],
+    [pct(line.tpm, line.tpa), '3P%'],
+    [pct(line.ftm, line.fta), 'FT%'],
   ];
   return (
     <p className="stat-strip num" aria-label={`${label}: season averages`}>

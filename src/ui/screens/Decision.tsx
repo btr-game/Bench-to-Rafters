@@ -269,7 +269,7 @@ function LiveView({ g, d }: { g: GameState; d: Decision }) {
           )}
           {l && l.min > 0 && (
             <p className="small">
-              <b>{g.player.name}</b>: {l.pts} pts, {l.reb} reb, {l.ast} ast, {l.fgm}/{l.fga} FG, {l.stl} stl, {l.blk} blk
+              <b>{g.player.name}</b>: {l.pts} pts, {l.reb} reb, {l.ast} ast, {l.fgm}/{l.fga} FG, {l.ftm}/{l.fta} FT, {l.stl} stl, {l.blk} blk
             </p>
           )}
         </>
