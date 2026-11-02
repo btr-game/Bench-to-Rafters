@@ -52,7 +52,7 @@ export interface OpenChallenge {
   answers: number;
 }
 /** One season of a class member, a short line (the database takes 1.5 KB at most). */
-export interface ClassSeason {
+interface ClassSeason {
   year: number;
   age: number;
   lv: string; // LevelKey
@@ -69,7 +69,7 @@ export interface ClassSeason {
   aw: string[];
   pn: string; // his name, so the class shows the player as well as the friend
 }
-export interface ClassMember {
+interface ClassMember {
   id: string;
   name: string;
   seasons: ClassSeason[];
@@ -240,9 +240,9 @@ export const mpScore = scoreOf;
 
 export const LEVEL_SHORT: Record<string, string> = { HSJV: 'HS JV', HSV: 'HS', NCAA: 'College', GL: 'G League', EU: 'Europe', INT: 'Overseas', NBA: 'NBA' };
 const has = (s: ClassSeason, re: RegExp) => s.aw.some((a) => re.test(a));
-export const isMvp = (s: ClassSeason) => has(s, /^MVP$/);
-export const isAllStar = (s: ClassSeason) => has(s, /^All-Star$/);
-export const isChamp = (s: ClassSeason) => has(s, /Champion$/) && s.lv === 'NBA';
+const isMvp = (s: ClassSeason) => has(s, /^MVP$/);
+const isAllStar = (s: ClassSeason) => has(s, /^All-Star$/);
+const isChamp = (s: ClassSeason) => has(s, /Champion$/) && s.lv === 'NBA';
 
 export interface Standing {
   m: ClassMember;

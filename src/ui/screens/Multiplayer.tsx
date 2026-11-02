@@ -119,7 +119,7 @@ function CodeEntry({ label, onOpen }: { label: string; onOpen: (code: string) =>
 }
 
 /** The code, big, and its link to copy. */
-export function ShareCode({ link }: { link: MpLink }) {
+function ShareCode({ link }: { link: MpLink }) {
   const url = linkFor(link);
   const field = useRef<HTMLInputElement>(null);
   const [said, setSaid] = useState('');

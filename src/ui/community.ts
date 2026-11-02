@@ -433,7 +433,7 @@ export async function watchReal(onCount: (n: number) => void, onFeed: (items: Fe
 }
 
 /** The room's visits that joined the court (joinCourt sets `here` in their presence). */
-export const onCourt = (peers: readonly unknown[]): number => peers.filter((p) => !!(p as { presence?: { here?: unknown } })?.presence?.here).length;
+const onCourt = (peers: readonly unknown[]): number => peers.filter((p) => !!(p as { presence?: { here?: unknown } })?.presence?.here).length;
 
 /** Whether this is the online build (the website), which carries its database's address (.env.itch). */
 export const onlineBuild = (): boolean => !!(import.meta.env.VITE_SB_URL && import.meta.env.VITE_SB_KEY);
