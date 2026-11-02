@@ -70,6 +70,16 @@ Other preferences:
 - The game is played mostly on a computer: desktop layout first, phones still supported.
 - Never put the owner's email address in the code, the docs or the published page.
 
+## Lighter checks (owner, round 35)
+
+Owner: "let's go with lighter checks". During a round: `npx tsc --noEmit -p .` and the test files
+the change touches; the visual check only on the screens a change touches (`--only <ids>`, two
+looks: `--configs desktop-light,phone-dark`); calibration runs of about 150 careers. The full set
+below runs once, at the end of the round: the whole test suite, the visual check on every card in
+all four looks with its diff, class contrast, dev-apart, and the tutorial end to end only when the
+tutorial changed. Balance only when how careers play changed, and the owner may still skip it.
+Big rounds may be split across parallel helper agents in worktrees (owner, round 35: "sure").
+
 ## Checks before a commit
 
 ```bash

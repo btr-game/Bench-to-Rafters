@@ -94,7 +94,7 @@ export function CareerLogCard() {
         Career log
       </div>
       <p className="small muted">
-        Your saved careers (continue, look back, a code to move one) and the cards of your last {LOG_MAX} finished careers, on this device. {n[0] ? `${n[0]} card${n[0] === 1 ? '' : 's'}${n[1] ? `, ${n[1]} locked` : ''}.` : 'Finish a career for its first card.'}
+        Your saved careers (continue or look back) and the cards of your last {LOG_MAX} finished careers, on this device. {n[0] ? `${n[0]} card${n[0] === 1 ? '' : 's'}${n[1] ? `, ${n[1]} locked` : ''}.` : 'Finish a career for its first card.'}
         {live ? ' During a career you can look, download and lock; deleting waits for the start page.' : ` Lock up to ${LOCK_MAX} to keep them for good.`}
       </p>
       <button className="btn ghost" data-tour="log" onClick={() => setPage('log')}>

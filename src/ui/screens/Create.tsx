@@ -37,6 +37,7 @@ import { ROADMAP } from '../../engine/balance';
 import { FootBar } from '../components/FootBar';
 import { LevelAdds } from '../components/LevelAdds';
 import { PlaceArt } from './RoadMap';
+import { modeOpen, unlockHint } from '../road';
 
 const pick = <T,>(a: readonly T[]): T => a[Math.floor(Math.random() * a.length)];
 const uiRng = makeRng(Math.floor(Math.random() * 2 ** 31));
@@ -157,6 +158,7 @@ export function Create({ level }: { level?: Level } = {}) {
   const [focus, setFocus] = useState<AttrKey[]>([]);
   const [hand, setHand] = useState<'R' | 'L'>('R');
   const [mode, setMode] = useState<Mode>('standard');
+  const road = useStore((s) => s.road);
   const [country, setCountry] = useState(''); // '' = the game decides, by real-world odds
   const [oath, setOath] = useState(false); // round 25: Rough Road, offered with Reality
   const [comet, setComet] = useState(false); // round 30: Comet, offered with Shoot for the stars
@@ -326,16 +328,21 @@ export function Create({ level }: { level?: Level } = {}) {
         <section className="stack">
           <div className="kicker">Choose how hard the road is</div>
           <div className="modes">
-            {DIFFICULTIES.map((m) => (
-              <button key={m} className={`choice mode-card${mode === m ? ' selected' : ''}${recommend && m === 'standard' ? ' recommended' : ''}`} aria-pressed={mode === m} onClick={() => setMode(m)} data-tour={m === 'standard' ? 'mode-regular' : undefined}>
-                <span className="label with-icon">
-                  <Icon name={ICON_FOR[m]} size={32} />
-                  {MODES[m].name}
-                  {recommend && m === 'standard' && <span className="tag good">Recommended</span>}
-                </span>
-                <small>{MODES[m].blurb}</small>
-              </button>
-            ))}
+            {DIFFICULTIES.map((m) => {
+              // round 35: a difficulty past Regular guy opens with its level on the road map
+              const shut = !modeOpen(road, m);
+              const why = m === 'reality' ? 'reality' : 'stars';
+              return (
+                <button key={m} className={`choice mode-card${mode === m ? ' selected' : ''}${recommend && m === 'standard' ? ' recommended' : ''}${shut ? ' mode-locked' : ''}`} aria-pressed={mode === m} disabled={shut} onClick={() => setMode(m)} data-tour={m === 'standard' ? 'mode-regular' : undefined}>
+                  <span className="label with-icon">
+                    <Icon name={shut ? 'lock' : ICON_FOR[m]} size={32} />
+                    {MODES[m].name}
+                    {recommend && m === 'standard' && <span className="tag good">Recommended</span>}
+                  </span>
+                  <small className={shut ? 'keep' : undefined}>{shut ? unlockHint(why) : MODES[m].blurb}</small>
+                </button>
+              );
+            })}
           </div>
           {/* round 34 (owner: "put the levels (tutorial) card on the main page as a pop out challenge for
               regular"): Regular guy's own challenge is the road map, every level to play again */}
@@ -344,7 +351,7 @@ export function Create({ level }: { level?: Level } = {}) {
               <PlaceArt place="advanced" size={96} />
               <div className="stack" style={{ gap: 6 }}>
                 <div className="sec-title">Back on the road map?</div>
-                <p className="small muted">The tutorial’s three levels, beginner, intermediate and advanced: short careers at fast break’s pace with one goal, an NBA All-Star team. Play any of them again; they count nowhere (no save, career log, achievements or leaderboards).</p>
+                <p className="small muted">The tutorial’s levels and the island: intermediate opens Reality hits hard, advanced Shoot for the stars, the island the mini-games. Short careers at fast break’s pace with one goal, an NBA All-Star team; they count nowhere (no save, career log, achievements or leaderboards).</p>
                 <div className="row" style={{ gap: 8 }}>
                   <button className="btn small ghost" data-tour="levels-card" onClick={() => (sfx('page'), setPage('road'))}>
                     Open the road map

@@ -215,7 +215,7 @@ describe('the road map on this device', () => {
 
 describe('the island', () => {
   it('grades each mini-game run, keeps the best, and passes at C', async () => {
-    const { roadGrade, bestGrade, passGrade, islandDone, roadDone, ROAD_MINIS } = await import('../src/ui/road');
+    const { roadGrade, bestGrade, passGrade, islandDone, unlocked, ROAD_MINIS } = await import('../src/ui/road');
     expect(roadGrade({ game: 'threes', score: 12, won: false, own: true })).toBe('D');
     expect(roadGrade({ game: 'threes', score: 13, won: false, own: true })).toBe('C');
     expect(roadGrade({ game: 'threes', score: 5, won: true, own: true })).toBe('A');
@@ -231,9 +231,9 @@ describe('the island', () => {
     const all = Object.fromEntries(ROAD_MINIS.map((m) => [m, 'C']));
     const passed = { beginner: { star: true }, intermediate: { star: true }, advanced: { star: false } };
     expect(islandDone({ passed, minis: all })).toBe(true);
-    expect(roadDone({ passed, minis: all })).toBe(false);
-    expect(roadDone({ passed, minis: all, toured: 1 })).toBe(true);
-    expect(roadDone({ passed, minis: { ...all, dunk: 'D' }, toured: 1 })).toBe(false);
+    // round 35: the island opens the mini-games, a D anywhere keeps them shut
+    expect(unlocked({ passed, minis: all }, 'minis')).toBe(true);
+    expect(unlocked({ passed, minis: { ...all, dunk: 'D' } }, 'minis')).toBe(false);
   });
 });
 

@@ -4,6 +4,13 @@
 // goes into the browser automatically gets assigned to the tutorial, regardless of their data");
 // the exit code skips it, and the graduation page shows the code (owner: "at the end of the
 // tutorial, the game reveals the exit password ... this allows old users to skip").
+// Round 35 (owner: "make only the beginner level of tutorial necessary. once the user graduates from
+// it, they get the key and gain access to the main game. but, can you lock the other difficulties
+// ... except for regular guy. also lock minigame. the user have to clear the other levels in
+// tutorial and the minigame tutorial in order to access those modes"): graduation follows the
+// beginner level; intermediate opens Reality hits hard, advanced Shoot for the stars, the island the
+// mini-games (Built in a lab among them). The exit code opens what beginner does. A device that had
+// already graduated keeps everything.
 
 import { LEVEL_IDS, levelOf, type Level } from '../engine/levels';
 import type { GameState } from '../engine/types';
@@ -16,8 +23,12 @@ import { fnv1a, isDev } from '../dev/mode';
 export type RoadMini = 'threes' | 'dunk' | 'street' | 'legends' | 'lab' | 'rhythm' | 'office';
 
 export interface Road {
-  /** The full game is open on this device: the tutorial finished, or the exit code. */
+  /** The full game is open on this device: the beginner level passed (round 35), or the exit code. */
   free?: 1;
+  /** Round 35: every mode open (a device that graduated before the round 35 locks). */
+  all?: 1;
+  /** The version of the road's rules this was saved under (35: the beginner-only tutorial). */
+  v?: number;
   /** The levels passed, and whether that career made an All-Star team. */
   passed: Partial<Record<Level, { star: boolean }>>;
   /** The best grade in each mini-game so far. */
@@ -37,12 +48,23 @@ const KEY = 'btr-road-v1';
 export function loadRoad(): Road {
   try {
     const r = JSON.parse(localStorage.getItem(KEY) ?? 'null') as Road | null;
-    if (r && typeof r === 'object') return { ...r, passed: r.passed ?? {}, minis: r.minis ?? {} };
+    if (r && typeof r === 'object') {
+      const road: Road = { ...r, passed: r.passed ?? {}, minis: r.minis ?? {} };
+      // round 35: a road saved before the locks; one that had graduated keeps every mode
+      if (!road.v) {
+        road.v = ROAD_V;
+        if (road.free) road.all = 1;
+        saveRoad(road);
+      }
+      return road;
+    }
   } catch {
     /* unreadable or blocked: the road from its start */
   }
-  return { passed: {}, minis: {} };
+  return { passed: {}, minis: {}, v: ROAD_V };
 }
+
+const ROAD_V = 35;
 
 export function saveRoad({ preview: _, ...r }: Road): void {
   try {
@@ -124,6 +146,26 @@ export const ROAD_NEED: Record<RoadMini, string> = {
   office: 'make the playoffs once',
 };
 
+/** Round 35: what the road map's other stops open once the full game is: intermediate Reality hits
+ * hard, advanced Shoot for the stars, the island the mini-games (Built in a lab is one of them). */
+export type Unlock = 'reality' | 'stars' | 'minis';
+export const UNLOCK_FROM: Record<Unlock, Level | 'island'> = { reality: 'intermediate', stars: 'advanced', minis: 'island' };
+export const UNLOCK_NAME: Record<Unlock, string> = { reality: 'Reality hits hard', stars: 'Shoot for the stars', minis: 'the mini-games' };
+const STOP_NAME: Record<Level | 'island', string> = { beginner: 'beginner', intermediate: 'the intermediate level', advanced: 'the advanced level', island: 'the island' };
+
+/** Whether this device has opened `u` (the dev deck has everything, but for its tutorial cards). */
+export function unlocked(r: Road, u: Unlock): boolean {
+  if (r.all || (isDev() && !r.preview)) return true;
+  const from = UNLOCK_FROM[u];
+  return from === 'island' ? islandDone(r) : !!r.passed[from];
+}
+/** A difficulty this device may start a career at (Regular guy always). */
+export const modeOpen = (r: Road, m: string): boolean => (m === 'reality' ? unlocked(r, 'reality') : m === 'stars' ? unlocked(r, 'stars') : true);
+/** What a stop on the road map opens, if it opens anything. */
+export const unlockOf = (stop: Level | 'island'): Unlock | null => (Object.keys(UNLOCK_FROM) as Unlock[]).find((u) => UNLOCK_FROM[u] === stop) ?? null;
+/** "Clear the intermediate level on the road map to open Reality hits hard." */
+export const unlockHint = (u: Unlock): string => `Clear ${STOP_NAME[UNLOCK_FROM[u]]} on the road map to open ${UNLOCK_NAME[u]}.`;
+
 /** A career kept nowhere: a level, or a closing-tour stop (no save slot, log, community or achievements). */
 export const offRecord = (g: GameState): boolean => !!(g.flags.level || g.flags.tour);
 
@@ -131,5 +173,3 @@ export const offRecord = (g: GameState): boolean => !!(g.flags.level || g.flags.
 export const levelsDone = (r: Road): boolean => LEVEL_IDS.every((l) => !!r.passed[l]);
 /** Every mini-game on the island has a C or better. */
 export const islandDone = (r: Road): boolean => ROAD_MINIS.every((m) => passGrade(r.minis[m]));
-/** The whole bucket list: the levels, the island and the closing tour. The graduation page is next. */
-export const roadDone = (r: Road): boolean => levelsDone(r) && islandDone(r) && !!r.toured;

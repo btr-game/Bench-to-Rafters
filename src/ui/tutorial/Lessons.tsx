@@ -16,15 +16,17 @@ import { SkipButton } from '../components/SkipTutorial';
 type St = ReturnType<typeof useStore.getState>;
 
 /** Which lessons fit the screen: a level (its create page too), a closing-tour stop, or the start page
- * just after graduation. None on the road map, in the mini-games, or outside the tutorial. */
+ * just after graduation. None on the road map or in the mini-games. Round 35: the levels after
+ * beginner and the closing tour are played in the full game now, with their lessons. */
 function whereNow(st: St): Where | null {
   if (isDev() && st.road.preview !== 'lesson') return null;
   if (st.recommend && !st.game && !st.page && !st.mini) return 'graduated';
-  if (!inTutorial(st.road) || st.mini) return null;
+  if (st.mini) return null;
   if (st.closing) return 'tour';
   const g = st.game;
   if (g) return g.flags.level ? levelOf(g) : null;
   if (st.creating) return st.creating;
+  if (!inTutorial(st.road)) return null;
   return nextLevel(st.road) === 'beginner' ? 'beginner' : null;
 }
 

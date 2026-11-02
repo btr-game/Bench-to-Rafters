@@ -27,7 +27,7 @@ import { ICON_FOR } from './art/icons';
 import { music, onHeard, sfx, wakeOnClick } from './sound';
 import { recordHeard } from './achievements';
 import { trackOf } from './tracks';
-import { inTutorial, levelTabs, nextLevel, roadDone } from './road';
+import { inTutorial, levelTabs } from './road';
 import { Graduation } from './screens/Graduation';
 import { STOPS } from './tutorial/closing';
 import { LEVEL_NAME, levelOf } from '../engine/levels';
@@ -263,15 +263,13 @@ export function App() {
 
   if (thanks && !game) return <Thanks g={thanks} />;
   if (intro) return <Intro />;
-  // round 33: the tutorial, until the full game opens on this device: the beginner career first,
-  // then the road map; none of the start page's pages
-  if (inTutorial(road) && !game) {
-    if (mini) return <MiniGames />;
-    if (roadDone(road)) return <Graduation />;
-    const next = nextLevel(road);
-    return creating || next === 'beginner' ? <Create level={creating ?? 'beginner'} /> : <RoadMap />;
-  }
+  // round 33: the tutorial, until the full game opens on this device. Round 35 (owner: "make only the
+  // beginner level of tutorial necessary"): the beginner career, then graduation; the road map's
+  // other stops wait in the full game, where they open the other modes
+  if (inTutorial(road) && !game) return road.passed.beginner ? <Graduation /> : <Create level="beginner" />;
   if (creating && !game) return <Create level={creating} />;
+  // the island from the road map (the hub over the map, which stays the page to go back to)
+  if (mini && !game) return <MiniGames />;
   if (page === 'road' && !game) return <RoadMap />;
   if (page === 'log') return <CareerLog />;
   if (page === 'achievements') return <AchievementBook />;

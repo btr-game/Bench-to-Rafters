@@ -12,6 +12,7 @@ import { LEVEL_COPY } from '../../content/roadmap';
 import { LevelAdds } from '../components/LevelAdds';
 import { sfx } from '../sound';
 import { PlaceArt } from './RoadMap';
+import { UNLOCK_NAME, unlockOf } from '../road';
 
 export function LevelEnd({ g }: { g: GameState }) {
   const endLevel = useStore((s) => s.endLevel);
@@ -64,6 +65,24 @@ export function LevelEnd({ g }: { g: GameState }) {
           </li>
         </ul>
       </section>
+      {/* round 35: beginner opens the full game; intermediate and advanced each open a mode */}
+      {level === 'beginner' ? (
+        <p className="card with-icon level-opens">
+          <Icon name="door" size={28} />
+          <span>
+            <b>The full game opens</b> with Regular guy. The road map&rsquo;s other stops open the rest.
+          </span>
+        </p>
+      ) : (
+        unlockOf(level) && (
+          <p className="card with-icon level-opens">
+            <Icon name="door" size={28} />
+            <span>
+              <b>{UNLOCK_NAME[unlockOf(level)!][0].toUpperCase() + UNLOCK_NAME[unlockOf(level)!].slice(1)}</b> is open: pick it on the start page.
+            </span>
+          </p>
+        )
+      )}
       {next && <LevelAdds level={next} />}
       <div className="row-end">
         <button className="btn" onClick={() => (sfx('confirm'), endLevel())} data-enter>

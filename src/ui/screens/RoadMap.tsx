@@ -15,7 +15,7 @@ import { SKIN_COLORS, HAIR_COLORS } from '../art/Player';
 import { LEVEL_IDS, LEVEL_NAME, type Level } from '../../engine/levels';
 import { LEVEL_COPY, LEVEL_GOAL } from '../../content/roadmap';
 import { ROADMAP } from '../../engine/balance';
-import { ROAD_MINIS, ROAD_NEED, inTutorial, islandDone, levelOpen, levelsDone, nextLevel, passGrade, type Road, type RoadMini } from '../road';
+import { ROAD_MINIS, ROAD_NEED, UNLOCK_NAME, inTutorial, islandDone, levelOpen, levelsDone, nextLevel, passGrade, unlockOf, unlocked, type Road, type RoadMini } from '../road';
 import { LevelAdds } from '../components/LevelAdds';
 import { Roll, Tick } from '../components/Scroll';
 import { SettingsMenu } from '../components/Settings';
@@ -302,6 +302,19 @@ function BucketList({ road }: { road: Road }) {
 
 
 /** A stop on the road: passed, next, or still locked. */
+/** Round 35: what a stop opens in the full game, and whether it has. */
+function Opens({ stop, road }: { stop: Level | 'island'; road: Road }) {
+  const u = unlockOf(stop);
+  if (!u) return null;
+  const done = unlocked(road, u);
+  return (
+    <p className={`small with-icon road-opens${done ? ' done' : ''}`}>
+      <Icon name={done ? 'checklist' : 'lock'} size={18} />
+      <span>{done ? `${UNLOCK_NAME[u][0].toUpperCase()}${UNLOCK_NAME[u].slice(1)}: open.` : `Clear it to open ${UNLOCK_NAME[u]}.`}</span>
+    </p>
+  );
+}
+
 function LevelStop({ level, road }: { level: Level; road: Road }) {
   const setCreating = useStore((s) => s.setCreating);
   const copy = LEVEL_COPY[level];
@@ -331,6 +344,7 @@ function LevelStop({ level, road }: { level: Level; road: Road }) {
           </span>
         ) : null}
       </div>
+      <Opens stop={level} road={road} />
       {next && (
         <>
           <p className="small">
@@ -369,6 +383,7 @@ function IslandStop({ road, onSail }: { road: Road; onSail: () => void }) {
           {open ? `${done}/${MINIS.length} at C or better` : 'Locked'}
         </span>
       </div>
+      <Opens stop="island" road={road} />
       <p className={open ? 'small prose' : 'small'}>{open ? 'Play each one once and get a C or better. Any time, between levels.' : 'Opens after beginner.'}</p>
       {open && (
         <ul className="island-grid">
