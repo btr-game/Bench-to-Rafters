@@ -2911,3 +2911,20 @@ multiple times."
   - The server: supabase/migrations/0006_multiplayer_class.sql (12 seats; the first line stands;
     the run; class news; reactions; the daily board), tested on a local Postgres with two players
     and a stranger.
+  - **Achievements** (25 more, the book at 776, a helper agent's work): for draft night (First
+    Chair, Honor Roll, Chip on the Shoulder, Believe the Hype, Thirty for Thirty, Pick of the
+    Litter), the rival series (Best of Enemies, Rent Free, Revenge Tour, Final Word, Brooms Out, Home
+    and Away, Same Time Next Year), classmates in the league (Head of the Class, Green with Envy,
+    All-Star Alumni, Phone a Friend, Friendship Ring), and the class pages (Homecoming King,
+    Superlatives, The Whole Yearbook, Hype Man, Heavy Is the Head, King of the Hill, Binge Watcher).
+    Tiers from measured rates (300 draft nights and careers: first overall 1.333333%, top five
+    16.66667%).
+  - **Turning points** (events/round35c.ts, class careers only): the rookie dinner, a classmate on
+    the trade block, the bracket math (both teams in their conference's top six), a classmate's MVP,
+    the reunion invitation (32 or older), each with a pixel icon. **Shop**: three things only a class
+    career is offered (framed art of the class's jerseys, a trainer shared with a classmate, a suit
+    for reunion night), kept out of every other career's draws, each with its own pixel icon.
+  - **A crash fixed on the way**: the duo-extension turning point read a duo of friends as a
+    teammate on the roster and threw in any class career with a classmate on his team.
+  - Sound: a toast for each reunion award (the championship sound for the class MVP) and a pop for a
+    reaction. Art: the banquet, the draft stage for draft night's intro, three shop icons.
