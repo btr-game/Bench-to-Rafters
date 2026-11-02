@@ -33,11 +33,15 @@ import { ROUND25_EVENTS } from '../engine/events/round25';
 import { ROUND32_EVENTS } from '../engine/events/round32';
 import { ROUND33_EVENTS } from '../engine/events/round33';
 import { ROUND34_EVENTS } from '../engine/events/round34';
+import { ROUND35_EVENTS } from '../engine/events/round35';
+import { ACHIEVEMENTS } from '../engine/achievements';
+import { ACH_CATS, achCatOf } from '../engine/achievementCats';
+import { CLASS_MAX } from '../ui/multiplayer';
 import { BEGINNER_EVENTS, LEVEL_IDS, LEVEL_NAME } from '../engine/levels';
 import { ROADMAP, ROAD_GRADES } from '../engine/balance';
 import { SIX_PLANS } from '../engine/career/season';
 import { LEVEL_COPY } from '../content/roadmap';
-import { ROAD_MINIS, ROAD_NEED } from '../ui/road';
+import { ROAD_MINIS, ROAD_NEED, UNLOCK_FROM, UNLOCK_NAME, unlockHint, type Unlock } from '../ui/road';
 import { PlaceArt } from '../ui/screens/RoadMap';
 import { GAMES, miniIcon } from '../ui/mini/MiniGames';
 import { LESSONS, type Where } from '../ui/tutorial/lessons';
@@ -150,6 +154,7 @@ function itemEffects(i: ShopItem): string[] {
   if (i.focus) out.push(`Focus ratings ${signed(i.focus, 2)}`);
   if (i.range) out.push(`Range ${signed(i.range, 2)}`);
   if (i.offhand) out.push(`Off hand ${signed(i.offhand, 2)}`);
+  if (i.touch) out.push(`Free-throw touch ${signed(i.touch, 1)}`);
   if (i.injuryMult) out.push(`Injury risk ${mult(i.injuryMult)}`);
   if (i.declineMult) out.push(`Decline ${mult(i.declineMult)}`);
   if (i.growthMult) out.push(`Growth next season ${mult(i.growthMult)}`);
@@ -179,6 +184,7 @@ const EVENT_SETS: [string, EventDef[]][] = [
   ['Round 32', ROUND32_EVENTS],
   ['Round 33', ROUND33_EVENTS],
   ['Round 34', ROUND34_EVENTS],
+  ['Round 35', ROUND35_EVENTS],
 ];
 
 function eventEntry(set: string, e: EventDef): Entry {
@@ -512,6 +518,7 @@ const CATEGORIES: Category[] = [
             ...attrList(p.attrs).map((x) => `${x} a half`),
             ...(p.rangeGain ? [`Range +${p.rangeGain}`] : []),
             ...(p.offhandGain ? [`Off hand +${p.offhandGain}`] : []),
+            ...(p.touchGain ? [`Free-throw touch +${p.touchGain} a half`] : []),
             ...(p.swing ? [`A gamble on ${p.swing.attrs.map((a) => NAMES.attr[a]).join(' and ')}: ${signed(p.swing.mean)} on average, give or take ${p.swing.sd}`] : []),
           ],
         };
@@ -982,6 +989,74 @@ const CATEGORIES: Category[] = [
         group: i < 9 ? 'What no level has' : i < STOPS.length - 1 ? 'The catch-up' : 'The switches',
         lines: st.lessons.map((id) => LESSONS.find((x) => x.id === id)?.text ?? id),
       })),
+  },
+  // ---------- round 35 ----------
+  {
+    key: 'ach-cats',
+    name: 'Achievement categories',
+    icon: 'laurel',
+    blurb: 'The book’s chapters (engine/achievementCats.ts): a short name each, so a category says where to look without giving a riddle away. None holds more than a tenth of the book.',
+    entries: () => {
+      const n = ACHIEVEMENTS.length;
+      return ACH_CATS.map((c) => {
+        const k = ACHIEVEMENTS.filter((a) => achCatOf(a.id) === c.key).length;
+        return {
+          key: c.key,
+          title: c.name,
+          art: () => <Icon name={c.icon} size={44} />,
+          facts: [
+            ['Achievements', String(k)],
+            ['Share of the book', `${((100 * k) / n).toFixed(1)}%`],
+          ] as [string, string][],
+        };
+      });
+    },
+  },
+  {
+    key: 'unlocks',
+    name: 'What the road map opens',
+    icon: 'unlock',
+    blurb: 'Beginner is the tutorial; the rest of the road map opens the rest of the game (ui/road.ts). A device that finished the old tutorial keeps everything.',
+    entries: () =>
+      (Object.keys(UNLOCK_FROM) as Unlock[]).map((u) => ({
+        key: u,
+        title: UNLOCK_NAME[u][0].toUpperCase() + UNLOCK_NAME[u].slice(1),
+        sub: `From ${UNLOCK_FROM[u] === 'island' ? 'the island' : `the ${UNLOCK_FROM[u]} level`}`,
+        text: unlockHint(u),
+        art: () => <Icon name="unlock" size={44} />,
+      })),
+  },
+  {
+    key: 'friends',
+    name: 'Play with friends',
+    icon: 'versus',
+    blurb: 'The two ways to play with friends (ui/multiplayer.ts), on the game’s database in the online build (supabase/migrations/0004_multiplayer.sql). Regular guy only.',
+    entries: () => [
+      {
+        key: 'challenge',
+        title: 'Challenge a friend',
+        text: 'A finished Regular guy career’s start (its seed and start page) with its card; a friend plays the same prospect, with no undo, and every answer is ranked beside it by career index.',
+        art: () => <Icon name="versus" size={44} />,
+        facts: [
+          ['Code', '6 characters, no I, O, 0 or 1'],
+          ['Answers', 'one a player, the best counts'],
+          ['Quick match', 'the last 30 days, fewest answers first'],
+          ['Limits', 'a challenge every 20 s, 30 a day'],
+        ] as [string, string][],
+      },
+      {
+        key: 'class',
+        title: 'Draft class',
+        text: 'Careers on one seed: each season posts a short line, each finished career its card. Standings by best rating so far, then honours; the best of the class each year.',
+        art: () => <Icon name="draftclass" size={44} />,
+        facts: [
+          ['Players', `${CLASS_MAX} at most`],
+          ['Season lines', '45 at most, 1.5 KB each'],
+          ['Quick match', 'the last 14 days, a seat left'],
+          ['Limits', 'a season every 2 s, 600 a day'],
+        ] as [string, string][],
+      },
+    ],
   },
   {
     key: 'beginner-events',

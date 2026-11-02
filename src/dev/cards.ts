@@ -492,6 +492,19 @@ export const CARDS: DevCard[] = [
       return show(g);
     },
   },
+  {
+    // round 35: a turning point at the line (the free-throw touch)
+    id: 'd-iced',
+    title: 'Iced at the line',
+    group: 'Decisions',
+    icon: 'touch',
+    blurb: 'Round 35: two free throws to win, a timeout to ice him; the odds of making both, from his shooting and his free-throw touch.',
+    open: () => {
+      const g = at('iced', (s) => s.stage === 'NBA' && s.step === 'midseason');
+      if (g) offerEvent(g, 'ftIced');
+      return show(g);
+    },
+  },
   { id: 'farewell-offer', title: 'Farewell tour: the offer', group: 'Decisions', icon: 'gift', blurb: 'An offseason move for a veteran: announce that next season is the last.', open: () => show(at('farewell', (s) => canFarewell(s))), press: '[data-tour="move-farewell"]' },
   {
     id: 'farewell-season',
@@ -593,6 +606,7 @@ export const CARDS: DevCard[] = [
     },
     press: '[data-tour="ach"]',
   },
+  { id: 'ach-cats', title: 'Achievement book by category', group: 'Records & community', icon: 'laurel', blurb: 'Round 35: the book in short-named categories, a chip each with what is earned of it; tap one (here the second) to see only it, with a tier or on its own.', open: () => (setAchievements(true), useStore.setState({ game: null, mini: null, page: 'achievements' })), press: '.achv-cats .achv-cat:nth-child(2)' },
   { id: 'ach-none', title: 'Achievement book (new player)', group: 'Records & community', icon: 'lock', blurb: 'Every name a riddle.', open: () => (setAchievements(false), useStore.setState({ game: null, mini: null, page: 'achievements' })) },
   {
     id: 'ach-toast',
