@@ -629,7 +629,10 @@ export const VISIT = { morale: 3, rest: 1 };
  * - spread: how far from that price the draw strays (the sd of the log of price over target).
  * - wear: the chance one of the six is an accessory (cheap at any price level, for the wardrobe).
  */
-export const SHOP = { stock: 6, inflate: { from: 1, to: 50, max: 3 }, share: 0.42, rich: { from: 20, to: 50, share: 0.03 }, spread: 0.45, wear: 0.4 };
+// - markup (round 35, owner: "increase shop item prices up a bit again (about +20~40%?)"): every
+//   price, and the price the six are drawn around, times this, so the same things come up and each
+//   costs this much more against his bank.
+export const SHOP = { stock: 6, inflate: { from: 1, to: 50, max: 3 }, share: 0.42, rich: { from: 20, to: 50, share: 0.03 }, spread: 0.45, wear: 0.4, markup: 1.3 };
 // round 25: personal staff (career/staff.ts). Pay and benefit by level (a raise moves him up one);
 // benefits a season at level 1, times `effect[level - 1]`; a talk once a season lifts morale and
 // (round 28) does `talkShare` of his season's benefit on the spot.

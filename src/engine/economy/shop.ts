@@ -30,12 +30,12 @@ const nice = (x: number): number => {
   const e = 10 ** (Math.floor(Math.log10(x)) - 1);
   return Math.round(x / e) * e;
 };
-export const priceFor = (s: GameState, it: ShopItem): number => nice(it.price * priceMult(s));
+export const priceFor = (s: GameState, it: ShopItem): number => nice(it.price * priceMult(s) * SHOP.markup);
 
 /** The price the six are drawn around: about a third of his bank, much less once he is very rich. */
 function target(s: GameState): number {
   const share = SHOP.share * (SHOP.rich.share / SHOP.share) ** ((logLerp(incomeOf(s), SHOP.rich.from, SHOP.rich.to, 0, 1)));
-  return Math.max(s.player.bank, 0.00005) * share;
+  return Math.max(s.player.bank, 0.00005) * share * SHOP.markup;
 }
 
 const HELPS: Record<string, string> = {
