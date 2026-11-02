@@ -445,7 +445,10 @@ export const WEAR = {
   // the most a prime can be pushed back by the hidden growth rate when it comes to aging
   maxPrimeShift: 2,
 };
-export const DECLINE_ATTR_MULT: Partial<Record<AttrKey, number>> = { ATH: 1.8, SHT: 0.5, IQ: 0.3 };
+// round 35 (owner: "the shooting barely gets affected by age, which makes the stat easy to max out
+// ... make shooting drop as well. just level it to similar levels of other stats"): shooting ages
+// like the rest (it was 0.5); basketball IQ still barely does
+export const DECLINE_ATTR_MULT: Partial<Record<AttrKey, number>> = { ATH: 1.8, IQ: 0.3 };
 export const IQ_LATE_GAIN = { perSeason: 0.3, untilAge: 33 };
 export const SUDDEN_DECLINE = { fromAge: 31, chance: 0.08, min: 4, max: 8 };
 export const DECLINE_NOISE = 0.3;
