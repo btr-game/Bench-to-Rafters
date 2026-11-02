@@ -400,15 +400,14 @@ function houseSeasons(k: number, upTo: number): ClassSeason[] {
   }
   return out;
 }
-function seed(): LocalData {
-  const recs = logCards();
+function seed(recs: CareerRecord[]): LocalData {
   const d: LocalData = { v: 1, challenges: [], classes: [] };
   recs.slice(0, 4).forEach((r, i) => {
     const rec = { ...r, mode: 'standard' as const };
     if (i === 0) {
       // one of the deck's own, with a friend's answer beside it
       const other = recs[1] ? { ...recs[1], mode: 'standard' as const, name: rec.name } : rec;
-      d.challenges.push({ code: 'DECK22', who: ME, name: 'You', prospect: prospectOf(rec), rec, at: ago(2), answers: [{ id: 'house00001', who: 'house-1', name: HOUSE[0], rec: other, at: ago(1) }] });
+      d.challenges.push({ code: 'DECK22', who: ME, name: 'Deck', prospect: prospectOf(rec), rec, at: ago(2), answers: [{ id: 'house00001', who: 'house-1', name: HOUSE[0], rec: other, at: ago(1) }] });
     } else d.challenges.push({ code: `HSE${i + 1}AB`, who: `house-${i}`, name: HOUSE[i], prospect: prospectOf(rec), rec, at: ago(i * 3), answers: [] });
   });
   d.classes.push({
@@ -433,7 +432,7 @@ function lload(): LocalData {
   } catch {
     // made again below
   }
-  const d = seed();
+  const d = seed(logCards());
   lsave(d);
   return d;
 }
@@ -444,13 +443,9 @@ function lsave(d: LocalData): void {
     // storage full or blocked: this visit only
   }
 }
-/** Puts the dev deck's stand-in back to its house players. */
-export function resetLocalMultiplayer(): void {
-  try {
-    localStorage.removeItem(LOCAL);
-  } catch {
-    // nothing kept
-  }
+/** Puts the dev deck's stand-in back to its house players, with these careers for their cards. */
+export function seedLocalMultiplayer(recs: CareerRecord[]): void {
+  lsave(seed(recs));
 }
 
 function localMultiplayer(): Multiplayer {

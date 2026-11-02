@@ -38,6 +38,8 @@ import {
   type OpenChallenge,
 } from '../multiplayer';
 
+/** The career index as the page shows it: a whole number. */
+const idx = (r: CareerRecord): number => Math.round(mpScore(r));
 const ago = (iso: string) => {
   const m = Math.max(0, Math.round((Date.now() - Date.parse(iso)) / 60000));
   return m < 1 ? 'just now' : m < 60 ? `${m} min ago` : m < 1440 ? `${Math.round(m / 60)} h ago` : `${Math.round(m / 1440)} d ago`;
@@ -157,7 +159,7 @@ export function ShareCode({ link }: { link: MpLink }) {
 function Line({ rec }: { rec: CareerRecord }) {
   return (
     <span className="mp-line">
-      <b>{mpScore(rec)}</b> index · peak {Math.round(rec.peak)} · {rec.titles} {rec.titles === 1 ? 'title' : 'titles'} · {rec.allStars} All-Star · {rec.mvps} MVP
+      <b>{idx(rec)}</b> index · peak {Math.round(rec.peak)} · {rec.titles} {rec.titles === 1 ? 'title' : 'titles'} · {rec.allStars} All-Star · {rec.mvps} MVP
     </span>
   );
 }
@@ -223,7 +225,7 @@ function ChallengeView({ mp, code, back }: { mp: Multiplayer; code: string; back
                     {r.maker ? ' (set it)' : ''}
                     {r.mine ? ' · you' : ''}
                   </td>
-                  <td>{mpScore(r.rec)}</td>
+                  <td>{idx(r.rec)}</td>
                   <td>{Math.round(r.rec.peak)}</td>
                   <td>{r.rec.titles}</td>
                   <td>{r.rec.allStars}</td>
@@ -313,7 +315,7 @@ function Challenges({ mp, open, setOpen }: { mp: Multiplayer; open: string | nul
                     <span>
                       <b>{c.rec.name}</b> <small className="muted">{c.mine ? 'you set it' : `${c.name}’s`} · {c.code} · {c.answers.length} {c.answers.length === 1 ? 'answer' : 'answers'}</small>
                     </span>
-                    <small>{best ? `Best answer: ${best.name}, ${mpScore(best.rec)} against ${mpScore(c.rec)}` : 'No answers yet'}</small>
+                    <small>{best ? `Best answer: ${best.name}, ${idx(best.rec)} against ${idx(c.rec)}` : 'No answers yet'}</small>
                   </button>
                 </li>
               );
@@ -509,7 +511,7 @@ function Classes({ mp, open, setOpen, name }: { mp: Multiplayer; open: string | 
       <section className="card stack">
         <div className="sec-title">Start a class</div>
         <p className="small muted desc">Name it, make your player, and send the code: up to eight friends start careers on the same seed.</p>
-        <div className="row" style={{ gap: 8 }}>
+        <div className="row mp-classes-new" style={{ gap: 8 }}>
           <input aria-label="Name of the class" maxLength={40} value={title} placeholder="Class of the rooftop" onChange={(e) => setTitle(e.target.value)} />
           <button className="btn" disabled={!title.trim() || !name || career} onClick={() => (sfx('confirm'), setDraft({ name: title.trim() }))}>
             Make your player
@@ -584,7 +586,7 @@ export function MultiplayerPage() {
                 <Icon name="rival" size={20} />
                 Challenge a friend
               </button>
-              <button className="with-icon" aria-pressed={tab === 'class'} onClick={() => (setTab('class'), openMp(null))}>
+              <button className="with-icon" data-mp-tab="class" aria-pressed={tab === 'class'} onClick={() => (setTab('class'), openMp(null))}>
                 <Icon name="roster" size={20} />
                 Draft class
               </button>
@@ -620,7 +622,7 @@ export function RetirementMp({ g, rec }: { g: GameState; rec: CareerRecord }) {
       live = false;
     };
   }, [mp, answering]);
-  if (!mp) return null;
+  if (!mp || (!answering && !g.mp?.klass && !canChallenge(g))) return null;
   const make = async () => {
     if (!g.start) return;
     setBusy(true);
@@ -632,8 +634,8 @@ export function RetirementMp({ g, rec }: { g: GameState; rec: CareerRecord }) {
       mutate((x) => (x.mp = { ...x.mp, made: r }));
     } else setErr(MP_FAIL[r as keyof typeof MP_FAIL] ?? MP_FAIL.error);
   };
-  const mine = mpScore(rec);
-  const target = theirs ? mpScore(theirs.rec) : null;
+  const mine = idx(rec);
+  const target = theirs ? idx(theirs.rec) : null;
   return (
     <section className="card stack mp-retire">
       <div className="sec-title with-icon">

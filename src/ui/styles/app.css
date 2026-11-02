@@ -2684,3 +2684,23 @@ input[type='range'] { width: 100%; min-height: 32px; accent-color: var(--accent)
   .achv-cats { display: grid; grid-auto-flow: column; grid-template-rows: repeat(2, auto); justify-content: start; overflow-x: auto; margin-inline: -16px; padding: 2px 16px 6px; scroll-padding-inline: 16px; -webkit-overflow-scrolling: touch; }
   .achv-cat { gap: 6px; padding: 4px 10px 4px 6px; }
 }
+
+/* round 35: play with friends (screens/Multiplayer.tsx) */
+.mp-handle .row input, .mp-code-entry input, .mp-classes-new input { flex: 1 1 200px; min-width: 0; }
+.mp-code-entry input { max-width: 220px; font-family: var(--f-mono); letter-spacing: 0.18em; text-transform: uppercase; }
+.mp-code { font-family: var(--f-mono); font-weight: 700; font-size: calc(30px * var(--ts)); letter-spacing: 0.22em; padding: 6px 14px; border: 2px dashed var(--accent); border-radius: 6px; background: var(--surface-2); color: var(--ink); }
+.mp-share input { font-family: var(--f-mono); font-size: calc(14px * var(--ts)); }
+.mp-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.mp-row { width: 100%; display: flex; flex-wrap: wrap; gap: 4px 14px; justify-content: space-between; align-items: baseline; text-align: left; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); font: inherit; cursor: pointer; min-height: 44px; }
+.mp-row:hover, .mp-row:focus-visible { border-color: var(--accent); }
+.mp-row > span { min-width: 0; overflow-wrap: anywhere; }
+.mp-line { font-family: var(--f-mono); font-size: calc(13.5px * var(--ts)); }
+.mp-line b { font-size: calc(16px * var(--ts)); }
+table.mp-years td { vertical-align: top; }
+.mp-cell { display: grid; gap: 2px; }
+.mp-cell small { font-size: calc(12.5px * var(--ts)); color: var(--muted); }
+td.mp-best { background: var(--accent-soft); }
+td.mp-best .mp-cell small { color: var(--ink); }
+.mp-best-tag { font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink) !important; }
+.mp-draft { gap: 12px; align-items: center; flex-wrap: wrap; border-color: var(--accent); }
+.mp-draft-text { display: grid; gap: 2px; flex: 1 1 260px; min-width: 0; }

@@ -20,6 +20,7 @@ import { Icon } from './art/Icon';
 import { CareerLog } from './screens/CareerLog';
 import { AchievementBook } from './screens/Achievements';
 import { CommunityPage } from './screens/Community';
+import { MultiplayerPage } from './screens/Multiplayer';
 import { FootBar } from './components/FootBar';
 import { Intro } from './screens/Intro';
 import { Thanks } from './screens/Thanks';
@@ -205,7 +206,7 @@ export function App() {
     window.scrollTo(0, 0); // braces: newer browsers return a promise from scrollTo, and an effect may only return its clean-up
   }, [tab, page, mini]);
   useEffect(() => {
-    const where = mini ? 'Mini-games' : page === 'log' ? 'Career log' : page === 'achievements' ? 'Achievement book' : page === 'community' ? 'Community' : game ? UI.tabs[tab] : '';
+    const where = mini ? 'Mini-games' : page === 'log' ? 'Career log' : page === 'achievements' ? 'Achievement book' : page === 'community' ? 'Community' : page === 'multi' ? 'Play with friends' : game ? UI.tabs[tab] : '';
     document.title = where ? `${where} · Bench to Rafters` : 'Bench to Rafters';
   }, [tab, page, mini, game]);
   // round 33: a level plays at fast break's pace but keeps every card in view
@@ -274,6 +275,7 @@ export function App() {
   if (page === 'log') return <CareerLog />;
   if (page === 'achievements') return <AchievementBook />;
   if (page === 'community') return <CommunityPage />;
+  if (page === 'multi') return <MultiplayerPage />;
   if (mini) return <MiniGames />;
   if (!game) return <Create />;
 

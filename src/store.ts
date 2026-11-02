@@ -450,7 +450,11 @@ export const useStore = create<Store>((set, get) => ({
     return true;
   },
   draft: null,
-  setDraft: (draft) => set({ draft, page: draft ? null : get().page, creating: null }),
+  setDraft: (draft) => {
+    // a finished career on screen steps aside first (its thank-you page, then the start page)
+    if (draft && get().game) get().reset();
+    set({ draft, page: draft ? null : get().page, creating: null });
+  },
   mpOpen: readLink(),
   openMp: (mpOpen) => set({ mpOpen, ...(mpOpen ? { page: 'multi' as Page } : {}) }),
   seen: {},

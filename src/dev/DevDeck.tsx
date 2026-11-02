@@ -257,6 +257,9 @@ export function DevDeck() {
         if (c) deal(c);
       },
       back: () => (clean(), setOpen(null)),
+      // round 35: the game's own store, for end-to-end scripts (an import from the page can load a
+      // second copy of the module after a hot update)
+      store: useStore,
     };
   }, [deal]);
 

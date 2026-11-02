@@ -1,6 +1,6 @@
 import { Icon } from '../art/Icon';
 import { ICON_FOR, archetypeIcon } from '../art/icons';
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ARCHETYPES } from '../../engine/player/archetypes';
 import { rerollAttrs } from '../../engine/player/create';
 import { makeRng } from '../../engine/rng';
@@ -21,6 +21,8 @@ import { ShareButton } from '../components/Share';
 import { GuideButton } from '../components/Guide';
 import { AchievementsCard } from './Achievements';
 import { CommunityCard, LiveStrip } from './Community';
+import { MultiplayerCard } from './Multiplayer';
+import { MP_FAIL, handle, multiplayer } from '../multiplayer';
 import { FlagArt } from '../art/Flag';
 import { POS_STYLE, PositionCard } from '../art/PositionCard';
 import { HeroArt, archPose } from '../art/Hero';
@@ -159,6 +161,14 @@ export function Create({ level }: { level?: Level } = {}) {
   const [hand, setHand] = useState<'R' | 'L'>('R');
   const [mode, setMode] = useState<Mode>('standard');
   const road = useStore((s) => s.road);
+  // round 35: a draft class waiting for this player (Regular guy only); made or joined on Start
+  const draft = useStore((s) => (level ? null : s.draft));
+  const setDraft = useStore((s) => s.setDraft);
+  const [seatErr, setSeatErr] = useState('');
+  const [seating, setSeating] = useState(false);
+  useEffect(() => {
+    if (draft) setMode('standard');
+  }, [draft]);
   const [country, setCountry] = useState(''); // '' = the game decides, by real-world odds
   const [oath, setOath] = useState(false); // round 25: Rough Road, offered with Reality
   const [comet, setComet] = useState(false); // round 30: Comet, offered with Shoot for the stars
@@ -245,7 +255,9 @@ export function Create({ level }: { level?: Level } = {}) {
           look,
           level,
         })
-      : start({
+      : draft
+        ? void takeSeat()
+        : start({
       name: name.trim() || 'Rookie',
       number: Math.max(0, Math.min(99, Number(number) || 0)),
       pos,
@@ -259,6 +271,20 @@ export function Create({ level }: { level?: Level } = {}) {
       comet: mode === 'stars' && comet,
       look,
     });
+
+  // round 35: the class is made (or joined) as he starts, and its seed is his career's
+  const takeSeat = async () => {
+    if (!draft || seating) return;
+    const mp = await multiplayer();
+    if (!mp) return setSeatErr(MP_FAIL.error);
+    setSeating(true);
+    setSeatErr('');
+    const who = handle() || 'A friend';
+    const seat = draft.code ? await mp.joinClass(draft.code, who) : await mp.makeClass(draft.name, who);
+    setSeating(false);
+    if (typeof seat === 'string') return setSeatErr(MP_FAIL[seat]);
+    start({ name: name.trim() || 'Rookie', number: Math.max(0, Math.min(99, Number(number) || 0)), pos, archetype: arch, attrs, focus, hand, mode: 'standard', country: country || undefined, look }, seat.seed, { klass: seat.code });
+  };
 
   const copy = level ? LEVEL_COPY[level] : null;
   return (
@@ -323,6 +349,18 @@ export function Create({ level }: { level?: Level } = {}) {
         ))}
       </div>
       <div style={{ height: 12 }} />
+      {draft && (
+        <section className="card mp-draft row" role="group" aria-label="Draft class">
+          <Icon name="roster" size={32} />
+          <span className="mp-draft-text">
+            <b>Draft class: {draft.name}</b>
+            <small className="muted">{draft.code ? `Code ${draft.code}. ` : 'A new class: its code comes when you start. '}Regular guy, on the class’s seed. Make your player and start.</small>
+          </span>
+          <button className="btn ghost small" onClick={() => setDraft(null)}>
+            Leave the class
+          </button>
+        </section>
+      )}
 
       {cur === 'Difficulty' && (
         <section className="stack">
@@ -330,7 +368,7 @@ export function Create({ level }: { level?: Level } = {}) {
           <div className="modes">
             {DIFFICULTIES.map((m) => {
               // round 35: a difficulty past Regular guy opens with its level on the road map
-              const shut = !modeOpen(road, m);
+              const shut = !modeOpen(road, m) || (!!draft && m !== 'standard');
               const why = m === 'reality' ? 'reality' : 'stars';
               return (
                 <button key={m} className={`choice mode-card${mode === m ? ' selected' : ''}${recommend && m === 'standard' ? ' recommended' : ''}${shut ? ' mode-locked' : ''}`} aria-pressed={mode === m} disabled={shut} onClick={() => setMode(m)} data-tour={m === 'standard' ? 'mode-regular' : undefined}>
@@ -339,7 +377,7 @@ export function Create({ level }: { level?: Level } = {}) {
                     {MODES[m].name}
                     {recommend && m === 'standard' && <span className="tag good">Recommended</span>}
                   </span>
-                  <small className={shut ? 'keep' : undefined}>{shut ? unlockHint(why) : MODES[m].blurb}</small>
+                  <small className={shut ? 'keep' : undefined}>{shut ? (draft ? 'A draft class plays Regular guy.' : unlockHint(why)) : MODES[m].blurb}</small>
                 </button>
               );
             })}
@@ -399,12 +437,13 @@ export function Create({ level }: { level?: Level } = {}) {
             </div>
           )}
           <p className="muted small">The league is the same at every difficulty. What changes is your potential, how fast you grow and how often you get hurt. Want it quicker? Flip the Fast break switch inside the game, any time.</p>
-          <div className="start-cards">
+          {!draft && <div className="start-cards">
+            <MultiplayerCard />
             <MiniGamesCard />
             <CareerLogCard />
             <AchievementsCard />
             <CommunityCard />
-          </div>
+          </div>}
         </section>
       )}
 
@@ -693,14 +732,15 @@ export function Create({ level }: { level?: Level } = {}) {
             {UI.create.next}
           </button>
         ) : (
-          <button className="btn" data-tour="create-start" onClick={begin}>
-            {UI.create.start}
+          <button className="btn" data-tour="create-start" disabled={seating} onClick={begin}>
+            {seating ? 'Taking your seat…' : UI.create.start}
           </button>
         )}
       </div>
       {/* round 25 (owner): the live strip and the saves sit under the hero and the cards (and under
           Next, so starting a career is no further away), the dev deck's door last */}
-      {cur === 'Difficulty' && (
+      {seatErr && <p className="small row-end" style={{ color: 'var(--bad)' }}>{seatErr}</p>}
+      {cur === 'Difficulty' && !draft && (
         <section className="stack start-foot">
           <LiveStrip />
           <ContinueCard />

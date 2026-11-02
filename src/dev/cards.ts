@@ -18,6 +18,7 @@ import { newSlotId, writeSlot } from '../ui/saves';
 import { todayKey } from '../engine/mini/daily';
 import { ATTRS } from '../engine/balance';
 import { attachChild, lockCard, logCards, logCareer } from '../ui/careerLog';
+import { seedLocalMultiplayer, type MpLink } from '../ui/multiplayer';
 import { advance as step, choose as pickChoice, prompt as nextPrompt } from '../engine/flow';
 import { offerEvent } from '../engine/events/resolver';
 import { announceFarewell, canFarewell, isFarewellSeason } from '../engine/career/farewell';
@@ -160,6 +161,12 @@ function seedCommunity(): void {
   }
 }
 
+/** The multiplayer page on the deck's stand-in, seeded with the deck's careers. */
+function mpPage(open: MpLink | null): boolean {
+  seedLocalMultiplayer(records());
+  useStore.setState({ game: null, mini: null, page: 'multi', mpOpen: open, draft: null });
+  return true;
+}
 function seedLog(locks = false): void {
   // round 32: the newest two show the card's challenge badges and achievement medals
   const tiers = ['hof', 'allstar', 'allstar', 'starter', 'starter', 'starter', 'rotation', 'rotation', 'bench', 'bench'] as const;
@@ -598,6 +605,13 @@ export const CARDS: DevCard[] = [
       useStore.setState({ toasts: ACH_TIERS.slice(0, 3).map((t, i) => ({ id: `dev-${t.key}`, name: ACHIEVEMENTS.find((a) => a.tier === t.key)!.name, tier: t.key, more: i === 2 ? 9 : undefined })) });
     },
   },
+  // round 35: play with friends (the deck's stand-in, with house players)
+  { id: 'mp', title: 'Play with friends', group: 'Records & community', icon: 'rival', blurb: 'Challenges and draft classes: a code, a link or quick match, your name for friends. Regular guy only.', open: () => mpPage(null) },
+  { id: 'mp-challenge', title: 'A challenge', group: 'Records & community', icon: 'rival', blurb: 'One prospect, played again from the same start: every answer ranked by career index beside the one that set it.', open: () => mpPage({ kind: 'challenge', code: 'DECK22' }) },
+  { id: 'mp-classes', title: 'Draft classes', group: 'Records & community', icon: 'roster', blurb: 'Start a class, open one by its code, yours, and the open ones with a seat left.', open: () => mpPage(null), press: '[data-mp-tab="class"]' },
+  { id: 'mp-class', title: 'A draft class', group: 'Records & community', icon: 'roster', blurb: 'Up to eight careers on one seed: the standings and every season side by side, the best of the class marked each year.', open: () => mpPage({ kind: 'class', code: 'CLASS2' }) },
+  { id: 'mp-draft', title: 'Starting in a draft class', group: 'Start', icon: 'roster', blurb: 'The start page with a class waiting: Regular guy only, the class made or joined as he starts.', open: () => (useStore.setState({ game: null, page: null, mini: null, creating: null, draft: { code: 'CLASS2', name: 'Rooftop runs' } }), true) },
+  { id: 'mp-retire', title: 'Challenge a friend', group: 'Big moments', icon: 'rival', blurb: 'A finished Regular guy career sets a challenge: the code and the link to send.', open: () => show(fixture('retired-std-5', () => play((s) => s.step === 'retired', { mode: 'standard', seed: 5, fast: true }))) },
   { id: 'c-boards', title: 'Leaderboards', group: 'Records & community', icon: 'podium', blurb: 'Daily and all-time, a board for each difficulty and each challenge, ranked by career index, with the house players at the foot.', open: () => (seedCommunity(), useStore.setState({ game: null, mini: null, page: 'community' })) },
   { id: 'c-rough', title: 'Rough Road board', group: 'Records & community', icon: 'oath', blurb: 'Rough Road careers only, today and all time; they rank on the Reality board too.', open: () => (seedCommunity(), useStore.setState({ game: null, mini: null, page: 'community' })), press: '[data-board="rough"]' },
   { id: 'c-comet', title: 'Comet board', group: 'Records & community', icon: 'comet', blurb: 'Comet careers only, off the Shoot for the stars board, so careers played by hand compete with each other.', open: () => (seedCommunity(), useStore.setState({ game: null, mini: null, page: 'community' })), press: '[data-board="comet"]' },
