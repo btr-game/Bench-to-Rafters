@@ -123,6 +123,8 @@ export function newGame(seed: number, input: CreateInput): GameState {
   logDecision(s, 'start', `Enrolled at ${player.highSchool} in ${player.hometown} as a ${input.pos}, ${player.archetype}.`);
   beginSeason(s);
   if (s.flags.level) playEarlyYears(s);
+  // round 35: the start, for a challenge (a level career is never one)
+  if (!input.level) s.start = { seed, input: JSON.parse(JSON.stringify(input)) as CreateInput };
   return s;
 }
 

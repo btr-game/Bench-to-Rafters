@@ -493,6 +493,11 @@ export interface GameState {
   version: 1;
   mode: import('./balance').Mode;
   seed: number;
+  /** Round 35: how the career began (the seed and what was picked on the start page), so a challenge
+   * can hand a friend the same prospect. Careers from before round 35 have none. */
+  start?: { seed: number; input: import('./player/create').CreateInput };
+  /** Round 35, multiplayer: the challenge this career takes (its code), or the draft class it plays in. */
+  mp?: { challenge?: string; klass?: string; made?: string };
   rng: Rng;
   nextId: number;
   year: number;

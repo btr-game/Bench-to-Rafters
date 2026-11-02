@@ -12,7 +12,7 @@ import { todayKey } from '../engine/mini/daily';
 import { BOARD_SIZE, STATUE, feedLine, hall99Ok, scoreOf, type Board, type Community, type FeedItem, type FeedbackRow, type ScoreRow, type StatueRow, type WriteResult } from './community';
 
 const SECRET = 'btr-online-secret';
-function secretOf(): string {
+export function secretOf(): string {
   try {
     let s = localStorage.getItem(SECRET);
     if (!s) {
