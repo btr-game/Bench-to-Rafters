@@ -64,7 +64,7 @@ export function MultiplayerCard() {
   return (
     <section className="card stack">
       <div className="sec-title with-icon">
-        <Icon name="rival" size={28} />
+        <Icon name="versus" size={28} />
         Play with friends
       </div>
       <p className="small muted">Challenge a friend to beat your career from the same start, or start a draft class together and follow each other’s seasons. Regular guy, nobody has to be on at the same time.</p>
@@ -238,7 +238,7 @@ function ChallengeView({ mp, code, back }: { mp: Multiplayer; code: string; back
         </div>
         <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
           {playable && (
-            <button className="btn" disabled={career} onClick={() => (sfx('confirm'), startChallenge(c))}>
+            <button className="btn" disabled={career} onClick={() => (sfx('versus'), startChallenge(c))}>
               {c.answers.some((a) => a.mine) ? 'Play it again (your best counts)' : 'Play this prospect'}
             </button>
           )}
@@ -246,7 +246,7 @@ function ChallengeView({ mp, code, back }: { mp: Multiplayer; code: string; back
             Back
           </button>
         </div>
-        {playable && career && <p className="small muted">Finish or leave the career you are playing first (New career in Settings), then come back.</p>}
+        {playable && career && <p className="small muted keep">Finish or leave the career you are playing first (New career in Settings), then come back.</p>}
       </section>
       <section className="card stack">
         <div className="sec-title">Send it on</div>
@@ -364,7 +364,7 @@ function ClassView({ mp, code, back }: { mp: Multiplayer; code: string; back: ()
         <p className="small muted desc">Every career here starts on one seed: the same year, the same league, the same draft. Each season posts its line when it ends, and each finished career its card.</p>
         <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
           {canJoin && (
-            <button className="btn" disabled={career} onClick={() => (sfx('confirm'), setDraft({ code: k.code, name: k.name }))}>
+            <button className="btn" disabled={career} onClick={() => (sfx('roll'), setDraft({ code: k.code, name: k.name }))}>
               {me ? 'Start your career in it' : 'Join with a new career'}
             </button>
           )}
@@ -372,8 +372,8 @@ function ClassView({ mp, code, back }: { mp: Multiplayer; code: string; back: ()
             Back
           </button>
         </div>
-        {canJoin && career && <p className="small muted">Finish or leave the career you are playing first (New career in Settings), then come back.</p>}
-        {me && me.seasons.length > 0 && !me.rec && <p className="small muted">Your career in this class carries on from Continue on the start page.</p>}
+        {canJoin && career && <p className="small muted keep">Finish or leave the career you are playing first (New career in Settings), then come back.</p>}
+        {me && me.seasons.length > 0 && !me.rec && <p className="small muted keep">Your career in this class carries on from Continue on the start page.</p>}
       </section>
       <section className="card stack">
         <div className="sec-title with-icon">
@@ -468,7 +468,7 @@ function ClassView({ mp, code, back }: { mp: Multiplayer; code: string; back: ()
       )}
       <section className="card stack">
         <div className="sec-title">Invite friends</div>
-        {k.members.length < CLASS_MAX ? <ShareCode link={{ kind: 'class', code: k.code }} /> : <p className="small muted">The class is full.</p>}
+        {k.members.length < CLASS_MAX ? <ShareCode link={{ kind: 'class', code: k.code }} /> : <p className="small muted keep">The class is full.</p>}
       </section>
     </section>
   );
@@ -517,7 +517,7 @@ function Classes({ mp, open, setOpen, name }: { mp: Multiplayer; open: string | 
             Make your player
           </button>
         </div>
-        {career && <p className="small muted">Finish or leave the career you are playing first (New career in Settings).</p>}
+        {career && <p className="small muted keep">Finish or leave the career you are playing first (New career in Settings).</p>}
       </section>
       <section className="card stack">
         <div className="sec-title">Got a code?</div>
@@ -563,7 +563,7 @@ export function MultiplayerPage() {
         <div>
           <div className="kicker">Multiplayer · Regular guy</div>
           <h1 className="hub-title with-icon">
-            <Icon name="rival" size={40} />
+            <Icon name="versus" size={40} />
             Play with friends
           </h1>
           <p className="small muted desc">Two ways to play with friends, and nobody has to be on at the same time.</p>
@@ -572,7 +572,7 @@ export function MultiplayerPage() {
           <p className="muted">Connecting…</p>
         ) : mp === false ? (
           <section className="card stack">
-            <p className="prose">Playing with friends needs the game’s own server, which this page cannot reach. It works on the website and in the itch.io download.</p>
+            <p className="keep">Playing with friends needs the game’s own server, which this page cannot reach. It works on the website and in the itch.io download.</p>
             <a className="btn" href={SITE} target="_blank" rel="noreferrer">
               Open the website
             </a>
@@ -583,11 +583,11 @@ export function MultiplayerPage() {
             <HandleBox onSet={setName} />
             <div className="seg" role="group" aria-label="Kind of game">
               <button className="with-icon" aria-pressed={tab === 'challenge'} onClick={() => (setTab('challenge'), openMp(null))}>
-                <Icon name="rival" size={20} />
+                <Icon name="versus" size={20} />
                 Challenge a friend
               </button>
               <button className="with-icon" data-mp-tab="class" aria-pressed={tab === 'class'} onClick={() => (setTab('class'), openMp(null))}>
-                <Icon name="roster" size={20} />
+                <Icon name="draftclass" size={20} />
                 Draft class
               </button>
             </div>
@@ -630,7 +630,7 @@ export function RetirementMp({ g, rec }: { g: GameState; rec: CareerRecord }) {
     const r = await mp.makeChallenge(name, g.start, rec);
     setBusy(false);
     if (r.length === 6 && CODE_RE.test(r)) {
-      sfx('sent');
+      sfx('versus');
       mutate((x) => (x.mp = { ...x.mp, made: r }));
     } else setErr(MP_FAIL[r as keyof typeof MP_FAIL] ?? MP_FAIL.error);
   };
@@ -639,7 +639,7 @@ export function RetirementMp({ g, rec }: { g: GameState; rec: CareerRecord }) {
   return (
     <section className="card stack mp-retire">
       <div className="sec-title with-icon">
-        <Icon name="rival" size={26} />
+        <Icon name="versus" size={26} />
         Play with friends
       </div>
       {answering && (

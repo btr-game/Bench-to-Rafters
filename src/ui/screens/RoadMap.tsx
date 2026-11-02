@@ -309,7 +309,7 @@ function Opens({ stop, road }: { stop: Level | 'island'; road: Road }) {
   const done = unlocked(road, u);
   return (
     <p className={`small with-icon road-opens${done ? ' done' : ''}`}>
-      <Icon name={done ? 'checklist' : 'lock'} size={18} />
+      <Icon name={done ? 'unlock' : 'lock'} size={18} />
       <span>{done ? `${UNLOCK_NAME[u][0].toUpperCase()}${UNLOCK_NAME[u].slice(1)}: open.` : `Clear it to open ${UNLOCK_NAME[u]}.`}</span>
     </p>
   );

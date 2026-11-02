@@ -70,6 +70,10 @@ export const SFX = [
   ['lesson', 'The tutorial: a lesson done'],
   ['graduate', 'Graduation: the tutorial is done and the full game opens'],
   ['boom', 'The announcer: the arena under his call (a deep thump, its echo, the crowd)'],
+  // round 35: play with friends, and the road map's unlocks
+  ['versus', 'Play with friends: a challenge set, or taken up'],
+  ['roll', 'Play with friends: a seat taken in a draft class'],
+  ['opened', 'The road map: a stop cleared opens a difficulty or the mini-games'],
 ] as const;
 type Sfx = (typeof SFX)[number][0];
 
@@ -396,6 +400,24 @@ export function sfx(name: Sfx, always = false): void {
     case 'lesson': // a pencil tick on the list
       tone(N(31), t, 0.03, 'triangle', 0.35);
       tone(N(36), t + 0.04, 0.04, 'triangle', 0.3);
+      break;
+    case 'versus': // two calls across the court, then both together: game on
+      seq([7, 12], 0.07, 'square', 0.45);
+      tone(N(14), t + 0.18, 0.08, 'square', 0.4);
+      tone(N(19), t + 0.26, 0.08, 'square', 0.4);
+      tone(N(12), t + 0.38, 0.22, 'square', 0.4);
+      tone(N(24), t + 0.38, 0.22, 'square', 0.35);
+      noise(t + 0.38, 0.08, 0.2);
+      break;
+    case 'roll': // roll call: the class bell, three names read out
+      seq([12, 16, 19], 0.1, 'triangle', 0.6);
+      tone(N(31), t + 0.32, 0.35, 'sine', 0.25);
+      break;
+    case 'opened': // the padlock clicks open, then a short fanfare
+      noise(t, 0.03, 0.35);
+      tone(N(5), t + 0.04, 0.04, 'square', 0.3);
+      seq([12, 19, 24], 0.08, 'square', 0.55);
+      tone(N(28), t + 0.3, 0.3, 'triangle', 0.5);
       break;
     case 'graduate': // caps in the air: a rising fanfare, the crowd
       seq([12, 16, 19, 24, 28, 31, 36], 0.09);

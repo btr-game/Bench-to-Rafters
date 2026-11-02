@@ -23,7 +23,8 @@ export function LevelEnd({ g }: { g: GameState }) {
   const best = nba.reduce((m, h) => Math.max(m, h.line.gp ? h.line.pts / h.line.gp : 0), 0);
   const next = LEVEL_IDS[LEVEL_IDS.indexOf(level) + 1];
   const copy = LEVEL_COPY[level];
-  useEffect(() => sfx(star ? 'award' : 'lose'), [star]);
+  // round 35: a level that opens a mode has the padlock's own sound
+  useEffect(() => sfx(star ? (unlockOf(level) ? 'opened' : 'award') : 'lose'), [star, level]);
   return (
     <div className="stack level-end">
       <section className={`card stack level-end-card ${star ? 'won' : 'missed'}`} data-tour="level-end">
@@ -76,7 +77,7 @@ export function LevelEnd({ g }: { g: GameState }) {
       ) : (
         unlockOf(level) && (
           <p className="card with-icon level-opens">
-            <Icon name="door" size={28} />
+            <Icon name="unlock" size={28} />
             <span>
               <b>{UNLOCK_NAME[unlockOf(level)!][0].toUpperCase() + UNLOCK_NAME[unlockOf(level)!].slice(1)}</b> is open: pick it on the start page.
             </span>

@@ -283,6 +283,7 @@ export function Create({ level }: { level?: Level } = {}) {
     const seat = draft.code ? await mp.joinClass(draft.code, who) : await mp.makeClass(draft.name, who);
     setSeating(false);
     if (typeof seat === 'string') return setSeatErr(MP_FAIL[seat]);
+    sfx('roll');
     start({ name: name.trim() || 'Rookie', number: Math.max(0, Math.min(99, Number(number) || 0)), pos, archetype: arch, attrs, focus, hand, mode: 'standard', country: country || undefined, look }, seat.seed, { klass: seat.code });
   };
 
@@ -351,7 +352,7 @@ export function Create({ level }: { level?: Level } = {}) {
       <div style={{ height: 12 }} />
       {draft && (
         <section className="card mp-draft row" role="group" aria-label="Draft class">
-          <Icon name="roster" size={32} />
+          <Icon name="draftclass" size={32} />
           <span className="mp-draft-text">
             <b>Draft class: {draft.name}</b>
             <small className="muted">{draft.code ? `Code ${draft.code}. ` : 'A new class: its code comes when you start. '}Regular guy, on the class’s seed. Make your player and start.</small>
