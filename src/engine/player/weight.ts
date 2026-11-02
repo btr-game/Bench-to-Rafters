@@ -117,6 +117,13 @@ export function startWeight(rng: Rng, p: UserPlayer): void {
   syncWeight(p);
 }
 
+/** Round 35: a draft-night career starts at 21 or 22 (career/draftNight.ts), so his body is set
+ * straight to where it settles at his adult height and age. */
+export function settleWeight(p: UserPlayer): void {
+  p.weight = Math.max(MIN_LB, Math.round(naturalWeight(p)));
+  syncWeight(p);
+}
+
 /** Extra body wear from carrying too much weight (a multiplier, 1 when fine). */
 export const weightWear = (p: UserPlayer): number => 1 + Math.max(0, weightUnits(p) - W.wearFrom) * W.wear;
 

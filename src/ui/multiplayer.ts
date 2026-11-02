@@ -163,6 +163,8 @@ export function cleanProspect(p: unknown): Prospect | null {
   const number = Number(i.number);
   if (!name || !Number.isInteger(number) || number < 0 || number > 99) return null;
   const input: CreateInput = { name, number, pos, archetype, focus: [focus[0], focus[1]], mode: 'standard', hand: i.hand === 'L' ? 'L' : 'R' };
+  // a draft-class career's start: the friend plays the same draft night
+  if (i.start === 'draft') input.start = 'draft';
   const a = i.attrs as Attrs | undefined;
   if (a && typeof a === 'object') {
     const ok = ATTRS.every((k) => Number.isInteger(a[k]) && Math.abs(a[k] - arch.attrs[k]) <= 6) && ATTRS.reduce((t, k) => t + a[k], 0) === 320;

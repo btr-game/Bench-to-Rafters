@@ -2,7 +2,7 @@
 // The balance targets in SPEC section 15 are the real requirement; change these
 // constants (not the code) to hit them.
 
-import type { AttrKey, Pos, LevelKey, HalfPlan, RoleKey, GrowthType, AgingProfile } from './types';
+import type { AttrKey, Pos, LevelKey, HalfPlan, RoleKey, GrowthType, AgingProfile, NcaaTier } from './types';
 
 export const ATTRS: AttrKey[] = ['SHT', 'FIN', 'PLY', 'PER', 'INT', 'REB', 'ATH', 'IQ'];
 export const POSITIONS: Pos[] = ['PG', 'SG', 'SF', 'PF', 'C'];
@@ -886,6 +886,36 @@ export const DRAFT = {
   userBoardBonus: 2,
   pot: { base: 45, mu: 2.84, sigma: 0.46, min: 50, max: 99 } as SkewDist,
   ovrNoise: 2.2,
+};
+
+/**
+ * Round 35: a draft class starts on draft night (career/draftNight.ts). Owner: "the 12 of you
+ * (max) were the first options of your colleges. you're going for the nba draft, and all of you
+ * are predicted to be entering as a 1st round pick (1~30th). ovr starts at a 65~75 range."
+ */
+export const DRAFT_NIGHT = {
+  ovr: [65, 75] as [number, number], // his OVR on draft night, drawn evenly across the range
+  // a junior (three college seasons behind him) or a senior (four), as often as each other
+  ages: [[21, 1], [22, 1]] as [number, number][],
+  // the mock drafts put the best of the range near the top pick and the least near the 30th,
+  // give or take this many picks (redrawn, not clamped, so the ends do not pile up)
+  pickSd: 4,
+  mockSpread: [2, 4] as [number, number], // picks either side of the projection in the mock range
+  firstRound: 30, // the last pick he can go: a team takes him there if he is still on the board
+  // his potential is the one he was made with, but never under the growth curve's for his OVR
+  // and age (the curve the draft class is drawn on), give or take potSd, nor under his OVR plus
+  // potRoom, so a first-round pick can still grow
+  potSd: 3,
+  potRoom: 2,
+  // where a first option bound for the first round played: mostly the big programs
+  tiers: [['blue', 5], ['power', 3], ['major', 1.5], ['mid', 0.5]] as [NcaaTier, number][],
+  // his fame with a mock at the 30th pick and at the first, a straight line between: 32.3836 on
+  // average over 400 draft nights, against 32.1433 for the first-round picks of 300 smart Regular
+  // guy careers on the day they were drafted (round 35)
+  rep: { last: 20, top: 45 },
+  // three or four seasons of college ball on his body: the mean wear of those same first-round
+  // picks on draft day (16.2515)
+  wear: 16,
 };
 
 // §8 recruiting

@@ -436,9 +436,10 @@ export const useStore = create<Store>((set, get) => ({
   start: (input, seed, mp) =>
     later(() => {
       const s = seed ?? Math.floor(Math.random() * 2 ** 31);
-      // round 35 (owner): with friends, Fast break and Sim stay off for the whole career
+      // round 35 (owner): with friends, Fast break and Sim stay off for the whole career, and a
+      // draft class starts on draft night (engine/career/draftNight.ts)
       const friends = !!(mp?.challenge || mp?.klass);
-      const game = newGame(s, friends ? { ...input, fast: false, mode: input.mode === 'fast' ? 'standard' : input.mode } : input);
+      const game = newGame(s, friends ? { ...input, fast: false, mode: input.mode === 'fast' ? 'standard' : input.mode, ...(mp?.klass ? { start: 'draft' as const } : {}) } : input);
       if (mp) game.mp = mp;
       if (friends) game.flags.friends = 1;
       fastForward(game);
