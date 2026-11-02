@@ -765,7 +765,7 @@ function FriendsLine({ g, k }: { g: GameState; k: DraftClass }) {
         <p className="small keep with-icon">
           <Icon name="rival" size={18} />
           <span>
-            Rival: <b>{rival.name}</b> ({pn(rival)}) · {rec.w}–{rec.l} in rival nights
+            Rival: <b>{rival.name}</b> ({pn(rival)}) · {rec.w}–{rec.l} in rival nights{rec.sw + rec.sl > 0 ? ` · ${rec.sw}–${rec.sl} in playoff series` : ''}
           </span>
         </p>
       )}

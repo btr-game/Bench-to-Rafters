@@ -81,9 +81,12 @@ export function rivalTeam(s: GameState): { f: FriendLine; line: Line & { project
 }
 
 /** Their record in rival nights: his wins and losses. */
-export function rivalRecord(s: GameState): { w: number; l: number } {
-  const m = s.mp?.meets ?? [];
-  return { w: m.filter((x) => x.won).length, l: m.filter((x) => !x.won).length };
+export function rivalRecord(s: GameState): { w: number; l: number; sw: number; sl: number } {
+  const all = s.mp?.meets ?? [];
+  // rival nights, and (round 35) playoff series against him, counted apart
+  const m = all.filter((x) => !x.series);
+  const ps = all.filter((x) => x.series);
+  return { w: m.filter((x) => x.won).length, l: m.filter((x) => !x.won).length, sw: ps.filter((x) => x.won).length, sl: ps.filter((x) => !x.won).length };
 }
 
 /** At the start of a season: a page for a duo (or Big Three) of friends the season it forms, and a
