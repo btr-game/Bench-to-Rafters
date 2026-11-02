@@ -2844,3 +2844,11 @@ multiple times."
   text keeps the notes a player needs on the new pages; the manual and Guide mode; the dev deck's
   cards and Catalog lists; the tutorial's end-to-end check now plays beginner alone and checks the
   locks hold. Balance was not run (the owner's list stopped short of it). Not published.
+  The full checks after the friends features: 316 tests in 29 files, the build, the visual check on
+  all 142 cards in four looks (diffed against round 34: the new screens, pages a little longer for
+  FT% and the new cards, and two cards whose made-up careers now end differently), class contrast,
+  dev-apart (the deck writes only its own keys, the friends stand-in among them). The visual check
+  found one bug: a risk tag on the highlighted (first) choice of a decision, green, amber or red on
+  the accent at 1.09:1; it now takes the button's ink. class-contrast.cjs missed it, so it now also
+  draws every tag the code puts inside a choice button in each state of the button, and fills in a
+  class built as prefix-${...} (risk-${level}) from the stylesheets: 223 combinations, none under AA.

@@ -107,6 +107,9 @@ ul { margin: 0; }
 .choice:hover:not(:disabled) { border-color: var(--accent); }
 .choice.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 .choice.primary small { color: var(--accent-ink); opacity: 0.85; }
+/* a risk or age tag on the highlighted choice takes its ink: green, amber or red on the accent fails AA */
+.choice.primary .risk,
+.choice.primary .plan-tag.age { color: var(--accent-ink); border-color: var(--accent-ink); }
 .choice.selected { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
 .odds { font-family: var(--f-mono); font-size: calc(14.5px * var(--ts)); color: var(--accent); }
 .plans { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
