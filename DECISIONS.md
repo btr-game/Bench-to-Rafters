@@ -2928,3 +2928,9 @@ multiple times."
     teammate on the roster and threw in any class career with a classmate on his team.
   - Sound: a toast for each reunion award (the championship sound for the class MVP) and a pop for a
     reaction. Art: the banquet, the draft stage for draft night's intro, three shop icons.
+- **The 50-40-90 Club** (owner: "add 50-40-90 season to a legendary season"): a legendary season card
+  for half the shots from the field, 40% from three and 90% at the line over a full NBA season (50
+  games), on the same line as the Fifty-Forty-Ninety achievement (two threes and two free throws
+  tried a game at least). It ranks just below the Triple-Double Season, so a rarer card the same
+  year still wins. Measured on 150 careers (Standard, smart policy): 6 careers (4.000000%) had one,
+  8 of 773 full NBA seasons (1.034929%).
