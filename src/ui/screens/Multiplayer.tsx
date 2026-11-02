@@ -14,6 +14,7 @@ import { DevDoor } from '../components/FootBar';
 import { Icon } from '../art/Icon';
 import { sfx } from '../sound';
 import { recordMp } from '../achievements';
+import { FriendCareer, ReactCounts, ReunionNight } from './ClassNight';
 import {
   CLASS_MAX,
   CODE_RE,
@@ -227,11 +228,18 @@ function MpChat({ mp, room, code, compact }: { mp: Multiplayer; room: Room; code
         ) : lines.length === 0 ? (
           <li className="muted">No one has said anything yet.</li>
         ) : (
-          lines.map((l) => (
-            <li key={l.id} className={l.mine ? 'mine' : undefined}>
-              <b>{l.mine ? 'You' : l.name}</b> <span>{l.body}</span> <small className="muted">{ago(l.at)}</small>
-            </li>
-          ))
+          lines.map((l) =>
+            // round 35: class news, in the game's voice
+            l.news ? (
+              <li key={l.id} className="news">
+                <Icon name="news" size={16} /> <span>{l.body}</span> <small className="muted">{ago(l.at)}</small>
+              </li>
+            ) : (
+              <li key={l.id} className={l.mine ? 'mine' : undefined}>
+                <b>{l.mine ? 'You' : l.name}</b> <span>{l.body}</span> <small className="muted">{ago(l.at)}</small>
+              </li>
+            ),
+          )
         )}
       </ol>
       <div className="row mp-chat-say" style={{ gap: 6 }}>
@@ -413,6 +421,8 @@ function ClassView({ mp, code, back }: { mp: Multiplayer; code: string; back: ()
   const [k, setK] = useState<DraftClass | null | 'error' | undefined>(undefined);
   const [tick, setTick] = useState(0);
   const [rivalErr, setRivalErr] = useState('');
+  // round 35 (owner: "watch a friend's career ... of course"): one member's career, season by season
+  const [watch, setWatch] = useState<string | null>(null);
   useEffect(() => {
     let live = true;
     void mp.draftClass(code).then((x) => live && setK(x));
@@ -447,6 +457,8 @@ function ClassView({ mp, code, back }: { mp: Multiplayer; code: string; back: ()
     );
   const me = k.members.find((m) => m.mine);
   const canJoin = (!me || me.seasons.length === 0) && (me || k.members.length < CLASS_MAX);
+  const watched = watch ? k.members.find((m) => m.id === watch) : null;
+  if (watched) return <FriendCareer mp={mp} k={k} m={watched} back={() => setWatch(null)} changed={() => setTick((n) => n + 1)} />;
   return (
     <section className="stack">
       <section className="card stack">
@@ -454,7 +466,7 @@ function ClassView({ mp, code, back }: { mp: Multiplayer; code: string; back: ()
           Draft class · {k.members.length} of {CLASS_MAX} · started {ago(k.at)}
         </div>
         <div className="sec-title">{k.name}</div>
-        <p className="small muted desc">Every career here starts on one seed: the same year, the same league, the same draft. Each season posts its line when it ends, and each finished career its card.</p>
+        <p className="small muted desc">Up to twelve friends, each his college’s first option, all projected in the first round of the same NBA draft: every career here starts on draft night, on one seed. Each season posts its line when it ends, and each finished career its card.</p>
         <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
           {canJoin && (
             <button className="btn" disabled={career} onClick={() => (sfx('roll'), setDraft({ code: k.code, name: k.name }))}>
@@ -468,12 +480,13 @@ function ClassView({ mp, code, back }: { mp: Multiplayer; code: string; back: ()
         {canJoin && career && <p className="small muted keep">Finish or leave the career you are playing first (New career in Settings), then come back.</p>}
         {me && me.seasons.length > 0 && !me.rec && <p className="small muted keep">Your career in this class carries on from Continue on the start page.</p>}
       </section>
+      <ReunionNight k={k} />
       <section className="card stack">
         <div className="sec-title with-icon">
           <Icon name="podium" size={24} />
           Standings
         </div>
-        <p className="small muted desc">By the best rating so far, then the honours. A finished career counts its card. Send one classmate a rivalry; when he sends one back, you are rivals, and your teams’ meetings become rival nights.</p>
+        <p className="small muted desc">By the best rating so far, then the honours. A finished career counts its card. Tap a friend to watch his career season by season. Send one classmate a rivalry; when he sends one back, you are rivals, and your teams’ meetings become rival nights.</p>
         {rivalErr && <p className="small" style={{ color: 'var(--bad)' }}>{rivalErr}</p>}
         <div className="tbl-wrap">
           <table>
@@ -500,7 +513,9 @@ function ClassView({ mp, code, back }: { mp: Multiplayer; code: string; back: ()
                   <tr key={t.m.id} className={t.m.mine ? 'me' : undefined}>
                     <td className="l">{i + 1}</td>
                     <td className="l">
-                      {t.m.name}
+                      <button className="link-btn" onClick={() => setWatch(t.m.id)} aria-label={`Watch ${t.m.mine ? 'your' : `${t.m.name}’s`} career`}>
+                        {t.m.name}
+                      </button>
                       {t.m.mine ? ' · you' : ''}
                     </td>
                     <td className="l">{t.m.rec?.name ?? last?.pn ?? '—'}</td>
@@ -569,6 +584,7 @@ function ClassView({ mp, code, back }: { mp: Multiplayer; code: string; back: ()
                               {s.aw.length ? ` · ${s.aw.slice(0, 2).join(', ')}` : ''}
                             </small>
                             {y.best === m.id && <small className="mp-best-tag">Best of the class</small>}
+                            <ReactCounts m={m} year={y.year} />
                           </span>
                         ) : (
                           <small className="muted">—</small>
@@ -631,7 +647,7 @@ function Classes({ mp, open, setOpen, name }: { mp: Multiplayer; open: string | 
     <section className="stack">
       <section className="card stack">
         <div className="sec-title">Start a class</div>
-        <p className="small muted desc">Name it, make your player, and send the code: up to eight friends start careers on the same seed.</p>
+        <p className="small muted desc">Name it, make your player, and send the code: up to twelve friends, first options from their colleges, start on the same draft night.</p>
         <div className="row mp-classes-new" style={{ gap: 8 }}>
           <input aria-label="Name of the class" maxLength={40} value={title} placeholder="Class of the rooftop" onChange={(e) => setTitle(e.target.value)} />
           <button className="btn" disabled={!title.trim() || !name || career} onClick={() => (sfx('confirm'), setDraft({ name: title.trim() }))}>

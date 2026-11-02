@@ -2730,4 +2730,34 @@ td.mp-best .mp-cell small { color: var(--ink); }
 .mp-chat-lines small { font-size: calc(12px * var(--ts)); white-space: nowrap; }
 .mp-chat-say input { flex: 1 1 140px; min-width: 0; }
 .mp-friends { gap: 4px; border-top: 1px solid var(--line); padding-top: 8px; }
+/* round 35: class news in the chat, reactions, a friend's career, reunion night */
+td > .link-btn { min-width: 44px; text-align: left; }
+.mp-chat-lines li.news { font-style: italic; color: var(--ink); display: flex; gap: 6px; align-items: baseline; flex-wrap: wrap; }
+.mp-reacts { display: inline-flex; gap: 8px; flex-wrap: wrap; font-family: var(--f-mono); font-size: calc(12.5px * var(--ts)); align-items: center; }
+.mp-reacts > span { display: inline-flex; gap: 2px; align-items: center; }
+.mp-reacts > span.mine { font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
+.mp-react-bar { display: inline-flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.mp-react-bar .chip { min-height: 36px; min-width: 40px; display: inline-flex; gap: 4px; align-items: center; justify-content: center; }
+.mp-ovr-chart { width: 100%; max-width: 560px; height: 72px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 6px; }
+.mp-friend-years { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.mp-friend-years li { display: grid; grid-template-columns: 5.5em minmax(0, 1fr) auto; gap: 6px 12px; align-items: center; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; }
+.mp-friend-year { display: grid; }
+.mp-aw { color: var(--ink) !important; font-weight: 700; }
+.mp-reunion { border-color: var(--gold); }
+.mp-award { display: flex; gap: 14px; align-items: flex-start; padding: 12px; border: 2px solid var(--line); border-radius: 10px; background: var(--surface-2); animation: mp-award-in 0.5s steps(4) both; }
+.mp-award.mvp { border-color: var(--gold); }
+.mp-award > svg { flex: none; }
+.mp-award-title { font-family: var(--f-display); font-size: calc(30px * var(--ts)); line-height: 1.05; text-transform: uppercase; }
+.mp-award.mvp .mp-award-title { font-size: calc(40px * var(--ts)); }
+.mp-award-win { font-size: calc(17px * var(--ts)); overflow-wrap: anywhere; }
+.mp-award-rest { margin: 4px 0 0; padding-left: 1.4em; font-size: calc(13.5px * var(--ts)); color: var(--muted); }
+.mp-award-rest li.me { color: var(--ink); font-weight: 700; }
+.mp-award-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: calc(13.5px * var(--ts)); }
+.mp-award-list li { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+@keyframes mp-award-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .mp-award { animation: none; } }
+@media (max-width: 560px) {
+  .mp-friend-years li { grid-template-columns: minmax(0, 1fr); }
+  .mp-award { flex-direction: column; }
+}
 .mp-friends p { margin: 0; }

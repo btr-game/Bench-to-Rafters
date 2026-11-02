@@ -11,6 +11,7 @@ import type { GameState } from '../../engine/types';
 import { PlayerArt } from '../art/Player';
 import { FlagArt } from '../art/Flag';
 import { Icon } from '../art/Icon';
+import { DailyFriends } from '../screens/ClassNight';
 
 const KEY = 'btr-daily';
 type Best = { points: number; legacy: number; peak: number; runs: number; last?: string; prevBest?: Best };
@@ -88,6 +89,8 @@ export function DailyGame() {
         </button>
       )}
       {streak > 1 && <p className="small muted keep">You have played on {streak} days.</p>}
+      {/* round 35: today's daily among friends (online only) */}
+      <DailyFriends day={day} best={best ? { points: best.points, legacy: best.legacy, peak: best.peak } : null} />
     </section>
   );
 }
@@ -128,6 +131,7 @@ export function DailyResult({ g }: { g: GameState }) {
   const sc = dailyScore(g);
   const record = rec && (!rec.before || sc.points > rec.before.points);
   return (
+    <>
     <section className="card stack daily-result">
       <div className="kicker">Daily challenge · {d.day}</div>
       <div className="row" style={{ gap: 18, alignItems: 'baseline', flexWrap: 'wrap' }}>
@@ -150,5 +154,7 @@ export function DailyResult({ g }: { g: GameState }) {
         </button>
       </div>
     </section>
+    {rec && <DailyFriends day={d.day} best={{ points: rec.now.points, legacy: rec.now.legacy, peak: rec.now.peak }} />}
+    </>
   );
 }

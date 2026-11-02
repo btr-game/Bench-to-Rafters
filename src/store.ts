@@ -439,7 +439,7 @@ export const useStore = create<Store>((set, get) => ({
       // round 35 (owner): with friends, Fast break and Sim stay off for the whole career
       const friends = !!(mp?.challenge || mp?.klass);
       const game = newGame(s, friends ? { ...input, fast: false, mode: input.mode === 'fast' ? 'standard' : input.mode } : input);
-      if (mp) game.mp = mp;
+      if (mp) game.mp = mp.klass && !mp.run ? { ...mp, run: `${s.toString(36)}-${Date.now().toString(36)}` } : mp;
       if (friends) game.flags.friends = 1;
       fastForward(game);
       // round 33: a level career has a save of its own (ui/saves.ts writeRun), not a slot
@@ -983,7 +983,7 @@ useStore.subscribe((now, before) => {
   // community"): a career with friends counts on its challenge's or class's board only
   if (!g.mp?.challenge && !g.mp?.klass) void community().then((c) => c.postCareer(rec));
   // round 35: a draft class gets the card, a friend's challenge its answer
-  if (g.mp?.klass) send({ k: 'career', code: g.mp.klass, rec });
+  if (g.mp?.klass) send({ k: 'career', code: g.mp.klass, rec, run: g.mp.run });
   if (g.mp?.challenge) {
     send({ k: 'answer', code: g.mp.challenge, name: handle() || 'A friend', rec });
     if (recordMp('answered', g.mp.challenge)) achievementsNow();
@@ -995,7 +995,7 @@ useStore.subscribe((now, before) => {
   const g = now.game;
   const b = before.game;
   if (!g?.mp?.klass || !b || g === b || g.seed !== b.seed || g.player.name !== b.player.name || g.history.length <= b.history.length) return;
-  for (const h of g.history.slice(b.history.length)) send({ k: 'season', code: g.mp.klass, s: seasonLine(h, g.player.name, g.player.pos) });
+  for (const h of g.history.slice(b.history.length)) send({ k: 'season', code: g.mp.klass, s: { ...seasonLine(h, g.player.name, g.player.pos), ...(g.mp.run ? { run: g.mp.run } : {}) } });
 });
 // anything a closed page left unsent goes now
 setTimeout(() => void pump(), 4000);

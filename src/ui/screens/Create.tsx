@@ -281,6 +281,15 @@ export function Create({ level }: { level?: Level } = {}) {
     setSeating(true);
     setSeatErr('');
     const who = handle() || 'A friend';
+    // round 35: a seat plays one career; one already under way (or done) is not started again
+    if (draft.code) {
+      const k = await mp.draftClass(draft.code);
+      const me = k && k !== 'error' ? k.members.find((m) => m.mine) : null;
+      if (me && (me.seasons.length > 0 || me.rec)) {
+        setSeating(false);
+        return setSeatErr(MP_FAIL.taken);
+      }
+    }
     const seat = draft.code ? await mp.joinClass(draft.code, who) : await mp.makeClass(draft.name, who);
     setSeating(false);
     if (typeof seat === 'string') return setSeatErr(MP_FAIL[seat]);

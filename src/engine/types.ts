@@ -530,6 +530,8 @@ export interface GameState {
     rival?: string;
     /** Rival nights: each meeting with the rival classmate's team. */
     meets?: RivalMeet[];
+    /** Round 35: this career's id in its class (a seat holds one career; the server refuses another's lines). */
+    run?: string;
   };
   rng: Rng;
   nextId: number;

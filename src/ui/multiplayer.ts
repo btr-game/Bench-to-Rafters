@@ -70,12 +70,38 @@ export interface ClassSeason {
   pn: string; // his name, so the class shows the player as well as the friend
   pos?: string; // round 35: his position (a friend's duo or rival needs it)
   sal?: number; // round 35: his salary that season, $M (joining a friend's team must fit it)
+  /** Sent with the line, never kept with it: the career it comes from (a seat holds one career). */
+  run?: string;
+}
+/** Round 35: the four reactions on a classmate's season (pixel icons from art/icons.ts). */
+export type Emote = 'fire' | 'crown' | 'heart' | 'snow';
+export const EMOTES: { k: Emote; icon: string; label: string }[] = [
+  { k: 'fire', icon: 'flame', label: 'On fire' },
+  { k: 'crown', icon: 'crown', label: 'Royalty' },
+  { k: 'heart', icon: 'heart', label: 'Love it' },
+  { k: 'snow', icon: 'snow', label: 'Ice cold' },
+];
+/** A season's reactions of one kind: how many, and whether one of them is his. */
+export interface React {
+  y: number;
+  e: Emote;
+  n: number;
+  mine: boolean;
+}
+/** Round 35: a friend's best daily challenge run of a day. */
+export interface DailyRow {
+  name: string;
+  points: number;
+  legacy: number;
+  peak: number;
+  mine: boolean;
 }
 export interface ClassMember {
   id: string;
   name: string;
   seasons: ClassSeason[];
   rec: CareerRecord | null;
+  reacts?: React[]; // round 35
   at: string;
   mine: boolean;
   rival?: string | null; // round 35: the member he picked as his rival (a short id)
@@ -87,6 +113,7 @@ export interface ChatLine {
   body: string;
   at: string;
   mine: boolean;
+  news?: boolean; // round 35: a line of class news, in the game's voice
 }
 export type Room = 'challenge' | 'class';
 export const CHAT_MAX = 200;
@@ -104,7 +131,7 @@ export interface ClassSummary {
   at: string;
   n: number;
 }
-export type MpFail = 'missing' | 'full' | 'denied' | 'busy' | 'error';
+export type MpFail = 'missing' | 'full' | 'denied' | 'busy' | 'taken' | 'error';
 export interface Seat {
   code: string;
   seed: number;
@@ -123,13 +150,19 @@ export interface Multiplayer {
   openClasses(): Promise<ClassSummary[] | 'error'>;
   myClasses(): Promise<ClassSummary[] | 'error'>;
   postSeason(code: string, s: ClassSeason): Promise<'ok' | MpFail>;
-  postCareer(code: string, rec: CareerRecord): Promise<'ok' | MpFail>;
+  postCareer(code: string, rec: CareerRecord, run?: string): Promise<'ok' | MpFail>;
   /** Round 35: pick a classmate as a rival (null takes it back); two who pick each other are rivals. */
   setRival(code: string, to: string | null): Promise<'ok' | MpFail>;
   /** Round 35: he starts a friend's challenge (so he may talk in its chat). */
   take(code: string, name: string): Promise<'ok' | MpFail>;
   chat(room: Room, code: string): Promise<ChatLine[] | null | 'error'>;
   say(room: Room, code: string, name: string, body: string): Promise<'ok' | MpFail>;
+  /** Round 35: a reaction on a classmate's season (null takes it back). */
+  react(code: string, to: string, year: number, emote: Emote | null): Promise<'ok' | MpFail>;
+  /** Round 35: his best daily challenge run of a day, for his friends' board. */
+  dailyPost(day: string, name: string, points: number, legacy: number, peak: number): Promise<'ok' | MpFail>;
+  /** A day's daily challenge board: his friends (classmates, challenge partners) and him. */
+  dailyFriends(day: string): Promise<DailyRow[] | 'error'>;
 }
 
 export const CLASS_MAX = 12; // round 35 (owner: "the 12 of you (max)")
@@ -139,7 +172,8 @@ export const cleanCode = (s: string): string => s.toUpperCase().replace(/[^A-Z0-
 
 export const MP_FAIL: Record<MpFail, string> = {
   missing: 'No game goes by that code. Check it with your friend.',
-  full: 'That draft class is full (eight players).',
+  full: 'That draft class is full (twelve players).',
+  taken: 'Your seat in that class already holds another career: a seat plays one career.',
   denied: 'That could not be sent: only a Regular guy career counts.',
   busy: 'Too many in a row: try again in a little while.',
   error: 'The game could not reach the server. Try again in a little while.',
@@ -327,6 +361,83 @@ export function classYears(c: DraftClass): { year: number; rows: { m: ClassMembe
   });
 }
 
+/** Round 35: the class news line a season brings (the server writes the same one, in
+ * supabase/migrations/0006_multiplayer_class.sql): his NBA team, then the honours that matter. */
+export function classNews(before: ClassSeason[], line: ClassSeason, friend: string): string | null {
+  const pr = before.find((x) => x.year === line.year - 1);
+  const bits: string[] = [];
+  if (line.lv === 'NBA' && (!pr || pr.lv !== 'NBA')) bits.push(`${before.some((x) => x.lv === 'NBA') ? 'back in the NBA with the' : 'starts his NBA career with the'} ${line.team}`);
+  else if (line.lv === 'NBA' && pr?.lv === 'NBA' && pr.team !== line.team) bits.push(`moves to the ${line.team}`);
+  else if (line.lv !== 'NBA' && pr?.lv === 'NBA') bits.push(`leaves the NBA for ${line.team}`);
+  if (line.aw.includes('Rookie of the Year')) bits.push('Rookie of the Year');
+  if (line.aw.includes('All-Star') && !before.some((x) => x.aw.includes('All-Star'))) bits.push('an All-Star for the first time');
+  if (line.aw.includes('MVP')) bits.push('the league MVP');
+  if (line.lv === 'NBA' && line.aw.some((a) => a.endsWith('Champion'))) bits.push(`NBA champion with the ${line.team}`);
+  return bits.length ? `${line.pn || friend} (${friend}), ${line.year}: ${bits.join(' · ')}.`.slice(0, CHAT_MAX) : null;
+}
+
+// ---------- reunion night (round 35) ----------
+// Owner: "instead of having that throughout, how about combining them all in reunion night,
+// revealing each of them one at a time (class MVP, most career points, most assists, wealth, ...,
+// from least important to most, so class MVP should be last)".
+
+/** A class member who has posted nothing for this long counts as he stands, so one friend who
+ * stops playing does not keep the reunion from the rest. */
+export const REUNION_WAIT_DAYS = 14;
+
+/** Whether the class can hold its reunion: every member who started has finished (or has been
+ * quiet for two weeks), and at least two played. */
+export function reunionReady(k: DraftClass, now = Date.now()): { ready: boolean; done: number; total: number } {
+  const started = k.members.filter((m) => m.seasons.length > 0 || m.rec);
+  const quiet = (m: ClassMember) => now - Date.parse(m.at) > REUNION_WAIT_DAYS * 86400000;
+  const done = started.filter((m) => m.rec || quiet(m)).length;
+  return { ready: started.length >= 2 && done === started.length, done, total: started.length };
+}
+
+export interface ReunionAward {
+  key: string;
+  title: string;
+  icon: string;
+  what: string; // what it measures, in a few words
+  rows: { m: ClassMember; value: number; text: string }[]; // best first
+}
+const nbaOnly = (m: ClassMember) => m.seasons.filter((s) => s.lv === 'NBA' && s.gp > 0);
+const total = (m: ClassMember, k: 'pts' | 'reb' | 'ast') => nbaOnly(m).reduce((a, s) => a + s[k] * s.gp, 0);
+const n0 = (x: number) => Math.round(x).toLocaleString('en-US');
+
+/** The night's awards, from the least of them to the class MVP, each with the class ranked. */
+export function reunionAwards(k: DraftClass): ReunionAward[] {
+  const ms = k.members.filter((m) => m.seasons.length > 0 || m.rec);
+  const award = (key: string, title: string, icon: string, what: string, value: (m: ClassMember) => number, text: (v: number) => string): ReunionAward => ({
+    key,
+    title,
+    icon,
+    what,
+    rows: ms
+      .map((m) => ({ m, value: value(m) }))
+      .sort((a, b) => b.value - a.value || a.m.at.localeCompare(b.m.at))
+      .map((r) => ({ ...r, text: text(r.value) })),
+  });
+  const st = new Map(standings(k).map((s) => [s.m.id, s]));
+  return [
+    award('iron', 'Iron Man', 'shoe', 'most NBA games', (m) => nbaOnly(m).reduce((a, s) => a + s.gp, 0), (v) => `${n0(v)} games`),
+    award('travel', 'Journeyman', 'jet', 'most NBA teams', (m) => new Set(nbaOnly(m).map((s) => s.team)).size, (v) => `${v} team${v === 1 ? '' : 's'}`),
+    award('glass', 'Glass Cleaner', 'rebound', 'most career rebounds', (m) => total(m, 'reb'), (v) => `${n0(v)} rebounds`),
+    award('dimes', 'Floor General', 'playmake', 'most career assists', (m) => total(m, 'ast'), (v) => `${n0(v)} assists`),
+    award('bank', 'Moneybags', 'bank', 'most career earnings', (m) => m.seasons.reduce((a, s) => a + (s.sal ?? 0), 0), (v) => `$${v >= 100 ? n0(v) : v.toFixed(1)}M earned`),
+    award('points', 'Bucket Getter', 'shoot', 'most career points', (m) => total(m, 'pts'), (v) => `${n0(v)} points`),
+    award('peak', 'Highest Peak', 'ovr', 'the best rating anyone reached', (m) => st.get(m.id)?.peak ?? 0, (v) => `peak ${v} OVR`),
+    award('stars', 'All-Star Regular', 'stars', 'most All-Star selections', (m) => st.get(m.id)?.allStars ?? 0, (v) => `${v} All-Star${v === 1 ? '' : 's'}`),
+    award('mvps', 'Hardware', 'crown', 'most MVP awards', (m) => st.get(m.id)?.mvps ?? 0, (v) => `${v} MVP${v === 1 ? '' : 's'}`),
+    award('rings', 'Ring Leader', 'laurel', 'most titles', (m) => st.get(m.id)?.titles ?? 0, (v) => `${v} ring${v === 1 ? '' : 's'}`),
+    // by the career index when every career has its card; with a quiet friend still out, by the
+    // class table's own score for everyone, so the two never mix
+    ms.every((m) => m.rec)
+      ? award('mvp', 'Class MVP', 'podium', 'the best career in the class, by career index', (m) => scoreOf(m.rec!), (v) => `career index ${n0(v)}`)
+      : award('mvp', 'Class MVP', 'podium', 'the best career in the class, by the class table', (m) => st.get(m.id)?.score ?? 0, (v) => `class score ${n0(v)}`),
+  ];
+}
+
 // ---------- which multiplayer this page has ----------
 
 let picked: Promise<Multiplayer | null> | null = null;
@@ -351,7 +462,7 @@ export function multiplayer(): Promise<Multiplayer | null> {
 
 /** A post waiting to go: kept on this device until the server takes it (or turns it down for
  * good), so a season played offline, or faster than the server takes them, still arrives. */
-type Job = { k: 'season'; code: string; s: ClassSeason } | { k: 'career'; code: string; rec: CareerRecord } | { k: 'answer'; code: string; name: string; rec: CareerRecord };
+type Job = { k: 'season'; code: string; s: ClassSeason } | { k: 'career'; code: string; rec: CareerRecord; run?: string } | { k: 'answer'; code: string; name: string; rec: CareerRecord };
 const QUEUE = 'btr-mp-queue';
 const sameJob = (a: Job, b: Job) => a.k === b.k && a.code === b.code && (a.k !== 'season' || (b.k === 'season' && a.s.year === b.s.year));
 function loadQ(): Job[] {
@@ -386,7 +497,7 @@ export async function pump(): Promise<void> {
     for (let misses = 0; misses < 12; ) {
       const j = loadQ()[0];
       if (!j) break;
-      const r = j.k === 'season' ? await mp.postSeason(j.code, j.s) : j.k === 'career' ? await mp.postCareer(j.code, j.rec) : await mp.answer(j.code, j.name, j.rec);
+      const r = j.k === 'season' ? await mp.postSeason(j.code, j.s) : j.k === 'career' ? await mp.postCareer(j.code, j.rec, j.run) : await mp.answer(j.code, j.name, j.rec);
       if (r === 'busy' || r === 'error') {
         misses++;
         await wait(r === 'busy' ? 2500 : 8000);
@@ -408,7 +519,9 @@ interface LocalData {
   chat?: Record<string, (Omit<ChatLine, 'mine'> & { who: string })[]>;
   takers?: Record<string, string[]>;
   challenges: (Omit<Challenge, 'mine' | 'answers'> & { who: string; answers: (Omit<Answer, 'mine'> & { who: string })[] })[];
-  classes: (Omit<DraftClass, 'mine' | 'members'> & { who: string; members: (Omit<ClassMember, 'mine'> & { who: string })[] })[];
+  classes: (Omit<DraftClass, 'mine' | 'members'> & { who: string; members: (Omit<ClassMember, 'mine' | 'reacts'> & { who: string; run?: string; reacts?: { y: number; e: Emote; who: string }[] })[] })[];
+  /** Round 35: each day's best daily challenge runs (the stand-in's friends are everyone in it). */
+  daily?: Record<string, (Omit<DailyRow, 'mine'> & { who: string })[]>;
 }
 const LOCAL = 'btr-mp-local';
 const ME = 'me';
@@ -450,6 +563,45 @@ function houseSeasons(k: number, upTo: number): ClassSeason[] {
   }
   return out;
 }
+/** Round 35: house seasons for a class that starts on draft night: a first-round rookie (65 to 75)
+ * in the NBA from his first season, one move mid-career, a rookie deal then a big one. */
+function draftSeasons(k: number, upTo: number, first = 2026): ClassSeason[] {
+  const teams = [['Boston Celtics', 'Miami Heat'], ['Denver Nuggets', 'Chicago Bulls'], ['New York Knicks', 'Phoenix Suns'], ['Golden State Warriors', 'Dallas Mavericks'], ['Toronto Raptors', 'Utah Jazz'], ['Atlanta Hawks', 'Orlando Magic']][k % 6];
+  const colors = ['#007A33', '#0E2240', '#006BB6', '#1D428A', '#CE1141', '#E03A3E'];
+  const out: ClassSeason[] = [];
+  let ovr = 66 + ((k * 3) % 10);
+  for (let i = 0; i < upTo; i++) {
+    ovr = Math.max(55, Math.min(95, ovr + [4, 3, 3, 2, 1, 1, 0, -1, -2, -3, -3, -4][i] + ((k + i) % 2)));
+    const team = teams[i < 5 + (k % 3) ? 0 : 1];
+    const ring = (k + i) % 5 === 4 && ovr >= 78;
+    out.push({
+      year: first + i,
+      age: 22 + i,
+      lv: 'NBA',
+      team,
+      color: colors[k % 6],
+      ovr,
+      gp: 64 + ((k * 7 + i * 3) % 18),
+      pts: Math.round((ovr - 52 + ((k + i) % 4)) * 0.9 * 10) / 10,
+      reb: Math.round((3 + ((k * 2 + i) % 7)) * 10) / 10,
+      ast: Math.round((2 + ((k * 5 + i) % 6)) * 10) / 10,
+      w: 30 + ((k * 5 + i * 3) % 30),
+      l: 52 - ((k * 5 + i * 3) % 30),
+      result: ring ? 'Won the title' : ['Lost in first round', 'Missed playoffs', 'Lost in conference finals'][(k + i) % 3],
+      aw: [...(i === 0 && k === 1 ? ['Rookie of the Year'] : []), ...(ovr >= 80 ? ['All-Star'] : []), ...(ovr >= 90 ? ['MVP'] : []), ...(ring ? ['NBA Champion'] : [])],
+      pn: ['Andre Cole', 'Luka Venn', 'Tariq Moss', 'Eli Brandt', 'Nico Hale', 'Ray Quinn'][k % 6],
+      pos: ['SG', 'C', 'SF', 'PG', 'PF', 'SF'][k % 6],
+      sal: Math.round((i < 4 ? 4 + k * 1.3 + i : 18 + (ovr - 70) * 1.6) * 10) / 10,
+    });
+  }
+  return out;
+}
+/** A finished house career's card, on one of the deck's own (so every field is real). */
+function houseCard(base: CareerRecord, k: number, seasons: ClassSeason[]): CareerRecord {
+  const peak = seasons.reduce((a, s) => Math.max(a, s.ovr), 0);
+  const count = (re: RegExp) => seasons.filter((s) => s.aw.some((a) => re.test(a))).length;
+  return { ...base, id: `house-r${k}`, mode: 'standard', name: seasons[0]?.pn ?? base.name, peak, nbaSeasons: seasons.length, allStars: count(/^All-Star$/), mvps: count(/^MVP$/), titles: count(/Champion$/), tier: peak >= 88 ? 'Hall of Famer' : peak >= 80 ? 'All-Star' : 'Starter', index: { total: 0, best: 0, score: 380 + peak * 6 + count(/^All-Star$/) * 25 - k * 7 } };
+}
 function seed(recs: CareerRecord[]): LocalData {
   const d: LocalData = { v: 1, challenges: [], classes: [] };
   recs.slice(0, 4).forEach((r, i) => {
@@ -481,6 +633,19 @@ function seed(recs: CareerRecord[]): LocalData {
     'challenge:DECK22': [{ id: 4, who: 'house-1', name: HOUSE[0], body: 'Beat your index on the first try. Your move.', at: ago(1) }],
   };
   d.classes.push({ code: 'OPEN22', who: 'house-5', name: 'Late bloomers', seed: 777, at: ago(1), members: [{ id: 'house00005', who: 'house-5', name: HOUSE[4], seasons: houseSeasons(3, 3), rec: null, at: ago(1) }] });
+  // round 35: a class on the draft-night story, three seasons in, with its news and reactions
+  const night: LocalData['classes'][number]['members'] = [0, 1, 2, 3, 4].map((k) => ({ id: `house0001${k}`, who: `house-n${k}`, name: HOUSE[k], seasons: draftSeasons(k, 3), rec: null, at: ago(2 - k * 0.1) }));
+  night[0].reacts = [{ y: 2027, e: 'fire', who: 'house-n1' }, { y: 2027, e: 'fire', who: 'house-n2' }, { y: 2028, e: 'crown', who: 'house-n3' }];
+  d.classes.push({ code: 'NIGHT6', who: 'house-n0', name: 'Draft night', seed: 2026, at: ago(6), members: night });
+  d.chat!['class:NIGHT6'] = night.flatMap((m) => m.seasons.map((s, i) => classNews(m.seasons.slice(0, i), s, m.name)).filter((b): b is string => !!b)).slice(0, 8).map((body, i) => ({ id: 20 + i, who: 'news', name: 'Class news', body, at: ago(5 - i * 0.4) }));
+  // and one whose careers are all over: its reunion night is ready (the deck's own seat in it too)
+  if (recs[0]) {
+    const done = [0, 1, 2, 3, 4, 5].map((k) => {
+      const seasons = draftSeasons(k, 9 + (k % 4), 2014);
+      return { id: k === 5 ? 'me00000000' : `house0002${k}`, who: k === 5 ? ME : `house-o${k}`, name: k === 5 ? 'Deck' : HOUSE[k], seasons, rec: houseCard(recs[k % recs.length], k, seasons), at: ago(30 - k) };
+    });
+    d.classes.push({ code: 'REUNI8', who: 'house-o0', name: 'Class of 2014', seed: 2014, at: ago(40), members: done });
+  }
   return d;
 }
 function lload(): LocalData {
@@ -511,7 +676,25 @@ export function seedLocalMultiplayer(recs: CareerRecord[], also?: { code: string
 
 function localMultiplayer(): Multiplayer {
   const view = (c: LocalData['challenges'][number]): Challenge => ({ ...c, mine: c.who === ME, answers: c.answers.map((a) => ({ ...a, mine: a.who === ME })) });
-  const viewClass = (k: LocalData['classes'][number]): DraftClass => ({ ...k, mine: k.who === ME, members: k.members.map((m) => ({ ...m, mine: m.who === ME })) });
+  const viewClass = (k: LocalData['classes'][number]): DraftClass => ({
+    ...k,
+    mine: k.who === ME,
+    members: k.members.map(({ run: _run, reacts, ...m }) => {
+      const out: React[] = [];
+      for (const r of reacts ?? []) {
+        const x = out.find((o) => o.y === r.y && o.e === r.e);
+        if (x) (x.n++, (x.mine ||= r.who === ME));
+        else out.push({ y: r.y, e: r.e, n: 1, mine: r.who === ME });
+      }
+      return { ...m, mine: m.who === ME, reacts: out };
+    }),
+  });
+  const news = (d: LocalData, code: string, body: string | null) => {
+    if (!body) return;
+    const key = `class:${code}`;
+    const lines = d.chat?.[key] ?? [];
+    d.chat = { ...d.chat, [key]: [...lines, { id: (lines[lines.length - 1]?.id ?? 0) + 1, who: 'news', name: 'Class news', body, at: new Date().toISOString() }].slice(-200) };
+  };
   const summary = (k: LocalData['classes'][number]): ClassSummary => ({ code: k.code, name: k.name, at: k.at, n: k.members.length });
   return {
     kind: 'local',
@@ -578,19 +761,30 @@ function localMultiplayer(): Multiplayer {
         .classes.filter((k) => k.members.some((m) => m.who === ME))
         .map(summary);
     },
+    // round 35: as the server (0006): a seat holds one career, a posted season stands, and what
+    // changed goes to the class news
     async postSeason(code, s) {
       const d = lload();
       const m = d.classes.find((x) => x.code === code)?.members.find((x) => x.who === ME);
       if (!m) return 'missing';
-      m.seasons = [...m.seasons.filter((x) => x.year !== s.year), s].sort((a, b) => a.year - b.year);
+      const { run, ...line } = s;
+      if (m.run && run !== m.run) return 'taken';
+      if (m.seasons.some((x) => x.year === s.year)) return 'ok';
+      news(d, code, classNews(m.seasons, line, m.name));
+      m.seasons = [...m.seasons, line].sort((a, b) => a.year - b.year);
+      m.run ??= run;
+      m.at = new Date().toISOString();
       lsave(d);
       return 'ok';
     },
-    async postCareer(code, rec) {
+    async postCareer(code, rec, run) {
       const d = lload();
       const m = d.classes.find((x) => x.code === code)?.members.find((x) => x.who === ME);
       if (!m) return 'missing';
+      if (m.run && run !== m.run) return 'taken';
+      if (m.rec) return 'ok';
       m.rec = rec;
+      news(d, code, `${rec.name} (${m.name}) retires: ${rec.tier}, peak ${Math.round(rec.peak)}.`);
       lsave(d);
       return 'ok';
     },
@@ -615,7 +809,7 @@ function localMultiplayer(): Multiplayer {
       const d = lload();
       const inRoom = room === 'class' ? !!d.classes.find((k) => k.code === code)?.members.some((m) => m.who === ME) : !!d.challenges.find((c) => c.code === code && (c.who === ME || c.answers.some((a) => a.who === ME))) || !!d.takers?.[code]?.includes(ME);
       if (!inRoom) return null;
-      return (d.chat?.[`${room}:${code}`] ?? []).slice(-50).map((x) => ({ id: x.id, name: x.name, body: x.body, at: x.at, mine: x.who === ME }));
+      return (d.chat?.[`${room}:${code}`] ?? []).slice(-50).map((x) => ({ id: x.id, name: x.name, body: x.body, at: x.at, mine: x.who === ME, ...(x.who === 'news' ? { news: true } : {}) }));
     },
     async say(room, code, name, body) {
       const d = lload();
@@ -626,6 +820,33 @@ function localMultiplayer(): Multiplayer {
       d.chat = { ...d.chat, [key]: [...lines, { id: (lines[lines.length - 1]?.id ?? 0) + 1, who: ME, name, body: b, at: new Date().toISOString() }].slice(-200) };
       lsave(d);
       return 'ok';
+    },
+    async react(code, to, year, emote) {
+      const d = lload();
+      const k = d.classes.find((x) => x.code === code);
+      if (!k?.members.some((m) => m.who === ME)) return 'missing';
+      const t = k.members.find((m) => m.id === to);
+      if (!t || t.who === ME || !t.seasons.some((s) => s.year === year)) return 'denied';
+      t.reacts = [...(t.reacts ?? []).filter((r) => !(r.y === year && r.who === ME)), ...(emote ? [{ y: year, e: emote, who: ME }] : [])];
+      lsave(d);
+      return 'ok';
+    },
+    async dailyPost(day, name, points, legacy, peak) {
+      const d = lload();
+      const rows = d.daily?.[day] ?? [];
+      const mine = rows.find((r) => r.who === ME);
+      const best = !mine || points > mine.points ? { who: ME, name, points, legacy, peak } : { ...mine, name };
+      d.daily = { ...d.daily, [day]: [...rows.filter((r) => r.who !== ME), best] };
+      lsave(d);
+      return 'ok';
+    },
+    async dailyFriends(day) {
+      const d = lload();
+      // the house friends play today's daily too (a fixed spread, so the board has company)
+      const house = HOUSE.slice(0, 4).map((name, i) => ({ who: `house-d${i}`, name, points: 5200 - i * 900, legacy: 52 - i * 9, peak: 84 - i * 3 }));
+      return [...house, ...(d.daily?.[day] ?? [])]
+        .sort((a, b) => b.points - a.points || b.peak - a.peak)
+        .map(({ who, ...r }) => ({ ...r, mine: who === ME }));
     },
   };
 }

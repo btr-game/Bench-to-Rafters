@@ -1,13 +1,13 @@
-// Multiplayer online (round 35): the database functions in supabase/migrations/0004_multiplayer.sql,
+// Multiplayer online (round 35): the database functions in supabase/migrations/0004 to 0006,
 // behind the interface in multiplayer.ts. The same anonymous secret as the community
 // (onlineCommunity.ts): the database keeps only its hash. Loaded only by the online build.
 
 import { createClient } from '@supabase/supabase-js';
 import type { CareerRecord } from '../engine/career/record';
 import { secretOf } from './onlineCommunity';
-import type { ChatLine, Challenge, ClassSummary, DraftClass, Multiplayer, MpFail, OpenChallenge, Seat } from './multiplayer';
+import type { ChatLine, Challenge, ClassSummary, DailyRow, DraftClass, Multiplayer, MpFail, OpenChallenge, Seat } from './multiplayer';
 
-const FAILS: MpFail[] = ['missing', 'full', 'denied', 'busy'];
+const FAILS: MpFail[] = ['missing', 'full', 'denied', 'busy', 'taken'];
 const fail = (x: unknown): MpFail => (FAILS.includes(x as MpFail) ? (x as MpFail) : 'error');
 
 export function onlineMultiplayer(url: string, key: string): Multiplayer {
@@ -47,10 +47,16 @@ export function onlineMultiplayer(url: string, key: string): Multiplayer {
     openClasses: () => call<ClassSummary[]>('mp_classes_open', { p_limit: 12 }),
     myClasses: () => call<ClassSummary[]>('mp_classes_mine', {}),
     postSeason: (code, s) => said('mp_class_season', { p_code: code, p_season: s }),
-    postCareer: (code, rec) => said('mp_class_career', { p_code: code, p_rec: rec }),
+    postCareer: (code, rec, run) => said('mp_class_career', { p_code: code, p_rec: run ? { ...rec, run } : rec }),
     setRival: (code, to) => said('mp_class_rival', { p_code: code, p_to: to }),
     take: (code, name) => said('mp_challenge_take', { p_code: code, p_name: name }),
     chat: (room, code) => call<ChatLine[] | null>('mp_chat_get', { p_kind: room, p_code: code }),
     say: (room, code, name, body) => said('mp_chat_post', { p_kind: room, p_code: code, p_name: name, p_body: body }),
+    react: (code, to, year, emote) => said('mp_react', { p_code: code, p_to: to, p_year: year, p_emote: emote }),
+    dailyPost: (day, name, points, legacy, peak) => said('mp_daily_post', { p_day: day, p_name: name, p_points: Math.round(points), p_legacy: Math.round(legacy), p_peak: Math.round(peak) }),
+    dailyFriends: async (day) => {
+      const r = await call<DailyRow[] | null>('mp_daily_friends', { p_day: day });
+      return r === 'error' ? 'error' : (r ?? []);
+    },
   };
 }
