@@ -357,7 +357,8 @@ function resolveWithdraw(s: GameState, d: Decision, id: string): void {
   doDraft(s, preview);
 }
 
-function doDraft(s: GameState, preview: Preview): void {
+/** The draft with him in it: the pick, the deal, the draft-night page (round 35: a draft-night career starts here). */
+export function doDraft(s: GameState, preview: Preview): void {
   const pick = runWorldDraft(s, preview);
   s.worldYearDone = s.year;
   if (pick !== null) {

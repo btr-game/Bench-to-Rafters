@@ -4,7 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ARCHETYPES } from '../../engine/player/archetypes';
 import { rerollAttrs } from '../../engine/player/create';
 import { makeRng } from '../../engine/rng';
-import { ATTRS, DIFFICULTIES, HEIGHT_RANGE, MODES, POSITIONS, type Mode } from '../../engine/balance';
+import { ATTRS, DIFFICULTIES, DRAFT_NIGHT, HEIGHT_RANGE, MODES, POSITIONS, type Mode } from '../../engine/balance';
 import type { AttrKey, Attrs, Pos } from '../../engine/types';
 import { NAMES, UI } from '../../content/strings';
 import { FIRST_NAMES, LAST_NAMES } from '../../content/names';
@@ -133,6 +133,9 @@ function backName(name: string): string {
   const words = name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().split(/\s+/).filter(Boolean);
   return (words[words.length - 1] ?? '').toUpperCase().replace(/[^A-Z0-9-]/g, '');
 }
+
+/** Round 35: what a draft class's player finds out when his career starts (it opens on draft night). */
+const DRAFT_ASSIGNED = 'You do not pick these. You find out which town you grew up in and which college you led when the career starts.';
 
 /** The new-career page; with `level`, a career on the road map (round 33): fewer steps, no difficulty. */
 export function Create({ level }: { level?: Level } = {}) {
@@ -366,7 +369,7 @@ export function Create({ level }: { level?: Level } = {}) {
           <Icon name="draftclass" size={32} />
           <span className="mp-draft-text">
             <b>Draft class: {draft.name}</b>
-            <small className="muted">{draft.code ? `Code ${draft.code}. ` : 'A new class: its code comes when you start. '}Regular guy, on the class’s seed. Make your player and start.</small>
+            <small className="muted">{draft.code ? `Code ${draft.code}. ` : 'A new class: its code comes when you start. '}Regular guy, on the class’s seed. The class starts on draft night. Make your player and start.</small>
           </span>
           <button className="btn ghost small" onClick={() => setDraft(null)}>
             Leave the class
@@ -497,7 +500,8 @@ export function Create({ level }: { level?: Level } = {}) {
           {roads && (
           <div className="card stack nation-card">
             <div className="sec-title">Where do you start?</div>
-            <p className="small muted">Your country sets your road until college or the pros: the youth system, the showcases, and who calls first.</p>
+            {/* round 35: a draft class starts on draft night, so the youth road is behind him */}
+            <p className="small muted">{draft ? 'Where he grew up, and the national team he can play for.' : 'Your country sets your road until college or the pros: the youth system, the showcases, and who calls first.'}</p>
             <div className="nation-grid">
               <button className={`nation${country === '' ? ' on' : ''}`} aria-pressed={country === ''} onClick={() => setCountry('')}>
                 <b>Surprise me</b>
@@ -525,7 +529,7 @@ export function Create({ level }: { level?: Level } = {}) {
                   ))}
               </select>
             </div>
-            <div className="nation-notes">
+            {!draft && <div className="nation-notes">
               <div className="kicker with-flag">
                 {country && <FlagArt country={country} size={30} />}
                 {country ? `Your road from ${country === 'USA' ? 'the United States' : country}` : 'Your road'}
@@ -539,7 +543,7 @@ export function Create({ level }: { level?: Level } = {}) {
               ) : (
                 <p className="small">Half of all careers start in the United States; the rest begin in academies and clubs around the world.</p>
               )}
-            </div>
+            </div>}
           </div>
           )}
 
@@ -607,8 +611,8 @@ export function Create({ level }: { level?: Level } = {}) {
             </fieldset>
             )}
             <div className="assigned">
-              <div className="kicker">{UI.create.assignedTitle}</div>
-              <div className="small">{UI.create.assignedText}{level === 'beginner' ? ' So are your archetype and your two focus ratings: the ones a ' + NAMES.pos[pos].toLowerCase() + ' like you is best at.' : ''}</div>
+              <div className="kicker">{draft ? 'Hometown and college' : UI.create.assignedTitle}</div>
+              <div className="small">{draft ? DRAFT_ASSIGNED : UI.create.assignedText}{level === 'beginner' ? ' So are your archetype and your two focus ratings: the ones a ' + NAMES.pos[pos].toLowerCase() + ' like you is best at.' : ''}</div>
             </div>
           </div>
         </section>
@@ -687,7 +691,7 @@ export function Create({ level }: { level?: Level } = {}) {
         <section className="card stack">
           <div className="row">
             <div style={{ minWidth: 0 }}>
-              <div className="kicker">{level ? 'High school senior · age 17' : 'Freshman · age 14'}</div>
+              <div className="kicker">{level ? 'High school senior · age 17' : draft ? 'Draft night · a college junior or senior' : 'Freshman · age 14'}</div>
               <div className="pc-name">{name || 'Rookie'}</div>
               <div className="muted">
                 #{number} · {NAMES.pos[pos]} · {archetype.name}
@@ -721,7 +725,10 @@ export function Create({ level }: { level?: Level } = {}) {
                 Rough Road: the road picked all of this for you, his look included. No rerolls.{' '}
               </span>
             )}
-            Focus: {focus.map((k) => NAMES.attr[k]).join(' and ')}. Height: still growing, most end up {ht(hMin + (archetype.height ?? 0))}–{ht(hMax + (archetype.height ?? 0))}, some well outside it. This card is a typical {archetype.name.toLowerCase()}; your real starting level is set at tryouts. {UI.create.assignedText}
+            Focus: {focus.map((k) => NAMES.attr[k]).join(' and ')}.{' '}
+            {draft
+              ? `The class starts on draft night: his college’s first option, done growing (most end up ${ht(hMin + (archetype.height ?? 0))}–${ht(hMax + (archetype.height ?? 0))}), OVR ${DRAFT_NIGHT.ovr[0]} to ${DRAFT_NIGHT.ovr[1]} and projected in the first round. This card is a typical ${archetype.name.toLowerCase()}; his college years shaped it. ${DRAFT_ASSIGNED}`
+              : `Height: still growing, most end up ${ht(hMin + (archetype.height ?? 0))}–${ht(hMax + (archetype.height ?? 0))}, some well outside it. This card is a typical ${archetype.name.toLowerCase()}; your real starting level is set at tryouts. ${UI.create.assignedText}`}
           </p>
           )}
         </section>

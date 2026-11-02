@@ -2,7 +2,9 @@
 // doors open at 16-18 (see content/origins.ts for the real routes these follow).
 
 import { chance, int, pick, weightedIndex } from '../rng';
-import type { Decision, GameState, Offer } from '../types';
+import type { Decision, GameState, Offer, UserPlayer } from '../types';
+import { ANOMALIES } from '../player/anomaly';
+import { heightExtreme } from '../player/create';
 import { ORIGINS, US_PREPS, originOf, type Origin, type PathKind } from '../../content/origins';
 import { EURO_CLUBS, HOMETOWN_SCHOOLS } from '../../content/teams';
 import { NAMES } from '../../content/strings';
@@ -76,6 +78,19 @@ export function introText(s: GameState): { text: string; lines: string[] } {
         lines: ['Freshman tryouts are next week.', 'JV or varsity: your spot depends on where you rank on the roster.'],
       };
   }
+}
+
+/** What the first page says about a rare body: a gift, or a height far outside the usual band
+ * (`grown`: he is done growing, so it is his height and not the doctors' projection). */
+export function rareLines(p: UserPlayer, grown: boolean): string[] {
+  const out: string[] = [];
+  const gift = ANOMALIES.find((a) => a.name === p.anomaly);
+  if (gift) out.push(`A rare one: ${gift.name.toLowerCase()}. ${gift.text}.`);
+  const odd = heightExtreme(grown ? p.height : p.heightProj);
+  const be = grown ? 'One of' : 'Projected to be one of';
+  if (odd > 0) out.push(`${be} the tallest players anywhere: a huge target inside, but slow on the perimeter and hard on the body`);
+  else if (odd < 0) out.push(`${be} the smallest players anywhere: quick, but every shot near the rim is a fight`);
+  return out;
 }
 
 const AUS_TEAMS = ['Victoria Metro', 'NSW Country', 'Queensland North', 'WA Pride', 'SA Central', 'Tasmania Devils', 'Canberra Capitals', 'NT Thunder'];

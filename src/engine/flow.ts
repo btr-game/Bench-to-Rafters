@@ -4,10 +4,9 @@
 import { syncMiniUnlocks } from './career/miniBonus';
 import { resolveArc } from './events/arcs';
 import { resolveMilitary } from './career/nationality';
-import { ANOMALIES } from './player/anomaly';
 import { makeRng } from './rng';
 import type { Decision, GameState, HalfPlan, Step } from './types';
-import { createPlayer, heightExtreme, type CreateInput } from './player/create';
+import { createPlayer, type CreateInput } from './player/create';
 import { ovrOf } from './player/ovr';
 import { BASE_YEAR } from './economy/salary';
 import { activeLeague, assignToGl, beginSeason, playHalf, runPostseason } from './career/season';
@@ -17,7 +16,8 @@ import { runWorldDraft } from './career/nbaYear';
 import { resolveEvent } from './events/resolver';
 import { resolveShop } from './economy/shop';
 import { resolveNationalTeam } from './sim/tournaments';
-import { assignOrigin, introText, resolveYouth } from './career/origin';
+import { assignOrigin, introText, rareLines, resolveYouth } from './career/origin';
+import { openOnDraftNight, opensOnDraftNight } from './career/draftNight';
 import { logDecision, milestone, pushMoment } from './career/common';
 import { raftersTeams } from './awards/legacy';
 import { UI } from '../content/strings';
@@ -105,6 +105,18 @@ export function newGame(seed: number, input: CreateInput): GameState {
   }
   // the game assigns his country, where he grows up and where he plays as a teenager
   assignOrigin(s);
+  // round 35: a draft class's career opens on draft night instead (career/draftNight.ts)
+  if (opensOnDraftNight(s, input)) openOnDraftNight(s, input);
+  else freshmanYear(s, input);
+  // round 35: the start, for a challenge (a level career is never one)
+  if (!input.level) s.start = { seed, input: JSON.parse(JSON.stringify(input)) as CreateInput };
+  return s;
+}
+
+/** The usual start: freshman tryouts, then his first high school season (a level's first three
+ * years are played for him). */
+function freshmanYear(s: GameState, input: CreateInput): void {
+  const player = s.player;
   const intro = introText(s);
   const start = ovrOf(player.attrs, player.pos);
   const ft = (x: number) => `${Math.floor(x / 12)}′${x % 12}″`;
@@ -114,18 +126,11 @@ export function newGame(seed: number, input: CreateInput): GameState {
       ? `${ft(player.height)} now; built to grow to ${ft(player.fullHeight)}`
       : `${ft(player.height)} now; the doctors think he will grow to about ${ft(player.heightProj)}, but nobody knows for sure`,
   );
-  const gift = ANOMALIES.find((a) => a.name === player.anomaly);
-  if (gift) intro.lines.push(`A rare one: ${gift.name.toLowerCase()}. ${gift.text}.`);
-  const odd = heightExtreme(player.heightProj);
-  if (odd > 0) intro.lines.push('Projected to be one of the tallest players anywhere: a huge target inside, but slow on the perimeter and hard on the body');
-  else if (odd < 0) intro.lines.push('Projected to be one of the smallest players anywhere: quick, but every shot near the rim is a fight');
+  intro.lines.push(...rareLines(player, false));
   pushMoment(s, { kind: 'intro', title: player.highSchool, text: intro.text, color: s.schoolColor, lines: intro.lines });
   logDecision(s, 'start', `Enrolled at ${player.highSchool} in ${player.hometown} as a ${input.pos}, ${player.archetype}.`);
   beginSeason(s);
   if (s.flags.level) playEarlyYears(s);
-  // round 35: the start, for a challenge (a level career is never one)
-  if (!input.level) s.start = { seed, input: JSON.parse(JSON.stringify(input)) as CreateInput };
-  return s;
 }
 
 /** Round 33: a level starts as a high school senior. The first three years are played for him
