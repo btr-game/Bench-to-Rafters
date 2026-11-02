@@ -90,6 +90,14 @@ function GameLogTable({ g }: { g: GameState }) {
               <td className="l">
                 {x.home ? 'vs' : '@'} {x.opp}
                 {x.post ? <span className="muted"> · {x.post}</span> : null}
+                {/* round 35: classmates in this game (engine/career/friendLeague.ts) */}
+                {x.friends?.map((f, k) => (
+                  <div key={k} className="small muted">
+                    {f.mate ? 'With you: ' : ''}
+                    {f.pn} ({f.name}): {f.pts} pts{f.reb !== undefined ? `, ${f.reb} reb` : ''}
+                    {f.ast !== undefined ? `, ${f.ast} ast` : ''}
+                  </div>
+                ))}
               </td>
               <td className={`l ${x.res === 'W' ? 'w' : 'lo'}`}>
                 {x.res} {x.us}–{x.them}

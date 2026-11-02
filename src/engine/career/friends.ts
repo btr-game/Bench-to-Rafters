@@ -26,6 +26,9 @@ export function friendNow(f: FriendLine, year: number): (Line & { projected?: bo
   return before ? { ...before, year, projected: true } : null;
 }
 
+/** How the game names a classmate: his player, then the friend. */
+export const friendName = (f: FriendLine): string => `${f.pn} (${f.name})`;
+
 const myTeam = (s: GameState): Team | null => (s.stage === 'NBA' ? (teamById(s.nba, s.teamId) ?? null) : null);
 
 /** Friends on his NBA team this season, in the order they joined the class. */
@@ -56,7 +59,7 @@ function together(s: GameState, f: FriendLine): { seasons: number; since: number
 export function friendBonds(s: GameState): Bond[] {
   return friendsOnTeam(s).map(({ f }, i) => {
     const t = together(s, f);
-    return { id: -1 - i, name: `${f.pn} (${f.name})`, pos: (f.pos || 'SF') as Pos, spark: 1, bond: 100, seasons: t.seasons, formed: t.since, friend: f.name, trio: i > 0 };
+    return { id: -1 - i, name: friendName(f), pos: (f.pos || 'SF') as Pos, spark: 1, bond: 100, seasons: t.seasons, formed: t.since, friend: f.name, trio: i > 0 };
   });
 }
 

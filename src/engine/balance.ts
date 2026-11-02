@@ -1022,5 +1022,60 @@ export const STARTERS_RECRUIT = { capShare: 1, match: 1.25, moves: 2, asks: 3, c
 // shots x(1 + usage), all times that strength.
 export const DUO = { realChance: 0.25, real: [0.65, 1] as [number, number], plain: [0.05, 0.3] as [number, number], fit: 0.1, grow: 55, winW: 30, trustW: 0.2, sd: 8, start: 0.6, perSeason: 0.15, team: 1.2, perf: 0.035, ast: 0.12, usage: 0.04, stay: 3, restart: 60, trio: { team: 1.0, perf: 0.02, ast: 0.06, usage: -0.03 } };
 
+// Round 35, friends in each other's leagues (career/friendLeague.ts). A classmate's player lives in
+// this league only through his season line: points, rebounds and assists a game, games, salary.
+// What the line does not carry is filled in at a regular starter's rates (steals, blocks and
+// turnovers a game; minutes; shots at the league's average true shooting, so his value score
+// neither gains nor loses for an efficiency nobody measured here).
+// - gp: his games when the line does not say; games: an NBA season, for his share of the games.
+// - rep: his fan vote for the All-Star teams, from his rating: `repPer` a point over `repFrom`
+//   (a 90 is a 75).
+// - box: his line in one game, drawn around his averages; the spread is a share of the average,
+//   never under the floor ([share, floor]).
+// - nudge: his team here was generated without him, so in games against you it plays a little
+//   better while he is on the floor: `per` strength for each OVR point over `from`, at most `max`
+//   for all the classmates on that team together (a 85 adds 1.0, about what home court does).
+export const FRIEND_LEAGUE = {
+  games: 82,
+  gp: 72,
+  min: 34,
+  stl: 0.9,
+  blk: 0.5,
+  tovPerPt: 0.12,
+  ftPerFga: 0.28,
+  threeShare: 0.38,
+  p3: 0.36,
+  ftp: 0.78,
+  repFrom: 60,
+  repPer: 2.5,
+  box: { pts: [0.28, 3], reb: [0.35, 1.5], ast: [0.4, 1.2] } as Record<'pts' | 'reb' | 'ast', [number, number]>,
+  nudge: { from: 75, per: 0.1, max: 1 },
+};
+
+// Round 35, a playoff series against the rival classmate's team (career/rivalSeries.ts). Before
+// game 1 he makes one call for the whole series:
+// - edge: strength his team gets in every game of the series;
+// - usage: his shots (times);
+// - cut: what it takes off his rival's scoring (a negative adds to it);
+// - hot: his form decides more; in a simulated game, each point of game score above or below what
+//   was expected of him moves his team's strength by `hot`, never more than `hotMax` either way;
+// - when the series ends: morale and reputation for a series won or lost ([morale, rep]), coach
+//   trust either way, and `outscored` on top when he outscored his rival over the series.
+// Over a coin-flip series, guard (+0.6) makes it 57.24871%, the team game (+0.3) 53.64044%.
+export const RIVAL_SERIES = {
+  guard: { edge: 0.6, usage: 0.9, cut: 0.2, hot: 0, hotMax: 0, won: [6, 3], lost: [-6, 0], trust: 0, outscored: [0, 0] },
+  duel: { edge: 0, usage: 1.25, cut: -0.05, hot: 0.12, hotMax: 2.5, won: [5, 2], lost: [-4, 0], trust: 0, outscored: [2, 2] },
+  team: { edge: 0.3, usage: 1, cut: 0.05, hot: 0, hotMax: 0, won: [4, 2], lost: [-3, 0], trust: 3, outscored: [0, 0] },
+} as Record<'guard' | 'duel' | 'team', { edge: number; usage: number; cut: number; hot: number; hotMax: number; won: [number, number]; lost: [number, number]; trust: number; outscored: [number, number] }>;
+
+// Round 35, asking to join a classmate's team (career/team.ts, the trade request's 'friend' aim;
+// owner: "salary still has to be a limit factor"). His salary and the friend's together, as a
+// share of next season's cap, set the odds: up to `free` the money is no obstacle; past it the odds
+// fall by `perShare` for each share of the cap, never under `minFit`; past `ceiling` (two near-max
+// deals) no team can carry both and it is not offered. The team's own payroll counts too: with
+// both contracts it may not pass `apron` times the cap. `odds` is the aim's own multiplier, as the
+// other aims have.
+export const JOIN_FRIEND = { odds: 1.1, free: 0.1, perShare: 1.5, minFit: 0.25, ceiling: 0.6, apron: 1.3 };
+
 /** A mode's dial (round 14): 1 unless the mode sets it. */
 export const modeDial = (mode: Mode, k: 'mini' | 'teamFx' | 'ringChase'): number => MODES[mode]?.[k] ?? 1;

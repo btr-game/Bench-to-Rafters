@@ -66,6 +66,17 @@ export interface GameLog {
   them: number;
   line: StatLine | null; // null = did not play
   post?: string; // round name in postseason
+  friends?: FriendGame[]; // round 35: classmates in this game (career/friendLeague.ts)
+}
+
+/** Round 35: a classmate's line in one of his games, on the other team or (mate) on his. */
+export interface FriendGame {
+  pn: string; // his player
+  name: string; // the friend
+  pts: number;
+  reb?: number; // left out when his season line has none
+  ast?: number;
+  mate?: boolean;
 }
 
 interface Program {
@@ -441,14 +452,15 @@ export interface FriendLine {
   seasons: { year: number; lv: string; team: string; ovr: number; pts: number; reb?: number; ast?: number; gp?: number; sal?: number; aw?: string[] }[];
 }
 
-/** Round 35: a rival night, his team against his rival classmate's. */
+/** Round 35: a rival night, his team against his rival classmate's, or a playoff series between them. */
 interface RivalMeet {
   year: number;
   won: boolean;
-  me: number; // his points
-  him: number; // the rival's points
-  score: string; // "112–104", his team first
+  me: number; // his points (a game, over a series)
+  him: number; // the rival's points (a game, over a series)
+  score: string; // "112–104", his team first (a series: "4–2")
   how: string; // the choice he made
+  series?: string; // a playoff series: its round (career/rivalSeries.ts)
 }
 
 export interface Rivalry {

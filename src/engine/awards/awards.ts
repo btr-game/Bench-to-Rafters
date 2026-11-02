@@ -17,6 +17,20 @@ interface Cand {
   prevValue: number | null;
   def: number;
   isUser: boolean;
+  friend?: boolean; // round 35: a classmate's player (career/friendLeague.ts)
+  age: number;
+  ovr: number;
+}
+
+/** Round 35: a classmate's player, as his season line has him (career/friendLeague.ts). */
+export interface FriendCandInput {
+  id: string;
+  name: string;
+  teamId: string;
+  line: StatLine;
+  rep: number;
+  rookie: boolean;
+  prevValue: number | null;
   age: number;
   ovr: number;
 }
@@ -44,7 +58,7 @@ function defScore(per: number, int: number, l: StatLine, team: Team): number {
   return 0.3 * kneeDef(per) + 0.3 * kneeDef(int) + (4 * l.stl) / g + (4 * l.blk) / g + (team.w - team.l) * 0.06;
 }
 
-export function buildCandidates(league: League, user: UserCandInput | null, lines?: Map<number, StatLine>): Cand[] {
+export function buildCandidates(league: League, user: UserCandInput | null, lines?: Map<number, StatLine>, friends?: FriendCandInput[]): Cand[] {
   const out: Cand[] = [];
   for (const t of league.teams) {
     for (const p0 of t.roster) {
@@ -88,14 +102,22 @@ export function buildCandidates(league: League, user: UserCandInput | null, line
       ovr: user.ovr ?? 0,
     });
   }
+  // round 35: classmates, with their season's numbers. His line carries no defensive numbers, so
+  // he stays out of the defensive race, and he counts as a starter (no Sixth Man of the Year).
+  for (const f of friends ?? []) {
+    const team = league.teams.find((t) => t.id === f.teamId);
+    if (!team || f.line.gp === 0) continue;
+    const value = valuePerGame(f.line);
+    out.push({ id: `F:${f.id}`, name: f.name, team, line: f.line, value, fhv: value, rep: f.rep, rookie: f.rookie, starter: true, prevValue: f.prevValue, def: -99, isUser: false, friend: true, age: f.age, ovr: f.ovr });
+  }
   return out;
 }
 
 export interface AwardOutcome {
   wins: { key: string; label: string }[];
   races: AwardRace[];
-  // generated players who won major awards (for rival tracking)
-  winners: { key: string; name: string; team: string }[];
+  // generated players who won major awards (for rival tracking); round 35: or a classmate
+  winners: { key: string; name: string; team: string; friend?: boolean }[];
   allStarIds: Set<string>;
 }
 
@@ -132,7 +154,7 @@ export function nbaAwards(cands: Cand[]): AwardOutcome {
   out.races.push(race('MVP', mvp, mvpScore, 5));
   if (mvp[0]) {
     if (mvp[0].isUser) out.wins.push({ key: 'MVP', label: 'MVP' });
-    else out.winners.push({ key: 'MVP', name: mvp[0].name, team: mvp[0].team.abbr });
+    else out.winners.push({ key: 'MVP', name: mvp[0].name, team: mvp[0].team.abbr, ...(mvp[0].friend ? { friend: true } : {}) });
   }
   const byValue = [...elig].sort((a, b) => b.value - a.value);
   byValue.slice(0, 15).forEach((c, i) => {
@@ -230,8 +252,8 @@ export interface MvpLadder {
  * The MVP race as it stands (round 11: "show the MVP race at the side"): the same score the
  * voters use at the end (value per game plus the team's record), from the season so far.
  */
-export function mvpLadder(league: League, user: UserCandInput | null, n = 5, lines?: Map<number, StatLine>): MvpLadder {
-  const cands = buildCandidates(league, user, lines);
+export function mvpLadder(league: League, user: UserCandInput | null, n = 5, lines?: Map<number, StatLine>, friends?: FriendCandInput[]): MvpLadder {
+  const cands = buildCandidates(league, user, lines, friends);
   const maxGp = Math.max(1, ...cands.map((c) => c.line.gp));
   // nobody who has missed most of the season so far
   const elig = cands.filter((c) => c.line.gp >= maxGp * 0.6);

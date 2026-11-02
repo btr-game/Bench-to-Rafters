@@ -13,10 +13,10 @@ import {
   type TeamStyle,
 } from "../../engine/career/identity";
 import {
+  friendTeams,
   oddsWord,
   TRADE_AIM,
   tradeOptions,
-  type TradeAim,
 } from "../../engine/career/team";
 import {
   canChangeFocus,
@@ -899,10 +899,14 @@ function PositionCard({ g }: { g: GameState }) {
 function TradeCard({ g }: { g: GameState }) {
   const ask = useStore((s) => s.requestTrade);
   const master = useStore((s) => s.master);
-  const [aim, setAim] = useState<TradeAim | null>(null);
+  // round 35: an aim and, for a friend's team, the team (several friends can be on several teams)
+  const [aim, setAim] = useState<string | null>(null);
   const rank = g.nba && g.teamId ? rosterRank(g.nba, g.teamId) : 0;
   const opts = tradeOptions(g);
-  const pick = opts.find((o) => o.aim === aim);
+  const keyOf = (o: (typeof opts)[number]) => (o.to ? `${o.aim}:${o.to}` : o.aim);
+  const pick = opts.find((o) => keyOf(o) === aim);
+  // a friend's team the money rules out, and why
+  const blocked = friendTeams(g).filter((x) => x.why);
   const res = g.tradeResult?.year === g.year ? g.tradeResult : null;
   if (res)
     return (
@@ -928,13 +932,13 @@ function TradeCard({ g }: { g: GameState }) {
       <div className="stack trade-aims">
         {opts.map((o) => (
           <button
-            key={o.aim}
-            className={`choice${aim === o.aim ? " selected" : ""}`}
-            aria-pressed={aim === o.aim}
-            onClick={() => setAim(o.aim)}
+            key={keyOf(o)}
+            className={`choice${aim === keyOf(o) ? " selected" : ""}`}
+            aria-pressed={aim === keyOf(o)}
+            onClick={() => setAim(keyOf(o))}
           >
             <span className="label">
-              {TRADE_AIM[o.aim].label}
+              {o.label ?? TRADE_AIM[o.aim].label}
               {!master && (
                 <span
                   className={`scout-rec rec-${oddsWord(o.chance) === "High" ? "high" : oddsWord(o.chance) === "Moderate" ? "moderate" : "low"}`}
@@ -949,21 +953,26 @@ function TradeCard({ g }: { g: GameState }) {
               </span>
             </span>
             <small>
-              {TRADE_AIM[o.aim].text}{" "}
-              {o.teams.length <= 3
+              {o.text ?? TRADE_AIM[o.aim].text}{" "}
+              {!o.to && o.teams.length <= 3
                 ? `(${o.teams.map((t) => t.short).join(", ")})`
                 : ""}
             </small>
           </button>
         ))}
       </div>
+      {blocked.map((x) => (
+        <p key={x.team.id} className="small muted">
+          Join {x.friends.map((f) => f.pn).join(" and ")} on the {x.team.name}: {x.why}
+        </p>
+      ))}
       <button
         className="btn"
         disabled={!pick}
-        onClick={() => pick && ask(pick.aim)}
+        onClick={() => pick && ask(pick.aim, pick.to)}
       >
         {pick
-          ? `Ask for a trade: ${TRADE_AIM[pick.aim].label.toLowerCase()}`
+          ? `Ask for a trade: ${pick.label ? pick.label.replace(/^Join/, "join") : TRADE_AIM[pick.aim].label.toLowerCase()}`
           : "Pick where you want to go"}
       </button>
     </section>
