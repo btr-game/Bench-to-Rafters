@@ -436,8 +436,11 @@ export const useStore = create<Store>((set, get) => ({
   start: (input, seed, mp) =>
     later(() => {
       const s = seed ?? Math.floor(Math.random() * 2 ** 31);
-      const game = newGame(s, input);
+      // round 35 (owner): with friends, Fast break and Sim stay off for the whole career
+      const friends = !!(mp?.challenge || mp?.klass);
+      const game = newGame(s, friends ? { ...input, fast: false, mode: input.mode === 'fast' ? 'standard' : input.mode } : input);
       if (mp) game.mp = mp;
+      if (friends) game.flags.friends = 1;
       fastForward(game);
       // round 33: a level career has a save of its own (ui/saves.ts writeRun), not a slot
       set({ game, slot: input.level ? null : newSlotId(), creating: null, draft: null, page: null, tab: 'home', transition: null, mini: null, seen: allSeen(game), lookBack: false, ...oathLock(game) });

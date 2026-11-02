@@ -54,12 +54,14 @@ export function ModesCard({ g }: { g: GameState }) {
   // beginner has none, so no card
   if (g.flags.level) return <LevelModes g={g} />;
   // round 30: a Comet keeps Fast break and Sim on for the whole career
-  const locked = g.mode === 'lab' || g.step === 'retired' || !!g.flags.daily || !!g.flags.oath || !!g.flags.comet;
+  const locked = g.mode === 'lab' || g.step === 'retired' || !!g.flags.daily || !!g.flags.oath || !!g.flags.comet || !!g.flags.friends;
   const oath = !!g.flags.oath;
   const on: Record<string, boolean> = { sim: !!g.flags.sim, fast: !!g.flags.fast, simple: st.simple, master: st.master, guide: st.guide && !st.master };
   const notes = NOTE.filter(([k]) => on[k] && !(k === 'fast' && on.sim)).map(([, t]) => t);
   // round 30: a Comet says why the two are locked on
   if (g.flags.comet) notes.unshift('Comet: Fast break and Sim stay on for the whole career, and only the biggest nights get a page.');
+  // round 35: and a career with friends says why they are locked off
+  if (g.flags.friends) notes.unshift('With friends: Fast break and Sim stay off, so everyone in the challenge or class plays every season the same way.');
   return (
     <section className="card stack modes-card" data-tour="modes">
       <div className="kicker">How you play</div>

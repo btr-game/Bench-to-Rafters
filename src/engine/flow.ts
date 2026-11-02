@@ -88,11 +88,11 @@ export function newGame(seed: number, input: CreateInput): GameState {
     flags: {},
     schoolColor: '',
   };
-  if (input.fast || input.mode === 'fast' || input.mode === 'lab') s.flags.fast = 1;
+  if (input.fast || input.mode === 'fast' || input.mode === 'lab') s.flags.fast = s.flags.quick = 1;
   // round 25 (owner): Rough Road, the hardest way to play, kept for the whole career
   if (input.oath && s.mode === 'reality' && !s.flags.fast) s.flags.oath = 1;
   // round 30 (owner): Comet, Shoot for the stars at hyper speed: fast break and sim, locked on
-  if (input.comet && s.mode === 'stars') s.flags.comet = s.flags.fast = s.flags.sim = 1;
+  if (input.comet && s.mode === 'stars') s.flags.comet = s.flags.fast = s.flags.sim = s.flags.quick = 1;
   if (s.mode === 'lab') labState(player);
   // round 33: a career on the road map (engine/levels.ts); beginner plays at fast break's pace
   if (input.level) {

@@ -436,7 +436,9 @@ export interface FriendLine {
   name: string; // the friend's name for friends
   pn: string; // his player
   pos: string;
-  seasons: { year: number; lv: string; team: string; ovr: number; pts: number }[];
+  /** A season as the class has it: per-game points, rebounds and assists, games, salary ($M) and
+   * honours (round 35: the later fields are optional, for lines posted before they existed). */
+  seasons: { year: number; lv: string; team: string; ovr: number; pts: number; reb?: number; ast?: number; gp?: number; sal?: number; aw?: string[] }[];
 }
 
 /** Round 35: a rival night, his team against his rival classmate's. */

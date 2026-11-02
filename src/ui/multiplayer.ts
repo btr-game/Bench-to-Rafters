@@ -69,6 +69,7 @@ export interface ClassSeason {
   aw: string[];
   pn: string; // his name, so the class shows the player as well as the friend
   pos?: string; // round 35: his position (a friend's duo or rival needs it)
+  sal?: number; // round 35: his salary that season, $M (joining a friend's team must fit it)
 }
 export interface ClassMember {
   id: string;
@@ -131,7 +132,7 @@ export interface Multiplayer {
   say(room: Room, code: string, name: string, body: string): Promise<'ok' | MpFail>;
 }
 
-export const CLASS_MAX = 8;
+export const CLASS_MAX = 12; // round 35 (owner: "the 12 of you (max)")
 /** Codes: six letters and digits, none that read alike (no I, O, 0 or 1). */
 export const CODE_RE = /^[A-HJ-NP-Z2-9]{6}$/;
 export const cleanCode = (s: string): string => s.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
@@ -246,6 +247,7 @@ export function seasonLine(h: SeasonRecord, playerName: string, pos?: string): C
     aw: h.awards.slice(0, 6).map((a) => a.slice(0, 40)),
     pn: playerName.slice(0, 40),
     ...(pos ? { pos } : {}),
+    sal: Math.round((h.salary || 0) * 10) / 10,
   };
 }
 
@@ -257,7 +259,7 @@ export function friendsOf(k: DraftClass): FriendLine[] {
     .filter((m) => !m.mine)
     .map((m) => {
       const last = m.seasons[m.seasons.length - 1];
-      return { id: m.id, name: m.name, pn: m.rec?.name ?? last?.pn ?? m.name, pos: m.rec?.pos ?? last?.pos ?? 'SF', seasons: m.seasons.map((x) => ({ year: x.year, lv: x.lv, team: x.team, ovr: x.ovr, pts: x.pts })) };
+      return { id: m.id, name: m.name, pn: m.rec?.name ?? last?.pn ?? m.name, pos: m.rec?.pos ?? last?.pos ?? 'SF', seasons: m.seasons.map((x) => ({ year: x.year, lv: x.lv, team: x.team, ovr: x.ovr, pts: x.pts, reb: x.reb, ast: x.ast, gp: x.gp, sal: x.sal ?? 0, aw: x.aw })) };
     });
 }
 /** His rival in the class: the member he picked who picked him back. */
@@ -273,7 +275,11 @@ export const rivalRequests = (k: DraftClass): ClassMember[] => {
 };
 
 /** A career a challenge can be made from: Regular guy, its start kept, not a level or a child's. */
-export const canChallenge = (g: GameState): boolean => g.mode === 'standard' && !!g.start && !g.flags.level && !g.flags.daily && !g.flags.gen2;
+const challengeable = (g: GameState): boolean => g.mode === 'standard' && !!g.start && !g.flags.level && !g.flags.daily && !g.flags.gen2;
+/** Round 35: and played at full pace, as the friend who answers it must play it. */
+export const canChallenge = (g: GameState): boolean => challengeable(g) && !g.flags.quick;
+/** A Regular guy career that would be a challenge but for Fast break or Sim. */
+export const ranQuick = (g: GameState): boolean => challengeable(g) && !!g.flags.quick;
 
 /** Who won a challenge: the career index, as on the leaderboards. */
 export const mpScore = scoreOf;

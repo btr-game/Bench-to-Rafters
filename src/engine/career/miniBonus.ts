@@ -75,7 +75,9 @@ export function claimsUsed(s: GameState): number {
 }
 
 export function canClaimMini(s: GameState | null, id?: MiniId): boolean {
-  return !!s && s.step !== 'retired' && claimsUsed(s) < MINI_CLAIMS.perSeason && (!id || miniProgress(s, id).open);
+  // round 35: a career with friends takes no arcade bonus, so time spent on the mini-games buys
+  // nobody in the class or challenge a rating the others did not get
+  return !!s && s.step !== 'retired' && !s.flags.friends && claimsUsed(s) < MINI_CLAIMS.perSeason && (!id || miniProgress(s, id).open);
 }
 
 /** What the next claim is worth, as a share of the full reward. */

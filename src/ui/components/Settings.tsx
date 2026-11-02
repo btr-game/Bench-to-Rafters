@@ -179,7 +179,7 @@ export function SettingsMenu({ g }: { g: GameState | null }) {
           )}
           {g && !retired && !g.flags.daily && (
             <>
-              {allows(g, 'fast') && <Toggle label="Fast break" note="Quick seasons; you still make every real call." on={!!g.flags.fast} onClick={toggleFast} tour="set-fast" locked={!!g.flags.oath || !!g.flags.comet} />}
+              {allows(g, 'fast') && <Toggle label="Fast break" note="Quick seasons; you still make every real call." on={!!g.flags.fast} onClick={toggleFast} tour="set-fast" locked={!!g.flags.oath || !!g.flags.comet || !!g.flags.friends} />}
               {!level && <Toggle label="Playable playoff games" note="Off: postseason games are simulated." on={!g.flags.simPostseason} onClick={togglePlayoffs} tour="set-playoffs" />}
             </>
           )}

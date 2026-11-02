@@ -181,8 +181,13 @@ export function fastForward(s: GameState): void {
  */
 export function setFast(s: GameState, on: boolean): void {
   if (on && s.flags.oath) return; // Rough Road (round 25): no quick pace, for the whole career
+  // round 35 (owner: "for equality purposes, i think sim and fastbreak should be locked in
+  // multiplayer"): a career with friends is played at full pace by everyone in it
+  if (on && s.flags.friends) return;
   if (!on && s.flags.comet) return; // Comet (round 30): the quick pace, for the whole career
   s.flags.fast = on ? 1 : 0;
+  // round 35: a career that ever ran quick is marked, so it is never sent as a challenge
+  if (on) s.flags.quick = 1;
   if (!on) {
     s.flags.simPostseason = 0;
     s.flags.sim = 0; // sim mode rides on fast break
@@ -198,7 +203,7 @@ export function setFast(s: GameState, on: boolean): void {
 
 /** Sim mode on or off (round 25). It turns fast break on with it; turning fast break off ends it. */
 export function setSim(s: GameState, on: boolean): void {
-  if (on && s.flags.oath) return;
+  if (on && (s.flags.oath || s.flags.friends)) return;
   if (!on && s.flags.comet) return;
   s.flags.sim = on ? 1 : 0;
   if (on) setFast(s, true);

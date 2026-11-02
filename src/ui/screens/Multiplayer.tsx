@@ -22,6 +22,7 @@ import {
   MP_FAIL,
   SITE,
   canChallenge,
+  ranQuick,
   classYears,
   cleanCode,
   cleanProspect,
@@ -893,7 +894,7 @@ export function RetirementMp({ g, rec }: { g: GameState; rec: CareerRecord }) {
   useEffect(() => {
     if (answering && theirs && mpScore(rec) > mpScore(theirs.rec) && recordMp('beat', answering)) achievementsNow();
   }, [answering, theirs, rec]);
-  if (!mp || (!answering && !g.mp?.klass && !canChallenge(g))) return null;
+  if (!mp || (!answering && !g.mp?.klass && !canChallenge(g) && !ranQuick(g))) return null;
   const make = async () => {
     if (!g.start) return;
     setBusy(true);
@@ -936,6 +937,7 @@ export function RetirementMp({ g, rec }: { g: GameState; rec: CareerRecord }) {
           </button>
         </div>
       )}
+      {ranQuick(g) && !answering && <p className="small muted">This career ran with Fast break or Sim, so it can’t be sent as a challenge: a friend answers at full pace, with neither.</p>}
       {canChallenge(g) && !answering && (
         <div className="stack" style={{ gap: 8 }}>
           {g.mp?.made ? (
