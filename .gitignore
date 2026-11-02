@@ -23,3 +23,6 @@ preview/
 
 # Netlify links a local folder with this (never committed)
 .netlify
+
+# helper agents work in their own worktrees here (round 35)
+.claude/worktrees/
