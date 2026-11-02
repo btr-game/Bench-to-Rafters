@@ -20,7 +20,7 @@ import { Icon } from './art/Icon';
 import { CareerLog } from './screens/CareerLog';
 import { AchievementBook } from './screens/Achievements';
 import { CommunityPage } from './screens/Community';
-import { MultiplayerPage } from './screens/Multiplayer';
+import { MpBoard, MultiplayerPage } from './screens/Multiplayer';
 import { FootBar } from './components/FootBar';
 import { Intro } from './screens/Intro';
 import { Thanks } from './screens/Thanks';
@@ -280,6 +280,7 @@ export function App() {
   if (!game) return <Create />;
 
   const retired = game.step === 'retired';
+  const sideBoard = !!(game.mp?.challenge || game.mp?.klass) && (tab !== 'home' || retired);
   return (
     <>
       <div className="wrap">
@@ -301,13 +302,21 @@ export function App() {
         {game.flags.daily ? <DailyStrip g={game} /> : null}
         <LookBackBar g={game} />
         {game.flags.tour ? <TourBar /> : null}
-        <TabView key={tab} fast={fast}>
-          {tab === 'home' && (retired ? game.flags.level ? <LevelEnd g={game} /> : <Retirement g={game} /> : <Home g={game} />)}
-          {tab === 'season' && <SeasonTab g={game} />}
-          {tab === 'player' && <PlayerTab g={game} />}
-          {tab === 'records' && <RecordsTab g={game} />}
-          {tab === 'extras' && <ExtrasTab g={game} />}
-        </TabView>
+        <div className={sideBoard ? 'mp-layout' : undefined}>
+          <TabView key={tab} fast={fast}>
+            {tab === 'home' && (retired ? game.flags.level ? <LevelEnd g={game} /> : <Retirement g={game} /> : <Home g={game} />)}
+            {tab === 'season' && <SeasonTab g={game} />}
+            {tab === 'player' && <PlayerTab g={game} />}
+            {tab === 'records' && <RecordsTab g={game} />}
+            {tab === 'extras' && <ExtrasTab g={game} />}
+          </TabView>
+          {/* round 35: a career with friends keeps its board beside every tab (Home has it in its own side column) */}
+          {sideBoard && (
+            <aside className="mp-aside">
+              <MpBoard g={game} />
+            </aside>
+          )}
+        </div>
         <FootBar where={`${tab} tab, ${MODES[game.mode]?.name ?? game.mode}, age ${game.player.age}`} />
       </div>
       <Overlays g={game} />

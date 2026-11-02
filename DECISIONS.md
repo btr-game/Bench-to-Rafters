@@ -2775,6 +2775,15 @@ multiple times."
     on the device, with house players.
   - Measured on the dev server: a challenge started on its prospect's seed (108) with no undo; a
     class made, its seed given to the career (849007920), the first season's line in the class.
+- **A board beside a career with friends, and off the community's** (owner: "for the multiplayer, a
+  leaderboard should always appear on the side. the career played in multiplayer wont be counted
+  towards the real leaderboards in community"). A challenge or draft-class career shows its board
+  on every tab: at the top of Home's side column, and beside the other tabs and the career's last
+  page (sticky on a computer; above the tab on a phone). It never folds. It holds this career as it
+  stands now (its index so far for a challenge; its seasons so far for a class, ahead of the
+  server's copy), and refreshes after each season and every minute. Such a career is never posted
+  to the community (boards, feed, statues, the hall), and its last page shows its own board instead
+  of what it qualifies for there.
 - **Achievement categories** (owner: "add catagories for achievments (very brief so that it doesnt
   reveal too much about it ... right now, there's so much achievements but too hard to look at)"):
   13 categories, a short name and an icon each, none over a tenth of the book; chips under the

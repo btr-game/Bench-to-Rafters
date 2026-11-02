@@ -38,6 +38,7 @@ import { LabCard } from "../components/Lab";
 import { MvpRace } from "../components/MvpRace";
 import { PlaybookArt } from "../art/Playbook";
 import { DuoCard, RecruitCard, StoriesCard } from "../components/Roster";
+import { MpBoard } from "./Multiplayer";
 import { canRecruit, recruitInfo } from "../../engine/career/recruit";
 import { STARTERS_RECRUIT } from "../../engine/balance";
 import {
@@ -1193,6 +1194,8 @@ export function Home({ g }: { g: GameState }) {
         )}
       </div>
       <div className="stack home-side">
+        {/* round 35: a career with friends keeps its board in sight */}
+        {(g.mp?.challenge || g.mp?.klass) && <MpBoard g={g} />}
         <FoldBox id="modes" title="How you play" icon="dial">
           <ModesCard g={g} />
         </FoldBox>

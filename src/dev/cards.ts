@@ -161,6 +161,16 @@ function seedCommunity(): void {
   }
 }
 
+/** An NBA career played with friends (a copy, so the fixture stays as it was), on the stand-in. */
+function friendsCareer(mp: GameState['mp'], tab: Tab = 'home'): boolean {
+  const g = nbaStar();
+  if (!g) return false;
+  seedLocalMultiplayer(records());
+  const c = structuredClone(g);
+  c.mode = 'standard';
+  c.mp = mp;
+  return show(c, tab);
+}
 /** The multiplayer page on the deck's stand-in, seeded with the deck's careers. */
 function mpPage(open: MpLink | null): boolean {
   seedLocalMultiplayer(records());
@@ -620,6 +630,9 @@ export const CARDS: DevCard[] = [
     },
   },
   // round 35: play with friends (the deck's stand-in, with house players)
+  // round 35 (owner: "for the multiplayer, a leaderboard should always appear on the side")
+  { id: 'mp-board', title: 'A career with friends', group: 'Career hub', icon: 'draftclass', blurb: 'A draft-class career’s Home: the class’s board at the top of the side column, this career as it stands now; it never folds.', open: () => friendsCareer({ klass: 'CLASS2' }) },
+  { id: 'mp-board-tab', title: 'The board beside every tab', group: 'Career hub', icon: 'versus', blurb: 'A challenge career on the Season tab: the challenge’s board beside the tab (above it on a phone), with this career so far.', open: () => friendsCareer({ challenge: 'HSE2AB' }, 'season') },
   { id: 'mp', title: 'Play with friends', group: 'Records & community', icon: 'versus', blurb: 'Challenges and draft classes: a code, a link or quick match, your name for friends. Regular guy only.', open: () => mpPage(null) },
   { id: 'mp-challenge', title: 'A challenge', group: 'Records & community', icon: 'versus', blurb: 'One prospect, played again from the same start: every answer ranked by career index beside the one that set it.', open: () => mpPage({ kind: 'challenge', code: 'DECK22' }) },
   { id: 'mp-classes', title: 'Draft classes', group: 'Records & community', icon: 'draftclass', blurb: 'Start a class, open one by its code, yours, and the open ones with a seat left.', open: () => mpPage(null), press: '[data-mp-tab="class"]' },

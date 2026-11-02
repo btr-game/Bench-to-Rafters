@@ -3,7 +3,7 @@
 // multiplayer under regular guy").
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { CareerRecord } from '../../engine/career/record';
+import { careerRecord, type CareerRecord } from '../../engine/career/record';
 import type { GameState } from '../../engine/types';
 import { ARCHETYPES } from '../../engine/player/archetypes';
 import { NAMES } from '../../content/strings';
@@ -29,6 +29,7 @@ import {
   linkFor,
   mpScore,
   multiplayer,
+  seasonLine,
   setHandle,
   standings,
   type Challenge,
@@ -603,6 +604,94 @@ export function MultiplayerPage() {
       </section>
       <DevDoor />
     </div>
+  );
+}
+
+// ---------- beside a career with friends ----------
+
+/** Round 35 (owner: "for the multiplayer, a leaderboard should always appear on the side"): the
+ * challenge's or the class's board, beside every tab of a career played with friends, with this
+ * career as it stands now (the server's copy of it lags a season behind). Never folds. */
+export function MpBoard({ g }: { g: GameState }) {
+  const openMp = useStore((s) => s.openMp);
+  const mp = useMp();
+  const code = g.mp?.challenge ?? g.mp?.klass ?? null;
+  const kind: MpLink['kind'] = g.mp?.challenge ? 'challenge' : 'class';
+  const [c, setC] = useState<Challenge | null>(null);
+  const [k, setK] = useState<DraftClass | null>(null);
+  const seasons = g.history.length;
+  // fetched again after every season, and every minute while the page is open
+  useEffect(() => {
+    if (!mp || !code) return;
+    let live = true;
+    const pull = () => {
+      if (kind === 'challenge') void mp.challenge(code).then((x) => live && x && x !== 'error' && setC(x));
+      else void mp.draftClass(code).then((x) => live && x && x !== 'error' && setK(x));
+    };
+    pull();
+    const t = window.setInterval(pull, 60000);
+    return () => {
+      live = false;
+      window.clearInterval(t);
+    };
+  }, [mp, code, kind, seasons]);
+  // this career so far: its card as if it ended today
+  const now = useMemo(() => careerRecord(g), [seasons, g.step]); // eslint-disable-line react-hooks/exhaustive-deps
+  if (!code) return null;
+  const rows: { id: string; name: string; score: number; peak: number; me: boolean; done: boolean }[] = [];
+  if (kind === 'challenge' && c) {
+    rows.push({ id: 'set', name: c.name, score: mpScore(c.rec), peak: c.rec.peak, me: false, done: true });
+    for (const a of c.answers) if (!a.mine) rows.push({ id: a.id, name: a.name, score: mpScore(a.rec), peak: a.rec.peak, me: false, done: true });
+  }
+  if (kind === 'challenge') rows.push({ id: 'me', name: handle() || 'You', score: mpScore(now), peak: now.peak, me: true, done: g.step === 'retired' });
+  rows.sort((a, b) => b.score - a.score);
+  // the class, with this career's seasons as they are on this device
+  const klass: DraftClass | null = kind === 'class' && k ? { ...k, members: k.members.map((m) => (m.mine ? { ...m, seasons: g.history.map((h) => seasonLine(h, g.player.name)), rec: g.step === 'retired' ? now : null } : m)) } : null;
+  const table = klass ? standings(klass) : [];
+  return (
+    <section className="card stack mp-board" aria-label={kind === 'challenge' ? 'Challenge leaderboard' : 'Draft class leaderboard'}>
+      <div className="sec-title with-icon">
+        <Icon name={kind === 'challenge' ? 'versus' : 'draftclass'} size={24} />
+        {kind === 'challenge' ? `Challenge ${code}` : (k?.name ?? `Class ${code}`)}
+      </div>
+      {!mp ? (
+        <p className="small muted keep">The board lives on the game’s server: open the game on the website to see it.</p>
+      ) : kind === 'challenge' ? (
+        <ol className="mp-board-list">
+          {(c ? rows : rows.filter((r) => r.me)).map((r, i) => (
+            <li key={r.id} className={r.me ? 'me' : undefined}>
+              <b>{i + 1}</b>
+              <span>
+                {r.name}
+                {r.id === 'set' ? <small> set it</small> : r.me && !r.done ? <small> so far</small> : null}
+              </span>
+              <span className="num">{Math.round(r.score)}</span>
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <ol className="mp-board-list">
+          {table.map((t, i) => (
+            <li key={t.m.id} className={t.m.mine ? 'me' : undefined}>
+              <b>{i + 1}</b>
+              <span>
+                {t.m.name}
+                {t.m.mine && !t.m.rec ? <small> so far</small> : null}
+              </span>
+              <span className="num">
+                {t.peak || '–'}
+                {t.titles ? <small> · {t.titles}× ring</small> : t.allStars ? <small> · {t.allStars}× AS</small> : null}
+              </span>
+            </li>
+          ))}
+          {!k && <li className="muted">Loading the class…</li>}
+        </ol>
+      )}
+      <p className="small muted keep">{kind === 'challenge' ? 'By career index. ' : 'By best rating so far, then honours. '}Careers with friends count here, not on the community’s leaderboards.</p>
+      <button className="btn ghost small" onClick={() => openMp({ kind, code })}>
+        The whole {kind === 'challenge' ? 'challenge' : 'class'}
+      </button>
+    </section>
   );
 }
 

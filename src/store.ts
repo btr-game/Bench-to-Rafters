@@ -973,8 +973,10 @@ useStore.subscribe((now, before) => {
   // round 34: a card pushed out of the log takes its save with it (the log is the saved careers)
   if (logged.dropped?.slot) deleteSlot(logged.dropped.slot);
   useStore.setState({ logged });
-  // round 24: onto the leaderboards (and the news feed) for everyone who shares this page
-  void community().then((c) => c.postCareer(rec));
+  // round 24: onto the leaderboards (and the news feed) for everyone who shares this page. Round 35
+  // (owner: "the career played in multiplayer wont be counted towards the real leaderboards in
+  // community"): a career with friends counts on its challenge's or class's board only
+  if (!g.mp?.challenge && !g.mp?.klass) void community().then((c) => c.postCareer(rec));
   // round 35: a draft class gets the card, a friend's challenge its answer
   if (g.mp?.klass) send({ k: 'career', code: g.mp.klass, rec });
   if (g.mp?.challenge) {

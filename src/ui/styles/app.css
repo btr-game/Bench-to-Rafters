@@ -2704,3 +2704,17 @@ td.mp-best .mp-cell small { color: var(--ink); }
 .mp-best-tag { font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink) !important; }
 .mp-draft { gap: 12px; align-items: center; flex-wrap: wrap; border-color: var(--accent); }
 .mp-draft-text { display: grid; gap: 2px; flex: 1 1 260px; min-width: 0; }
+/* round 35: the board beside a career with friends */
+.mp-board-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; font-family: var(--f-mono); font-size: calc(14px * var(--ts)); }
+.mp-board-list li { display: grid; grid-template-columns: 1.6em minmax(0, 1fr) auto; gap: 8px; align-items: baseline; padding: 5px 8px; border-radius: 6px; }
+.mp-board-list li > span:first-of-type { overflow-wrap: anywhere; }
+.mp-board-list li.me { background: var(--accent-soft); font-weight: 700; }
+.mp-board-list small { font-weight: 400; color: var(--muted); }
+.mp-board-list li.me small { color: var(--ink); }
+.mp-layout { display: grid; gap: 14px; }
+@media (min-width: 1100px) {
+  .mp-layout { grid-template-columns: minmax(0, 1fr) 300px; align-items: start; }
+  .mp-aside { position: sticky; top: 76px; }
+}
+@media (max-width: 1099px) { .mp-layout > .mp-aside { order: -1; } }
+@media (max-width: 899px) { .home-grid .mp-board { order: 4; } }
