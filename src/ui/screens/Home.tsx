@@ -70,6 +70,7 @@ import { ModesCard } from '../components/ModesCard';
 import { StrengthCard } from '../components/StrengthCard';
 import { RivalCard } from '../components/RivalCard';
 import { CoachTalk } from '../components/CoachTalk';
+import { leanLevel } from '../road';
 
 function SeasonSummary({ rec }: { rec: SeasonRecord }) {
   const delta = rec.ovrEnd - rec.ovrStart;
@@ -1099,6 +1100,7 @@ export function Home({ g }: { g: GameState }) {
   const advance = useStore((s) => s.advance);
   const pr = prompt(g);
   const last = g.lastSummary;
+  const lean = leanLevel(g);
   return (
     <div className="home-grid">
       <div className="stack">
@@ -1113,9 +1115,11 @@ export function Home({ g }: { g: GameState }) {
           <FoldBox id="scout" title="Scouting report" icon="scouts">
             <ScoutCard g={g} compact />
           </FoldBox>
-          <Card title="Milestones">
-            <MilestoneStrip reached={g.milestones} />
-          </Card>
+          {!lean && (
+            <Card title="Milestones">
+              <MilestoneStrip reached={g.milestones} />
+            </Card>
+          )}
         </Extra>
       </div>
       <div className="stack home-center">
@@ -1219,7 +1223,7 @@ export function Home({ g }: { g: GameState }) {
             <RivalCard g={g} />
           </FoldBox>
           <StoriesCard g={g} />
-          {g.feed[0] && (
+          {g.feed[0] && !lean && (
             <FoldBox id="reaction" title="The talk" icon="news">
               <section className="card prose">
                 <ReactionCard r={g.feed[0]} />

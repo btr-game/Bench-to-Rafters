@@ -49,6 +49,7 @@ import { buildWord, idealWeight, weightOf } from '../../engine/player/weight';
 import { touchOf } from '../../engine/player/touch';
 import { polyCells, type Pt } from '../art/pixel';
 import { ChampionStrip, LeaderBars, StandingsBars, VoteBars } from '../components/LeagueVisuals';
+import { leanLevel } from '../road';
 
 /** The ratings his weight is adding or taking away right now, biggest first. */
 function frameLine(p: GameState['player']): string {
@@ -513,6 +514,7 @@ export function PlayerTab({ g }: { g: GameState }) {
   const now = Math.round(ovr(g));
   const start = g.season?.attrsStart ? Math.round(ovrOf(g.season.attrsStart as GameState['player']['attrs'], p.pos)) : now;
   const [kit, setKit] = useState<KitName>('home');
+  const lean = leanLevel(g);
   return (
     <div className="page">
       <PageHero
@@ -540,19 +542,21 @@ export function PlayerTab({ g }: { g: GameState }) {
           { k: 'Scouts', v: p.scoutGrade ?? '—' },
         ]}
       />
-      <div className="page-grid three">
+      <div className={`page-grid ${lean ? 'two' : 'three'}`}>
         <Card title="Ratings" kicker={now !== start ? `OVR ${start} → ${now} this season` : 'This season'} tour="ratings">
           <Radar g={g} compare={g.season?.attrsStart} />
           <AttrRows g={g} compare={g.season?.attrsStart} />
           <p className="muted small">● focus stat · the dashed shape is where you started the season.</p>
-          <div className="meters">
-            <Meter label="Range" value={p.range} tone="ink" />
-            <Meter label="Free-throw touch" value={touchOf(p)} tone="ink" />
-            <Meter label={`${p.hand === 'L' ? 'Right' : 'Left'} hand (weak hand)`} value={p.offhand} tone="ink" />
-          </div>
+          {!lean && (
+            <div className="meters">
+              <Meter label="Range" value={p.range} tone="ink" />
+              <Meter label="Free-throw touch" value={touchOf(p)} tone="ink" />
+              <Meter label={`${p.hand === 'L' ? 'Right' : 'Left'} hand (weak hand)`} value={p.offhand} tone="ink" />
+            </div>
+          )}
         </Card>
         <div className="stack">
-          {t && (
+          {t && !lean && (
             <Extra>
             <Card title="Kits" kicker={t.name}>
               <div className="kits">
@@ -566,7 +570,7 @@ export function PlayerTab({ g }: { g: GameState }) {
             </Card>
             </Extra>
           )}
-          <Card title="Status">
+          <Card title="Status" tour="status">
             <div className="meters">
               <Meter label="Morale" value={p.morale} tone={p.morale < 35 ? 'bad' : p.morale > 70 ? 'good' : undefined} />
               <Meter label="Coach trust" value={p.trust} tone={p.trust <= 30 ? 'bad' : p.trust >= 70 ? 'good' : undefined} />
@@ -575,6 +579,8 @@ export function PlayerTab({ g }: { g: GameState }) {
             </div>
             <p className="small muted">Body wear builds with heavy minutes, hard plans and injuries, and makes aging hit harder after 30. Recovery plans, rest summers and health purchases bring it down.</p>
           </Card>
+          {!lean && (
+          <>
           <Card title="Contract and money">
             {c && g.stage !== 'HS' ? (
               <p>
@@ -682,7 +688,10 @@ export function PlayerTab({ g }: { g: GameState }) {
             </dl>
           </Card>
           </Extra>
+          </>
+          )}
         </div>
+        {!lean && (
         <div className="stack">
           <Extra>
           <ScoutCard g={g} />
@@ -695,19 +704,24 @@ export function PlayerTab({ g }: { g: GameState }) {
           <BodyMap g={g} narrow />
           </Extra>
         </div>
+        )}
       </div>
       {/* round 27 (owner: "staff, wardrobe, collection are all stacked in one row ... the sides are
           completely empty"): their own full-width row, side by side */}
-      <Extra>
-        <div className="player-extras">
-          <StaffCard g={g} />
-          <WardrobeCard g={g} kit={kit} />
-          <CollectionCard g={g} />
-        </div>
-      </Extra>
-      <Extra>
-        <RosterCard g={g} />
-      </Extra>
+      {!lean && (
+        <>
+          <Extra>
+            <div className="player-extras">
+              <StaffCard g={g} />
+              <WardrobeCard g={g} kit={kit} />
+              <CollectionCard g={g} />
+            </div>
+          </Extra>
+          <Extra>
+            <RosterCard g={g} />
+          </Extra>
+        </>
+      )}
     </div>
   );
 }

@@ -78,6 +78,11 @@ export function saveRoad({ preview: _, ...r }: Road): void {
  * but for the cards that show its pages). */
 export const inTutorial = (r: Road): boolean => !r.free && (!isDev() || !!r.preview);
 
+/** Round 35 (owner: "there are still too much features accessible in the tutorial mode"): the
+ * beginner level, the tutorial, shows the essence only: no fan talk or milestones on Home, and a
+ * Player tab of ratings and status. */
+export const leanLevel = (g: GameState): boolean => levelOf(g) === 'beginner';
+
 /** The tabs a level career shows (owner: beginner "tabs Home + Player"), or null for all of them. */
 export function levelTabs(g: GameState): ('home' | 'season' | 'player')[] | null {
   const l = levelOf(g);

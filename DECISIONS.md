@@ -2934,3 +2934,11 @@ multiple times."
   tried a game at least). It ranks just below the Triple-Double Season, so a rarer card the same
   year still wins. Measured on 150 careers (Standard, smart policy): 6 careers (4.000000%) had one,
   8 of 773 full NBA seasons (1.034929%).
+- **A leaner tutorial** (owner: "i think there are still too much features accessible in the tutorial
+  mode"; the owner picked what goes): the beginner level drops the milestones strip and the fan talk
+  (the paper's headline and the made-up posts) from Home, and its Player tab keeps only the ratings
+  and the status meters (no kits, contract and money, nickname and brand, profile, second scouting
+  report, body map, staff, wardrobe, collection or roster). The coach card, the scouting report and
+  the whole Settings menu stay. One rule (`leanLevel` in src/ui/road.ts) for both screens; the
+  lessons follow: the milestones and fan-talk lessons are gone, the Player tab teaches the ratings
+  and the status, and the scouts' lesson moves to Home. Intermediate and advanced are unchanged.

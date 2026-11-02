@@ -39,7 +39,7 @@ const SECTIONS: { title: string; where: string; items: [string, string[]][] }[] 
     title: 'The road map',
     where: 'The tutorial, then Regular guy’s card on the start page',
     items: [
-      ['The tutorial', ['Every device starts with the beginner level (high school): a short career at fast break’s pace with one goal, an NBA All-Star team in 5 NBA seasons. Goal or not, the level is passed.', 'Then graduation, and the full game opens with Regular guy.']],
+      ['The tutorial', ['Every device starts with the beginner level (high school): a short career at fast break’s pace with one goal, an NBA All-Star team in 5 NBA seasons. Goal or not, the level is passed.', 'It keeps to the essentials: Home (plans, turning points, the coach, the scouts) and a Player tab of ratings and status.', 'Then graduation, and the full game opens with Regular guy.']],
       ['Lessons', ['The tutorial guide shades the page but for one control and says what it does: Got it (Enter or Space) to read on, or use the control.', 'One lesson at a time, none skipped.']],
       ['Opening the rest', ['The road map’s other stops each open a part of the game: intermediate (college, 6 NBA seasons) opens Reality hits hard, advanced (the NBA arena, 7) opens Shoot for the stars, and the island opens the mini-games.', 'Click a place, or drive to it with the arrow keys, and its card pops out of the map (Enter opens it, Escape folds it away); each card says what it opens.', 'Until then the locked cards on the start page say which stop opens them. A device that finished the old tutorial keeps everything.']],
       ['The island', ['Every mini-game once, with a C or better in each: the mark to beat is on its card. Built in a lab is one of them.']],
