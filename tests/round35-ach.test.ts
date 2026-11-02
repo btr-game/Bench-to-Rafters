@@ -49,7 +49,7 @@ describe('the book: round 35', () => {
   it('keeps every id and every name unique across the whole book', () => {
     expect(new Set(ACHIEVEMENTS.map((a) => a.id)).size).toBe(ACHIEVEMENTS.length);
     expect(new Set(ACHIEVEMENTS.map((a) => a.name.toLowerCase())).size).toBe(ACHIEVEMENTS.length);
-    expect(ACHIEVEMENTS_35.length).toBe(36);
+    expect(ACHIEVEMENTS_35.length).toBe(41);
     for (const id of R35_TOTALS_ONLY) expect(ACHIEVEMENTS_35.some((a) => a.id === id), id).toBe(true);
     for (const a of ACHIEVEMENTS_35) expect(ACHIEVEMENTS, a.id).toContain(a);
   });
@@ -207,6 +207,27 @@ describe('the book: round 35', () => {
     nbaOf(g)[5].result = 'Missed the playoffs (11th in the West)';
     expect(test35('c-dfig', g, true)).toBe(false);
     expect(test35('r-every', g, true)).toBe(false);
+  });
+});
+
+describe('friends in each other\'s careers', () => {
+  it('earns a duo or Big Three of friends and the chat from the totals, and rival nights from the career', () => {
+    const none = earnedNow(null, { ...NO_TOTALS });
+    for (const id of ['mp-fduo', 'mp-ftrio', 'mp-chat1']) expect(none, id).not.toContain(id);
+    const some = earnedNow(null, { ...NO_TOTALS, mp: { friendDuo: 1, chat: 1 } });
+    expect(some).toContain('mp-fduo');
+    expect(some).toContain('mp-chat1');
+    expect(some).not.toContain('mp-ftrio');
+    expect(earnedNow(null, { ...NO_TOTALS, mp: { friendTrio: 1 } })).toContain('mp-ftrio');
+    const g = newGame(3520, { name: 'Marcus Hale', number: 23, pos: 'SF', archetype: 0, focus: ['SHT', 'ATH'], mode: 'standard' });
+    const meet = (won: boolean, year: number) => ({ year, won, me: 20, him: 18, score: won ? '110–100' : '100–110', how: 'went at him' });
+    g.mp = { klass: 'ABCDEF', meets: [meet(false, 2030)] };
+    expect(test35('mp-rn1', g)).toBe(false);
+    g.mp.meets = [meet(false, 2030), meet(true, 2031)];
+    expect(test35('mp-rn1', g)).toBe(true);
+    expect(test35('mp-rn5', g)).toBe(false);
+    g.mp.meets = [2030, 2031, 2032, 2033, 2034].map((y) => meet(true, y));
+    expect(test35('mp-rn5', g)).toBe(true);
   });
 });
 

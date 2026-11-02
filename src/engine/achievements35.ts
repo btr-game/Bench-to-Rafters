@@ -11,7 +11,7 @@ import type { AchTier, CareerTotals } from './achievements';
 import { count, hallOfFame } from './awards/legacy';
 
 /** What a device has done with friends (ui/achievements.ts recordMp counts each). */
-export type MpKind = 'made' | 'answered' | 'beat' | 'joined' | 'classTop';
+export type MpKind = 'made' | 'answered' | 'beat' | 'joined' | 'classTop' | 'friendDuo' | 'friendTrio' | 'chat';
 
 /** What these checks read (the book's facts, in part). */
 interface Facts35 {
@@ -105,6 +105,12 @@ export const ACHIEVEMENTS_35: Ach35[] = [
   A('r-homegrown', 'Homegrown', 'starter', 'Win an NBA title with the team that drafted you.', (f) => !!f.g.draftedBy && f.nba.some((h) => champ(h) && h.teamId === f.g.draftedBy)),
   A('r-rookie-ring', 'Beginner’s Luck', 'allstar', 'Win the NBA title in your first NBA season.', (f) => !!f.nba.length && f.nba.some((h) => h.year === f.nba[0].year && champ(h))),
   A('r-redeem', 'Unfinished Business', 'starter', 'Lose in the NBA Finals, then win the title the next season.', (f) => f.nba.some((h) => /Lost in the NBA Finals/.test(h.result) && f.nba.some((x) => x.year === h.year + 1 && champ(x)))),
+  // ---- friends in each other's careers (rival nights, duos of friends, the chat) ----
+  A('mp-rn1', 'Grudge Match', 'starter', 'Win a rival night against your rival from the draft class.', (f) => !!f.g.mp?.meets?.some((m) => m.won)),
+  A('mp-rn5', 'Bad Blood', 'allstar', 'Win five rival nights in one career.', (f) => (f.g.mp?.meets?.filter((m) => m.won).length ?? 0) >= 5),
+  A('mp-fduo', 'Friends on the Floor', 'rotation', 'Play on the same NBA team as a friend from your draft class.', (f) => mp(f, 'friendDuo') >= 1),
+  A('mp-ftrio', 'The Old Gang', 'allstar', 'Make a Big Three with two friends from your draft class.', (f) => mp(f, 'friendTrio') >= 1),
+  A('mp-chat1', 'Chirp', 'bench', 'Say something in a challenge’s or a draft class’s chat.', (f) => mp(f, 'chat') >= 1),
   A('a-as-first3', 'Instant Classic', 'starter', 'Make the All-Star team in each of your first three NBA seasons.', (f) => {
     const first = [...byYear(f, () => true).keys()].slice(0, 3);
     return first.length === 3 && first.every((y) => f.g.awards.some((a) => a.key === 'ALLSTAR' && a.year === y));
@@ -112,4 +118,4 @@ export const ACHIEVEMENTS_35: Ach35[] = [
 ];
 
 /** The ones that only read the totals kept across careers (checked with no career open). */
-export const R35_TOTALS_ONLY = ['mp-made1', 'mp-made5', 'mp-ans1', 'mp-join1', 'mp-beat1', 'mp-beat5', 'mp-top1', 'mp-top3', 'un-real', 'un-stars', 'un-minis', 'un-all'];
+export const R35_TOTALS_ONLY = ['mp-made1', 'mp-made5', 'mp-ans1', 'mp-join1', 'mp-beat1', 'mp-beat5', 'mp-top1', 'mp-top3', 'mp-fduo', 'mp-ftrio', 'mp-chat1', 'un-real', 'un-stars', 'un-minis', 'un-all'];

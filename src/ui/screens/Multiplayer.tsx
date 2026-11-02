@@ -209,6 +209,7 @@ export function MpChat({ mp, room, code, compact }: { mp: Multiplayer; room: Roo
       setText('');
       setErr('');
       sfx('sent');
+      if (recordMp('chat')) achievementsNow();
       void pull();
     } else setErr(r === 'busy' ? 'One line every few seconds.' : r === 'missing' ? 'Only the people in it can talk here.' : MP_FAIL[r]);
   };
@@ -734,6 +735,12 @@ function FriendsLine({ g, k }: { g: GameState; k: DraftClass }) {
   const team = friendsOnTeam(g);
   const rec = rivalRecord(g);
   const pn = (m: ClassMember) => m.seasons[m.seasons.length - 1]?.pn ?? m.rec?.name ?? m.name;
+  // a duo (or a Big Three) of friends: once a class
+  useEffect(() => {
+    let earned = team.length >= 1 && recordMp('friendDuo', k.code);
+    if (team.length >= 2) earned = recordMp('friendTrio', k.code) || earned;
+    if (earned) achievementsNow();
+  }, [team.length, k.code]);
   if (!rival && !asks.length && !team.length) return null;
   return (
     <div className="mp-friends stack">
