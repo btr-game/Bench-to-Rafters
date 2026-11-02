@@ -2715,3 +2715,31 @@ multiple times."
   13. The project summary: the road map's pop-out cards and the stage, the turning points (187),
       the shop (213), the career log, the achievements (with how often each happens), cards that
       fold, the announcer, the intro, what a device keeps and the dev deck (129 cards).
+
+## Round 35 (owner requests): multiplayer
+
+- **The dev deck's real numbers** (owner: "real numbers of user in the dev deck doesnt seem to
+  work (not sure) just verify it works"): they did not. The deck's community is its own (this
+  device's, so it never posts to or reads the real one), and the Real numbers line read that, so it
+  only ever counted the deck. It now reads the real community, read only (community.ts watchReal):
+  on the website, the presence channel watched without joining it (so the deck is never counted and
+  never uses the player's identity) and the feed; on the claude.ai page, the room's visits that
+  joined the court and the shared feed; a copy with neither says there is nothing real to count.
+  The website's feed held 11 careers, 3 in the last 24 hours, when checked.
+- **Skip tutorial mid-tutorial** (owner: "the skip button of the tutorial doesnt appear. let users
+  skip mid tutorial if possible"): the lessons shade the whole page but one control, top bar
+  included, so the button was dimmed and could not be pressed for almost the whole tutorial. The
+  lesson layer now has its own Skip tutorial, fixed to the top-right corner above the shade (the
+  top-left when the control is in that corner); its pop-up opens above the lesson and takes its
+  keys. The exit code is still what skips (the owner's round 33 design). The note's own "Have the
+  exit code?" link went, so there is one way out.
+- **The career code, explained** (owner: "how the import/export code works? is it that a code line
+  is added when the user makes a choice"): no. Code packs the whole career as it stands (gzip, then
+  base64, after BTR1.); 12 finished careers measured 149,803 to 192,599 characters. The project
+  summary has a section on it.
+- **Import for devs only** (owner: "let's put the import function exclusive to devs. i dont want
+  people abusing the export codes"): a code has no signature, so an edited one could carry made-up
+  ratings or honours to the boards. The import box shows only in the dev deck, and the store refuses
+  an import anywhere else. Players keep Code, to send the maker with a bug report.
+- **Multiplayer** (owner's picks: Draft class with friends, Challenge a friend; an invite code or
+  link and quick match): the plan is in ROADMAP.md, round 35.
