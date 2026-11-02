@@ -20,7 +20,7 @@ interface LiveChoice {
 }
 
 export interface LiveRequest {
-  stage: 'game' | 'quarter' | 'clutch' | 'crunch';
+  stage: 'game' | 'quarter' | 'clutch' | 'crunch' | 'rival'; // round 35: rival, the call before a rival series (career/rivalSeries.ts)
   title: string;
   text: string;
   round: string;
@@ -59,6 +59,9 @@ export interface LiveState {
   recent: string[];
   // round 33: beginner's one last shot (levels.ts shotDue): no other pick in this postseason
   shot?: boolean;
+  // round 35: a series against his rival classmate's team, once he has made the call for it
+  // (career/rivalSeries.ts): its key (round|team), the call, and the points so far
+  rival?: { key: string; round: string; how: 'guard' | 'duel' | 'team'; gp: number; me: number; hisGp: number; him: number };
 }
 
 export interface SeriesCtx {

@@ -111,7 +111,7 @@ export const FRIEND_EVENTS: EventDef[] = [
     // never drawn at random: the season queues it (events/resolver.ts queueMidseasonEvents)
     weight: 0,
     cooldownSeasons: 1,
-    when: (s) => !!rivalTeam(s) && !s.mp?.meets?.some((m) => m.year === s.year),
+    when: (s) => !!rivalTeam(s) && !s.mp?.meets?.some((m) => m.year === s.year && !m.series),
     title: 'Rival night',
     text: (s) => {
       const r = rivalTeam(s)!;

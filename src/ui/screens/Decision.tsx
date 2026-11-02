@@ -197,7 +197,8 @@ function LiveView({ g, d }: { g: GameState; d: Decision }) {
   const lg = g.season ? (g.stage === 'NBA' ? g.nba : g.league) : null;
   const team = lg?.teams.find((t) => t.id === g.teamId) ?? null;
   const me = team?.short ?? 'You';
-  const started = r.stage !== 'game';
+  // round 35: the call before a rival series comes before any game, like a game's own pick
+  const started = r.stage !== 'game' && r.stage !== 'rival';
   const l = r.line;
   const crunch = r.stage === 'crunch';
   // round 28: crunch time sounds out each trip (the first one, a new overtime, then how it went)

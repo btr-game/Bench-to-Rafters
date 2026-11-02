@@ -10,9 +10,9 @@
 // - Trade requests: an NBA player under contract can ask out, once a summer.
 // These all go into the season's team bonus, added to the team's strength in his games.
 
-import { TEAM_FACTORS as T, modeDial } from '../balance';
+import { JOIN_FRIEND, TEAM_FACTORS as T, modeDial } from '../balance';
 import { chance, clamp, int, pick, range } from '../rng';
-import type { GameState, League, Team } from '../types';
+import type { FriendLine, GameState, League, Team } from '../types';
 import { adjust, logDecision, ordinal, pushMoment, teamById, userOvr } from './common';
 import { currentStyle, fitLabel, styleEffect, styleFit, TEAM_STYLES } from './identity';
 import { duoEffect, breakGroup } from './duo';
@@ -20,6 +20,8 @@ import { FAN_CULTURES } from './fanCulture';
 import { rosterFit } from './roster';
 import { takePressFx } from './press';
 import { allows } from '../levels';
+import { capFor, fmtMoney, marketValue } from '../economy/salary';
+import { friendName, friendNow } from './friends';
 
 /** 1 = the best roster in the league. */
 export function rosterRank(league: League, teamId: string): number {
@@ -188,18 +190,62 @@ export function canRequestTrade(s: GameState): boolean {
  * - rival: the team he is feuding with. Long odds, a headline either way: reputation if it
  *   happens, a ruined locker room if it does not.
  * - needed: a weaker team that would make him its first option. Easy to get, a bigger role.
+ * - friend (round 35): a classmate's team, to play beside him (friendTeams below); the money has
+ *   to fit, and the more the two of them earn, the harder the deal.
  */
-export type TradeAim = 'better' | 'contender' | 'champion' | 'rival' | 'needed';
+export type TradeAim = 'better' | 'contender' | 'champion' | 'rival' | 'needed' | 'friend';
 export const TRADE_AIM: Record<TradeAim, { label: string; text: string; odds: number; risk: 'Low' | 'Medium' | 'High' }> = {
   better: { label: 'Any better team', text: 'Let the front office find a deal with a team that has a better roster.', odds: 1, risk: 'Low' },
   contender: { label: 'A contender', text: 'A top-five roster. A real shot at a ring; you may lose your starting spot.', odds: 0.85, risk: 'Medium' },
   champion: { label: 'The champions', text: 'Join last year\'s champion. The best title odds, the hardest deal to get done.', odds: 0.6, risk: 'Medium' },
   rival: { label: 'Your rival', text: 'Ask to be sent to the team you are feuding with. Long odds; huge headlines if it happens, a poisoned locker room if it does not.', odds: 0.55, risk: 'High' },
   needed: { label: 'A team that needs you', text: 'A weaker team that would build around you. Easy to get; a bigger role, fewer wins.', odds: 1.35, risk: 'Low' },
+  friend: { label: 'Join a friend', text: 'Ask to be sent to a classmate’s team. Both contracts have to fit: the more you two earn, the harder the deal.', odds: JOIN_FRIEND.odds, risk: 'Medium' },
 };
 
-/** The teams each aim would send him to (best first), and the odds word for the screen. */
-export function tradeOptions(s: GameState): { aim: TradeAim; teams: Team[]; chance: number }[] {
+/**
+ * Round 35 (owner: "yup. cool, but salary still has to be a limit factor"): the NBA teams other
+ * than his where classmates play, as far as the class knows for next season (career/friends.ts
+ * friendNow), with what joining them would cost. His salary and theirs together, as a share of
+ * next season's cap, set `fit`, the share of the usual odds the money leaves (JOIN_FRIEND); `why`
+ * says why it cannot happen at all: more than any team can carry, or more than this team's payroll
+ * has room for. A friend's salary missing from an old line is his market value.
+ */
+export function friendTeams(s: GameState): { team: Team; friends: FriendLine[]; need: number; fit: number; why?: string }[] {
+  const nba = s.nba;
+  if (!nba || !s.teamId || !s.mp?.klass || !s.mp.friends?.length) return [];
+  const J = JOIN_FRIEND;
+  const year = s.year + 1;
+  const cap = capFor(year);
+  const mine = s.contract?.salary ?? 0;
+  const by = new Map<string, { team: Team; friends: FriendLine[]; pay: number }>();
+  for (const f of s.mp.friends) {
+    const line = friendNow(f, year);
+    const team = line?.lv === 'NBA' ? nba.teams.find((t) => t.name === line.team && t.id !== s.teamId) : undefined;
+    if (!line || !team) continue;
+    const pay = line.sal && line.sal > 0 ? line.sal : marketValue(year, line.ovr, s.player.age, 50, 'starter', s.serviceYears);
+    const at = by.get(team.id) ?? { team, friends: [], pay: 0 };
+    at.friends.push(f);
+    at.pay += pay;
+    by.set(team.id, at);
+  }
+  return [...by.values()].map(({ team, friends, pay }) => {
+    const need = mine + pay;
+    const share = need / cap;
+    const room = cap * J.apron - team.roster.reduce((t, p) => t + p.salary, 0) - need;
+    const why =
+      share > J.ceiling
+        ? `Your contracts together (${fmtMoney(need)}) are ${Math.round(share * 100)}% of the cap: no team can carry both.`
+        : room < 0
+          ? `The ${team.name} cannot fit both contracts (${fmtMoney(need)}): ${fmtMoney(-room)} over what they can carry.`
+          : undefined;
+    return { team, friends, need, fit: clamp(1 - J.perShare * (share - J.free), J.minFit, 1), ...(why ? { why } : {}) };
+  });
+}
+
+/** The teams each aim would send him to (best first), and the odds word for the screen. A friend's
+ * team is an aim of its own for each team (`to`), with its own label and text. */
+export function tradeOptions(s: GameState): { aim: TradeAim; teams: Team[]; chance: number; to?: string; label?: string; text?: string }[] {
   const nba = s.nba;
   if (!nba || !s.teamId) return [];
   const ovr = userOvr(s);
@@ -209,22 +255,37 @@ export function tradeOptions(s: GameState): { aim: TradeAim; teams: Team[]; chan
   const champName = s.nbaHistory[s.nbaHistory.length - 1]?.champion;
   const rivalId = (s.stories ?? []).find((x) => x.kind === 'rival')?.teamId ?? s.nemesis;
   const byRank = [...nba.teams].sort((a, b) => b.strength - a.strength);
-  const pools: Record<TradeAim, Team[]> = {
+  const pools: Record<Exclude<TradeAim, 'friend'>, Team[]> = {
     better: byRank.filter((t) => fits(t) && rosterRank(nba, t.id) < mine),
     contender: byRank.slice(0, 5).filter(fits),
     champion: nba.teams.filter((t) => t.name === champName && fits(t)),
     rival: nba.teams.filter((t) => t.id === rivalId && t.id !== s.teamId),
     needed: byRank.filter((t) => t.id !== s.teamId && (t.roster[0]?.ovr ?? 99) < ovr && rosterRank(nba, t.id) > mine),
   };
-  return (Object.keys(TRADE_AIM) as TradeAim[]).map((aim) => ({ aim, teams: pools[aim], chance: clamp(base * TRADE_AIM[aim].odds, 0.05, 0.85) })).filter((o) => o.teams.length > 0);
+  const opts: { aim: TradeAim; teams: Team[]; chance: number; to?: string; label?: string; text?: string }[] = (Object.keys(pools) as Exclude<TradeAim, 'friend'>[]).map((aim) => ({ aim, teams: pools[aim], chance: clamp(base * TRADE_AIM[aim].odds, 0.05, 0.85) })).filter((o) => o.teams.length > 0);
+  // round 35: each team where classmates play and the money fits
+  for (const x of friendTeams(s)) {
+    if (x.why) continue;
+    const who = x.friends.map((f) => friendName(f)).join(' and ');
+    opts.push({
+      aim: 'friend',
+      teams: [x.team],
+      chance: clamp(base * TRADE_AIM.friend.odds * x.fit, 0.05, 0.85),
+      to: x.team.id,
+      label: `Join ${who}`,
+      text: `Ask to be sent to the ${x.team.name}, where ${who} ${x.friends.length > 1 ? 'play' : 'plays'}: ${x.friends.length > 1 ? 'a Big Three' : 'a duo'} of friends if ${x.friends.length > 1 ? 'they are' : 'he is'} still there when the season starts. Your contracts together: ${fmtMoney(x.need)}${x.fit < 1 ? ', which makes the deal harder' : ''}.`,
+    });
+  }
+  return opts;
 }
 
 export const oddsWord = (p: number): 'High' | 'Moderate' | 'Low' => (p >= 0.45 ? 'High' : p >= 0.25 ? 'Moderate' : 'Low');
 
-/** The player asks out. A deal may get done; if not, the relationship suffers. */
-export function requestTrade(s: GameState, aim: TradeAim = 'better'): void {
+/** The player asks out. A deal may get done; if not, the relationship suffers. `toId` picks the
+ * friend's team when there are several (round 35). */
+export function requestTrade(s: GameState, aim: TradeAim = 'better', toId?: string): void {
   if (!canRequestTrade(s)) return;
-  const opt = tradeOptions(s).find((o) => o.aim === aim);
+  const opt = tradeOptions(s).find((o) => o.aim === aim && (!toId || o.to === toId));
   s.flags.tradeAsk = s.year;
   const nba = s.nba!;
   if (!opt || !chance(s.rng, opt.chance)) {
@@ -232,12 +293,15 @@ export function requestTrade(s: GameState, aim: TradeAim = 'better'): void {
     s.player.trust = adjust(s.player.trust, harsh ? -16 : -10);
     s.player.morale = adjust(s.player.morale, harsh ? -7 : -4);
     logDecision(s, 'trade', `Asked for a trade (${TRADE_AIM[aim].label.toLowerCase()}). Nobody bit.`, s.teamId!);
-    s.toast = harsh ? 'Word got out that you wanted to join your rival. No deal, and your teammates have not forgotten.' : 'The front office shopped you around. No deal. Things are awkward at practice now.';
-    s.tradeResult = { year: s.year, ok: false, text: `No deal. ${harsh ? 'Your rival passed, and your teammates heard about it (coach trust -16, morale -7).' : 'Nobody met the price (coach trust -10, morale -4).'} You stay with the ${teamById(nba, s.teamId!)?.name ?? 'team'}.` };
+    const friend = aim === 'friend' && opt ? opt.teams[0].name : null;
+    s.toast = harsh ? 'Word got out that you wanted to join your rival. No deal, and your teammates have not forgotten.' : friend ? `The ${friend} could not make the money work for both of you. No deal, and things are awkward at practice now.` : 'The front office shopped you around. No deal. Things are awkward at practice now.';
+    s.tradeResult = { year: s.year, ok: false, text: `No deal. ${harsh ? 'Your rival passed, and your teammates heard about it (coach trust -16, morale -7).' : friend ? `The ${friend} could not fit both contracts (coach trust -10, morale -4).` : 'Nobody met the price (coach trust -10, morale -4).'} You stay with the ${teamById(nba, s.teamId!)?.name ?? 'team'}.` };
     return;
   }
   const to = opt.teams[int(s.rng, 0, Math.min(aim === 'better' ? 2 : 1, opt.teams.length - 1))];
   const from = teamById(nba, s.teamId)!;
+  // round 35: the classmates he joins (read before the move: friendTeams leaves out his own team)
+  const pals = aim === 'friend' ? (friendTeams(s).find((x) => x.team.id === to.id)?.friends ?? []) : [];
   s.teamId = to.id;
   s.contract!.teamId = to.id;
   s.player.trust = aim === 'needed' ? 60 : 45;
@@ -245,7 +309,7 @@ export function requestTrade(s: GameState, aim: TradeAim = 'better'): void {
   if (aim === 'rival') s.player.rep = clamp(s.player.rep + 4, 0, 100);
   logDecision(s, 'trade', `Traded from the ${from.name} to the ${to.name} at his request (${TRADE_AIM[aim].label.toLowerCase()}).`, to.id);
   breakGroup(s); // round 28: a duo or Big Three ends with the trade
-  const extra = aim === 'rival' ? ['The rivalry is personal now (reputation +4)'] : aim === 'needed' ? ['They will build around you'] : aim === 'champion' ? ['Joining the champions'] : [];
+  const extra = aim === 'rival' ? ['The rivalry is personal now (reputation +4)'] : aim === 'needed' ? ['They will build around you'] : aim === 'champion' ? ['Joining the champions'] : pals.length ? [`Teammates with ${pals.map((f) => friendName(f)).join(' and ')}: ${pals.length > 1 ? 'a Big Three' : 'a duo'} of friends when the season starts`] : [];
   pushMoment(s, { kind: 'commit', title: 'Traded', teamName: to.name, color: to.color, text: `You asked out, and the ${from.name} found a deal. You are a member of the ${to.name}.`, lines: [`Roster rank: ${rosterRank(nba, to.id)} of ${nba.teams.length}`, 'Same contract, new team', ...extra] });
   s.toast = `Traded to the ${to.name}.`;
   s.tradeResult = { year: s.year, ok: true, team: to.name, color: to.color, rank: rosterRank(nba, to.id), text: `Traded to the ${to.name} (roster ${rosterRank(nba, to.id)} of ${nba.teams.length}). Same contract, new team.${extra.length ? ` ${extra.join('. ')}.` : ''}` };

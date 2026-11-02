@@ -87,7 +87,7 @@ interface Store {
   togglePlayoffs: () => void;
   toggleFast: () => void;
   toggleSim: () => void;
-  requestTrade: (aim?: import('./engine/career/team').TradeAim) => void;
+  requestTrade: (aim?: import('./engine/career/team').TradeAim, to?: string) => void;
   /** Round 31: the career as it was before his last choice (one step), with what that choice was. */
   undo: { game: GameState; label: string } | null;
   undoLast: () => void;
@@ -779,11 +779,11 @@ export const useStore = create<Store>((set, get) => ({
     if (text) set({ game: next, ...remember(g, 'A staff move') });
     return text;
   },
-  requestTrade: (aim) => {
+  requestTrade: (aim, to) => {
     const g = get().game;
     if (!g) return;
     const next = structuredClone(g);
-    requestTrade(next, aim);
+    requestTrade(next, aim, to);
     set({ game: next, ...remember(g, 'A trade request') });
   },
   mutate: (fn) => {
