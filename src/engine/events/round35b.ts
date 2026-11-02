@@ -170,7 +170,8 @@ export const ROUND35B_EVENTS: EventDef[] = [
     weight: 1.2,
     cooldownSeasons: 4,
     title: 'The other you',
-    text: (s) => `You are ${s.player.age}. Somewhere a friend has already played this exact career: the same ${s.player.highSchool || 'high school'}, the same first tryout, the same name on the back. You cannot see what his ${s.player.name.split(' ')[0]} did at ${s.player.age}. You know it is out there.`,
+    // a challenge made from a draft class career opens on draft night, not at a high school tryout
+    text: (s) => `You are ${s.player.age}. Somewhere a friend has already played this exact career: ${s.start?.input.start === 'draft' ? 'the same college, the same draft night' : `the same ${s.player.highSchool || 'high school'}, the same first tryout`}, the same name on the back. You cannot see what his ${s.player.name.split(' ')[0]} did at ${s.player.age}. You know it is out there.`,
     choices: [
       {
         label: 'Play your own game',
