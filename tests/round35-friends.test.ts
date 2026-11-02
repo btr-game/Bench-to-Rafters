@@ -12,6 +12,12 @@ import { activeDuo, activeTrio, duoEffect } from '../src/engine/career/duo';
 import { friendNow, friendsOnTeam, rivalRecord, rivalTeam } from '../src/engine/career/friends';
 import { offerEvent, queueMidseasonEvents } from '../src/engine/events/resolver';
 import { teamById } from '../src/engine/career/common';
+import { FRIEND_EVENTS } from '../src/engine/events/friends';
+import { ICONS } from '../src/ui/art/icons';
+import { EVENT_ICONS_A } from '../src/ui/art/eventIconsA';
+import { EVENT_ICONS_B } from '../src/ui/art/eventIconsB';
+import { EVENT_ICONS_C } from '../src/ui/art/eventIconsC';
+import { themeOf } from '../src/dev/eventThemes';
 
 const input = { name: 'Marcus Hale', number: 23, pos: 'SF' as const, archetype: 0, focus: ['SHT', 'ATH'] as ['SHT', 'ATH'], mode: 'standard' as const };
 
@@ -101,5 +107,19 @@ describe('friends in a career', () => {
       return t.mp!.meets![0];
     };
     expect(run()).toEqual(run());
+  });
+});
+
+describe('the rival night on the page', () => {
+  it('has a pixel icon of its own and a theme in the Catalog', () => {
+    const all = { ...ICONS, ...EVENT_ICONS_A, ...EVENT_ICONS_B, ...EVENT_ICONS_C };
+    for (const e of FRIEND_EVENTS) {
+      const pic = EVENT_ICONS_C[`ev-${e.id}`];
+      expect(pic, e.id).toBeTruthy();
+      expect(pic.length).toBe(16);
+      for (const row of pic) expect(row, e.id).toMatch(/^[.OWwKRrBbGgYyNnPpSsTtCLMm]{16}$/);
+      expect(Object.entries(all).filter(([k, v]) => k !== `ev-${e.id}` && v.join('|') === pic.join('|'))).toEqual([]);
+      expect(themeOf(e.id), e.id).not.toBe('Other');
+    }
   });
 });

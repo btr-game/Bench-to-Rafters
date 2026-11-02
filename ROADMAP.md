@@ -237,9 +237,9 @@ link, and quick match). Defaults proposed, for the owner to confirm or change:
 - **Challenges from the career log**: a challenge is set from a career's last page, since a career
   card does not keep its start. Keeping the start on the card (a few hundred bytes) would let any
   logged Regular guy career be sent.
-- **Friends in each other's leagues**: a draft class shares a seed, so the league is the same; the
-  friends' players could appear on their NBA teams in each other's careers, for the seasons already
-  played.
+- **Friends in each other's leagues** (in part: rivals, rival nights and duos of friends were built
+  in round 35): the friends' players could also show in each other's box scores, team rosters and
+  award races, for the seasons already played.
 - **More class awards**: the best of the class each year today; a class MVP over the whole career,
   a class All-Star game, or a class reunion page when everyone has retired.
 - **Multiplayer on the claude.ai page**: its shared database (the community's) could hold

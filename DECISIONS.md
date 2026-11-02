@@ -2807,6 +2807,36 @@ multiple times."
   more against his bank. Over 400 visits: at $4M a year and a $6M bank, 2.727500 items fit, now
   2.375000 (the mean item 20.3% dearer); at $12M and $30M, 3.295000 now 2.630000 (29.1%); at $60M
   nothing he can afford changes.
+- **Friends in each other's careers** (owner: "can you add multiplayer specific features? for
+  example, each user can send a rivalry to one other, and if they accept, they become draft rivals.
+  their dynamics when they meet should be more deliberate. if two users join the same team, they can
+  form duos (or a big three if three are in the same team) try to make a chat below the leaderboard
+  so that the users can communicate"). Each friend's career is played on their own device, so
+  before each season the side board copies the class's season lines into the career
+  (`GameState.mp.friends`, with the rival pick in `mp.rival`), and the engine reads only that copy:
+  the same copy gives the same career. A friend is where their line for this year says, or a season
+  behind, where last year's says.
+  - **Rivals**: each member of a class picks one classmate from the standings (Send a rivalry; Sent,
+    take back; Accept the rivalry when one has picked you); two who pick each other are rivals.
+  - **Rival nights**: once a season, when the two are in the NBA on different teams, their meeting is
+    a turning point that is never left to chance (it is queued before the season's random ones):
+    guard them yourself, outscore them, or play it like any other night. The odds start at a half,
+    move 3 points for each point of team strength and 1.2 for each point of OVR between the two, plus
+    1 or 2 for the call, between 15% and 85%; both players' points come from their season so far.
+    The record (the last 30 meetings) is on the side board and in the career.
+  - **Duos and Big Threes of friends**: a classmate on his NBA team for a season is a duo, two are a
+    Big Three, formed the first season of their run together. A friend counts only when the career
+    has no duo or Big Three of its own (or as the third of its own duo), with the duo's usual edge,
+    and a moment marks the season it forms.
+  - **The chat**: one for each challenge and each class, under its board (on the Play with friends
+    page and beside the career), for its people only: a class's members; a challenge's maker, the
+    friends who have started it and those who have answered it. 200 characters a line, a line every
+    3 seconds and 300 a day; a room keeps its latest 200 lines and shows 50. New functions in
+    `supabase/migrations/0005_multiplayer_friends.sql` (tested on a local Postgres with two players
+    and a stranger, who reads nothing and posts nothing); the dev deck's stand-in has a classmate who
+    has already picked you and a chat with a few lines.
+  - Five achievements (Grudge Match, Bad Blood, Friends on the Floor, The Old Gang, Chirp), the rival
+    night's pixel icon (two jerseys and a bolt), Catalog entries, the manual and Guide mode.
 - **End of round** (owner: "go til here. dont publish yet": the list up to the summary and this
   file). Pixel icons for a challenge (two players squared up), a draft class (classmates on a bench
   under the class banner) and the unlock (the padlock, open); sound for a challenge, a seat taken in

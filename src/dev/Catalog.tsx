@@ -35,6 +35,7 @@ import { ROUND33_EVENTS } from '../engine/events/round33';
 import { ROUND34_EVENTS } from '../engine/events/round34';
 import { ROUND35_EVENTS } from '../engine/events/round35';
 import { ROUND35B_EVENTS } from '../engine/events/round35b';
+import { FRIEND_EVENTS } from '../engine/events/friends';
 import { ACHIEVEMENTS } from '../engine/achievements';
 import { ACH_CATS, achCatOf } from '../engine/achievementCats';
 import { CLASS_MAX } from '../ui/multiplayer';
@@ -185,7 +186,7 @@ const EVENT_SETS: [string, EventDef[]][] = [
   ['Round 32', ROUND32_EVENTS],
   ['Round 33', ROUND33_EVENTS],
   ['Round 34', ROUND34_EVENTS],
-  ['Round 35', [...ROUND35_EVENTS, ...ROUND35B_EVENTS]],
+  ['Round 35', [...ROUND35_EVENTS, ...ROUND35B_EVENTS, ...FRIEND_EVENTS]],
 ];
 
 function eventEntry(set: string, e: EventDef): Entry {
@@ -1031,7 +1032,7 @@ const CATEGORIES: Category[] = [
     key: 'friends',
     name: 'Play with friends',
     icon: 'versus',
-    blurb: 'The two ways to play with friends (ui/multiplayer.ts), on the game’s database in the online build (supabase/migrations/0004_multiplayer.sql). Regular guy only.',
+    blurb: 'The two ways to play with friends (ui/multiplayer.ts), on the game’s database in the online build (supabase/migrations/0004_multiplayer.sql and 0005_multiplayer_friends.sql), with what friends bring into each other’s careers. Regular guy only.',
     entries: () => [
       {
         key: 'challenge',
@@ -1055,6 +1056,35 @@ const CATEGORIES: Category[] = [
           ['Season lines', '45 at most, 1.5 KB each'],
           ['Quick match', 'the last 14 days, a seat left'],
           ['Limits', 'a season every 2 s, 600 a day'],
+        ] as [string, string][],
+      },
+      {
+        key: 'rivals',
+        title: 'Rivals in a class',
+        text: 'Each member picks one classmate; two who pick each other are rivals. Once a season their NBA teams meet in a rival night (events/friends.ts), from the classmate’s season line copied into the career.',
+        art: () => <Icon name="rival" size={44} />,
+        facts: [
+          ['Odds', '15% to 85%: team strength, OVR, the call'],
+          ['Kept', 'the last 30 meetings'],
+          ['Limits', 'a pick every 5 s, 50 a day'],
+        ] as [string, string][],
+      },
+      {
+        key: 'friend-duo',
+        title: 'Duo of friends',
+        text: 'Two classmates on one team in one season form a duo, three a Big Three (career/friends.ts); it counts as the career’s duo or Big Three when it has none of its own.',
+        art: () => <Icon name="superteam" size={44} />,
+        facts: [['From', 'last season’s line, or this one’s']] as [string, string][],
+      },
+      {
+        key: 'chat',
+        title: 'Chat',
+        text: 'One for each challenge and each class, under its board, for its people only (a class’s members; a challenge’s maker, takers and answerers).',
+        art: () => <Icon name="envelope" size={44} />,
+        facts: [
+          ['Line', '200 characters, no control characters'],
+          ['Kept', 'the latest 200 lines, 50 shown'],
+          ['Limits', 'a line every 3 s, 300 a day'],
         ] as [string, string][],
       },
     ],

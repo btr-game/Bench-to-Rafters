@@ -158,6 +158,8 @@ const TOUR: Step[] = [
   T('card-download', D('card-download'), 'Download your career card as an image.'),
   T('retire-new', D('retire-new'), 'Start the next career. This one stays in your log.'),
   T('mp-board', '.mp-board', 'Your challenge’s or class’s leaderboard, beside every tab, with your career so far. Careers with friends count here, not on the community’s boards.'),
+  T('mp-friends', '.mp-friends', 'Friends in this career: your rival and your record against them, and any classmate on your team (a duo of friends, or a Big Three).'),
+  T('mp-chat', '.mp-chat', 'The chat for this challenge or class: its people only, a line at a time.'),
   T('mp-challenge', D('mp-challenge'), 'Challenge a friend: they play this same prospect from the same start, and both cards go side by side.'),
   T('community-note', D('community-note'), 'What this career qualifies for: the leaderboards, the Reality 99 hall, a statue.'),
   T('next-gen', D('next-gen'), 'Your son’s career, at Comet speed. A quarter of his legacy points join yours.'),

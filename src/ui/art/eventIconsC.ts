@@ -1420,4 +1420,23 @@ export const EVENT_ICONS_C: Record<string, string[]> = {
     '....OOOO........',
     'TTTTTTTTTTTTTTTT',
   ],
+  // round 35: a rival night, two friends' teams on one floor
+  'ev-rivalNight': [
+    '................',
+    '.O..O...YY.O..O.',
+    'OrOOrO.YY.ObOObO',
+    'ORRRRO.YY.OBBBBO',
+    'ORWWROYYYYOBWWBO',
+    'ORRWRO..YYOBBWBO',
+    'ORWWRO.YY.OBWWBO',
+    'ORRRRO.Y..OBBBBO',
+    'ORRRRO....OBBBBO',
+    'OOOOOO....OOOOOO',
+    '.......OO.......',
+    '......ONnO......',
+    '......OnNO......',
+    '.......OO.......',
+    'TTTTTTTTTTTTTTTT',
+    'tttttttttttttttt',
+  ],
 };
