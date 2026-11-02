@@ -36,13 +36,17 @@ function isBig(m: Moment): boolean {
  * employs fastbreak and sim ... an estimate playtime of 5~10 minutes, more towards the 5 minute
  * bound"; then "make balance changes or additional features to fastbreak and sim to achieve the 5
  * minute goal"): on top of sim, the game takes the brand deal (a signature line for a big name,
- * the sure deal otherwise) and the youth academy's call, and never stops between seasons. What is
+ * the sure deal otherwise), the youth academy's call and a storyline's chapters (round 35), and never stops between seasons. What is
  * left is his: where to play, the draft, and when to retire. Only the career's biggest days get a
  * page of their own (cometPage); the rest of the story goes into a list of highlights on Home.
  */
 function cometChoice(d: Decision): string | null {
   const open = d.choices.filter((c) => !c.disabled).map((c) => c.id);
   if (d.kind === 'youth') return open.includes('promote') ? 'promote' : open.includes('move') ? 'move' : (open[0] ?? null);
+  // round 35: a storyline's chapter is answered as sim answers a turning point (the first choice
+  // that is not high risk); the chapter keeps its page (cometPage). It used to stop the career,
+  // which Comet never meant to: only where he plays, the draft, brands and retiring are his
+  if (d.kind === 'arc') return (d.choices.find((c) => !c.disabled && c.risk !== 'High') ?? d.choices.find((c) => !c.disabled))?.id ?? null;
   return null;
 }
 

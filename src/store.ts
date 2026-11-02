@@ -24,7 +24,7 @@ import type { WearSlot } from './content/shop';
 import { careerRecord, type CareerRecord } from './engine/career/record';
 import { canPlayChild, childGame, childLegacy, childSeed } from './engine/nextGen';
 import { attachChild, logCareer, type LogResult } from './ui/careerLog';
-import { checkAch, countCareer, earnedIn, recordOpened, recordUndo, recordVisit } from './ui/achievements';
+import { checkAch, countCareer, earnedIn, recordMp, recordOpened, recordUndo, recordVisit } from './ui/achievements';
 import { community } from './ui/community';
 import { cleanProspect, handle, pump, readLink, seasonLine, send, type Challenge, type MpLink } from './ui/multiplayer';
 import { deleteSlot, dropRun, importCode, newSlotId, readRun, readSlot, writeRun, writeSlot } from './ui/saves';
@@ -977,7 +977,10 @@ useStore.subscribe((now, before) => {
   void community().then((c) => c.postCareer(rec));
   // round 35: a draft class gets the card, a friend's challenge its answer
   if (g.mp?.klass) send({ k: 'career', code: g.mp.klass, rec });
-  if (g.mp?.challenge) send({ k: 'answer', code: g.mp.challenge, name: handle() || 'A friend', rec });
+  if (g.mp?.challenge) {
+    send({ k: 'answer', code: g.mp.challenge, name: handle() || 'A friend', rec });
+    if (recordMp('answered', g.mp.challenge)) achievementsNow();
+  }
 });
 
 // round 35: each finished season of a draft class career goes to the class, a short line

@@ -7,11 +7,12 @@ import type { CareerRecord } from '../../engine/career/record';
 import type { GameState } from '../../engine/types';
 import { ARCHETYPES } from '../../engine/player/archetypes';
 import { NAMES } from '../../content/strings';
-import { useStore } from '../../store';
+import { achievementsNow, useStore } from '../../store';
 import { PageTop } from '../components/PageTop';
 import { DevDoor } from '../components/FootBar';
 import { Icon } from '../art/Icon';
 import { sfx } from '../sound';
+import { recordMp } from '../achievements';
 import {
   CLASS_MAX,
   CODE_RE,
@@ -341,6 +342,10 @@ function ClassView({ mp, code, back }: { mp: Multiplayer; code: string; back: ()
     };
   }, [mp, code]);
   const table = useMemo(() => (k && k !== 'error' ? standings(k) : []), [k]);
+  // first in a class where two or more have played: once a class
+  useEffect(() => {
+    if (k && k !== 'error' && table[0]?.m.mine && k.members.filter((m) => m.seasons.length || m.rec).length >= 2 && recordMp('classTop', k.code)) achievementsNow();
+  }, [k, table]);
   const years = useMemo(() => (k && k !== 'error' ? classYears(k) : []), [k]);
   if (k === undefined) return <p className="muted">Looking up {code}…</p>;
   if (k === null || k === 'error')
@@ -622,6 +627,10 @@ export function RetirementMp({ g, rec }: { g: GameState; rec: CareerRecord }) {
       live = false;
     };
   }, [mp, answering]);
+  // the answer beat the career that set the challenge: once a challenge
+  useEffect(() => {
+    if (answering && theirs && mpScore(rec) > mpScore(theirs.rec) && recordMp('beat', answering)) achievementsNow();
+  }, [answering, theirs, rec]);
   if (!mp || (!answering && !g.mp?.klass && !canChallenge(g))) return null;
   const make = async () => {
     if (!g.start) return;
@@ -632,6 +641,7 @@ export function RetirementMp({ g, rec }: { g: GameState; rec: CareerRecord }) {
     if (r.length === 6 && CODE_RE.test(r)) {
       sfx('versus');
       mutate((x) => (x.mp = { ...x.mp, made: r }));
+      if (recordMp('made', r)) achievementsNow();
     } else setErr(MP_FAIL[r as keyof typeof MP_FAIL] ?? MP_FAIL.error);
   };
   const mine = idx(rec);

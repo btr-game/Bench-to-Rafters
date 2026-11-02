@@ -8,7 +8,7 @@ import { ATTRS, DIFFICULTIES, HEIGHT_RANGE, MODES, POSITIONS, type Mode } from '
 import type { AttrKey, Attrs, Pos } from '../../engine/types';
 import { NAMES, UI } from '../../content/strings';
 import { FIRST_NAMES, LAST_NAMES } from '../../content/names';
-import { useStore } from '../../store';
+import { achievementsNow, useStore } from '../../store';
 import { listSlots } from '../saves';
 import { ORIGINS } from '../../content/origins';
 import { edgeOf } from '../../engine/career/nationality';
@@ -23,6 +23,7 @@ import { AchievementsCard } from './Achievements';
 import { CommunityCard, LiveStrip } from './Community';
 import { MultiplayerCard } from './Multiplayer';
 import { MP_FAIL, handle, multiplayer } from '../multiplayer';
+import { recordMp } from '../achievements';
 import { FlagArt } from '../art/Flag';
 import { POS_STYLE, PositionCard } from '../art/PositionCard';
 import { HeroArt, archPose } from '../art/Hero';
@@ -284,6 +285,7 @@ export function Create({ level }: { level?: Level } = {}) {
     setSeating(false);
     if (typeof seat === 'string') return setSeatErr(MP_FAIL[seat]);
     sfx('roll');
+    if (recordMp('joined', seat.code)) achievementsNow();
     start({ name: name.trim() || 'Rookie', number: Math.max(0, Math.min(99, Number(number) || 0)), pos, archetype: arch, attrs, focus, hand, mode: 'standard', country: country || undefined, look }, seat.seed, { klass: seat.code });
   };
 
