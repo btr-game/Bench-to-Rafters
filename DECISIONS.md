@@ -2741,5 +2741,67 @@ multiple times."
   people abusing the export codes"): a code has no signature, so an edited one could carry made-up
   ratings or honours to the boards. The import box shows only in the dev deck, and the store refuses
   an import anywhere else. Players keep Code, to send the maker with a bug report.
-- **Multiplayer** (owner's picks: Draft class with friends, Challenge a friend; an invite code or
-  link and quick match): the plan is in ROADMAP.md, round 35.
+- **The tutorial is the beginner level** (owner: "make only the beginner level of tutorial
+  necessary. once the user graduates from it, they get the key and gain access to the main game.
+  but, can you lock the other difficulties ... also lock minigame"). Graduation follows beginner;
+  the full game opens with Regular guy. The owner's answers: one mode per stop (intermediate opens
+  Reality hits hard, advanced Shoot for the stars, the island the mini-games, Built in a lab with
+  them since it is one); the exit code opens what beginner does; a device that finished the old
+  tutorial keeps everything (the road's first load sets a version and `all`). Locked cards on the
+  start page say which stop opens them; the road map's cards and a level's last page say what
+  they open. In the dev deck everything is open unless a card previews the tutorial.
+- **Multiplayer: Play with friends** (owner's picks: Draft class with friends, Challenge a friend;
+  an invite code or link and quick match; "i want the multiplayer under regular guy"). Both are
+  asynchronous. A career now keeps its start (seed and start page; `GameState.start`) and what it
+  is to friends (`GameState.mp`).
+  - Challenge a friend: from the last page of a finished Regular guy career, a six-letter code (no
+    I, O, 0 or 1) and a link (`#challenge-CODE`). A friend plays the same prospect from the same
+    seed, with no undo; every answer is ranked beside the career that set it by career index, a
+    player's best counting. Quick match lists others' challenges of the last 30 days, the least
+    answered first.
+  - Draft class: up to 8 friends start Regular guy careers on one seed. The class is made or joined
+    as the player starts (its seed is his career's). Each finished season sends a short line, each
+    finished career its card: standings (best rating so far, then honours), every season side by
+    side, the best of the class each year. Quick match lists classes of the last 14 days with a
+    seat left.
+  - Players pick a name for friends; the game keeps no email or login (the anonymous secret of the
+    online community). A prospect from another player is checked before it is played (only what
+    the start page can pick, a rerolled card within reach of its archetype's, Regular guy), so a
+    challenge cannot carry a made-up player onto the leaderboards. Posts wait on the device until
+    the server takes them.
+  - Where: the website and itch.io, on the game's database (supabase/migrations/0004: four tables
+    no player can read or write directly, twelve checked, rate-limited functions). The claude.ai
+    page cannot reach that database, so it points to the website. The dev deck plays on a stand-in
+    on the device, with house players.
+  - Measured on the dev server: a challenge started on its prospect's seed (108) with no undo; a
+    class made, its seed given to the career (849007920), the first season's line in the class.
+- **Achievement categories** (owner: "add catagories for achievments (very brief so that it doesnt
+  reveal too much about it ... right now, there's so much achievements but too hard to look at)"):
+  13 categories, a short name and an icon each, none over a tenth of the book; chips under the
+  tiers (each with what is earned of it), combining with a tier and Earned or Still a riddle; the
+  full book reads in chapters, one a category.
+- **Free-throw percentage** (owner: "add free throw percentage to the game, with events and other
+  stuff that helps it. this is mostly for the 50-40-90 achievemnet"): a hidden free-throw touch (it
+  starts from his shooting, grows with every season of reps, and faster with the shooting plan, a
+  shooting summer, a shooting coach, three turning points at the line and shop items) adds to the
+  FT% his shooting gives. FT% shows on Home, Records, the game log and the season tables; the touch
+  has a meter on the Player tab. Over 600 smart careers the mean FT% stayed 0.8004567 to 0.8006348
+  and 50-40-90 seasons went from 1.0% to 3.0% of careers; a shooter who builds his touch on purpose
+  reached it in 37% (100 careers): the lever is the shooting plan's touch, for the owner.
+- **Shooting ages** (owner: "the shooting barely gets affected by age ... make shooting drop as well.
+  just level it to similar levels of other stats, no balance check needed"): shooting declined at
+  half the rate of the other ratings; now at the same rate (basketball IQ keeps its slower one).
+  Over the six-year decline table a small forward's shooting now loses 19.21569 points, not
+  10.37037; the OVR he loses is the same.
+- **Shop prices up 30%** (owner: "increase shop item prices up a bit again (about +20~40%?)"): every
+  price, and the price the six are drawn around, times 1.3, so the same things come up and each costs
+  more against his bank. Over 400 visits: at $4M a year and a $6M bank, 2.727500 items fit, now
+  2.375000 (the mean item 20.3% dearer); at $12M and $30M, 3.295000 now 2.630000 (29.1%); at $60M
+  nothing he can afford changes.
+- **End of round** (owner: "go til here. dont publish yet": the list up to the summary and this
+  file). Pixel icons for a challenge (two players squared up), a draft class (classmates on a bench
+  under the class banner) and the unlock (the padlock, open); sound for a challenge, a seat taken in
+  a class and a mode opening, and a loop of its own for Play with friends (Call and answer); simple
+  text keeps the notes a player needs on the new pages; the manual and Guide mode; the dev deck's
+  cards and Catalog lists; the tutorial's end-to-end check now plays beginner alone and checks the
+  locks hold. Balance was not run (the owner's list stopped short of it). Not published.

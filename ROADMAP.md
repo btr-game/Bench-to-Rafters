@@ -209,7 +209,7 @@ no statue or hall.
   kept on the device, could give the road map card (Regular guy's, on the start page) a reason to
   come back.
 
-## Round 35 (planned): multiplayer
+## Round 35: multiplayer (built; see DECISIONS.md)
 
 Owner: "let's start round 35. the theme here is multiplayer". Owner's picks: **Draft class with
 friends** and **Challenge a friend**; players find each other **both** ways (an invite code or
@@ -231,6 +231,20 @@ link, and quick match). Defaults proposed, for the owner to confirm or change:
 - **Where**: the website and itch.io (the online database: new tables and functions, a migration),
   and the claude.ai page (its shared database). A copy with neither says multiplayer needs the
   online game.
+
+## Kept from round 35
+
+- **Challenges from the career log**: a challenge is set from a career's last page, since a career
+  card does not keep its start. Keeping the start on the card (a few hundred bytes) would let any
+  logged Regular guy career be sent.
+- **Friends in each other's leagues**: a draft class shares a seed, so the league is the same; the
+  friends' players could appear on their NBA teams in each other's careers, for the seasons already
+  played.
+- **More class awards**: the best of the class each year today; a class MVP over the whole career,
+  a class All-Star game, or a class reunion page when everyone has retired.
+- **Multiplayer on the claude.ai page**: its shared database (the community's) could hold
+  challenges too, with what it can check (each write is the player's own, but not validated as the
+  website's functions validate it).
 
 ## Kept from round 34
 
