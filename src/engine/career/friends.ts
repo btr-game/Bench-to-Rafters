@@ -61,7 +61,7 @@ export function friendBonds(s: GameState): Bond[] {
 }
 
 /** The classmate he and his rival picked each other, if the class has sent him. */
-export function rivalFriend(s: GameState): FriendLine | null {
+function rivalFriend(s: GameState): FriendLine | null {
   const id = s.mp?.rival;
   return (id && s.mp?.friends?.find((f) => f.id === id)) || null;
 }

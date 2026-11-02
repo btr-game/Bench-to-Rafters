@@ -440,7 +440,7 @@ export interface FriendLine {
 }
 
 /** Round 35: a rival night, his team against his rival classmate's. */
-export interface RivalMeet {
+interface RivalMeet {
   year: number;
   won: boolean;
   me: number; // his points

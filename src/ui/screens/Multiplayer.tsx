@@ -183,7 +183,7 @@ const prospectText = (c: Challenge): string => {
 /** Round 35 (owner: "try to make a chat below the leaderboard so that the users can communicate"):
  * a challenge's or a class's chat, for its people only (the server checks), the latest 50 lines,
  * new ones every ten seconds. Lines are plain text. */
-export function MpChat({ mp, room, code, compact }: { mp: Multiplayer; room: Room; code: string; compact?: boolean }) {
+function MpChat({ mp, room, code, compact }: { mp: Multiplayer; room: Room; code: string; compact?: boolean }) {
   const [lines, setLines] = useState<ChatLine[] | null | 'error' | undefined>(undefined);
   const [text, setText] = useState('');
   const [err, setErr] = useState('');
