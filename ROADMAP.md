@@ -8,10 +8,14 @@ Owner: "i think the game is way past the minigame inspired from the football gam
 switch lanes to an indie game." The game stays **free** (a donation channel, in a later round).
 The order the owner set:
 
-- **Round 36**: cut and merge features so the core stands out (the list is the owner's to confirm),
-  then **the rafters finale**: the ending scene (the jersey raised, a speech, an epilogue) replaces
-  the Thank you for playing page; unskippable the first time it plays on a device, with a Skip
-  button from then on.
+- **Round 36** (done): no cuts (owner: "i dont really want to cut anything"), three merges (Around
+  you, Your life, the Body panel), and **the rafters finale** in place of Thank you for playing.
+- **Endings for the other paths** (owner: "careers that dont make the rafters can have their own
+  ending. let's catagorize that a bit later, because there are many paths"): today a finished career
+  without the rafters gets the credits, the title and the thank-you. Candidates: the Hall of Fame
+  without a retired number, a long overseas career, the G League grinder, the cup of coffee, the
+  dream that ended before the pros, the ring chaser. Also: a father whose son's career is played
+  next reaches his ending only through the son's (the son's credits name him).
 - **Round 37**: **a world to walk around instead of menus**: a pixel hometown, then a city, whose
   places (the gym, the agent's office, home, the arena) open what the tabs open today.
 - **Round 38**: **story mode**: a recurring cast (a childhood friend, a draft-class rival, the coach,
