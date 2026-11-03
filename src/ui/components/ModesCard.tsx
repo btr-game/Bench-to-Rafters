@@ -5,6 +5,7 @@ import { allows } from '../../engine/levels';
 import { useState } from 'react';
 import { MODES } from '../../engine/balance';
 import { difficultiesLeft, simOpen } from '../achievements';
+import { t, tx } from '../../i18n';
 
 // Every way to play, one tap away (round 25, the owner: easier access to all the modes, above
 // Around the league instead of in the top bar).
@@ -24,18 +25,18 @@ function LevelModes({ g }: { g: GameState }) {
   const fast = allows(g, 'fast');
   const sim = allows(g, 'sim');
   if (!fast && !sim) return null;
-  const notes = NOTE.filter(([k]) => (k === 'sim' && g.flags.sim) || (k === 'fast' && g.flags.fast && !g.flags.sim)).map(([, t]) => t);
+  const notes = NOTE.filter(([k]) => (k === 'sim' && g.flags.sim) || (k === 'fast' && g.flags.fast && !g.flags.sim)).map(([, x]) => t(x));
   return (
     <section className="card stack modes-card" data-tour="modes">
-      <div className="kicker">How you play</div>
+      <div className="kicker">{t('How you play')}</div>
       <div className="mode-chips">
-        {sim && <Chip icon="sim" label="Sim" on={!!g.flags.sim} onClick={st.toggleSim} tour="chip-sim" disabled={g.step === 'retired'} />}
-        {fast && <Chip icon="fast" label="Fast break" on={!!g.flags.fast} onClick={st.toggleFast} tour="chip-fast" disabled={g.step === 'retired'} />}
+        {sim && <Chip icon="sim" label={t('Sim')} on={!!g.flags.sim} onClick={st.toggleSim} tour="chip-sim" disabled={g.step === 'retired'} />}
+        {fast && <Chip icon="fast" label={t('Fast break')} on={!!g.flags.fast} onClick={st.toggleFast} tour="chip-fast" disabled={g.step === 'retired'} />}
       </div>
       {notes.length > 0 && (
         <ul className="small muted mode-notes">
-          {notes.map((t) => (
-            <li key={t}>{t}</li>
+          {notes.map((x) => (
+            <li key={x}>{x}</li>
           ))}
         </ul>
       )}
@@ -44,11 +45,11 @@ function LevelModes({ g }: { g: GameState }) {
 }
 
 const NOTE: [string, string][] = [
-  ['sim', 'Sim: the season plays itself, turning points included (it lists the calls it made); it stops for offers, the draft and contracts.'],
-  ['fast', 'Fast break: quick seasons; you still make every real call.'],
-  ['simple', 'Simple text: just the choices.'],
-  ['master', 'Master: no recommendations anywhere.'],
-  ['guide', 'Guide: the next thing to do is highlighted.'],
+  ['sim', tx('Sim: the season plays itself, turning points included (it lists the calls it made); it stops for offers, the draft and contracts.')],
+  ['fast', tx('Fast break: quick seasons; you still make every real call.')],
+  ['simple', tx('Simple text: just the choices.')],
+  ['master', tx('Master: no recommendations anywhere.')],
+  ['guide', tx('Guide: the next thing to do is highlighted.')],
 ];
 
 export function ModesCard({ g }: { g: GameState }) {
@@ -64,33 +65,33 @@ export function ModesCard({ g }: { g: GameState }) {
   const oath = !!g.flags.oath;
   const simShut = !g.flags.sim && (st.simShut || shut);
   const on: Record<string, boolean> = { sim: !!g.flags.sim, fast: !!g.flags.fast, simple: st.simple, master: st.master, guide: st.guide && !st.master };
-  const notes = NOTE.filter(([k]) => on[k] && !(k === 'fast' && on.sim)).map(([, t]) => t);
+  const notes = NOTE.filter(([k]) => on[k] && !(k === 'fast' && on.sim)).map(([, x]) => t(x));
   // round 30: a Comet says why the two are locked on
-  if (g.flags.comet) notes.unshift('Comet: Fast break and Sim stay on for the whole career, and only the biggest nights get a page.');
+  if (g.flags.comet) notes.unshift(t('{comet}: Fast break and Sim stay on for the whole career, and only the biggest nights get a page.', { comet: 'Comet' }));
   // round 35: and a career with friends says why they are locked off
-  if (g.flags.friends) notes.unshift('With friends: Fast break and Sim stay off, so everyone in the challenge or class plays every season the same way.');
-  if (simShut && !locked) notes.unshift(`Sim opens once you have played a career to retirement with an NBA All-Star team on every difficulty. Still to go: ${left.map((m) => MODES[m].name).join(', ')}.`);
+  if (g.flags.friends) notes.unshift(t('With friends: Fast break and Sim stay off, so everyone in the challenge or class plays every season the same way.'));
+  if (simShut && !locked) notes.unshift(t('Sim opens once you have played a career to retirement with an NBA All-Star team on every difficulty. Still to go: {modes}.', { modes: left.map((m) => MODES[m].name).join(', ') }));
   return (
     <section className="card stack modes-card" data-tour="modes">
-      <div className="kicker">How you play</div>
+      <div className="kicker">{t('How you play')}</div>
       <div className="mode-chips">
-        <Chip icon="sim" label="Sim" on={on.sim} onClick={st.toggleSim} tour="chip-sim" disabled={locked || simShut} />
-        <Chip icon="fast" label="Fast break" on={on.fast} onClick={st.toggleFast} tour="chip-fast" disabled={locked} />
-        <Chip icon="simple" label="Simple text" on={on.simple} onClick={st.toggleSimple} tour="chip-simple" />
-        <Chip icon="guide" label="Guide" on={on.guide} onClick={st.toggleGuide} tour="chip-guide" disabled={st.master} />
-        <Chip icon="master" label="Master" on={on.master} onClick={st.toggleMaster} tour="chip-master" disabled={oath} />
-        {g.mode !== 'lab' && <Chip icon="bracket" label="Play playoffs" on={!g.flags.simPostseason} onClick={st.togglePlayoffs} tour="chip-playoffs" disabled={!!g.flags.daily || !!g.flags.fast} />}
+        <Chip icon="sim" label={t('Sim')} on={on.sim} onClick={st.toggleSim} tour="chip-sim" disabled={locked || simShut} />
+        <Chip icon="fast" label={t('Fast break')} on={on.fast} onClick={st.toggleFast} tour="chip-fast" disabled={locked} />
+        <Chip icon="simple" label={t('Simple text')} on={on.simple} onClick={st.toggleSimple} tour="chip-simple" />
+        <Chip icon="guide" label={t('Guide')} on={on.guide} onClick={st.toggleGuide} tour="chip-guide" disabled={st.master} />
+        <Chip icon="master" label={t('Master')} on={on.master} onClick={st.toggleMaster} tour="chip-master" disabled={oath} />
+        {g.mode !== 'lab' && <Chip icon="bracket" label={t('Play playoffs')} on={!g.flags.simPostseason} onClick={st.togglePlayoffs} tour="chip-playoffs" disabled={!!g.flags.daily || !!g.flags.fast} />}
       </div>
       {oath && (
         <p className="small oath-note with-icon">
           <Icon name="oath" size={20} />
-          Rough Road: a player the road picked, master mode and every season played, for the whole career.
+          {t('{oath}: a player the road picked, master mode and every season played, for the whole career.', { oath: 'Rough Road' })}
         </p>
       )}
       {notes.length > 0 && (
         <ul className="small muted mode-notes">
-          {notes.map((t) => (
-            <li key={t}>{t}</li>
+          {notes.map((x) => (
+            <li key={x}>{x}</li>
           ))}
         </ul>
       )}

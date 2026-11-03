@@ -7,6 +7,7 @@ import type { Reaction, StatLine } from '../../engine/types';
 import { MILESTONES, UI } from '../../content/strings';
 import { pct, pg } from '../format';
 import { SPOT, useFold } from '../fold';
+import { lang, t, tableOf } from '../../i18n';
 
 export function Scoreboard({ line, showGp = true }: { line: StatLine; showGp?: boolean }) {
   const has = line.gp > 0;
@@ -23,7 +24,7 @@ export function Scoreboard({ line, showGp = true }: { line: StatLine; showGp?: b
   ];
   if (showGp) cells.push(['GP', String(line.gp)]);
   return (
-    <div className="board" role="group" aria-label="Season averages">
+    <div className="board" role="group" aria-label={t('Season averages')}>
       {cells.map(([k, v]) => (
         <div className="cell" key={k}>
           <div className="k">{k}</div>
@@ -50,7 +51,7 @@ export function StatStrip({ line, label }: { line: StatLine; label: string }) {
     [pct(line.ftm, line.fta), 'FT%'],
   ];
   return (
-    <p className="stat-strip num" aria-label={`${label}: season averages`}>
+    <p className="stat-strip num" aria-label={t('{label}: season averages', { label })}>
       <span className="kicker">{label}</span>
       {cells.map(([v, k]) => (
         <span key={k}>
@@ -133,11 +134,11 @@ export function MilestoneStrip({ reached }: { reached: string[] }) {
         <span>
           {done}/{MILESTONES.length}
         </span>
-        <span className="muted">{next ? `Next: ${next.label}` : 'Every milestone reached'}</span>
+        <span className="muted">{next ? t('Next: {name}', { name: next.label }) : t('Every milestone reached')}</span>
       </div>
-      <div className="milestones" aria-label="Milestones">
+      <div className="milestones" aria-label={t('Milestones')}>
         {MILESTONES.map((m) => (
-          <div key={m.key} className={`ms${reached.includes(m.key) ? ' on' : ''}${m.key === next?.key ? ' next' : ''}`} aria-label={`${m.label}${reached.includes(m.key) ? ' (reached)' : ''}`}>
+          <div key={m.key} className={`ms${reached.includes(m.key) ? ' on' : ''}${m.key === next?.key ? ' next' : ''}`} aria-label={reached.includes(m.key) ? t('{name} (reached)', { name: m.label }) : m.label}>
             {m.label}
           </div>
         ))}
@@ -176,11 +177,25 @@ export function FoldMark({ open }: { open: boolean }) {
   );
 }
 
+/** Round 40: a title back in its English, so a card's fold is kept under the same name in every
+ * language (titles come in translated; the device keeps the folds by the English). */
+const english = new Map<string, Map<string, string>>();
+function englishOf(s: string): string {
+  const l = lang();
+  if (l === 'en') return s;
+  let back = english.get(l);
+  if (!back) {
+    back = new Map(Object.entries(tableOf(l).ui).map(([en, tr]) => [tr, en]));
+    english.set(l, back);
+  }
+  return back.get(s) ?? s;
+}
+
 /** A card with a title (round 34: one that folds from its title, the fold kept on this device;
  * `fold={false}` keeps a card open, `fold="id"` names it when titles repeat; round 36: `startShut`
  * folds it until the viewer opens it). */
 export function Card({ title, kicker, children, right, tour, fold, startShut = false }: { title?: string; kicker?: string; children: ReactNode; right?: ReactNode; tour?: string; fold?: string | false; startShut?: boolean }) {
-  const id = fold === false || !title ? null : `card:${fold ?? title}`;
+  const id = fold === false || !title ? null : `card:${fold ?? englishOf(title)}`;
   const [folded, toggleFold] = useFold(id, startShut);
   // round 36: a guide step that points at a folded card opens it for a look, and the fold kept on
   // the device stays as it was
@@ -248,7 +263,7 @@ export function FoldBox({ id, title, icon, children }: { id: string; title: stri
         {children}
       </div>
       {!shut && (
-        <button className="fold-tab" aria-expanded aria-label={`Fold ${title}`} title={`Fold ${title}`} onClick={toggle}>
+        <button className="fold-tab" aria-expanded aria-label={t('Fold {name}', { name: title })} title={t('Fold {name}', { name: title })} onClick={toggle}>
           <FoldMark open />
         </button>
       )}

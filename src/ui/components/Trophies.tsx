@@ -13,6 +13,7 @@ import { NBA_TEAMS } from '../../content/teams';
 import { TEAM_STYLE } from '../../content/teamStyle';
 import { BannerArt, TrophyIcon } from '../art/Trophy';
 import { AwardArt } from '../art/Award';
+import { t } from '../../i18n';
 
 /** Every honour once, with its count, the ones that matter most to the legacy first. */
 export function trophyItems(g: GameState): BannerItem[] {
@@ -45,9 +46,9 @@ function Detail({ g, label, onClose }: { g: GameState; label: string; onClose: (
     } else byTeam.push({ team: w.teamName, color: w.teamColor, runs: [{ from: w.year, to: w.year, level: w.level }] });
   }
   const runText = (r: { from: number; to: number; level: string }) =>
-    `${r.from === r.to ? seasonLabel(r.from) : `${seasonLabel(r.from)} to ${seasonLabel(r.to)} (${r.to - r.from + 1})`}${r.level !== 'NBA' ? ` · ${LEVELS[r.level as keyof typeof LEVELS]?.short ?? r.level}` : ''}`;
+    `${r.from === r.to ? seasonLabel(r.from) : t('{from} to {to} ({n})', { from: seasonLabel(r.from), to: seasonLabel(r.to), n: r.to - r.from + 1 })}${r.level !== 'NBA' ? ` · ${LEVELS[r.level as keyof typeof LEVELS]?.short ?? r.level}` : ''}`;
   return (
-    <div className="ach-detail" style={{ borderTopColor: d.color }} role="region" aria-label={`${d.label} details`}>
+    <div className="ach-detail" style={{ borderTopColor: d.color }} role="region" aria-label={t('{name} details', { name: d.label })}>
       <div className="row">
         <div>
           <div className="kicker">{d.category}</div>
@@ -74,7 +75,7 @@ function Detail({ g, label, onClose }: { g: GameState; label: string; onClose: (
         ))}
       </ul>
       <p className="ach-legacy">
-        <span className="kicker">What it means for your legacy</span>
+        <span className="kicker">{t('What it means for your legacy')}</span>
         <br />
         {d.legacyLine}
       </p>
@@ -84,18 +85,18 @@ function Detail({ g, label, onClose }: { g: GameState; label: string; onClose: (
         </div>
       )}
       <button className="btn ghost small-btn" onClick={onClose}>
-        Close
+        {t('Close')}
       </button>
     </div>
   );
 }
 
-export function TrophyCabinet({ g, title = 'Trophy cabinet' }: { g: GameState; title?: string }) {
+export function TrophyCabinet({ g, title = t('Trophy cabinet') }: { g: GameState; title?: string }) {
   const [sel, setSel] = useState<string | null>(null);
   const items = trophyItems(g);
   return (
-    <Card title={title} kicker={items.length ? 'Tap a banner for details' : undefined} tour="trophies">
-      {items.length === 0 ? <p className="muted">Empty, for now.</p> : <Banners items={items} selected={sel} onSelect={(l) => setSel(sel === l ? null : l)} />}
+    <Card title={title} kicker={items.length ? t('Tap a banner for details') : undefined} tour="trophies">
+      {items.length === 0 ? <p className="muted">{t('Empty, for now.')}</p> : <Banners items={items} selected={sel} onSelect={(l) => setSel(sel === l ? null : l)} />}
       {sel && <Detail g={g} label={sel} onClose={() => setSel(null)} />}
     </Card>
   );
@@ -124,14 +125,14 @@ export function BannersAndRings({ g, compact = false }: { g: GameState; compact?
         ))}
       </div>
       {rings.length > 0 && (
-        <div className="rings" aria-label={`${rings.length} championship ring${rings.length > 1 ? 's' : ''}`}>
+        <div className="rings" aria-label={rings.length > 1 ? t('{n} championship rings', { n: rings.length }) : t('1 championship ring')}>
           {rings.map((t, i) => (
             <span key={i} title={`${seasonLabel(t.year)} ${t.teamName}`}>
               <TrophyIcon icon="ring" color={t.teamColor} size={compact ? 32 : 40} />
             </span>
           ))}
           <b>
-            {rings.length} ring{rings.length > 1 ? 's' : ''}
+            {rings.length > 1 ? t('{n} rings', { n: rings.length }) : t('1 ring')}
           </b>
         </div>
       )}

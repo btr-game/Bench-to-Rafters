@@ -8,25 +8,26 @@ import { LEVELS } from '../../engine/balance';
 import { seasonLabel } from '../format';
 import { Card } from './bits';
 import { lineCells, type Pt } from '../art/pixel';
+import { t, tx } from '../../i18n';
 
 const KIND: Record<MarkKind, { name: string; color: string }> = {
-  legend: { name: 'Legendary season', color: '#B8860B' },
-  title: { name: 'Title', color: '#D4A017' },
-  award: { name: 'Honour', color: '#7048E8' },
-  duo: { name: 'Duo', color: '#C2255C' },
-  move: { name: 'Team move', color: '#1C7ED6' },
-  story: { name: 'Story', color: '#495057' },
-  injury: { name: 'Injury', color: '#E03131' },
-  event: { name: 'Turning point', color: '#2F9E44' },
+  legend: { name: tx('Legendary season'), color: '#B8860B' },
+  title: { name: tx('Title'), color: '#D4A017' },
+  award: { name: tx('Honour'), color: '#7048E8' },
+  duo: { name: tx('Duo'), color: '#C2255C' },
+  move: { name: tx('Team move'), color: '#1C7ED6' },
+  story: { name: tx('Story'), color: '#495057' },
+  injury: { name: tx('Injury'), color: '#E03131' },
+  event: { name: tx('Turning point'), color: '#2F9E44' },
 };
 
 type Filter = 'all' | 'event' | 'injury' | 'honours' | 'moves';
 const FILTERS: { key: Filter; label: string; kinds: MarkKind[] }[] = [
-  { key: 'all', label: 'Everything', kinds: ['legend', 'title', 'award', 'duo', 'move', 'story', 'injury', 'event'] },
-  { key: 'event', label: 'Turning points', kinds: ['event', 'story'] },
-  { key: 'honours', label: 'Honours', kinds: ['legend', 'title', 'award'] },
-  { key: 'injury', label: 'Injuries', kinds: ['injury'] },
-  { key: 'moves', label: 'Teams and duos', kinds: ['move', 'duo'] },
+  { key: 'all', label: tx('Everything'), kinds: ['legend', 'title', 'award', 'duo', 'move', 'story', 'injury', 'event'] },
+  { key: 'event', label: tx('Turning points'), kinds: ['event', 'story'] },
+  { key: 'honours', label: tx('Honours'), kinds: ['legend', 'title', 'award'] },
+  { key: 'injury', label: tx('Injuries'), kinds: ['injury'] },
+  { key: 'moves', label: tx('Teams and duos'), kinds: ['move', 'duo'] },
 ];
 
 const W = 900;
@@ -63,7 +64,7 @@ function Glyph({ kind, x, y }: { kind: MarkKind; x: number; y: number }) {
 
 function Chart({ g, pick, picked }: { g: GameState; pick: (year: number) => void; picked: number | null }) {
   const { seasons, marks } = useMemo(() => careerTimeline(g), [g]);
-  if (seasons.length === 0) return <p className="muted">The timeline starts after your first season.</p>;
+  if (seasons.length === 0) return <p className="muted">{t('The timeline starts after your first season.')}</p>;
   const ovrs = seasons.flatMap((x) => [x.ovrStart, x.ovrEnd]);
   const lo = Math.max(20, Math.floor((Math.min(...ovrs) - 4) / 5) * 5);
   const hi = Math.min(100, Math.ceil((Math.max(...ovrs) + 4) / 5) * 5);
@@ -80,11 +81,11 @@ function Chart({ g, pick, picked }: { g: GameState; pick: (year: number) => void
   const bands = ([[72, 'Rotation'], [80, 'All-Star'], [90, 'All-NBA 1st'], [95, 'MVP']] as [number, string][]).filter(([v]) => v > lo && v < hi);
   const big = marks.filter((m) => m.big);
   return (
-    <svg className="tl-chart" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="OVR by season">
+    <svg className="tl-chart" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={t('OVR by season')}>
       {seasons.map((x, i) => (
         <g key={x.year} className={`tl-col${picked === x.year ? ' on' : ''}`} onClick={() => pick(x.year)}>
           <rect x={PAD.l + colW * i} y={PAD.t - 26} width={colW} height={H - PAD.t - PAD.b + 26} fill={x.color} opacity={picked === x.year ? 0.22 : x.level === 'NBA' ? 0.1 : 0.05} />
-          <title>{`${seasonLabel(x.year)} · age ${x.age} · ${x.team} (${LEVELS[x.level].short}) · OVR ${Math.round(x.ovrStart)} → ${Math.round(x.ovrEnd)}`}</title>
+          <title>{t('{season} · age {age} · {team} ({level}) · OVR {from} → {to}', { season: seasonLabel(x.year), age: x.age, team: x.team, level: LEVELS[x.level].short, from: Math.round(x.ovrStart), to: Math.round(x.ovrEnd) })}</title>
         </g>
       ))}
       {grid.map((v) => (
@@ -130,7 +131,7 @@ function Chart({ g, pick, picked }: { g: GameState; pick: (year: number) => void
 function Row({ m }: { m: TimelineMark }) {
   return (
     <li className={`tl-entry k-${m.kind}`}>
-      <i style={{ background: KIND[m.kind].color }} title={KIND[m.kind].name} />
+      <i style={{ background: KIND[m.kind].color }} title={t(KIND[m.kind].name)} />
       <span>{m.label}</span>
       {m.tier && <span className={`tl-tier tier-${m.tier.split(' ')[0].toLowerCase()}`}>{m.tier}</span>}
     </li>
@@ -147,13 +148,13 @@ export function CareerTimeline({ g, journal = false }: { g: GameState; journal?:
   const ss = picked === null ? null : seasons.find((x) => x.year === picked);
   const list = picked === null ? [] : marks.filter((m) => m.year === picked);
   return (
-    <Card title="Career timeline" kicker="OVR at the end of each season, with the big moments. Tap a season to see that year.">
+    <Card title={t('Career timeline')} kicker={t('OVR at the end of each season, with the big moments. Tap a season to see that year.')}>
       <Chart g={g} pick={(y) => setPicked(picked === y ? null : y)} picked={picked} />
       <div className="tl-legend small">
         {(['legend', 'title', 'award', 'duo', 'move', 'injury', 'event'] as MarkKind[]).map((k) => (
           <span key={k}>
             <i style={{ background: KIND[k].color }} />
-            {KIND[k].name}
+            {t(KIND[k].name)}
           </span>
         ))}
       </div>
@@ -163,14 +164,14 @@ export function CareerTimeline({ g, journal = false }: { g: GameState; journal?:
             <b className="num">{seasonLabel(picked)}</b>
             {ss && (
               <span className="small muted">
-                Age {ss.age} · {ss.team} ({LEVELS[ss.level].short}) · OVR {Math.round(ss.ovrStart)} → {Math.round(ss.ovrEnd)}
+                {t('Age {age} · {team} ({level}) · OVR {from} → {to}', { age: ss.age, team: ss.team, level: LEVELS[ss.level].short, from: Math.round(ss.ovrStart), to: Math.round(ss.ovrEnd) })}
               </span>
             )}
             <button className="btn ghost small" onClick={() => setPicked(null)}>
-              Close
+              {t('Close')}
             </button>
           </header>
-          {list.length ? <ul>{list.map((m, i) => <Row key={i} m={m} />)}</ul> : <p className="small muted keep">A quiet season.</p>}
+          {list.length ? <ul>{list.map((m, i) => <Row key={i} m={m} />)}</ul> : <p className="small muted keep">{t('A quiet season.')}</p>}
         </section>
       )}
       {journal && <JournalBody g={g} picked={picked} onClear={() => setPicked(null)} />}
@@ -181,7 +182,7 @@ export function CareerTimeline({ g, journal = false }: { g: GameState; journal?:
 /** The journal on its own card (the Records tab). */
 export function CareerJournal({ g }: { g: GameState }) {
   return (
-    <Card title="Journal" kicker="Every season's big moments, newest first" tour="journal">
+    <Card title={t('Journal')} kicker={t("Every season's big moments, newest first")} tour="journal">
       <JournalBody g={g} picked={null} onClear={() => undefined} />
     </Card>
   );
@@ -198,7 +199,7 @@ function JournalBody({ g, picked, onClear }: { g: GameState; picked: number | nu
       <div className="seg small-seg">
         {FILTERS.map((f) => (
           <button key={f.key} aria-pressed={filter === f.key} onClick={() => setFilter(f.key)}>
-            {f.label}
+            {t(f.label)}
           </button>
         ))}
         {picked !== null && (
@@ -218,13 +219,13 @@ function JournalBody({ g, picked, onClear }: { g: GameState; picked: number | nu
                 <b className="num">{seasonLabel(y)}</b>
                 {ss && (
                   <span className="small muted">
-                    Age {ss.age} · {ss.team} ({LEVELS[ss.level].short}) · OVR {Math.round(ss.ovrStart)} → {Math.round(ss.ovrEnd)}
+                    {t('Age {age} · {team} ({level}) · OVR {from} → {to}', { age: ss.age, team: ss.team, level: LEVELS[ss.level].short, from: Math.round(ss.ovrStart), to: Math.round(ss.ovrEnd) })}
                     {ss.height ? ` · ${Math.floor(ss.height / 12)}′${ss.height % 12}″` : ''}
                     {ss.weight ? `, ${ss.weight} lb` : ''}
                   </span>
                 )}
               </header>
-              {list.length ? <ul>{list.map((m, i) => <Row key={i} m={m} />)}</ul> : <p className="small muted keep">A quiet season.</p>}
+              {list.length ? <ul>{list.map((m, i) => <Row key={i} m={m} />)}</ul> : <p className="small muted keep">{t('A quiet season.')}</p>}
             </section>
           );
         })}

@@ -21,6 +21,7 @@ import { genericKits } from '../../content/teamStyle';
 import { CelebrationArt, StoryScene } from '../art/Scene';
 import { AwardArt, awardKeyOf } from '../art/Award';
 import { MedalArt } from '../art/Medal';
+import { t, tx } from '../../i18n';
 
 const reducedMotion = () => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
@@ -37,14 +38,14 @@ function useTicker(total: number, ms: number): [number, () => void] {
 
 // ---------- half-season ticker ----------
 
-function HalfSim({ t, g, onDone }: { t: Extract<Transition, { kind: 'half' }>; g: GameState; onDone: () => void }) {
-  const n = t.games.length;
+function HalfSim({ t: tr, g, onDone }: { t: Extract<Transition, { kind: 'half' }>; g: GameState; onDone: () => void }) {
+  const n = tr.games.length;
   const step = Math.max(28, Math.min(150, 2400 / Math.max(1, n)));
   const [i, skip] = useTicker(n, step);
-  const shown = t.games.slice(0, i);
+  const shown = tr.games.slice(0, i);
   const reg = shown.filter((g) => !g.post || g.post === 'G League');
-  const w = t.w + reg.filter((g) => g.res === 'W').length;
-  const l = t.l + reg.filter((g) => g.res === 'L').length;
+  const w = tr.w + reg.filter((g) => g.res === 'W').length;
+  const l = tr.l + reg.filter((g) => g.res === 'L').length;
   const pts = shown.reduce((s, g) => s + (g.line?.pts ?? 0), 0);
   const played = shown.filter((g) => g.line).length;
   const done = i >= n;
@@ -63,25 +64,25 @@ function HalfSim({ t, g, onDone }: { t: Extract<Transition, { kind: 'half' }>; g
   }, [done]);
   const recent = shown.slice(-5).reverse();
   return (
-    <div className="overlay sim" style={{ ['--team' as string]: t.color }} role="dialog" aria-modal="true" aria-label={`Simulating ${t.label}`}>
+    <div className="overlay sim" style={{ ['--team' as string]: tr.color }} role="dialog" aria-modal="true" aria-label={t('Simulating {label}', { label: tr.label })}>
       <div className="overlay-inner">
-        <div className="kicker on-dark">{t.label}</div>
-        <div className="sim-team">{t.teamName}</div>
+        <div className="kicker on-dark">{tr.label}</div>
+        <div className="sim-team">{tr.teamName}</div>
         <div className="board sim-board">
           <div className="cell">
-            <div className="k">Record</div>
+            <div className="k">{t('Record')}</div>
             <div className="v">
               {w}–{l}
             </div>
           </div>
           <div className="cell">
-            <div className="k">Games</div>
+            <div className="k">{t('Games')}</div>
             <div className="v">
               {i}/{n}
             </div>
           </div>
           <div className="cell">
-            <div className="k">Your PPG</div>
+            <div className="k">{t('Your PPG')}</div>
             <div className="v">{played ? (pts / played).toFixed(1) : '—'}</div>
           </div>
         </div>
@@ -100,26 +101,26 @@ function HalfSim({ t, g, onDone }: { t: Extract<Transition, { kind: 'half' }>; g
           ))}
         </div>
         <button ref={go} className="btn ghost-dark" onClick={done ? onDone : skip} data-skip={done ? undefined : ''}>
-          {done ? 'Continue' : 'Skip'}
+          {done ? t('Continue') : t('Skip')}
         </button>
       </div>
     </div>
   );
 }
 
-function SeasonCard({ t, g, onDone }: { t: Extract<Transition, { kind: 'season' }>; g: GameState; onDone: () => void }) {
+function SeasonCard({ t: tr, g, onDone }: { t: Extract<Transition, { kind: 'season' }>; g: GameState; onDone: () => void }) {
   useEffect(() => {
     const tm = setTimeout(onDone, reducedMotion() ? 600 : 1700);
     return () => clearTimeout(tm);
   }, [onDone]);
   return (
-    <div className="overlay season-card" style={{ ['--team' as string]: t.color }} onClick={onDone} role="dialog" aria-modal="true" aria-label={`${t.label} season`}>
+    <div className="overlay season-card" style={{ ['--team' as string]: tr.color }} onClick={onDone} role="dialog" aria-modal="true" aria-label={t('{label} season', { label: tr.label })}>
       <div className="overlay-inner center">
-        <div className="kicker on-dark">New season</div>
-        <div className="season-year">{t.label}</div>
-        <div className="sim-team">{t.sub}</div>
+        <div className="kicker on-dark">{t('New season')}</div>
+        <div className="season-year">{tr.label}</div>
+        <div className="sim-team">{tr.sub}</div>
         <div className="on-dark small">
-          {stageLine(g)} · age {g.player.age}
+          {stageLine(g)} · {t('age {n}', { n: g.player.age })}
         </div>
       </div>
     </div>
@@ -191,11 +192,11 @@ function Outcome({ o }: { o: NonNullable<Moment['outcome']> }) {
   return (
     <div className="moment-outcome">
       <div className="mo-row mine">
-        <span className="mo-tag">Your team · {o.short}</span>
+        <span className="mo-tag">{t('Your team')} · {o.short}</span>
         <b>{o.result}</b>
       </div>
       <div className="mo-row">
-        <span className="mo-tag champ">Champion</span>
+        <span className="mo-tag champ">{t('Champion')}</span>
         <b>{o.champion}</b>
       </div>
     </div>
@@ -267,14 +268,14 @@ function TitleGame({ m, g, onDone }: { m: Moment; g: GameState; onDone?: () => v
   const feed = shown.slice(-4).reverse();
   return (
     <div className="stack" style={{ gap: 14 }}>
-      <div className="kicker on-dark">{m.game!.post ?? 'Final'}</div>
+      <div className="kicker on-dark">{m.game!.post ?? t('Final')}</div>
       <div className="board title-board">
         <div className="cell">
           <div className="k">{m.game!.teamShort}</div>
           <div className="v big">{us}</div>
         </div>
         <div className="cell clock">
-          <div className="k">{done ? 'Final' : `Q${q}`}</div>
+          <div className="k">{done ? t('Final') : `Q${q}`}</div>
           <div className="v">{done ? '—' : clock}</div>
         </div>
         <div className="cell right">
@@ -297,14 +298,14 @@ function TitleGame({ m, g, onDone }: { m: Moment; g: GameState; onDone?: () => v
         <>
           <CelebrationArt g={g} prize={m.title} />
           <div className="champ-banner">
-            <span>Champions</span>
+            <span>{t('Champions')}</span>
             <b>{m.title}</b>
           </div>
           <Recap m={m} />
         </>
       ) : (
         <button className="btn ghost-dark" onClick={skip} data-skip="">
-          Skip to the final buzzer
+          {t('Skip to the final buzzer')}
         </button>
       )}
     </div>
@@ -314,15 +315,15 @@ function TitleGame({ m, g, onDone }: { m: Moment; g: GameState; onDone?: () => v
 // ---------- the last minutes of a final (round 9) ----------
 
 const TAG_LABEL: Record<string, string> = {
-  LEAD: 'Takes the lead',
-  TIE: 'All tied up',
-  BLOCK: 'Block!',
-  STEAL: 'Steal!',
-  BUZZER: 'Buzzer beater!',
-  DAGGER: 'Dagger',
-  RUN: 'Here comes the run',
-  MISS: 'No good',
-  STOP: 'Game over',
+  LEAD: tx('Takes the lead'),
+  TIE: tx('All tied up'),
+  BLOCK: tx('Block!'),
+  STEAL: tx('Steal!'),
+  BUZZER: tx('Buzzer beater!'),
+  DAGGER: tx('Dagger'),
+  RUN: tx('Here comes the run'),
+  MISS: tx('No good'),
+  STOP: tx('Game over'),
 };
 
 /** A national final: the moment's title ends in "gold" (Olympics, World Cup, Asian Games). */
@@ -418,14 +419,14 @@ export function FinalReel({ m, g, onDone }: { m: Moment; g?: GameState; onDone?:
   };
   return (
     <div className="stack" style={{ gap: 14 }}>
-      <div className="kicker on-dark">{game.post ?? 'Final'}</div>
+      <div className="kicker on-dark">{game.post ?? t('Final')}</div>
       <div className="board title-board">
         <div className="cell">
           <div className="k">{game.teamShort}</div>
           <div className={`v big${us < them && done ? ' dim' : ''}`}>{done ? game.us : us}</div>
         </div>
         <div className="cell clock">
-          <div className="k">{done ? 'Final' : clock}</div>
+          <div className="k">{done ? t('Final') : clock}</div>
           <div className="v">—</div>
         </div>
         <div className="cell right">
@@ -437,20 +438,20 @@ export function FinalReel({ m, g, onDone }: { m: Moment; g?: GameState; onDone?:
         <div className="clutch-ask stack">
           <ActionCam play={null} us={sides.us} them={sides.them} winner={winner} me={g ? { name: g.player.name, number: g.player.number } : null} venue={venue} />
           <p className="on-dark lede-dark">
-            {daily ? 'The last minutes of the final. Mini-games are off in the daily challenge: watch them, or go straight to the result.' : 'The last minutes of the final. Take the big possessions yourself, watch them, or go straight to the result.'}
+            {daily ? t('The last minutes of the final. Mini-games are off in the daily challenge: watch them, or go straight to the result.') : t('The last minutes of the final. Take the big possessions yourself, watch them, or go straight to the result.')}
           </p>
           <div className="clutch-moves">
             {!daily && (
               <button className="btn with-icon" data-tour="clutch-play" onClick={() => setMode('play')}>
                 <Icon name="clutch" size={22} />
-                Play the last minutes
+                {t('Play the last minutes')}
               </button>
             )}
             <button className={`btn${daily ? '' : ' ghost-dark'}`} onClick={() => setMode('watch')}>
-              Watch them
+              {t('Watch them')}
             </button>
             <button className="btn ghost-dark" onClick={() => (setMode('watch'), skip())} data-skip="">
-              Skip to the result
+              {t('Skip to the result')}
             </button>
           </div>
         </div>
@@ -480,7 +481,7 @@ export function FinalReel({ m, g, onDone }: { m: Moment; g?: GameState; onDone?:
               }}
             />
           )}
-          {i < warm && !done && <div className="on-dark small">Three quarters of a final…</div>}
+          {i < warm && !done && <div className="on-dark small">{t('Three quarters of a final…')}</div>}
           <div className="drama-feed" aria-live="polite">
             {(done ? plays : shown)
               .slice()
@@ -488,7 +489,7 @@ export function FinalReel({ m, g, onDone }: { m: Moment; g?: GameState; onDone?:
               .slice(0, done ? 3 : 4)
               .map((p, k) => (
                 <div key={`${p.clock}-${p.text}`} className={`drama-play${p.mine ? ' mine' : ''}${k === 0 && !done ? ' fresh' : ''}${p.side === 'them' ? ' them' : ''}`}>
-                  {p.tag && <span className={`drama-tag tag-${p.tag.toLowerCase()}`}>{TAG_LABEL[p.tag]}</span>}
+                  {p.tag && <span className={`drama-tag tag-${p.tag.toLowerCase()}`}>{t(TAG_LABEL[p.tag])}</span>}
                   <span className="drama-clock">{p.clock}</span>
                   <span className="drama-text">{p.text}</span>
                   {p.pts > 0 && <b>+{p.pts}</b>}
@@ -503,21 +504,21 @@ export function FinalReel({ m, g, onDone }: { m: Moment; g?: GameState; onDone?:
             <div className="clutch-score">
               <b>{rating}</b>
               <span>
-                Clutch rating · {graded.filter((c) => c.grade === 'perfect').length} perfect of {graded.length}
-                {g && reward ? ` · +${reward} reputation` : ''}
+                {t('Clutch rating · {perfect} perfect of {n}', { perfect: graded.filter((c) => c.grade === 'perfect').length, n: graded.length })}
+                {g && reward ? ` · ${t('+{n} reputation', { n: reward })}` : ''}
               </span>
             </div>
           )}
           {m.lostFinal ? (
             <div className="stack" style={{ gap: 8 }}>
-              <div className="moment-title">So close</div>
+              <div className="moment-title">{t('So close')}</div>
               <p className="on-dark lede-dark">{m.text}</p>
             </div>
           ) : (
             <>
               {g && <CelebrationArt g={g} prize={m.title} mode={m.kind === 'tournament' ? 'bite' : 'cheer'} />}
               <div className="champ-banner">
-                <span>Champions</span>
+                <span>{t('Champions')}</span>
                 <b>{m.title}</b>
               </div>
             </>
@@ -527,7 +528,7 @@ export function FinalReel({ m, g, onDone }: { m: Moment; g?: GameState; onDone?:
       ) : (
         mode !== 'ask' && (
           <button className="btn ghost-dark" onClick={skip} data-skip="">
-            Skip to the final buzzer
+            {t('Skip to the final buzzer')}
           </button>
         )
       )}
@@ -545,11 +546,11 @@ function DraftReveal({ m }: { m: Moment }) {
   }, []);
   return (
     <div className="stack center" style={{ gap: 12 }}>
-      <div className="kicker on-dark">NBA Draft · pick {m.pick}</div>
+      <div className="kicker on-dark">NBA Draft · {t('pick {n}', { n: m.pick ?? '' })}</div>
       {!shown ? (
         <div className="pick-wait">
           <div className="season-year">#{m.pick}</div>
-          <div className="on-dark">The pick is in…</div>
+          <div className="on-dark">{t('The pick is in…')}</div>
         </div>
       ) : (
         <div className="reveal stack center" style={{ gap: 10 }}>
@@ -567,16 +568,16 @@ function DraftReveal({ m }: { m: Moment }) {
 }
 
 const KICKER: Record<Moment['kind'], string> = {
-  intro: 'Day one',
-  commit: 'Decision made',
-  draft: 'Draft night',
-  title: 'Championship',
-  awards: 'Honours',
-  camp: 'Training camp',
-  injury: 'Injury',
-  event: 'Turning point',
-  tournament: 'Tournament',
-  fine: 'Fined',
+  intro: tx('Day one'),
+  commit: tx('Decision made'),
+  draft: tx('Draft night'),
+  title: tx('Championship'),
+  awards: tx('Honours'),
+  camp: tx('Training camp'),
+  injury: tx('Injury'),
+  event: tx('Turning point'),
+  tournament: tx('Tournament'),
+  fine: tx('Fined'),
 };
 
 const CONFETTI = ['#F5C542', '#FFFFFF', '#E8590C', '#2F9E44', '#1C7ED6', '#C2255C'];
@@ -605,7 +606,7 @@ function MoodFx({ mood, color }: { mood: NonNullable<Moment['mood']>; color: str
             />
           ))}
         </div>
-        <div className={`fx-stamp win`}>{mood === 'gold' ? 'Gold' : 'Champions'}</div>
+        <div className={`fx-stamp win`}>{mood === 'gold' ? t('Gold') : t('Champions')}</div>
       </div>
     );
   if (mood === 'silver' || mood === 'bronze')
@@ -619,7 +620,7 @@ function MoodFx({ mood, color }: { mood: NonNullable<Moment['mood']>; color: str
     );
   return (
     <div className="fx-layer" aria-hidden="true">
-      <div className={`fx-stamp lose`}>{mood === 'heartbreak' ? 'So close' : 'Eliminated'}</div>
+      <div className={`fx-stamp lose`}>{mood === 'heartbreak' ? t('So close') : t('Eliminated')}</div>
     </div>
   );
 }
@@ -656,7 +657,7 @@ function MomentPage({ m, g }: { m: Moment; g: GameState }) {
                 <PixelWord text={m.nick} color="#FFD43B" shade="#5A4206" className="nick-word" />
               </div>
             ) : m.duo && activeDuo(g) ? <DuoArt g={g} b={activeDuo(g)!} third={activeTrio(g)} size={170} /> : <StoryScene g={g} title={m.title} kind={m.kind === 'tournament' && (m.mood === 'silver' || m.mood === 'bronze' || m.mood === 'out') ? 'medal' : m.kind} prize={m.kind === 'awards' ? m.lines?.[0] : m.kind === 'title' ? m.title : m.kind === 'tournament' ? `${m.title}. ${m.text}` : undefined} />}
-            <div className="kicker on-dark">{m.kind === 'intro' && g.start?.input.start === 'draft' ? KICKER.draft : KICKER[m.kind]}</div>
+            <div className="kicker on-dark">{t(m.kind === 'intro' && g.start?.input.start === 'draft' ? KICKER.draft : KICKER[m.kind])}</div>
             {m.kind === 'injury' ? (
               <div className="title-with-icon">
                 <InjuryBadge name={m.title} sev={/^Season over/.test(m.text) ? 'season' : 'major'} size={56} />
@@ -687,7 +688,7 @@ function MomentPage({ m, g }: { m: Moment; g: GameState }) {
           </div>
         )}
         <button ref={ref} className="btn moment-btn" onClick={dismiss}>
-          Continue
+          {t('Continue')}
         </button>
       </div>
     </div>
@@ -695,10 +696,10 @@ function MomentPage({ m, g }: { m: Moment; g: GameState }) {
 }
 
 export function Overlays({ g }: { g: GameState }) {
-  const t = useStore((s) => s.transition);
+  const tr = useStore((s) => s.transition);
   const end = useStore((s) => s.endTransition);
-  if (t?.kind === 'half') return <HalfSim t={t} g={g} onDone={end} />;
-  if (t?.kind === 'season') return <SeasonCard t={t} g={g} onDone={end} />;
+  if (tr?.kind === 'half') return <HalfSim t={tr} g={g} onDone={end} />;
+  if (tr?.kind === 'season') return <SeasonCard t={tr} g={g} onDone={end} />;
   if (g.moments.length > 0) return <MomentPage m={g.moments[0]} g={g} />;
   return null;
 }

@@ -17,6 +17,7 @@ import { championships, hallOfFame } from '../../engine/awards/legacy';
 import { sfx } from '../sound';
 import { NBA_ARENAS } from '../arenas';
 import { recordPlace, recordStreet, recordWalk, runOf } from '../achievements';
+import { t } from '../../i18n';
 
 /** How big an art pixel is on screen: the street fills a computer's width up to this, and on a
  * narrow screen keeps the smallest size and pans. */
@@ -214,25 +215,28 @@ export function Town({ g, fast }: { g: GameState; fast: boolean }) {
   };
 
   return (
-    <nav ref={box} className={`town look-${town.look}`} aria-label="Main: the town" data-tour="town" style={{ height: STREET.h * scale + BAND }}>
+    <nav ref={box} className={`town look-${town.look}`} aria-label={t('Main: the town')} data-tour="town" style={{ height: STREET.h * scale + BAND }}>
       <div className="tw-street" style={{ width: streetW, height: STREET.h * scale + BAND, transform: `translateX(${off}px)`, ...timing }}>
         <div className="tw-art-wrap" style={{ width: streetW, height: STREET.h * scale }}>
           <TownArt town={town} here={here?.id ?? null} pad={pad} banners={banners} hof={hof} />
         </div>
         {slots.map((s, i) => {
-          const t = s.place.tab;
+          const tb = s.place.tab;
           const on = here?.id === s.place.id;
           // a dot on a tab with something new (the agent's office shares the Player tab's)
-          const fresh = !on && t !== tab && seen[t] !== undefined && seen[t] !== tabKey(g, t) && !s.place.spot;
+          const fresh = !on && tb !== tab && seen[tb] !== undefined && seen[tb] !== tabKey(g, tb) && !s.place.spot;
+          // round 40: the place and the tab keep their English names; the sentence around them is translated
+          const place = s.place.id === 'arena' && town.look === 'hometown' ? g.player.highSchool : s.place.name;
+          const key = tb[0].toUpperCase();
           return (
             <button
               key={s.place.id}
               ref={(el) => (buttons.current[i] = el)}
               className={`tw-place${on ? ' here' : ''}`}
               data-place={s.place.id}
-              data-tour={s.place.spot ? `place-${s.place.id}` : `tab-${t}`}
+              data-tour={s.place.spot ? `place-${s.place.id}` : `tab-${tb}`}
               aria-current={on ? 'page' : undefined}
-              title={`${s.place.id === 'arena' && town.look === 'hometown' ? g.player.highSchool : s.place.name}: ${s.place.spot ? 'your contract and money' : `the ${UI.tabs[t]} page`} (${t[0].toUpperCase()})`}
+              title={s.place.spot ? t('{place}: your contract and money ({key})', { place, key }) : t('{place}: the {tab} page ({key})', { place, tab: UI.tabs[tb], key })}
               style={{ left: s.x * scale, width: s.w * scale, height: STREET.h * scale + BAND }}
               onClick={() => go(s.place)}
               onFocus={() => setFocused(s.place.id)}
@@ -240,13 +244,13 @@ export function Town({ g, fast }: { g: GameState; fast: boolean }) {
               onKeyDown={(e) => onKey(e, i)}
             >
               {fresh && (
-                <span className="tw-new" aria-label="new">
+                <span className="tw-new" aria-label={t('new')}>
                   !
                 </span>
               )}
               <span className="tw-sign">
-                <span className="tw-name">{simple ? (s.place.spot ? 'Agent' : UI.tabs[t]) : s.place.name}</span>
-                {!simple && <span className="tw-tab">{s.place.spot ? 'Contract' : UI.tabs[t]}</span>}
+                <span className="tw-name">{simple ? (s.place.spot ? 'Agent' : UI.tabs[tb]) : s.place.name}</span>
+                {!simple && <span className="tw-tab">{s.place.spot ? 'Contract' : UI.tabs[tb]}</span>}
               </span>
             </button>
           );

@@ -12,19 +12,20 @@ import { Card } from './bits';
 import { CollectionPanel, collected } from './Collection';
 import { StaffPanel } from './StaffCard';
 import { WardrobePanel } from './Wardrobe';
+import { t, tx } from '../../i18n';
 
 type Life = 'staff' | 'wardrobe' | 'collection';
 const TABS: { k: Life; label: string; icon: string }[] = [
-  { k: 'staff', label: 'Staff', icon: 'chef' },
-  { k: 'wardrobe', label: 'Wardrobe', icon: 'hanger' },
-  { k: 'collection', label: 'Collection', icon: 'car' },
+  { k: 'staff', label: tx('Staff'), icon: 'chef' },
+  { k: 'wardrobe', label: tx('Wardrobe'), icon: 'hanger' },
+  { k: 'collection', label: tx('Collection'), icon: 'car' },
 ];
 const KEY = 'btr-life-tab';
 
 function lastPick(): Life | null {
   try {
     const v = localStorage.getItem(KEY);
-    return TABS.find((t) => t.k === v)?.k ?? null;
+    return TABS.find((x) => x.k === v)?.k ?? null;
   } catch {
     return null;
   }
@@ -42,9 +43,9 @@ export function LifeCard({ g, kit }: { g: GameState; kit: KitName }) {
     return () => document.removeEventListener(SPOT, look);
   }, []);
   const count: Record<Life, number> = { staff: g.player.staff?.length ?? 0, wardrobe: g.player.wardrobe?.owned.length ?? 0, collection: collected(g).length };
-  const tabs = TABS.filter((t) => count[t.k] > 0);
+  const tabs = TABS.filter((x) => count[x.k] > 0);
   if (tabs.length === 0) return null;
-  const on = tabs.find((t) => t.k === pick)?.k ?? tabs[0].k;
+  const on = tabs.find((x) => x.k === pick)?.k ?? tabs[0].k;
   const choose = (k: Life) => {
     setPick(k);
     try {
@@ -55,15 +56,15 @@ export function LifeCard({ g, kit }: { g: GameState; kit: KitName }) {
   };
   // the guides find a tab by its name: on its button, or on what it shows once it is picked
   return (
-    <Card title="Your life" kicker="Off the court">
-      <div className="seg life-tabs" role="group" aria-label="Your life">
-        {tabs.map((t) => (
-          <button key={t.k} data-life={t.k} data-tour={t.k === on ? undefined : t.k} aria-pressed={t.k === on} onClick={() => choose(t.k)}>
+    <Card title={t('Your life')} kicker={t('Off the court')}>
+      <div className="seg life-tabs" role="group" aria-label={t('Your life')}>
+        {tabs.map((x) => (
+          <button key={x.k} data-life={x.k} data-tour={x.k === on ? undefined : x.k} aria-pressed={x.k === on} onClick={() => choose(x.k)}>
             <span className="life-icon">
-              <Icon name={t.icon} size={20} />
+              <Icon name={x.icon} size={20} />
             </span>
-            <span className="life-label">{t.label}</span>
-            <span className="life-count num">{count[t.k]}</span>
+            <span className="life-label">{t(x.label)}</span>
+            <span className="life-count num">{count[x.k]}</span>
           </button>
         ))}
       </div>

@@ -12,19 +12,21 @@ import { sfx } from '../sound';
 import { recordShare } from '../achievements';
 import { achievementsNow } from '../../store';
 import { SkipButton } from './SkipTutorial';
+import { t, tx } from '../../i18n';
 
 /** The game's address on the web (Netlify). Change it here if the game moves to a domain of its own. */
 export const GAME_URL = 'https://bench-to-rafters.netlify.app/';
 const TITLE = 'Bench to Rafters';
-const PITCH = 'A basketball career game: from the bench to the rafters. Free, in your browser.';
+const PITCH = tx('A basketball career game: from the bench to the rafters. Free, in your browser.');
 
 const enc = encodeURIComponent;
-const SITES: { name: string; href: string }[] = [
-  { name: 'X', href: `https://twitter.com/intent/tweet?text=${enc(PITCH)}&url=${enc(GAME_URL)}` },
-  { name: 'Reddit', href: `https://www.reddit.com/submit?url=${enc(GAME_URL)}&title=${enc(`${TITLE}: ${PITCH}`)}` },
+/** The big sites, the pitch in the player's language (round 40: built when the pop-up draws). */
+const sitesFor = (pitch: string): { name: string; href: string }[] => [
+  { name: 'X', href: `https://twitter.com/intent/tweet?text=${enc(pitch)}&url=${enc(GAME_URL)}` },
+  { name: 'Reddit', href: `https://www.reddit.com/submit?url=${enc(GAME_URL)}&title=${enc(`${TITLE}: ${pitch}`)}` },
   { name: 'Facebook', href: `https://www.facebook.com/sharer/sharer.php?u=${enc(GAME_URL)}` },
-  { name: 'WhatsApp', href: `https://wa.me/?text=${enc(`${PITCH} ${GAME_URL}`)}` },
-  { name: 'Email', href: `mailto:?subject=${enc(TITLE)}&body=${enc(`${PITCH}\n\n${GAME_URL}`)}` },
+  { name: 'WhatsApp', href: `https://wa.me/?text=${enc(`${pitch} ${GAME_URL}`)}` },
+  { name: t('Email'), href: `mailto:?subject=${enc(TITLE)}&body=${enc(`${pitch}\n\n${GAME_URL}`)}` },
 ];
 
 /** Counted once it leaves: the link copied, the share sheet used, or a site opened (the achievement). */
@@ -72,42 +74,43 @@ function SharePanel({ onClose }: { onClose: () => void }) {
     }
   };
   const native = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+  const pitch = t(PITCH);
   const share = () => {
-    navigator.share({ title: TITLE, text: PITCH, url: GAME_URL }).then(shared, (e: unknown) => {
+    navigator.share({ title: TITLE, text: pitch, url: GAME_URL }).then(shared, (e: unknown) => {
       // closed by the player: nothing to do; refused here: the link to copy instead
       if ((e as { name?: string })?.name !== 'AbortError') copy();
     });
   };
   return createPortal(
-    <div className="hall-pop share-pop" role="dialog" aria-modal="true" aria-label="Share the game" onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <div className="hall-pop share-pop" role="dialog" aria-modal="true" aria-label={t('Share the game')} onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="share-card">
-        <button className="pop-x" aria-label="Close" onClick={onClose}>
+        <button className="pop-x" aria-label={t('Close')} onClick={onClose}>
           <PixelX />
         </button>
         <div className="share-head">
           <Icon name="share" size={34} />
           <div style={{ minWidth: 0 }}>
-            <div className="sec-title">Share the game</div>
-            <p className="small muted">Send Bench to Rafters to a friend. It is free and plays in the browser.</p>
+            <div className="sec-title">{t('Share the game')}</div>
+            <p className="small muted">{t('Send {game} to a friend. It is free and plays in the browser.', { game: TITLE })}</p>
           </div>
         </div>
         <div className="share-link">
-          <input ref={field} readOnly value={GAME_URL} aria-label="The game's link" onFocus={(e) => e.currentTarget.select()} />
+          <input ref={field} readOnly value={GAME_URL} aria-label={t("The game's link")} onFocus={(e) => e.currentTarget.select()} />
           <button ref={first} className="btn small with-icon" onClick={copy}>
-            Copy link
+            {t('Copy link')}
           </button>
         </div>
         <p className="small keep share-said" aria-live="polite">
-          {said === 'copied' ? 'Link copied. Paste it anywhere.' : said === 'select' ? 'Copying is blocked here: the link is selected, so copy it with Ctrl+C (Cmd+C on a Mac).' : ' '}
+          {said === 'copied' ? t('Link copied. Paste it anywhere.') : said === 'select' ? t('Copying is blocked here: the link is selected, so copy it with Ctrl+C (Cmd+C on a Mac).') : ' '}
         </p>
         {native && (
           <button className="btn ghost with-icon share-native" onClick={share}>
             <Icon name="share" size={20} />
-            Share to an app…
+            {t('Share to an app…')}
           </button>
         )}
-        <div className="share-sites" aria-label="Post it on">
-          {SITES.map((s) => (
+        <div className="share-sites" aria-label={t('Post it on')}>
+          {sitesFor(pitch).map((s) => (
             <a key={s.name} className="btn small ghost" href={s.href} target="_blank" rel="noopener noreferrer" onClick={shared}>
               {s.name}
             </a>
@@ -132,9 +135,9 @@ export function ShareButton({ look = 'top' }: { look?: 'top' | 'foot' | 'big' })
     <>
       {/* round 34: in a top bar, the tutorial's Skip button comes just before Share */}
       {look === 'top' && <SkipButton />}
-      <button className={cls} data-tour={look === 'top' ? 'share-btn' : undefined} aria-haspopup="dialog" aria-expanded={open} aria-label="Share the game" onClick={show}>
+      <button className={cls} data-tour={look === 'top' ? 'share-btn' : undefined} aria-haspopup="dialog" aria-expanded={open} aria-label={t('Share the game')} onClick={show}>
         <Icon name="share" size={look === 'top' ? 18 : 22} />
-        <span className="share-word">{look === 'top' ? 'Share' : 'Share the game'}</span>
+        <span className="share-word">{look === 'top' ? t('Share') : t('Share the game')}</span>
       </button>
       {open && <SharePanel onClose={() => setOpen(false)} />}
     </>

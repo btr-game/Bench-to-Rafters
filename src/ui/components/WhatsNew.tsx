@@ -9,6 +9,7 @@ import { NEWS } from '../../content/whatsNew';
 import { newsFresh, useStore } from '../../store';
 import { Icon } from '../art/Icon';
 import { sfx } from '../sound';
+import { t } from '../../i18n';
 
 /** The button beside Intro, with a dot until the latest changes have been opened. */
 export function WhatsNewButton() {
@@ -21,13 +22,13 @@ export function WhatsNewButton() {
       data-tour="whats-new"
       aria-haspopup="dialog"
       aria-expanded={open}
-      aria-label={fresh ? 'What’s new (not opened yet)' : undefined}
+      aria-label={fresh ? t('What’s new (not opened yet)') : undefined}
       onClick={() => {
         sfx('page');
         showNews();
       }}
     >
-      What&rsquo;s new
+      {t('What’s new')}
       {fresh && <span className="news-dot" aria-hidden="true" />}
     </button>
   );
@@ -72,12 +73,12 @@ export function WhatsNewPanel() {
           <div style={{ minWidth: 0 }}>
             <div className="kicker">{latest.date}</div>
             <h2 className="title" id="news-title">
-              What&rsquo;s new
+              {t('What’s new')}
             </h2>
           </div>
           <div className="spacer" />
           <button ref={closeBtn} className="btn small ghost" onClick={close}>
-            Close
+            {t('Close')}
           </button>
         </header>
         <ul className="news-list big">
@@ -88,7 +89,7 @@ export function WhatsNewPanel() {
             </li>
           ))}
         </ul>
-        <p className="small muted news-foot">To see this again, press What&rsquo;s new next to Intro at the top of the start page.</p>
+        <p className="small muted news-foot">{t('To see this again, press What’s new next to Intro at the top of the start page.')}</p>
       </aside>
     </div>,
     document.body,

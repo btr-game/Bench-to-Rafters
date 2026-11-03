@@ -5,6 +5,7 @@ import type { GameState } from '../../engine/types';
 import { raftersDetail, raftersNearMiss, RAFTERS_POINTS } from '../../engine/awards/details';
 import { Card } from './bits';
 import { BannerArt } from '../art/Trophy';
+import { t } from '../../i18n';
 
 const yrs = (a: number, b: number) => (a === b ? String(a + 1) : `${a}–${b + 1}`);
 // on the banner itself: '38-47'
@@ -46,7 +47,7 @@ export function RaftersPage({ g, onContinue }: { g: GameState; onContinue: () =>
           S tier with the Hall of Fame and MVP, worth {RAFTERS_POINTS} legacy points for each team that hangs it.
         </p>
         <button className="btn" onClick={onContinue}>
-          See the whole career
+          {t('See the whole career')}
         </button>
       </div>
     </section>
@@ -69,7 +70,7 @@ export function RaftersSummary({ g, onOpen }: { g: GameState; onOpen: () => void
           <div className="rf-mini-title">
             {teams.map((t) => t.name).join(' and ')} retire number {g.player.number}
           </div>
-          <div className="small">Tap to open the ceremony</div>
+          <div className="small">{t('Tap to open the ceremony')}</div>
         </div>
       </section>
     );

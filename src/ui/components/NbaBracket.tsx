@@ -5,6 +5,7 @@
 import type { Bracket, League, SeriesResult } from '../../engine/types';
 import { TeamArt } from '../art/Crest';
 import { badge } from '../art/color';
+import { t } from '../../i18n';
 
 interface Props {
   bracket: Bracket;
@@ -61,11 +62,11 @@ export function NbaBracket(p: Props) {
     return side === 'east' ? s.slice(0, n) : s.slice(n);
   };
   const fin = r[3].series[0];
-  const champ = p.league.teams.find((t) => t.id === p.bracket.champion);
+  const champ = p.league.teams.find((x) => x.id === p.bracket.champion);
   const loserId = fin.winner === fin.a ? fin.b : fin.a;
   const champW = fin.winner === fin.a ? fin.wa : fin.wb;
   const loserW = fin.winner === fin.a ? fin.wb : fin.wa;
-  const loser = p.league.teams.find((t) => t.id === loserId);
+  const loser = p.league.teams.find((x) => x.id === loserId);
   const fmvp = p.bracket.mvps?.find((m) => m.award === 'Finals MVP');
   return (
     <div className="nb-scroll">
@@ -90,7 +91,7 @@ export function NbaBracket(p: Props) {
           </div>
           <div className="nb-champ" style={badge(champ?.color ?? '#555555')}>
             {champ && <TeamArt name={champ.name} abbr={champ.abbr} color={champ.color} league="NBA" size={40} />}
-            <small>Champions</small>
+            <small>{t('Champions')}</small>
             <b>{champ?.name ?? p.bracket.champion}</b>
           </div>
           {fmvp && (
@@ -103,7 +104,7 @@ export function NbaBracket(p: Props) {
         <Column series={half(1, 'east')} p={p} side="east" round={2} />
         <Column series={half(0, 'east')} p={p} side="east" round={1} />
         <div className="nb-rounds">
-          {['First round', 'Conf. semis', 'Conf. finals', 'Finals', 'Conf. finals', 'Conf. semis', 'First round'].map((x, i) => (
+          {[t('First round'), t('Conf. semis'), t('Conf. finals'), t('Finals'), t('Conf. finals'), t('Conf. semis'), t('First round')].map((x, i) => (
             <span key={i}>{x}</span>
           ))}
         </div>
