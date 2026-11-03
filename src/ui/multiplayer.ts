@@ -22,6 +22,7 @@ import { LOOK_FACES, LOOK_HAIRS, LOOK_STYLES, type ChosenLook } from '../content
 import { isDev } from '../dev/mode';
 import { scoreOf } from './community';
 import { logCards } from './careerLog';
+import { t, tx } from '../i18n';
 
 /** The start of a career anyone can play again: the same seed and the same start page. */
 export interface Prospect {
@@ -76,10 +77,10 @@ export interface ClassSeason {
 /** Round 35: the four reactions on a classmate's season (pixel icons from art/icons.ts). */
 export type Emote = 'fire' | 'crown' | 'heart' | 'snow';
 export const EMOTES: { k: Emote; icon: string; label: string }[] = [
-  { k: 'fire', icon: 'flame', label: 'On fire' },
-  { k: 'crown', icon: 'crown', label: 'Royalty' },
-  { k: 'heart', icon: 'heart', label: 'Love it' },
-  { k: 'snow', icon: 'snow', label: 'Ice cold' },
+  { k: 'fire', icon: 'flame', label: tx('On fire') },
+  { k: 'crown', icon: 'crown', label: tx('Royalty') },
+  { k: 'heart', icon: 'heart', label: tx('Love it') },
+  { k: 'snow', icon: 'snow', label: tx('Ice cold') },
 ];
 /** A season's reactions of one kind: how many, and whether one of them is his. */
 export interface React {
@@ -171,12 +172,12 @@ export const CODE_RE = /^[A-HJ-NP-Z2-9]{6}$/;
 export const cleanCode = (s: string): string => s.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
 
 export const MP_FAIL: Record<MpFail, string> = {
-  missing: 'No game goes by that code. Check it with your friend.',
-  full: 'That draft class is full (twelve players).',
-  taken: 'Your seat in that class already holds another career: a seat plays one career.',
-  denied: 'That could not be sent: only a Regular guy career counts.',
-  busy: 'Too many in a row: try again in a little while.',
-  error: 'The game could not reach the server. Try again in a little while.',
+  missing: tx('No game goes by that code. Check it with your friend.'),
+  full: tx('That draft class is full (twelve players).'),
+  taken: tx('Your seat in that class already holds another career: a seat plays one career.'),
+  denied: tx('That could not be sent: only a Regular guy career counts.'),
+  busy: tx('Too many in a row: try again in a little while.'),
+  error: tx('The game could not reach the server. Try again in a little while.'),
 };
 
 /** A prospect from another player, kept to what the start page can pick (Regular guy, each pick in
@@ -201,7 +202,7 @@ export function cleanProspect(p: unknown): Prospect | null {
   if (i.start === 'draft') input.start = 'draft';
   const a = i.attrs as Attrs | undefined;
   if (a && typeof a === 'object') {
-    const ok = ATTRS.every((k) => Number.isInteger(a[k]) && Math.abs(a[k] - arch.attrs[k]) <= 6) && ATTRS.reduce((t, k) => t + a[k], 0) === 320;
+    const ok = ATTRS.every((k) => Number.isInteger(a[k]) && Math.abs(a[k] - arch.attrs[k]) <= 6) && ATTRS.reduce((sum, k) => sum + a[k], 0) === 320;
     if (ok) input.attrs = Object.fromEntries(ATTRS.map((k) => [k, a[k]])) as Attrs;
   }
   if (typeof i.country === 'string' && ORIGINS.some((o) => o.country === i.country)) input.country = i.country;
@@ -388,7 +389,9 @@ const nbaOnly = (m: ClassMember) => m.seasons.filter((s) => s.lv === 'NBA' && s.
 const total = (m: ClassMember, k: 'pts' | 'reb' | 'ast') => nbaOnly(m).reduce((a, s) => a + s[k] * s.gp, 0);
 const n0 = (x: number) => Math.round(x).toLocaleString('en-US');
 
-/** The night's awards, from the least of them to the class MVP, each with the class ranked. */
+/** The night's awards, from the least of them to the class MVP, each with the class ranked. The
+ * awards keep their English names; what each measures and each row's line are in the player's
+ * language (round 40), so this is called when a screen shows them. */
 export function reunionAwards(k: DraftClass): ReunionAward[] {
   const ms = k.members.filter((m) => m.seasons.length > 0 || m.rec);
   const award = (key: string, title: string, icon: string, what: string, value: (m: ClassMember) => number, text: (v: number) => string): ReunionAward => ({
@@ -403,21 +406,21 @@ export function reunionAwards(k: DraftClass): ReunionAward[] {
   });
   const st = new Map(standings(k).map((s) => [s.m.id, s]));
   return [
-    award('iron', 'Iron Man', 'shoe', 'most NBA games', (m) => nbaOnly(m).reduce((a, s) => a + s.gp, 0), (v) => `${n0(v)} games`),
-    award('travel', 'Journeyman', 'jet', 'most NBA teams', (m) => new Set(nbaOnly(m).map((s) => s.team)).size, (v) => `${v} team${v === 1 ? '' : 's'}`),
-    award('glass', 'Glass Cleaner', 'rebound', 'most career rebounds', (m) => total(m, 'reb'), (v) => `${n0(v)} rebounds`),
-    award('dimes', 'Floor General', 'playmake', 'most career assists', (m) => total(m, 'ast'), (v) => `${n0(v)} assists`),
-    award('bank', 'Moneybags', 'bank', 'most career earnings', (m) => m.seasons.reduce((a, s) => a + (s.sal ?? 0), 0), (v) => `$${v >= 100 ? n0(v) : v.toFixed(1)}M earned`),
-    award('points', 'Bucket Getter', 'shoot', 'most career points', (m) => total(m, 'pts'), (v) => `${n0(v)} points`),
-    award('peak', 'Highest Peak', 'ovr', 'the best rating anyone reached', (m) => st.get(m.id)?.peak ?? 0, (v) => `peak ${v} OVR`),
-    award('stars', 'All-Star Regular', 'stars', 'most All-Star selections', (m) => st.get(m.id)?.allStars ?? 0, (v) => `${v} All-Star${v === 1 ? '' : 's'}`),
-    award('mvps', 'Hardware', 'crown', 'most MVP awards', (m) => st.get(m.id)?.mvps ?? 0, (v) => `${v} MVP${v === 1 ? '' : 's'}`),
-    award('rings', 'Ring Leader', 'laurel', 'most titles', (m) => st.get(m.id)?.titles ?? 0, (v) => `${v} ring${v === 1 ? '' : 's'}`),
+    award('iron', 'Iron Man', 'shoe', t('most NBA games'), (m) => nbaOnly(m).reduce((a, s) => a + s.gp, 0), (v) => t('{n} games', { n: n0(v) })),
+    award('travel', 'Journeyman', 'jet', t('most NBA teams'), (m) => new Set(nbaOnly(m).map((s) => s.team)).size, (v) => (v === 1 ? t('1 team') : t('{n} teams', { n: v }))),
+    award('glass', 'Glass Cleaner', 'rebound', t('most career rebounds'), (m) => total(m, 'reb'), (v) => t('{n} rebounds', { n: n0(v) })),
+    award('dimes', 'Floor General', 'playmake', t('most career assists'), (m) => total(m, 'ast'), (v) => t('{n} assists', { n: n0(v) })),
+    award('bank', 'Moneybags', 'bank', t('most career earnings'), (m) => m.seasons.reduce((a, s) => a + (s.sal ?? 0), 0), (v) => t('{money} earned', { money: `$${v >= 100 ? n0(v) : v.toFixed(1)}M` })),
+    award('points', 'Bucket Getter', 'shoot', t('most career points'), (m) => total(m, 'pts'), (v) => t('{n} points', { n: n0(v) })),
+    award('peak', 'Highest Peak', 'ovr', t('the best rating anyone reached'), (m) => st.get(m.id)?.peak ?? 0, (v) => t('peak {n} OVR', { n: v })),
+    award('stars', 'All-Star Regular', 'stars', t('most All-Star selections'), (m) => st.get(m.id)?.allStars ?? 0, (v) => (v === 1 ? t('1 All-Star') : t('{n} All-Stars', { n: v }))),
+    award('mvps', 'Hardware', 'crown', t('most MVP awards'), (m) => st.get(m.id)?.mvps ?? 0, (v) => (v === 1 ? t('1 MVP') : t('{n} MVPs', { n: v }))),
+    award('rings', 'Ring Leader', 'laurel', t('most titles'), (m) => st.get(m.id)?.titles ?? 0, (v) => (v === 1 ? t('1 ring') : t('{n} rings', { n: v }))),
     // by the career index when every career has its card; with a quiet friend still out, by the
     // class table's own score for everyone, so the two never mix
     ms.every((m) => m.rec)
-      ? award('mvp', 'Class MVP', 'podium', 'the best career in the class, by career index', (m) => scoreOf(m.rec!), (v) => `career index ${n0(v)}`)
-      : award('mvp', 'Class MVP', 'podium', 'the best career in the class, by the class table', (m) => st.get(m.id)?.score ?? 0, (v) => `class score ${n0(v)}`),
+      ? award('mvp', 'Class MVP', 'podium', t('the best career in the class, by career index'), (m) => scoreOf(m.rec!), (v) => t('career index {n}', { n: n0(v) }))
+      : award('mvp', 'Class MVP', 'podium', t('the best career in the class, by the class table'), (m) => st.get(m.id)?.score ?? 0, (v) => t('class score {n}', { n: n0(v) })),
   ];
 }
 
@@ -812,9 +815,9 @@ function localMultiplayer(): Multiplayer {
       const d = lload();
       const k = d.classes.find((x) => x.code === code);
       if (!k?.members.some((m) => m.who === ME)) return 'missing';
-      const t = k.members.find((m) => m.id === to);
-      if (!t || t.who === ME || !t.seasons.some((s) => s.year === year)) return 'denied';
-      t.reacts = [...(t.reacts ?? []).filter((r) => !(r.y === year && r.who === ME)), ...(emote ? [{ y: year, e: emote, who: ME }] : [])];
+      const mate = k.members.find((m) => m.id === to);
+      if (!mate || mate.who === ME || !mate.seasons.some((s) => s.year === year)) return 'denied';
+      mate.reacts = [...(mate.reacts ?? []).filter((r) => !(r.y === year && r.who === ME)), ...(emote ? [{ y: year, e: emote, who: ME }] : [])];
       lsave(d);
       return 'ok';
     },

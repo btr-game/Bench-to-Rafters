@@ -7,6 +7,7 @@ import type { ChosenLook } from '../../content/looks';
 import { LOOK_FACES, LOOK_HAIRS, LOOK_STYLES, chooseLook } from '../../content/looks';
 import type { Kit } from '../../content/teamStyle';
 import { HAIR_COLORS, PlayerArt, SKIN_COLORS } from '../art/Player';
+import { t, tx } from '../../i18n';
 
 export type Jersey = 'white' | 'black';
 /** The plain practice jersey: one colour, the number, nothing else. */
@@ -15,9 +16,9 @@ export const PLAIN: Record<Jersey, Kit> = {
   black: { base: '#1B1820', ink: '#F4F4F4', trim: '#1B1820', word: '' },
 };
 
-export const STYLE_NAME: Record<string, string> = { short: 'Short', buzz: 'Buzz', flattop: 'Flat-top', afro: 'Afro', bigafro: 'Big afro', cornrows: 'Cornrows', twists: 'Twists', curly: 'Curly', parted: 'Parted', long: 'Long', mop: 'Mop', mullet: 'Mullet', bald: 'Bald' };
-export const FACE_NAME: Record<string, string> = { none: 'Clean', stubble: 'Stubble', mustache: 'Mustache', goatee: 'Goatee', beard: 'Beard', bigbeard: 'Big beard', sideburns: 'Sideburns' };
-export const HAIR_NAME: Record<string, string> = { k: 'Black', b: 'Brown', l: 'Blond', r: 'Red', g: 'Grey' };
+export const STYLE_NAME: Record<string, string> = { short: tx('Short'), buzz: tx('Buzz'), flattop: tx('Flat-top'), afro: tx('Afro'), bigafro: tx('Big afro'), cornrows: tx('Cornrows'), twists: tx('Twists'), curly: tx('Curly'), parted: tx('Parted'), long: tx('Long'), mop: tx('Mop'), mullet: tx('Mullet'), bald: tx('Bald') };
+export const FACE_NAME: Record<string, string> = { none: tx('Clean'), stubble: tx('Stubble'), mustache: tx('Mustache'), goatee: tx('Goatee'), beard: tx('Beard'), bigbeard: tx('Big beard'), sideburns: tx('Sideburns') };
+export const HAIR_NAME: Record<string, string> = { k: tx('Black'), b: tx('Brown'), l: tx('Blond'), r: tx('Red'), g: tx('Grey') };
 
 /** A random look from the parts. */
 export const randomLook = (): ChosenLook => ({
@@ -37,51 +38,51 @@ export function LookPicker({ look, setLook, jersey, setJersey }: { look: ChosenL
   const set = (patch: Partial<ChosenLook>) => setLook({ ...look, ...patch });
   return (
     <div className="look-picker">
-      <div className="look-row" role="group" aria-label="Skin tone">
-        <span className="kicker">Skin</span>
+      <div className="look-row" role="group" aria-label={t('Skin tone')}>
+        <span className="kicker">{t('Skin')}</span>
         <div className="look-swatches">
           {SKIN_COLORS.map((c, i) => (
-            <button key={c} className="look-swatch" style={{ background: c }} aria-pressed={look.skin === i} aria-label={`Skin tone ${i + 1} of 7`} onClick={() => set({ skin: i })} />
+            <button key={c} className="look-swatch" style={{ background: c }} aria-pressed={look.skin === i} aria-label={t('Skin tone {n} of 7', { n: i + 1 })} onClick={() => set({ skin: i })} />
           ))}
         </div>
       </div>
-      <div className="look-row" role="group" aria-label="Hair colour">
-        <span className="kicker">Hair colour</span>
+      <div className="look-row" role="group" aria-label={t('Hair colour')}>
+        <span className="kicker">{t('Hair colour')}</span>
         <div className="look-swatches">
           {LOOK_HAIRS.map((h) => (
-            <button key={h} className="look-swatch" style={{ background: HAIR_COLORS[h] }} aria-pressed={look.hair === h} aria-label={HAIR_NAME[h]} title={HAIR_NAME[h]} onClick={() => set({ hair: h })} />
+            <button key={h} className="look-swatch" style={{ background: HAIR_COLORS[h] }} aria-pressed={look.hair === h} aria-label={t(HAIR_NAME[h])} title={t(HAIR_NAME[h])} onClick={() => set({ hair: h })} />
           ))}
         </div>
       </div>
-      <div className="look-row" role="group" aria-label="Hair">
-        <span className="kicker">Hair</span>
+      <div className="look-row" role="group" aria-label={t('Hair')}>
+        <span className="kicker">{t('Hair')}</span>
         <div className="seg small-seg look-seg">
           {LOOK_STYLES.map((s) => (
             <button key={s} aria-pressed={look.style === s} onClick={() => set({ style: s })}>
-              {STYLE_NAME[s]}
+              {t(STYLE_NAME[s])}
             </button>
           ))}
         </div>
       </div>
-      <div className="look-row" role="group" aria-label="Facial hair">
-        <span className="kicker">Face</span>
+      <div className="look-row" role="group" aria-label={t('Facial hair')}>
+        <span className="kicker">{t('Face')}</span>
         <div className="seg small-seg look-seg">
           {LOOK_FACES.map((f) => (
             <button key={f} aria-pressed={look.face === f} onClick={() => set({ face: f })}>
-              {FACE_NAME[f]}
+              {t(FACE_NAME[f])}
             </button>
           ))}
         </div>
       </div>
-      <div className="look-row" role="group" aria-label="Practice jersey">
-        <span className="kicker">Jersey</span>
+      <div className="look-row" role="group" aria-label={t('Practice jersey')}>
+        <span className="kicker">{t('Jersey')}</span>
         <div className="seg small-seg look-seg">
           {(['white', 'black'] as Jersey[]).map((j) => (
             <button key={j} aria-pressed={jersey === j} onClick={() => setJersey(j)}>
-              {j === 'white' ? 'White' : 'Black'}
+              {j === 'white' ? t('White') : t('Black')}
             </button>
           ))}
-          <button onClick={() => setLook(randomLook())}>Random look</button>
+          <button onClick={() => setLook(randomLook())}>{t('Random look')}</button>
         </div>
       </div>
     </div>

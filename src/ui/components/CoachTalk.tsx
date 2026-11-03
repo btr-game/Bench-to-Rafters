@@ -15,6 +15,7 @@ import { CoachArt } from '../art/Coach';
 import { PlaybookArt } from '../art/Playbook';
 import { PixelX } from '../art/PixelX';
 import { sfx } from '../sound';
+import { t } from '../../i18n';
 
 export const COACH_LINES: Record<TeamStyle, [string, string, string]> = {
   pace: ['Coach, let’s run. Push it up the floor, shoot early.', 'A track meet, then. We outrun everybody until May.', 'And in May we keep running.'],
@@ -27,9 +28,9 @@ export const COACH_LINES: Record<TeamStyle, [string, string, string]> = {
 /** The talk, then the playbook. `onClose` when it is over. */
 export function CoachTalk({ g, style, onClose }: { g: GameState; style: TeamStyle; onClose: () => void }) {
   const [step, setStep] = useState(0); // 0..3 the bubbles, 4 the playbook
-  const t = teamOf(g);
-  const coach = t ? coachOf(t) : null; // round 32: the team's own head coach, his name and face
-  const color = t?.color ?? '#1F5FBF';
+  const club = teamOf(g);
+  const coach = club ? coachOf(club) : null; // round 32: the team's own head coach, his name and face
+  const color = club?.color ?? '#1F5FBF';
   const lines = COACH_LINES[style];
   useEffect(() => {
     if (step >= 4) return;
@@ -52,16 +53,16 @@ export function CoachTalk({ g, style, onClose }: { g: GameState; style: TeamStyl
     return () => window.removeEventListener('keydown', key, true);
   }, [step, onClose]);
   return createPortal(
-    <div className="hall-pop coach-pop" role="dialog" aria-modal="true" aria-label={`A talk with the coach: ${TEAM_STYLES[style].name}`} onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <div className="hall-pop coach-pop" role="dialog" aria-modal="true" aria-label={t('A talk with the coach: {style}', { style: TEAM_STYLES[style].name })} onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="coach-card" style={{ ['--team' as string]: color }}>
-        <button className="pop-x" aria-label="Close" onClick={onClose}>
+        <button className="pop-x" aria-label={t('Close')} onClick={onClose}>
           <PixelX />
         </button>
-        <div className="kicker">The coach’s office · a new game plan</div>
+        <div className="kicker">{t('The coach’s office · a new game plan')}</div>
         <div className="coach-stage">
           <div className="coach-who me">
-            <PlayerArt name={g.player.name} number={g.player.number} pos={g.player.pos} color={color} team={t?.name} abbr={t?.abbr} league={styleLeague(g.stage)} size={118} noBall wear={g.player.wardrobe?.on} />
-            <span>You</span>
+            <PlayerArt name={g.player.name} number={g.player.number} pos={g.player.pos} color={color} team={club?.name} abbr={club?.abbr} league={styleLeague(g.stage)} size={118} noBall wear={g.player.wardrobe?.on} />
+            <span>{t('You')}</span>
           </div>
           <div className="coach-bubbles" aria-live="polite">
             {step >= 1 && <p className="bubble me">{lines[0]}</p>}
@@ -70,22 +71,22 @@ export function CoachTalk({ g, style, onClose }: { g: GameState; style: TeamStyl
           </div>
           <div className="coach-who coach">
             <CoachArt coach={coach ?? { name: 'Head Coach', temper: 'tactician' }} color={color} size={118} mirror />
-            <span>{coach ? `Coach ${coach.name.split(' ').slice(-1)[0]}` : 'Coach'}</span>
+            <span>{coach ? t('Coach {name}', { name: coach.name.split(' ').slice(-1)[0] }) : t('Coach')}</span>
           </div>
         </div>
         {step >= 4 && (
           <div className="coach-plan">
             <PlaybookArt style={style} size={150} />
             <div className="stack" style={{ gap: 6, minWidth: 0 }}>
-              <b className="coach-plan-name">New game plan: {TEAM_STYLES[style].name}</b>
+              <b className="coach-plan-name">{t('New game plan: {style}', { style: TEAM_STYLES[style].name })}</b>
               <span className="small prose">{TEAM_STYLES[style].text}</span>
               <button className="btn small" onClick={onClose} autoFocus>
-                Let’s go
+                {t('Let’s go')}
               </button>
             </div>
           </div>
         )}
-        {step < 4 && <p className="small muted keep pop-hint">Enter or Space to skip ahead</p>}
+        {step < 4 && <p className="small muted keep pop-hint">{t('Enter or Space to skip ahead')}</p>}
       </div>
     </div>,
     document.body,

@@ -35,6 +35,7 @@ import { LEVEL_NAME, levelOf } from '../engine/levels';
 import { RoadMap } from './screens/RoadMap';
 import { LevelEnd } from './screens/LevelEnd';
 import { Town } from './components/Town';
+import { t } from '../i18n';
 
 
 // round 28 (owner: "any graphic that isnt pixels, change them"): the tab icons on a 12x12 pixel
@@ -49,7 +50,7 @@ const ICON_ROWS: Record<Tab, string[]> = {
   extras: ['.....##.....', '....####....', '....####....', '.....##.....', '.....##.....', '.....##.....', '..########..', '.#........#.', '.#.##..#.#.#', '.#........#.', '.##########.', '............'],
 };
 const ICONS: Record<Tab, ReactNode> = Object.fromEntries(
-  (Object.keys(ICON_ROWS) as Tab[]).map((t) => [t, ICON_ROWS[t].flatMap((row, y) => [...row].map((c, x) => (c === '#' ? <rect key={`${x}-${y}`} x={x} y={y} width={1} height={1} /> : null)))]),
+  (Object.keys(ICON_ROWS) as Tab[]).map((id) => [id, ICON_ROWS[id].flatMap((row, y) => [...row].map((c, x) => (c === '#' ? <rect key={`${x}-${y}`} x={x} y={y} width={1} height={1} /> : null)))]),
 ) as unknown as Record<Tab, ReactNode>;
 
 /** The main tabs: along the top on a computer, along the bottom on a phone. A dot marks a tab with something new. */
@@ -58,16 +59,16 @@ function TabBar({ g, top = false }: { g: GameState; top?: boolean }) {
   const setTab = useStore((s) => s.setTab);
   const seen = useStore((s) => s.seen);
   return (
-    <nav className={top ? 'toptabs' : 'tabbar'} aria-label="Main">
-      {((levelTabs(g) ?? Object.keys(UI.tabs)) as Tab[]).map((t) => {
-        const fresh = t !== tab && seen[t] !== undefined && seen[t] !== tabKey(g, t);
+    <nav className={top ? 'toptabs' : 'tabbar'} aria-label={t('Main')}>
+      {((levelTabs(g) ?? Object.keys(UI.tabs)) as Tab[]).map((id) => {
+        const fresh = id !== tab && seen[id] !== undefined && seen[id] !== tabKey(g, id);
         return (
-          <button key={t} data-tour={`tab-${t}`} aria-current={tab === t ? 'page' : undefined} onClick={() => setTab(t)} title={`${UI.tabs[t]} (${t[0].toUpperCase()})`}>
+          <button key={id} data-tour={`tab-${id}`} aria-current={tab === id ? 'page' : undefined} onClick={() => setTab(id)} title={`${UI.tabs[id]} (${id[0].toUpperCase()})`}>
             <svg viewBox="-1 -1 14 14" fill="currentColor" shapeRendering="crispEdges" aria-hidden="true">
-              {ICONS[t]}
+              {ICONS[id]}
             </svg>
-            {UI.tabs[t]}
-            {fresh && <span className="tab-dot" aria-label="new" />}
+            {UI.tabs[id]}
+            {fresh && <span className="tab-dot" aria-label={t('new')} />}
           </button>
         );
       })}
@@ -82,15 +83,15 @@ function LookBackBar({ g }: { g: GameState }) {
   const leave = useStore((s) => s.leaveLookBack);
   if (!lookBack || g.step !== 'retired') return null;
   return (
-    <div className="daily-strip look-back-bar" role="region" aria-label="Looking back">
+    <div className="daily-strip look-back-bar" role="region" aria-label={t('Looking back')}>
       <Icon name="rewind" size={22} />
-      <b>Looking back</b>
+      <b>{t('Looking back')}</b>
       <span className="small">
-        {g.player.name}, retired at {g.player.age}
+        {t('{name}, retired at {age}', { name: g.player.name, age: g.player.age })}
       </span>
       <span className="spacer" />
       <button className="btn small" onClick={() => (sfx('page'), leave())}>
-        Leave: back to the career log
+        {t('Leave: back to the career log')}
       </button>
     </div>
   );
@@ -105,8 +106,8 @@ function TourBar() {
   const [ready, setReady] = useState(false);
   useEffect(() => {
     setReady(false);
-    const t = setTimeout(() => setReady(true), 1500);
-    return () => clearTimeout(t);
+    const id = setTimeout(() => setReady(true), 1500);
+    return () => clearTimeout(id);
   }, [closing?.i]);
   if (!closing) return null;
   const stop = STOPS.find((x) => x.id === closing.ids[closing.i]);
@@ -116,13 +117,13 @@ function TourBar() {
       <Icon name="map" size={28} />
       <div style={{ minWidth: 0 }}>
         <div className="kicker">
-          Closing tour · stop {closing.i + 1} of {closing.ids.length}
+          {t('Closing tour · stop {i} of {n}', { i: closing.i + 1, n: closing.ids.length })}
         </div>
-        <b>{stop?.title}</b>
+        <b>{stop && t(stop.title)}</b>
       </div>
       <div className="spacer" />
       <button className="btn" disabled={up || !ready} onClick={nextStop}>
-        {last ? 'Finish the tour' : 'Next stop'}
+        {last ? t('Finish the tour') : t('Next stop')}
       </button>
     </div>
   );
@@ -137,14 +138,14 @@ function ModeBadge({ g }: { g: GameState }) {
   const level = levelOf(g);
   if (level)
     return (
-      <span className="mode-badge mode-level" title="Level">
+      <span className="mode-badge mode-level" title={t('Level')}>
         <Icon name="map" size={14} />
-        <span className="long">Level {['beginner', 'intermediate', 'advanced'].indexOf(level) + 1} · {LEVEL_NAME[level]}</span>
+        <span className="long">{t('Level {n}', { n: ['beginner', 'intermediate', 'advanced'].indexOf(level) + 1 })} · {LEVEL_NAME[level]}</span>
         <span className="short">{LEVEL_NAME[level]}</span>
       </span>
     );
   return (
-    <span className={`mode-badge mode-${g.mode}`} title="Difficulty">
+    <span className={`mode-badge mode-${g.mode}`} title={t('Difficulty')}>
       {ICON_FOR[g.mode] && <Icon name={ICON_FOR[g.mode]} size={14} />}
       <span className="long">{MODES[g.mode]?.name ?? g.mode}</span>
       <span className="short">{SHORT_MODE[g.mode] ?? g.mode}</span>
@@ -161,7 +162,7 @@ function ModeBadge({ g }: { g: GameState }) {
           Comet
         </b>
       ) : (
-        master && <b> · Master</b>
+        master && <b> · {t('Master')}</b>
       )}
     </span>
   );
@@ -182,7 +183,7 @@ function TabView({ fast, children }: { fast: boolean; children: ReactNode }) {
       {children}
       {fast && folded > 0 && (
         <button className="btn ghost fold-toggle" onClick={() => setAll(!all)}>
-          {all ? 'Fold the extra cards' : `Show everything (${folded} more card${folded === 1 ? '' : 's'})`}
+          {all ? t('Fold the extra cards') : folded === 1 ? t('Show everything (1 more card)') : t('Show everything ({n} more cards)', { n: folded })}
         </button>
       )}
     </div>

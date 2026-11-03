@@ -7,6 +7,7 @@
 
 import { BLOCKED } from '../content/blocked';
 import type { CareerRecord } from '../engine/career/record';
+import { t } from '../i18n';
 
 export const NAME_MAX = 28;
 export const USERNAME_MAX = 20;
@@ -26,8 +27,8 @@ const LEET: Record<string, string> = { '0': 'o', '1': 'i', '3': 'e', '4': 'a', '
 /** Whether a name holds a swear word or a slur: spelled with numbers for letters (sh1t), or
  * spaced out letter by letter (f u c k), too. */
 export function isRude(s: string): boolean {
-  const t = plain(s).toLowerCase().replace(/[0134578@$!|]/g, (c) => LEET[c] ?? c);
-  const words = t.split(/[^a-z]+/).filter(Boolean);
+  const low = plain(s).toLowerCase().replace(/[0134578@$!|]/g, (c) => LEET[c] ?? c);
+  const words = low.split(/[^a-z]+/).filter(Boolean);
   // single letters in a row read as one word (f u c k)
   const runs: string[] = [];
   let run = '';
@@ -42,8 +43,8 @@ export function isRude(s: string): boolean {
 
 /** What is wrong with a name, or '' when it may stand. */
 export function nameProblem(s: string): string {
-  if (!s.trim()) return 'Pick a name first.';
-  return isRude(s) ? 'That name isn’t allowed. Pick another one.' : '';
+  if (!s.trim()) return t('Pick a name first.');
+  return isRude(s) ? t('That name isn’t allowed. Pick another one.') : '';
 }
 
 // ---------- the username ----------

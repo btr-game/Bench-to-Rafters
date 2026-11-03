@@ -10,17 +10,18 @@ import { useStore } from '../../store';
 import { PlayerArt, styleLeague } from '../art/Player';
 import { Icon } from '../art/Icon';
 import { team as teamOf } from '../selectors';
+import { t, tx } from '../../i18n';
 
 export const MOVES = [
-  { id: 'dribble', name: 'Dribbling' },
-  { id: 'cross', name: 'Crossover' },
-  { id: 'legs', name: 'Through the legs' },
-  { id: 'behind', name: 'Behind the back' },
-  { id: 'spin', name: 'Finger spin' },
-  { id: 'two', name: 'Two-ball drill' },
-  { id: 'pound', name: 'Pound dribble' },
-  { id: 'world', name: 'Around the world' },
-  { id: 'ft', name: 'Free-throw routine' },
+  { id: 'dribble', name: tx('Dribbling') },
+  { id: 'cross', name: tx('Crossover') },
+  { id: 'legs', name: tx('Through the legs') },
+  { id: 'behind', name: tx('Behind the back') },
+  { id: 'spin', name: tx('Finger spin') },
+  { id: 'two', name: tx('Two-ball drill') },
+  { id: 'pound', name: tx('Pound dribble') },
+  { id: 'world', name: tx('Around the world') },
+  { id: 'ft', name: tx('Free-throw routine') },
 ] as const;
 export type Move = (typeof MOVES)[number];
 
@@ -30,12 +31,12 @@ const SHOW_AFTER = 200;
 /** The avatar and the ball: the player on screen, or a playground kid before a career starts. */
 export function Dribbler({ move }: { move: Move }) {
   const g = useStore((s) => s.game);
-  const t = g ? teamOf(g) : null;
+  const club = g ? teamOf(g) : null;
   return (
     <span className={`lp-stage lp-${move.id}`} aria-hidden="true">
       <span className="lp-guy">
         {g ? (
-          <PlayerArt name={g.player.name} number={g.player.number} pos={g.player.pos} color={t?.color} team={t?.name} abbr={t?.abbr} league={styleLeague(g.stage)} size={58} wear={g.player.wardrobe?.on} noBall />
+          <PlayerArt name={g.player.name} number={g.player.number} pos={g.player.pos} color={club?.color} team={club?.name} abbr={club?.abbr} league={styleLeague(g.stage)} size={58} wear={g.player.wardrobe?.on} noBall />
         ) : (
           <PlayerArt name="Kai Moreno" number={3} pos="PG" color="#E8590C" size={58} noBall />
         )}
@@ -65,8 +66,8 @@ export function Loading() {
   const fading = loading === null && s && s.key !== gone && (s.end ?? 0) - s.at >= SHOW_AFTER ? s.key : null;
   useEffect(() => {
     if (fading === null) return;
-    const t = setTimeout(() => setGone(fading), 260);
-    return () => clearTimeout(t);
+    const id = setTimeout(() => setGone(fading), 260);
+    return () => clearTimeout(id);
   }, [fading]);
   const key = loading ?? fading;
   if (key === null) return null;
@@ -75,8 +76,8 @@ export function Loading() {
     <div className={`lp${loading === null ? ' out' : ''}`} role="status" aria-live="polite">
       <Dribbler move={move} />
       <span className="lp-text">
-        <b>Loading</b>
-        {!simple && <small>{move.name}</small>}
+        <b>{t('Loading')}</b>
+        {!simple && <small>{t(move.name)}</small>}
       </span>
     </div>
   );

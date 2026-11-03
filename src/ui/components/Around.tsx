@@ -13,6 +13,7 @@ import { ReactionCard } from './bits';
 import { MvpRace } from './MvpRace';
 import { RivalCard } from './RivalCard';
 import { DuoCard, StoriesCard } from './Roster';
+import { t } from '../../i18n';
 
 const ICON: Record<Pane, string> = { mvp: 'spotlight', rival: 'rival', duo: 'teamfirst', league: 'globe', talk: 'news' };
 
@@ -37,7 +38,7 @@ export function AroundCard({ g }: { g: GameState }) {
   const cur = pick && pick.at === moment && panes.includes(pick.pane) ? pick.pane : panes[0];
   return (
     <section className="card stack around" data-tour="around">
-      <h2 className="title">Around you</h2>
+      <h2 className="title">{t('Around you')}</h2>
       {teach ? (
         panes.map((p) => (
           <div key={p} className="around-part">
@@ -47,11 +48,11 @@ export function AroundCard({ g }: { g: GameState }) {
       ) : (
         <>
           {panes.length > 1 && (
-            <div className="seg around-tabs" aria-label="Around you">
+            <div className="seg around-tabs" aria-label={t('Around you')}>
               {panes.map((p) => (
                 <button key={p} data-pane={p} aria-pressed={p === cur} onClick={() => setPick({ at: moment, pane: p })}>
                   <Icon name={ICON[p]} size={18} />
-                  {PANE_NAME[p]}
+                  {t(PANE_NAME[p])}
                 </button>
               ))}
             </div>

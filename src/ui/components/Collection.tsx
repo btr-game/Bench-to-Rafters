@@ -7,6 +7,7 @@ import { Icon } from '../art/Icon';
 import { SHIFT_COLOR, shopIcon, shopShift } from '../art/icons';
 import { PlayerArt, styleLeague } from '../art/Player';
 import { team as teamOf } from '../selectors';
+import { t } from '../../i18n';
 
 // Everything he has bought (round 25, the owner: a showcase of the purchases, and a visit to the
 // car, the jet, the house...). Accessories live in the wardrobe instead. A thing he can use has a
@@ -26,7 +27,7 @@ export function CollectionPanel({ g }: { g: GameState }) {
   const [scene, setScene] = useState<{ id: string; text: string } | null>(null);
   const items = collected(g);
   if (items.length === 0) return null;
-  const t = teamOf(g);
+  const club = teamOf(g);
   const go = (id: string) => {
     const text = visit(id);
     if (text) setScene({ id, text });
@@ -37,17 +38,17 @@ export function CollectionPanel({ g }: { g: GameState }) {
       {scene && shown && (
         <div className={`visit-scene place-${VISITS[scene.id]?.place ?? 'home'}`} role="status">
           <div className="visit-stage">
-            <PlayerArt name={g.player.name} number={g.player.number} pos={g.player.pos} color={t?.color} team={t?.name} abbr={t?.abbr} league={styleLeague(g.stage)} size={110} wear={g.player.wardrobe?.on} />
+            <PlayerArt name={g.player.name} number={g.player.number} pos={g.player.pos} color={club?.color} team={club?.name} abbr={club?.abbr} league={styleLeague(g.stage)} size={110} wear={g.player.wardrobe?.on} />
             <span className="visit-thing">
               <Icon name={shopIcon(shown.id, shown.name)} shift={shopShift(shown.id)} size={88} />
             </span>
           </div>
           <div className="visit-text">
-            <b>{shown.name}</b>
+            <b>{t(shown.name)}</b>
             <span>{scene.text}</span>
           </div>
           <button className="btn small ghost" onClick={() => setScene(null)}>
-            Back
+            {t('Back')}
           </button>
         </div>
       )}
@@ -56,7 +57,7 @@ export function CollectionPanel({ g }: { g: GameState }) {
         if (here.length === 0) return null;
         return (
           <div key={shelf} className="stack" style={{ gap: 6 }}>
-            <span className="kicker">{shelf}</span>
+            <span className="kicker">{t(shelf)}</span>
             <div className="collection">
               {here.map((i) => {
                 const v = VISITS[i.id];
@@ -66,10 +67,10 @@ export function CollectionPanel({ g }: { g: GameState }) {
                     <span className="coll-icon" style={{ background: `${SHIFT_COLOR[shopShift(i.id)]}22` }}>
                       <Icon name={shopIcon(i.id, i.name)} shift={shopShift(i.id)} size={36} />
                     </span>
-                    <span className="coll-name">{i.name}</span>
+                    <span className="coll-name">{t(i.name)}</span>
                     {v && (
-                      <button className="btn small" title={done ? 'Visited this season: the small edge comes again next season' : 'A small edge, once a season'} onClick={() => go(i.id)}>
-                        {done ? 'Go again' : v.verb}
+                      <button className="btn small" title={done ? t('Visited this season: the small edge comes again next season') : t('A small edge, once a season')} onClick={() => go(i.id)}>
+                        {done ? t('Go again') : v.verb}
                       </button>
                     )}
                   </div>

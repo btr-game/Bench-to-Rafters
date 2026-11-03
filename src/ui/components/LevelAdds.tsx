@@ -5,25 +5,26 @@
 import { Icon } from '../art/Icon';
 import { LEVEL_COPY } from '../../content/roadmap';
 import { LEVEL_IDS, LEVEL_NAME, type Level } from '../../engine/levels';
+import { t } from '../../i18n';
 
 export function LevelAdds({ level }: { level: Level }) {
   const before = LEVEL_IDS[LEVEL_IDS.indexOf(level) - 1];
   const adds = LEVEL_COPY[level].adds;
   return (
-    <section className="card level-adds" aria-label={`New in ${LEVEL_NAME[level]}`} data-tour="level-adds">
-      <div className="kicker">New in {LEVEL_NAME[level].toLowerCase()} · {adds.length}</div>
+    <section className="card level-adds" aria-label={t('New in {level}', { level: LEVEL_NAME[level] })} data-tour="level-adds">
+      <div className="kicker">{t('New in {level}', { level: LEVEL_NAME[level].toLowerCase() })} · {adds.length}</div>
       <ul className="adds-grid">
         {before && (
           <li className="adds-was">
             <Icon name="checklist" size={40} />
-            <span>All of {LEVEL_NAME[before].toLowerCase()}</span>
+            <span>{t('All of {level}', { level: LEVEL_NAME[before].toLowerCase() })}</span>
           </li>
         )}
         {adds.map((a) => (
           <li key={a.label}>
             <span className="adds-plus" aria-hidden="true">+</span>
             <Icon name={a.icon} size={40} />
-            <span>{a.label}</span>
+            <span>{t(a.label)}</span>
           </li>
         ))}
       </ul>
