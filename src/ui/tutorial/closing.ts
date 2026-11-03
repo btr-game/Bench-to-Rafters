@@ -19,9 +19,11 @@ import { SHOP_ITEMS } from '../../content/shop';
 import { applyItem } from '../../engine/economy/shop';
 import { duoEffect } from '../../engine/career/duo';
 import { isFinal, type LiveRequest } from '../../engine/career/live';
+import { tx } from '../../i18n';
 
 export interface Stop {
   id: string;
+  /** Round 40: English marked tx(); the screen that shows it translates it with t(). */
   title: string;
   lessons: string[];
   tab?: Tab;
@@ -65,35 +67,35 @@ const dressed = () => {
 
 export const STOPS: Stop[] = [
   // the systems no level has
-  { id: 'prime', title: 'A star in his prime', lessons: ['t-season', 't-locker', 't-city', 't-home', 't-stories', 't-record', 'i-mvp', 'i-rival', 'b-coach'], build: prime },
-  { id: 'duo', title: 'A duo', lessons: ['t-duo'], build: withDuo },
-  { id: 'press', title: 'A press conference', lessons: ['t-press', 't-undo'], build: kind('press') },
-  { id: 'record', title: 'Record watch', lessons: ['t-record'], build: () => play((s, p) => p.type === 'advance' && s.stage === 'NBA' && recordWatch(s).length > 0, star) },
-  { id: 'national', title: 'The national team', lessons: ['t-national'], build: kind('national') },
-  { id: 'love', title: 'Love', lessons: ['t-love'], build: () => play((_, p) => p.type === 'decision' && p.decision.kind === 'arc' && p.decision.data?.arc === 'love', star) },
-  { id: 'farewell', title: 'A farewell tour', lessons: ['t-farewell'], build: offseason(canFarewell) },
-  { id: 'ring', title: 'Chasing a ring', lessons: ['t-retire'], build: () => play((_, p) => p.type === 'decision' && p.decision.kind === 'retirePrompt' && p.decision.choices.some((c) => c.id === 'ringchase'), star) },
-  { id: 'son', title: 'The next generation', lessons: ['t-son', 't-card'], build: () => play((s) => canPlayChild(s), { ...star, tries: 10 }) },
+  { id: 'prime', title: tx('A star in his prime'), lessons: ['t-season', 't-locker', 't-city', 't-home', 't-stories', 't-record', 'i-mvp', 'i-rival', 'b-coach'], build: prime },
+  { id: 'duo', title: tx('A duo'), lessons: ['t-duo'], build: withDuo },
+  { id: 'press', title: tx('A press conference'), lessons: ['t-press', 't-undo'], build: kind('press') },
+  { id: 'record', title: tx('Record watch'), lessons: ['t-record'], build: () => play((s, p) => p.type === 'advance' && s.stage === 'NBA' && recordWatch(s).length > 0, star) },
+  { id: 'national', title: tx('The national team'), lessons: ['t-national'], build: kind('national') },
+  { id: 'love', title: tx('Love'), lessons: ['t-love'], build: () => play((_, p) => p.type === 'decision' && p.decision.kind === 'arc' && p.decision.data?.arc === 'love', star) },
+  { id: 'farewell', title: tx('A farewell tour'), lessons: ['t-farewell'], build: offseason(canFarewell) },
+  { id: 'ring', title: tx('Chasing a ring'), lessons: ['t-retire'], build: () => play((_, p) => p.type === 'decision' && p.decision.kind === 'retirePrompt' && p.decision.choices.some((c) => c.id === 'ringchase'), star) },
+  { id: 'son', title: tx('The next generation'), lessons: ['t-son', 't-card'], build: () => play((s) => canPlayChild(s), { ...star, tries: 10 }) },
   // the catch-up: whatever the levels never showed
-  { id: 'moves', title: 'The offseason’s moves', lessons: ['a-focus', 'a-position', 'a-number', 'a-style', 'a-trade', 'a-five'], build: offseason(() => true) },
-  { id: 'player', title: 'The Player tab', lessons: ['a-body', 'a-kits', 'a-roster', 'a-staff', 'a-wardrobe', 'a-collection', 'i-name'], tab: 'player', build: dressed },
-  { id: 'season', title: 'The Season tab', lessons: ['i-strength', 'i-standings', 'i-games'], tab: 'season', build: prime },
-  { id: 'bracket', title: 'The playoffs and the leaders', lessons: ['i-bracket', 'i-leaders'], tab: 'season', build: () => play((s, p) => p.type === 'advance' && s.step === 'summary' && s.stage === 'NBA', star) },
-  { id: 'offers', title: 'Offers', lessons: ['i-offers', 'a-road', 'i-talks'], build: kind('offers') },
-  { id: 'arc', title: 'A storyline', lessons: ['a-arc'], build: kind('arc') },
-  { id: 'brand', title: 'A brand deal', lessons: ['i-brand'], build: kind('brand') },
-  { id: 'summer', title: 'The summer program', lessons: ['i-summer'], build: kind('summer') },
-  { id: 'event', title: 'A turning point', lessons: ['b-risk', 'b-event', 'b-result'], build: kind('event') },
-  { id: 'live', title: 'A playoff game', lessons: ['i-live'], build: kind('live', { ...star, live: true }) },
-  { id: 'crunch', title: 'Crunch time', lessons: ['a-crunch'], build: () => play(liveStage('crunch'), { ...star, live: true, tries: 12, pick: plays(true) }) },
-  { id: 'meter', title: 'The last shot', lessons: ['b-meter'], build: () => play(liveStage('clutch'), { ...star, live: true, pick: plays(false) }) },
-  { id: 'reel', title: 'The last minutes of a final', lessons: ['a-clutch'], page: true, build: () => {
+  { id: 'moves', title: tx('The offseason’s moves'), lessons: ['a-focus', 'a-position', 'a-number', 'a-style', 'a-trade', 'a-five'], build: offseason(() => true) },
+  { id: 'player', title: tx('The Player tab'), lessons: ['a-body', 'a-kits', 'a-roster', 'a-staff', 'a-wardrobe', 'a-collection', 'i-name'], tab: 'player', build: dressed },
+  { id: 'season', title: tx('The Season tab'), lessons: ['i-strength', 'i-standings', 'i-games'], tab: 'season', build: prime },
+  { id: 'bracket', title: tx('The playoffs and the leaders'), lessons: ['i-bracket', 'i-leaders'], tab: 'season', build: () => play((s, p) => p.type === 'advance' && s.step === 'summary' && s.stage === 'NBA', star) },
+  { id: 'offers', title: tx('Offers'), lessons: ['i-offers', 'a-road', 'i-talks'], build: kind('offers') },
+  { id: 'arc', title: tx('A storyline'), lessons: ['a-arc'], build: kind('arc') },
+  { id: 'brand', title: tx('A brand deal'), lessons: ['i-brand'], build: kind('brand') },
+  { id: 'summer', title: tx('The summer program'), lessons: ['i-summer'], build: kind('summer') },
+  { id: 'event', title: tx('A turning point'), lessons: ['b-risk', 'b-event', 'b-result'], build: kind('event') },
+  { id: 'live', title: tx('A playoff game'), lessons: ['i-live'], build: kind('live', { ...star, live: true }) },
+  { id: 'crunch', title: tx('Crunch time'), lessons: ['a-crunch'], build: () => play(liveStage('crunch'), { ...star, live: true, tries: 12, pick: plays(true) }) },
+  { id: 'meter', title: tx('The last shot'), lessons: ['b-meter'], build: () => play(liveStage('clutch'), { ...star, live: true, pick: plays(false) }) },
+  { id: 'reel', title: tx('The last minutes of a final'), lessons: ['a-clutch'], page: true, build: () => {
       const s = play((g) => g.stage === 'NBA' && g.moments.some((m) => !!m.drama), { ...star, tries: 10 });
       return s && onlyMoment(s, (m) => !!m.drama);
     } },
-  { id: 'sim', title: 'Sim mode', lessons: ['a-sim', 'a-sim-calls'], build: () => play((s, p) => p.type !== 'retired' && !!s.simCalls?.length && s.stage === 'NBA', { ...star, quick: 'sim' }) },
+  { id: 'sim', title: tx('Sim mode'), lessons: ['a-sim', 'a-sim-calls'], build: () => play((s, p) => p.type !== 'retired' && !!s.simCalls?.length && s.stage === 'NBA', { ...star, quick: 'sim' }) },
   // last: the tabs and the switches, on a star's career
-  { id: 'wrap', title: 'Records, Extras and the switches', lessons: ['t-records', 't-timeline', 't-trophies', 't-extras', 't-back', 't-modes', 't-simple', 't-master', 't-guide', 't-manual', 't-settings', 't-new'], build: prime },
+  { id: 'wrap', title: tx('Records, Extras and the switches'), lessons: ['t-records', 't-timeline', 't-trophies', 't-extras', 't-back', 't-modes', 't-simple', 't-master', 't-guide', 't-manual', 't-settings', 't-new'], build: prime },
 ];
 
 /** The stops a player still needs: any with a lesson not done yet. */

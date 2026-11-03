@@ -14,6 +14,7 @@ import { PlayerArt } from '../art/Player';
 import { TEAM_STYLE, genericKits } from '../../content/teamStyle';
 import { team as teamOf } from '../selectors';
 import { sfx } from '../sound';
+import { t } from '../../i18n';
 
 type Ball = 'todo' | 'make' | 'miss';
 
@@ -124,8 +125,8 @@ function Round({ shooter, moneyRack, onDone, label }: { shooter: Shooter; moneyR
     sfx(made && v === THREES.money ? 'money' : r === 'swish' ? 'net' : r === 'make' ? 'rimin' : r === 'rim' ? 'rim' : 'brick');
     if (st === LIVELY.fireAfter) sfx('fire');
     setFlash(
-      (r === 'swish' ? `Swish! +${v}` : r === 'make' ? `Good +${v}` : r === 'rim' ? 'In and out' : 'Off the mark') +
-        (st === LIVELY.fireAfter ? ' · On fire!' : !made && streak >= LIVELY.fireAfter ? ' · Cooled off' : ''),
+      (r === 'swish' ? t('Swish! +{n}', { n: v }) : r === 'make' ? t('Good +{n}', { n: v }) : r === 'rim' ? t('In and out') : t('Off the mark')) +
+        (st === LIVELY.fireAfter ? ` · ${t('On fire!')}` : !made && streak >= LIVELY.fireAfter ? ` · ${t('Cooled off')}` : ''),
     );
     setI((x) => x + 1);
     iRef.current = i + 1;
@@ -170,12 +171,12 @@ function Round({ shooter, moneyRack, onDone, label }: { shooter: Shooter; moneyR
         <div className="meter-mark" ref={marker} />
       </div>
       <div className="three-flash" aria-live="polite">
-        {done ? (left <= 0 && i < balls.length ? 'Time!' : 'Round over') : surging ? 'Surge!' : flash || (started ? '' : 'Tap Shoot to start the clock')}
+        {done ? (left <= 0 && i < balls.length ? t('Time!') : t('Round over')) : surging ? t('Surge!') : flash || (started ? '' : t('Tap Shoot to start the clock'))}
       </div>
       <button className="btn block shoot-btn" onClick={shoot} disabled={done}>
-        {started ? 'Shoot' : 'Start'}
+        {started ? t('Shoot') : t('Start')}
       </button>
-      <p className="small muted">Stop the marker in the green; the bright middle is a swish. Every ball moves at its own pace and the green moves too. Watch for surges. Three in a row and you are on fire: a wider green until you miss. Money balls (red, white and blue) are worth 2 and a little harder.</p>
+      <p className="small muted">{t('Stop the marker in the green; the bright middle is a swish. Every ball moves at its own pace and the green moves too. Watch for surges. Three in a row and you are on fire: a wider green until you miss. Money balls (red, white and blue) are worth 2 and a little harder.')}</p>
     </div>
   );
 }
@@ -223,14 +224,14 @@ export function ThreesGame() {
     return (
       <section className="stack">
         <div className="kicker">Three-point contest</div>
-        <h2 className="title">{me ? 'Your money-ball rack' : 'Pick your shooter'}</h2>
+        <h2 className="title">{me ? t('Your money-ball rack') : t('Pick your shooter')}</h2>
         {!me ? (
           <div className="plans">
             {pool.map((s) => (
               <button key={s.name} className="choice shooter-choice" onClick={() => start(s)}>
                 {s.me && game ? <PlayerArt name={s.name} number={game.player.number} pos="SF" kitData={kitOf(s, game)} size={84} wear={game.player.wardrobe?.on} /> : <LegendBust name={s.name} team={s.team} kit="road" size={84} />}
-                <span className="label">{s.me ? `${s.name} (your player)` : s.name}</span>
-                <small>{s.skill >= 95 ? 'Elite stroke: a wide green zone' : s.skill >= 90 ? 'Pure shooter' : s.skill >= 80 ? 'Good shooter' : 'Streaky: a narrow green zone'}</small>
+                <span className="label">{s.me ? t('{name} (your player)', { name: s.name }) : s.name}</span>
+                <small>{s.skill >= 95 ? t('Elite stroke: a wide green zone') : s.skill >= 90 ? t('Pure shooter') : s.skill >= 80 ? t('Good shooter') : t('Streaky: a narrow green zone')}</small>
               </button>
             ))}
           </div>
@@ -238,34 +239,32 @@ export function ThreesGame() {
           <>
             {/* he always starts at rack 1, as in the real contest: the pick only moves the money balls (owner bug report, round 24) */}
             <ThreesCourt kit={kitOf(me, game)} name={me.name} accent="#C8102E" rack={0} balls={Array(THREES.racks * THREES.balls).fill('todo')} moneyRack={money} onFire={false} shot={null} score={0} left={THREES.seconds} />
-            <p className="small muted">Every round starts at rack 1 and works round to rack 5. Pick the rack that is all money balls (2 points each): most shooters put it last, in the far corner; tired arms say otherwise.</p>
+            <p className="small muted">{t('Every round starts at rack 1 and works round to rack 5. Pick the rack that is all money balls (2 points each): most shooters put it last, in the far corner; tired arms say otherwise.')}</p>
             <div className="seg">
               {[0, 1, 2, 3, 4].map((r) => (
                 <button key={r} aria-pressed={money === r} onClick={() => setMoney(r)}>
-                  Money rack {r + 1}
+                  {t('Money rack {n}', { n: r + 1 })}
                 </button>
               ))}
             </div>
-            <p className="small">
-              Field: {field.map((f) => f.name).join(', ')}. Top three go to the final.
-            </p>
+            <p className="small">{t('Field: {names}. Top three go to the final.', { names: field.map((f) => f.name).join(', ') })}</p>
             <button className="btn" onClick={() => setStage('r1')}>
-              Step to the line
+              {t('Step to the line')}
             </button>
           </>
         )}
       </section>
     );
 
-  if (stage === 'r1') return <Round shooter={me!} moneyRack={money} onDone={finishR1} label="First round" />;
-  if (stage === 'final') return <Round shooter={me!} moneyRack={money} onDone={finishFinal} label="Final round" />;
+  if (stage === 'r1') return <Round shooter={me!} moneyRack={money} onDone={finishR1} label={t('First round')} />;
+  if (stage === 'final') return <Round shooter={me!} moneyRack={money} onDone={finishFinal} label={t('Final round')} />;
 
   const board = stage === 'board' ? r1 : fin;
   const place = board.findIndex((x) => x.me) + 1;
   return (
     <section className="stack">
-      <div className="kicker">{stage === 'board' ? 'First round' : 'Final'}</div>
-      <h2 className="title">{stage === 'done' ? (place === 1 ? 'Three-point champion!' : `You finished ${place === 2 ? 'second' : 'third'}`) : place <= 3 ? 'Into the final' : 'Out in the first round'}</h2>
+      <div className="kicker">{stage === 'board' ? t('First round') : t('Final')}</div>
+      <h2 className="title">{stage === 'done' ? (place === 1 ? t('Three-point champion!') : place === 2 ? t('You finished second') : t('You finished third')) : place <= 3 ? t('Into the final') : t('Out in the first round')}</h2>
       <div className="five">
         {board.map((x, k) => (
           <div key={x.name} className={`five-row${x.me ? ' mine' : ''}`}>
@@ -281,7 +280,7 @@ export function ThreesGame() {
       )}
       {stage === 'board' && place <= 3 ? (
         <button className="btn" onClick={() => setStage('final')}>
-          Shoot the final
+          {t('Shoot the final')}
         </button>
       ) : (
         <button
@@ -291,7 +290,7 @@ export function ThreesGame() {
             setStage('setup');
           }}
         >
-          Play again
+          {t('Play again')}
         </button>
       )}
     </section>

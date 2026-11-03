@@ -6,6 +6,7 @@ import { mix } from '../art/color';
 import { DIGITS, toPaths } from '../art/pixel';
 import { lookOf } from '../art/Player';
 import { DRIBBLE, DUNK, noBall, paint, type Pose } from '../art/sprite';
+import { t } from '../../i18n';
 
 // The dunk contest stage (round 17), side on: the crowd, the stanchion, glass and rim on the
 // right, hardwood with the free-throw line, the judges' table up front. The dunker runs in from
@@ -107,48 +108,48 @@ export function DunkStage({ kit, name, design, phase, progress = 0, made = true,
     const mateLook = lookOf(`${name} teammate`, '#18141C');
     return { run: toPaths(paint(noBall(DRIBBLE), kit, look, 0)), fly: toPaths(paint(noBall(DUNK), kit, look, 0)), mate: toPaths(paint(noBall(DRIBBLE), mate, mateLook, 0)) };
   }, [name, kit]);
-  const [t, setT] = useState(phase === 'replay' ? 0 : 0);
+  const [time, setTime] = useState(phase === 'replay' ? 0 : 0);
   const raf = useRef(0);
   useEffect(() => {
     cancelAnimationFrame(raf.current);
-    if (phase === 'idle') return setT(0);
-    if (phase === 'taps') return setT(Math.min(0.7, progress * 0.7));
+    if (phase === 'idle') return setTime(0);
+    if (phase === 'taps') return setTime(Math.min(0.7, progress * 0.7));
     const t0 = performance.now();
     const tick = (now: number) => {
       const u = Math.min(1, (now - t0) / 2200);
-      setT(u);
+      setTime(u);
       if (u < 1) raf.current = requestAnimationFrame(tick);
     };
     raf.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf.current);
   }, [phase, progress]);
 
-  const p = path(design, t);
-  const slam = phase === 'replay' && made && t >= 0.72 && t < 0.9;
-  const clank = phase === 'replay' && !made && t >= 0.7;
+  const p = path(design, time);
+  const slam = phase === 'replay' && made && time >= 0.72 && time < 0.9;
+  const clank = phase === 'replay' && !made && time >= 0.7;
   // the ball: in hand on the run, up high in flight, through the rim on a make, off it on a miss
   let ball: [number, number] | null = null;
-  if (design.prop === 'lob' && t > 0.2 && t < 0.6) {
-    const u = (t - 0.2) / 0.4;
+  if (design.prop === 'lob' && time > 0.2 && time < 0.6) {
+    const u = (time - 0.2) / 0.4;
     ball = [96 + (RIM[0] - 30 - 96) * u, 110 - Math.sin(u * Math.PI) * 70 + u * -20];
-  } else if (design.prop === 'glass' && t > 0.25 && t < 0.55) {
-    const u = (t - 0.25) / 0.3;
+  } else if (design.prop === 'glass' && time > 0.25 && time < 0.55) {
+    const u = (time - 0.25) / 0.3;
     ball = u < 0.6 ? [p.x + (268 - p.x) * (u / 0.6), FLOOR - 40 - (u / 0.6) * 30] : [268 - ((u - 0.6) / 0.4) * 20, FLOOR - 70 + ((u - 0.6) / 0.4) * 4];
   } else if (clank) {
-    const u = Math.min(1, (t - 0.7) / 0.3);
+    const u = Math.min(1, (time - 0.7) / 0.3);
     ball = [RIM[0] - 4 - u * 40, RIM[1] - 4 - Math.sin(u * Math.PI) * 26 + u * 70];
-  } else if (made && t >= 0.72 && t < 0.92) {
-    const u = (t - 0.72) / 0.2;
+  } else if (made && time >= 0.72 && time < 0.92) {
+    const u = (time - 0.72) / 0.2;
     ball = [RIM[0] - 4, RIM[1] + u * 30];
-  } else if (t < 0.72 && !(design.prop === 'lob' && t <= 0.6)) {
+  } else if (time < 0.72 && !(design.prop === 'lob' && time <= 0.6)) {
     // windmill and friends swing the ball round the body
-    const swing = design.moves.some((m) => ['windmill', 'legs', 'back', 'cradle', 'scorpion', 'pump'].includes(m)) && p.air ? Math.sin(t * 40) * 9 : 0;
-    ball = p.air ? [p.x - 10 + swing, p.y - 50 + Math.abs(swing)] : [p.x - 14, p.y - 18 + Math.abs(Math.sin(t * 50)) * 6];
+    const swing = design.moves.some((m) => ['windmill', 'legs', 'back', 'cradle', 'scorpion', 'pump'].includes(m)) && p.air ? Math.sin(time * 40) * 9 : 0;
+    ball = p.air ? [p.x - 10 + swing, p.y - 50 + Math.abs(swing)] : [p.x - 14, p.y - 18 + Math.abs(Math.sin(time * 50)) * 6];
   }
-  const shake = slam ? (Math.floor(t * 100) % 2 ? 1 : -1) : 0;
+  const shake = slam ? (Math.floor(time * 100) % 2 ? 1 : -1) : 0;
   const hype = judges ? judges.reduce((a, b) => a + b, 0) : 0;
   return (
-    <svg className={`dunk-stage${hype >= 45 ? ' hype' : ''}${hype === 50 ? ' fifty' : ''}`} viewBox={`0 0 ${SW} ${SH}`} shapeRendering="crispEdges" role="img" aria-label="The dunk contest floor">
+    <svg className={`dunk-stage${hype >= 45 ? ' hype' : ''}${hype === 50 ? ' fifty' : ''}`} viewBox={`0 0 ${SW} ${SH}`} shapeRendering="crispEdges" role="img" aria-label={t('The dunk contest floor')}>
       {stage.map((s) => (
         <path key={s.fill} d={s.d} fill={s.fill} />
       ))}
@@ -194,7 +195,7 @@ export function DunkStage({ kit, name, design, phase, progress = 0, made = true,
           <rect x={x + 3} y={157} width={6} height={2} fill="#1C1512" />
         </g>
       ))}
-      {phase === 'replay' && t >= 1 && judges && judges.map((j, i) => <Card key={i} x={[10, 32, 54, 76, 98][i] - 1} score={j} delay={0.15 + i * 0.28} />)}
+      {phase === 'replay' && time >= 1 && judges && judges.map((j, i) => <Card key={i} x={[10, 32, 54, 76, 98][i] - 1} score={j} delay={0.15 + i * 0.28} />)}
     </svg>
   );
 }

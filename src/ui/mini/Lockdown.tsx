@@ -14,6 +14,7 @@ import { genericKits, type Kit } from '../../content/teamStyle';
 import { team as teamOf } from '../selectors';
 import { Icon } from '../art/Icon';
 import { musicVolume } from '../sound';
+import { t, tx } from '../../i18n';
 
 const W = 360;
 const H = 540;
@@ -23,8 +24,8 @@ const SPEED = (HIT - 40) / LEAD;
 const LANE_X = [52, 192];
 const LANE_W = 116;
 const COLOR = [
-  { base: '#F08A2C', dark: '#B4531E', light: '#FFC285', name: 'BLOCK', key: 'A' },
-  { base: '#4DABF7', dark: '#1971C2', light: '#A5D8FF', name: 'STEAL', key: 'S' },
+  { base: '#F08A2C', dark: '#B4531E', light: '#FFC285', name: tx('BLOCK'), key: 'A' },
+  { base: '#4DABF7', dark: '#1971C2', light: '#A5D8FF', name: tx('STEAL'), key: 'S' },
 ];
 const JUDGE_COLOR: Record<string, string> = { perfect: '#FFD43B', good: '#69DB7C', miss: '#FF6B6B', held: '#FFD43B', dropped: '#FF6B6B' };
 
@@ -347,6 +348,12 @@ function Stage({ chart, audio, muted, onDone }: { chart: Chart; audio: AudioCont
       drums(audio, g, chart, s.start);
     } else s.perf0 = performance.now() / 1000 + 0.35;
     const last = Math.max(...chart.notes.map((n) => n.t + n.len));
+    // round 40: the words the canvas draws, in the player's language (once a run)
+    const word: Record<Judge | 'held' | 'dropped', string> = { perfect: t('PERFECT'), good: t('GOOD'), miss: t('MISS'), held: t('HELD'), dropped: t('LET GO') };
+    const laneWord = COLOR.map((c) => t(c.name));
+    const under = [t('contest the shot'), t('jump the lane')];
+    const theirSet = t('THEIR SET');
+    const comboWord = t('COMBO');
     const say = (text: string, kind: string, t: number) => (s.judge = { text, kind, at: t });
     const hit = (kind: Judge | 'held' | 'dropped', t: number, lane: Lane) => {
       if (kind !== 'held') s.act = { kind: kind === 'miss' || kind === 'dropped' ? (lane === 0 ? 'score' : 'blowby') : lane === 0 ? 'block' : 'steal', at: t };
@@ -354,7 +361,7 @@ function Stage({ chart, audio, muted, onDone }: { chart: Chart; audio: AudioCont
       else s.combo += 1;
       s.tally.maxCombo = Math.max(s.tally.maxCombo, s.combo);
       s.tally[kind] += 1;
-      say(kind === 'held' ? 'HELD' : kind === 'dropped' ? 'LET GO' : kind.toUpperCase(), kind, t);
+      say(word[kind], kind, t);
     };
     const press = (lane: Lane) => {
       const t = now();
@@ -486,10 +493,10 @@ function Stage({ chart, audio, muted, onDone }: { chart: Chart; audio: AudioCont
         c.fillStyle = on ? '#15171D' : COLOR[l].light;
         c.font = '800 15px "Big Shoulders Display", system-ui, sans-serif';
         c.textAlign = 'center';
-        c.fillText(`${COLOR[l].key} · ${COLOR[l].name}`, x + LANE_W / 2, HIT + 5);
+        c.fillText(`${COLOR[l].key} · ${laneWord[l]}`, x + LANE_W / 2, HIT + 5);
         c.fillStyle = '#8A93A3';
         c.font = '600 12px "IBM Plex Mono", monospace';
-        c.fillText(l === 0 ? 'contest the shot' : 'jump the lane', x + LANE_W / 2, HIT + 40);
+        c.fillText(under[l], x + LANE_W / 2, HIT + 40);
       }
       // the count-in, the set they are running, the combo and the call
       c.textAlign = 'center';
@@ -503,7 +510,7 @@ function Stage({ chart, audio, muted, onDone }: { chart: Chart; audio: AudioCont
       c.fillStyle = '#8A93A3';
       c.font = '600 12px "IBM Plex Mono", monospace';
       c.textAlign = 'left';
-      c.fillText('THEIR SET', 12, 22);
+      c.fillText(theirSet, 12, 22);
       c.fillStyle = '#F1F3F5';
       c.font = '800 20px "Big Shoulders Display", system-ui, sans-serif';
       c.fillText(set ? set.name.toUpperCase() : '—', 12, 44);
@@ -514,7 +521,7 @@ function Stage({ chart, audio, muted, onDone }: { chart: Chart; audio: AudioCont
         c.fillText(String(s.combo), W - 12, 40);
         c.fillStyle = '#8A93A3';
         c.font = '600 12px "IBM Plex Mono", monospace';
-        c.fillText('COMBO', W - 12, 56);
+        c.fillText(comboWord, W - 12, 56);
       }
       const age = t - s.judge.at;
       if (age < 0.45 && s.judge.text) {
@@ -545,12 +552,12 @@ function Stage({ chart, audio, muted, onDone }: { chart: Chart; audio: AudioCont
 
   return (
     <div className="ld-stage">
-      <canvas ref={canvas} className="ld-canvas" style={{ aspectRatio: `${W} / ${H}` }} aria-label="Lockdown: notes falling toward the line" />
+      <canvas ref={canvas} className="ld-canvas" style={{ aspectRatio: `${W} / ${H}` }} aria-label={t('Lockdown: notes falling toward the line')} />
       <div className="ld-pads">
         {[0, 1].map((l) => (
           <button key={l} className="ld-pad" style={{ ['--lane' as string]: COLOR[l].base }}>
             <Icon name={l === 0 ? 'block' : 'steal'} size={26} />
-            {COLOR[l].name} <span className="kbd">{COLOR[l].key}</span>
+            {t(COLOR[l].name)} <span className="kbd">{COLOR[l].key}</span>
           </button>
         ))}
       </div>
@@ -656,36 +663,37 @@ export function LockdownGame() {
     return (
       <section className="stack stage-in ld-intro">
         <div>
-          <div className="kicker">Mini-game · rhythm</div>
+          <div className="kicker">{t('Mini-game · rhythm')}</div>
           <h1 className="hub-title with-icon">
             <Icon name="lockdown" size={44} />
             Lockdown
           </h1>
           <p className="prose">
-            The offense runs its sets to the beat. Notes fall down two lanes: <b>Block</b> on the left (A) and <b>Steal</b> on the right (S). Press as each one reaches the line; hold a long note until it ends. Perfect timing is worth the most, a clean hold counts again, and a miss breaks your combo.
+            {t('The offense runs its sets to the beat. Notes fall down two lanes:')} <b>{t('Block')}</b> {t('on the left (A) and')} <b>{t('Steal')}</b> {t('on the right (S). Press as each one reaches the line; hold a long note until it ends. Perfect timing is worth the most, a clean hold counts again, and a miss breaks your combo.')}
           </p>
           <p className="small muted">
-            This run: {chart.bpm} beats a minute, about {Math.round(chart.length)} seconds, {chart.notes.length} notes ({chart.notes.filter((n) => n.len).length} long), {new Set(chart.sets.map((x) => x.name)).size} of the {PATTERNS.length} sets they run. {me ? `${me.name}'s grade pays perimeter and interior defense.` : 'With a career, your grade pays perimeter and interior defense.'}
+            {t('This run: {bpm} beats a minute, about {sec} seconds, {notes} notes ({long} long), {sets} of the {all} sets they run.', { bpm: chart.bpm, sec: Math.round(chart.length), notes: chart.notes.length, long: chart.notes.filter((n) => n.len).length, sets: new Set(chart.sets.map((x) => x.name)).size, all: PATTERNS.length })}{' '}
+            {me ? t("{name}'s grade pays perimeter and interior defense.", { name: me.name }) : t('With a career, your grade pays perimeter and interior defense.')}
           </p>
         </div>
         <div className="ld-intro-row">
           {me && <PlayerArt name={me.name} number={me.number} pos="PG" size={96} noBall wear={me.wardrobe?.on} />}
           <div className="ld-keys">
             <span>
-              <span className="kbd">A</span> Block
+              <span className="kbd">A</span> {t('Block')}
             </span>
             <span>
-              <span className="kbd">S</span> Steal
+              <span className="kbd">S</span> {t('Steal')}
             </span>
-            <span className="muted small">or tap the pads under the lanes</span>
+            <span className="muted small">{t('or tap the pads under the lanes')}</span>
           </div>
         </div>
         <div className="row" style={{ gap: 10 }}>
           <button className="btn sb-go" onClick={start}>
-            Start
+            {t('Start')}
           </button>
           <button className="btn ghost" aria-pressed={muted} onClick={() => setMuted(!muted)}>
-            {muted ? 'Sound off' : 'Sound on'}
+            {muted ? t('Sound off') : t('Sound on')}
           </button>
         </div>
         <LockdownCourt />
@@ -696,13 +704,13 @@ export function LockdownGame() {
     return (
       <section className="stack stage-in">
         <div className="row" style={{ gap: 10, alignItems: 'center' }}>
-          <div className="kicker">Lockdown · {chart.bpm} BPM</div>
+          <div className="kicker">{t('Lockdown · {bpm} BPM', { bpm: chart.bpm })}</div>
           <div className="spacer" />
           <button className="btn small ghost" onClick={() => setMuted(!muted)}>
-            {muted ? 'Sound off' : 'Sound on'}
+            {muted ? t('Sound off') : t('Sound on')}
           </button>
         </div>
-        <Stage chart={chart} audio={audio} muted={muted} onDone={(t) => (setTally(t), setPhase('done'))} />
+        <Stage chart={chart} audio={audio} muted={muted} onDone={(done) => (setTally(done), setPhase('done'))} />
       </section>
     );
 
@@ -713,16 +721,16 @@ export function LockdownGame() {
       <div className="ld-result">
         <span className={`ld-grade g-${grade}`}>{grade}</span>
         <div className="stack" style={{ gap: 4 }}>
-          <div className="kicker">Lockdown · final</div>
-          <h2 className="title">{grade === 'S' ? 'Nobody scored on you' : grade === 'A' ? 'Lockdown defense' : grade === 'B' ? 'Solid on the ball' : grade === 'C' ? 'A step slow' : 'They got buckets'}</h2>
+          <div className="kicker">{t('Lockdown · final')}</div>
+          <h2 className="title">{grade === 'S' ? t('Nobody scored on you') : grade === 'A' ? t('Lockdown defense') : grade === 'B' ? t('Solid on the ball') : grade === 'C' ? t('A step slow') : t('They got buckets')}</h2>
           <p className="small">
-            {(acc * 100).toFixed(1)}% · {tally.perfect} perfect, {tally.good} good, {tally.miss} missed · long notes {tally.held} held, {tally.dropped} let go · best combo {tally.maxCombo}
+            {t('{acc}% · {perfect} perfect, {good} good, {miss} missed · long notes {held} held, {dropped} let go · best combo {combo}', { acc: (acc * 100).toFixed(1), perfect: tally.perfect, good: tally.good, miss: tally.miss, held: tally.held, dropped: tally.dropped, combo: tally.maxCombo })}
           </p>
         </div>
       </div>
       <MiniBonus result={{ game: 'rhythm', grade }} />
       <button className="btn ghost" onClick={() => (setSeed(Math.floor(Math.random() * 2 ** 31)), setTally(null), setPhase('intro'))}>
-        Run it back (new sets)
+        {t('Run it back (new sets)')}
       </button>
     </section>
   );

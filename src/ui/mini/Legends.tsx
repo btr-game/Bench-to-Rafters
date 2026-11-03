@@ -15,10 +15,11 @@ import type { Bracket, League, Moment } from '../../engine/types';
 import { TextBracket } from '../components/TextBracket';
 import { FinalReel } from '../components/Overlays';
 import { MiniBonus } from './MiniBonus';
+import { t, tx } from '../../i18n';
 
 const TIERS = ['Favorite', 'Contender', 'Dark horse', 'Long shot'] as const;
 const tierOf = (rank: number) => (rank <= 3 ? TIERS[0] : rank <= 10 ? TIERS[1] : rank <= 20 ? TIERS[2] : TIERS[3]);
-const TIER_PLURAL: Record<(typeof TIERS)[number], string> = { Favorite: 'Favorites', Contender: 'Contenders', 'Dark horse': 'Dark horses', 'Long shot': 'Long shots' };
+const TIER_PLURAL: Record<(typeof TIERS)[number], string> = { Favorite: tx('Favorites'), Contender: tx('Contenders'), 'Dark horse': tx('Dark horses'), 'Long shot': tx('Long shots') };
 const last = (name: string) => name.split(' ').slice(-1)[0];
 
 function Five({ t }: { t: LTeam }) {
@@ -49,12 +50,9 @@ function ChemBox({ c }: { c: Chemistry }) {
   return (
     <div className={`chem chem-${c.label.toLowerCase()}`}>
       <div className="row" style={{ gap: 8 }}>
-        <span className="kicker">Chemistry</span>
+        <span className="kicker">{t('Chemistry')}</span>
         <b>{c.label}</b>
-        <span className="small muted">
-          ({c.value >= 0 ? '+' : ''}
-          {c.value} team rating)
-        </span>
+        <span className="small muted">{t('({n} team rating)', { n: `${c.value >= 0 ? '+' : ''}${c.value}` })}</span>
       </div>
       <ul>
         {c.notes.map((n) => (
@@ -86,32 +84,32 @@ function Picker({ teams, onPick, me }: { teams: LTeam[]; onPick: (id: string) =>
   return (
     <section className="stack stage-in">
       <div className="kicker">Legends showdown</div>
-      <h2 className="title">Pick your franchise</h2>
+      <h2 className="title">{t('Pick your franchise')}</h2>
       <p className="small muted">
         {me
-          ? `Every team plays with its all-time starting five, and ${me.name} (${me.pos}, OVR ${me.ovr}, ${FOCUS_LABEL[me.tag].name.toLowerCase()} type) takes one legend's place. Each franchise has an identity: the right fit is worth real chemistry.`
-          : 'Every team plays with its all-time starting five. You add one super-rookie. Each franchise has an identity: build a rookie who fits it.'}
+          ? t("Every team plays with its all-time starting five, and {name} ({pos}, OVR {ovr}, {type} type) takes one legend's place. Each franchise has an identity: the right fit is worth real chemistry.", { name: me.name, pos: me.pos, ovr: me.ovr, type: FOCUS_LABEL[me.tag].name.toLowerCase() })
+          : t('Every team plays with its all-time starting five. You add one super-rookie. Each franchise has an identity: build a rookie who fits it.')}
       </p>
       {TIERS.map((tier) => {
         const list = teams.filter((_, i) => tierOf(i + 1) === tier);
         return (
           <div key={tier} className="stack lg-tier">
             <div className={`lg-tier-head t-${tier.replace(' ', '-').toLowerCase()}`}>
-              {TIER_PLURAL[tier]} <span className="muted">{list.length}</span>
+              {t(TIER_PLURAL[tier])} <span className="muted">{list.length}</span>
             </div>
-            {list.map((t) => (
-              <button key={t.id} className="lg-row" style={{ ['--team' as string]: t.color }} onClick={() => onPick(t.id)}>
+            {list.map((tm) => (
+              <button key={tm.id} className="lg-row" style={{ ['--team' as string]: tm.color }} onClick={() => onPick(tm.id)}>
                 <b>
-                  {t.name} <span className="lg-ident">{FRANCHISE_IDENTITY[t.id]?.name}</span>
+                  {tm.name} <span className="lg-ident">{FRANCHISE_IDENTITY[tm.id]?.name}</span>
                 </b>
                 <span className="lg-faces" aria-hidden="true">
-                  {t.five.map((p) => (
-                    <LegendBust key={p.name} name={p.name} team={t.id} size={40} />
+                  {tm.five.map((p) => (
+                    <LegendBust key={p.name} name={p.name} team={tm.id} size={40} />
                   ))}
                 </span>
-                <span className="muted small">{t.five.map((p) => last(p.name)).join(' · ')}</span>
-                {me && <span className={`lg-chem chem-${bestChem(t, me).label.toLowerCase()}`}>{bestChem(t, me).label}</span>}
-                <span className="lg-rating">{t.rating.toFixed(1)}</span>
+                <span className="muted small">{tm.five.map((p) => last(p.name)).join(' · ')}</span>
+                {me && <span className={`lg-chem chem-${bestChem(tm, me).label.toLowerCase()}`}>{bestChem(tm, me).label}</span>}
+                <span className="lg-rating">{tm.rating.toFixed(1)}</span>
               </button>
             ))}
           </div>
@@ -122,58 +120,64 @@ function Picker({ teams, onPick, me }: { teams: LTeam[]; onPick: (id: string) =>
 }
 
 /** Step 2: name the rookie and tap the legend he replaces. */
-function Setup({ t, onBack, onStart, me }: { t: LTeam; onBack: () => void; onStart: (name: string, bench: string) => void; me: CareerMe | null }) {
+function Setup({ t: tm, onBack, onStart, me }: { t: LTeam; onBack: () => void; onStart: (name: string, bench: string) => void; me: CareerMe | null }) {
   const [name, setName] = useState(() => me?.name ?? `${FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)]} ${LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)]}`);
   const [bench, setBench] = useState<string | null>(null);
-  const id = FRANCHISE_IDENTITY[t.id];
-  const chem = me && bench ? chemistryOf(t.id, t.five, me, bench) : null;
+  const id = FRANCHISE_IDENTITY[tm.id];
+  const chem = me && bench ? chemistryOf(tm.id, tm.five, me, bench) : null;
+  const thrice = LEGENDS.rookieWeight === 3;
   return (
     <section className="stack stage-in">
       <button className="link-btn" onClick={onBack}>
-        ← All teams
+        ← {t('All teams')}
       </button>
-      <section className="card stack lg-setup" style={{ ['--team' as string]: t.color }}>
-        <div className="kicker">Your franchise</div>
-        <h2 className="title">{t.name}</h2>
+      <section className="card stack lg-setup" style={{ ['--team' as string]: tm.color }}>
+        <div className="kicker">{t('Your franchise')}</div>
+        <h2 className="title">{tm.name}</h2>
         {id && (
           <p className="lg-identity">
-            <b>{id.name}.</b> {id.text} <span className="muted">Fits: {id.wants.map((w) => FOCUS_LABEL[w].name.toLowerCase()).join(', ')} types.</span>
+            <b>{id.name}.</b> {id.text} <span className="muted">{t('Fits: {types} types.', { types: id.wants.map((w) => FOCUS_LABEL[w].name.toLowerCase()).join(', ') })}</span>
           </p>
         )}
         {me ? (
           <p className="small">
-            <b>{me.name}</b> · {me.pos} · OVR {me.ovr} · {FOCUS_LABEL[me.tag].name} type
+            <b>{me.name}</b> · {me.pos} · OVR {me.ovr} · {t('{type} type', { type: FOCUS_LABEL[me.tag].name })}
           </p>
         ) : (
           <div className="field">
-            <label htmlFor="rk-name">Your super-rookie</label>
+            <label htmlFor="rk-name">{t('Your super-rookie')}</label>
             <input id="rk-name" type="text" maxLength={28} value={name} onChange={(e) => setName(e.target.value)} />
           </div>
         )}
-        <div className="small">Tap the legend {me ? 'you replace' : 'he replaces'}:</div>
+        <div className="small">{me ? t('Tap the legend you replace:') : t('Tap the legend he replaces:')}</div>
         <div className="stack lg-bench">
-          {t.five.map((p) => {
+          {tm.five.map((p) => {
             const on = bench === p.name;
             return (
               <button key={p.name} className={`lg-bench-row${on ? ' on' : ''}`} aria-pressed={on} onClick={() => setBench(p.name)}>
-                <LegendBust name={p.name} team={t.id} size={52} />
+                <LegendBust name={p.name} team={tm.id} size={52} />
                 <span className="lg-pos">{p.pos}</span>
                 <span className="lg-who">
                   <s>{p.name}</s>
-                  <b>{name.trim() || 'The Rookie'}</b>
+                  <b>{name.trim() || t('The Rookie')}</b>
                 </span>
-                <span className="lg-ovr">{on ? (me ? `you · ${me.ovr}` : 'rookie') : p.ovr}</span>
+                <span className="lg-ovr">{on ? (me ? t('you · {ovr}', { ovr: me.ovr }) : t('rookie')) : p.ovr}</span>
               </button>
             );
           })}
         </div>
         {chem && <ChemBox c={chem} />}
         <p className="small muted">
-          {me ? 'You count' : 'The rookie counts'} {LEGENDS.rookieWeight === 3 ? 'three times' : 'twice'} as much as a legend, and {me ? 'your' : 'his'} form can swing a series.
-          {me ? '' : ' Chemistry is set when he joins, from the type he becomes.'}
+          {me
+            ? thrice
+              ? t('You count three times as much as a legend, and your form can swing a series.')
+              : t('You count twice as much as a legend, and your form can swing a series.')
+            : thrice
+              ? t('The rookie counts three times as much as a legend, and his form can swing a series. Chemistry is set when he joins, from the type he becomes.')
+              : t('The rookie counts twice as much as a legend, and his form can swing a series. Chemistry is set when he joins, from the type he becomes.')}
         </p>
         <button className="btn" disabled={!bench} onClick={() => onStart(name, bench!)}>
-          {me ? 'Join them' : 'Draft him'}
+          {me ? t('Join them') : t('Draft him')}
         </button>
       </section>
     </section>
@@ -206,14 +210,14 @@ export function LegendsGame() {
   };
 
   if (!st) {
-    const t = teams.find((x) => x.id === pick);
-    return t ? (
+    const chosen = teams.find((x) => x.id === pick);
+    return chosen ? (
       <Setup
-        key={t.id}
-        t={t}
+        key={chosen.id}
+        t={chosen}
         me={careerMe}
         onBack={() => setPick(null)}
-        onStart={(name, bench) => setSt(careerMe ? newLegendsCareer(Math.floor(Math.random() * 2 ** 31), t.id, careerMe, bench) : newLegends(Math.floor(Math.random() * 2 ** 31), t.id, name, bench))}
+        onStart={(name, bench) => setSt(careerMe ? newLegendsCareer(Math.floor(Math.random() * 2 ** 31), chosen.id, careerMe, bench) : newLegends(Math.floor(Math.random() * 2 ** 31), chosen.id, name, bench))}
       />
     ) : (
       <Picker teams={teams} onPick={setPick} me={careerMe} />
@@ -231,9 +235,9 @@ export function LegendsGame() {
       id: 1,
       kind: f.won ? 'title' : 'tournament',
       title: `${me.name}`,
-      text: f.won ? 'Champions of the legends.' : `The ${opp.name} end your run in the ${f.round.toLowerCase()}.`,
+      text: f.won ? t('Champions of the legends.') : t('The {team} end your run in the {round}.', { team: opp.name, round: f.round.toLowerCase() }),
       color: me.color,
-      game: { n: 1, opp: opp.id, home: true, res: f.won ? 'W' : 'L', us: f.us, them: f.them, line: null, post: `${f.round}, last game`, level: 'NBA', teamShort: me.id },
+      game: { n: 1, opp: opp.id, home: true, res: f.won ? 'W' : 'L', us: f.us, them: f.them, line: null, post: t('{round}, last game', { round: f.round }), level: 'NBA', teamShort: me.id },
       drama: f.drama,
       lostFinal: !f.won,
     };
@@ -242,7 +246,7 @@ export function LegendsGame() {
         <div className="overlay-inner">
           <FinalReel m={m} />
           <button className="btn moment-btn" onClick={() => setReel(false)}>
-            Continue
+            {t('Continue')}
           </button>
         </div>
       </div>
@@ -267,7 +271,7 @@ export function LegendsGame() {
         {started && (
           <div className="record">
             {me.w}–{me.l}
-            <small>SEASON</small>
+            <small>{t('SEASON')}</small>
           </div>
         )}
       </div>
@@ -276,9 +280,7 @@ export function LegendsGame() {
         {st.phase === 'grow' && (
           <section className="card stack">
             <div className="row">
-              <div className="kicker">
-                Development · year {r.season + 1} of {years}
-              </div>
+              <div className="kicker">{t('Development · year {n} of {total}', { n: r.season + 1, total: years })}</div>
               <div className="spacer" />
               <div className="lg-dots" aria-hidden="true">
                 {Array.from({ length: years }, (_, k) => (
@@ -290,7 +292,7 @@ export function LegendsGame() {
               <div>
                 <div className="sec-title">{r.name}</div>
                 <div className="small muted">
-                  {r.pos} · replacing {last(r.replaces)} · {r.pot >= 96 ? 'a once-in-a-generation talent' : r.pot >= 92 ? 'a future MVP' : 'a future All-Star'}
+                  {r.pos} · {t('replacing {name}', { name: last(r.replaces) })} · {r.pot >= 96 ? t('a once-in-a-generation talent') : r.pot >= 92 ? t('a future MVP') : t('a future All-Star')}
                 </div>
               </div>
               <div className="lg-big">{Math.round(r.ovr)}</div>
@@ -307,7 +309,7 @@ export function LegendsGame() {
                 </button>
               ))}
             </div>
-            <p className="small muted">What he works on most becomes his identity, and changes what kind of team you are.</p>
+            <p className="small muted">{t('What he works on most becomes his identity, and changes what kind of team you are.')}</p>
           </section>
         )}
 
@@ -315,18 +317,18 @@ export function LegendsGame() {
           <section className="card stack">
             <div className="lg-rookie">
               <div>
-                <div className="kicker">Ready</div>
+                <div className="kicker">{t('Ready')}</div>
                 <div className="sec-title">{r.name}</div>
-                <div className="small muted">{FOCUS_LABEL[rookieTag(r)].name} type</div>
+                <div className="small muted">{t('{type} type', { type: FOCUS_LABEL[rookieTag(r)].name })}</div>
               </div>
               <div className="lg-big">{Math.round(r.ovr)}</div>
             </div>
             {st.chem && <ChemBox c={st.chem} />}
             {note && <p className="small lg-note">{note}</p>}
             <Five t={me} />
-            <p className="small muted">29 games, one against every other all-time five. The top eight in each conference make the playoffs.</p>
+            <p className="small muted">{t('29 games, one against every other all-time five. The top eight in each conference make the playoffs.')}</p>
             <button className="btn block" onClick={() => act(playSeason)}>
-              Play the season
+              {t('Play the season')}
             </button>
           </section>
         )}
@@ -336,22 +338,22 @@ export function LegendsGame() {
             <div className="kicker">{st.rounds[st.next!.round].name}</div>
             <div className="lg-match">
               <div className="lg-side" style={{ ['--team' as string]: me.color }}>
-                <span className="small muted">Seed {seedOf(st, me.id)}</span>
+                <span className="small muted">{t('Seed {n}', { n: seedOf(st, me.id) })}</span>
                 <b>{me.name}</b>
                 <span className="lg-rating">{me.rating.toFixed(1)}</span>
               </div>
-              <div className="lg-vs">vs</div>
+              <div className="lg-vs">{t('vs')}</div>
               <div className="lg-side" style={{ ['--team' as string]: sc.opp.color }}>
-                <span className="small muted">Seed {seedOf(st, sc.opp.id)}</span>
+                <span className="small muted">{t('Seed {n}', { n: seedOf(st, sc.opp.id) })}</span>
                 <b>{sc.opp.name}</b>
                 <span className="lg-rating">{sc.opp.rating.toFixed(1)}</span>
               </div>
             </div>
             <p className="scout-hint">
-              <b>Scouting:</b> {STYLE_HINT[sc.opp.style]}
+              <b>{t('Scouting:')}</b> {STYLE_HINT[sc.opp.style]}
             </p>
             <button className="link-btn" aria-expanded={scout} onClick={() => setScout(!scout)}>
-              {scout ? 'Hide' : 'See'} their five
+              {scout ? t('Hide their five') : t('See their five')}
             </button>
             <div className={`lg-fold${scout ? ' open' : ''}`}>
               <div>
@@ -371,13 +373,13 @@ export function LegendsGame() {
 
         {st.phase === 'over' && (
           <section className={`card stack lg-over${champ ? ' won' : ''}`} style={{ ['--team' as string]: me.color }}>
-            <div className="kicker">{champ ? 'Champions' : 'Season over'}</div>
-            <h2 className="title">{champ ? 'Champions of the legends' : st.out === 'the regular season' ? 'Missed the playoffs' : `Out in the ${st.out?.toLowerCase()}`}</h2>
-            {!champ && <p className="small">Champion: {st.teams.find((t) => t.id === st.champion)?.name}</p>}
+            <div className="kicker">{champ ? t('Champions') : t('Season over')}</div>
+            <h2 className="title">{champ ? t('Champions of the legends') : st.out === 'the regular season' ? t('Missed the playoffs') : t('Out in the {round}', { round: st.out?.toLowerCase() ?? '' })}</h2>
+            {!champ && <p className="small">{t('Champion: {team}', { team: st.teams.find((x) => x.id === st.champion)?.name ?? '' })}</p>}
             <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
               {st.finals && (
                 <button className="btn ghost" onClick={() => setReel(true)}>
-                  Watch the last game
+                  {t('Watch the last game')}
                 </button>
               )}
               <button
@@ -389,7 +391,7 @@ export function LegendsGame() {
                   setTab('run');
                 }}
               >
-                Play again
+                {t('Play again')}
               </button>
             </div>
           </section>
@@ -402,9 +404,9 @@ export function LegendsGame() {
           <div className="seg lg-tabs" role="tablist">
             {(
               [
-                ['run', 'Your run'],
-                ['bracket', 'Bracket'],
-                ['table', 'Standings'],
+                ['run', t('Your run')],
+                ['bracket', t('Bracket')],
+                ['table', t('Standings')],
               ] as const
             ).map(([k, label]) => (
               <button key={k} role="tab" aria-selected={tab === k} aria-pressed={tab === k} onClick={() => setTab(k)}>
@@ -422,16 +424,16 @@ export function LegendsGame() {
                 ))}
               </div>
             )}
-            {tab === 'bracket' && (b.rounds.length > 0 ? <TextBracket b={b} league={lg} userTeamId={st.mine} /> : <p className="small muted keep">The playoffs have not started.</p>)}
+            {tab === 'bracket' && (b.rounds.length > 0 ? <TextBracket b={b} league={lg} userTeamId={st.mine} /> : <p className="small muted keep">{t('The playoffs have not started.')}</p>)}
             {tab === 'table' && (
               <div className="tbl-wrap">
                 <table>
                   <thead>
                     <tr>
-                      <th className="l">Team</th>
+                      <th className="l">{t('Team')}</th>
                       <th>W</th>
                       <th>L</th>
-                      <th>Seed</th>
+                      <th>{t('Seed')}</th>
                     </tr>
                   </thead>
                   <tbody>
