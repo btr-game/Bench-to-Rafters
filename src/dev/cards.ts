@@ -37,6 +37,7 @@ import { LoadingLab } from './LoadingLab';
 import { raftersTeams } from '../engine/awards/legacy';
 import { finaleFor, type Act } from '../ui/finale';
 import { endingOf, type EndingId } from '../ui/endings';
+import { cityMark } from '../engine/career/street';
 
 export type Group = 'Start' | 'Tutorial' | 'Career hub' | 'Decisions' | 'Big moments' | 'Modes' | 'Mini-games' | 'Records & community';
 export const GROUPS: { key: Group; color: string; icon: string }[] = [
@@ -164,6 +165,13 @@ function loaded(): GameState | null {
 const PRO = ['NBA', 'EU', 'INT', 'GL'];
 
 /** Puts a game on screen, with nothing else in the way (a card that wants a moment keeps it). */
+/** Round 37: his city's street with what the round's turning points put on it (events/round37.ts). */
+function cityPutUp(g: GameState | null): GameState | null {
+  if (!g) return null;
+  Object.assign(g.flags, { streetName: cityMark(g), mural: cityMark(g), yardHoop: g.year });
+  if (!g.purchases.includes('car')) g.purchases.push('car');
+  return g;
+}
 function show(g: GameState | null, tab: Tab = 'home', extra: Partial<ReturnType<typeof useStore.getState>> = {}, keepMoments = false): boolean {
   if (!g) return false;
   if (!keepMoments) g.moments = [];
@@ -397,6 +405,7 @@ export const CARDS: DevCard[] = [
   // career hub
   { id: 'home-hs', title: 'Home: high school', group: 'Career hub', icon: 'house', blurb: 'The first season, the first plan.', open: () => show(hsStart()) },
   { id: 'home-nba', title: 'Home: an NBA star', group: 'Career hub', icon: 'stars', blurb: 'Third NBA season; Around you opens on what matters now (the MVP race, the duo, the rivalry, the league, the talk).', open: () => show(nbaStar()) },
+  { id: 'town-city', title: 'The town: what his city put up', group: 'Career hub', icon: 'arena', blurb: 'Round 37’s turning points on the street: the green sign on the lamp post outside the arena (a street named after him), his mural with his number on the practice facility’s wall, his car at the kerb and the hoop that came with the house on moving day.', open: () => show(cityPutUp(nbaStar())) },
   { id: 'season', title: 'Season tab', group: 'Career hub', icon: 'calendar', blurb: 'Season and league in one (round 29): team and form, standings beside team strength, the league leaders, his games, award voting, champions, the record book.', open: () => show(nbaStar(), 'season') },
   { id: 'player', title: 'Player tab', group: 'Career hub', icon: 'person', blurb: 'Ratings, status, contract, profile, scouting, and the Body panel (folded until opened; open here): height, weight, the weak hand, free-throw touch, the body map.', open: () => show(nbaStar(), 'player'), press: '[data-tour="body"] .fold-btn' },
   { id: 'roster', title: 'Team roster and fit', group: 'Career hub', icon: 'roster', blurb: 'The five, the bench, the system and the chemistry.', open: () => show(nbaStar(), 'player'), press: '[data-tour="roster"]' },

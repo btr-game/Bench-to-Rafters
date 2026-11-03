@@ -6,14 +6,15 @@
 // agent's office opens the Player tab at his contract and money. Pure: what the street holds is
 // decided here; ui/components/Town.tsx walks it and ui/art/TownArt.tsx draws it.
 
-import type { GameState, LevelKey } from '../engine/types';
-import { hallOfFame, raftersTeams } from '../engine/awards/legacy';
+import type { GameState } from '../engine/types';
+import { hallOfFame } from '../engine/awards/legacy';
+import { HOUSE_BANK, carOut, hoopHome, statueUp, streetLook, upHere, type StreetLook } from '../engine/career/street';
 import { team as teamOf } from './selectors';
 import { levelTabs } from './road';
 import { ARENA_W, MARK_W, NBA_ARENAS } from './arenas';
 import type { Tab } from '../store';
 
-export type TownLook = 'hometown' | 'campus' | 'city' | 'abroad';
+export type TownLook = StreetLook;
 export type PlaceKind = 'gym' | 'arena' | 'house' | 'agent' | 'hall' | 'arcade';
 /** Where he lives, which grows with the bank in a pro city. */
 export type HouseTier = 'family' | 'dorm' | 'flat' | 'house' | 'mansion';
@@ -42,24 +43,19 @@ export interface Town {
   car: boolean;
   hoop: boolean;
   statue: boolean;
+  /** what his team's city put up for him (round 37's turning points): his mural on the practice
+   * facility, with his number, and the street sign with his name */
+  mural: number | null;
+  sign: boolean;
   house: HouseTier;
   places: Place[];
 }
 
 /** The bank (in millions) that moves him out of a flat, then into a mansion. */
-export const HOUSE_AT = { house: 3, mansion: 40 };
+export const HOUSE_AT = HOUSE_BANK;
 
-/** The level he played last, for a career that is over. */
-const lastLevel = (g: GameState): LevelKey | undefined => g.history[g.history.length - 1]?.level;
-
-/** Which street he is on: his hometown in high school, the campus in college, then a city. */
-export function townLook(g: GameState): TownLook {
-  const st = g.stage === 'RETIRED' || g.stage === 'FA' ? lastLevel(g) ?? 'HSV' : g.stage;
-  if (st === 'HS' || st === 'HSJV' || st === 'HSV') return 'hometown';
-  if (st === 'NCAA') return 'campus';
-  if (st === 'EU' || st === 'INT') return 'abroad';
-  return 'city';
-}
+/** Which street he is on: his hometown in high school, the campus in college, then a city (engine/career/street.ts). */
+export const townLook = streetLook;
 
 /** The longest sign a place gets (the full name is in its tooltip). */
 export const SIGN_MAX = 20;
@@ -119,10 +115,9 @@ export function townOf(g: GameState): Town {
   const open = levelTabs(g) as Tab[] | null;
   const places = open ? all.filter((p) => open.includes(p.tab) && p.id !== 'agent') : all;
   const name = look === 'hometown' ? short(g.player.hometown) : look === 'campus' ? t?.short ?? 'Campus' : t?.short ?? short(g.player.hometown);
-  const abbr = g.stage === 'NBA' || (g.stage === 'RETIRED' && lastLevel(g) === 'NBA') ? t?.abbr : undefined;
-  const owns = (...ids: string[]) => ids.some((id) => g.purchases.includes(id));
-  const statue = g.stage === 'RETIRED' && !!g.teamId && raftersTeams(g).includes(g.teamId);
-  return { look, name, color: t?.color ?? '#1C7ED6', club: t?.name ?? name, abbr: abbr && NBA_ARENAS[abbr] ? abbr : undefined, school: g.player.highSchool, house, places, car: pro && owns('car', 'car-collection'), hoop: owns('backyard-court', 'home-court', 'smart-court'), statue };
+  const abbr = g.stage === 'NBA' || (g.stage === 'RETIRED' && g.history[g.history.length - 1]?.level === 'NBA') ? t?.abbr : undefined;
+  const city = look === 'city';
+  return { look, name, color: t?.color ?? '#1C7ED6', club: t?.name ?? name, abbr: abbr && NBA_ARENAS[abbr] ? abbr : undefined, school: g.player.highSchool, house, places, car: carOut(g), hoop: hoopHome(g), statue: statueUp(g), mural: city && upHere(g, g.flags.mural) ? g.player.number : null, sign: city && upHere(g, g.flags.streetName) };
 }
 
 /** The place a tab belongs to (the agent's office only when it was the last one entered). */

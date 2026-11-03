@@ -52,7 +52,8 @@ describe('the book: round 36', () => {
     expect(new Set(ACHIEVEMENTS.map((a) => a.id)).size).toBe(ACHIEVEMENTS.length);
     expect(new Set(ACHIEVEMENTS.map((a) => a.name.toLowerCase())).size).toBe(ACHIEVEMENTS.length);
     expect(ACHIEVEMENTS_36.length).toBe(49);
-    expect(ACHIEVEMENTS.length).toBe(825);
+    // the book was 825 after this round; round 37's batch adds to it (tests/round37-ach.test.ts pins it now)
+    expect(ACHIEVEMENTS.length).toBeGreaterThanOrEqual(825);
     for (const a of ACHIEVEMENTS_36) {
       expect(ACHIEVEMENTS, a.id).toContain(a);
       expect(achCatOf(a.id), a.id).not.toBeNull();

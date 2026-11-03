@@ -1054,7 +1054,7 @@ const CATEGORIES: Category[] = [
     entries: () =>
       NBA_TEAMS.map((t) => {
         const a = NBA_ARENAS[t.abbr];
-        const town: Town = { look: 'city', name: t.abbr, color: TEAM_STYLE[t.abbr].c1, club: `${t.city} ${t.nick}`, abbr: t.abbr, school: '', house: 'flat', places: [{ id: 'arena', tab: 'season', name: `${`${t.city} ${t.nick}`} arena` }], car: false, hoop: false, statue: false };
+        const town: Town = { look: 'city', name: t.abbr, color: TEAM_STYLE[t.abbr].c1, club: `${t.city} ${t.nick}`, abbr: t.abbr, school: '', house: 'flat', places: [{ id: 'arena', tab: 'season', name: `${`${t.city} ${t.nick}`} arena` }], car: false, hoop: false, statue: false, mural: null, sign: false };
         return {
           key: t.abbr,
           title: `${t.city} ${t.nick}`,
