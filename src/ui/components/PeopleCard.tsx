@@ -6,9 +6,11 @@
 import type { GameState, StoryPal, StoryRole } from '../../engine/types';
 import { STORY_CHAPTERS } from '../../engine/story/chapters';
 import { storyT } from '../../i18n/story';
+import { t } from '../../i18n';
 import { StoryPortrait } from '../art/StoryArt';
 import { team as teamOf } from '../selectors';
 import { Card } from './bits';
+import { useStore } from '../../store';
 
 const ROLES: StoryRole[] = ['friend', 'rival', 'parent', 'sibling'];
 
@@ -38,9 +40,10 @@ function Bond({ value }: { value: number }) {
 
 export function PeopleCard({ g }: { g: GameState }) {
   const st = g.story;
+  const simple = useStore((s) => s.simple);
   if (!st) return null;
   return (
-    <Card title="His people" kicker={`Story mode · ${st.done.length} of ${STORY_CHAPTERS.length} chapters`} tour="people">
+    <Card title={t('His people')} fold="people" kicker={`Story mode · ${t('{done} of {total} chapters', { done: st.done.length, total: STORY_CHAPTERS.length })}`} tour="people">
       <ul className="people">
         {ROLES.map((who) => {
           const pal = who === 'friend' ? st.friend : who === 'rival' ? st.rival : null;
@@ -63,7 +66,7 @@ export function PeopleCard({ g }: { g: GameState }) {
                     <Bond value={bond} /> {storyT(`people.bond.${Math.max(-3, Math.min(3, Math.round(bond)))}`)}
                   </span>
                 )}
-                {mem && <q className="small muted">{storyT(`mem.${mem.id}`)}</q>}
+                {mem && !simple && <q className="small muted">{storyT(`mem.${mem.id}`)}</q>}
               </div>
             </li>
           );
