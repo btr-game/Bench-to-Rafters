@@ -3028,3 +3028,25 @@ multiple times."
   card already holds it. The daily and Built in a Lab still end without one. A father whose son's
   career is played next reaches his ending through the son's (the son's credits name him): to look
   at when the endings are categorized.
+- **Achievements for the round** (41 more, the book at 817; a helper agent's work, measured on 150
+  Regular guy careers, smart policy, casual mini-games; tiers on round 35's bands): the rafters
+  (Three Arenas, One Number; Draft Day to Banner Day 7.333333%; Bench to Rafters, a JV starter whose
+  number hangs, 11.33333%; Local Legend; Nowhere to Hang It, the Hall without a retired number,
+  10.00000%; Promise Kept; Plus One; Raised in Reality, 6.666667% of Reality careers), the speech
+  (Don't Tell Anybody, the rival thanked, 12.00000%; Little Jersey; We Never Stopped Chasing;
+  Rehearsed), the credits (Ensemble Cast, 12 teams, 10.00000%; Awards Season; Supporting Cast;
+  Championship Montage; Director's Cut, the full 52-second roll, 47.33333%; Indie Darling), the
+  turning points and shop items below, the username (Handle With Care, New Handle on Life, Witness
+  Protection, Signed, Sealed, Delivered, Autograph Session, Name in Lights) and watching endings (Stay
+  for the Credits, Skip to the Good Part, Double Feature, Film Festival, Not a Dry Eye in the House).
+- **Turning points and shop items for the round** (`events/round36.ts`, each with a pixel icon, no
+  new decision kind): the number talk (a team floats retiring his number: two more seasons at a
+  discount, and a pledge), writing the speech, the JV coach's last game, a fan account built on his
+  name, the rival's jersey ceremony. In the shop: a framed first jersey and a replica rafters banner
+  (both visited from the collection), a public-speaking coach, a yearly full-body scan. Measured on
+  the helper's 150 careers: careers whose number hangs 15.33333% → 17.33333%, the Hall of Fame
+  19.33333% → 20.00000% (partly the number talk, partly drift from the changed draws).
+- **A bug the helper found**: once a career has retired no season is in play, so the duo lookup
+  returned nothing and the speech and the credits never named his running mate. `duoAtEnd`
+  (engine/career/duo.ts) reads the bonds still formed when he retired, for the finale and its
+  achievements alike.

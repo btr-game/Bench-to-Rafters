@@ -37,6 +37,7 @@ import { ROUND35_EVENTS } from '../engine/events/round35';
 import { ROUND35B_EVENTS } from '../engine/events/round35b';
 import { FRIEND_EVENTS } from '../engine/events/friends';
 import { ROUND35C_EVENTS } from '../engine/events/round35c';
+import { ROUND36_EVENTS } from '../engine/events/round36';
 import { ACHIEVEMENTS } from '../engine/achievements';
 import { ACH_CATS, achCatOf } from '../engine/achievementCats';
 import { CLASS_MAX } from '../ui/multiplayer';
@@ -188,6 +189,7 @@ const EVENT_SETS: [string, EventDef[]][] = [
   ['Round 33', ROUND33_EVENTS],
   ['Round 34', ROUND34_EVENTS],
   ['Round 35', [...ROUND35_EVENTS, ...ROUND35B_EVENTS, ...FRIEND_EVENTS, ...ROUND35C_EVENTS]],
+  ['Round 36', ROUND36_EVENTS],
 ];
 
 function eventEntry(set: string, e: EventDef): Entry {
