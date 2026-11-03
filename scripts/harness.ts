@@ -173,6 +173,7 @@ export interface CareerResult {
   ages: { age: number; ovr: number; wear: number }[]; // at the end of each season
   leap: boolean;
   tragedy: boolean;
+  nextStep: boolean; // round 36: the late-career leap
   anomaly: string;
   country: string;
   stars: number;
@@ -303,6 +304,7 @@ export function runCareer(seed: number, policy: Policy, mode: Mode = 'standard',
     titles: s.awards.filter((a) => a.key === 'TITLE' || a.key === 'TITLEKEY').map((a) => { const h = s.history.find((x) => x.year === a.year && x.level === 'NBA'); return { age: h?.age ?? 0, key: a.key === 'TITLEKEY', role: h?.role ?? '?', rank: 0 }; }),
     leap: s.log.some((l) => l.kind === 'leap'),
     tragedy: s.log.some((l) => l.kind === 'tragedy'),
+    nextStep: s.log.some((l) => l.kind === 'nextStep'), // round 36
     anomaly: s.player.anomaly ?? '',
     country: s.player.country,
     stars: starsAt,

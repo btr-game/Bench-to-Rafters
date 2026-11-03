@@ -45,10 +45,12 @@ describe('achievements', () => {
 });
 
 describe('longevity', () => {
-  it('has an age ceiling of 85 at 40 and 50 at 50, and nobody plays past 50', () => {
+  // round 36: softer (it was 85 at 40, 50 at 50)
+  it('has an age ceiling of 90 at 37, about 85 at 40 and 68 at 50, and nobody plays past 50', () => {
     expect(ageCeiling(36)).toBe(99);
-    expect(ageCeiling(40)).toBe(85);
-    expect(ageCeiling(50)).toBe(50);
+    expect(ageCeiling(37)).toBe(90);
+    expect(ageCeiling(40)).toBeCloseTo(84.9, 9);
+    expect(ageCeiling(50)).toBeCloseTo(67.9, 9);
     expect(RETIRE.forcedAge).toBe(50);
     for (const seed of [5, 6, 7]) expect(runCareer(seed, 'smart', 'standard').ages.every((a) => a.age <= 50)).toBe(true);
   });

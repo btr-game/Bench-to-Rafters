@@ -35,7 +35,7 @@ export function liveMvpRace(s: GameState): (MvpLadder & { final: boolean }) | nu
   const prev = [...s.history].reverse().find((h) => h.level === 'NBA' && h.line.gp > 0);
   const ladder = mvpLadder(
     s.nba,
-    { name: p.name, teamId: s.teamId!, line, firstHalfLine: season.halfLines[0] ?? line, rep: p.rep, rookie: s.serviceYears === 0, per: p.attrs.PER, int: p.attrs.INT, prevValue: prev ? valuePerGame(prev.line) : null, age: p.age, ovr: userOvr(s) },
+    { name: p.name, teamId: s.teamId!, line, firstHalfLine: season.halfLines[0] ?? line, rep: p.rep, rookie: s.serviceYears === 0, per: p.attrs.PER, int: p.attrs.INT, prevValue: prev ? valuePerGame(prev.line) : null, age: p.age, ovr: userOvr(s), mvpWins: s.awards.filter((a) => a.key === 'MVP').length },
     MVP_RACE.top,
     projectedLines(s.nba, s.teamId, season.roleRank),
     // round 35: classmates in the race, at their share of the games so far (career/friendLeague.ts)

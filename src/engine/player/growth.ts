@@ -25,6 +25,7 @@ import {
   OVR_WEIGHTS,
   PERF_FACTOR,
   SUDDEN_DECLINE,
+  LEGEND_AGING,
   HEIGHT_PROJ_SD,
   HEIGHT_SURPRISE,
   GROWTH_RATE_AGE,
@@ -175,8 +176,11 @@ function longevityMult(p: UserPlayer): number {
   return p.age >= LONGEVITY.from ? 1 - Math.min(LONGEVITY.max, (p.longevity ?? 0) * LONGEVITY.per) : 1;
 }
 
-/** The highest OVR a body can hold at this age (no limit before 37): 85 at 40, 50 at 50. */
-export const ageCeiling = (age: number): number => (age < LONGEVITY.ceilingFrom ? 99 : LONGEVITY.ceilingAt40 - (age - 40) * LONGEVITY.ceilingPerYear);
+/** The highest OVR a body can hold at this age (no limit before 37): 90 at 37, 68 at 50. */
+export const ageCeiling = (age: number): number => (age < LONGEVITY.ceilingFrom ? 99 : LONGEVITY.ceilingAt - (age - LONGEVITY.ceilingFrom) * LONGEVITY.ceilingPerYear);
+
+/** Round 36: greatness ages slower (LEGEND_AGING): 1 up to an 82 peak, 0.48 at 95. */
+export const legendMult = (p: UserPlayer): number => clamp(1 - Math.max(0, p.peakOvr - LEGEND_AGING.from) * LEGEND_AGING.per, LEGEND_AGING.min, 1);
 
 export function applyAging(rng: Rng, p: UserPlayer): { change: number; sudden: boolean } {
   const before = ovrOf(p.attrs, p.pos);
@@ -192,7 +196,8 @@ export function applyAging(rng: Rng, p: UserPlayer): { change: number; sudden: b
       p.declineMultNext *
       clamp(1.2 - 0.2 * (p.growthRate ?? 1), 0.8, 1.15) *
       wearMult(p) *
-      longevityMult(p);
+      longevityMult(p) *
+      legendMult(p);
     const w = OVR_WEIGHTS[p.pos];
     const mult = (k: AttrKey) => {
       if (k === 'IQ') return p.age < IQ_LATE_GAIN.untilAge ? 0 : (DECLINE_ATTR_MULT.IQ ?? 1);
@@ -203,7 +208,7 @@ export function applyAging(rng: Rng, p: UserPlayer): { change: number; sudden: b
     const unit = target / denom;
     for (const k of ATTRS) p.attrs[k] = Math.max(15, p.attrs[k] + unit * mult(k));
   }
-  if (p.age >= SUDDEN_DECLINE.fromAge && chance(rng, SUDDEN_DECLINE.chance * (1 - Math.min(LONGEVITY.suddenMax, (p.longevity ?? 0) * LONGEVITY.suddenPer)))) {
+  if (p.age >= SUDDEN_DECLINE.fromAge && chance(rng, SUDDEN_DECLINE.chance * (1 - Math.min(LONGEVITY.suddenMax, (p.longevity ?? 0) * LONGEVITY.suddenPer)) * legendMult(p))) {
     sudden = true;
     const drop = range(rng, SUDDEN_DECLINE.min, SUDDEN_DECLINE.max);
     // ATH takes a triple hit; the rest is spread so the OVR loss equals `drop`

@@ -1,6 +1,6 @@
 // Awards rank the player against everyone in his league (§10).
 
-import { FAN_VOTE, LEVELS, MIN_GAMES_AWARD_FRAC } from '../balance';
+import { ALL_STAR_BAR, FAN_VOTE, LEVELS, MIN_GAMES_AWARD_FRAC, MVP_BAR } from '../balance';
 import type { AwardRace, League, LevelKey, StatLine, Team } from '../types';
 import { genProfile, perGame, valuePerGame } from '../sim/statModel';
 
@@ -18,6 +18,8 @@ interface Cand {
   def: number;
   isUser: boolean;
   friend?: boolean; // round 35: a classmate's player (career/friendLeague.ts)
+  /** Round 36: his MVP bar (MVP_BAR), taken off his MVP score: voters want a clear case. */
+  mvpBar?: number;
   age: number;
   ovr: number;
 }
@@ -48,6 +50,7 @@ interface UserCandInput {
   age: number;
   ovr?: number;
   dpoyWins?: number; // voter fatigue: past wins make the next one harder
+  mvpWins?: number; // round 36: the same for the MVP (MVP_BAR)
 }
 
 // ratings above 85 count for less: past that, voters see the stops, not the rating
@@ -100,6 +103,7 @@ export function buildCandidates(league: League, user: UserCandInput | null, line
       isUser: true,
       age: user.age,
       ovr: user.ovr ?? 0,
+      mvpBar: MVP_BAR.margin + MVP_BAR.fatigue * (user.mvpWins ?? 0),
     });
   }
   // round 35: classmates, with their season's numbers. His line carries no defensive numbers, so
@@ -149,7 +153,7 @@ export function nbaAwards(cands: Cand[]): AwardOutcome {
   const out: AwardOutcome = { wins: [], races: [], winners: [], allStarIds: new Set() };
   const g65 = minGames('NBA');
   const elig = cands.filter((c) => c.line.gp >= g65);
-  const mvpScore = (c: Cand) => c.value + (c.team.w - 41) * 0.25;
+  const mvpScore = (c: Cand) => c.value + (c.team.w - 41) * 0.25 - (c.mvpBar ?? 0);
   const mvp = [...elig].sort((a, b) => mvpScore(b) - mvpScore(a));
   out.races.push(race('MVP', mvp, mvpScore, 5));
   if (mvp[0]) {
@@ -168,6 +172,9 @@ export function nbaAwards(cands: Cand[]): AwardOutcome {
     const pool = cands.filter((c) => c.team.conf === conf && c.line.gp >= 20);
     const score = (c: Cand) => (1 - FAN_VOTE.share) * c.fhv + FAN_VOTE.share * (c.rep / 100) * FAN_VOTE.scale;
     pool.sort((a, b) => score(b) - score(a));
+    // round 36: twelve named, but he makes it only from the top ALL_STAR_BAR.userTop
+    const me = pool.findIndex((c) => c.isUser);
+    if (me >= ALL_STAR_BAR.userTop && me < 12) pool.splice(me, 1);
     pool.slice(0, 12).forEach((c) => {
       out.allStarIds.add(c.id);
       if (c.isUser) out.wins.push({ key: 'ALLSTAR', label: 'All-Star' });
@@ -259,7 +266,7 @@ export function mvpLadder(league: League, user: UserCandInput | null, n = 5, lin
   const elig = cands.filter((c) => c.line.gp >= maxGp * 0.6);
   const score = (c: Cand) => {
     const g = c.team.w + c.team.l;
-    return c.value + (g > 0 ? (c.team.w / g - 0.5) * 82 : 0) * 0.25;
+    return c.value + (g > 0 ? (c.team.w / g - 0.5) * 82 : 0) * 0.25 - (c.mvpBar ?? 0);
   };
   const ranked = [...elig].sort((a, b) => score(b) - score(a));
   const userIdx = ranked.findIndex((c) => c.isUser);

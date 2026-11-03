@@ -1,6 +1,6 @@
 // The persistent simulated NBA: generated players grow, age, retire and change teams.
 
-import { COACHING, DECLINE_TABLE, GEN_GROWTH, NBA_WORLD, SUDDEN_DECLINE } from '../balance';
+import { COACHING, GEN_DECLINE_TABLE, GEN_GROWTH, NBA_WORLD, SUDDEN_DECLINE } from '../balance';
 import { chance, clamp, int, normal, range, weightedIndex, type Rng } from '../rng';
 import type { GameState, GenPlayer, League, Team } from '../types';
 import { valuePerGame } from '../sim/statModel';
@@ -15,7 +15,7 @@ function progressGen(rng: Rng, p: GenPlayer): void {
   if (gap > 0 && p.pot > p.ovr) p.ovr += (p.pot - p.ovr) * gap * (p.dev ?? GEN_GROWTH.devMean) * range(rng, 0.7, 1.3);
   const start = 30 + int(rng, -2, 2);
   if (p.age >= start) {
-    p.ovr += DECLINE_TABLE[Math.min(DECLINE_TABLE.length - 1, p.age - start)] * range(rng, 0.7, 1.3);
+    p.ovr += GEN_DECLINE_TABLE[Math.min(GEN_DECLINE_TABLE.length - 1, p.age - start)] * range(rng, 0.7, 1.3);
   }
   if (p.age >= SUDDEN_DECLINE.fromAge && chance(rng, SUDDEN_DECLINE.chance)) p.ovr -= range(rng, SUDDEN_DECLINE.min, SUDDEN_DECLINE.max);
   p.ovr = clamp(p.ovr + normal(rng, 0, GEN_GROWTH.noise * 0.5), 30, 97);

@@ -772,6 +772,7 @@ function finishSeason(s: GameState): void {
     age: p.age,
     ovr: userOvr(s),
     dpoyWins: s.awards.filter((a) => a.key === 'DPOY').length,
+    mvpWins: s.awards.filter((a) => a.key === 'MVP').length,
   };
   // round 35: classmates run for the NBA's awards too (career/friendLeague.ts)
   const cands = buildCandidates(league, userCand, undefined, level === 'NBA' && s.mp?.klass ? friendCandidates(s, league) : undefined);

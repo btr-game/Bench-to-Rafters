@@ -33,19 +33,11 @@ function profileOf(s: GameState, e: EventDef): Profile {
   try {
     const choices: EventChoice[] = typeof e.choices === 'function' ? e.choices(s) : e.choices;
     choices.forEach((c, i) => {
-      const t: GameState = {
-        ...s,
-        player: { ...structuredClone(s.player), injury: null },
-        flags: { ...s.flags },
-        pending: [],
-        moments: [],
-        log: [],
-        events: structuredClone(s.events),
-        season: s.season ? structuredClone(s.season) : null,
-        contract: s.contract ? { ...s.contract } : null,
-        arcs: s.arcs ? structuredClone(s.arcs) : undefined,
-        rng: makeRng(7919 * (i + 1) + e.id.length),
-      };
+      // a deep copy: a choice that writes to any part of the state (the league, the history, the
+      // bonds...) must never reach the real career, or the first career in a session plays
+      // differently from every later one with the same seed (round 36)
+      const t: GameState = { ...structuredClone({ ...s, rng: undefined }), pending: [], moments: [], log: [], rng: makeRng(7919 * (i + 1) + e.id.length) };
+      t.player.injury = null;
       for (const k of ATTRS) {
         t.player.attrs[k] = 50;
         t.player.caps[k] = 99;

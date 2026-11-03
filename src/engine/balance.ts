@@ -415,13 +415,30 @@ export const MORALE_GROWTH = (morale: number): number => (morale >= 75 ? 1.1 : m
 export const MORALE_PERF = (morale: number): number => 1 + Math.max(-1, Math.min(1, (morale - 75) / 40)) * 0.06;
 // All-Star fan vote: share of the score and the scale of reputation
 export const FAN_VOTE = { share: 0.15, scale: 25 };
+// Round 36 (owner: "i think all star is pretty easy, as well as mvp. instead of reducing growth too
+// much, let's set the bar a bit higher than before"): his own bar, not the league's. The All-Star
+// teams still name twelve a conference, but he makes one only from the top `userTop` (the five
+// starters and one more); for the MVP voters want a clear case: `margin` off his score (value a
+// game plus team wins), and `fatigue` more for each MVP he has won. Measured on 600 Regular guy
+// careers: All-Star 39.0% to 32.5%, MVP 14.2% to about 9-10% (the balance harness: smart player, casual mini-games).
+export const ALL_STAR_BAR = { userTop: 6 };
+export const MVP_BAR = { margin: 6, fatigue: 2.5 };
 // per-game form (hot and cold nights) and a streaky rhythm across a half
 export const FORM = { gameSd: 0.17, halfSd: 0.08, min: 0.5, max: 1.7, shootingShare: 0.3 };
 
 // §7 aging
 // Aging hits hard in every mode (playtest round 7): most players are clearly worse by 35.
-export const DECLINE_START = { durable: 31, normal: 29, fragile: 27 } as const;
+// Round 36 (owner: "careers are really not sustained that well ... many legendary players were
+// still elite at their mid 30s and only started getting rusty by late 30s"): a durable body starts
+// declining a year later, greatness slows the decline (LEGEND_AGING), and the age ceiling softens.
+// Most players still fade by their mid 30s.
+export const DECLINE_START = { durable: 32, normal: 29, fragile: 27 } as const;
 export const DECLINE_TABLE = [-1.2, -2.0, -2.8, -3.6, -4.5, -5.5];
+/** Round 36: the league's generated players keep the aging they had (world/nbaWorld.ts). */
+export const GEN_DECLINE_TABLE = [-1.2, -2.0, -2.8, -3.6, -4.5, -5.5];
+/** Round 36: past `from` peak OVR each point slows his decline (and the odds of a sudden one) by
+ * `per`, down to `min` of it: a 95 peak ages at 0.48 of the pace. */
+export const LEGEND_AGING = { from: 82, per: 0.04, min: 0.4 };
 // Body wear (0-100): heavy minutes, hard plans and injuries add to it; recovery, rest and
 // health spending take it off. It scales how hard aging hits (decline x (base + wear/div),
 // 0.6x for a well-kept body up to about 2.6x for a worn-out one) and the odds of a
@@ -432,8 +449,16 @@ export const DECLINE_TABLE = [-1.2, -2.0, -2.8, -3.6, -4.5, -5.5];
 export const ANOMALY = { chance: 0.05, capShare: 0.6 };
 
 export const SWINGS = {
-  leap: { chance: 0.005, minAge: 19, maxAge: 28, ceiling: [8, 16] as [number, number], now: [5, 9] as [number, number], rateMult: 1.3 },
-  tragedy: { chance: 0.003, minAge: 21, wearDiv: 40, ath: [10, 15] as [number, number], other: [3, 6] as [number, number], caps: [6, 10] as [number, number], durability: 0.25, rateMult: 0.8, wear: 15, daysOut: 330 },
+  // round 36: the leap is for young players (it was to 28); later in a career, the next step
+  leap: { chance: 0.005, minAge: 19, maxAge: 24, ceiling: [8, 16] as [number, number], now: [5, 9] as [number, number], rateMult: 1.3 },
+  // round 36 (owner: "next step (a huge leap greater than normal breakthrough, only happens in later
+  // career, at least 25)", "make the chances of these extremely low"): a jump bigger than the leap's,
+  // a higher ceiling, a little faster growth
+  nextStep: { chance: 0.0015, minAge: 25, maxAge: 33, ceiling: [6, 12] as [number, number], now: [7, 11] as [number, number], rateMult: 1.15 },
+  // round 36 (owner: "career ending injury. 1~2 missed seasons, no longer the same player (ovr drops
+  // drastically, potential also drops significantly)"): one season out, or two (`twoSeasons`); far
+  // rarer than before (it was 0.003, about 7% of careers)
+  tragedy: { chance: 0.0006, minAge: 21, wearDiv: 40, ath: [18, 26] as [number, number], other: [8, 13] as [number, number], minor: [3, 6] as [number, number], caps: [8, 14] as [number, number], potential: [10, 16] as [number, number], durability: 0.25, rateMult: 0.75, wear: 20, twoSeasons: 0.4 },
 };
 export const WEAR = {
   minutes: 3, // per half at a full share of minutes
@@ -772,7 +797,7 @@ export const RETIRE = { ovrBelowPeak: 11, forcedAge: 50, vetAge: 32, vetBelowPea
  * be able to play well until 40, not at a 99 level, maybe 85"). A hidden number built by looking
  * after the body: Recovery halves, health and longevity purchases, rest summers and offseasons
  * with little wear. From `from` on it slows aging (by `per` a point, at most `max` (a 70% slower decline)) and makes a
- * sudden decline rarer. Past `ceilingFrom` ratings also meet an age ceiling: 85 at 40, 50 at 50;
+ * sudden decline rarer. Past `ceilingFrom` ratings also meet an age ceiling: 90 at 37, 68 at 50;
  * whatever sits above it fades by `over` of the gap each year.
  */
 export const LONGEVITY = {
@@ -786,9 +811,10 @@ export const LONGEVITY = {
   max: 0.7,
   suddenPer: 0.015,
   suddenMax: 0.6,
+  // round 36: softer: 90 at 37, about 85 at 40, 80 at 43, 68 at 50 (it was 85 at 40, 50 at 50)
   ceilingFrom: 37,
-  ceilingAt40: 85,
-  ceilingPerYear: 3.5,
+  ceilingAt: 90,
+  ceilingPerYear: 1.7,
   over: 0.5,
 };
 // NBA interest in a free agent. Teams only call when he would rank within `maxRank` on
