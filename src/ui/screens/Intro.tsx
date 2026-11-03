@@ -15,6 +15,7 @@ import { toPaths } from '../art/pixel';
 import { PixelWord } from '../art/PixelText';
 import { Icon } from '../art/Icon';
 import { musicAudible, setMusic, soundSettings } from '../sound';
+import { t } from '../../i18n';
 
 // ---------- the venues, a career in order ----------
 type Px = [number, number, number, number, string];
@@ -248,7 +249,7 @@ function MusicButton() {
       }}
     >
       <Icon name="note" size={20} />
-      {audible ? 'Music off' : 'Play the music'}
+      {audible ? t('Music off') : t('Play the music')}
     </button>
   );
 }
@@ -269,9 +270,9 @@ export function Intro() {
           <PixelWord text="BENCH" color="#F4F1EA" shade="#1B1820" />
           <PixelWord text="TO RAFTERS" color="#FF6B2C" shade="#5A1E06" />
         </h1>
-        <p className="intro-line">From a high school bench to a jersey in the rafters. One career, every choice yours.</p>
+        <p className="intro-line">{t('From a high school bench to a jersey in the rafters. One career, every choice yours.')}</p>
         <button className="btn intro-go" onClick={end} autoFocus>
-          Start
+          {t('Start')}
         </button>
       </div>
     </main>

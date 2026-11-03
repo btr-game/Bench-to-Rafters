@@ -14,6 +14,7 @@ import { LEVEL_SHORT, EMOTES, multiplayer, reunionAwards, reunionReady, reunionW
 import { scoreOf } from '../community';
 import { recordMp, recordReunion } from '../achievements';
 import { achievementsNow } from '../../store';
+import { t, tx } from '../../i18n';
 
 // ---------- reactions ----------
 
@@ -22,7 +23,7 @@ export function ReactCounts({ m, year }: { m: ClassMember; year: number }) {
   const rs = (m.reacts ?? []).filter((r) => r.y === year);
   if (!rs.length) return null;
   return (
-    <span className="mp-reacts" aria-label={`Reactions: ${rs.map((r) => `${r.n} ${EMOTES.find((e) => e.k === r.e)?.label}`).join(', ')}`}>
+    <span className="mp-reacts" aria-label={t('Reactions: {list}', { list: rs.map((r) => `${r.n} ${t(EMOTES.find((e) => e.k === r.e)?.label ?? '')}`).join(', ') })}>
       {rs.map((r) => (
         <span key={r.e} className={r.mine ? 'mine' : undefined}>
           <Icon name={EMOTES.find((e) => e.k === r.e)?.icon ?? 'flame'} size={16} />
@@ -44,20 +45,20 @@ function ReactBar({ mp, code, m, year, done }: { mp: Multiplayer; code: string; 
       if (mine !== e && recordMp('react', `${code}:${m.id}:${year}`)) achievementsNow();
       setErr('');
       done();
-    } else setErr(r === 'busy' ? 'One at a time.' : MP_FAIL[r]);
+    } else setErr(r === 'busy' ? tx('One at a time.') : MP_FAIL[r]);
   };
   return (
-    <span className="mp-react-bar" role="group" aria-label={`React to ${m.name}’s ${year}`}>
+    <span className="mp-react-bar" role="group" aria-label={t('React to {name}’s {year}', { name: m.name, year })}>
       {EMOTES.map((e) => {
         const n = (m.reacts ?? []).find((r) => r.y === year && r.e === e.k)?.n ?? 0;
         return (
-          <button key={e.k} className={`chip${mine === e.k ? ' on' : ''}`} aria-pressed={mine === e.k} aria-label={e.label} title={e.label} onClick={() => void pick(e.k)}>
+          <button key={e.k} className={`chip${mine === e.k ? ' on' : ''}`} aria-pressed={mine === e.k} aria-label={t(e.label)} title={t(e.label)} onClick={() => void pick(e.k)}>
             <Icon name={e.icon} size={18} />
             {n > 0 && <small>{n}</small>}
           </button>
         );
       })}
-      {err && <small style={{ color: 'var(--bad)' }}>{err}</small>}
+      {err && <small style={{ color: 'var(--bad)' }}>{t(err)}</small>}
     </span>
   );
 }
@@ -79,19 +80,23 @@ export function FriendCareer({ mp, k, m, back, changed }: { mp: Multiplayer; k: 
     <section className="card stack mp-friend">
       <div className="row" style={{ justifyContent: 'space-between', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
         <div>
-          <div className="kicker">{m.mine ? 'Your career' : `${m.name}’s career`}</div>
+          <div className="kicker">{m.mine ? t('Your career') : t('{name}’s career', { name: m.name })}</div>
           <div className="sec-title">{m.rec?.name ?? last?.pn ?? m.name}</div>
         </div>
         <button className="btn ghost small" onClick={back}>
-          Back to the class
+          {t('Back to the class')}
         </button>
       </div>
       <p className="small muted desc">
-        {m.rec ? `Retired at ${m.rec.retiredAt}: ${m.rec.tier}, peak ${Math.round(m.rec.peak)}, career index ${Math.round(scoreOf(m.rec))}.` : last ? `Now: ${LEVEL_SHORT[last.lv] ?? last.lv}, ${last.team}, age ${last.age}, rated ${last.ovr}.` : 'Not started yet.'}
+        {m.rec
+          ? t('Retired at {age}: {tier}, peak {peak}, career index {index}.', { age: m.rec.retiredAt, tier: m.rec.tier, peak: Math.round(m.rec.peak), index: Math.round(scoreOf(m.rec)) })
+          : last
+            ? t('Now: {level}, {team}, age {age}, rated {ovr}.', { level: LEVEL_SHORT[last.lv] ?? last.lv, team: last.team, age: last.age, ovr: last.ovr })
+            : t('Not started yet.')}
       </p>
       {ss.length > 1 && (
         // his rating each season, a bar a year (pixel art: square cells, hard edges)
-        <svg className="mp-ovr-chart" viewBox={`0 0 ${W * 6} 40`} shapeRendering="crispEdges" role="img" aria-label={`Rating by season: ${ss.map((s) => `${s.year} ${s.ovr}`).join(', ')}`}>
+        <svg className="mp-ovr-chart" viewBox={`0 0 ${W * 6} 40`} shapeRendering="crispEdges" role="img" aria-label={t('Rating by season: {list}', { list: ss.map((s) => `${s.year} ${s.ovr}`).join(', ') })}>
           {ss.map((s, i) => {
             const h = Math.max(2, Math.round(((s.ovr - 40) / 60) * 36));
             return <rect key={s.year} x={i * 6 + 1} y={40 - h} width={4} height={h} fill={s.aw.length ? 'var(--gold)' : s.color || 'var(--accent)'} />;
@@ -102,7 +107,7 @@ export function FriendCareer({ mp, k, m, back, changed }: { mp: Multiplayer; k: 
         {[...ss].reverse().map((s) => (
           <li key={s.year}>
             <span className="mp-friend-year">
-              <b>{s.year}</b> <small className="muted">age {s.age}</small>
+              <b>{s.year}</b> <small className="muted">{t('age {n}', { n: s.age })}</small>
             </span>
             <span className="mp-cell">
               <span>
@@ -110,7 +115,7 @@ export function FriendCareer({ mp, k, m, back, changed }: { mp: Multiplayer; k: 
                 {LEVEL_SHORT[s.lv] ?? s.lv} · {s.team} · {s.w}-{s.l}
               </span>
               <small>
-                {s.ovr} OVR · {s.pts} pts {s.reb} reb {s.ast} ast{s.gp ? ` · ${s.gp} games` : ''}
+                {s.ovr} OVR · {s.pts} pts {s.reb} reb {s.ast} ast{s.gp ? ` · ${t('{n} games', { n: s.gp })}` : ''}
                 {s.result ? ` · ${s.result}` : ''}
               </small>
               {s.aw.length > 0 && <small className="mp-aw">{s.aw.join(' · ')}</small>}
@@ -141,11 +146,14 @@ export function ReunionNight({ k }: { k: DraftClass }) {
       <section className="card stack mp-reunion-wait">
         <div className="sec-title with-icon">
           <Icon name="laurel" size={24} />
-          Reunion night
+          {t('Reunion night')}
         </div>
         <ReunionArt seats={Math.max(2, ready.total)} />
         <p className="small muted desc">
-          When every career in the class is over, the class meets one last time and the awards come out one by one, the class MVP last. {ready.done} of {ready.total || 'its'} careers are over; a friend who posts nothing for {REUNION_WAIT_DAYS} days counts as he stands.
+          {t('When every career in the class is over, the class meets one last time and the awards come out one by one, the class MVP last.')}{' '}
+          {ready.total
+            ? t('{done} of {total} careers are over; a friend who posts nothing for {days} days counts as he stands.', { done: ready.done, total: ready.total, days: REUNION_WAIT_DAYS })
+            : t('{done} of its careers are over; a friend who posts nothing for {days} days counts as he stands.', { done: ready.done, days: REUNION_WAIT_DAYS })}
         </p>
       </section>
     );
@@ -162,30 +170,30 @@ export function ReunionNight({ k }: { k: DraftClass }) {
   const lastOne = at === awards.length - 1;
   return (
     <section className="card stack mp-reunion">
-      <div className="kicker">{k.name} · reunion night</div>
+      <div className="kicker">{k.name} · {t('reunion night')}</div>
       <div className="sec-title with-icon">
         <Icon name="laurel" size={28} />
-        Reunion night
+        {t('Reunion night')}
       </div>
       <ReunionArt seats={awards[0]?.rows.length ?? 6} lit={at >= 0} />
       {at < 0 ? (
-        <p className="prose">Every career in the class is over. {awards.length} awards tonight, one at a time, from the smallest to the one that matters most: the class MVP.</p>
+        <p className="prose">{t('Every career in the class is over. {n} awards tonight, one at a time, from the smallest to the one that matters most: the class MVP.', { n: awards.length })}</p>
       ) : (
         cur && (
           <div className={`mp-award${lastOne ? ' mvp' : ''}`} key={cur.key} aria-live="polite">
             <Icon name={cur.icon} size={lastOne ? 56 : 44} />
             <div className="stack" style={{ gap: 4 }}>
               <small className="kicker">
-                Award {at + 1} of {awards.length} · {cur.what}
+                {t('Award {n} of {total}', { n: at + 1, total: awards.length })} · {cur.what}
               </small>
               <div className="mp-award-title">{cur.title}</div>
               <div className="mp-award-win">
-                {cur.rows[0]?.m.mine ? 'You' : cur.rows[0]?.m.name} <span className="muted">· {cur.rows[0]?.m.rec?.name ?? cur.rows[0]?.m.seasons.at(-1)?.pn}</span> · <b>{cur.rows[0]?.text}</b>
+                {cur.rows[0]?.m.mine ? t('You') : cur.rows[0]?.m.name} <span className="muted">· {cur.rows[0]?.m.rec?.name ?? cur.rows[0]?.m.seasons.at(-1)?.pn}</span> · <b>{cur.rows[0]?.text}</b>
               </div>
               <ol className="mp-award-rest" start={2}>
                 {cur.rows.slice(1).map((r) => (
                   <li key={r.m.id} className={r.m.mine ? 'me' : undefined}>
-                    {r.m.mine ? 'You' : r.m.name}: {r.text}
+                    {r.m.mine ? t('You') : r.m.name}: {r.text}
                   </li>
                 ))}
               </ol>
@@ -196,19 +204,19 @@ export function ReunionNight({ k }: { k: DraftClass }) {
       <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
         {!lastOne ? (
           <button className="btn" onClick={next}>
-            {at < 0 ? 'Start the night' : `Next award (${at + 2} of ${awards.length})`}
+            {at < 0 ? t('Start the night') : t('Next award ({n} of {total})', { n: at + 2, total: awards.length })}
           </button>
         ) : (
           <button className="btn ghost" onClick={() => setAt(-1)}>
-            See the night again
+            {t('See the night again')}
           </button>
         )}
       </div>
       {shown.length > 1 && (
-        <ul className="mp-award-list" aria-label="Awards so far">
+        <ul className="mp-award-list" aria-label={t('Awards so far')}>
           {shown.slice(0, -1).map((a) => (
             <li key={a.key}>
-              <Icon name={a.icon} size={18} /> <b>{a.title}</b>: {a.rows[0]?.m.mine ? 'You' : a.rows[0]?.m.name} ({a.rows[0]?.text})
+              <Icon name={a.icon} size={18} /> <b>{a.title}</b>: {a.rows[0]?.m.mine ? t('You') : a.rows[0]?.m.name} ({a.rows[0]?.text})
             </li>
           ))}
         </ul>
@@ -244,23 +252,26 @@ export function DailyFriends({ day, best }: { day: string; best: { points: numbe
     <section className="card stack mp-daily">
       <div className="sec-title with-icon">
         <Icon name="versus" size={24} />
-        Friends today
+        {t('Friends today')}
       </div>
-      <p className="small muted desc">Today’s daily challenge among your friends: everyone you share a draft class or a challenge with.{!username() ? ' Pick a username (in Settings) to put your run on it.' : ''}</p>
+      <p className="small muted desc">
+        {t('Today’s daily challenge among your friends: everyone you share a draft class or a challenge with.')}
+        {!username() ? ` ${t('Pick a username (in Settings) to put your run on it.')}` : ''}
+      </p>
       {rows === undefined ? (
-        <p className="small muted">Loading…</p>
+        <p className="small muted">{t('Loading…')}</p>
       ) : rows === 'error' ? (
-        <p className="small muted">{MP_FAIL.error}</p>
+        <p className="small muted">{t(MP_FAIL.error)}</p>
       ) : rows.length === 0 ? (
-        <p className="small muted keep">No friend has played today’s yet.</p>
+        <p className="small muted keep">{t('No friend has played today’s yet.')}</p>
       ) : (
         <ol className="mp-board-list">
           {rows.map((r, i) => (
             <li key={`${r.name}-${i}`} className={r.mine ? 'me' : undefined}>
               <b>{i + 1}</b>
-              <span>{r.mine ? 'You' : r.name}</span>
+              <span>{r.mine ? t('You') : r.name}</span>
               <small>
-                {r.legacy} legacy · peak {r.peak}
+                {t('{legacy} legacy · peak {peak}', { legacy: r.legacy, peak: r.peak })}
               </small>
             </li>
           ))}

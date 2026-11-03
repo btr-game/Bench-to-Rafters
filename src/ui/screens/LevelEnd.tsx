@@ -13,6 +13,7 @@ import { LevelAdds } from '../components/LevelAdds';
 import { sfx } from '../sound';
 import { PlaceArt } from './RoadMap';
 import { UNLOCK_NAME, unlockOf } from '../road';
+import { t } from '../../i18n';
 
 export function LevelEnd({ g }: { g: GameState }) {
   const endLevel = useStore((s) => s.endLevel);
@@ -33,36 +34,38 @@ export function LevelEnd({ g }: { g: GameState }) {
           <Icon name={star ? 'stars' : 'morale'} size={56} />
           <div style={{ minWidth: 0 }}>
             <div className="kicker">
-              Level {copy.n} · {LEVEL_NAME[level]} · passed
+              {t('Level {n}', { n: copy.n })} · {LEVEL_NAME[level]} · {t('passed')}
             </div>
-            <h2 className="level-end-title">{star ? 'Goal reached: NBA All-Star' : 'So close: no All-Star team this time'}</h2>
+            <h2 className="level-end-title">{star ? t('Goal reached: NBA All-Star') : t('So close: no All-Star team this time')}</h2>
           </div>
         </div>
         <p className="small">
           {star
-            ? `${g.player.name} made ${allStars === 1 ? 'an All-Star team' : `${allStars} All-Star teams`} in ${nbaSeasons(g)} NBA seasons.`
-            : `${g.player.name} played ${nbaSeasons(g)} NBA seasons without an All-Star call. The level still counts: the road goes on.`}
+            ? allStars === 1
+              ? t('{name} made an All-Star team in {n} NBA seasons.', { name: g.player.name, n: nbaSeasons(g) })
+              : t('{name} made {k} All-Star teams in {n} NBA seasons.', { name: g.player.name, k: allStars, n: nbaSeasons(g) })
+            : t('{name} played {n} NBA seasons without an All-Star call. The level still counts: the road goes on.', { name: g.player.name, n: nbaSeasons(g) })}
         </p>
         <ul className="level-end-stats">
           <li>
             <Icon name="calendar" size={28} />
             <b>{nbaSeasons(g)}</b>
-            <span>NBA seasons</span>
+            <span>{t('NBA seasons')}</span>
           </li>
           <li>
             <Icon name="ovr" size={28} />
             <b>{Math.round(g.player.peakOvr)}</b>
-            <span>Peak OVR</span>
+            <span>{t('Peak OVR')}</span>
           </li>
           <li>
             <Icon name="stars" size={28} />
             <b>{allStars}</b>
-            <span>All-Star teams</span>
+            <span>{t('All-Star teams')}</span>
           </li>
           <li>
             <Icon name="shoot" size={28} />
             <b>{best.toFixed(1)}</b>
-            <span>Best PPG</span>
+            <span>{t('Best PPG')}</span>
           </li>
         </ul>
       </section>
@@ -71,7 +74,7 @@ export function LevelEnd({ g }: { g: GameState }) {
         <p className="card with-icon level-opens">
           <Icon name="door" size={28} />
           <span>
-            <b>The full game opens</b> with Regular guy. The road map&rsquo;s other stops open the rest.
+            <b>{t('The full game opens')}</b> {t('with Regular guy. The road map’s other stops open the rest.')}
           </span>
         </p>
       ) : (
@@ -79,7 +82,7 @@ export function LevelEnd({ g }: { g: GameState }) {
           <p className="card with-icon level-opens">
             <Icon name="unlock" size={28} />
             <span>
-              <b>{UNLOCK_NAME[unlockOf(level)!][0].toUpperCase() + UNLOCK_NAME[unlockOf(level)!].slice(1)}</b> is open: pick it on the start page.
+              <b>{UNLOCK_NAME[unlockOf(level)!][0].toUpperCase() + UNLOCK_NAME[unlockOf(level)!].slice(1)}</b> {t('is open: pick it on the start page.')}
             </span>
           </p>
         )
@@ -87,7 +90,7 @@ export function LevelEnd({ g }: { g: GameState }) {
       {next && <LevelAdds level={next} />}
       <div className="row-end">
         <button className="btn" onClick={() => (sfx('confirm'), endLevel())} data-enter>
-          Continue
+          {t('Continue')}
         </button>
       </div>
     </div>
