@@ -25,6 +25,7 @@ import {
   OVR_WEIGHTS,
   PERF_FACTOR,
   SUDDEN_DECLINE,
+  LEGEND_AGING,
   HEIGHT_PROJ_SD,
   HEIGHT_SURPRISE,
   GROWTH_RATE_AGE,
@@ -124,6 +125,17 @@ export function eliteMult(mode: Mode, ovr: number): number {
   return e ? Math.max(e.min, 1 - Math.max(0, ovr - e.from) * e.per) : 1;
 }
 
+/** Round 37 (owner: the peak curve above 70 should fall in a straight line): every summer a rating
+ * pushed past its cap by a turning point, the shop or a mini-game settles back by a share of the
+ * excess, so boosts past the ceiling stop stacking up at the top. The share is the mode's `settle`:
+ * nothing at `from` OVR, rising in a straight line to the full share at `to`. */
+export function settleBack(p: UserPlayer, mode: Mode): void {
+  const settle = MODES[mode].settle;
+  if (!settle) return;
+  const share = settle.share * clamp((ovrOf(p.attrs, p.pos) - settle.from) / (settle.to - settle.from), 0, 1);
+  if (share > 0) for (const k of ATTRS) if (p.attrs[k] > p.caps[k]) p.attrs[k] -= (p.attrs[k] - p.caps[k]) * share;
+}
+
 /** Applies one half-season of growth to the user. Returns the gain per attribute. */
 export function applyHalfGrowth(rng: Rng, p: UserPlayer, ctx: HalfGrowthCtx): Partial<Attrs> {
   const mf = minutesFactor(ctx.minutesShare, ctx.played);
@@ -175,8 +187,11 @@ function longevityMult(p: UserPlayer): number {
   return p.age >= LONGEVITY.from ? 1 - Math.min(LONGEVITY.max, (p.longevity ?? 0) * LONGEVITY.per) : 1;
 }
 
-/** The highest OVR a body can hold at this age (no limit before 37): 85 at 40, 50 at 50. */
-export const ageCeiling = (age: number): number => (age < LONGEVITY.ceilingFrom ? 99 : LONGEVITY.ceilingAt40 - (age - 40) * LONGEVITY.ceilingPerYear);
+/** The highest OVR a body can hold at this age (no limit before 37): 90 at 37, 68 at 50. */
+export const ageCeiling = (age: number): number => (age < LONGEVITY.ceilingFrom ? 99 : LONGEVITY.ceilingAt - (age - LONGEVITY.ceilingFrom) * LONGEVITY.ceilingPerYear);
+
+/** Round 36: greatness ages slower (LEGEND_AGING): 1 up to an 82 peak, 0.48 at 95. */
+export const legendMult = (p: UserPlayer): number => clamp(1 - Math.max(0, p.peakOvr - LEGEND_AGING.from) * LEGEND_AGING.per, LEGEND_AGING.min, 1);
 
 export function applyAging(rng: Rng, p: UserPlayer): { change: number; sudden: boolean } {
   const before = ovrOf(p.attrs, p.pos);
@@ -192,7 +207,8 @@ export function applyAging(rng: Rng, p: UserPlayer): { change: number; sudden: b
       p.declineMultNext *
       clamp(1.2 - 0.2 * (p.growthRate ?? 1), 0.8, 1.15) *
       wearMult(p) *
-      longevityMult(p);
+      longevityMult(p) *
+      legendMult(p);
     const w = OVR_WEIGHTS[p.pos];
     const mult = (k: AttrKey) => {
       if (k === 'IQ') return p.age < IQ_LATE_GAIN.untilAge ? 0 : (DECLINE_ATTR_MULT.IQ ?? 1);
@@ -203,7 +219,7 @@ export function applyAging(rng: Rng, p: UserPlayer): { change: number; sudden: b
     const unit = target / denom;
     for (const k of ATTRS) p.attrs[k] = Math.max(15, p.attrs[k] + unit * mult(k));
   }
-  if (p.age >= SUDDEN_DECLINE.fromAge && chance(rng, SUDDEN_DECLINE.chance * (1 - Math.min(LONGEVITY.suddenMax, (p.longevity ?? 0) * LONGEVITY.suddenPer)))) {
+  if (p.age >= SUDDEN_DECLINE.fromAge && chance(rng, SUDDEN_DECLINE.chance * (1 - Math.min(LONGEVITY.suddenMax, (p.longevity ?? 0) * LONGEVITY.suddenPer)) * legendMult(p))) {
     sudden = true;
     const drop = range(rng, SUDDEN_DECLINE.min, SUDDEN_DECLINE.max);
     // ATH takes a triple hit; the rest is spread so the OVR loss equals `drop`

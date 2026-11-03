@@ -2,11 +2,11 @@
 
 import { Icon } from '../art/Icon';
 import { meterIcon } from '../art/icons';
-import type { ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { Reaction, StatLine } from '../../engine/types';
 import { MILESTONES, UI } from '../../content/strings';
 import { pct, pg } from '../format';
-import { useFold } from '../fold';
+import { SPOT, useFold } from '../fold';
 
 export function Scoreboard({ line, showGp = true }: { line: StatLine; showGp?: boolean }) {
   const has = line.gp > 0;
@@ -177,12 +177,29 @@ export function FoldMark({ open }: { open: boolean }) {
 }
 
 /** A card with a title (round 34: one that folds from its title, the fold kept on this device;
- * `fold={false}` keeps a card open, `fold="id"` names it when titles repeat). */
-export function Card({ title, kicker, children, right, tour, fold }: { title?: string; kicker?: string; children: ReactNode; right?: ReactNode; tour?: string; fold?: string | false }) {
+ * `fold={false}` keeps a card open, `fold="id"` names it when titles repeat; round 36: `startShut`
+ * folds it until the viewer opens it). */
+export function Card({ title, kicker, children, right, tour, fold, startShut = false }: { title?: string; kicker?: string; children: ReactNode; right?: ReactNode; tour?: string; fold?: string | false; startShut?: boolean }) {
   const id = fold === false || !title ? null : `card:${fold ?? title}`;
-  const [shut, toggle] = useFold(id);
+  const [folded, toggleFold] = useFold(id, startShut);
+  // round 36: a guide step that points at a folded card opens it for a look, and the fold kept on
+  // the device stays as it was
+  const [peek, setPeek] = useState(false);
+  const ref = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!folded) {
+      setPeek(false);
+      return;
+    }
+    const look = () => setPeek(true);
+    el?.addEventListener(SPOT, look);
+    return () => el?.removeEventListener(SPOT, look);
+  }, [folded]);
+  const shut = folded && !peek;
+  const toggle = peek ? () => setPeek(false) : toggleFold;
   return (
-    <section className={`card stack${shut ? ' folded' : ''}`} data-tour={tour}>
+    <section ref={ref} className={`card stack${shut ? ' folded' : ''}`} data-tour={tour}>
       {(title || kicker || right) && (
         <div className="row">
           <div>

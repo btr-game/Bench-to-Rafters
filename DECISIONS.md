@@ -2959,3 +2959,291 @@ multiple times."
   as the requirement"): a career counts toward opening Sim only if it made an NBA All-Star team
   (`starBy` in the totals, `simReady`), so three quick early retirements no longer open it. The Grand
   Tour achievement keeps its own rule (any finished career at each difficulty).
+- **Published** (owner: "i think once this is done, we can publish"): the game artifact (version 77),
+  the live database (0004 through the connector; 0005 and 0006 run by the owner in the Supabase SQL
+  Editor, since the connector's confirmation never reached the owner's screen, so the project's
+  migration list shows only 0001 to 0004 while every table, column and function of 0005 and 0006 is
+  in place and checked), and the website (main at the round 35 merge, Netlify deploy ready).
+
+## Round 36 (owner requests)
+
+- **Four cards on the start page** (owner: "never put more that 4 cards here. move the play with
+  friends elsewhere (under difficulties maybe)"): Play with friends left the row of cards for a card
+  of its own under the difficulties (with Regular guy picked, beside the road map card, as both are
+  Regular guy's), so the row is the mini-games, the career log, the achievement book and the
+  community again. The row's grid now makes four columns at most at any width, and CLAUDE.md keeps
+  the rule.
+- **The indie lane** (owner: "i want to switch lanes to an indie game"): free, a donation channel
+  later. Round 36 cuts features (the owner confirms the list) and builds the rafters finale in place
+  of the Thank you for playing page (unskippable the first time, skippable after). Round 37: a world
+  to walk around instead of menus. Round 38: story mode and maybe one signature on-court engine.
+  Roguelite runs turned down. ROADMAP.md keeps the order.
+- **A username, apart from the player's name** (owner: "ask the user for a username(changable) after
+  the tutorial. this is for the community function(so that users can know who's player it is
+  without having constraints on the player name)"): one username per device (`src/ui/names.ts`,
+  kept under the key Play with friends already used, so a friend name carries over). It is asked
+  on the graduation page, once on the difficulty step for a device that finished the tutorial
+  before this round ("Not now" hides it), and changed any time in Settings or on the friends page.
+  A career card posted to the boards, the Reality 99 Hall or the statue plaza carries it as `by`
+  inside the record, so the database needs no migration; the boards show "by <username>" and
+  re-check it when they draw, since the server does not.
+- **Clean names** (owner: "filter out curse words or non english characters in the player name"):
+  a player's name keeps letters A to Z, spaces, apostrophes, hyphens and dots; accents become plain
+  letters (Kovač is Kovac) and other alphabets, numbers and emoji drop as they are typed. Swear
+  words and slurs are refused (spelled with numbers or spaced out too), while real names that only
+  look close stand (Hancock, Dickerson, Sexton, Cumberland); the list is kept encoded in
+  `src/content/blocked.ts`. Usernames follow the same rules with numbers, `_`, `.` and `-` added,
+  and so does a draft class's name. Every name the game picks at random passes (all 9,216 checked).
+  Chat lines between friends stay unfiltered (owner: "no need for filtering friend chats").
+- **A new visual check, `under`** (round 27 rule: "add a check whenever a new kind of visual bug
+  turns up"): text drawn over a button or a box it isn't part of. The name note slid under the
+  phone's New name button with no two texts touching, so `overlap` missed it; the new check flags
+  that layout and runs clean on the fix.
+- **No cuts; three merges** (owner: "i dont really want to cut anything you suggested, so lets scrap
+  6. but the merges, i like. merge 11, 12, 14"). Every function stays; the merges only regroup.
+  Item 11 suggested hiring staff like shop items, but since nothing is cut, staff keeps its talk,
+  raise and let-go steps.
+- **Around you** (merge 12): Home's side column (the MVP race, the duo, the rivalry, the league's
+  stories, the fans' talk) is one card with small tabs, opening on what matters most right now
+  (`src/ui/around.ts`: a close MVP race, a duo or a rivalry new this season, news about him, story
+  calls left) and holding a pick until the season moves on. With the tutorial or Guide mode on,
+  every part shows stacked, so each lesson and tour step still finds its target.
+- **The rafters finale** (owner: "i like steps 123, but let's combine 45 ... like movie credits,
+  the title of the game fills the screen and then a thank you message. i dont want this to be any
+  longer than 2 minutes"): it replaces Thank you for playing (`src/ui/finale.ts`,
+  `src/ui/screens/Finale.tsx`). A finished career whose jersey hangs gets the empty arena at night
+  (the house lights come up a bank at a time), his speech (four or five lines written from the
+  career: the city, where he started, the rings or the MVP, a person, his number), the jersey
+  rising to the rafters, then the credits roll: the career (Starring, Teams, Championships,
+  Legendary seasons, Awards, In the NBA, Forever, With), then the makers in two lines
+  ("Developer: MJ Kwon", "Code, art and sound: Claude"; owner: "make that part extremely short"),
+  the title filling the screen and the thank-you with Play again and Share. Its longest run is
+  about 105 seconds (tested under 120). The first time each ending plays on a device it can't be
+  skipped (`btr-finale-seen`); after that a Skip button (and Enter) jumps to the thank-you.
+- **Who gets which ending**: careers that don't make the rafters get their own endings later
+  (owner: "let's catagorize that a bit later, because there are many paths"); until then a finished
+  career without the rafters gets the credits, the title and the thank-you. A tutorial level gets
+  the title and the thank-you (skippable). Leaving a career that isn't over gets no ending (owner:
+  "leaving a career that isnt finished doesnt deserve the ending card"); the start page's Continue
+  card already holds it. The daily and Built in a Lab still end without one. A father whose son's
+  career is played next reaches his ending through the son's (the son's credits name him): to look
+  at when the endings are categorized.
+- **Achievements for the round** (41 more, the book at 817; a helper agent's work, measured on 150
+  Regular guy careers, smart policy, casual mini-games; tiers on round 35's bands): the rafters
+  (Three Arenas, One Number; Draft Day to Banner Day 7.333333%; Bench to Rafters, a JV starter whose
+  number hangs, 11.33333%; Local Legend; Nowhere to Hang It, the Hall without a retired number,
+  10.00000%; Promise Kept; Plus One; Raised in Reality, 6.666667% of Reality careers), the speech
+  (Don't Tell Anybody, the rival thanked, 12.00000%; Little Jersey; We Never Stopped Chasing;
+  Rehearsed), the credits (Ensemble Cast, 12 teams, 10.00000%; Awards Season; Supporting Cast;
+  Championship Montage; Director's Cut, the full 52-second roll, 47.33333%; Indie Darling), the
+  turning points and shop items below, the username (Handle With Care, New Handle on Life, Witness
+  Protection, Signed, Sealed, Delivered, Autograph Session, Name in Lights) and watching endings (Stay
+  for the Credits, Skip to the Good Part, Double Feature, Film Festival, Not a Dry Eye in the House).
+- **Turning points and shop items for the round** (`events/round36.ts`, each with a pixel icon, no
+  new decision kind): the number talk (a team floats retiring his number: two more seasons at a
+  discount, and a pledge), writing the speech, the JV coach's last game, a fan account built on his
+  name, the rival's jersey ceremony. In the shop: a framed first jersey and a replica rafters banner
+  (both visited from the collection), a public-speaking coach, a yearly full-body scan. Measured on
+  the helper's 150 careers: careers whose number hangs 15.33333% → 17.33333%, the Hall of Fame
+  19.33333% → 20.00000% (partly the number talk, partly drift from the changed draws).
+- **A bug the helper found**: once a career has retired no season is in play, so the duo lookup
+  returned nothing and the speech and the credits never named his running mate. `duoAtEnd`
+  (engine/career/duo.ts) reads the bonds still formed when he retired, for the finale and its
+  achievements alike.
+- **Twelve endings** (owner: "do all 12", "sure", "yes", "make all 12"; a helper agent's work,
+  `src/ui/endings.ts`, `src/ui/art/Endings.tsx`): a finished career is given the first ending that
+  fits, in this order: the rafters, Enshrined (the Hall of Fame), Ring bearer (an NBA title),
+  All-Star (an All-Star or All-NBA team, or an MVP), Legend of Europe (3+ seasons abroad with a
+  title or an MVP there; ranked above the next two, owner: "sure"), The long haul (6+ NBA seasons),
+  Made it (an NBA game), Passport (any season abroad), The grinder (the G League), One shining
+  moment (a college title or the big college awards), Cap and gown (college) and Hoops dream. Each
+  but the rafters opens on a scene of its own (a 6-second caption, three 6-second lines, where he
+  is now) before the credits, under a theme of its own (eleven new loops, kept out of Full Album).
+  Twists take the third line: the injury, the leap, the Rough Road, his father, his family, iron
+  man at 40, walking away before 30. The achievement book has an Endings page ("N of 12 endings
+  seen", silhouettes for the rest) and eight achievements (the book at 825). Measured on 150 smart
+  Regular guy careers: the rafters 12.00000%, Enshrined 4.666667%, Ring bearer 11.33333%, All-Star
+  5.333333%, Legend of Europe 22.00000%, The long haul 14.66667%, Made it 3.333333%, Passport
+  23.33333%, Cap and gown 0.6666667%, Hoops dream 2.666667%; the grinder and One shining moment
+  never come up with this policy, which never stays in the G League or stops after college. **For
+  the owner:** Legend of Europe is common because an NBA veteran who finishes with three title-
+  winning seasons abroad takes it ahead of The long haul; it could ask that his seasons abroad
+  outnumber his NBA ones.
+- **Aging that diverges** (owner: "every player i seem to play ends up washed by early-mid 30s ...
+  many legendary players were still elite at their mid 30s"): past an 82 peak, each point of peak
+  OVR slows the yearly decline by 4%, down to 40% of it (`legendMult`, engine/player/growth.ts); a
+  durable body starts declining at 32 instead of 31; the age ceiling is 90 at 37, falling 1.7 a
+  year (about 85 at 40, 68 at 50; it was 85 at 40 and 50 at 50). The league's generated players keep
+  the aging they had (`GEN_DECLINE_TABLE`). Careers that never retire by choice, Regular guy, peak
+  95 or more, mean OVR before → after: 91.6 → 95.2 at 35, 87.3 → 90.9 at 38, 83.7 → 87.5 at 40,
+  69.1 → 79.1 at 45, 59.4 → 73.5 at 48. A peak in the 70s ages as before (about 64.5 at 35).
+- **A higher bar for All-Star and MVP** (owner: "instead of reducing growth too much, let's set the
+  bar a bit higher"): he makes an All-Star team only from his conference's top six (the selection
+  in `allStarWeekend` and at season end), and the MVP voters take 6 points off his score and 2.5
+  more for each MVP he has won (`MVP_BAR`; the live ladder too). Calibrated on 600 careers a step
+  (All-Star / MVP): no bar 39.0% / 14.16667%; top 8, 1 point 35.0% / 13.66667%; top 7, 1.5 33.83333%
+  / 13.5%; top 6, 3 + 1.5 32.5% / 12.66667%; top 6, 5 + 2 32.5% / 10.83333%; top 5, 8 + 3 31.0% /
+  8.333333%. The 2,000-career run (Regular guy, before → after): All-Star 36.15% → 30.55%, MVP
+  13.00% → 9.55%, mean peak 74.1466 → 74.2029 (growth untouched), titles 38.30% → 39.30%, the Hall
+  of Fame 15.65% → 16.60%, median retirement 32 → 33, retired at 36 or older 21.25% → 30.70%. The
+  Word report (Round 36 balance diagnostics) has every difficulty's distribution and aging curves.
+- **Two career changers, both extremely rare** (owner): the next step (25 to 33, once a career,
+  0.15% a summer: +7 to +11 on every rating, a ceiling 6 to 12 higher, faster growth; 1.30% of
+  Regular guy careers) and the career-altering injury (a torn ACL, meniscus and MCL, 0.06% a
+  summer: one season out, or two in 40%; athleticism −18 to −26, finishing, perimeter defence,
+  rebounding and interior defence −8 to −13, the rest −3 to −6, every ceiling −8 to −14, potential
+  −10 to −16; 1.50% of careers, it was about 7%). The leap now belongs to 19 to 24.
+- **A determinism bug fixed**: the event director tried each event's choices on a shallow copy of
+  the game to learn what it does to ratings, so a choice that wrote to a shared part of the state
+  (the league, the history) reached the real career the first time an event was seen in a session.
+  The first career with a seed then played differently from every later one (found by the test
+  "same seed and same choices give the same career"). The copy is deep now. The shop variety test
+  looks at 24 summers instead of 6: variety was unchanged (17.68 different things per six shops
+  with the round's four new items, 17.58 without), six seeds had just drawn an unlucky set.
+
+## Round 37 (owner requests): a world to walk around
+
+- **The town** (owner: "a world to walk around instead of menus"; ROADMAP: "a pixel hometown, then
+  a city, whose places open what the tabs open today"): in a career, the row of tabs is a pixel
+  street (`src/ui/town.ts`, `src/ui/components/Town.tsx`, `src/ui/art/TownArt.tsx`). The gym is
+  Home (the day's work), the arena the Season tab, where he lives the Player tab, the hall Records,
+  the arcade Extras; a pro also has an agent's office, which opens the Player tab at his contract
+  and money. His hometown in high school (the rec center, his school, the family house, the diner
+  with his clippings), the campus in college, his team's city as a pro, a city abroad in Europe.
+  Clicking a place opens it at once while he walks to its door (the walk never holds the page up);
+  with the town in focus, the arrow keys or A and D walk him door to door and Enter goes in; H, S,
+  P, R and E still open the places. Fast break and reduced motion skip the walk; simple text
+  signs show the tab's name only. Night in the dark theme (the buildings dim, the windows, lamps
+  and neon light up). The tutorial levels show only their places. On a narrow screen the street is
+  wider than the screen and follows him. Once the town scrolls out of view the row of tabs comes
+  back in the top bar, and a phone keeps its bottom bar (thumb reach): the owner may want either
+  gone. The tabs' icons are now their places (the gym's hoop, the arena, the house, the trophy,
+  the arcade's joystick), so a house never stands for Home.
+- **Every arena its own** (owner: "make each stadium unique? especially for nba team stadiums, make
+  the design symbolize the team and city"): each NBA team's arena is designed by hand
+  (`src/ui/arenas.ts`, `src/ui/art/arenaArt.ts`): one of eight roofs and six skins in the spirit of
+  its building (Brooklyn's weathered-steel lattice, New York's and Golden State's round drums,
+  Phoenix's adobe, Memphis's stone by the river), the team's crest motif on a panel over the doors,
+  and a landmark of its city beside it (the Old North Church, the Brooklyn Bridge, the Empire
+  State, Independence Hall, the CN Tower, the Willis Tower, the Terminal Tower, the Renaissance
+  Center, the Monument Circle obelisk, the art museum's wings, the peach, the Queen City's crown,
+  an art deco hotel, a coaster loop, the Capitol, the Rockies, snowy pines, an oil derrick, Mount
+  Hood, a rock arch, the Golden Gate, a clipper's mast, searchlights, saguaros, the Tower Bridge,
+  Reunion Tower, a rocket, the Pyramid, a French Quarter balcony, the Alamo). No two share a
+  landmark or a build (a test checks). Any other arena (a college's, a G League club's, a club
+  abroad) is put together from its name, with the club's initial over the doors, and every high
+  school from its name too (its tower, its brick, its flag), so each looks the same every visit.
+  The Catalog lists the thirty with their art.
+- **The street shows the career**: a banner on the arena for each title won there, his home growing
+  with the bank (an apartment, then a house from $3M, a mansion from $40M), his car at the kerb
+  once he bought one as a pro, a hoop beside the house once he built a court at home, his statue
+  in gold outside the arena of the team that hung his jersey, and a gold dome on the museum once he
+  is in the Hall of Fame (it becomes the Hall of Fame).
+- **Sound**: soft footsteps as he walks, and the bell over the door when he goes in (not when the
+  arrow keys walk him past).
+
+
+- **The main land** (owner: "can we make the main home page a map as well? let's do it this way:
+  once the user completes the first tutorial beginner level, they can take a plane to the "main
+  land". in the main land, there's buildings/islands/areas/... where the user can access the main
+  contents"): the start page's first step (with no level and no draft class) is a pixel town along
+  one avenue (`ui/mainland.ts`, `screens/MainLand.tsx`, `art/LandArt.tsx`), on a 224 by 100 grid,
+  wide across the page on a computer and scaled to the width on a phone. Above the avenue: the
+  airport (back to the road map), the cinema (the intro), and a venue for each difficulty: the gym
+  (Regular guy), the cage, a fenced street court under a wall of tags (Reality hits hard), and the
+  dome under its star (Shoot for the stars). Below it: his house (Continue, only while a career is
+  going; a lot for sale otherwise), the park (Play with friends), the library (the career log), the
+  newsstand (What's new), the statue plaza (the community), the trophy museum (the achievements),
+  and the dock, with the island of mini-games across the water.
+- **How it works** (round 34's road map pattern, owner: "when the user clicks on the buildings, or use
+  the arrow keys to move around, the cards pop out"): every place is a button with a plate (its icon
+  and name; the icon alone below 1000 px). Click it, or drive his car to it with the arrow keys, and
+  its card pops out beside it (under the map on a phone); the arrows go to the nearest place that
+  way, Tab reaches every place, Enter opens the card where the car is (the focus goes to its main
+  button), Escape folds it away and gives the place the focus back. The island's card sends the boat
+  across with him in it; the airport's plane takes off before the road map opens (skipped with
+  reduced motion). Right after graduation the gym's plate hops; a difficulty or the island the road
+  map hasn't opened shows its lock and today's hint. In the dark theme the town is at night: a shade
+  over it, lit windows, lamps and signs, square halos and the dome's searchlights. Simple text keeps
+  the names and buttons and hides the descriptions, as everywhere.
+- **Where the old start page went**: the difficulty cards are the venues, each card holding its blurb,
+  its challenge exactly as before (Rough Road in the cage, Comet in the dome) and Make your player,
+  which goes on to the Identity step; the stepper and the Next button are gone from that step. The
+  four cards of the start page's row (mini-games, career log, achievements, community) are four
+  places now (the island, the library, the trophy museum, the statue plaza), so there is no row of
+  cards any more: round 36's "four cards at most" rule was about clutter, and the map has none.
+  Play with friends is the park, a place of its own beside the gym rather than inside it, so it is
+  found without picking Regular guy first; its careers stay Regular guy. "Back on the road map?" is
+  the airport's card. The username prompt sits between the title and the map; the live strip, the
+  Developer door and the fan note stay under it. A draft class keeps the old difficulty step (only
+  Regular guy open), without the road map card.
+- **The plane** (`screens/Plane.tsx`, `art/FlightArt.tsx`): graduation's last button is Take the plane
+  to the main land, under a card with the plane waiting on the island's airstrip. The flight is five
+  seconds in steps of twelve frames a second: wheels up from the road map's island, over the sea,
+  down onto the main land's runway, with a caption for each part. Skip, Enter or Escape lands at
+  once. It plays once on a device (`btr-plane-seen`) and never with reduced motion; the dev deck
+  always shows it (a still over the sea with reduced motion). On a screen taller than it is wide the
+  flight shows a narrower window with the sky above.
+- **Targets kept** for the tutorial, the closing tour, Guide mode and What's new: `mode-regular` is the
+  gym, `levels-card` the airport card's button, `saves` his house's card, `create-next` a venue's Make
+  your player, `minis`, `log`, `ach`, `community` and `multi` their places' cards, `intro-btn`,
+  `whats-new`, `share-btn`, `settings-btn`, `guide-btn` the header, `username-prompt` the prompt; the
+  map itself is `mainland`. After graduation a first lesson shows the main land, then the gym; Guide
+  mode has two new steps (the main land, the three venues), and its Rough Road step now finds only
+  the Rough Road card (it used to match any dashed card, the road map's or the username's).
+- **Regular guy's peak curve above 70 falls in a straight line** (owner, with two charts: "in regular
+  guy, instead of what it is now (first image), i want the upper hand (above 70 ovr) to go linearly
+  down, like on the second image ... try to aim the more niche factors than the main factors
+  (stats)"). Above 70 the curve was thin from 72 to 85 and thick from 88 to 99. Two side systems
+  did it, not growth: boosts past a rating's cap (turning points, the shop, mini-game bonuses)
+  stacked up for good, worth 3 to 5 OVR to a player with a ceiling under 88 and under 1 near the
+  top (he hits 99 first), so the middle was lifted into the high 80s; and about 5% of potentials
+  were drawn above 99 and all landed on it. Two dials, Regular guy only: `settle` (a rating's part
+  past its cap shrinks each summer by a share that is nothing at OVR 76 and all of it at 98,
+  `settleBack` in player/growth.ts, run in the offseason after aging) and `redrawOver: 99` on its
+  potential (a draw above 99 is drawn again, up to six times). Calibrated on 1,200 smart careers a
+  setting (root-mean-square gap from the line, scaled to 2,000 careers): redraw alone 21.9026; a
+  settle above a fixed OVR stacks careers on that line (31.2927 to 33.8923, about 200 per 2,000 at
+  80 to 81 for the line at 80), a ramp from 70 piles them at 70 to 73 (22.4135), ramps from 72 and
+  74 14.8272 and 12.6236, the ramp from 76 to 98 10.9479. On 2,000 fresh careers (seeds 20000 on,
+  smart policy, casual mini-games), before → after: gap 28.9653 → 15.0327; 5-point bands as a share
+  of 70 to 74 (the line: 1, 0.818, 0.636, 0.455, 0.273, 0.091) 1, 0.617, 0.442, 0.493, 0.540, 0.260 →
+  1, 0.773, 0.569, 0.425, 0.258, 0.082; mean peak 74.0726 → 72.5173; 70+ 56.80% → 54.85% (the
+  redrawn potentials fall anywhere in the spread, about half under 70); 80+ 29.40% → 23.55%; 90+
+  13.55% → 6.00%; NBA 78.55% → 77.70%; All-Star 28.90% → 25.00%; MVP 9.25% → 3.85%; Hall of Fame
+  17.00% → 9.50%; titles 40.05% → 33.05%. The honours that need a star are rarer because the shape
+  has fewer stars; the owner decides whether to lower round 36's All-Star and MVP bars to win some
+  back. What is left: the bars from 72 to 79 sit 20 to 30 careers under the line, before as after
+  (filling them would lift the curve under 70 too). Word report: "Regular guy peak curve".
+- **The plane's sounds**: the engines spool up at take-off (graduation's flight and the airport's
+  flight back to the road map, which borrowed the feedback's paper plane), tyre chirps and the cabin
+  bell at touchdown (`takeoff`, `touchdown`, on the sound board).
+- **Achievements, turning points and shop things for the round** (checklist items 5 to 7, a helper
+  in its own worktree): 45 achievements (`engine/achievements37.ts`; the book 825 → 870), filed in
+  the existing categories under the 10% cap, for the street (his house, the mansion, the statue,
+  five banners in one arena, the kerb, and on the device the doors he walks through, the agent's
+  office, the four looks of the town, the miles walked, the landmarks seen), aging and the bar (an
+  All-Star at 38, OVR 90 at 37, twenty a game at 40, ten All-Star teams in a row, three MVPs in a
+  row), and the two career changers. Tiers from 150 smart Regular guy careers on rough bands
+  (bench 50% or more, rotation 20 to 50%, starter 6 to 20%, All-Star 1.5 to 6%, Hall of Fame
+  under 1.5%), by judgement where the harness can't reach (choices it never makes, counts kept by
+  the UI). What the street shows now lives in `engine/career/street.ts`, which the town, the book
+  and the events all read. Nine turning points, each once a career (`events/round37.ts`): a street
+  named after him (its sign on the lamp post outside the arena), his mural on the practice
+  facility, his hometown rec center taking his name, the arena's naming rights, another agent in
+  the lobby, moving day (a house with a hoop on the street), the neighbour at midnight, the reporter
+  asking about the knee after the career-altering injury, and a late summer of work. Signs and
+  murals stay with the city that put them up. Four shop things: framed prints of every arena, a
+  city bike, a custom knee brace, a summer at a longevity clinic. No new decision kind, so the
+  harness's `smartChoice` needed nothing. A dev deck card (`town-city`) stages the street with the
+  sign, the mural, the car and the hoop.
+- **Two bugs the end-of-round checks found** (round 37's town): the tutorial's "The Player tab"
+  lesson drew its ring round an empty box in the top bar and the tutorial could not go on. The top
+  bar's row of tabs is only hidden (it keeps its size) while the town is on screen, and the lesson
+  had picked it while the town was scrolled away, then never looked again when the page came back
+  to the top (it watched the page for changes, not the root's `town-out` class). The lessons and
+  Guide mode now skip hidden targets and look again when the town comes and goes; the tutorial runs
+  end to end on a desktop, on a phone and with the plane's flight. And on a phone the locker room's
+  name tags were wider than the gaps between the people (round 36's `under` check had not looked at
+  it before): the tags now leave the buttons' boxes, under the feet or, for every second person
+  from the left, over the head.

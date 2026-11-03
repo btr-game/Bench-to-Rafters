@@ -730,11 +730,14 @@ button.scout-row { text-align: left; background: var(--surface); color: inherit;
 .look-seg { flex-wrap: wrap; }
 @media (max-width: 560px) { .look-row { grid-template-columns: minmax(0, 1fr); gap: 4px; } }
 .id-fields { gap: 8px; }
-.id-row { display: grid; grid-template-columns: minmax(0, 340px) 136px auto; gap: 10px; align-items: end; justify-content: start; }
+.id-row { display: grid; grid-template-columns: minmax(0, 340px) 136px auto; gap: 10px; align-items: end; justify-content: start; padding-bottom: calc(20px * var(--ts)); }
+/* round 36: the name's note hangs under its box, so the boxes in the row stay level */
+.id-row > .field:first-child { position: relative; }
+.id-row > .field:first-child .name-note { position: absolute; left: 0; right: 0; top: 100%; }
 @media (max-width: 560px) {
   .id-card { grid-template-columns: minmax(0, 1fr); justify-items: center; }
   .id-fields { width: 100%; }
-  .id-row { grid-template-columns: minmax(0, 1fr) 84px; }
+  .id-row { grid-template-columns: minmax(0, 1fr) 84px; row-gap: calc(30px * var(--ts)); padding-bottom: 0; }
   .id-dice { grid-column: 1 / -1; justify-self: start; }
 }
 .nation-card { border-top: 4px solid var(--accent); }
@@ -1432,10 +1435,9 @@ td .art-team { display: inline-block; vertical-align: middle; margin: -3px 8px -
 :root { --body-base: #E9E3DC; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme='light']) { --body-base: #3A3F47; } }
 :root[data-theme='dark'] { --body-base: #3A3F47; }
-.bm { display: grid; grid-template-columns: minmax(260px, 1.1fr) 1fr; gap: 18px; align-items: start; }
-.bm.narrow { grid-template-columns: 1fr; gap: 12px; }
-.bm.narrow .bm-svg { max-height: 360px; }
-.bm-svg { width: 100%; height: auto; max-height: 470px; }
+/* round 36: inside the Body panel, in a side column: the figures above, the numbers below */
+.bm { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; align-items: start; }
+.bm-svg { width: 100%; height: auto; max-height: 360px; }
 .bm-part { transition: filter 0.15s; }
 .bm-part.on { filter: brightness(1.15) saturate(1.2); }
 .bm-line { fill: var(--ink); }
@@ -1468,7 +1470,6 @@ td .art-team { display: inline-block; vertical-align: middle; margin: -3px 8px -
 .bm-age i { width: 12px; border-radius: 3px 3px 0 0; background: color-mix(in srgb, var(--ink) 25%, transparent); }
 .bm-age i.grew { background: #2F9E44; }
 .bm-age span { font-family: var(--f-mono); font-size: calc(10.5px * var(--ts)); color: var(--muted); }
-@media (max-width: 760px) { .bm { grid-template-columns: 1fr; } }
 
 /* round 22: duo art */
 .duo-art { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 8px 8px; border-radius: 12px; background: radial-gradient(ellipse at 50% 85%, color-mix(in srgb, var(--team) 32%, transparent), transparent 70%); }
@@ -1575,7 +1576,8 @@ td .art-team { display: inline-block; vertical-align: middle; margin: -3px 8px -
 @keyframes camFlash { 0% { opacity: 0; } 20% { opacity: 1; } 100% { opacity: 0; } }
 
 /* the career log (round 24) */
-.start-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+/* round 36 (owner: "never put more that 4 cards here"): four columns at most, however wide the page */
+.start-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(max(280px, calc((100% - 42px) / 4)), 1fr)); gap: 14px; }
 .log-entry { display: grid; gap: 12px; }
 .log-head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 14px; align-items: center; }
 .log-who { min-width: 0; display: grid; gap: 2px; }
@@ -2190,39 +2192,24 @@ input[type='range'] { width: 100%; min-height: 32px; accent-color: var(--accent)
   .news-panel { top: auto; left: max(12px, env(safe-area-inset-left, 0px)); right: max(12px, env(safe-area-inset-right, 0px)); bottom: max(12px, env(safe-area-inset-bottom, 0px)); width: auto; max-height: 74dvh; padding: 16px; animation-name: news-up; }
 }
 
-/* ---------- thank you for playing (round 27): a cheering crowd, confetti, the trophy held high ---------- */
-.thanks { position: fixed; inset: 0; z-index: 90; display: grid; place-items: start center; overflow: hidden; background: #0d0f15; color: #f4f1ea; }
-.th-scene { position: absolute; inset: 0; }
-/* three rows of pixel fans, dim and darker the further back; only the front row waves, slowly */
-.th-crowd { position: absolute; left: 0; right: 0; }
-.th-crowd svg { display: block; width: 100%; height: 100%; }
-.th-crowd.r1 { top: 34%; height: 8%; filter: brightness(0.26) saturate(0.4); }
-.th-crowd.r2 { top: 42%; height: 9.5%; filter: brightness(0.38) saturate(0.5); }
-.th-crowd.r3 { top: 51.5%; height: 11.5%; filter: brightness(0.55) saturate(0.6); }
-.th-wave { position: absolute; inset: 0; }
-.th-wave.b { opacity: 0; }
-.th-crowd.r3 .th-wave.b { animation: th-wave 1.6s steps(1, end) infinite; }
-@keyframes th-wave { 0% { opacity: 0; } 50% { opacity: 1; } }
-.th-light { position: absolute; top: 0; left: 50%; width: 28vw; height: 80%; transform: translateX(-50%); fill: rgba(255, 236, 170, 0.08); }
-.th-floor { position: absolute; inset: 66% 0 0 0; background: repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.14) 0 3px, transparent 3px 56px), linear-gradient(#c98d52, #a46c38); border-top: 5px solid #f4f1ea; }
-.th-bit { position: absolute; top: -4%; width: 6px; height: 6px; opacity: 0.7; will-change: transform; animation: th-fall steps(40, end) infinite; }
-@keyframes th-fall { from { transform: translateY(0); } to { transform: translateY(112vh); } }
-.th-hero { position: absolute; left: 50%; bottom: 3%; width: clamp(230px, 48vh, 460px); transform: translateX(-50%); }
-/* his honours on the wall behind, left and right of the title, bobbing gently in steps */
-.th-honours { position: absolute; inset: 0; }
-.th-honour { position: absolute; opacity: 0.8; animation: th-bob 1.6s steps(2, end) infinite; }
-.th-honour svg { display: block; }
-@keyframes th-bob { 0% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
-@media (max-width: 640px) { .th-honour { transform: scale(0.7); } .th-honour svg { width: 36px; height: auto; } .th-hero { width: clamp(200px, 40vh, 320px); } }
-.th-hero .art-celebrate { display: block; width: 100%; height: auto; }
-.th-front { position: relative; z-index: 1; display: grid; justify-items: center; gap: 10px; margin-top: 6vh; padding: 22px max(20px, env(safe-area-inset-left, 0px)); text-align: center; background: radial-gradient(ellipse at center, rgba(14, 16, 22, 0.82) 0 45%, rgba(14, 16, 22, 0) 72%); }
-.th-front .kicker { color: #c9cfda; }
-.th-title { display: grid; justify-items: center; gap: 1vh; margin: 0; }
-.th-word { display: block; height: clamp(34px, 6.5vh, 70px); width: auto; max-width: 86vw; }
-@media (prefers-reduced-motion: reduce) { .th-wave.b, .th-bit, .th-honour { animation: none !important; } .th-bit { display: none; } }
-
-/* round 27: staff, wardrobe and the collection side by side under the Player tab's columns */
-.player-extras { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr)); gap: 16px; align-items: start; margin-top: 16px; }
+/* round 27: staff, wardrobe and the collection under the Player tab's columns; round 36: one card,
+   Your life, a tab each (the picked tab marked by a hard bar along its foot) */
+.life-tabs button { display: inline-flex; align-items: center; gap: 8px; }
+.life-tabs button[aria-pressed='true'] { box-shadow: inset 0 -4px 0 var(--accent); }
+/* each icon on a light tile, so the dark pixels show on a picked tab and in the dark theme */
+.life-icon { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 4px; background: #F1EEE6; }
+.life-count { padding: 0 6px; border-radius: 4px; background: color-mix(in srgb, currentColor 14%, transparent); font-family: var(--f-mono); font-size: calc(13px * var(--ts)); }
+.life-panel { gap: 10px; min-width: 0; }
+.life-panel .staff-list { grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); }
+.life-panel .staff-row { align-content: start; }
+/* on a phone the three share one row: the icon and the count above the name */
+@media (max-width: 640px) {
+  .life-tabs { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
+  .life-tabs button { display: grid; grid-template-columns: auto auto; justify-content: center; align-items: center; gap: 4px 6px; padding: 6px 4px; font-size: calc(14.5px * var(--ts)); }
+  .life-icon, .life-count { grid-row: 1; }
+  .life-label { grid-row: 2; grid-column: 1 / -1; }
+}
+.ward-slots { flex: 1 1 280px; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); gap: 10px 18px; min-width: 0; }
 
 /* ---------- the intro page (round 27): a pixel title over a one-on-one, the venues of a career ---------- */
 .intro { position: fixed; inset: 0; z-index: 90; display: grid; place-items: start center; overflow: hidden; background: #0b0d14; color: #f4f1ea; --feet: 9%; --pl: clamp(120px, 30vh, 280px); }
@@ -2327,10 +2314,10 @@ input[type='range'] { width: 100%; min-height: 32px; accent-color: var(--accent)
 .share-sites .btn { text-decoration: none; }
 .share-foot { display: flex; align-items: center; gap: 8px; margin: 0; padding-block: 12px; min-height: 61px; /* the closed feedback bar beside it */ font: inherit; font-weight: 600; color: var(--ink); text-align: left; cursor: pointer; }
 .share-foot:hover { border-color: var(--accent); }
-.th-go { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 12px; }
-/* the thank-you page is dark in both themes: its Share button reads light on it */
-.th-go .share-big { color: #f4f1ea; border-color: rgba(244, 241, 234, 0.7); background: transparent; }
-.th-go .share-big:hover, .th-go .share-big:focus-visible { background: rgba(244, 241, 234, 0.14); }
+.fn-go { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 12px; }
+/* the finale is dark in both themes: its Share button reads light on it */
+.fn-go .share-big { color: #f4f1ea; border-color: rgba(244, 241, 234, 0.7); background: transparent; }
+.fn-go .share-big:hover, .fn-go .share-big:focus-visible { background: rgba(244, 241, 234, 0.14); }
 @media (prefers-reduced-motion: reduce) { .share-card { animation: none; } }
 
 
@@ -2508,7 +2495,14 @@ input[type='range'] { width: 100%; min-height: 32px; accent-color: var(--accent)
 .lk-tag.you { visibility: hidden; }
 .lk-you { position: absolute; top: -18px; left: 50%; transform: translateX(-50%); padding: 0 6px; border-radius: 4px; background: var(--accent); color: var(--accent-ink); font-size: calc(12px * var(--ts)); font-weight: 700; white-space: nowrap; }
 .lk-me { bottom: calc(6% + 2px); }
-@media (max-width: 640px) { .lk-tag { font-size: calc(10.5px * var(--ts)); padding: 0 4px; } .lk-role { display: none; } .lk-who.near .lk-role { display: inline; } .lk-who.near { z-index: 1; } }
+@media (max-width: 640px) { .lk-tag { font-size: calc(10.5px * var(--ts)); padding: 0 4px; } .lk-role { display: none; } .lk-who.near .lk-role { display: inline; } .lk-who.near { z-index: 1; }
+  /* the people stand closer than their tags are wide: the tags leave the buttons' boxes, hanging
+     under the feet or, for every second one from the left, floating over the head */
+  .lk-who, .lk-me { bottom: calc(6% + 14px); }
+  .lk-tag { position: absolute; top: calc(100% + 1px); left: 50%; transform: translateX(-50%); }
+  .lk-who.up .lk-tag { top: auto; bottom: calc(100% + 1px); }
+  .lk-who.up .lk-alert { top: -36px; }
+}
 
 /* round 32: the farewell tour: the banner on Home in the last season, the gifts on Records */
 .farewell-bar { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 8px; border: 2px solid var(--gold); background: var(--surface); font-size: calc(15px * var(--ts)); }
@@ -2646,8 +2640,6 @@ input[type='range'] { width: 100%; min-height: 32px; accent-color: var(--accent)
 .diploma-code > span { font-family: var(--f-mono); text-transform: uppercase; letter-spacing: 0.1em; font-size: calc(13px * var(--ts)); }
 .diploma-code b { font-family: var(--f-mono); font-size: calc(34px * var(--ts)); letter-spacing: 0.18em; color: #9B2C1A; user-select: all; }
 .diploma-code small { font-size: calc(13px * var(--ts)); color: #5A4229; max-width: 34ch; }
-.mode-card.recommended { box-shadow: 0 0 0 3px var(--accent); }
-.mode-card.recommended .tag { margin-left: 6px; }
 /* the tutorial guide: the page shaded around one control, which alone responds */
 .lesson-layer { position: fixed; inset: 0; z-index: 1200; pointer-events: none; }
 .lesson-shade { position: fixed; background: rgba(12, 14, 22, 0.58); pointer-events: auto; }
@@ -2689,7 +2681,7 @@ input[type='range'] { width: 100%; min-height: 32px; accent-color: var(--accent)
 }
 
 /* round 35: play with friends (screens/Multiplayer.tsx) */
-.mp-handle .row input, .mp-code-entry input, .mp-classes-new input { flex: 1 1 200px; min-width: 0; }
+.mp-code-entry input, .mp-classes-new input { flex: 1 1 200px; min-width: 0; }
 .mp-code-entry input { max-width: 220px; font-family: var(--f-mono); letter-spacing: 0.18em; text-transform: uppercase; }
 .mp-code { font-family: var(--f-mono); font-weight: 700; font-size: calc(30px * var(--ts)); letter-spacing: 0.22em; padding: 6px 14px; border: 2px dashed var(--accent); border-radius: 6px; background: var(--surface-2); color: var(--ink); }
 .mp-share input { font-family: var(--f-mono); font-size: calc(14px * var(--ts)); }
@@ -2762,3 +2754,348 @@ td > .link-btn { min-width: 44px; text-align: left; }
   .mp-award { flex-direction: column; }
 }
 .mp-friends p { margin: 0; }
+
+/* round 36: names and the username */
+.name-note { display: block; margin-top: 4px; font-size: calc(13px * var(--ts)); }
+.name-note.bad { color: var(--bad); font-weight: 600; }
+.username-box input { flex: 1; min-width: 0; }
+.username-box.compact .desc { margin: 0; }
+.set-user { display: block; }
+.board-by { font-weight: 400; color: var(--muted); font-size: 0.85em; margin-left: 6px; }
+.grad-username { margin-block: 14px; }
+.username-prompt { margin-bottom: 16px; }
+/* round 36: Around you, one card at Home's side; the parts inside drop their own card frame */
+.around-tabs { gap: 5px; }
+.around-tabs button { display: inline-flex; align-items: center; gap: 6px; padding: 5px 9px; min-height: 36px; min-width: 0; font-size: calc(13px * var(--ts)); }
+.around-part > .card { background: none; border: 0; border-radius: 0; padding: 0; }
+.around-part > .rival-card { border-top: 4px solid var(--bad); padding-top: 10px; }
+.around-part > .rival-card.lvl-mvp { border-top-color: var(--gold); }
+.around-part + .around-part { border-top: 1px solid var(--line); padding-top: 14px; }
+/* round 36: the finale, in place of Thank you for playing (screens/Finale.tsx). Dark in both themes. */
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.finale { position: fixed; inset: 0; z-index: 90; overflow: hidden; background: #07090f; color: #f4f1ea; }
+.fn-stage { position: absolute; inset: 0; }
+.fn-arena { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
+.fn-seats rect { fill: #141b31; }
+.fn-bank { fill: #262c44; }
+.fn-spot rect { fill: #fff3c4; opacity: 0; }
+/* the house lights come up a bank at a time, then the spot on him */
+.act-arena .fn-bank { animation: fn-bank 0.1s steps(1, end) forwards; }
+.act-arena .fn-bank.b1 { animation-delay: 0.8s; }
+.act-arena .fn-bank.b2 { animation-delay: 1.6s; }
+.act-arena .fn-bank.b0 { animation-delay: 2.4s; }
+.act-arena .fn-bank.b3 { animation-delay: 3.2s; }
+.act-arena .fn-seats rect { animation: fn-seats 3.2s steps(4, end) 0.8s forwards; }
+.act-arena .fn-spot rect { animation: fn-spot 0.6s steps(3, end) 4s forwards; }
+.act-speech .fn-bank, .act-jersey .fn-bank { fill: #fff3c4; }
+.act-speech .fn-seats rect, .act-jersey .fn-seats rect { fill: #2b3558; }
+.act-speech .fn-spot rect, .act-jersey .fn-spot rect { opacity: 0.1; }
+@keyframes fn-bank { to { fill: #fff3c4; } }
+@keyframes fn-seats { to { fill: #2b3558; } }
+@keyframes fn-spot { to { opacity: 0.1; } }
+.fn-him { position: absolute; left: 50%; bottom: 8%; transform: translateX(-50%); }
+.fn-him svg { display: block; width: min(clamp(120px, 30vh, 280px), 44vw); height: auto; }
+/* the jersey goes up from the floor; he stands aside to watch */
+.act-jersey .fn-him { left: 26%; }
+.fn-rise { position: absolute; left: 50%; top: 64%; transform: translateX(-50%); animation: fn-rise 9s steps(36, end) 1s both; }
+.fn-rise svg { display: block; width: min(clamp(90px, 17vh, 170px), 32vw); height: auto; }
+.fn-rope { position: absolute; bottom: 92%; left: 50%; width: 2px; height: 100vh; transform: translateX(-50%); background: repeating-linear-gradient(#9aa3b8 0 4px, #5c6478 4px 8px); }
+@keyframes fn-rise { from { top: 64%; } to { top: 9%; } }
+.fn-caption { position: absolute; left: 50%; top: 30%; transform: translateX(-50%); display: grid; justify-items: center; gap: 4px; width: min(640px, calc(100% - 32px)); text-align: center; animation: fn-fade 1.2s steps(4, end) 4.4s both; }
+.fn-caption span { font-family: var(--f-mono, monospace); font-size: calc(13px * var(--ts)); letter-spacing: 0.16em; text-transform: uppercase; color: #c9cfda; }
+.fn-caption b { font-family: var(--f-display); font-size: calc(30px * var(--ts)); text-transform: uppercase; letter-spacing: 0.04em; }
+.fn-caption.fn-late { top: 40%; left: 70%; width: min(320px, 44%); animation-delay: 9.6s; }
+@keyframes fn-fade { from { opacity: 0; } to { opacity: 1; } }
+.fn-speech { position: absolute; left: 50%; top: 26%; transform: translateX(-50%); width: min(760px, calc(100% - 32px)); min-height: 4.6em; padding: 14px 18px; background: rgba(7, 9, 15, 0.94); border: 4px solid #f4f1ea; box-shadow: 0 0 0 4px #07090f; font-size: calc(19px * var(--ts)); line-height: 1.45; }
+.fn-caret { display: inline-block; width: 0.5em; height: 1em; margin-left: 3px; vertical-align: -0.15em; background: currentColor; animation: fn-blink 0.8s steps(1, end) infinite; }
+@keyframes fn-blink { 50% { opacity: 0; } }
+.fn-roll { position: absolute; inset: 0; overflow: hidden; }
+.fn-roll-in { position: absolute; left: 0; right: 0; top: 62%; display: grid; justify-items: center; gap: 40px; padding-inline: max(16px, env(safe-area-inset-left, 0px)); text-align: center; animation: fn-roll linear forwards; }
+@keyframes fn-roll { to { transform: translateY(calc(-100% - 62vh)); } }
+.fn-icons { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; max-width: 560px; }
+.fn-block { display: grid; gap: 4px; max-width: 720px; }
+.fn-block h3 { margin: 0 0 6px; font-family: var(--f-display); font-size: calc(15px * var(--ts)); text-transform: uppercase; letter-spacing: 0.16em; color: #ffd43b; }
+.fn-block p { margin: 0; font-size: calc(19px * var(--ts)); line-height: 1.4; }
+.fn-makers { gap: 22px; padding-top: 30px; }
+.fn-maker { font-family: var(--f-display); font-size: calc(30px * var(--ts)) !important; text-transform: uppercase; letter-spacing: 0.04em; }
+.fn-title, .fn-thanks { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 3vh; padding: 16px; text-align: center; background: radial-gradient(ellipse at center, #1c2444 0%, #07090f 72%); }
+.fn-title { animation: fn-fade 1.4s steps(6, end) both; }
+.fn-word { display: block; width: min(76vw, 880px); height: auto; }
+.fn-word.big { width: min(92vw, 1180px); }
+.fn-thanks .fn-word { width: min(64vw, 560px); }
+.fn-line { margin: 0; font-size: calc(19px * var(--ts)); color: #c9cfda; }
+.fn-skip { position: absolute; z-index: 2; top: max(14px, env(safe-area-inset-top, 0px)); right: max(14px, env(safe-area-inset-right, 0px)); color: #f4f1ea; }
+@media (max-width: 640px) { .fn-caption.fn-late { left: 50%; top: 52%; width: min(320px, calc(100% - 32px)); } .act-jersey .fn-him { left: 20%; } }
+
+/* round 37: the town, his street of places in place of the row of tabs (ui/components/Town.tsx).
+   The sky is the one smooth gradient; the street is square pixels; the signs are pixel-cornered
+   plates: gold where he is, street-sign green elsewhere. Night in the dark theme. */
+.town { position: relative; overflow: hidden; margin: 0 0 14px; border-radius: 10px; border: 1px solid var(--line); background: linear-gradient(180deg, #7DBDEB 0%, #BFE0F6 62%, #E3F1FB 100%); }
+.tw-street { position: absolute; left: 0; top: 0; transition-property: transform; will-change: transform; }
+.tw-art-wrap { position: absolute; left: 0; top: 0; }
+.tw-art { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+.tw-street::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 36px; background: #3A3F47; border-top: 2px solid #2C3037; }
+.tw-place { position: absolute; top: 0; z-index: 1; background: transparent; border: 0; padding: 0; cursor: pointer; border-radius: 0; }
+.tw-place:hover .tw-sign { transform: translate(-50%, -2px); }
+.tw-place:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
+.tw-sign { position: absolute; z-index: 2; left: 50%; bottom: 3px; transform: translateX(-50%); display: grid; justify-items: center; padding: 1px 7px 2px; background: #1E6B42; color: #FFFFFF; border: 2px solid #124A2C; box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.35); white-space: nowrap; line-height: 1.05; transition: transform 0.12s steps(2); }
+.tw-name { font-weight: 800; font-size: calc(12.5px * var(--ts)); }
+.tw-tab { font-size: calc(10.5px * var(--ts)); font-weight: 600; opacity: 0.9; text-transform: uppercase; letter-spacing: 0.05em; }
+.tw-place.here .tw-sign { background: #F2C14E; color: #20242B; border-color: #B8891C; }
+.tw-new { position: absolute; z-index: 2; left: 50%; top: 2px; transform: translateX(-50%); min-width: 18px; height: 18px; display: grid; place-items: center; background: #FF7A3D; color: #20242B; font-weight: 900; font-size: 13px; border: 2px solid #20242B; animation: twBob 1.2s steps(2) infinite; }
+@keyframes twBob { 50% { transform: translate(-50%, -3px); } }
+.tw-me { position: absolute; z-index: 3; pointer-events: none; transition-property: left; }
+.tw-walker { display: block; image-rendering: pixelated; }
+.tw-street-name { position: absolute; z-index: 3; right: 8px; top: 6px; padding: 1px 7px; background: rgba(255, 255, 255, 0.85); color: #20242B; border: 2px solid #20242B; font-weight: 800; font-size: calc(11px * var(--ts)); text-transform: uppercase; letter-spacing: 0.06em; pointer-events: none; }
+.tw-ring { box-shadow: 0 0 0 3px var(--accent) !important; transition: box-shadow 0.2s; }
+/* the theme's lights: windows are glass by day and lit at night, lamps, bulbs and neon glow at night */
+.tw-art .tw-win { fill: #A9D4F5; }
+.tw-art .tw-open { fill: #FFE08A; }
+.tw-art .tw-lamp { fill: #E9ECEF; }
+.tw-art .tw-bulb { fill: #FFF3BF; }
+.tw-art .tw-neon { fill: #FF8FB1; }
+.tw-art .tw-neon-p { fill: #E64C9A; }
+.tw-art .tw-neon-c { fill: #33B5C9; }
+.tw-art .tw-far { fill: #8FAAC2; }
+.tw-art .tw-far2 { fill: #A1BAD0; }
+.tw-art .tw-farwin { fill: #B9CEDF; }
+.tw-art .tw-hill { fill: #7CBF6B; }
+.tw-art .tw-walk { fill: #CFC9BC; }
+.tw-art .tw-curb { fill: #8D8A82; }
+.tw-art .tw-road { fill: #3A3F47; }
+.tw-art .tw-dash { fill: #F2C14E; }
+.tw-art .tw-gap { fill: #BFE0F6; }
+.tw-art .tw-beam { fill: #F4F8FC; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .town { background: linear-gradient(180deg, #060A1A 0%, #111934 62%, #1D2545 100%); }
+  :root:not([data-theme='light']) .tw-body { filter: brightness(0.62) saturate(0.85); }
+  :root:not([data-theme='light']) .tw-art .tw-win { fill: #FFD66B; }
+  :root:not([data-theme='light']) .tw-art .tw-lamp { fill: #FFF3A6; }
+  :root:not([data-theme='light']) .tw-art .tw-bulb { fill: #FFE066; }
+  :root:not([data-theme='light']) .tw-art .tw-neon { fill: #FF5C93; }
+  :root:not([data-theme='light']) .tw-art .tw-neon-p { fill: #FF3FA4; }
+  :root:not([data-theme='light']) .tw-art .tw-neon-c { fill: #3BE8FF; }
+  :root:not([data-theme='light']) .tw-art .tw-far { fill: #1B2340; }
+  :root:not([data-theme='light']) .tw-art .tw-far2 { fill: #222B4C; }
+  :root:not([data-theme='light']) .tw-art .tw-farwin { fill: #E8C35A; }
+  :root:not([data-theme='light']) .tw-art .tw-hill { fill: #1F3A2E; }
+  :root:not([data-theme='light']) .tw-art .tw-walk { fill: #5A5750; }
+  :root:not([data-theme='light']) .tw-art .tw-curb { fill: #403E39; }
+  :root:not([data-theme='light']) .tw-art .tw-road { fill: #23262C; }
+  :root:not([data-theme='light']) .tw-art .tw-gap { fill: #111934; }
+  :root:not([data-theme='light']) .tw-art .tw-beam { fill: #FFF3BF; }
+  :root:not([data-theme='light']) .tw-street::after { background: #23262C; border-top-color: #181A1F; }
+  :root:not([data-theme='light']) .tw-street-name { background: rgba(17, 25, 52, 0.85); color: #F1F3F5; border-color: #F1F3F5; }
+}
+:root[data-theme='dark'] .town { background: linear-gradient(180deg, #060A1A 0%, #111934 62%, #1D2545 100%); }
+:root[data-theme='dark'] .tw-body { filter: brightness(0.62) saturate(0.85); }
+:root[data-theme='dark'] .tw-art .tw-win { fill: #FFD66B; }
+:root[data-theme='dark'] .tw-art .tw-lamp { fill: #FFF3A6; }
+:root[data-theme='dark'] .tw-art .tw-bulb { fill: #FFE066; }
+:root[data-theme='dark'] .tw-art .tw-neon { fill: #FF5C93; }
+:root[data-theme='dark'] .tw-art .tw-neon-p { fill: #FF3FA4; }
+:root[data-theme='dark'] .tw-art .tw-neon-c { fill: #3BE8FF; }
+:root[data-theme='dark'] .tw-art .tw-far { fill: #1B2340; }
+:root[data-theme='dark'] .tw-art .tw-far2 { fill: #222B4C; }
+:root[data-theme='dark'] .tw-art .tw-farwin { fill: #E8C35A; }
+:root[data-theme='dark'] .tw-art .tw-hill { fill: #1F3A2E; }
+:root[data-theme='dark'] .tw-art .tw-walk { fill: #5A5750; }
+:root[data-theme='dark'] .tw-art .tw-curb { fill: #403E39; }
+:root[data-theme='dark'] .tw-art .tw-road { fill: #23262C; }
+:root[data-theme='dark'] .tw-art .tw-gap { fill: #111934; }
+:root[data-theme='dark'] .tw-art .tw-beam { fill: #FFF3BF; }
+:root[data-theme='dark'] .tw-street::after { background: #23262C; border-top-color: #181A1F; }
+:root[data-theme='dark'] .tw-street-name { background: rgba(17, 25, 52, 0.85); color: #F1F3F5; border-color: #F1F3F5; }
+/* the row of tabs in the top bar waits until the town has scrolled out of view */
+@media (min-width: 900px) { html:not(.town-out) .toptabs { visibility: hidden; } }
+@media (prefers-reduced-motion: reduce) { .tw-new { animation: none; } .tw-street, .tw-me { transition: none !important; } }
+
+/* round 36: a farewell tour's ending opens on the last road ovation: the house lights up, the crowd on its feet */
+.act-ovation .fn-bank { fill: #fff3c4; }
+.act-ovation .fn-seats rect { fill: #3a4878; }
+.act-ovation .fn-spot rect { opacity: 0.1; }
+.act-ovation .fn-seats.a { animation: es-bob 0.6s steps(1, end) infinite; }
+.act-ovation .fn-seats.b { animation: es-bob 0.6s steps(1, end) 0.3s infinite; }
+.act-ovation .fn-caption { animation-delay: 0.6s; }
+/* round 36: the other endings' scenes (art/Endings.tsx). Each layer shows how its scene ends, as a
+   tile in the book does; while the scene plays (.act-scene) it moves there in steps. Every one-shot
+   keyframe ends on a plateau: a stepped animation held at its end is read at a progress a hair under
+   1, so without one a light switched off comes back on */
+.fn-scene { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
+.es-cone { opacity: 0.2; }
+.es-cloth, .es-lid-shut, .es-dim, .es-plate, .es-peel, .es-net, .es-phone, .es-dark, .es-gold, .es-flash { opacity: 0; }
+.es-glow { opacity: 0.22; }
+.es-smoke { opacity: 0.35; }
+.es-fl.b { opacity: 0; }
+.es-plane { transform: translate(18px, -26px); }
+.es-sun { transform: translateY(5px); }
+.act-now .es-gold { opacity: 1; }
+.act-scene .es-cone { animation: es-cone-in 0.1s steps(1, end) 1s both; }
+.act-scene .es-lit { animation: es-in 0.1s steps(1, end) 1s both; }
+.finale .es-flash.a { animation: es-pop 2.6s steps(1, end) infinite; }
+.finale .es-flash.b { animation: es-pop 3.4s steps(1, end) 1.1s infinite; }
+.finale .es-sparkle, .finale .es-twinkle, .finale .es-blink { animation: es-blink 1.2s steps(1, end) infinite; }
+.finale .es-confetti { animation: es-fall 1.6s steps(4, end) infinite; }
+/* Enshrined: the spotlights, then the cloth comes off the plaque */
+.act-scene .es-enshrined .es-cone { animation-delay: 0.6s; }
+.act-scene .es-cloth { animation: es-drop 0.8s steps(4, end) 2.4s both; }
+/* Ring bearer: the lamp clicks on, the box opens */
+.act-scene .es-lid-shut { animation: es-out 0.1s steps(1, end) 2.6s both; }
+.act-scene .es-lid-open { animation: es-in 0.1s steps(1, end) 2.6s both; }
+.act-scene .es-ring .es-sparkle { animation-delay: 3s; }
+/* All-Star: the bulb flickers on, then the jerseys come out of the dark one by one */
+.act-scene .es-allstar .es-cone, .act-scene .es-allstar .es-lit { animation: es-flicker 0.8s steps(1, end) 0.8s both; }
+.act-scene .es-allstar .es-cone { animation-name: es-flicker-cone; }
+.act-scene .es-dim { animation: es-undim 0.1s steps(1, end) 1.8s both; }
+.act-scene .es-dim.j1 { animation-delay: 2.3s; }
+.act-scene .es-dim.j2 { animation-delay: 2.8s; }
+.act-scene .es-dim.j3 { animation-delay: 3.3s; }
+.act-scene .es-dim.j4 { animation-delay: 3.8s; }
+.act-scene .es-dim.j5 { animation-delay: 4.3s; }
+.act-scene .es-dim.j6 { animation-delay: 4.8s; }
+.act-scene .es-dim.j7 { animation-delay: 5.3s; }
+/* Legend of Europe: the banner drops, the flares burn, the scarves go up */
+.act-scene .es-banner { animation: es-unfurl 0.7s steps(7, end) 1.2s both; }
+.finale .es-scarf.a { animation: es-bob 0.9s steps(1, end) infinite; }
+.finale .es-scarf.b { animation: es-bob 0.9s steps(1, end) 0.45s infinite; }
+.finale .es-fl.a { animation: es-flip 0.5s steps(1, end) infinite; }
+.finale .es-fl.b { animation: es-flop 0.5s steps(1, end) infinite; }
+.finale .es-glow { animation: es-glow 0.5s steps(1, end) infinite; }
+.finale .es-smoke { animation: es-smoke 3s steps(6, end) infinite; }
+/* The long haul: the nameplate's corner lifts, it comes off, then the lights go out a row at a time */
+.act-scene .es-peel { animation: es-peel 6.8s steps(1, end) forwards; }
+.act-scene .es-plate { animation: es-drop 0.8s steps(4, end) 6s both; }
+.act-scene .es-longhaul .es-light { animation: es-out 0.1s steps(1, end) 14s both; }
+.act-scene .es-longhaul .es-cone { animation: es-cone-out 0.1s steps(1, end) 14s both; }
+.act-scene .es-dark { animation: es-darken 0.1s steps(1, end) 14s both; }
+.act-scene .es-longhaul .l1 { animation-delay: 16s; }
+.act-scene .es-longhaul .l2 { animation-delay: 18s; }
+.act-scene .es-longhaul .l3 { animation-delay: 20s; }
+.act-now .es-longhaul .es-light, .act-now .es-longhaul .es-cone { opacity: 0; }
+.act-now .es-dark { opacity: 0.16; }
+/* Passport: the board's rows flip in one by one, the plane takes off */
+.act-scene .es-row { animation: es-in 0.1s steps(1, end) 0.8s both; }
+.act-scene .es-row.r1 { animation-delay: 1.4s; }
+.act-scene .es-row.r2 { animation-delay: 2s; }
+.act-scene .es-row.r3 { animation-delay: 2.6s; }
+.act-scene .es-row.r4 { animation-delay: 3.2s; }
+.act-scene .es-row.r5 { animation-delay: 3.8s; }
+.act-scene .es-plane { animation: es-takeoff 6s steps(12, end) 1s both; }
+/* The grinder: the road runs under the bus, the NBA exit goes by */
+.finale .es-dash { animation: es-road 0.5s steps(2, end) infinite; }
+.act-scene .es-sign { animation: es-pass 10s steps(40, end) 2s both; }
+.act-now .es-sign { opacity: 0; }
+/* One shining moment: the net comes down */
+.act-scene .es-net { animation: es-drop 0.8s steps(4, end) 3.5s both; }
+/* Cap and gown: the caps go up */
+.act-scene .es-caps { animation: es-toss 1.2s steps(6, end) 2s both; }
+/* Hoops dream: the phone goes dark, the sun goes down, the streetlight comes on */
+.act-scene .es-phone { animation: es-out 0.1s steps(1, end) 3s both; }
+.act-scene .es-sun { animation: es-sink 24s steps(5, end) both; }
+.act-scene .es-dream .es-cone, .act-scene .es-dream .es-lit { animation: es-flicker 0.8s steps(1, end) 5s both; }
+.act-scene .es-dream .es-cone { animation-name: es-flicker-cone; }
+@keyframes es-in { 0% { opacity: 0; } 50%, 100% { opacity: 1; } }
+@keyframes es-out { 0% { opacity: 1; } 50%, 100% { opacity: 0; } }
+@keyframes es-cone-in { 0% { opacity: 0; } 50%, 100% { opacity: 0.2; } }
+@keyframes es-cone-out { 0% { opacity: 0.2; } 50%, 100% { opacity: 0; } }
+@keyframes es-undim { 0% { opacity: 0.82; } 50%, 100% { opacity: 0; } }
+@keyframes es-darken { 0% { opacity: 0; } 50%, 100% { opacity: 0.16; } }
+@keyframes es-flicker { 0% { opacity: 0; } 20% { opacity: 1; } 35% { opacity: 0; } 55% { opacity: 1; } 100% { opacity: 1; } }
+@keyframes es-flicker-cone { 0% { opacity: 0; } 20% { opacity: 0.2; } 35% { opacity: 0; } 55% { opacity: 0.2; } 100% { opacity: 0.2; } }
+@keyframes es-drop { 0% { opacity: 1; transform: translateY(0); } 90% { opacity: 1; transform: translateY(24px); } 91%, 100% { opacity: 0; transform: translateY(24px); } }
+@keyframes es-peel { 0% { opacity: 0; } 67% { opacity: 1; } 88% { opacity: 0; } }
+@keyframes es-pop { 0% { opacity: 0; } 90% { opacity: 1; } 95% { opacity: 0; } }
+@keyframes es-blink { 50% { opacity: 0; } }
+@keyframes es-bob { 0% { transform: translateY(0); } 50% { transform: translateY(-1px); } }
+@keyframes es-flip { 0% { opacity: 1; } 50% { opacity: 0; } }
+@keyframes es-flop { 0% { opacity: 0; } 50% { opacity: 1; } }
+@keyframes es-glow { 0% { opacity: 0.22; } 50% { opacity: 0.3; } }
+@keyframes es-smoke { from { transform: translateY(0); opacity: 0.35; } to { transform: translateY(-8px); opacity: 0; } }
+@keyframes es-fall { from { transform: translateY(0); } to { transform: translateY(8px); } }
+@keyframes es-unfurl { 0% { transform: translateY(-28px); } 90%, 100% { transform: translateY(0); } }
+@keyframes es-takeoff { 0% { transform: translate(0, 0); } 95%, 100% { transform: translate(18px, -26px); } }
+@keyframes es-road { to { transform: translateX(-16px); } }
+@keyframes es-pass { 0% { transform: translateX(0); } 98%, 100% { transform: translateX(-170px); } }
+@keyframes es-toss { 0% { opacity: 0; transform: translateY(14px); } 17% { opacity: 1; } 90%, 100% { opacity: 1; transform: translateY(0); } }
+@keyframes es-sink { 0% { transform: translateY(0); } 95%, 100% { transform: translateY(5px); } }
+/* the words over a scene: its caption, a line at a time, where he is now; all at the top, in a box */
+.fn-caption.fn-top { top: max(5%, 14px); padding: 10px 18px; background: rgba(7, 9, 15, 0.92); border: 4px solid #f4f1ea; box-shadow: 0 0 0 4px #07090f; animation-delay: 0.4s; }
+.fn-caption.fn-top small { font-family: var(--f-mono, monospace); font-size: calc(13px * var(--ts)); color: #ffd43b; }
+.fn-speech.fn-top { top: max(5%, 14px); }
+.fn-now { position: absolute; left: 50%; top: max(5%, 14px); transform: translateX(-50%); display: grid; gap: 6px; width: min(760px, calc(100% - 32px)); padding: 14px 18px; background: rgba(7, 9, 15, 0.94); border: 4px solid #f4f1ea; box-shadow: 0 0 0 4px #07090f; animation: fn-fade 0.8s steps(4, end) both; }
+.fn-now span { font-family: var(--f-mono, monospace); font-size: calc(13px * var(--ts)); letter-spacing: 0.16em; text-transform: uppercase; color: #ffd43b; }
+.fn-now p { margin: 0; font-size: calc(19px * var(--ts)); line-height: 1.45; }
+.fn-now small { font-family: var(--f-mono, monospace); font-size: calc(13px * var(--ts)); color: #ffd43b; }
+/* on a tall phone the scene keeps the screen's lower part and the words the dark above it */
+@media (max-aspect-ratio: 4/5) { .fn-stage .fn-scene { top: auto; height: 62%; } }
+/* round 36: the book's Endings page: a tile a scene, dark until that ending is seen on this device */
+.end-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; }
+.end-tile { margin: 0; display: grid; gap: 6px; }
+.end-frame { position: relative; aspect-ratio: 16 / 9; overflow: hidden; border: 3px solid var(--line); background: #07090f; }
+.end-tile.seen .end-frame { border-color: var(--gold); }
+.end-art { display: block; width: 100%; height: 100%; }
+.end-tile:not(.seen) .end-art { filter: grayscale(1) brightness(0.12); }
+.end-tile figcaption { font-size: calc(13px * var(--ts)); font-weight: 700; text-align: center; }
+.end-tile:not(.seen) figcaption { color: var(--muted); letter-spacing: 0.2em; }
+@media (max-width: 640px) { .end-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; } }
+/* on a phone the team's tag would sit over a building: the street's own signs say enough */
+@media (max-width: 599px) { .tw-street-name { display: none; } }
+
+/* ---- round 37: the main land, the start page's first step (screens/MainLand.tsx, art/LandArt.tsx),
+   and the plane to it from graduation (screens/Plane.tsx, art/FlightArt.tsx). One block, so it
+   merges cleanly. ---- */
+/* the town by night in the dark theme: the shade over it, the lit windows and the halos show */
+.ml-night { display: none; }
+:root[data-theme='dark'] .ml-night { display: inline; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme='light']) .ml-night { display: inline; } }
+.ml-hero { display: grid; gap: 4px; padding-block: 4px 12px; }
+.ml-title { font-family: var(--f-display); font-weight: 900; font-size: calc(clamp(34px, 4.4vw, 54px) * var(--ts)); line-height: 0.9; text-transform: uppercase; }
+.ml-stage { position: relative; }
+.ml-art { display: block; width: 100%; height: auto; border-radius: 10px; border: 1px solid var(--line); image-rendering: pixelated; }
+.ml-spots { position: absolute; left: 0; top: 0; width: 100%; aspect-ratio: 224 / 100; pointer-events: none; z-index: 1; }
+.ml-spot { position: absolute; pointer-events: auto; padding: 0; background: transparent; border: 3px dashed transparent; border-radius: 6px; cursor: pointer; }
+.ml-spot:hover, .ml-spot:focus-visible, .ml-spot.on { border-color: #FFFFFF; box-shadow: 0 0 0 2px rgba(24, 20, 28, 0.75); outline: none; }
+/* the plates: a sign for each place on the avenue's side of it, the name beside its icon */
+.ml-plate { position: absolute; left: 50%; display: inline-flex; align-items: center; gap: 5px; padding: 2px 7px 2px 4px; border: 2px solid #18141C; border-radius: 5px; background: #FFFFFF; color: #18141C; font-family: var(--f-display); font-weight: 800; font-size: calc(13px * var(--ts)); letter-spacing: 0.03em; text-transform: uppercase; line-height: 1.15; white-space: nowrap; box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.35); }
+.ml-plate .art-icon { flex: none; }
+.ml-spot.ml-top .ml-plate { bottom: 0; transform: translate(-50%, 50%); }
+.ml-spot.ml-bottom .ml-plate { top: 0; transform: translate(-50%, -50%); }
+.ml-spot.locked .ml-plate { background: #DEE2E6; }
+.ml-spot.next .ml-plate { background: #FCC419; animation: ml-hop 0.9s steps(2, jump-none) infinite; }
+@keyframes ml-hop { 50% { translate: 0 -4px; } }
+:root[data-theme='dark'] .ml-plate { background: #1B1F27; color: #F1F3F5; border-color: #E9ECEF; }
+:root[data-theme='dark'] .ml-spot.locked .ml-plate { background: #343A40; }
+:root[data-theme='dark'] .ml-spot.next .ml-plate { background: #FCC419; color: #18141C; border-color: #18141C; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .ml-plate { background: #1B1F27; color: #F1F3F5; border-color: #E9ECEF; }
+  :root:not([data-theme='light']) .ml-spot.locked .ml-plate { background: #343A40; }
+  :root:not([data-theme='light']) .ml-spot.next .ml-plate { background: #FCC419; color: #18141C; border-color: #18141C; }
+}
+/* a map too small for the names keeps the icons; on a phone they sit inside their places */
+@media (max-width: 999px) { .ml-name { display: none; } .ml-plate { padding: 2px; } }
+@media (max-width: 720px) {
+  .ml-plate .art-icon { width: 14px; height: 14px; }
+  .ml-spot.ml-top .ml-plate { bottom: 2px; transform: translateX(-50%); }
+  .ml-spot.ml-bottom .ml-plate { top: 2px; transform: translateX(-50%); }
+}
+/* the card beside a place (round 34's road map pop-out, a little narrower for a busier map) */
+@media (min-width: 721px) { .ml-pop { width: min(440px, 40%); } .ml-pop.ml-top { max-height: none; overflow: visible; } }
+.ml-head { gap: 10px; align-items: center; padding-right: 44px; }
+.ml-crop { flex: none; border-radius: 6px; border: 1px solid var(--line); image-rendering: pixelated; }
+.ml-card > .card { background: none; border: 0; border-radius: 0; padding: 0; box-shadow: none; }
+.ml-venue-title { gap: 10px; align-items: center; flex-wrap: wrap; }
+.ml-venue .oath-card { display: block; padding: 12px; }
+@media (prefers-reduced-motion: reduce) { .ml-spot.next .ml-plate { animation: none; } }
+/* the flight: the strip at the foot of the screen under a sky (a smooth gradient, as backgrounds may be) */
+.plane-flight { position: fixed; inset: 0; z-index: 95; overflow: hidden; background: linear-gradient(#4FA8EC, #BFE3FF 72%, #E7F5FF); }
+:root[data-theme='dark'] .plane-flight, :root[data-theme='dark'] .grad-plane .pl-art { background: linear-gradient(#040817, #15214A 72%, #22305E); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme='light']) .plane-flight, :root:not([data-theme='light']) .grad-plane .pl-art { background: linear-gradient(#040817, #15214A 72%, #22305E); } }
+.plane-flight .pl-art { position: absolute; inset: 0; display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+.pl-caption { position: absolute; left: 50%; top: max(9%, 64px); transform: translateX(-50%); display: grid; justify-items: center; gap: 4px; width: max-content; max-width: calc(100% - 32px); padding: 10px 18px; background: #0C101C; border: 3px solid #F8F9FA; box-shadow: 0 0 0 3px #0C101C; color: #F8F9FA; text-align: center; }
+.pl-caption span { font-family: var(--f-mono); font-size: calc(13px * var(--ts)); letter-spacing: 0.14em; text-transform: uppercase; color: #C9CFDA; }
+.pl-caption b { font-family: var(--f-display); font-size: calc(clamp(26px, 4vw, 40px) * var(--ts)); text-transform: uppercase; letter-spacing: 0.04em; line-height: 1; }
+.pl-skip { position: absolute; top: max(14px, env(safe-area-inset-top, 0px)); right: max(14px, env(safe-area-inset-right, 0px)); }
+/* graduation's last card: the plane waiting on the island's airstrip */
+.grad-plane { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 16px; align-items: center; margin-block: 14px; }
+.grad-plane .pl-art { display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--line); background: linear-gradient(#4FA8EC, #BFE3FF 72%); image-rendering: pixelated; }
+@media (max-width: 640px) { .grad-plane { grid-template-columns: minmax(0, 1fr); } }

@@ -17,6 +17,8 @@ import { ACHIEVEMENTS_32, R32_TOTALS_ONLY } from './achievements32';
 import { ACHIEVEMENTS_33 } from './achievements33';
 import { ACHIEVEMENTS_34, R34_TOTALS_ONLY } from './achievements34';
 import { ACHIEVEMENTS_35, R35_TOTALS_ONLY, type MpKind } from './achievements35';
+import { ACHIEVEMENTS_36, R36_TOTALS_ONLY, type FinaleSeen } from './achievements36';
+import { ACHIEVEMENTS_37, R37_TOTALS_ONLY, type TownRun } from './achievements37';
 import { ACHIEVEMENTS_25 } from './achievements25';
 import { ACHIEVEMENTS_MINI, MINI_TOTALS_ONLY, type MiniTotals } from './achievementsMini';
 
@@ -57,10 +59,21 @@ export interface CareerTotals {
   mp?: Partial<Record<MpKind, number>>; // round 35: what was done with friends (ui/achievements.ts recordMp)
   mpSeen?: string[]; // round 35: `kind:code` of each challenge or class already counted, so none counts twice
   unlocks?: string[]; // round 35: the modes the road map opened by clearing their stops (ui/road.ts Unlock)
+  handle?: number; // round 36: 1 once this device has a username (ui/names.ts)
+  renamed?: number; // round 36: times the username was changed
+  posted?: number; // round 36: careers posted to the community boards under the username
+  postedHof?: number; // round 36: ... of them Hall of Fame careers
+  fin?: Partial<Record<FinaleSeen, number>>; // round 36: finales watched to the end, or skipped (ui/achievements.ts recordFinale)
+  finSeen?: string[]; // round 36: the careers (runOf) whose finale was already counted, so none counts twice
+  doors?: number; // round 37: places walked into on the town's street (ui/achievements.ts recordPlace)
+  agentDoors?: number; // round 37: ... of them the agent's office
+  walked?: number; // round 37: feet walked along the street, at his size (recordWalk)
+  marks?: string[]; // round 37: the NBA arenas' landmarks seen beside the street (ui/arenas.ts; recordStreet)
+  townRun?: TownRun; // round 37: the career walked last: the places gone into and the looks of the street seen
 }
 
 /** Round 29: how many music loops the game has (ui/tracks.ts; a test keeps the two in step). */
-export const MUSIC_LOOPS = 19; // round 35: Play with friends has its own loop
+export const MUSIC_LOOPS = 19; // round 35: Play with friends has its own loop (round 36: the endings' themes, heard only at an ending, stay out)
 /** The three difficulties. */
 export const DIFFICULTIES: Mode[] = ['standard', 'reality', 'stars'];
 /** A career has been finished at every difficulty (the Grand Tour). */
@@ -427,10 +440,14 @@ export const ACHIEVEMENTS: Achievement[] = [
   ...ACHIEVEMENTS_34,
   // round 35: play with friends, the road map's unlocks, free throws, the late jump shot, and more (achievements35.ts)
   ...ACHIEVEMENTS_35,
+  // round 36: the rafters finale (whose rafters, the speech, the credits), the username, and the round's turning points and shop things (achievements36.ts)
+  ...ACHIEVEMENTS_36,
+  // round 37: the town (walking it, what the career puts on the street), the arenas' landmarks, the career changers, the long career, the higher bar, the round's turning points and shop things (achievements37.ts)
+  ...ACHIEVEMENTS_37,
 ];
 
 // the ones that only read the totals kept across careers (they can be checked with no career open)
-const TOTALS_ONLY = new Set(['c1', 'c3', 'c5', 'c10', 'c25', 'c50', 'c100', 'allmodes', 'fastdone', 'masterdone', 'titles10', 'mvp10', 'daily1', 'daily7', 'daily30', 'share1', 'lock1', 'lock5', 'mixtape', 'album', 'undo1', 'cmp1', ...MINI_TOTALS_ONLY, ...R32_TOTALS_ONLY, ...R34_TOTALS_ONLY, ...R35_TOTALS_ONLY]);
+const TOTALS_ONLY = new Set(['c1', 'c3', 'c5', 'c10', 'c25', 'c50', 'c100', 'allmodes', 'fastdone', 'masterdone', 'titles10', 'mvp10', 'daily1', 'daily7', 'daily30', 'share1', 'lock1', 'lock5', 'mixtape', 'album', 'undo1', 'cmp1', ...MINI_TOTALS_ONLY, ...R32_TOTALS_ONLY, ...R34_TOTALS_ONLY, ...R35_TOTALS_ONLY, ...R36_TOTALS_ONLY, ...R37_TOTALS_ONLY]);
 
 /** The achievements this career (and the totals) have earned, by id. */
 export function earnedNow(g: GameState | null, t: CareerTotals): string[] {

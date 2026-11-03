@@ -1,5 +1,6 @@
 // The achievement book (round 24) and the banners that announce a new one. Earned ones show how
-// they were earned, when and by whom; the rest show only their name, as a riddle.
+// they were earned, when and by whom; the rest show only their name, as a riddle. Round 36: the
+// Endings page, the twelve endings a career can have, each seen one as its scene.
 
 import { FootBar } from '../components/FootBar';
 import { useEffect, useMemo, useState } from 'react';
@@ -11,6 +12,9 @@ import { PageTop } from '../components/PageTop';
 import { earnedIn, loadAch, runOf } from '../achievements';
 import { Badge } from '../art/Badge';
 import { Icon } from '../art/Icon';
+import { EndingArt } from '../art/Endings';
+import { endingsSeen } from '../../engine/achievements36';
+import { ENDINGS, ENDING_IDS, type EndingId, type SceneArt } from '../endings';
 
 const tierOf = (k: AchTier) => ACH_TIERS.find((t) => t.key === k)!;
 
@@ -120,6 +124,46 @@ function tally(got: Record<string, Got>, keep: (a: Ach) => boolean, key: (a: Ach
 
 const ALL_CATS = [{ key: null, name: 'All', icon: 'book' }, ...ACH_CATS];
 
+/** What a tile shows of a scene with no career to read: a sample player's, with a few jerseys and cities. */
+const TILE_ART: Partial<Record<EndingId, Partial<SceneArt>>> = {
+  allstar: { labels: ['33', '34', '35', '36'], tints: ['#1D428A', '#C8102E', '#1D428A', '#1D428A'] },
+  passport: { labels: ['2030 ISTANBUL', '2032 BELGRADE', '2034 SYDNEY', '2036 MADRID'] },
+  gown: { color: '#7A1F2B', labels: ['2031'] },
+  eurolegend: { color: '#C8102E' },
+  ring: { color: '#552583' },
+};
+const tileArt = (k: EndingId): SceneArt => ({ color: '#1D428A', number: 23, surname: 'HALE', labels: [], tints: [], family: false, gold: false, ...TILE_ART[k] });
+
+/** Round 36 (owner: "An Endings page in the achievement book: '7 of 12 endings seen', unseen ones as
+ * silhouettes"): each ending a tile, its scene once seen on this device, a dark shape and ??? until then. */
+function Endings({ seen }: { seen: EndingId[] }) {
+  return (
+    <section className="card stack" aria-label="Endings" data-tour="endings">
+      <div className="sec-title with-icon">
+        <Icon name="cards" size={26} />
+        Endings
+        <small className="num">
+          {seen.length} of {ENDING_IDS.length} endings seen
+        </small>
+      </div>
+      <p className="small muted">Every finished career ends on one of twelve endings, the first that fits it. Ones you haven’t seen stay in the dark.</p>
+      <div className="end-grid">
+        {ENDING_IDS.map((k) => {
+          const got = seen.includes(k);
+          return (
+            <figure key={k} className={`end-tile${got ? ' seen' : ''}`}>
+              <div className="end-frame" aria-hidden="true">
+                <EndingArt kind={k} art={tileArt(k)} className="end-art" />
+              </div>
+              <figcaption>{got ? ENDINGS[k].name : '???'}</figcaption>
+            </figure>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 /** The book: every achievement by category and tier; the ones not earned yet keep their secret. */
 export function AchievementBook() {
   const setPage = useStore((s) => s.setPage);
@@ -143,6 +187,7 @@ export function AchievementBook() {
       .filter((x) => x.items.length);
   }, [tier, cat, show, got]);
   const total = Object.keys(got).length;
+  const seen = useMemo(() => endingsSeen(saved.totals), [saved]);
   return (
     <div className="wrap">
       <PageTop trail={['Achievement book']} back={() => setPage(null)} />
@@ -171,6 +216,7 @@ export function AchievementBook() {
             )}
           </section>
         )}
+        <Endings seen={seen} />
         <div className="achv-tiers">
           {ACH_TIERS.map((t) => {
             const { have, n } = tierN(t.key);

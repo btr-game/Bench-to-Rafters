@@ -27,10 +27,10 @@ import {
   TEAM_FACTORS,
   LONGEVITY,
   FAREWELL,
-  RECORD_CHASE } from '../balance';
+  RECORD_CHASE, ALL_STAR_BAR } from '../balance';
 import { chance, clamp, int, normal, range, weightedIndex, type Rng } from '../rng';
 import type { Attrs, GameLog, GameState, HalfPlan, League, LevelKey, RoleKey, SeasonRecord, SeasonState, StatLine, Team } from '../types';
-import { inLevel, levelGrowth, planStyle, shotDue } from '../levels';
+import { inLevel, levelGrowth, levelOf, planStyle, shotDue } from '../levels';
 import { ovrOf } from '../player/ovr';
 import { applyHalfGrowth, eliteMult, perfFactor } from '../player/growth';
 import { healDays, rollInjury } from '../player/injury';
@@ -772,6 +772,9 @@ function finishSeason(s: GameState): void {
     age: p.age,
     ovr: userOvr(s),
     dpoyWins: s.awards.filter((a) => a.key === 'DPOY').length,
+    mvpWins: s.awards.filter((a) => a.key === 'MVP').length,
+    // round 37: a tutorial level's goal is an All-Star team, so it keeps the old cut-off (all twelve)
+    allStarTop: levelOf(s) ? ALL_STAR_BAR.level : ALL_STAR_BAR.userTop,
   };
   // round 35: classmates run for the NBA's awards too (career/friendLeague.ts)
   const cands = buildCandidates(league, userCand, undefined, level === 'NBA' && s.mp?.klass ? friendCandidates(s, league) : undefined);

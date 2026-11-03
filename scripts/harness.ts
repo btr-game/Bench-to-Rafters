@@ -2,6 +2,7 @@
 // It drives the game only through flow.ts, exactly like the UI.
 
 import { claimMini, miniProgress, type MiniId, type MiniResult } from '../src/engine/career/miniBonus';
+import { endingOf } from '../src/ui/endings';
 import { canSetStyle, setStyle, styleEffect, TEAM_STYLES, type TeamStyle } from '../src/engine/career/identity';
 import { advance, choose, newGame, prompt } from '../src/engine/flow';
 import { fastForward } from '../src/engine/fast';
@@ -173,6 +174,8 @@ export interface CareerResult {
   ages: { age: number; ovr: number; wear: number }[]; // at the end of each season
   leap: boolean;
   tragedy: boolean;
+  nextStep: boolean; // round 36: the late-career leap
+  ending: string; // round 36: which of the twelve endings the career gets (ui/endings.ts)
   anomaly: string;
   country: string;
   stars: number;
@@ -217,6 +220,8 @@ function playMinis(s: GameState, how: MiniPlay): void {
 export interface PlayModes {
   fast?: boolean;
   sim?: boolean;
+  /** round 37: called with the career at every season's summary (diagnostics) */
+  peek?: (s: GameState) => void;
 }
 
 export function runCareer(seed: number, policy: Policy, mode: Mode = 'standard', minis: MiniPlay = 'none', play: PlayModes = {}, force?: { pos: Pos; archetype: number }): CareerResult {
@@ -239,6 +244,7 @@ export function runCareer(seed: number, policy: Policy, mode: Mode = 'standard',
       choose(s, id);
     } else {
       if (s.step === 'summary' && ages[ages.length - 1]?.age !== s.player.age) ages.push({ age: s.player.age, ovr: ovrOf(s.player.attrs, s.player.pos), wear: s.player.wear });
+      if (s.step === 'summary' && play.peek) play.peek(s);
       if (s.step === 'summary' && s.stage === 'HS' && s.hsYear === 4) starsAt = s.stars;
       if (s.step === 'summary' && s.nbaSnapshot && s.year !== lastSnapYear && s.nba) {
         snapshots.push({ ...s.nbaSnapshot });
@@ -303,6 +309,8 @@ export function runCareer(seed: number, policy: Policy, mode: Mode = 'standard',
     titles: s.awards.filter((a) => a.key === 'TITLE' || a.key === 'TITLEKEY').map((a) => { const h = s.history.find((x) => x.year === a.year && x.level === 'NBA'); return { age: h?.age ?? 0, key: a.key === 'TITLEKEY', role: h?.role ?? '?', rank: 0 }; }),
     leap: s.log.some((l) => l.kind === 'leap'),
     tragedy: s.log.some((l) => l.kind === 'tragedy'),
+    nextStep: s.log.some((l) => l.kind === 'nextStep'), // round 36
+    ending: endingOf(s),
     anomaly: s.player.anomaly ?? '',
     country: s.player.country,
     stars: starsAt,

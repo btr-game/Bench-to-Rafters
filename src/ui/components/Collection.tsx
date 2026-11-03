@@ -7,19 +7,24 @@ import { Icon } from '../art/Icon';
 import { SHIFT_COLOR, shopIcon, shopShift } from '../art/icons';
 import { PlayerArt, styleLeague } from '../art/Player';
 import { team as teamOf } from '../selectors';
-import { Card } from './bits';
 
 // Everything he has bought (round 25, the owner: a showcase of the purchases, and a visit to the
 // car, the jet, the house...). Accessories live in the wardrobe instead. A thing he can use has a
 // button: a short scene of him there, as often as he likes (round 28, owner: "let the user
-// revisit"); the first visit of a season gives a small edge.
+// revisit"); the first visit of a season gives a small edge. Round 36: a tab of the Player tab's
+// Your life card (YourLife.tsx).
 
 const SHELVES: ShopCategory[] = ['Lifestyle', 'Training', 'Recovery', 'Shoes', 'Gear'];
 
-export function CollectionCard({ g }: { g: GameState }) {
+/** The things on his shelves: every purchase but the accessories. */
+export function collected(g: GameState) {
+  return g.purchases.map((id) => SHOP_ITEMS.find((i) => i.id === id)).filter((i): i is (typeof SHOP_ITEMS)[number] => !!i && !i.wear);
+}
+
+export function CollectionPanel({ g }: { g: GameState }) {
   const visit = useStore((s) => s.visit);
   const [scene, setScene] = useState<{ id: string; text: string } | null>(null);
-  const items = g.purchases.map((id) => SHOP_ITEMS.find((i) => i.id === id)).filter((i): i is (typeof SHOP_ITEMS)[number] => !!i && !i.wear);
+  const items = collected(g);
   if (items.length === 0) return null;
   const t = teamOf(g);
   const go = (id: string) => {
@@ -28,7 +33,7 @@ export function CollectionCard({ g }: { g: GameState }) {
   };
   const shown = scene && SHOP_ITEMS.find((i) => i.id === scene.id);
   return (
-    <Card title="Collection" kicker={`${items.length} thing${items.length === 1 ? '' : 's'} bought`} tour="collection">
+    <>
       {scene && shown && (
         <div className={`visit-scene place-${VISITS[scene.id]?.place ?? 'home'}`} role="status">
           <div className="visit-stage">
@@ -74,7 +79,6 @@ export function CollectionCard({ g }: { g: GameState }) {
           </div>
         );
       })}
-    </Card>
+    </>
   );
 }
-

@@ -96,6 +96,9 @@ export function LockerRoom({ g }: { g: GameState }) {
   const [size, setSize] = useState(84);
   const box = useRef<HTMLDivElement>(null);
   const spots = useMemo(() => (room ? spotsOf(room) : []), [room]);
+  // on a phone the people stand closer than their name tags are wide: every second one from the
+  // left wears its tag over its head (app.css, .lk-who.up)
+  const upper = useMemo(() => new Set(spots.filter((p) => p.who !== 'feud').sort((a, b) => a.x - b.x).filter((_, i) => i % 2 === 1).map((p) => p.who)), [spots]);
   const near = nearest(spots, x);
   const talk = room && open ? talkFor(room, open) : null;
 
@@ -239,7 +242,7 @@ export function LockerRoom({ g }: { g: GameState }) {
           const at = spots.find((s) => s.who === String(m.id))!.x;
           const id = String(m.id);
           return (
-            <button key={id} className={`lk-who${done(id) ? ' done' : ''}${near?.who === id ? ' near' : ''}`} style={{ left: `${(at / W) * 100}%` }} onClick={() => talkTo(id)} tabIndex={-1} aria-label={`Talk to ${m.name}, ${PERSONA[m.persona]}`}>
+            <button key={id} className={`lk-who${done(id) ? ' done' : ''}${near?.who === id ? ' near' : ''}${upper.has(id) ? ' up' : ''}`} style={{ left: `${(at / W) * 100}%` }} onClick={() => talkTo(id)} tabIndex={-1} aria-label={`Talk to ${m.name}, ${PERSONA[m.persona]}`}>
               {feuders.includes(id) && !done('feud') && <span className="lk-alert">!!</span>}
               <PlayerArt name={m.name} number={(m.id % 49) + 1} pos={m.pos} color={t.color} team={t.name} abbr={t.abbr} league={league} size={size} noBall mirror={at > x} />
               <span className="lk-tag">
@@ -250,7 +253,7 @@ export function LockerRoom({ g }: { g: GameState }) {
             </button>
           );
         })}
-        <button className={`lk-who coach${done('coach') ? ' done' : ''}${near?.who === 'coach' ? ' near' : ''}`} style={{ left: `${(coachSpot.x / W) * 100}%` }} onClick={() => talkTo('coach')} tabIndex={-1} aria-label={`Talk to coach ${room.coach.name}`}>
+        <button className={`lk-who coach${done('coach') ? ' done' : ''}${near?.who === 'coach' ? ' near' : ''}${upper.has('coach') ? ' up' : ''}`} style={{ left: `${(coachSpot.x / W) * 100}%` }} onClick={() => talkTo('coach')} tabIndex={-1} aria-label={`Talk to coach ${room.coach.name}`}>
           <CoachArt coach={room.coach} color={room.team.color} size={size} mirror />
           <span className="lk-tag">
             Coach<span className="lk-role"> · {TEMPER[room.coach.temper]}</span>

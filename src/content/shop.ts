@@ -180,6 +180,18 @@ export const SHOP_ITEMS: ShopItem[] = [
   { id: 'class-jersey-art', name: 'Framed art of your draft class’s jerseys', category: 'Lifestyle', price: 15 * K, blurb: 'Your whole draft class in its college colors, one draft night, on one wall.', morale: 3, rep: 1, klass: true },
   { id: 'class-trainer', name: 'A trainer you share with a classmate', category: 'Training', price: 20 * K, blurb: 'Two first-round picks, one trainer, every rep a race.', focus: 1, morale: 2, klass: true },
   { id: 'reunion-suit', name: 'A stylist’s suit for reunion night', category: 'Lifestyle', price: 6 * K, blurb: 'Cut now, worn the night every career in the class is over.', rep: 2, morale: 2, klass: true },
+  // round 36: the rafters finale, the speech and the body (the round's systems: the jersey that goes
+  // up, the speech under the lights, the Player tab's Body panel); kept in the Your life collection
+  { id: 'framed-jersey', name: 'Your first jersey, framed', category: 'Lifestyle', price: 0.5 * K, blurb: 'The one from your first team, number and all, behind glass in the hallway.', morale: 3, rep: 1 },
+  { id: 'rafters-banner', name: 'A replica rafters banner for the garage', category: 'Lifestyle', price: 2.5 * K, blurb: 'Your name and number on a banner, hung from the garage beams. Practice for the real one.', morale: 4 },
+  { id: 'speech-coach', name: 'A public-speaking coach', category: 'Lifestyle', price: 8 * K, blurb: 'For press conferences now, and one long speech later. Slow down, look up, breathe.', rep: 2, morale: 1, trust: 1 },
+  { id: 'body-scan', name: 'A yearly full-body scan', category: 'Recovery', price: 12 * K, blurb: 'Every joint and tendon, measured each August. The small things get caught while they are small.', injuryMult: 0.95, declineMult: 0.99 },
+  // round 37: the town and its arenas, the knee and the long career (the round's systems: the street
+  // he walks, an arena for every city, round 36's career-altering injury and aging that diverges)
+  { id: 'arena-prints', name: 'Framed prints of every arena in the league', category: 'Lifestyle', price: 1.2 * K, blurb: 'Thirty arenas and their skylines, in a row down the hallway. You have played in most of them.', morale: 3 },
+  { id: 'city-bike', name: 'A city bike for getting around town', category: 'Lifestyle', price: 0.9 * K, blurb: 'Gym, arena, home, no traffic. The doorman at the arena keeps a spot for it by the loading dock.', morale: 2, attrs: { ATH: 0.2 } },
+  { id: 'knee-brace', name: 'A custom-fitted knee brace', category: 'Gear', price: 1.5 * K, blurb: 'Carbon and foam, cast from your own knee. It clicks on, and you stop thinking about it.', injuryMult: 0.97 },
+  { id: 'longevity-clinic', name: 'A summer at a longevity clinic', category: 'Recovery', price: 90 * K, blurb: 'Cold plunges, blood work and sleep studies every August, with the doctor half the league quietly sees.', declineMult: 0.985, injuryMult: 0.98 },
   // round 34: simplification (the round's theme: fewer, better things)
   { id: 'career-scrapbook', name: 'A career scrapbook', category: 'Lifestyle', price: 0.3 * K, blurb: 'Every clipping since high school, in one fat binder.', morale: 3, rep: 1 },
   { id: 'one-move-coach', name: 'A one-move coach', category: 'Training', price: 3 * K, blurb: 'One move, a thousand times a day, until it is yours.', attrs: { FIN: 0.5 }, morale: 1 },

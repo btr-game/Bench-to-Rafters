@@ -11,6 +11,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { createPortal } from 'react-dom';
 import { useStore } from '../../store';
 import { inTutorial } from '../road';
+import { spot } from '../fold';
 
 interface Step {
   id: string;
@@ -28,11 +29,14 @@ const TOUR: Step[] = [
   T('intro-btn', D('intro-btn'), 'Intro plays the opening again.'),
   T('whats-new', D('whats-new'), 'What’s new: the latest changes to the game. It opens by itself once after each update; this opens it again.'),
   T('share-btn', D('share-btn'), 'Share gives you the game’s link to send to a friend.'),
+  // round 37: the start page is the main land
+  T('mainland', D('mainland'), 'The main land: every part of the game is a place. Click one, or move between them with the arrow keys; Enter opens its card, Escape folds it away.'),
+  T('land-venues', D('mode-regular'), 'Three venues, three difficulties: the gym is Regular guy, the cage Reality hits hard, the dome Shoot for the stars. A difficulty stays for the whole career; a locked one says which road map stop opens it.'),
   T('start-mode', '.modes', 'How hard the road is. It stays for the whole career. A locked one says which road map stop opens it.'),
   T('comet', '.comet-card', 'With Shoot for the stars: Comet, the stars at hyper speed. Fast break and Sim for the whole career, about five minutes.'),
-  T('oath', '.oath-card:not(.comet-card)', 'With Reality hits hard: Rough Road, the hardest way to play. The road picks your player at random, then master mode with no Fast break or Sim, for the whole career, and a mark of honour for it.'),
+  T('oath', '.oath-card[aria-label="The Rough Road challenge"]', 'With Reality hits hard: Rough Road, the hardest way to play. The road picks your player at random, then master mode with no Fast break or Sim, for the whole career, and a mark of honour for it.'),
   T('minis', D('minis'), 'Mini-games. They open with the island on the road map; then free from the start page, and in a career each one opens with your ratings and pays a rating bonus.'),
-  T('levels', D('levels-card'), 'With Regular guy: the road map. Its stops open Reality hits hard, Shoot for the stars and the mini-games, and every level plays again. Level careers count nowhere.'),
+  T('levels', D('levels-card'), 'The airport flies back to the road map. Its stops open Reality hits hard, Shoot for the stars and the mini-games, and every level plays again. Level careers count nowhere.'),
   T('log', D('log'), 'The career log: the cards of your last ten finished careers. Lock up to five to keep them for good.'),
   T('log-saves', '.save-entry', 'A career in progress: continue it, or copy its code to send the maker with a bug report. Finished careers below open again with Look back.'),
   T('log-lock', D('log-lock'), 'Lock a card: a new career never replaces it, and it can’t be deleted until you unlock it. Five at most.'),
@@ -44,7 +48,7 @@ const TOUR: Step[] = [
   T('page-back', '.back-btn', 'Back where you came from (Escape works too). Next to it: where you are.'),
   T('achv-tiers', '.achv-tiers', 'Tap a tier to see only its achievements.'),
   T('achv-cats', '.achv-cats', 'Categories: tap one to see only its achievements, with a tier or on its own.'),
-  T('mp-name', '.mp-handle', 'Your name for friends: it goes beside everything you post. No email or login.'),
+  T('mp-name', '.username-box', 'Your username: it goes beside every career you post and everything friends see; your player keeps his own name. Change it any time. No email or login.'),
   T('mp-tabs', D('mp-tabs'), 'Challenge a friend, or a draft class: each by its code, its link or quick match.'),
   T('mp-code', '.mp-code', 'The code to send a friend. Copy the link sends them straight to it.'),
   T('comm-tabs', D('comm-tabs'), 'Leaderboards, the Reality 99 hall, the statue plaza, and a note to the maker.'),
@@ -60,7 +64,8 @@ const TOUR: Step[] = [
   T('start-arch', '.arch-cards', 'Your archetype: the kind of player you start as.'),
   T('start-focus', '.focus-grid', 'Two focus stats: they grow almost twice as fast.'),
   T('create-start', D('create-start'), 'Start the career.'),
-  T('tab-home', D('tab-home'), 'Home: the choice waiting for you.'),
+  T('town', D('town'), 'Your town: every page is a place on the street. Click one and you walk to its door; or Tab in, walk with the arrow keys or A and D, and press Enter. H, S, P, R and E still work.'),
+  T('tab-home', D('tab-home'), 'Home, at the gym: the choice waiting for you.'),
   T('todo', '.todo-now', 'What the game is waiting for now. Tap to jump to it.'),
   T('d-plan', D('d-plan'), 'Pick one or two plans for this half. The first one you tap is the main plan.'),
   T('main-go', '.main-go', 'Plays the next step. Enter does the same.'),
@@ -116,8 +121,9 @@ const TOUR: Step[] = [
   T('set-sfx', D('set-sfx'), 'Sound effects on or off, and how loud.'),
   T('set-announcer', D('set-announcer'), 'The announcer: a deep voice for the big plays. It follows the sound effects.'),
   T('set-music', D('set-music'), 'Music: a chiptune loop for each part of the game, every level and league, the offseason and each mini-game, with its own volume.'),
+  T('around', D('around'), 'Around you: the MVP race, your duo, the rivalry, the league and the fans’ talk, each a tab. It opens on what matters most right now.'),
   T('stories', '.fold-head', 'Around the league: this season’s storylines. Call how they end for reputation.'),
-  T('tab-season', D('tab-season'), 'Season: your team and the whole league in one, the most worth a look first.'),
+  T('tab-season', D('tab-season'), 'Season, at the arena: your team and the whole league in one, the most worth a look first.'),
   T('season-standings', D('season-standings'), 'The standings, your conference first. The dashed line is the playoff cut.'),
   T('season-leaders', D('season-leaders'), 'The league leaders. You are marked when you make the list.'),
   T('season-city', '.city-card', 'Your city and its fans, and what they do to you.'),
@@ -125,18 +131,19 @@ const TOUR: Step[] = [
   T('locker', D('locker'), 'The locker room: click in, walk with A and D, talk with Space. Each teammate and the coach once a half: chemistry, mood and trust.'),
   T('strength', D('strength'), 'Why your team is as good as it is: teammates, you, and every team factor.'),
   T('bracket', '.bracket', 'The playoff bracket.'),
-  T('tab-player', D('tab-player'), 'Player: ratings, status, kits, scouting and your body.'),
+  T('tab-player', D('tab-player'), 'Player, at home: ratings, status, kits, scouting and your body. Your home grows with the bank.'),
+  T('place-agent', D('place-agent'), 'The agent’s office (a pro only): your contract and money, on the Player page.'),
   T('kits', '.kits', 'Tap a kit to dress your player in it.'),
   T('scout', '.scout-card', 'Where the scouts think you peak, and your odds.'),
-  T('bodymap', '.bm', 'What training built and where you got hurt. Hover a muscle.'),
+  T('bodymap', D('body'), 'The Body panel: height and where it is headed, weight, the free-throw touch, the weak hand, and the body map (what training built, where you got hurt; hover a muscle).'),
   T('name-card', D('name-card'), 'Your nickname, and your brand deal. The nickname’s logo is drawn with your first brand deal.'),
   T('staff', D('staff'), 'Your staff: a talk once a season adds a small edge; give a raise, or let them go.'),
   T('wardrobe', D('wardrobe'), 'Your accessories: tap a colour to wear it, or None to take it off.'),
   T('collection', D('collection'), 'Everything you bought. Visit as often as you like; the first visit each season gives a small edge.'),
   T('roster', D('roster'), 'Your roster: the five, the bench, the team’s system, and how well it all fits (team chemistry).'),
   T('record-book', D('record-book'), 'Champions and award winners, year by year.'),
-  T('tab-records', D('tab-records'), 'Records: your whole career.'),
-  T('tab-extras', D('tab-extras'), 'Extras: the mini-games, the career log, the achievement book and the community, without leaving the career.'),
+  T('tab-records', D('tab-records'), 'Records, at the hall: your whole career.'),
+  T('tab-extras', D('tab-extras'), 'Extras, at the arcade: the mini-games, the career log, the achievement book and the community, without leaving the career.'),
   T('run-ach', D('run-ach'), 'How many this career has earned. The book opens on them, at the top.'),
   T('extras-limits', D('extras-limits'), 'What waits for the start page while a career is on.'),
   T('timeline', '.tl-chart', 'Your OVR season by season. Tap a season for its story.'),
@@ -207,13 +214,15 @@ export function resetTour(): void {
 
 const shown = (el: HTMLElement) => {
   const r = el.getBoundingClientRect();
-  return r.width > 0 && r.height > 0 && !(el as HTMLButtonElement).disabled;
+  // round 37: the top bar's row of tabs keeps its size while the town stands in for it (it is only
+  // hidden), so a hidden match never takes the ring from the place in the town
+  return r.width > 0 && r.height > 0 && !(el as HTMLButtonElement).disabled && getComputedStyle(el).visibility !== 'hidden';
 };
 
 export function GuideTour() {
   // round 27: not over the intro page, nor while a tab's news is up (TabNews)
   // round 33: never in the tutorial, which has its own guide (Guide mode stays for after it)
-  const on = useStore((s) => s.guide && !s.master && !s.intro && !s.thanks && !s.spots && !inTutorial(s.road) && !s.game?.flags.level);
+  const on = useStore((s) => s.guide && !s.master && !s.intro && !s.finale && !s.spots && !inTutorial(s.road) && !s.game?.flags.level);
   const [seen, setSeen] = useState(loadSeen);
   const [cur, setCur] = useState<{ step: Step; el: HTMLElement } | null>(null);
   const [box, setBox] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
@@ -261,6 +270,8 @@ export function GuideTour() {
     find();
     const mo = new MutationObserver(later);
     mo.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['disabled', 'aria-expanded', 'aria-modal'] });
+    // round 37: the town scrolling in or out swaps which row of tabs shows (html.town-out)
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
     window.addEventListener('resize', later);
     return () => {
       mo.disconnect();
@@ -282,6 +293,8 @@ export function GuideTour() {
       return;
     }
     const at = Date.now();
+    // round 36: a folded card opens for a look, a tab of a card's tabs shows its own (fold.ts)
+    spot(cur.el);
     cur.el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     let raf = 0;
     const tick = () => {

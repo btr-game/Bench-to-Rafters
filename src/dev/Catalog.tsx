@@ -37,6 +37,7 @@ import { ROUND35_EVENTS } from '../engine/events/round35';
 import { ROUND35B_EVENTS } from '../engine/events/round35b';
 import { FRIEND_EVENTS } from '../engine/events/friends';
 import { ROUND35C_EVENTS } from '../engine/events/round35c';
+import { ROUND36_EVENTS } from '../engine/events/round36';
 import { ACHIEVEMENTS } from '../engine/achievements';
 import { ACH_CATS, achCatOf } from '../engine/achievementCats';
 import { CLASS_MAX } from '../ui/multiplayer';
@@ -89,6 +90,11 @@ import { FACE_NAME, HAIR_NAME, LookPreview, STYLE_NAME } from '../ui/components/
 import { PlayerArt, PlayerStatue, SKIN_COLORS, kitFor, type KitName } from '../ui/art/Player';
 import { VENUES, Venue } from '../ui/screens/Intro';
 import { houseRecords } from '../ui/house';
+import { ENDINGS, ENDING_IDS } from '../ui/endings';
+import { EndingArt } from '../ui/art/Endings';
+import { TownArt } from '../ui/art/TownArt';
+import { NBA_ARENAS } from '../ui/arenas';
+import type { Town } from '../ui/town';
 
 interface Entry {
   key: string;
@@ -188,6 +194,7 @@ const EVENT_SETS: [string, EventDef[]][] = [
   ['Round 33', ROUND33_EVENTS],
   ['Round 34', ROUND34_EVENTS],
   ['Round 35', [...ROUND35_EVENTS, ...ROUND35B_EVENTS, ...FRIEND_EVENTS, ...ROUND35C_EVENTS]],
+  ['Round 36', ROUND36_EVENTS],
 ];
 
 function eventEntry(set: string, e: EventDef): Entry {
@@ -1014,6 +1021,58 @@ const CATEGORIES: Category[] = [
         };
       });
     },
+  },
+  // ---------- round 36 ----------
+  {
+    key: 'endings',
+    name: 'Endings',
+    icon: 'cards',
+    blurb: 'The twelve endings of a finished career, in the order they are tried, the first that fits winning (ui/endings.ts): the rafters keeps its ceremony, the rest open on a scene of their own (art/Endings.tsx), shown here as the book’s tiles, under a theme of their own.',
+    entries: () =>
+      ENDING_IDS.map((k, i) => ({
+        key: k,
+        title: ENDINGS[k].name,
+        sub: `${i + 1} of ${ENDING_IDS.length}`,
+        text: ENDINGS[k].fits,
+        art: () => (
+          <div className="end-frame" style={{ width: '100%' }}>
+            <EndingArt kind={k} className="end-art" />
+          </div>
+        ),
+        facts: [
+          ['Place', ENDINGS[k].place],
+          ['Theme', TRACKS[k].name],
+        ] as [string, string][],
+      })),
+  },
+  // ---------- round 37 ----------
+  {
+    key: 'arenas',
+    name: 'NBA arenas in the town',
+    icon: 'arena',
+    blurb: 'Each NBA team’s arena on the town’s street (ui/arenas.ts, art/arenaArt.ts): a roof and a skin in the spirit of its building, the team’s emblem over the doors and a landmark of its city beside it. Any other arena, and every high school, is built from its name.',
+    entries: () =>
+      NBA_TEAMS.map((t) => {
+        const a = NBA_ARENAS[t.abbr];
+        const town: Town = { look: 'city', name: t.abbr, color: TEAM_STYLE[t.abbr].c1, club: `${t.city} ${t.nick}`, abbr: t.abbr, school: '', house: 'flat', places: [{ id: 'arena', tab: 'season', name: `${`${t.city} ${t.nick}`} arena` }], car: false, hoop: false, statue: false, mural: null, sign: false };
+        return {
+          key: t.abbr,
+          title: `${t.city} ${t.nick}`,
+          sub: a.why,
+          text: `A ${a.roof} roof over ${a.skin}; beside it, ${a.why.split('; ').pop()}.`,
+          art: () => (
+            <div className="town cat-town" style={{ width: '100%', height: 'auto' }}>
+              <TownArt town={town} here={null} />
+            </div>
+          ),
+          facts: [
+            ['Roof', a.roof],
+            ['Skin', a.skin],
+            ['Landmark', a.mark ?? ''],
+            ['Side', a.side === 'l' ? 'left' : 'right'],
+          ] as [string, string][],
+        };
+      }),
   },
   {
     key: 'unlocks',

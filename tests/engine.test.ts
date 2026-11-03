@@ -413,8 +413,10 @@ describe('round 8: built in a lab and the shop', () => {
   });
 
   it('the shop shows about six random things a summer, not the same list every time', () => {
+    // 24 summers, so one unlucky draw can't decide it (round 36: over 600 summers of a $2K bank,
+    // 24 show 32.44 different things on average, never fewer than 27)
     const seen = new Set<string>();
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 24; i++) {
       const s = newGame(8810 + i, input);
       s.player.bank = 0.002; // $2K: a high schooler with a summer job
       pushShop(s);
@@ -424,7 +426,7 @@ describe('round 8: built in a lab and the shop', () => {
       expect(items.filter((c) => !c.disabled).length).toBeGreaterThanOrEqual(4);
       items.forEach((c) => seen.add(c.id));
     }
-    expect(seen.size).toBeGreaterThan(14);
+    expect(seen.size).toBeGreaterThan(24);
   });
 });
 

@@ -139,6 +139,15 @@ export function nudgeBonds(s: GameState, v: number): Bond | null {
 /** How far along a duo is: 0.6 the season it forms, 1 three seasons later. */
 export const duoLevel = (s: GameState, b: Bond): number => clamp(DUO.start + (s.year - (b.formed ?? s.year)) * DUO.perSeason, DUO.start, 1);
 
+/** His duo (and a Big Three's third) as the career ended, for the finale and its achievements:
+ * `duoEffect` reads only a season in play, and a retired career has none. growBonds drops a bond
+ * once the teammate is gone, and nothing drops one after his last season. */
+export function duoAtEnd(s: GameState): { b: Bond; third: Bond | null } | null {
+  const formed = (s.bonds ?? []).filter((b) => b.formed !== undefined);
+  const b = formed.find((x) => !x.trio);
+  return b ? { b, third: formed.find((x) => x.trio) ?? null } : null;
+}
+
 /** What the duo adds this season: team strength, and multipliers on his own game. */
 export function duoEffect(s: GameState): { team: number; perf: number; ast: number; usage: number; b: Bond; third: Bond | null } | null {
   const b = activeDuo(s);

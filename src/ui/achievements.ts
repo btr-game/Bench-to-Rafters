@@ -10,8 +10,13 @@ import { isDev } from '../dev/mode';
 import { count, nbaTitles } from '../engine/awards/legacy';
 import { addMiniResult } from '../engine/achievementsMini';
 import type { MpKind } from '../engine/achievements35';
+import { ENDING_IDS } from '../engine/achievements36';
+import { TOWN_MARKS } from '../engine/achievements37';
+import type { CareerRecord } from '../engine/career/record';
 import type { MiniResult } from '../engine/career/miniBonus';
-import { UNLOCK_FROM, islandDone, loadRoad, type Road, type Unlock } from './road';
+import { UNLOCK_FROM, islandDone, loadRoad, offRecord, type Road, type Unlock } from './road';
+import { shownBy, username } from './names';
+import type { FinaleKind } from './finale';
 
 const KEY = 'btr-achv-v1';
 
@@ -208,6 +213,101 @@ export function recordReunion(code: string, won: number, of: number, mvp: boolea
   return got.some(Boolean);
 }
 
+/** Round 36: the username was saved (components/Username.tsx, right after setUsername), with the
+ * one it replaced ('' for none): a first pick and a change count apart. A device that had a name
+ * before the round (Play with friends kept one) counts as having picked it (checkAch). */
+export function recordUsername(before: string): void {
+  const now = username();
+  if (!now || now === before) return;
+  const d = loadAch();
+  d.totals.handle = 1;
+  if (before) d.totals.renamed = (d.totals.renamed ?? 0) + 1;
+  saveAch(d);
+}
+
+/** Round 36: a career went to the community boards (store.ts, with the card `signed` gave it). It
+ * counts only under a username (a Hall of Fame career counts again on its own); true when it counted. */
+export function recordPosted(r: CareerRecord): boolean {
+  if (!shownBy(r.by)) return false;
+  const d = loadAch();
+  d.totals.posted = (d.totals.posted ?? 0) + 1;
+  if (r.hof) d.totals.postedHof = (d.totals.postedHof ?? 0) + 1;
+  saveAch(d);
+  return true;
+}
+
+/** Round 36: a finale reached its thank-you (screens/Finale.tsx): `skipped` when the Skip button
+ * (or Enter) jumped there, `skippable` when the button was there to press. Each career counts once,
+ * the tutorial's levels never; true when it counted. */
+export function recordFinale(g: GameState, kind: FinaleKind, how: { skippable: boolean; skipped: boolean }): boolean {
+  if (kind === 'level') return false;
+  const d = loadAch();
+  const t = d.totals;
+  const run = runOf(g);
+  if (t.finSeen?.includes(run)) return false;
+  // the latest 200 careers are enough to keep one from counting twice
+  t.finSeen = [...(t.finSeen ?? []), run].slice(-200);
+  const fin = { ...t.fin };
+  if (how.skipped) fin.skipped = (fin.skipped ?? 0) + 1;
+  else {
+    fin[kind] = (fin[kind] ?? 0) + 1;
+    if (how.skippable) fin.encore = (fin.encore ?? 0) + 1;
+  }
+  t.fin = fin;
+  saveAch(d);
+  return true;
+}
+
+/** Round 37, the town (components/Town.tsx): the street of this career, started afresh when a
+ * different career is walked. */
+function townRunOf(t: CareerTotals, g: GameState) {
+  const run = runOf(g);
+  if (t.townRun?.run !== run) t.townRun = { run, places: [], looks: [] };
+  return t.townRun;
+}
+
+/** Round 37: a place on the town's street walked into (not the one he stood at when the street came
+ * up). Counts every door, the agent's office's apart, and the places of this career; true when a
+ * mark the book reads was reached. The tutorial's levels and the closing tour count nowhere. */
+export function recordPlace(g: GameState, place: string): boolean {
+  if (offRecord(g)) return false;
+  const d = loadAch();
+  const t = d.totals;
+  t.doors = (t.doors ?? 0) + 1;
+  if (place === 'agent') t.agentDoors = (t.agentDoors ?? 0) + 1;
+  const town = townRunOf(t, g);
+  const fresh = !town.places.includes(place);
+  if (fresh) town.places.push(place);
+  saveAch(d);
+  return fresh || TOWN_MARKS.doors.includes(t.doors) || (place === 'agent' && TOWN_MARKS.agent.includes(t.agentDoors ?? 0));
+}
+
+/** Round 37: the street of this career came up: its look (his hometown, a campus, a city, a city
+ * abroad) and the landmark beside an NBA arena on it. True when either is new. */
+export function recordStreet(g: GameState, look: string, landmark?: string): boolean {
+  if (offRecord(g)) return false;
+  const d = loadAch();
+  const t = d.totals;
+  const town = townRunOf(t, g);
+  const newLook = !town.looks.includes(look);
+  if (newLook) town.looks.push(look);
+  const newMark = !!landmark && !t.marks?.includes(landmark);
+  if (newMark) t.marks = [...(t.marks ?? []), landmark!];
+  saveAch(d);
+  return newLook || newMark;
+}
+
+/** Round 37: he walked along the street, `feet` at his size. True when a whole mile was passed. */
+export function recordWalk(g: GameState, feet: number): boolean {
+  if (offRecord(g) || !(feet > 0)) return false;
+  const d = loadAch();
+  const before = d.totals.walked ?? 0;
+  d.totals.walked = before + feet;
+  saveAch(d);
+  const marathon = TOWN_MARKS.mile * TOWN_MARKS.marathon;
+  return Math.floor(d.totals.walked / TOWN_MARKS.mile) > Math.floor(before / TOWN_MARKS.mile) || (before < marathon && d.totals.walked >= marathon);
+}
+
 /** Round 29: cards locked in the career log right now (the most at once is kept). */
 export function recordLocks(n: number): void {
   const d = loadAch();
@@ -218,10 +318,13 @@ export function recordLocks(n: number): void {
 /** Round 29: a music loop was heard; true the first time. */
 /** The music loops of the tutorial, left out of Full Album (the levels count nowhere). */
 export const TUTORIAL_LOOPS = ['road', 'sad'];
+/** Round 36: each ending's theme (tracks.ts: a loop per ending, named as the ending), heard only at
+ * that ending, so left out of Full Album too. */
+export const ENDING_LOOPS: string[] = [...ENDING_IDS];
 
 export function recordHeard(id: string): boolean {
   // round 33: the tutorial's two loops (the road map, a missed goal) are not part of the album
-  if (TUTORIAL_LOOPS.includes(id)) return false;
+  if (TUTORIAL_LOOPS.includes(id) || ENDING_LOOPS.includes(id)) return false;
   const d = loadAch();
   if (d.totals.heard?.includes(id)) return false;
   d.totals.heard = [...(d.totals.heard ?? []), id];
@@ -244,6 +347,8 @@ export function checkAch(g: GameState | null): Achievement[] {
   // round 35: the road map's stops cleared (kept once seen, like the daily days)
   const open = roadOpened(loadRoad()).filter((u) => !d.totals.unlocks?.includes(u));
   if (open.length) d.totals.unlocks = [...(d.totals.unlocks ?? []), ...open];
+  // round 36: a username on this device, whenever it was picked (kept once seen)
+  if (!d.totals.handle && username()) d.totals.handle = 1;
   const fresh = earnedNow(g, d.totals).filter((id) => !d.got[id]);
   if (!fresh.length) return [];
   const at = new Date().toISOString();

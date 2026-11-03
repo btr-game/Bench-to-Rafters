@@ -2,6 +2,51 @@
 
 Ideas the owner has asked to keep for later. Not started unless marked.
 
+## The indie lane (owner, round 36)
+
+Owner: "i think the game is way past the minigame inspired from the football game. so, i want to
+switch lanes to an indie game." The game stays **free** (a donation channel, in a later round).
+The order the owner set:
+
+- **Round 36** (done): no cuts (owner: "i dont really want to cut anything"), three merges (Around
+  you, Your life, the Body panel), and **the rafters finale** in place of Thank you for playing.
+- **Endings for the other paths** (done in round 36): twelve endings, each with its scene and
+  theme. Still open: a father whose son's career is played next reaches his ending only through the
+  son's (the son's credits name him).
+- **Round 37** (done): **a world to walk around**: the town in a career (the tabs as places on his
+  street, every arena its own) and the main land (the start page as a map, reached by plane after
+  the tutorial).
+- **Round 38** (next; the plan is the Word document "Round 38 plan: story mode"): **story mode**, a
+  cast of six (the friend, the rival, the mentor, the agent, the reporter, family), six chapters each
+  at fixed moments of a career, with memories later chapters quote, met on the town's street, paid
+  off in the finale. The owner's decisions: **its own mode** (a Story mode venue on the main land,
+  one written hero, apart from the other careers); **mostly story, with a few real hooks** (the
+  agent in contract talks, the mentor's plan edge, the friend as a trainer, the rival trade);
+  **heavy at times, always with a gentle path**; **the player names his friend, his family and his
+  rival** (the rest generated; skipping the naming generates all). Not asked, so the plan's
+  defaults: the cast of six, and the reporter at a newsstand on the street.
+  **The friend and the rival carry it** (owner: "the story mode will totally rely on the
+  relationship between the three"): the friend is with him from the driveway up to the NBA, and
+  how good he gets depends on the player's choices (out of the league early and his biggest fan,
+  or a turn to coaching and later his assistant, or a huge leap past him to an MVP and a friendly
+  rivalry to overcome); the rival is met in college and grows with him, always one small step
+  ahead (an OVR just above his). Storylines: the friend joins his team, the rival joins his team,
+  the rival and the friend on the same team, and a dramatic road where the rival badly injures the
+  friend and the rivalry turns personal.
+- **Round 39**: **The Floor**, one possession engine for every playable moment (crunch time, the
+  playable playoff games, the finals action cam, 3-on-3). Owner: "this should be a high level game,
+  with great detail and extensive design. we're gonna spend a lot of time building the interactions
+  and animations." Discussed with the owner while 38 and 40 are built; built last, before publishing.
+- **Round 40**: **languages**: Korean, Chinese, Japanese, Spanish and French. The last round with a
+  significant system; after it, only small balance changes and bug fixes (owner: "so let's keep up
+  the spark").
+- **Publishing**: rounds 38, 39 and 40 go out together (owner: "when doing round 38, dont do the
+  publishing"); priority is 38 and 40, then 39.
+- **Later**: a donation channel.
+- Turned down: careers framed as roguelite runs with meta-unlocks ("no").
+- Still to weigh before any paid release: a fictional league in place of the NBA's teams, colours
+  and legends.
+
 ## Next (owner, round 26)
 
 - A UI and convenience update, once the round 26 requests are done: under way as round 27 (screen

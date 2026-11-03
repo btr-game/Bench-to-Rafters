@@ -23,7 +23,7 @@ import { CommunityPage } from './screens/Community';
 import { MpBoard, MultiplayerPage } from './screens/Multiplayer';
 import { FootBar } from './components/FootBar';
 import { Intro } from './screens/Intro';
-import { Thanks } from './screens/Thanks';
+import { Finale } from './screens/Finale';
 import { ICON_FOR } from './art/icons';
 import { music, onHeard, sfx, wakeOnClick } from './sound';
 import { recordHeard } from './achievements';
@@ -34,17 +34,19 @@ import { STOPS } from './tutorial/closing';
 import { LEVEL_NAME, levelOf } from '../engine/levels';
 import { RoadMap } from './screens/RoadMap';
 import { LevelEnd } from './screens/LevelEnd';
+import { Town } from './components/Town';
 
 
 // round 28 (owner: "any graphic that isnt pixels, change them"): the tab icons on a 12x12 pixel
-// grid, in the tab's own colour
+// grid, in the tab's own colour. Round 37: each is its place in the town (components/Town.tsx):
+// the gym's hoop for Home, the arena for Season, his house for Player, the trophy for Records and
+// the arcade's joystick for Extras
 const ICON_ROWS: Record<Tab, string[]> = {
-  home: ['.....##.....', '....####....', '...##..##...', '..##....##..', '.##......##.', '##........##', '.#........#.', '.#..####..#.', '.#..#..#..#.', '.#..#..#..#.', '.#..#..#..#.', '.####..####.'],
-  season: ['..#.....#...', '.#########..', '.#.......#..', '.#########..', '.#.......#..', '.#.#.#.#.#..', '.#.......#..', '.#.#.#.#.#..', '.#.......#..', '.#########..', '............', '............'],
-  player: ['....####....', '...#....#...', '...#....#...', '...#....#...', '....####....', '............', '...######...', '..#......#..', '.#........#.', '.#........#.', '.#........#.', '.##########.'],
+  home: ['.##########.', '.#........#.', '.#..####..#.', '.#..#..#..#.', '.##########.', '.....##.....', '...######...', '...#.##.#...', '....#..#....', '....#..#....', '.....##.....', '............'],
+  season: ['....####....', '..##....##..', '.#........#.', '############', '#.##.##.##.#', '#.##.##.##.#', '#..........#', '#.##.##.##.#', '#.##.##.##.#', '#....##....#', '#....##....#', '############'],
+  player: ['.....##.....', '....####....', '...##..##...', '..##....##..', '.##......##.', '##........##', '.#........#.', '.#..####..#.', '.#..#..#..#.', '.#..#..#..#.', '.#..#..#..#.', '.####..####.'],
   records: ['.##########.', '#.#......#.#', '#.#......#.#', '.##......##.', '..#......#..', '...#....#...', '....####....', '.....##.....', '.....##.....', '....####....', '...######...', '............'],
-  // round 29: the four cards of the start page, two by two
-  extras: ['#####..#####', '#...#..#...#', '#.#.#..#.#.#', '#...#..#...#', '#####..#####', '............', '............', '#####..#####', '#...#..#...#', '#.#.#..#.#.#', '#...#..#...#', '#####..#####'],
+  extras: ['.....##.....', '....####....', '....####....', '.....##.....', '.....##.....', '.....##.....', '..########..', '.#........#.', '.#.##..#.#.#', '.#........#.', '.##########.', '............'],
 };
 const ICONS: Record<Tab, ReactNode> = Object.fromEntries(
   (Object.keys(ICON_ROWS) as Tab[]).map((t) => [t, ICON_ROWS[t].flatMap((row, y) => [...row].map((c, x) => (c === '#' ? <rect key={`${x}-${y}`} x={x} y={y} width={1} height={1} /> : null)))]),
@@ -193,7 +195,7 @@ export function App() {
   const mini = useStore((s) => s.mini);
   const page = useStore((s) => s.page);
   const intro = useStore((s) => s.intro);
-  const thanks = useStore((s) => s.thanks);
+  const finale = useStore((s) => s.finale);
   const simple = useStore((s) => s.simple);
   const road = useStore((s) => s.road);
   const creating = useStore((s) => s.creating);
@@ -262,7 +264,7 @@ export function App() {
     [],
   );
 
-  if (thanks && !game) return <Thanks g={thanks} />;
+  if (finale && !game) return <Finale key={`${finale.g.seed}-${finale.from ?? ""}`} g={finale.g} from={finale.from} />;
   if (intro) return <Intro />;
   // round 33: the tutorial, until the full game opens on this device. Round 35 (owner: "make only the
   // beginner level of tutorial necessary"): the beginner career, then graduation; the road map's
@@ -299,6 +301,8 @@ export function App() {
             <SettingsMenu g={game} />
           </div>
         </header>
+        {/* round 37: the town, his street of places in place of the row of tabs */}
+        <Town g={game} fast={fast} />
         {game.flags.daily ? <DailyStrip g={game} /> : null}
         <LookBackBar g={game} />
         {game.flags.tour ? <TourBar /> : null}

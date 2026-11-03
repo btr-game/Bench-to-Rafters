@@ -9,20 +9,17 @@ import type { AttrKey, Attrs, Pos } from '../../engine/types';
 import { NAMES, UI } from '../../content/strings';
 import { FIRST_NAMES, LAST_NAMES } from '../../content/names';
 import { achievementsNow, useStore } from '../../store';
-import { listSlots } from '../saves';
 import { ORIGINS } from '../../content/origins';
 import { edgeOf } from '../../engine/career/nationality';
-import { ht, seasonLabel } from '../format';
-import { MiniGamesCard } from '../mini/MiniGames';
-import { CareerLogCard } from './CareerLog';
+import { ht } from '../format';
 import { SettingsMenu } from '../components/Settings';
 import { WhatsNewButton, WhatsNewPanel } from '../components/WhatsNew';
 import { ShareButton } from '../components/Share';
 import { GuideButton } from '../components/Guide';
-import { AchievementsCard } from './Achievements';
-import { CommunityCard, LiveStrip } from './Community';
-import { MultiplayerCard } from './Multiplayer';
-import { MP_FAIL, handle, multiplayer } from '../multiplayer';
+import { LiveStrip } from './Community';
+import { MP_FAIL, multiplayer } from '../multiplayer';
+import { NAME_MAX, cleanName, nameProblem, username } from '../names';
+import { UsernameBox } from '../components/Username';
 import { recordMp } from '../achievements';
 import { FlagArt } from '../art/Flag';
 import { POS_STYLE, PositionCard } from '../art/PositionCard';
@@ -40,7 +37,7 @@ import { ROADMAP } from '../../engine/balance';
 import { FootBar } from '../components/FootBar';
 import { LevelAdds } from '../components/LevelAdds';
 import { PlaceArt } from './RoadMap';
-import { modeOpen, unlockHint } from '../road';
+import { MainLand } from './MainLand';
 
 const pick = <T,>(a: readonly T[]): T => a[Math.floor(Math.random() * a.length)];
 const uiRng = makeRng(Math.floor(Math.random() * 2 ** 31));
@@ -53,45 +50,6 @@ const FEATURED = ['USA', 'Canada', 'France', 'Spain', 'Serbia', 'Australia', 'Ja
 
 function cards(pos: Pos): Attrs[] {
   return ARCHETYPES[pos].map((a) => ({ ...a.attrs }));
-}
-
-/** The new-career page. */
-/** Round 32 (owner: "move the saved on this device to the career log"): the start page keeps a
- * single Continue for the latest career still going; every save lives in the career log. */
-function ContinueCard() {
-  const resume = useStore((s) => s.resume);
-  const setPage = useStore((s) => s.setPage);
-  const slots = listSlots(); // read each time: a save written while the page is up shows at once
-  const [failed, setFailed] = useState(false);
-  const live = slots.find((x) => !x.retired);
-  return (
-    <section className="card continue-card" data-tour="saves">
-      <div style={{ minWidth: 0 }}>
-        <div className="kicker">{live ? 'Your career' : 'Career log'}</div>
-        {live ? (
-          <>
-            <b className="resume-name">{live.name}</b>
-            <div className="muted small">
-              {seasonLabel(live.year)} · {MODES[live.mode as Mode]?.name ?? live.mode}
-            </div>
-            {failed && <div className="small" style={{ color: 'var(--bad)' }}>That save could not be read.</div>}
-          </>
-        ) : (
-          <div className="small muted keep">{slots.length ? 'Every career, in progress or finished, is in the career log.' : 'No career yet. Every career is saved after each move, in the career log.'}</div>
-        )}
-      </div>
-      <div className="row save-actions">
-        {live && (
-          <button className="btn" onClick={() => void resume(live.id).then((ok) => !ok && setFailed(true))}>
-            Continue
-          </button>
-        )}
-        <button className="btn ghost small" onClick={() => setPage('log')}>
-          Open the career log
-        </button>
-      </div>
-    </section>
-  );
 }
 
 /** Round 25 (owner): the dev deck, inside the game, behind a password, at the foot of the start page. */
@@ -142,9 +100,6 @@ export function Create({ level }: { level?: Level } = {}) {
   const start = useStore((s) => s.start);
   const showIntro = useStore((s) => s.showIntro);
   const setCreating = useStore((s) => s.setCreating);
-  const setPage = useStore((s) => s.setPage);
-  // round 33: right after graduation, a Regular guy career is suggested (owner: "highly suggested, but not necessary")
-  const recommend = useStore((s) => s.recommend);
   const [step, setStep] = useState(0);
   // each step opens at the top (owner: "when i move from the home page to identity, make the screen
   // start at the top"; the browser kept the Next button in place, so the page opened at its foot)
@@ -156,7 +111,7 @@ export function Create({ level }: { level?: Level } = {}) {
     }
     window.scrollTo(0, 0);
   }, [step]);
-  const [name, setName] = useState(`${pick(FIRST_NAMES)} ${pick(LAST_NAMES)}`);
+  const [name, setName] = useState(cleanName(`${pick(FIRST_NAMES)} ${pick(LAST_NAMES)}`));
   const [number, setNumber] = useState(String(Math.floor(Math.random() * 35)));
   const [pos, setPos] = useState<Pos>('SG');
   const [arch, setArch] = useState(0);
@@ -164,7 +119,6 @@ export function Create({ level }: { level?: Level } = {}) {
   const [focus, setFocus] = useState<AttrKey[]>([]);
   const [hand, setHand] = useState<'R' | 'L'>('R');
   const [mode, setMode] = useState<Mode>('standard');
-  const road = useStore((s) => s.road);
   // round 35: a draft class waiting for this player (Regular guy only); made or joined on Start
   const draft = useStore((s) => (level ? null : s.draft));
   const setDraft = useStore((s) => s.setDraft);
@@ -209,7 +163,7 @@ export function Create({ level }: { level?: Level } = {}) {
   // "when there's already randomizers" beside each pick)
   const randomAll = () => {
     const p = pick(POSITIONS);
-    setName(`${pick(FIRST_NAMES)} ${pick(LAST_NAMES)}`);
+    setName(cleanName(`${pick(FIRST_NAMES)} ${pick(LAST_NAMES)}`));
     setNumber(String(Math.floor(Math.random() * 35)));
     setPos(p);
     setCands(cards(p));
@@ -235,13 +189,21 @@ export function Create({ level }: { level?: Level } = {}) {
     setCountry((ORIGINS.find((o) => (x -= o.weight) <= 0) ?? ORIGINS[0]).country);
     setStep(steps.indexOf('Confirm'));
   };
+  // round 37: a venue on the main land starts its difficulty (Rough Road rolls the player at once)
+  const startAt = (m: Mode) => {
+    setMode(m);
+    if (m === 'reality' && oath) rollRoad();
+    else setStep(1);
+  };
   const toggleFocus = (k: AttrKey) =>
     setFocus((f) => (f.includes(k) ? f.filter((x) => x !== k) : f.length >= 2 ? [f[1], k] : [...f, k]));
 
   const attrs = cands[arch];
   const archetype = ARCHETYPES[pos][arch];
   const [hMin, hMax] = HEIGHT_RANGE[pos];
-  const canNext = cur === 'Identity' ? name.trim().length > 0 : cur === 'Focus' ? focus.length === 2 : true;
+  // round 36 (owner: "filter out curse words or non english characters in the player name")
+  const badName = nameProblem(name);
+  const canNext = cur === 'Identity' ? !badName : cur === 'Focus' ? focus.length === 2 : true;
   // beginner picks no focus: his archetype's two best ratings
   const autoFocus = [...ATTRS].sort((a, b) => attrs[b] - attrs[a]).slice(0, 2);
 
@@ -283,7 +245,7 @@ export function Create({ level }: { level?: Level } = {}) {
     if (!mp) return setSeatErr(MP_FAIL.error);
     setSeating(true);
     setSeatErr('');
-    const who = handle() || 'A friend';
+    const who = username() || 'A friend';
     // round 35: a seat plays one career; one already under way (or done) is not started again
     if (draft.code) {
       const k = await mp.draftClass(draft.code);
@@ -302,6 +264,8 @@ export function Create({ level }: { level?: Level } = {}) {
   };
 
   const copy = level ? LEVEL_COPY[level] : null;
+  // round 37: the first step, with no level and no draft class, is the main land
+  const land = cur === 'Difficulty' && !level && !draft;
   return (
     <div className="wrap no-tabs">
       <header className="top">
@@ -343,7 +307,7 @@ export function Create({ level }: { level?: Level } = {}) {
           </p>
           {level !== 'beginner' && step === 0 && <LevelAdds level={level} />}
         </section>
-      ) : (
+      ) : land ? null : (
       <section className="hero with-lineup">
         <LineupArt />
         <div className="kicker">A basketball career game</div>
@@ -356,14 +320,18 @@ export function Create({ level }: { level?: Level } = {}) {
         </p>
       </section>
       )}
-      <div className="stepper" aria-label="Steps">
-        {steps.map((s, i) => (
-          <span key={s} className={i === step ? 'on' : ''} aria-current={i === step ? 'step' : undefined}>
-            {i + 1}. {s}
-          </span>
-        ))}
-      </div>
-      <div style={{ height: 12 }} />
+      {!land && (
+        <>
+          <div className="stepper" aria-label="Steps">
+            {steps.map((s, i) => (
+              <span key={s} className={i === step ? 'on' : ''} aria-current={i === step ? 'step' : undefined}>
+                {i + 1}. {s}
+              </span>
+            ))}
+          </div>
+          <div style={{ height: 12 }} />
+        </>
+      )}
       {draft && (
         <section className="card mp-draft row" role="group" aria-label="Draft class">
           <Icon name="draftclass" size={32} />
@@ -377,88 +345,30 @@ export function Create({ level }: { level?: Level } = {}) {
         </section>
       )}
 
-      {cur === 'Difficulty' && (
+      {land && (
+        <MainLand ch={{ oath, setOath, comet, setComet }} onStart={startAt}>
+          <UsernamePrompt />
+        </MainLand>
+      )}
+      {/* a draft class plays Regular guy: the difficulties as they were, the other two shut */}
+      {cur === 'Difficulty' && draft && (
         <section className="stack">
           <div className="kicker">Choose how hard the road is</div>
           <div className="modes">
             {DIFFICULTIES.map((m) => {
-              // round 35: a difficulty past Regular guy opens with its level on the road map
-              const shut = !modeOpen(road, m) || (!!draft && m !== 'standard');
-              const why = m === 'reality' ? 'reality' : 'stars';
+              const shut = m !== 'standard';
               return (
-                <button key={m} className={`choice mode-card${mode === m ? ' selected' : ''}${recommend && m === 'standard' ? ' recommended' : ''}${shut ? ' mode-locked' : ''}`} aria-pressed={mode === m} disabled={shut} onClick={() => setMode(m)} data-tour={m === 'standard' ? 'mode-regular' : undefined}>
+                <button key={m} className={`choice mode-card${mode === m ? ' selected' : ''}${shut ? ' mode-locked' : ''}`} aria-pressed={mode === m} disabled={shut} onClick={() => setMode(m)}>
                   <span className="label with-icon">
                     <Icon name={shut ? 'lock' : ICON_FOR[m]} size={32} />
                     {MODES[m].name}
-                    {recommend && m === 'standard' && <span className="tag good">Recommended</span>}
                   </span>
-                  <small className={shut ? 'keep' : undefined}>{shut ? (draft ? 'A draft class plays Regular guy.' : unlockHint(why)) : MODES[m].blurb}</small>
+                  <small className={shut ? 'keep' : undefined}>{shut ? 'A draft class plays Regular guy.' : MODES[m].blurb}</small>
                 </button>
               );
             })}
           </div>
-          {/* round 34 (owner: "put the levels (tutorial) card on the main page as a pop out challenge for
-              regular"): Regular guy's own challenge is the road map, every level to play again */}
-          {mode === 'standard' && !level && (
-            <div className="card oath-card levels-card" role="group" aria-label="The road map">
-              <PlaceArt place="advanced" size={96} />
-              <div className="stack" style={{ gap: 6 }}>
-                <div className="sec-title">Back on the road map?</div>
-                <p className="small muted">The tutorial’s levels and the island: intermediate opens Reality hits hard, advanced Shoot for the stars, the island the mini-games. Short careers at fast break’s pace with one goal, an NBA All-Star team; they count nowhere (no save, career log, achievements or leaderboards).</p>
-                <div className="row" style={{ gap: 8 }}>
-                  <button className="btn small ghost" data-tour="levels-card" onClick={() => (sfx('page'), setPage('road'))}>
-                    Open the road map
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-          {/* round 25 (owner): Reality, played the hardest way, asks once and is honoured for it */}
-          {mode === 'reality' && (
-            <div className={`card oath-card${oath ? ' on' : ''}`} role="group" aria-label="The Rough Road challenge">
-              <Icon name="oath" size={48} />
-              <div className="stack" style={{ gap: 6 }}>
-                <div className="sec-title">Take the rough road?</div>
-                <p className="small muted">
-                  The road picks your whole player at random, with no reroll: position, archetype, focus stats, country, hand, name, number <b>and his look</b>, so you don&rsquo;t choose how your avatar looks (skin, hair and face are rolled too). Then master mode, with no recommendations anywhere, and no Fast break or Sim mode, locked for the whole career (Simple text is allowed). Take it and the career carries the Rough Road mark on its card, the leaderboards and the career log, with achievements of its own.
-                </p>
-                <div className="row" style={{ gap: 8 }}>
-                  <button className={`btn small${oath ? '' : ' ghost'}`} aria-pressed={oath} onClick={() => (oath || sfx('oath'), setOath(true))}>
-                    {oath ? 'Challenge accepted' : 'Accept the challenge'}
-                  </button>
-                  <button className="btn small ghost" aria-pressed={!oath} onClick={() => setOath(false)}>
-                    Just Reality
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-          {/* round 30 (owner): Shoot for the stars at hyper speed, about five minutes a career */}
-          {mode === 'stars' && (
-            <div className={`card oath-card comet-card${comet ? ' on' : ''}`} role="group" aria-label="The Comet challenge">
-              <Icon name="comet" size={48} />
-              <div className="stack" style={{ gap: 6 }}>
-                <div className="sec-title">Ride the comet? About five minutes a career</div>
-                <p className="small muted">Comet is Shoot for the stars at hyper speed: Fast break and Sim stay on for the whole career. The seasons play themselves and the game makes the routine calls and the turning points; you choose where you play, the draft, your brand deals and when to retire, and the biggest nights (draft night, awards, finals, breakthroughs) get a page of their own. The rest waits for you in a list of highlights. The career carries the Comet mark.</p>
-                <div className="row" style={{ gap: 8 }}>
-                  <button className={`btn small${comet ? '' : ' ghost'}`} aria-pressed={comet} onClick={() => (comet || sfx('comet'), setComet(true))}>
-                    {comet ? 'Comet away' : 'Ride the comet'}
-                  </button>
-                  <button className="btn small ghost" aria-pressed={!comet} onClick={() => setComet(false)}>
-                    Just the stars
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
           <p className="muted small">The league is the same at every difficulty. What changes is your potential, how fast you grow and how often you get hurt. Want it quicker? Flip the Fast break switch inside the game, any time.</p>
-          {!draft && <div className="start-cards">
-            <MultiplayerCard />
-            <MiniGamesCard />
-            <CareerLogCard />
-            <AchievementsCard />
-            <CommunityCard />
-          </div>}
         </section>
       )}
 
@@ -483,13 +393,14 @@ export function Create({ level }: { level?: Level } = {}) {
               <div className="id-row">
                 <div className="field">
                   <label htmlFor="f-name">{UI.create.name}</label>
-                  <input id="f-name" type="text" maxLength={28} value={name} onChange={(e) => setName(e.target.value)} />
+                  <input id="f-name" type="text" maxLength={NAME_MAX} value={name} aria-describedby="f-name-note" onChange={(e) => setName(cleanName(e.target.value))} />
+                  <small id="f-name-note" className={badName ? 'name-note bad' : 'name-note muted'}>{badName || 'Letters A to Z.'}</small>
                 </div>
                 <div className="field id-num">
                   <label htmlFor="f-num">{UI.create.number}</label>
                   <input id="f-num" type="number" min={0} max={99} value={number} onChange={(e) => setNumber(e.target.value)} />
                 </div>
-                <button className="btn ghost small id-dice" onClick={() => setName(`${pick(FIRST_NAMES)} ${pick(LAST_NAMES)}`)} title="Pick a random name">
+                <button className="btn ghost small id-dice" onClick={() => setName(cleanName(`${pick(FIRST_NAMES)} ${pick(LAST_NAMES)}`))} title="Pick a random name">
                   New name
                 </button>
               </div>
@@ -734,7 +645,8 @@ export function Create({ level }: { level?: Level } = {}) {
         </section>
       )}
 
-      <div style={{ height: 14 }} />
+      {!land && <div style={{ height: 14 }} />}
+      {!land && (
       <div className="row-end">
         {step === 0 && level && level !== 'beginner' && (
           <button className="btn ghost" onClick={() => setCreating(null)}>
@@ -756,13 +668,13 @@ export function Create({ level }: { level?: Level } = {}) {
           </button>
         )}
       </div>
+      )}
       {/* round 25 (owner): the live strip and the saves sit under the hero and the cards (and under
           Next, so starting a career is no further away), the dev deck's door last */}
       {seatErr && <p className="small row-end" style={{ color: 'var(--bad)' }}>{seatErr}</p>}
-      {cur === 'Difficulty' && !draft && (
+      {land && (
         <section className="stack start-foot">
           <LiveStrip />
-          <ContinueCard />
           <DevGate />
           {/* the game uses real teams and legends: it says plainly that it is not official */}
           <p className="small muted keep fan-note">Bench to Rafters is an unofficial fan game. It is not affiliated with or endorsed by the NBA, its teams or its players.</p>
@@ -770,5 +682,41 @@ export function Create({ level }: { level?: Level } = {}) {
       )}
       {level ? <FootBar where={`level ${level}, create, ${cur.toLowerCase()}`} /> : <WhatsNewPanel />}
     </div>
+  );
+}
+
+// round 36: the username, asked once on the start page of a device that has none yet (it skipped the
+// tutorial with the exit code, or graduated before usernames came in); Not now hides it for good
+const LATER = 'btr-username-later';
+function UsernamePrompt() {
+  const [hidden, setHidden] = useState(() => {
+    try {
+      return !!username() || !!localStorage.getItem(LATER);
+    } catch {
+      return true;
+    }
+  });
+  if (hidden) return null;
+  const later = () => {
+    try {
+      localStorage.setItem(LATER, '1');
+    } catch {
+      // storage blocked: asked again next visit
+    }
+    setHidden(true);
+  };
+  return (
+    <section className="card oath-card username-prompt" role="group" aria-label="Pick a username" data-tour="username-prompt">
+      <Icon name="crowd" size={48} />
+      <div className="stack" style={{ gap: 6 }}>
+        <div className="sec-title">Pick a username?</div>
+        <UsernameBox onSet={() => setHidden(true)} note="Shown beside your careers on the community boards and to friends, so people know whose player it is. Letters A to Z and numbers; change it any time in Settings." />
+        <div className="row" style={{ gap: 8 }}>
+          <button className="btn small ghost" onClick={later}>
+            Not now
+          </button>
+        </div>
+      </div>
+    </section>
   );
 }

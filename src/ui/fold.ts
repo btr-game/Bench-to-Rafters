@@ -21,8 +21,13 @@ function load(): Set<string> {
 let folded = load();
 const subs = new Set<() => void>();
 
-/** Whether the card `id` is folded, and the toggle (null: a card that does not fold). */
-export function useFold(id: string | null): [boolean, () => void] {
+/** A card that starts folded (round 36: the Player tab's Body panel) keeps the opposite instead:
+ * `open:<id>` once the viewer has opened it. */
+const OPEN = 'open:';
+
+/** Whether the card `id` is folded, and the toggle (null: a card that does not fold). `startShut`:
+ * folded until the viewer opens it. */
+export function useFold(id: string | null, startShut = false): [boolean, () => void] {
   const [, redraw] = useReducer((x: number) => x + 1, 0);
   useEffect(() => {
     subs.add(redraw);
@@ -30,10 +35,11 @@ export function useFold(id: string | null): [boolean, () => void] {
       subs.delete(redraw);
     };
   }, []);
+  const key = id && startShut ? OPEN + id : id;
   const toggle = () => {
-    if (!id) return;
-    if (folded.has(id)) folded.delete(id);
-    else folded.add(id);
+    if (!key) return;
+    if (folded.has(key)) folded.delete(key);
+    else folded.add(key);
     sfx('click');
     try {
       localStorage.setItem(KEY, JSON.stringify([...folded]));
@@ -41,14 +47,23 @@ export function useFold(id: string | null): [boolean, () => void] {
       /* the fold lasts for the visit */
     }
     subs.forEach((f) => f());
-    // the book keeps the most cards folded at once (Origami, Neatly Pressed, Less Is More)
-    recordFolds(folded.size);
+    // the book keeps the most cards folded at once (Origami, Neatly Pressed, Less Is More): the
+    // ones the viewer folded, not the ones he opened
+    recordFolds([...folded].filter((x) => !x.startsWith(OPEN)).length);
     achievementsNow();
   };
-  return [!!id && folded.has(id), toggle];
+  return [!!key && folded.has(key) !== startShut, toggle];
 }
 
-/** The dev deck: sets exactly these cards folded (none, before each card it deals). */
+/** Round 36: the guides (Guide mode's tour, the tutorial's lessons) tell the control they point at,
+ * so a folded card opens for a look and a row of tabs shows the tab the step is about. */
+export const SPOT = 'btr-spot';
+export function spot(el: HTMLElement): void {
+  el.dispatchEvent(new Event(SPOT, { bubbles: true }));
+}
+
+/** The dev deck: sets exactly these cards folded (none, before each card it deals: then a card that
+ * starts folded is folded again, and `open:<id>` opens it). */
 export function setFolds(ids: string[]): void {
   folded = new Set(ids);
   try {

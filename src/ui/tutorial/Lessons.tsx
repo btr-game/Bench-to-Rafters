@@ -12,6 +12,7 @@ import { inTutorial, nextLevel } from '../road';
 import { LESSONS, type Lesson, type Where } from './lessons';
 import { STOPS } from './closing';
 import { SkipButton } from '../components/SkipTutorial';
+import { spot } from '../fold';
 
 type St = ReturnType<typeof useStore.getState>;
 
@@ -41,7 +42,9 @@ function pool(st: St, where: Where): Lesson[] {
 
 const shown = (el: HTMLElement) => {
   const r = el.getBoundingClientRect();
-  return r.width > 0 && r.height > 0 && !(el as HTMLButtonElement).disabled;
+  // round 37: the top bar's row of tabs keeps its size while the town stands in for it (it is only
+  // hidden), so a hidden match never takes the ring from the place in the town
+  return r.width > 0 && r.height > 0 && !(el as HTMLButtonElement).disabled && getComputedStyle(el).visibility !== 'hidden';
 };
 
 const PAD = 6;
@@ -84,6 +87,8 @@ export function Lessons() {
     find();
     const mo = new MutationObserver(later);
     mo.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['disabled', 'aria-expanded', 'aria-modal', 'class'] });
+    // round 37: the town scrolling in or out swaps which row of tabs shows (html.town-out)
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
     window.addEventListener('resize', later);
     return () => {
       mo.disconnect();
@@ -107,6 +112,8 @@ export function Lessons() {
       setBox(null);
       return;
     }
+    // round 36: a folded card opens for a look, a tab of a card's tabs shows its own (fold.ts)
+    spot(cur.el);
     {
       const r0 = cur.el.getBoundingClientRect();
       if (r0.top < 0 || r0.top > window.innerHeight * 0.6) window.scrollBy({ top: r0.top - window.innerHeight * 0.25, behavior: 'smooth' });

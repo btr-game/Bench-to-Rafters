@@ -35,9 +35,9 @@ import { NAMES, UI } from "../../content/strings";
 import { canUndo, useStore } from "../../store";
 import { sfx } from "../sound";
 import { LabCard } from "../components/Lab";
-import { MvpRace } from "../components/MvpRace";
 import { PlaybookArt } from "../art/Playbook";
-import { DuoCard, RecruitCard, StoriesCard } from "../components/Roster";
+import { RecruitCard } from "../components/Roster";
+import { AroundCard } from "../components/Around";
 import { MpBoard } from "./Multiplayer";
 import { canRecruit, recruitInfo } from "../../engine/career/recruit";
 import { STARTERS_RECRUIT } from "../../engine/balance";
@@ -47,7 +47,6 @@ import {
   Extra,
   FoldBox,
   MilestoneStrip,
-  ReactionCard,
   Scoreboard,
   StatStrip,
 } from "../components/bits";
@@ -68,7 +67,6 @@ import { perGame } from "../../engine/sim/statModel";
 import { weightOf } from "../../engine/player/weight";
 import { ModesCard } from '../components/ModesCard';
 import { StrengthCard } from '../components/StrengthCard';
-import { RivalCard } from '../components/RivalCard';
 import { CoachTalk } from '../components/CoachTalk';
 import { leanLevel } from '../road';
 
@@ -1212,24 +1210,11 @@ export function Home({ g }: { g: GameState }) {
         <FoldBox id="modes" title="How you play" icon="dial">
           <ModesCard g={g} />
         </FoldBox>
+        {/* round 36 (owner: "merge 12"): the MVP race, the duo, the rivalry, the league and the talk in one card */}
         <Extra>
-          <FoldBox id="mvp" title="MVP race" icon="spotlight">
-            <MvpRace g={g} />
+          <FoldBox id="around" title="Around you" icon="globe">
+            <AroundCard g={g} />
           </FoldBox>
-          <FoldBox id="duo" title="Your duo" icon="teamfirst">
-            <DuoCard g={g} />
-          </FoldBox>
-          <FoldBox id="rival" title="Rivalry" icon="rival">
-            <RivalCard g={g} />
-          </FoldBox>
-          <StoriesCard g={g} />
-          {g.feed[0] && !lean && (
-            <FoldBox id="reaction" title="The talk" icon="news">
-              <section className="card prose">
-                <ReactionCard r={g.feed[0]} />
-              </section>
-            </FoldBox>
-          )}
         </Extra>
       </div>
     </div>
