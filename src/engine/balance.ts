@@ -1211,3 +1211,56 @@ export const STORY_CH = {
   /** the last chapter comes from this age (or when retiring is recommended, or before a farewell season) */
   lastAge: 36,
 };
+
+/**
+ * Round 39: the Floor, the playable fourth quarter (engine/floor/). Owner, on the ideas document:
+ * "let's go with 4 minutes, so time is tripled"; "defence too"; only his own team's elimination
+ * games from the conference finals on; "make the shooting percentage lower for the user's team and
+ * higher for oponents as difficulty goes up". Distances in feet on a 94 by 50 court; times in game
+ * seconds unless named real.
+ */
+export const FLOOR = {
+  /** Game seconds a tick moves on, and the ticks of real time a second: 0.15 x 20 = 3 game seconds a real one. */
+  tick: 0.15,
+  ticksPerSec: 20,
+  quarter: 720,
+  shotClock: 24,
+  offReboundClock: 14,
+  /** Top speed in feet a game second, from athleticism 0 to 100, and sprinting's share more. */
+  speed: [13, 21],
+  sprint: 1.22,
+  /** Stamina (0 to 1) a game second: sprinting, moving, standing; a timeout gives back. */
+  stamina: { sprint: -0.012, move: -0.0025, rest: 0.004, timeout: 0.25 },
+  /** A shot's base chance by zone, and how much its rating (from 70) moves it per point. */
+  shot: { rim: 0.67, paint: 0.48, mid: 0.44, three: 0.385, perPoint: { rim: 0.006, paint: 0.0055, mid: 0.005, three: 0.005 }, deep: 26, deepPerFt: 0.04, min: 0.02, max: 0.93 },
+  /** A defender closer than `within` feet takes up to `max` off the chance; tired legs up to `tired`. */
+  contest: { within: 6, max: 0.17, tired: 0.08 },
+  /** His meter: how long a full load takes (game seconds), the window's half-width at 0 and 100
+   * shooting, what being contested or tired takes off it, and what a perfect or a missed release does
+   * to the chance (scaled between). */
+  meter: { load: 0.9, window: [0.1, 0.26], contested: 0.45, tired: 0.4, best: 1.15, worst: 0.55 },
+  /** Free throws: the chance from free-throw touch 0 to 100. */
+  ft: [0.5, 0.95],
+  /** Fouls on a shot: at the rim, on a jumper; bonus from this many team fouls; out at six. */
+  foul: { rim: 0.19, jumper: 0.045, perPoint: 0.0025, bonus: 5, out: 6 },
+  block: { base: 0.06, perPoint: 0.0035, reach: 3 },
+  steal: { base: 0.18, perPoint: 0.004, reach: 4, foul: 0.22 },
+  /** A pass flies at this speed; a defender this close to its line may pick it off. */
+  pass: { speed: 42, lane: 2.5, pick: 0.2, bad: 0.02 },
+  /** An AI defender on the ball reaches in each time the handler thinks: a strip this often (at 70 perimeter defense). */
+  strip: 0.011,
+  /** A move (crossover, spin, step-back) beats his man this often from even, slowing him this long. */
+  move: { beat: 0.5, perPoint: 0.006, slow: 1.1, lose: 0.05 },
+  rebound: { offense: 0.72, wait: 0.6 },
+  /** The difficulty: added to his team's and the other team's shooting. */
+  mode: { standard: { us: 0, them: 0 }, reality: { us: -0.03, them: 0.025 }, stars: { us: 0.02, them: -0.015 }, fast: { us: 0, them: 0 }, lab: { us: 0, them: 0 } } as Record<Mode, { us: number; them: number }>,
+  /** Momentum: what a basket, a stop and a big play add (his team up, theirs down), how fast it fades
+   * a game second, and the shooting a full meter gives. */
+  momentum: { basket: 0.08, big: 0.18, fade: 0.01, full: 0.8, edge: 0.02 },
+  timeouts: 3,
+  /** The AI's ball handler thinks again this often (game seconds); a shot is open past `open` feet. */
+  think: 0.6,
+  open: 6,
+  /** Trailing late, the defense fouls on purpose: within this margin, under this many seconds. */
+  hack: { margin: [1, 8], secs: 35 },
+} as const;
