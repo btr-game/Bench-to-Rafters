@@ -16,19 +16,22 @@ import { DunkGame } from './Dunk';
 import { StreetballGame } from './Streetball';
 import { LockdownGame } from './Lockdown';
 import { DailyGame } from './Daily';
+import { t, tx } from '../../i18n';
 
 /** A mini-game's icon (the Catalog's island list uses it too). */
 export const miniIcon = (id: string): string => (id === 'office' ? 'office' : id === 'lab' ? 'lab' : id === 'daily' ? 'calendar' : id === 'rhythm' ? 'lockdown' : ICON_FOR[id] ?? '');
 
+// round 40: a game's name stays English in every language (owner); its tag and text are marked
+// tx() and shown with t()
 export const GAMES: { id: MiniId | 'daily'; name: string; text: string; tag: string; color: string }[] = [
-  { id: 'daily' as const, tag: 'Every day', color: '#0B7285', name: 'Daily challenge', text: 'One prospect a day, the same for everyone. A whole career with fast break and simple text, scored by the legacy he leaves. From the start page, when no career is in progress.' },
-  { id: 'office' as const, tag: 'Strategy', color: '#1C7ED6', name: 'Front Office', text: 'Run an NBA franchise for three seasons. Scout the draft, trade, sign players from Europe and beyond, set the game plan, and win a title before the owner loses patience.' },
-  { id: 'threes' as const, tag: 'Timing', color: '#E8590C', name: 'Three-point contest', text: 'Five racks, sixty seconds, a money-ball rack of your choice. Stop the meter in the green. Beat seven of the best shooters ever.' },
-  { id: 'dunk' as const, tag: 'Timing', color: '#C2255C', name: 'Dunk contest', text: 'Design your dunks (takeoff, moves, props) and land them one timing tap at a time. Five judges, two rounds, three of the best dunkers ever.' },
-  { id: 'lab' as const, tag: 'Building', color: '#2F9E44', name: 'Built in a lab', text: 'Design a player and build him over ten seasons: spend each summer\'s credits on ratings, then watch the season play out. Two minutes a run.' },
-  { id: 'street' as const, tag: 'Action', color: '#2B8A3E', name: '3-on-3 streetball', text: 'One game to 11 at a city park against the crew that holds the court, by ones and twos, make it take it. Pick the play, time your drives and pull-ups on the action cam, read their defense.' },
-  { id: 'rhythm' as const, tag: 'Rhythm', color: '#5F3DC4', name: 'Lockdown', text: 'A rhythm game of defense: the offense runs its sets to the beat, you block (A) and steal (S) on time and hold the long notes. Fourteen sets in a random order, under a minute a run. Pays perimeter and interior defense.' },
-  { id: 'legends' as const, tag: 'Strategy', color: '#B08900', name: 'Legends showdown', text: 'Every franchise plays with its all-time starting five. Join one (with a career: your own player), mind the chemistry, survive the season, then beat the powerhouses in four playoff rounds.' },
+  { id: 'daily' as const, tag: tx('Every day'), color: '#0B7285', name: 'Daily challenge', text: tx('One prospect a day, the same for everyone. A whole career with fast break and simple text, scored by the legacy he leaves. From the start page, when no career is in progress.') },
+  { id: 'office' as const, tag: tx('Strategy'), color: '#1C7ED6', name: 'Front Office', text: tx('Run an NBA franchise for three seasons. Scout the draft, trade, sign players from Europe and beyond, set the game plan, and win a title before the owner loses patience.') },
+  { id: 'threes' as const, tag: tx('Timing'), color: '#E8590C', name: 'Three-point contest', text: tx('Five racks, sixty seconds, a money-ball rack of your choice. Stop the meter in the green. Beat seven of the best shooters ever.') },
+  { id: 'dunk' as const, tag: tx('Timing'), color: '#C2255C', name: 'Dunk contest', text: tx('Design your dunks (takeoff, moves, props) and land them one timing tap at a time. Five judges, two rounds, three of the best dunkers ever.') },
+  { id: 'lab' as const, tag: tx('Building'), color: '#2F9E44', name: 'Built in a lab', text: tx('Design a player and build him over ten seasons: spend each summer\'s credits on ratings, then watch the season play out. Two minutes a run.') },
+  { id: 'street' as const, tag: tx('Action'), color: '#2B8A3E', name: '3-on-3 streetball', text: tx('One game to 11 at a city park against the crew that holds the court, by ones and twos, make it take it. Pick the play, time your drives and pull-ups on the action cam, read their defense.') },
+  { id: 'rhythm' as const, tag: tx('Rhythm'), color: '#5F3DC4', name: 'Lockdown', text: tx('A rhythm game of defense: the offense runs its sets to the beat, you block (A) and steal (S) on time and hold the long notes. Fourteen sets in a random order, under a minute a run. Pays perimeter and interior defense.') },
+  { id: 'legends' as const, tag: tx('Strategy'), color: '#B08900', name: 'Legends showdown', text: tx('Every franchise plays with its all-time starting five. Join one (with a career: your own player), mind the chemistry, survive the season, then beat the powerhouses in four playoff rounds.') },
 ];
 
 /** The lobby: big cards. With a career, a game opens once his ratings reach it (round 15). */
@@ -42,17 +45,17 @@ function Hub() {
   return (
     <section className="stack stage-in">
       <div>
-        <div className="kicker">Mini-games</div>
+        <div className="kicker">{t('Mini-games')}</div>
         <h1 className="hub-title with-icon">
           <Icon name="controller" size={40} />
-          Pick a game
+          {t('Pick a game')}
         </h1>
         <p className="small muted">
           {island
-            ? `The island: play each game once and get a C or better. ${ROAD_MINIS.filter((m) => passGrade(road.minis[m])).length} of ${ROAD_MINIS.length} done.`
+            ? t('The island: play each game once and get a C or better. {n} of {total} done.', { n: ROAD_MINIS.filter((m) => passGrade(road.minis[m])).length, total: ROAD_MINIS.length })
             : career
-            ? `For ${career.player.name}: each game opens when his ratings reach it, and a good result earns a rating bonus (${MINI_CLAIMS.perSeason - claimsUsed(career)} of ${MINI_CLAIMS.perSeason} claims left this season).`
-            : 'Free play: every game is open. With a career in progress, games unlock as your player grows and pay a rating bonus.'}
+            ? t('For {name}: each game opens when his ratings reach it, and a good result earns a rating bonus ({left} of {total} claims left this season).', { name: career.player.name, left: MINI_CLAIMS.perSeason - claimsUsed(career), total: MINI_CLAIMS.perSeason })
+            : t('Free play: every game is open. With a career in progress, games unlock as your player grows and pay a rating bonus.')}
         </p>
       </div>
       <div className="hub-grid">
@@ -64,32 +67,33 @@ function Hub() {
           return (
             <button key={x.id} className={`hub-card${locked ? ' locked' : ''}`} style={{ ['--hub' as string]: x.color }} disabled={locked} onClick={() => setMini(x.id)}>
               <span className="hub-band">
-                <span>{x.tag}</span>
-                {(pr || dailyShut) && <span className={`hub-state${locked ? '' : ' open'}`}>{locked ? 'Locked' : 'Unlocked'}</span>}
+                <span>{t(x.tag)}</span>
+                {(pr || dailyShut) && <span className={`hub-state${locked ? '' : ' open'}`}>{locked ? t('Locked') : t('Unlocked')}</span>}
               </span>
               <b className="hub-name with-icon">
                 <Icon name={miniIcon(x.id)} size={34} />
                 {x.name}
               </b>
-              <small>{x.text}</small>
+              <small>{t(x.text)}</small>
               {island && x.id !== 'daily' && (
                 <span className={`hub-req island-req${passGrade(road.minis[x.id as RoadMini]) ? ' done' : ''}`}>
                   <span>
                     C: {ROAD_NEED[x.id as RoadMini]}
-                    {road.minis[x.id as RoadMini] ? ` · best ${road.minis[x.id as RoadMini]}` : ''}
+                    {road.minis[x.id as RoadMini] ? <> · {t('best {grade}', { grade: road.minis[x.id as RoadMini] ?? '' })}</> : ''}
                   </span>
                 </span>
               )}
               {dailyShut && (
                 <span className="hub-req">
-                  <span>Not during a career: play it from the start page, or once this career is over.</span>
+                  <span>{t('Not during a career: play it from the start page, or once this career is over.')}</span>
                 </span>
               )}
               {pr && (
                 <span className="hub-req">
                   <span>
-                    {locked ? 'Unlocks at' : 'Needed'} {pr.label} {pr.at}
-                    {locked && <> · now {Math.round(pr.value)}</>}
+                    {/* the rating's name stays English (owner) */}
+                    {locked ? t('Unlocks at {rating} {n}', { rating: pr.label, n: pr.at }) : t('Needed {rating} {n}', { rating: pr.label, n: pr.at })}
+                    {locked && <> · {t('now {n}', { n: Math.round(pr.value) })}</>}
                   </span>
                   {locked && (
                     <span className="hub-bar">
@@ -102,7 +106,7 @@ function Hub() {
           );
         })}
       </div>
-      {!island && <p className="muted small">Your career is safe: Back to career is always at the top right.</p>}
+      {!island && <p className="muted small">{t('Your career is safe: Back to career is always at the top right.')}</p>}
     </section>
   );
 }
@@ -117,11 +121,11 @@ export function MiniEnd({ children }: { children?: React.ReactNode }) {
       <div className="mini-end-actions">
         {hasCareer && (
           <button className="btn mini-end-back" onClick={() => setMini(null)}>
-            Back to career
+            {t('Back to career')}
           </button>
         )}
         <button className={`btn ${hasCareer ? 'ghost' : ''}`} onClick={() => setMini('hub')}>
-          Other mini-games
+          {t('Other mini-games')}
         </button>
       </div>
     </section>
@@ -140,13 +144,13 @@ export function MiniGames() {
     <div className="wrap no-tabs">
       {/* round 27: the shared page top; in a game the way back is the hub, and the career is one tap away */}
       <PageTop
-        trail={mini === 'hub' || !mini ? ['Mini-games'] : ['Mini-games', MINI_NAME[mini] ?? mini]}
+        trail={mini === 'hub' || !mini ? [t('Mini-games')] : [t('Mini-games'), MINI_NAME[mini] ?? mini]}
         back={() => setMini(mini === 'hub' ? null : 'hub')}
-        backLabel={mini === 'hub' ? undefined : 'All mini-games'}
+        backLabel={mini === 'hub' ? undefined : t('All mini-games')}
         extra={
           mini !== 'hub' && (
             <button className="icon-btn exit-btn" onClick={() => setMini(null)}>
-              {hasCareer ? 'Back to the career' : island ? 'Back to the road map' : 'Exit'}
+              {hasCareer ? t('Back to the career') : island ? t('Back to the road map') : t('Exit')}
             </button>
           )
         }
@@ -178,28 +182,28 @@ export function MiniGamesCard() {
     <section className={`card stack${daily || shut ? ' mini-locked' : ''}`}>
       <div className="sec-title with-icon">
         <Icon name={daily || shut ? 'lock' : 'controller'} size={28} />
-        Mini-games
+        {t('Mini-games')}
       </div>
       {shut ? (
         <>
-          <p className="small muted keep">{unlockHint('minis')} Every game once, a C or better in each.</p>
+          <p className="small muted keep">{unlockHint('minis')} {t('Every game once, a C or better in each.')}</p>
           {!career && (
             <button className="btn ghost" data-tour="minis-locked" onClick={() => setPage('road')}>
-              Open the road map
+              {t('Open the road map')}
             </button>
           )}
         </>
       ) : daily ? (
-        <p className="small muted">Locked during the daily challenge, so a run stays quick. They open again when you go back to your career.</p>
+        <p className="small muted">{t('Locked during the daily challenge, so a run stays quick. They open again when you go back to your career.')}</p>
       ) : (
         <>
           <p className="small muted">
             {live
-              ? 'Front Office, the three-point and dunk contests, 3-on-3 streetball, Lockdown, Built in a lab and the legends showdown. Each opens when your ratings reach it, and a good result pays a rating bonus. The daily challenge waits for the start page.'
-              : 'Front Office, the three-point and dunk contests, 3-on-3 streetball, Lockdown, Built in a lab, the legends showdown and the daily challenge. With a career, each opens when your ratings reach it.'}
+              ? t('Front Office, the three-point and dunk contests, 3-on-3 streetball, Lockdown, Built in a lab and the legends showdown. Each opens when your ratings reach it, and a good result pays a rating bonus. The daily challenge waits for the start page.')
+              : t('Front Office, the three-point and dunk contests, 3-on-3 streetball, Lockdown, Built in a lab, the legends showdown and the daily challenge. With a career, each opens when your ratings reach it.')}
           </p>
           <button className="btn ghost" data-tour="minis" onClick={() => setMini('hub')}>
-            Play a mini-game
+            {t('Play a mini-game')}
           </button>
         </>
       )}

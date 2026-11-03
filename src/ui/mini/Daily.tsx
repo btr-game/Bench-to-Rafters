@@ -12,6 +12,7 @@ import { PlayerArt } from '../art/Player';
 import { FlagArt } from '../art/Flag';
 import { Icon } from '../art/Icon';
 import { DailyFriends } from '../screens/ClassNight';
+import { t } from '../../i18n';
 
 const KEY = 'btr-daily';
 type Best = { points: number; legacy: number; peak: number; runs: number; last?: string; prevBest?: Best };
@@ -55,40 +56,41 @@ export function DailyGame() {
   return (
     <section className="stack stage-in daily">
       <div>
-        <div className="kicker">Mini-game · {day}</div>
+        <div className="kicker">{t('Mini-game · {day}', { day })}</div>
         <h1 className="hub-title with-icon">
           <Icon name="calendar" size={40} />
           Daily challenge
         </h1>
-        <p className="prose">Everyone gets the same prospect today. Take him from high school to retirement in Regular guy, with fast break and simple text on: a few minutes a run. Your score is the legacy he leaves, with his peak OVR breaking ties. Play as often as you like; the best run of the day counts.</p>
+        <p className="prose">{t('Everyone gets the same prospect today. Take him from high school to retirement in Regular guy, with fast break and simple text on: a few minutes a run. Your score is the legacy he leaves, with his peak OVR breaking ties. Play as often as you like; the best run of the day counts.')}</p>
       </div>
       <div className="card daily-card">
         <PlayerArt name={input.name} number={input.number} pos={input.pos} size={120} />
         <div className="stack" style={{ gap: 4 }}>
-          <div className="kicker">Today’s prospect</div>
+          <div className="kicker">{t('Today’s prospect')}</div>
           <div className="pc-name">{input.name}</div>
           <div className="with-flag">
             <FlagArt country={input.country!} size={22} />
             {input.country} · #{input.number} · {NAMES.pos[input.pos]}
           </div>
           <div className="small">
-            {arch.name}: {arch.blurb.toLowerCase()}. Focus: {input.focus.map((k) => NAMES.attr[k]).join(' and ')}.
+            {/* the archetype's and the ratings' names stay English (owner) */}
+            {t('{archetype}: {blurb}. Focus: {focus}.', { archetype: arch.name, blurb: arch.blurb.toLowerCase(), focus: input.focus.map((k) => NAMES.attr[k]).reduce((a, b) => (a ? t('{a} and {b}', { a, b }) : b), '') })}
           </div>
         </div>
         <div className="daily-best">
-          <small>Today’s best</small>
+          <small>{t('Today’s best')}</small>
           <b>{best ? best.legacy : '—'}</b>
-          <small>{best ? `legacy · peak ${best.peak} · ${best.runs} run${best.runs === 1 ? '' : 's'}` : 'no run yet'}</small>
+          <small>{best ? (best.runs === 1 ? t('legacy · peak {peak} · {runs} run', { peak: best.peak, runs: best.runs }) : t('legacy · peak {peak} · {runs} runs', { peak: best.peak, runs: best.runs })) : t('no run yet')}</small>
         </div>
       </div>
       {busy ? (
-        <p className="small">A career is in progress. The daily challenge opens from the start page, or once this career is over.</p>
+        <p className="small">{t('A career is in progress. The daily challenge opens from the start page, or once this career is over.')}</p>
       ) : (
         <button className="btn sb-go" onClick={start}>
-          Start today’s run
+          {t('Start today’s run')}
         </button>
       )}
-      {streak > 1 && <p className="small muted keep">You have played on {streak} days.</p>}
+      {streak > 1 && <p className="small muted keep">{t('You have played on {n} days.', { n: streak })}</p>}
       {/* round 35: today's daily among friends (online only) */}
       <DailyFriends day={day} best={best ? { points: best.points, legacy: best.legacy, peak: best.peak } : null} />
     </section>
@@ -105,12 +107,10 @@ export function DailyStrip({ g }: { g: GameState }) {
     <div className="daily-strip">
       <Icon name="calendar" size={22} />
       <b>Daily challenge · {d.day}</b>
-      <span className="small">
-        {g.player.name}, age {g.player.age}
-      </span>
+      <span className="small">{t('{name}, age {age}', { name: g.player.name, age: g.player.age })}</span>
       <span className="spacer" />
       <button className="btn ghost small" onClick={end}>
-        Quit the run
+        {t('Quit the run')}
       </button>
     </div>
   );
@@ -137,20 +137,20 @@ export function DailyResult({ g }: { g: GameState }) {
       <div className="row" style={{ gap: 18, alignItems: 'baseline', flexWrap: 'wrap' }}>
         <div className="daily-score">
           <b>{sc.legacy}</b>
-          <small>legacy points</small>
+          <small>{t('legacy points')}</small>
         </div>
         <div className="daily-score">
           <b>{sc.peak}</b>
-          <small>peak OVR</small>
+          <small>{t('peak OVR')}</small>
         </div>
-        {rec && <div className="small">{record ? (rec.before ? `A new best for today (was ${rec.before.legacy}).` : 'Your first run today.') : `Today’s best stays ${rec.now.legacy} (peak ${rec.now.peak}).`}</div>}
+        {rec && <div className="small">{record ? (rec.before ? t('A new best for today (was {n}).', { n: rec.before.legacy }) : t('Your first run today.')) : t('Today’s best stays {n} (peak {peak}).', { n: rec.now.legacy, peak: rec.now.peak })}</div>}
       </div>
       <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
         <button className="btn" onClick={end}>
-          Done
+          {t('Done')}
         </button>
         <button className="btn ghost" onClick={start}>
-          Run it again
+          {t('Run it again')}
         </button>
       </div>
     </section>

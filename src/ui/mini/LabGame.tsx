@@ -12,6 +12,7 @@ import type { Pos } from '../../engine/types';
 import { ht } from '../format';
 import { MiniBonus } from './MiniBonus';
 import { EvolutionArt } from '../art/Evolution';
+import { t } from '../../i18n';
 
 /** The lab's kit: lab-coat white with a blue trim. */
 const LAB_KIT = { base: '#1C7ED6', ink: '#FFFFFF', trim: '#F4F4F4', word: 'LAB' };
@@ -35,11 +36,11 @@ export function LabGame() {
     return (
       <section className="stack">
         <div className="kicker">Built in a lab</div>
-        <h2 className="title">Design a player</h2>
-        <p className="small muted">Ten seasons, one screen each: spend the summer's credits on ratings, then play the season and see what he becomes.</p>
+        <h2 className="title">{t('Design a player')}</h2>
+        <p className="small muted">{t("Ten seasons, one screen each: spend the summer's credits on ratings, then play the season and see what he becomes.")}</p>
         <section className="card stack">
           <div className="field">
-            <label htmlFor="lab-name">Name</label>
+            <label htmlFor="lab-name">{t('Name')}</label>
             <input id="lab-name" value={name} onChange={(e) => setName(e.target.value)} maxLength={24} />
           </div>
           <div className="seg">
@@ -57,10 +58,10 @@ export function LabGame() {
             ))}
           </div>
           <div className="ht-val">{ht(height)}</div>
-          <input type="range" min={lo - 2} max={hi + 2} step={1} value={height} onChange={(e) => setHeight(Number(e.target.value))} aria-label="Height" />
-          <p className="small muted">Taller: more rebounding and inside defense, less speed and playmaking.</p>
+          <input type="range" min={lo - 2} max={hi + 2} step={1} value={height} onChange={(e) => setHeight(Number(e.target.value))} aria-label={t('Height')} />
+          <p className="small muted">{t('Taller: more rebounding and inside defense, less speed and playmaking.')}</p>
           <button className="btn" onClick={() => setSt(newLabGame(Math.floor(Math.random() * 1e9), name, pos, height))}>
-            Start the experiment
+            {t('Start the experiment')}
           </button>
         </section>
       </section>
@@ -75,18 +76,16 @@ export function LabGame() {
     const shelf = st.history.flatMap((h) => h.awards).reduce<Record<string, number>>((m, a) => ({ ...m, [a]: (m[a] ?? 0) + 1 }), {});
     return (
       <section className="stack">
-        <div className="kicker">Built in a lab · results</div>
+        <div className="kicker">{t('Built in a lab · results')}</div>
         <section className="card stack lab-end">
           <div className="lab-grade">{g.letter}</div>
           <EvolutionArt ovr={st.peak} name={st.name} number={23} kit={LAB_KIT} size={170} />
           <h2 className="title">{st.name}</h2>
-          <p className="small">
-            Peak {Math.round(st.peak)} OVR · {g.text}
-          </p>
-          <p className="small">{Object.keys(shelf).length ? Object.entries(shelf).map(([a, n]) => (n > 1 ? `${n}× ${a}` : a)).join(' · ') : 'No awards.'}</p>
+          <p className="small">{t('Peak {n} OVR · {grade}', { n: Math.round(st.peak), grade: g.text })}</p>
+          <p className="small">{Object.keys(shelf).length ? Object.entries(shelf).map(([a, n]) => (n > 1 ? `${n}× ${a}` : a)).join(' · ') : t('No awards.')}</p>
         </section>
         <section className="card stack">
-          <div className="sec-title">Season by season</div>
+          <div className="sec-title">{t('Season by season')}</div>
           {st.history.map((h) => (
             <div key={h.age} className="labg-row">
               <b>{h.age}</b>
@@ -101,7 +100,7 @@ export function LabGame() {
         </section>
         <MiniBonus result={{ game: 'lab', peak: st.peak }} />
         <button className="btn ghost" onClick={() => setSt(null)}>
-          Build another
+          {t('Build another')}
         </button>
       </section>
     );
@@ -109,9 +108,7 @@ export function LabGame() {
 
   return (
     <section className="stack">
-      <div className="kicker">
-        Built in a lab · season {st.season + 1} of {LAB_GAME.seasons} · age {LAB_GAME.startAge + st.season}
-      </div>
+      <div className="kicker">{t('Built in a lab · season {n} of {total} · age {age}', { n: st.season + 1, total: LAB_GAME.seasons, age: LAB_GAME.startAge + st.season })}</div>
       <section className="card stack">
         <div className="lab-top">
           <div>
@@ -126,23 +123,21 @@ export function LabGame() {
           </div>
           <div className="labg-credits">
             <b>{st.credits.toFixed(1)}</b>
-            <span className="small muted">credits</span>
+            <span className="small muted">{t('credits')}</span>
           </div>
         </div>
         <EvolutionArt ovr={ovr} name={st.name} number={23} kit={LAB_KIT} size={170} />
         {last && (
           <p className="small lab-last">
-            Last season: {last.line} · {last.record}
+            {t('Last season: {line} · {record}', { line: last.line, record: last.record })}
             {last.awards.length ? ` · ${last.awards.join(', ')}` : ''}
           </p>
         )}
         {st.twist && <p className="small lab-twist">{st.twist}</p>}
       </section>
       <section className="card stack">
-        <div className="sec-title">Spend the summer</div>
-        <p className="small muted">
-          Each tap adds {LAB_GAME.step}; the price goes up from 80 and 90. Matters most at {st.pos}: {key.map((k) => NAMES.attr[k]).join(', ')}.
-        </p>
+        <div className="sec-title">{t('Spend the summer')}</div>
+        <p className="small muted">{t('Each tap adds {n}; the price goes up from 80 and 90. Matters most at {pos}: {ratings}.', { n: LAB_GAME.step, pos: st.pos, ratings: key.map((k) => NAMES.attr[k]).join(', ') })}</p>
         <div className="lab-attrs">
           {ATTRS.map((k) => {
             const c = labCost(st.attrs[k]);
@@ -153,9 +148,9 @@ export function LabGame() {
                   {NAMES.attr[k]}
                 </span>
                 <b>{st.attrs[k]}</b>
-                <button className="icon-btn" disabled={st.credits + 1e-9 < c || st.attrs[k] >= 99} onClick={() => act((s) => void labBuy(s, k))} aria-label={`Add ${LAB_GAME.step} ${NAMES.attr[k]}`}>
+                <button className="icon-btn" disabled={st.credits + 1e-9 < c || st.attrs[k] >= 99} onClick={() => act((s) => void labBuy(s, k))} aria-label={t('Add {n} {rating}', { n: LAB_GAME.step, rating: NAMES.attr[k] })}>
                   {st.attrs[k] >= 99 ? (
-                    'Max'
+                    t('Max')
                   ) : (
                     <>
                       +{LAB_GAME.step} <span className="muted">({c})</span>
@@ -169,11 +164,11 @@ export function LabGame() {
       </section>
       {st.credits >= 1 && (
         <button className="btn ghost" onClick={() => act(labSpreadSpend)}>
-          Spread it evenly
+          {t('Spread it evenly')}
         </button>
       )}
       <button className="btn" onClick={() => act((s) => void labPlaySeason(s))}>
-        {st.credits >= 1 ? `Play the season (${st.credits.toFixed(1)} credits carry over)` : 'Play the season'}
+        {st.credits >= 1 ? t('Play the season ({n} credits carry over)', { n: st.credits.toFixed(1) }) : t('Play the season')}
       </button>
     </section>
   );
