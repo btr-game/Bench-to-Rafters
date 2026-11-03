@@ -21,7 +21,9 @@ import { storyRng } from './cast';
 export const FRIEND_ID = 'story-friend';
 export const RIVAL_ID = 'story-rival';
 
-const NBA_NAMES = (s: GameState): string[] => (s.nba?.teams ?? []).map((t) => t.name);
+// the friend and the rival live in the States (owner: "all three main characters should be american,
+// or living in america at least"): never placed in Toronto
+const NBA_NAMES = (s: GameState): string[] => (s.nba?.teams ?? []).filter((t) => t.abbr !== 'TOR').map((t) => t.name);
 
 /** The hero's NBA team this season, if he plays for one. */
 function myNbaTeam(s: GameState): string | null {

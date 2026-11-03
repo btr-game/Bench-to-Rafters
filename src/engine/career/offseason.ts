@@ -425,7 +425,7 @@ function pushUndrafted(s: GameState): void {
     retireNow(s, 'No team called after the draft.');
     return;
   }
-  const shown = roadOffers(s, offers);
+  const shown = roadOffers(s, offers, () => glOffer(s, ovr));
   pushDecision(s, {
     kind: 'offers',
     title: 'Undrafted',
@@ -466,7 +466,7 @@ function proContractStep(s: GameState): void {
     if (expired) retireNow(s, 'No contract offers came.');
     return;
   }
-  const shown = roadOffers(s, offers);
+  const shown = roadOffers(s, offers, () => glOffer(s, ovr));
   const choices = shown.map(offerChoice);
   if (!expired) choices.push({ id: 'stay', label: `Stay with ${teamById(s.league, s.teamId)?.name ?? 'your club'}`, detail: `${c!.years} year(s) left on your deal.` });
   pushDecision(s, {
@@ -550,8 +550,9 @@ function pushLastChance(s: GameState, why: string): void {
     retireNow(s, 'Time catches everyone.');
     return;
   }
-  const offers: Offer[] = [...europeOffers(s, ovr, ovr >= 52 ? 2 : 1), ...intOffers(s, ovr, 2, { cba: s.player.age >= 29 })];
-  offers.push(...homeLeagueOffers(s).filter((x) => !offers.some((y) => y.teamName === x.teamName)));
+  // story mode stays in the States: no last chance abroad (round 38)
+  const offers: Offer[] = s.story ? [] : [...europeOffers(s, ovr, ovr >= 52 ? 2 : 1), ...intOffers(s, ovr, 2, { cba: s.player.age >= 29 })];
+  if (!s.story) offers.push(...homeLeagueOffers(s).filter((x) => !offers.some((y) => y.teamName === x.teamName)));
   // round 22: the G League is for young players on the way up, not veterans on the way out
   if (ovr >= 56 && s.player.age < 30 && chance(s.rng, FA_INTEREST.minorAgeFade(s.player.age))) offers.push(glOffer(s, ovr));
   const choices = offers.map(offerChoice);
