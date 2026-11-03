@@ -7,6 +7,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useStore } from '../../store';
 import { sfx } from '../sound';
+import { t } from '../../i18n';
 
 interface Box {
   x: number;
@@ -97,12 +98,12 @@ export function TabNews() {
   return createPortal(
     <>
       <div className="tour-ring" style={{ left: box.x - 6, top: box.y - 6, width: box.w + 12, height: box.h + 12 }} aria-hidden="true" />
-      <div className="tour-tip spot-tip" ref={tip} role="alertdialog" aria-label="New on this tab" style={{ left, top, width: w }}>
-        <div className="kicker">New on this tab{spots.total > 1 ? ` · ${at} of ${spots.total}` : ''}</div>
+      <div className="tour-tip spot-tip" ref={tip} role="alertdialog" aria-label={t('New on this tab')} style={{ left, top, width: w }}>
+        <div className="kicker">{t('New on this tab')}{spots.total > 1 ? ` · ${t('{at} of {n}', { at, n: spots.total })}` : ''}</div>
         <p>{spot.text}</p>
         <div className="tour-row">
           <button className="btn small" autoFocus onClick={gotIt}>
-            Got it <kbd className="tour-key">Enter</kbd>
+            {t('Got it')} <kbd className="tour-key">Enter</kbd>
           </button>
         </div>
       </div>

@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useStore } from '../../store';
 import { ShareButton } from './Share';
+import { t } from '../../i18n';
 
 // The top of a page of its own (round 27, navigation): the way back on the left, saying where it
 // goes; where you are; the game's name on the right. Escape goes back too, unless a dialog, the
@@ -8,7 +9,7 @@ import { ShareButton } from './Share';
 
 export function PageTop({ trail, back, backLabel, extra }: { trail: string[]; back: () => void; backLabel?: string; extra?: React.ReactNode }) {
   const career = useStore((s) => !!s.game);
-  const label = backLabel ?? (career ? 'Back to the career' : 'Back to the start');
+  const label = backLabel ?? (career ? t('Back to the career') : t('Back to the start'));
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape' || document.querySelector('[role="dialog"], .set-menu, .tour-tip')) return;
@@ -24,10 +25,10 @@ export function PageTop({ trail, back, backLabel, extra }: { trail: string[]; ba
       <button className="btn ghost back-btn" onClick={back} title={`${label} (Esc)`}>
         <span aria-hidden="true">←</span> {label}
       </button>
-      <nav className="crumbs" aria-label="You are here">
-        {[career ? 'Career' : 'Start', ...trail].map((t, i, all) => (
-          <span key={t} aria-current={i === all.length - 1 ? 'page' : undefined}>
-            {t}
+      <nav className="crumbs" aria-label={t('You are here')}>
+        {[career ? t('Career') : t('Start'), ...trail].map((x, i, all) => (
+          <span key={x} aria-current={i === all.length - 1 ? 'page' : undefined}>
+            {x}
           </span>
         ))}
       </nav>

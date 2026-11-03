@@ -3,12 +3,14 @@
 import type { GameState } from '../../engine/types';
 import { liveMvpRace } from '../../engine/career/mvpRace';
 import { ordinal } from '../format';
+import { t } from '../../i18n';
 
 function verdict(rank: number | null, gap: number, final: boolean): string {
-  if (rank === 1) return final ? 'You won it.' : gap === 0 ? 'You lead the race.' : 'You lead the race.';
-  if (rank === null) return final ? 'You were not on enough ballots.' : 'Not in the race yet: play more games.';
-  const how = gap <= 1 ? 'neck and neck' : gap <= 3 ? 'within reach' : gap <= 6 ? 'a long way back' : 'out of it';
-  return final ? `You finished ${ordinal(rank)}: ${how === 'out of it' ? 'never close' : how}.` : `You are ${ordinal(rank)}: ${how}.`;
+  if (rank === 1) return final ? t('You won it.') : gap === 0 ? t('You lead the race.') : t('You lead the race.');
+  if (rank === null) return final ? t('You were not on enough ballots.') : t('Not in the race yet: play more games.');
+  const far = gap > 6;
+  const how = gap <= 1 ? t('neck and neck') : gap <= 3 ? t('within reach') : gap <= 6 ? t('a long way back') : t('out of it');
+  return final ? t('You finished {rank}: {how}.', { rank: ordinal(rank), how: far ? t('never close') : how }) : t('You are {rank}: {how}.', { rank: ordinal(rank), how });
 }
 
 export function MvpRace({ g }: { g: GameState }) {
@@ -20,8 +22,8 @@ export function MvpRace({ g }: { g: GameState }) {
     <section className="card stack mvp-race">
       <div className="row">
         <div>
-          <div className="kicker">{r.final ? 'Final voting' : `After ${r.games} games`}</div>
-          <div className="sec-title">MVP race</div>
+          <div className="kicker">{r.final ? t('Final voting') : t('After {n} games', { n: r.games })}</div>
+          <div className="sec-title">{t('MVP race')}</div>
         </div>
       </div>
       <div className="small">{verdict(r.userRank, r.gap, r.final)}</div>
