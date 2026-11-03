@@ -4,21 +4,22 @@
 // main contents"). The start page's first step is a pixel town along one avenue: a venue for each
 // difficulty, his house while a career is going, the library (the career log), the trophy museum
 // (the achievement book), the statue plaza (the community), the park (Play with friends), the
-// newsstand (What's new), the cinema (the intro), the airport back to the road map, and the island
-// of mini-games across the water. This file says where each place stands, which are open, how the
+// newsstand (What's new), the cinema (the intro), the airport back to the road map, the island
+// of mini-games across the water, and (round 38) the old neighbourhood on the island to the north,
+// where story mode starts. This file says where each place stands, which are open, how the
 // arrow keys move between them, and the flight that brings him there; the page draws them
 // (screens/MainLand.tsx, art/LandArt.tsx, screens/Plane.tsx).
 
 import type { Mode } from '../engine/balance';
 import { modeOpen, unlocked, type Road } from './road';
 
-export type LandId = 'airport' | 'cinema' | 'gym' | 'cage' | 'dome' | 'house' | 'park' | 'library' | 'news' | 'plaza' | 'museum' | 'island';
+export type LandId = 'airport' | 'cinema' | 'gym' | 'cage' | 'dome' | 'house' | 'park' | 'library' | 'news' | 'plaza' | 'museum' | 'island' | 'story';
 
 interface LandPlace {
   id: LandId;
   /** The place to click on the map: x, y, w, h on its 224 by 100 grid. */
   box: [number, number, number, number];
-  /** Where on the avenue the car stops for it (the island's stop is the dock). */
+  /** Where on the avenue the car stops for it (the islands' stop is the dock). */
   stop: number;
   /** Which side of the avenue it stands on: its plate hangs on the avenue's side. */
   row: 'top' | 'bottom';
@@ -36,7 +37,7 @@ export const AVENUE = 52;
 export const AVENUE_X: [number, number] = [2, 168];
 
 // in the order Tab reaches them: the row above the avenue, west to east, then the row below, then
-// the island across the water
+// the two islands across the water
 export const LAND: LandPlace[] = [
   { id: 'airport', box: [2, 2, 40, 44], stop: 17, row: 'top', name: 'The airport', plate: 'Road map', icon: 'jet' },
   { id: 'cinema', box: [44, 12, 22, 34], stop: 55, row: 'top', name: 'The cinema', plate: 'Intro', icon: 'camera' },
@@ -50,7 +51,12 @@ export const LAND: LandPlace[] = [
   { id: 'plaza', box: [112, 58, 30, 40], stop: 127, row: 'bottom', name: 'The statue plaza', plate: 'Community', icon: 'statue' },
   { id: 'museum', box: [144, 58, 26, 40], stop: 157, row: 'bottom', name: 'The trophy museum', plate: 'Achievements', icon: 'laurel' },
   { id: 'island', box: [184, 62, 38, 30], stop: 166, row: 'bottom', name: 'The island', plate: 'Mini-games', icon: 'controller' },
+  { id: 'story', box: [184, 4, 38, 36], stop: 166, row: 'top', name: 'The old neighbourhood', plate: 'Story mode', icon: 'story' },
 ];
+
+/** The places across the water: the car stops at the dock and the boat takes him over (north to
+ * the old neighbourhood, south to the island). */
+export const ISLANDS: Partial<Record<LandId, 1 | -1>> = { island: 1, story: -1 };
 
 /** The three difficulties, each a venue of its own. */
 export const LAND_MODE: Partial<Record<LandId, Mode>> = { gym: 'standard', cage: 'reality', dome: 'stars' };

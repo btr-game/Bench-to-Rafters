@@ -38,6 +38,7 @@ import { FootBar } from '../components/FootBar';
 import { LevelAdds } from '../components/LevelAdds';
 import { PlaceArt } from './RoadMap';
 import { MainLand } from './MainLand';
+import { StoryStart } from './StoryStart';
 
 const pick = <T,>(a: readonly T[]): T => a[Math.floor(Math.random() * a.length)];
 const uiRng = makeRng(Math.floor(Math.random() * 2 ** 31));
@@ -189,6 +190,9 @@ export function Create({ level }: { level?: Level } = {}) {
     setCountry((ORIGINS.find((o) => (x -= o.weight) <= 0) ?? ORIGINS[0]).country);
     setStep(steps.indexOf('Confirm'));
   };
+  // round 38: the old neighbourhood opens story mode's naming page in place of the main land
+  const story = useStore((s) => s.naming);
+  const toStory = useStore((s) => s.setNaming);
   // round 37: a venue on the main land starts its difficulty (Rough Road rolls the player at once)
   const startAt = (m: Mode) => {
     setMode(m);
@@ -345,11 +349,12 @@ export function Create({ level }: { level?: Level } = {}) {
         </section>
       )}
 
-      {land && (
-        <MainLand ch={{ oath, setOath, comet, setComet }} onStart={startAt}>
+      {land && !story && (
+        <MainLand ch={{ oath, setOath, comet, setComet }} onStart={startAt} onStory={() => toStory(true)}>
           <UsernamePrompt />
         </MainLand>
       )}
+      {land && story && <StoryStart onBack={() => toStory(false)} />}
       {/* a draft class plays Regular guy: the difficulties as they were, the other two shut */}
       {cur === 'Difficulty' && draft && (
         <section className="stack">

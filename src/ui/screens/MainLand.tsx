@@ -12,7 +12,7 @@ import { useStore } from '../../store';
 import { Icon } from '../art/Icon';
 import { ICON_FOR } from '../art/icons';
 import { MODES, type Mode } from '../../engine/balance';
-import { AVENUE, LAND, LAND_H, LAND_MODE, LAND_W, firstLand, landPlaces, landSide, landState, neighbour, reducedMotion, type LandDir, type LandId, type LandState } from '../mainland';
+import { AVENUE, ISLANDS, LAND, LAND_H, LAND_MODE, LAND_W, firstLand, landPlaces, landSide, landState, neighbour, reducedMotion, type LandDir, type LandId, type LandState } from '../mainland';
 import { LandCrop, LandMap } from '../art/LandArt';
 import { BOAT, CAR, PLANE, PLANE_COLORS, Sprite } from '../art/Sprites';
 import { HAIR_COLORS, SKIN_COLORS } from '../art/Player';
@@ -28,6 +28,7 @@ import { AchievementsCard } from './Achievements';
 import { CommunityCard } from './Community';
 import { MultiplayerCard } from './Multiplayer';
 import { PlaceArt } from './RoadMap';
+import { StoryCard } from './StoryStart';
 
 const KEYS: Record<string, LandDir> = { ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down' };
 const DOCK = LAND.find((p) => p.id === 'island')!.stop;
@@ -200,7 +201,7 @@ function Venue({ mode, state, ch, onStart, onFly }: { mode: Mode; state: LandSta
 }
 
 /** What each place's card holds. */
-function PlaceCard({ id, state, ch, onStart, onFly }: { id: LandId; state: LandState; ch: Challenges; onStart: (m: Mode) => void; onFly: () => void }) {
+function PlaceCard({ id, state, ch, onStart, onFly, onStory }: { id: LandId; state: LandState; ch: Challenges; onStart: (m: Mode) => void; onFly: () => void; onStory: () => void }) {
   const mode = LAND_MODE[id];
   if (mode) return <Venue mode={mode} state={state} ch={ch} onStart={onStart} onFly={onFly} />;
   switch (id) {
@@ -220,14 +221,17 @@ function PlaceCard({ id, state, ch, onStart, onFly }: { id: LandId; state: LandS
       return <CommunityCard />;
     case 'museum':
       return <AchievementsCard />;
+    case 'story':
+      return <StoryCard onStory={onStory} />;
     default:
       return <MiniGamesCard />;
   }
 }
 
 /** The main land: the map with its places, the car on the avenue, and the card of the place picked;
- * `children` (the username prompt) sit between the title and the map. */
-export function MainLand({ ch, onStart, children }: { ch: Challenges; onStart: (m: Mode) => void; children?: ReactNode }) {
+ * `children` (the username prompt) sit between the title and the map. `onStory` opens story mode's
+ * naming page (round 38). */
+export function MainLand({ ch, onStart, onStory, children }: { ch: Challenges; onStart: (m: Mode) => void; onStory: () => void; children?: ReactNode }) {
   const road = useStore((s) => s.road);
   const recommend = useStore((s) => s.recommend);
   const setPage = useStore((s) => s.setPage);
@@ -240,19 +244,21 @@ export function MainLand({ ch, onStart, children }: { ch: Challenges; onStart: (
   const pop = useRef<HTMLDivElement>(null);
   const place = places.find((p) => p.id === sel) ?? places[0];
 
-  // the car drives along the avenue a few pixels at a time; the boat takes him across to the island
+  // the car drives along the avenue a few pixels at a time; the boat takes him across to an island
+  // (south to the mini-games, north to the old neighbourhood: `sail` counts its steps, minus north)
   const [carX, setCarX] = useState(() => stopOf(place.id));
   const [facing, setFacing] = useState<1 | -1>(1);
   const [sail, setSail] = useState(0);
-  const goal = place.id === 'island' ? DOCK : place.stop;
+  const isle = ISLANDS[place.id] ?? 0;
+  const goal = isle ? DOCK : place.stop;
   useEffect(() => {
-    if (carX === goal || (sail > 0 && place.id !== 'island')) return;
+    if (carX === goal || (sail !== 0 && !isle)) return;
     setFacing(goal < carX ? -1 : 1);
     if (reducedMotion()) return setCarX(goal);
     const t = setTimeout(() => setCarX((x) => (x < goal ? Math.min(goal, x + 3) : Math.max(goal, x - 3))), 30);
     return () => clearTimeout(t);
-  }, [carX, goal, sail, place.id]);
-  const across = place.id === 'island' && carX === DOCK ? 8 : 0;
+  }, [carX, goal, sail, isle]);
+  const across = isle && carX === DOCK ? 8 * isle : 0;
   useEffect(() => {
     if (sail === across) return;
     if (reducedMotion()) return setSail(across);
@@ -333,9 +339,9 @@ export function MainLand({ ch, onStart, children }: { ch: Challenges; onStart: (
       </section>
       {children}
       <div className="ml-stage" data-tour="mainland">
-        <LandMap career={career} label="The main land: a gym, the cage and the dome for the three difficulties, the airport, the cinema, the park, the library, the newsstand, the statue plaza, the trophy museum, his house while a career is going, and the island of mini-games across the water">
+        <LandMap career={career} label="The main land: a gym, the cage and the dome for the three difficulties, the airport, the cinema, the park, the library, the newsstand, the statue plaza, the trophy museum, his house while a career is going, the island of mini-games across the water, and the old neighbourhood to the north, where story mode starts">
           <Sprite rows={PLANE} x={plane.x} y={plane.y} colors={PLANE_COLORS} />
-          <Sprite rows={BOAT} x={186 + sail} y={51 + Math.round(sail * 1.1)} colors={sail ? kin : { ...kin, h: '', s: '' }} />
+          <Sprite rows={BOAT} x={186 + Math.abs(sail)} y={51 + Math.round(sail * (sail > 0 ? 1.1 : 1.25))} colors={sail ? kin : { ...kin, h: '', s: '' }} />
           {!sail && <Sprite rows={CAR} x={carX - 4} y={AVENUE - 4} colors={kin} flip={facing < 0} />}
           {!sail && <rect className="ml-night" x={facing > 0 ? carX + 5 : carX - 7} y={AVENUE - 1} width={3} height={1} fill="#FFF3BF" />}
         </LandMap>
@@ -374,7 +380,7 @@ export function MainLand({ ch, onStart, children }: { ch: Challenges; onStart: (
                 <LandCrop place={place.id} career={career} size={64} />
                 <div className="kicker">{place.name}</div>
               </div>
-              <PlaceCard id={place.id} state={state} ch={ch} onStart={onStart} onFly={fly} />
+              <PlaceCard id={place.id} state={state} ch={ch} onStart={onStart} onFly={fly} onStory={onStory} />
             </section>
           </div>
         )}

@@ -171,6 +171,9 @@ interface Store {
   /** The level whose career is being set up (the create page in level mode). */
   creating: Level | null;
   setCreating: (l: Level | null) => void;
+  /** Round 38: story mode's naming page is up in place of the main land. */
+  naming: boolean;
+  setNaming: (on: boolean) => void;
   /** The exit code: true when it was right, and the full game opens. */
   skipTutorial: (code: string) => boolean;
   /** A level career has ended and its last page was read: the level is passed, back to the road. */
@@ -450,7 +453,7 @@ export const useStore = create<Store>((set, get) => ({
       if (friends) game.flags.friends = 1;
       fastForward(game);
       // round 33: a level career has a save of its own (ui/saves.ts writeRun), not a slot
-      set({ game, slot: input.level ? null : newSlotId(), creating: null, draft: null, page: null, tab: 'home', transition: null, mini: null, seen: allSeen(game), lookBack: false, ...oathLock(game) });
+      set({ game, slot: input.level ? null : newSlotId(), creating: null, naming: false, draft: null, page: null, tab: 'home', transition: null, mini: null, seen: allSeen(game), lookBack: false, ...oathLock(game) });
     }),
   startChallenge: (c) => {
     const p = cleanProspect(c.prospect);
@@ -509,6 +512,11 @@ export const useStore = create<Store>((set, get) => ({
       top();
     }),
   road: loadRoad(),
+  naming: false,
+  setNaming: (naming) => {
+    set({ naming });
+    top();
+  },
   creating: null,
   setCreating: (creating) =>
     later(() => {

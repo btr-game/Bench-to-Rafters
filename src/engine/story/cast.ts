@@ -12,6 +12,22 @@ import type { CreateInput } from '../player/create';
 import type { GameState, Pos, StoryRole, StoryState } from '../types';
 import { userOvr } from '../career/common';
 
+/** Story mode's written hero (owner: "one written hero"): a shooting guard from Dayton, Ohio, number
+ * 3 at Fairview High, a sharpshooter working on his shot and his handle, on Regular guy's road. The
+ * naming step may rename him; the rest is his. */
+export const STORY_HERO: CreateInput = {
+  name: 'Eli Carter',
+  number: 3,
+  pos: 'SG',
+  archetype: 0,
+  focus: ['SHT', 'PLY'],
+  hand: 'R',
+  mode: 'standard',
+  hometown: 'Dayton, OH',
+  highSchool: 'Fairview High',
+  look: { skin: 4, hair: 'k', style: 'short', face: 'none' },
+};
+
 /** A stream of its own for one story roll (the career's seed, the year and a tag). */
 export function storyRng(s: GameState, ...parts: (string | number)[]): Rng {
   let h = 2166136261;

@@ -183,6 +183,9 @@ const withMoment = (key: string, ok: (m: Moment) => boolean, o: PlayOpts = {}) =
   return show(g && onlyMoment(g, ok), 'home', {}, true);
 };
 const atDecision = (kind: string, o: PlayOpts = {}) => show(at(`d-${kind}-${o.mode ?? 'stars'}`, decision(kind), o));
+/** Round 38: a story mode career at one of its chapters. */
+const STORY_NAMES = { friend: 'Marcus Bell', rival: 'Dante Vale' };
+const storyAt = (ch: string) => fixture(`story-${ch}`, () => play((_, p) => p.type === 'decision' && p.decision.kind === 'story' && p.decision.data?.ch === ch, { story: STORY_NAMES }));
 /** A live game's request is at this stage. */
 const liveAt = (stage: LiveRequest['stage']) => (_: GameState, p: Parameters<Parameters<typeof play>[0]>[1]) => p.type === 'decision' && p.decision.kind === 'live' && (p.decision.data?.req as LiveRequest | undefined)?.stage === stage;
 /** Round 28: sims every series to the final, plays the final's games, the steady call each quarter. */
@@ -366,7 +369,7 @@ const MINI: DevCard[] = (
 
 export const CARDS: DevCard[] = [
   // start
-  { id: 'start', title: 'The main land', group: 'Start', icon: 'map', blurb: 'Round 37: the start page is a pixel town along one avenue: a venue for each difficulty (the gym, the cage, the dome), the airport back to the road map, the cinema (the intro), the park (Play with friends), the library (the career log), the newsstand (What’s new), the statue plaza (the community), the trophy museum (the achievements) and the island of mini-games; at night in the dark theme.', open: () => void useStore.setState({ game: null, page: null, mini: null }) },
+  { id: 'start', title: 'The main land', group: 'Start', icon: 'map', blurb: 'Round 37: the start page is a pixel town along one avenue: a venue for each difficulty (the gym, the cage, the dome), the airport back to the road map, the cinema (the intro), the park (Play with friends), the library (the career log), the newsstand (What’s new), the statue plaza (the community), the trophy museum (the achievements) and the island of mini-games; at night in the dark theme.', open: () => void useStore.setState({ game: null, page: null, mini: null, naming: false }) },
   {
     id: 'mainland',
     title: 'The main land: a place’s card',
@@ -635,6 +638,14 @@ export const CARDS: DevCard[] = [
   { id: 'mode-reality', title: 'Reality hits hard', group: 'Modes', icon: 'reality', blurb: 'Most careers end short of the NBA.', open: () => show(hsStart('reality')) },
   { id: 'mode-stars', title: 'Shoot for the stars', group: 'Modes', icon: 'stars', blurb: 'Every career reaches stardom.', open: () => show(hsStart('stars')) },
   { id: 'mode-lab', title: 'Built in a lab', group: 'Modes', icon: 'lab', blurb: 'Spend credits on any rating.', open: () => show(hsStart('lab')) },
+
+  // round 38: story mode
+  { id: 'story-isle', title: 'Story mode on the main land', group: 'Modes', icon: 'story', blurb: 'Round 38: the old neighbourhood, an island to the north (his house and his friend’s, the driveway hoop between): the boat takes him over, and its card offers story mode with the written hero, Eli Carter from Dayton, Ohio.', open: () => void useStore.setState({ game: null, page: null, mini: null, naming: false }), press: '.ml-spot[data-place="story"]' },
+  { id: 'story-names', title: 'Story mode: his people', group: 'Modes', icon: 'people', blurb: 'Before the first chapter: his name (it may change), then his best friend, a parent, a younger sibling and his rival, each a portrait that follows the name typed. An empty box is named by the game; Skip names them all.', open: () => void useStore.setState({ game: null, page: null, mini: null, naming: true }) },
+  { id: 'story-driveway', title: 'Story mode: the first chapter', group: 'Modes', icon: 'story', blurb: 'The career opens on the driveway: the two of them face to face at sunset, the friend’s lines and three answers that set how far he goes.', open: () => show(storyAt('f-driveway')) },
+  { id: 'story-rival', title: 'Story mode: the rival', group: 'Modes', icon: 'story', blurb: 'Met in college, one small step ahead: media day in the arena, the first of his chapters.', open: () => show(storyAt('r-meet')) },
+  { id: 'story-family', title: 'Story mode: the family', group: 'Modes', icon: 'story', blurb: 'The car rides: the parent who took the night shift so the mornings were his, at home.', open: () => show(storyAt('p-ride')) },
+  { id: 'story-people', title: 'Story mode: the People card', group: 'Modes', icon: 'people', blurb: 'On the Player tab: the friend, the rival and his family, where each is now (the friend’s OVR follows his choices; the rival’s is always just above his), how they feel about him, and the last thing they remember him saying.', open: () => show(fixture('story-nba', () => play((s) => s.stage === 'NBA' && s.serviceYears >= 3 && s.step === 'preseason', { story: STORY_NAMES })), 'player') },
 
   // mini-games
   ...MINI,

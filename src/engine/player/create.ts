@@ -78,7 +78,8 @@ const weightedPick = (rng: Rng, odds: [number, number][]): number => weighted(rn
 
 export function createPlayer(rng: Rng, input: CreateInput): UserPlayer {
   const p = buildPlayer(rng, input);
-  rollAnomaly(rng, p);
+  // round 38: story mode's hero is written (a sharpshooter), never a rare one
+  if (!input.story) rollAnomaly(rng, p);
   startWeight(rng, p);
   p.startAttrs = { ...p.attrs };
   p.touch = touchStart(p);

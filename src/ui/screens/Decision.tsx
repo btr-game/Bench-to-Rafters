@@ -20,6 +20,7 @@ import { FinalsCourt } from '../components/FinalsCourt';
 import { sfx } from '../sound';
 import { negotiable, type Ask } from '../../engine/career/negotiate';
 import { talksOpen } from '../../engine/levels';
+import { StoryPage } from '../components/StoryPage';
 
 const TIER: Record<string, string> = { blue: 'Blue blood', power: 'Power program', major: 'Major conference', mid: 'Mid-major' };
 
@@ -327,6 +328,9 @@ export function DecisionView({ g, d }: { g: GameState; d: Decision }) {
   if (d.kind === 'live') return <LiveView g={g} d={d} />;
 
   if (d.kind === 'plan') return <PlanPicker d={d} />;
+
+  // round 38: a story mode chapter, face to face
+  if (d.kind === 'story') return <StoryPage g={g} d={d} />;
 
   // round 20: the late-career specialist roles, as cards with the player in each role's action
   if (d.kind === 'chaserRole') {

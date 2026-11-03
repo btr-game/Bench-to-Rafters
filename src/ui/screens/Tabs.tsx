@@ -17,6 +17,7 @@ import { cityCultureOf } from '../../engine/career/cityCulture';
 import { fanCultureOf } from '../../engine/career/fanCulture';
 import { BodyCard } from '../components/BodyMap';
 import { RosterCard } from '../components/TeamRoster';
+import { PeopleCard } from '../components/PeopleCard';
 import { NameCard } from '../components/NameCard';
 import { LifeCard } from '../components/YourLife';
 import { StrengthCard } from '../components/StrengthCard';
@@ -565,6 +566,8 @@ export function PlayerTab({ g }: { g: GameState }) {
             </div>
             <p className="small muted">Body wear builds with heavy minutes, hard plans and injuries, and makes aging hit harder after 30. Recovery plans, rest summers and health purchases bring it down.</p>
           </Card>
+          {/* round 38: story mode's people */}
+          <PeopleCard g={g} />
           {!lean && (
           <>
           <Card title="Contract and money" tour="contract">

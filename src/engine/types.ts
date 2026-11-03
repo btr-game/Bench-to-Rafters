@@ -493,6 +493,9 @@ export interface StoryState {
   rival: StoryPal | null;
   /** Switches the chapters set and read (the injury, a trade, the coaching road...). */
   f: Record<string, number>;
+  /** The last answer's result, by key and the names that fill it (content/story.ts), so the screen
+   * can show it in the player's language. */
+  after?: { k: string; v: Record<string, string> };
 }
 
 /** Round 35: a rival night, his team against his rival classmate's, or a playoff series between them. */
