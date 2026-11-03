@@ -107,6 +107,9 @@ function simChoice(s: GameState, d: Decision): string | null {
       return has('go') ?? open[0] ?? null;
     case 'press':
       return has('humble') ?? open[0] ?? null;
+    case 'story':
+      // round 38: story mode's chapters: the warm answer (the first), as the plan said
+      return open[0] ?? null;
     case 'event':
       return (d.choices.find((c) => !c.disabled && c.risk !== 'High') ?? d.choices.find((c) => !c.disabled))?.id ?? null;
     default:

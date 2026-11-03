@@ -11,6 +11,7 @@
 // These all go into the season's team bonus, added to the team's strength in his games.
 
 import { JOIN_FRIEND, TEAM_FACTORS as T, modeDial } from '../balance';
+import { palsOn } from './friends';
 import { chance, clamp, int, pick, range } from '../rng';
 import type { FriendLine, GameState, League, Team } from '../types';
 import { adjust, logDecision, ordinal, pushMoment, teamById, userOvr } from './common';
@@ -213,7 +214,7 @@ export const TRADE_AIM: Record<TradeAim, { label: string; text: string; odds: nu
  */
 export function friendTeams(s: GameState): { team: Team; friends: FriendLine[]; need: number; fit: number; why?: string }[] {
   const nba = s.nba;
-  if (!nba || !s.teamId || !s.mp?.klass || !s.mp.friends?.length) return [];
+  if (!nba || !s.teamId || !palsOn(s) || !s.mp?.friends?.length) return [];
   const J = JOIN_FRIEND;
   const year = s.year + 1;
   const cap = capFor(year);

@@ -50,6 +50,8 @@ const ALLOW: Record<Level, Feature[]> = {
  * (press, the locker room, duos, the farewell tour, the record watch, Love, the ring chase, the
  * national team, Around the league) are in no level: they ask `inLevel` instead. */
 export function allows(s: GameState, f: Feature): boolean {
+  // round 38: story mode's written hero takes the American road to the NBA (no roads abroad)
+  if (f === 'roads' && s.story) return false;
   const l = levelOf(s);
   return !l || ALLOW[l].includes(f);
 }

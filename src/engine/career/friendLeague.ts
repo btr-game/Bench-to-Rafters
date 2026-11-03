@@ -14,6 +14,7 @@
 // career; and a career with no friends never gets past the first line of any of it.
 
 import { FAN_VOTE, FRIEND_LEAGUE as F, VALUE } from '../balance';
+import { palsOn } from './friends';
 import { clamp, makeRng, next, normal, type Rng } from '../rng';
 import type { FriendGame, FriendLine, GameState, League, StatLine, Team } from '../types';
 import type { FriendCandInput } from '../awards/awards';
@@ -24,7 +25,7 @@ type Line = FriendLine['seasons'][number] & { projected?: boolean };
 
 /** Classmates on an NBA team this season, with that season's line (or last season's). */
 function inLeague(s: GameState): { f: FriendLine; line: Line }[] {
-  if (!s.mp?.klass || !s.mp.friends?.length) return [];
+  if (!palsOn(s) || !s.mp?.friends?.length) return [];
   return s.mp.friends.flatMap((f) => {
     const line = friendNow(f, s.year);
     return line && line.lv === 'NBA' ? [{ f, line }] : [];

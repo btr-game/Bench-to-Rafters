@@ -53,6 +53,9 @@ export interface CreateInput {
   look?: import('../../content/looks').ChosenLook; // round 27: the look he picked (from his name if not)
   level?: import('../levels').Level; // round 33: a career on the road map (engine/levels.ts)
   start?: 'draft'; // round 35: a draft class's career opens on draft night (career/draftNight.ts)
+  /** Round 38: story mode, with the names the player gave his friend, family and rival (a name left
+   * out, or the whole thing skipped, is generated). */
+  story?: { friend?: string; parent?: string; sibling?: string; rival?: string };
 }
 
 /** "See other candidates": each stat ±3, then re-normalized to exactly 320. */

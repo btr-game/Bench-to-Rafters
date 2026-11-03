@@ -452,6 +452,49 @@ export interface FriendLine {
   seasons: { year: number; lv: string; team: string; ovr: number; pts: number; reb?: number; ast?: number; gp?: number; sal?: number; aw?: string[] }[];
 }
 
+/** Round 38: story mode (engine/story/). The written hero's people: his friend from the driveway, the
+ * rival he meets in college, his family and the people around them. The friend's and the rival's
+ * seasons go into `mp.friends` (the round 35 friends system), so they play in his league: box
+ * scores, award races, All-Star votes, a duo when they share a team, rival nights and series. */
+export type StoryRole = 'friend' | 'rival' | 'parent' | 'sibling' | 'mentor' | 'agent' | 'reporter';
+
+/** The friend or the rival: where he is and how good he is (his line for the season is built from this). */
+export interface StoryPal {
+  name: string;
+  pos: Pos;
+  ovr: number;
+  /** Where he plays: HS, NCAA, NBA, GL, EU; OUT once he is out of the game, COACH once he coaches. */
+  lv: string;
+  team: string;
+  /** The friend's road, set when the scouts decide (around the draft): out early, a pro, or a star. */
+  track?: 'bust' | 'pro' | 'star';
+  /** What the hero's choices put into him (the friend: how far he goes; the rival: how much it burns). */
+  drive: number;
+  /** Seasons out hurt, still to sit. */
+  hurt?: number;
+  /** The friend's seeds of coaching, and the year he started; the rival's last season. */
+  coach?: number;
+  since?: number;
+  last?: number;
+}
+
+export interface StoryState {
+  names: Record<StoryRole, string>;
+  /** The people the player named himself (the rest the game named). */
+  named: StoryRole[];
+  /** Each person's feeling for him, −3 to +3. */
+  bond: Partial<Record<StoryRole, number>>;
+  /** Chapters played, in order. */
+  done: string[];
+  /** What later chapters remember and quote: a line he said, the year, who heard it. */
+  mem: { id: string; year: number; who: StoryRole; text: string }[];
+  friend: StoryPal;
+  /** Met in college (or wherever he plays at 18). */
+  rival: StoryPal | null;
+  /** Switches the chapters set and read (the injury, a trade, the coaching road...). */
+  f: Record<string, number>;
+}
+
 /** Round 35: a rival night, his team against his rival classmate's, or a playoff series between them. */
 interface RivalMeet {
   year: number;
@@ -532,6 +575,8 @@ export interface GameState {
    * can hand a friend the same prospect. Careers from before round 35 have none. */
   start?: { seed: number; input: import('./player/create').CreateInput };
   /** Round 35, multiplayer: the challenge this career takes (its code), or the draft class it plays in. */
+  /** Round 38: a story mode career (engine/story/). */
+  story?: StoryState;
   mp?: {
     challenge?: string;
     klass?: string;

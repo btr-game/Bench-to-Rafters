@@ -18,6 +18,11 @@ import { note, pushMoment, teamById } from './common';
 
 type Line = FriendLine['seasons'][number];
 
+/** Whether the friends system's league is on: a draft class, or (round 38) story mode, whose friend
+ * and rival are written into mp.friends each season (engine/story/pals.ts). The class's own extras
+ * (its events, shop things, achievements and board) still ask for the class. */
+export const palsOn = (s: GameState): boolean => !!s.mp?.klass || !!s.story;
+
 /** Where a friend is this season: his line for it, or the one before it (he plays it next). */
 export function friendNow(f: FriendLine, year: number): (Line & { projected?: boolean }) | null {
   const now = f.seasons.find((x) => x.year === year);
@@ -34,8 +39,10 @@ const myTeam = (s: GameState): Team | null => (s.stage === 'NBA' ? (teamById(s.n
 /** Friends on his NBA team this season, in the order they joined the class. */
 export function friendsOnTeam(s: GameState): { f: FriendLine; line: Line }[] {
   const t = myTeam(s);
-  if (!t || !s.mp?.klass) return [];
-  return (s.mp.friends ?? []).flatMap((f) => {
+  if (!t || !palsOn(s)) return [];
+  return (s.mp?.friends ?? []).flatMap((f) => {
+    // story mode: a rival he is feuding with never makes a duo with him
+    if (f.id === 'story-rival' && s.story?.f.feud) return [];
     const line = friendNow(f, s.year);
     return line && line.lv === 'NBA' && line.team === t.name ? [{ f, line }] : [];
   });

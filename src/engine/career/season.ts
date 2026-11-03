@@ -1,6 +1,9 @@
 // The in-season loop: preseason → first half → midseason → second half + postseason.
 
 import { midseasonSwing, startTeamFactors, winningEdge } from './team';
+import { palsOn } from './friends';
+import { storySeason } from '../story/pals';
+import { pushStory } from '../story/chapters';
 
 import { evaluateBreakthrough, updateHighs } from './breakthrough';
 import { markGames } from './marks';
@@ -175,6 +178,10 @@ export function beginSeason(s: GameState): void {
   s.season = season;
   s.step = 'preseason';
   startStories(s, league);
+  // round 38: story mode's friend and rival move on a year (their lines feed meetFriends), and a
+  // chapter that opens a season
+  storySeason(s);
+  pushStory(s, 'start');
   meetFriends(s);
   pushPlanDecision(s, 1);
 }
@@ -334,7 +341,7 @@ function makeHook(s: GameState, league: League, level: LevelKey, acc: HalfAcc, s
     // round 35: classmates in this game (career/friendLeague.ts): their lines, the lift the ones on
     // the other team give it, and a rival series' call (career/rivalSeries.ts)
     const rs = post && s.live?.rival ? rivalSeriesFx(s, post, opp) : null;
-    const fr = level === 'NBA' && s.mp?.klass ? friendGame(s, team, opp, (post ? season.postGames : season.games).length + 1, post, rs ? { id: rs.id, by: rs.cut } : undefined) : null;
+    const fr = level === 'NBA' && palsOn(s) ? friendGame(s, team, opp, (post ? season.postGames : season.games).length + 1, post, rs ? { id: rs.id, by: rs.cut } : undefined) : null;
     const oppStrength = fr ? opp.strength + fr.nudge : opp.strength;
     let hot = 0;
     acc.games++;
@@ -777,7 +784,7 @@ function finishSeason(s: GameState): void {
     allStarTop: levelOf(s) ? ALL_STAR_BAR.level : ALL_STAR_BAR.userTop,
   };
   // round 35: classmates run for the NBA's awards too (career/friendLeague.ts)
-  const cands = buildCandidates(league, userCand, undefined, level === 'NBA' && s.mp?.klass ? friendCandidates(s, league) : undefined);
+  const cands = buildCandidates(league, userCand, undefined, level === 'NBA' && palsOn(s) ? friendCandidates(s, league) : undefined);
   let aw: AwardOutcome;
   if (level === 'NBA') {
     aw = nbaAwards(cands);

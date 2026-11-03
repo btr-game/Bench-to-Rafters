@@ -1155,3 +1155,59 @@ export const JOIN_FRIEND = { odds: 1.1, free: 0.1, perShare: 1.5, minFit: 0.25, 
 
 /** A mode's dial (round 14): 1 unless the mode sets it. */
 export const modeDial = (mode: Mode, k: 'mini' | 'teamFx' | 'ringChase'): number => MODES[mode]?.[k] ?? 1;
+
+/**
+ * Round 38: story mode (engine/story/). The friend grows like a prospect until the scouts decide
+ * (the summer he turns 22), faster for each point of drive the hero's choices give him: with none he
+ * is about 66 at the fork, with six about 76. Then his road: a star (to the high 90s' doorstep, past
+ * the hero), a pro (to the high 70s) or out early (one season on an NBA bench, one in the G League,
+ * then out of the league, or coaching with enough seeds of it). The rival is the hero's OVR plus 1 to
+ * 3, drawn fresh each season ("he always seems to be one small step ahead").
+ */
+export const STORY = {
+  /** a year's growth by age (to 17, to 21, to 25, to 28, to 31, after) */
+  youth: [4.4, 2.2, 1.6, 0.5, -0.6, -2.2],
+  /** growth multiplier before the fork: base + per point of drive */
+  driveGrowth: [0.85, 0.06],
+  /** the friend's road at the fork, by the drive he was given: a star is rare even for a friend
+   * given everything (owner: "often times, he can be very bad and be out of the league early") */
+  star: { base: 0.03, per: 0.035, min: 0.03, max: 0.3 },
+  bust: { base: 0.6, per: 0.07, min: 0.15, max: 0.62 },
+  /** the friend's start: about where a freshman is, whatever the hero's card */
+  friendStart: [38, 50] as [number, number],
+  /** the written hero never falls too far behind an NBA rotation player (as the levels' floor, lower) */
+  floor: { age: 22, ovr: 70, until: 31 },
+  starPeak: 93,
+  proPeak: 79,
+  bustPeak: 68,
+  /** the school he goes to when not the hero's */
+  smallSchool: 'Valley State',
+  /** seeds of coaching that turn "out of the game" into a bench */
+  coachSeeds: 2,
+  rivalLead: [1, 3] as [number, number],
+  rivalRetireAge: 35,
+  games: 72,
+  /** the friend on the hero's NBA bench: coach trust each season */
+  coachTrust: 3,
+  hurt: { twoSeasons: 0.4, ovr: 6 },
+};
+/** Round 38: the chapters' dials (engine/story/chapters.ts). */
+export const STORY_CH = {
+  /** the friend makes the travel team when the hero gets him a tryout */
+  travelMakes: 0.5,
+  /** a workout with the hero's team turns the friend's "out early" road into a pro's */
+  workoutSaves: 0.35,
+  /** a summer training together: next season's growth */
+  trainGrowth: 1.04,
+  /** the house and the debts ($M) */
+  house: 1.5,
+  debts: 0.6,
+  /** the friend coaching joins an NBA staff from this age */
+  coachAge: 27,
+  /** the friend ahead of the hero by this much OVR: the "better than you" chapter */
+  starAhead: 3,
+  /** a summer's chance of the hit, once both play in the NBA on different teams */
+  hit: 0.3,
+  /** the last chapter comes from this age (or when retiring is recommended, or before a farewell season) */
+  lastAge: 36,
+};

@@ -2,6 +2,8 @@
 // through `newGame`, `prompt`, `choose` and `advance`.
 
 import { syncMiniUnlocks } from './career/miniBonus';
+import { startStory } from './story/cast';
+import { openStory, resolveStory } from './story/chapters';
 import { resolveArc } from './events/arcs';
 import { resolveMilitary } from './career/nationality';
 import { makeRng } from './rng';
@@ -103,11 +105,18 @@ export function newGame(seed: number, input: CreateInput): GameState {
     // the road abroad is advanced's: below it he grows up in America
     if (!allows(s, 'roads')) player.country = 'USA';
   }
+  // round 38: story mode's written hero grows up in America
+  if (input.story) player.country = 'USA';
   // the game assigns his country, where he grows up and where he plays as a teenager
   assignOrigin(s);
   // round 35: a draft class's career opens on draft night instead (career/draftNight.ts)
   if (opensOnDraftNight(s, input)) openOnDraftNight(s, input);
   else freshmanYear(s, input);
+  // round 38: story mode: his people, and the first page (the driveway)
+  if (input.story && !input.level) {
+    startStory(s, input);
+    openStory(s);
+  }
   // round 35: the start, for a challenge (a level career is never one)
   if (!input.level) s.start = { seed, input: JSON.parse(JSON.stringify(input)) as CreateInput };
   return s;
@@ -235,6 +244,9 @@ function chooseInner(s: GameState, choiceId: string): void {
       return;
     case 'arc':
       s.toast = resolveArc(s, d, choiceId) || null;
+      return;
+    case 'story':
+      s.toast = resolveStory(s, d, choiceId);
       return;
     case 'live':
       if (s.postSnap) {

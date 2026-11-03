@@ -2,11 +2,12 @@
 // (recruiting, draft, contracts, free agency, retirement).
 
 import { homeLeagueOffers, splitLine } from './culture';
+import { pushStory } from '../story/chapters';
 import { playShowcase } from './culture';
 import { processArcs } from '../events/arcs';
 import { reclassify } from '../player/classify';
 import { pushMilitary } from './nationality';
-import { ATTR_MAX, GROWTH_RATE_AGE, MODES, POSITIONS, WEAR, FA_INTEREST, OVERSEAS_FA, TEAM_FACTORS, OFFSEASON_DAYS, REP, RETIRE, ATTRS, TEAM_OPTION, LONGEVITY, TOUCH } from '../balance';
+import { ATTR_MAX, GROWTH_RATE_AGE, MODES, STORY, POSITIONS, WEAR, FA_INTEREST, OVERSEAS_FA, TEAM_FACTORS, OFFSEASON_DAYS, REP, RETIRE, ATTRS, TEAM_OPTION, LONGEVITY, TOUCH } from '../balance';
 import { chance, clamp, int, logistic, range, shuffle } from '../rng';
 import type { Contract, Decision, GameState, Offer, RoleKey } from '../types';
 import { applyAging, growHeight, settleBack, updateHeightProjection } from '../player/growth';
@@ -93,7 +94,7 @@ export function beginOffseason(s: GameState): void {
   p.wear = clamp((p.wear ?? 0) - WEAR.summerRest + Math.max(0, p.age - 25) * WEAR.agePerYear, 0, 100);
   // shoot-for-the-stars mode: never too far behind the path to the floor
   // (only through the prime: after 29 age hits stars as hard as anyone)
-  const floor = levelFloor(s) ?? MODES[s.mode ?? 'standard'].floor;
+  const floor = levelFloor(s) ?? (s.story ? STORY.floor : undefined) ?? MODES[s.mode ?? 'standard'].floor;
   if (floor && p.age <= floor.until) {
     const start = ovrOf(p.startAttrs, p.pos);
     const want = start + (floor.ovr - start) * clamp((p.age - 14) / (floor.age - 14), 0, 1);
@@ -167,6 +168,8 @@ export function beginOffseason(s: GameState): void {
     pushSummer(s);
     if (!inLevel(s)) pushPress(s);
     if (allows(s, 'brand')) pushBrand(s);
+    // round 38: story mode's chapter for the summer
+    pushStory(s, 'summer');
     pushShop(s);
     queueOffseasonEvent(s);
   }
