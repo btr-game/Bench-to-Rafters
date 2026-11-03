@@ -3050,3 +3050,94 @@ multiple times."
   returned nothing and the speech and the credits never named his running mate. `duoAtEnd`
   (engine/career/duo.ts) reads the bonds still formed when he retired, for the finale and its
   achievements alike.
+- **Twelve endings** (owner: "do all 12", "sure", "yes", "make all 12"; a helper agent's work,
+  `src/ui/endings.ts`, `src/ui/art/Endings.tsx`): a finished career is given the first ending that
+  fits, in this order: the rafters, Enshrined (the Hall of Fame), Ring bearer (an NBA title),
+  All-Star (an All-Star or All-NBA team, or an MVP), Legend of Europe (3+ seasons abroad with a
+  title or an MVP there; ranked above the next two, owner: "sure"), The long haul (6+ NBA seasons),
+  Made it (an NBA game), Passport (any season abroad), The grinder (the G League), One shining
+  moment (a college title or the big college awards), Cap and gown (college) and Hoops dream. Each
+  but the rafters opens on a scene of its own (a 6-second caption, three 6-second lines, where he
+  is now) before the credits, under a theme of its own (eleven new loops, kept out of Full Album).
+  Twists take the third line: the injury, the leap, the Rough Road, his father, his family, iron
+  man at 40, walking away before 30. The achievement book has an Endings page ("N of 12 endings
+  seen", silhouettes for the rest) and eight achievements (the book at 825). Measured on 150 smart
+  Regular guy careers: the rafters 12.00000%, Enshrined 4.666667%, Ring bearer 11.33333%, All-Star
+  5.333333%, Legend of Europe 22.00000%, The long haul 14.66667%, Made it 3.333333%, Passport
+  23.33333%, Cap and gown 0.6666667%, Hoops dream 2.666667%; the grinder and One shining moment
+  never come up with this policy, which never stays in the G League or stops after college. **For
+  the owner:** Legend of Europe is common because an NBA veteran who finishes with three title-
+  winning seasons abroad takes it ahead of The long haul; it could ask that his seasons abroad
+  outnumber his NBA ones.
+- **Aging that diverges** (owner: "every player i seem to play ends up washed by early-mid 30s ...
+  many legendary players were still elite at their mid 30s"): past an 82 peak, each point of peak
+  OVR slows the yearly decline by 4%, down to 40% of it (`legendMult`, engine/player/growth.ts); a
+  durable body starts declining at 32 instead of 31; the age ceiling is 90 at 37, falling 1.7 a
+  year (about 85 at 40, 68 at 50; it was 85 at 40 and 50 at 50). The league's generated players keep
+  the aging they had (`GEN_DECLINE_TABLE`). Careers that never retire by choice, Regular guy, peak
+  95 or more, mean OVR before → after: 91.6 → 95.2 at 35, 87.3 → 90.9 at 38, 83.7 → 87.5 at 40,
+  69.1 → 79.1 at 45, 59.4 → 73.5 at 48. A peak in the 70s ages as before (about 64.5 at 35).
+- **A higher bar for All-Star and MVP** (owner: "instead of reducing growth too much, let's set the
+  bar a bit higher"): he makes an All-Star team only from his conference's top six (the selection
+  in `allStarWeekend` and at season end), and the MVP voters take 6 points off his score and 2.5
+  more for each MVP he has won (`MVP_BAR`; the live ladder too). Calibrated on 600 careers a step
+  (All-Star / MVP): no bar 39.0% / 14.16667%; top 8, 1 point 35.0% / 13.66667%; top 7, 1.5 33.83333%
+  / 13.5%; top 6, 3 + 1.5 32.5% / 12.66667%; top 6, 5 + 2 32.5% / 10.83333%; top 5, 8 + 3 31.0% /
+  8.333333%. The 2,000-career run (Regular guy, before → after): All-Star 36.15% → 30.55%, MVP
+  13.00% → 9.55%, mean peak 74.1466 → 74.2029 (growth untouched), titles 38.30% → 39.30%, the Hall
+  of Fame 15.65% → 16.60%, median retirement 32 → 33, retired at 36 or older 21.25% → 30.70%. The
+  Word report (Round 36 balance diagnostics) has every difficulty's distribution and aging curves.
+- **Two career changers, both extremely rare** (owner): the next step (25 to 33, once a career,
+  0.15% a summer: +7 to +11 on every rating, a ceiling 6 to 12 higher, faster growth; 1.30% of
+  Regular guy careers) and the career-altering injury (a torn ACL, meniscus and MCL, 0.06% a
+  summer: one season out, or two in 40%; athleticism −18 to −26, finishing, perimeter defence,
+  rebounding and interior defence −8 to −13, the rest −3 to −6, every ceiling −8 to −14, potential
+  −10 to −16; 1.50% of careers, it was about 7%). The leap now belongs to 19 to 24.
+- **A determinism bug fixed**: the event director tried each event's choices on a shallow copy of
+  the game to learn what it does to ratings, so a choice that wrote to a shared part of the state
+  (the league, the history) reached the real career the first time an event was seen in a session.
+  The first career with a seed then played differently from every later one (found by the test
+  "same seed and same choices give the same career"). The copy is deep now. The shop variety test
+  looks at 24 summers instead of 6: variety was unchanged (17.68 different things per six shops
+  with the round's four new items, 17.58 without), six seeds had just drawn an unlucky set.
+
+## Round 37 (owner requests): a world to walk around
+
+- **The town** (owner: "a world to walk around instead of menus"; ROADMAP: "a pixel hometown, then
+  a city, whose places open what the tabs open today"): in a career, the row of tabs is a pixel
+  street (`src/ui/town.ts`, `src/ui/components/Town.tsx`, `src/ui/art/TownArt.tsx`). The gym is
+  Home (the day's work), the arena the Season tab, where he lives the Player tab, the hall Records,
+  the arcade Extras; a pro also has an agent's office, which opens the Player tab at his contract
+  and money. His hometown in high school (the rec center, his school, the family house, the diner
+  with his clippings), the campus in college, his team's city as a pro, a city abroad in Europe.
+  Clicking a place opens it at once while he walks to its door (the walk never holds the page up);
+  with the town in focus, the arrow keys or A and D walk him door to door and Enter goes in; H, S,
+  P, R and E still open the places. Fast break and reduced motion skip the walk; simple text
+  signs show the tab's name only. Night in the dark theme (the buildings dim, the windows, lamps
+  and neon light up). The tutorial levels show only their places. On a narrow screen the street is
+  wider than the screen and follows him. Once the town scrolls out of view the row of tabs comes
+  back in the top bar, and a phone keeps its bottom bar (thumb reach): the owner may want either
+  gone. The tabs' icons are now their places (the gym's hoop, the arena, the house, the trophy,
+  the arcade's joystick), so a house never stands for Home.
+- **Every arena its own** (owner: "make each stadium unique? especially for nba team stadiums, make
+  the design symbolize the team and city"): each NBA team's arena is designed by hand
+  (`src/ui/arenas.ts`, `src/ui/art/arenaArt.ts`): one of eight roofs and six skins in the spirit of
+  its building (Brooklyn's weathered-steel lattice, New York's and Golden State's round drums,
+  Phoenix's adobe, Memphis's stone by the river), the team's crest motif on a panel over the doors,
+  and a landmark of its city beside it (the Old North Church, the Brooklyn Bridge, the Empire
+  State, Independence Hall, the CN Tower, the Willis Tower, the Terminal Tower, the Renaissance
+  Center, the Monument Circle obelisk, the art museum's wings, the peach, the Queen City's crown,
+  an art deco hotel, a coaster loop, the Capitol, the Rockies, snowy pines, an oil derrick, Mount
+  Hood, a rock arch, the Golden Gate, a clipper's mast, searchlights, saguaros, the Tower Bridge,
+  Reunion Tower, a rocket, the Pyramid, a French Quarter balcony, the Alamo). No two share a
+  landmark or a build (a test checks). Any other arena (a college's, a G League club's, a club
+  abroad) is put together from its name, with the club's initial over the doors, and every high
+  school from its name too (its tower, its brick, its flag), so each looks the same every visit.
+  The Catalog lists the thirty with their art.
+- **The street shows the career**: a banner on the arena for each title won there, his home growing
+  with the bank (an apartment, then a house from $3M, a mansion from $40M), his car at the kerb
+  once he bought one as a pro, a hoop beside the house once he built a court at home, his statue
+  in gold outside the arena of the team that hung his jersey, and a gold dome on the museum once he
+  is in the Hall of Fame (it becomes the Hall of Fame).
+- **Sound**: soft footsteps as he walks, and the bell over the door when he goes in (not when the
+  arrow keys walk him past).
