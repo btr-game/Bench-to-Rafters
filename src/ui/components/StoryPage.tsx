@@ -5,7 +5,8 @@
 
 import type { Decision, GameState, StoryRole } from '../../engine/types';
 import { useStore } from '../../store';
-import { storyText, type StorySlots } from '../../content/story';
+import type { StorySlots } from '../../content/story';
+import { storyT } from '../../i18n/story';
 import { genericKits } from '../../content/teamStyle';
 import { BustArt } from '../art/Bust';
 import { StoryPortrait } from '../art/StoryArt';
@@ -41,19 +42,19 @@ export function StoryPage({ g, d }: { g: GameState; d: Decision }) {
       </div>
       <div>
         <div className="kicker">
-          Story mode · chapter {n} · {storyText(`people.${who}`)}: {name}
+          Story mode · chapter {n} · {storyT(`people.${who}`)}: {name}
         </div>
-        <h2 className="title story-title">{storyText(`${ch}.title`)}</h2>
+        <h2 className="title story-title">{storyT(`${ch}.title`)}</h2>
       </div>
       <div className="stack story-lines">
         {lines.map((k) => (
-          <p key={k}>{storyText(k, v)}</p>
+          <p key={k}>{storyT(k, v)}</p>
         ))}
       </div>
       <div className="choices">
         {d.choices.map((c) => (
           <button key={c.id} className="choice" onClick={() => choose(c.id)}>
-            <span className="label">{storyText(`${ch}.a.${c.id}`, v)}</span>
+            <span className="label">{storyT(`${ch}.a.${c.id}`, v)}</span>
           </button>
         ))}
       </div>

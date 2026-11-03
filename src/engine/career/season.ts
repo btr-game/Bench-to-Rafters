@@ -187,7 +187,8 @@ export function beginSeason(s: GameState): void {
 }
 
 type PlanText = { id: HalfPlan; label: string; detail: string };
-const PLAN_TEXT: Record<HalfPlan, PlanText> = {
+/** The plans' names and what they do (round 40: the screens show them in the player's language, scripts/i18n.ts lists them). */
+export const PLAN_TEXT: Record<HalfPlan, PlanText> = {
   balanced: { id: 'balanced', label: 'Balanced', detail: 'Steady work, normal risk.' },
   grind: { id: 'grind', label: 'Grind', detail: 'Work harder than anyone. Faster development, much more wear on your body, burnout possible.' },
   recovery: { id: 'recovery', label: 'Recovery', detail: 'Ease off. Slower development, far fewer injuries, heal faster, feel better.' },

@@ -11,21 +11,21 @@ import { UsernameBox } from './Username';
 import { allows } from '../../engine/levels';
 import { setMusic, setSfx, setVolume, sfx, soundSettings } from '../sound';
 import { announce, announcerOn, setAnnouncer } from '../announcer';
+import { LANGS, lang, setLang, t } from '../../i18n';
 
 /** A switch row: label, short note, on/off button. */
 /** Round 31 (owner: "volume sliders"): a channel's level, under its switch; arrow keys step it by 5%. */
 function Volume({ label, value, onChange, disabled }: { label: string; value: number; onChange: (v: number) => void; disabled: boolean }) {
   return (
     <label className="set-vol">
-      <span>{label} volume</span>
-      <input type="range" min={0} max={100} step={5} value={Math.round(value * 100)} disabled={disabled} aria-valuetext={`${Math.round(value * 100)} percent`} onChange={(e) => onChange(Number(e.target.value) / 100)} />
+      <span>{t('{label} volume', { label })}</span>
+      <input type="range" min={0} max={100} step={5} value={Math.round(value * 100)} disabled={disabled} aria-valuetext={t('{n} percent', { n: Math.round(value * 100) })} onChange={(e) => onChange(Number(e.target.value) / 100)} />
       <b>{Math.round(value * 100)}%</b>
     </label>
   );
 }
 
-function Toggle({ label, note, on, onClick, tour, locked, why = 'Locked for this career’s challenge' }: { label: string; note: string; on: boolean; onClick: () => void; tour: string; locked?: boolean; why?: string }) {
-  const icon = /fast/i.test(label) ? 'fast' : /simple/i.test(label) ? 'simple' : /guide/i.test(label) ? 'guide' : /master/i.test(label) ? 'master' : /playoff/i.test(label) ? 'bracket' : /announcer/i.test(label) ? 'mic' : /sound|music/i.test(label) ? 'live' : '';
+function Toggle({ icon, label, note, on, onClick, tour, locked, why = t('Locked for this career’s challenge') }: { icon: string; label: string; note: string; on: boolean; onClick: () => void; tour: string; locked?: boolean; why?: string }) {
   return (
     <div className="set-row" data-tour={tour}>
       <Icon name={icon} size={26} />
@@ -99,7 +99,7 @@ export function SettingsMenu({ g }: { g: GameState | null }) {
 
   const retired = g?.step === 'retired';
   // round 33: where the career goes when he leaves it (every career is saved but a daily challenge)
-  const keepNote = g?.flags.daily ? 'Today’s challenge is not saved: leaving ends this run.' : 'This career stays saved in the career log: continue it there any time.';
+  const keepNote = g?.flags.daily ? t('Today’s challenge is not saved: leaving ends this run.') : t('This career stays saved in the career log: continue it there any time.');
   return (
     <div className="set-wrap" ref={box}>
       <button className="icon-btn" data-tour="settings-btn" aria-expanded={open} aria-haspopup="true" onClick={() => setOpen(!open)}>
@@ -109,27 +109,27 @@ export function SettingsMenu({ g }: { g: GameState | null }) {
             [...row].map((c, x) => (c === '#' ? <rect key={`${x}-${y}`} x={x} y={y} width={1} height={1} /> : null)),
           )}
         </svg>
-        <span className="hide-narrow">Settings</span>
+        <span className="hide-narrow">{t('Settings')}</span>
       </button>
       {open && (
         <div className="set-menu" role="menu" ref={keepOnScreen}>
           <div className="set-row" data-tour="set-theme">
-            <b>Theme</b>
+            <b>{t('Theme')}</b>
             <div className="seg small-seg">
-              {(['auto', 'light', 'dark'] as Theme[]).map((t) => (
-                <button key={t} aria-pressed={theme === t} onClick={() => setTheme(t)}>
-                  {t === 'auto' ? 'Auto' : t === 'light' ? 'Light' : 'Dark'}
+              {(['auto', 'light', 'dark'] as Theme[]).map((x) => (
+                <button key={x} aria-pressed={theme === x} onClick={() => setTheme(x)}>
+                  {x === 'auto' ? t('Auto') : x === 'light' ? t('Light') : t('Dark')}
                 </button>
               ))}
             </div>
           </div>
           {g?.flags.level !== 1 && (
           <div className="set-row" data-tour="set-court">
-            <b>Court</b>
+            <b>{t('Court')}</b>
             <div className="seg small-seg">
               {(['classic', 'hardwood', 'street'] as Court[]).map((c) => (
                 <button key={c} aria-pressed={court === c} onClick={() => setCourt(c)}>
-                  {c === 'classic' ? 'Classic' : c === 'hardwood' ? 'Hardwood' : 'Streetball'}
+                  {c === 'classic' ? t('Classic') : c === 'hardwood' ? t('Hardwood') : t('Streetball')}
                 </button>
               ))}
             </div>
@@ -138,12 +138,26 @@ export function SettingsMenu({ g }: { g: GameState | null }) {
           <div className="set-row" data-tour="set-text">
             <b className="with-icon">
               <Icon name="textsize" size={18} />
-              Text size
+              {t('Text size')}
             </b>
             <div className="seg small-seg">
-              {(['m', 'l', 'xl'] as TextSize[]).map((t) => (
-                <button key={t} aria-pressed={text === t} onClick={() => setText(t)}>
-                  {t === 'm' ? 'Normal' : t === 'l' ? 'Large' : 'Extra large'}
+              {(['m', 'l', 'xl'] as TextSize[]).map((x) => (
+                <button key={x} aria-pressed={text === x} onClick={() => setText(x)}>
+                  {x === 'm' ? t('Normal') : x === 'l' ? t('Large') : t('Extra large')}
+                </button>
+              ))}
+            </div>
+          </div>
+          {/* round 40: the game's languages, each by its own name */}
+          <div className="set-row" data-tour="set-lang">
+            <b className="with-icon">
+              <Icon name="globe" size={18} />
+              {t('Language')}
+            </b>
+            <div className="seg small-seg set-langs">
+              {LANGS.map((l) => (
+                <button key={l.id} lang={l.id} aria-pressed={lang() === l.id} onClick={() => setLang(l.id)}>
+                  {l.name}
                 </button>
               ))}
             </div>
@@ -151,7 +165,7 @@ export function SettingsMenu({ g }: { g: GameState | null }) {
           {/* round 36 (owner: a username "changable"): the same one the graduation page asked for */}
           {!tut && !level && (
             <div className="set-row set-user" data-tour="set-username">
-              <UsernameBox compact note="Shown beside your careers on the community boards and to friends." />
+              <UsernameBox compact note={t('Shown beside your careers on the community boards and to friends.')} />
             </div>
           )}
           {/* round 24 (owner): New career sits right under the court, not at the bottom of the menu */}
@@ -160,15 +174,15 @@ export function SettingsMenu({ g }: { g: GameState | null }) {
           {g && !level && (
             <div className="set-new" data-tour="set-new">
               {armed && !retired ? (
-                <div className="set-confirm" role="group" aria-label="Start a new career?">
-                  <b>Leave this career and start a new one?</b>
+                <div className="set-confirm" role="group" aria-label={t('Start a new career?')}>
+                  <b>{t('Leave this career and start a new one?')}</b>
                   <small>{keepNote}</small>
                   <div className="set-confirm-row">
                     <button className="btn" onClick={() => (reset(), setOpen(false), setArmed(false))} autoFocus>
-                      Yes, new career
+                      {t('Yes, new career')}
                     </button>
                     <button className="btn ghost" onClick={() => setArmed(false)}>
-                      Keep playing
+                      {t('Keep playing')}
                     </button>
                   </div>
                 </div>
@@ -176,7 +190,7 @@ export function SettingsMenu({ g }: { g: GameState | null }) {
                 <>
                   <button className="btn block with-icon set-new-btn" onClick={() => (retired ? (reset(), setOpen(false)) : setArmed(true))}>
                     <Icon name="door" size={24} />
-                    New career
+                    {t('New career')}
                   </button>
                   {/* round 33 (owner: "users might be hesitant to leave if they arent aware"): said before the tap, not only after */}
                   {!retired && <small className="set-new-note">{keepNote}</small>}
@@ -186,31 +200,31 @@ export function SettingsMenu({ g }: { g: GameState | null }) {
           )}
           {g && !retired && !g.flags.daily && (
             <>
-              {allows(g, 'fast') && <Toggle label="Fast break" note="Quick seasons; you still make every real call." on={!!g.flags.fast} onClick={toggleFast} tour="set-fast" locked={!!g.flags.oath || !!g.flags.comet || !!g.flags.friends} />}
-              {!level && <Toggle label="Playable playoff games" note="Off: postseason games are simulated." on={!g.flags.simPostseason} onClick={togglePlayoffs} tour="set-playoffs" />}
+              {allows(g, 'fast') && <Toggle icon="fast" label={t('Fast break')} note={t('Quick seasons; you still make every real call.')} on={!!g.flags.fast} onClick={toggleFast} tour="set-fast" locked={!!g.flags.oath || !!g.flags.comet || !!g.flags.friends} />}
+              {!level && <Toggle icon="bracket" label={t('Playable playoff games')} note={t('Off: postseason games are simulated.')} on={!g.flags.simPostseason} onClick={togglePlayoffs} tour="set-playoffs" />}
             </>
           )}
-          <Toggle label="Sound effects" note="Chiptune sounds for clicks, wins, titles and the rest." on={snd.sfx} onClick={() => (setSfx(!snd.sfx), setSnd(soundSettings()))} tour="set-sfx" />
-          <Volume label="Effects" value={snd.sfxVol} disabled={!snd.sfx} onChange={(v) => (setVolume('sfx', v), setSnd(soundSettings()))} />
+          <Toggle icon="live" label={t('Sound effects')} note={t('Chiptune sounds for clicks, wins, titles and the rest.')} on={snd.sfx} onClick={() => (setSfx(!snd.sfx), setSnd(soundSettings()))} tour="set-sfx" />
+          <Volume label={t('Effects')} value={snd.sfxVol} disabled={!snd.sfx} onChange={(v) => (setVolume('sfx', v), setSnd(soundSettings()))} />
           {/* round 32: the booming voice for the big plays (with the effects, at their volume) */}
-          <Toggle label="Announcer" note="A booming voice for the big plays: blocks, dunks, threes, buzzer beaters, titles." on={voiceOn && snd.sfx} locked={!snd.sfx} why="On with the sound effects" onClick={() => (setAnnouncer(!voiceOn), setVoiceOn(!voiceOn), !voiceOn && announce('Let’s go!'))} tour="set-announcer" />
-          <Toggle label="Music" note="A loop for each part of the game: every level and league, the offseason, the mini-games." on={snd.music} onClick={() => (setMusic(!snd.music), setSnd(soundSettings()))} tour="set-music" />
-          <Volume label="Music" value={snd.musicVol} disabled={!snd.music} onChange={(v) => (setVolume('music', v), setSnd(soundSettings()))} />
+          <Toggle icon="mic" label={t('Announcer')} note={t('A booming voice for the big plays: blocks, dunks, threes, buzzer beaters, titles.')} on={voiceOn && snd.sfx} locked={!snd.sfx} why={t('On with the sound effects')} onClick={() => (setAnnouncer(!voiceOn), setVoiceOn(!voiceOn), !voiceOn && announce('Let’s go!'))} tour="set-announcer" />
+          <Toggle icon="live" label={t('Music')} note={t('A loop for each part of the game: every level and league, the offseason, the mini-games.')} on={snd.music} onClick={() => (setMusic(!snd.music), setSnd(soundSettings()))} tour="set-music" />
+          <Volume label={t('Music')} value={snd.musicVol} disabled={!snd.music} onChange={(v) => (setVolume('music', v), setSnd(soundSettings()))} />
           {!lite && (
             <>
-              <Toggle label="Simple text" note="Hide descriptions, keep the choices." on={simple} onClick={toggleSimple} tour="set-simple" />
-              <Toggle label="Guide mode" note={master ? 'Off while Master mode is on.' : 'Highlights the next thing to do.'} on={guide && !master} onClick={toggleGuide} tour="set-guide" />
-              <Toggle label="Master mode" note="No recommendations: no scouts' calls, fit tags, suggested deals or guide hints. You read the game yourself." on={master} onClick={toggleMaster} tour="set-master" locked={!!g?.flags.oath} />
+              <Toggle icon="simple" label={t('Simple text')} note={t('Hide descriptions, keep the choices.')} on={simple} onClick={toggleSimple} tour="set-simple" />
+              <Toggle icon="guide" label={t('Guide mode')} note={master ? t('Off while Master mode is on.') : t('Highlights the next thing to do.')} on={guide && !master} onClick={toggleGuide} tour="set-guide" />
+              <Toggle icon="master" label={t('Master mode')} note={t('No recommendations: no scouts’ calls, fit tags, suggested deals or guide hints. You read the game yourself.')} on={master} onClick={toggleMaster} tour="set-master" locked={!!g?.flags.oath} />
             </>
           )}
           <div className="set-keys hide-touch">
-            <b>Keyboard</b>
+            <b>{t('Keyboard')}</b>
             <span>
-              <kbd>Enter</kbd> continue, leave the shop or skip a final to the buzzer · <kbd>1</kbd>–<kbd>9</kbd> <kbd>0</kbd> <kbd>-</kbd> <kbd>=</kbd> pick a choice · <kbd>H</kbd> <kbd>S</kbd> <kbd>P</kbd> <kbd>R</kbd> <kbd>E</kbd> tabs · <kbd>U</kbd> undo the last choice · <kbd>Esc</kbd> back from a page, close a menu
+              <kbd>Enter</kbd> {t('continue, leave the shop or skip a final to the buzzer')} · <kbd>1</kbd>–<kbd>9</kbd> <kbd>0</kbd> <kbd>-</kbd> <kbd>=</kbd> {t('pick a choice')} · <kbd>H</kbd> <kbd>S</kbd> <kbd>P</kbd> <kbd>R</kbd> <kbd>E</kbd> {t('tabs')} · <kbd>U</kbd> {t('undo the last choice')} · <kbd>Esc</kbd> {t('back from a page, close a menu')}
             </span>
           </div>
           <div className="set-foot">
-            <small className="muted">{saving === 'ok' ? 'Saved on this device after every move.' : 'This browser is not letting the game save.'}</small>
+            <small className="muted">{saving === 'ok' ? t('Saved on this device after every move.') : t('This browser is not letting the game save.')}</small>
           </div>
         </div>
       )}
@@ -228,12 +242,12 @@ export function NextStep({ g }: { g: GameState }) {
   if (pr.type === 'retired') return null;
   return pr.type === 'decision' ? (
     <button className="next-step" onClick={() => setTab('home')}>
-      <small>Waiting at Home</small>
+      <small>{t('Waiting at Home')}</small>
       <b>{pr.decision.title}</b>
     </button>
   ) : (
     <button className="next-step go" onClick={advance}>
-      <small>Next</small>
+      <small>{t('Next')}</small>
       <b>{pr.label}</b>
     </button>
   );

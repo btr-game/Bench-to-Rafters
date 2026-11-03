@@ -3127,3 +3127,11 @@ td > .link-btn { min-width: 44px; text-align: left; }
 .bond i.cold { background: var(--bad); }
 .tw-folk { position: absolute; z-index: 2; pointer-events: none; }
 .tw-say { position: absolute; left: 50%; bottom: 100%; transform: translate(-50%, -4px); background: #FFFFFF; color: #18141C; border: 2px solid #18141C; font: 700 12px/1 var(--f-mono); padding: 2px 5px 4px; white-space: nowrap; }
+
+/* ---- round 40: languages. Korean, Chinese and Japanese read in the system's own faces (the game's
+   fonts have no glyphs for them); Korean keeps words whole at a line break ---- */
+:root:lang(ko) { --f-display: 'Big Shoulders Display', 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', sans-serif; --f-body: 'Archivo', 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif; --f-mono: 'IBM Plex Mono', 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', monospace; }
+:root:lang(ja) { --f-display: 'Big Shoulders Display', 'Hiragino Sans', 'Yu Gothic', 'Meiryo', 'Noto Sans JP', sans-serif; --f-body: 'Archivo', 'Hiragino Sans', 'Yu Gothic', 'Meiryo', 'Noto Sans JP', system-ui, sans-serif; --f-mono: 'IBM Plex Mono', 'Hiragino Sans', 'Yu Gothic', 'Noto Sans JP', monospace; }
+:root:lang(zh) { --f-display: 'Big Shoulders Display', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif; --f-body: 'Archivo', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', system-ui, sans-serif; --f-mono: 'IBM Plex Mono', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', monospace; }
+:root:lang(ko) body { word-break: keep-all; }
+.set-langs { flex-wrap: wrap; }

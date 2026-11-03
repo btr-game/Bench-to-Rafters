@@ -11,7 +11,7 @@ import { Icon } from '../art/Icon';
 import { StoryPortrait } from '../art/StoryArt';
 import { LookPreview } from '../components/LookPicker';
 import { STORY_HERO } from '../../engine/story/cast';
-import { storyText } from '../../content/story';
+import { storyT } from '../../i18n/story';
 import { NAME_MAX, cleanName, isRude, nameProblem } from '../names';
 import { sfx } from '../sound';
 import type { ChosenLook } from '../../content/looks';
@@ -88,9 +88,9 @@ export function StoryStart({ onBack }: { onBack: () => void }) {
             <StoryPortrait role={k} name={shown(k)} size={76} />
             <div className="stack" style={{ gap: 4, minWidth: 0 }}>
               <label className="sec-title" htmlFor={`story-${k}`}>
-                {storyText(`people.${k}`)}
+                {storyT(`people.${k}`)}
               </label>
-              <p className="small muted">{storyText(`people.${k}.about`)}</p>
+              <p className="small muted">{storyT(`people.${k}.about`)}</p>
               <input id={`story-${k}`} type="text" maxLength={NAME_MAX} value={names[k]} placeholder="Empty: the game names him" aria-describedby={`story-${k}-note`} onChange={(e) => setNames((n) => ({ ...n, [k]: cleanName(e.target.value) }))} />
               <small id={`story-${k}-note`} className={bad(k) ? 'name-note bad' : 'name-note muted'}>
                 {bad(k) || (names[k].trim() ? `Meet ${shown(k)}.` : 'The game names this one.')}

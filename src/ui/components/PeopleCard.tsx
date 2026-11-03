@@ -5,7 +5,7 @@
 
 import type { GameState, StoryPal, StoryRole } from '../../engine/types';
 import { STORY_CHAPTERS } from '../../engine/story/chapters';
-import { storyText } from '../../content/story';
+import { storyT } from '../../i18n/story';
 import { StoryPortrait } from '../art/StoryArt';
 import { team as teamOf } from '../selectors';
 import { Card } from './bits';
@@ -15,14 +15,14 @@ const ROLES: StoryRole[] = ['friend', 'rival', 'parent', 'sibling'];
 /** Where the friend or the rival is this season, in words. */
 function whereOf(g: GameState, who: StoryRole, pal: StoryPal | null): string {
   const town = (g.player.hometown || 'Dayton').split(',')[0];
-  if (who === 'parent' || who === 'sibling') return storyText('people.where.home', { town });
-  if (!pal) return storyText('people.where.unmet');
+  if (who === 'parent' || who === 'sibling') return storyT('people.where.home', { town });
+  if (!pal) return storyT('people.where.unmet');
   const mine = teamOf(g)?.name;
-  if (pal.hurt) return storyText('people.where.hurt');
-  if (who === 'rival' && pal.lv === 'OUT') return storyText('people.where.retired');
-  if (pal.lv === 'COACH' && g.story?.f.friendCoach && pal.team === mine) return storyText('people.where.bench');
-  if (pal.lv === 'NBA' && pal.team === mine) return storyText('people.where.mine');
-  return storyText(`people.where.${pal.lv}`, { team: pal.team || '' });
+  if (pal.hurt) return storyT('people.where.hurt');
+  if (who === 'rival' && pal.lv === 'OUT') return storyT('people.where.retired');
+  if (pal.lv === 'COACH' && g.story?.f.friendCoach && pal.team === mine) return storyT('people.where.bench');
+  if (pal.lv === 'NBA' && pal.team === mine) return storyT('people.where.mine');
+  return storyT(`people.where.${pal.lv}`, { team: pal.team || '' });
 }
 
 function Bond({ value }: { value: number }) {
@@ -52,7 +52,7 @@ export function PeopleCard({ g }: { g: GameState }) {
             <li key={who} className="person">
               <StoryPortrait role={who} name={met ? st.names[who] : `${who} of ${g.player.name}`} team={pal?.lv === 'NBA' ? pal.team : ''} size={56} />
               <div className="stack" style={{ gap: 2, minWidth: 0 }}>
-                <span className="kicker">{storyText(`people.${who}`)}</span>
+                <span className="kicker">{storyT(`people.${who}`)}</span>
                 <b>
                   {name}
                   {pal && met && pal.lv !== 'OUT' && pal.lv !== 'COACH' ? <span className="muted small"> · OVR {Math.round(pal.ovr)}</span> : null}
@@ -60,10 +60,10 @@ export function PeopleCard({ g }: { g: GameState }) {
                 <span className="small">{whereOf(g, who, pal)}</span>
                 {met && (
                   <span className="small bond-line">
-                    <Bond value={bond} /> {storyText(`people.bond.${Math.max(-3, Math.min(3, Math.round(bond)))}`)}
+                    <Bond value={bond} /> {storyT(`people.bond.${Math.max(-3, Math.min(3, Math.round(bond)))}`)}
                   </span>
                 )}
-                {mem && <q className="small muted">{storyText(`mem.${mem.id}`)}</q>}
+                {mem && <q className="small muted">{storyT(`mem.${mem.id}`)}</q>}
               </div>
             </li>
           );
