@@ -301,6 +301,15 @@ const MINI: DevCard[] = (
 export const CARDS: DevCard[] = [
   // start
   { id: 'start', title: 'Start page and player creation', group: 'Start', icon: 'person', blurb: 'Name, position, archetype, focus, country, difficulty.', open: () => void useStore.setState({ game: null, page: null, mini: null }) },
+  { id: 'username', title: 'Pick a username', group: 'Start', icon: 'crowd', blurb: 'Round 36: the start page asks once for a username, apart from the player’s name, on a device that finished the tutorial before it was asked there (Not now puts it off). It shows beside careers on the boards, the hall and the plaza.', open: () => {
+    try {
+      localStorage.removeItem('btr-mp-name');
+      localStorage.removeItem('btr-username-later');
+    } catch {
+      /* the deck's own storage */
+    }
+    useStore.setState({ game: null, page: null, mini: null, intro: false, news: false, finale: null });
+  } },
   { id: 'look', title: 'Your look', group: 'Start', icon: 'jersey', blurb: 'The identity step: skin, hair colour, hair and facial hair on the player, in a plain white or black jersey with his number, and the back of the jersey with his name.', open: () => void useStore.setState({ game: null, page: null, mini: null }), press: '[data-tour="create-next"]' },
   {
     id: 'saves',
