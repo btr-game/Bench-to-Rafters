@@ -45,20 +45,24 @@ export const ACH_CAT_RULES: Record<AchCat, (string | RegExp)[]> = {
   // the way in
   road: [/^(hs|ncaa|eu|int|gl|d)-/, 'fivestar', 'topclass', 'state', 'college', 'ncaa', 'naismith', 'euro', 'eutitle', 'abroad', 'gleague', 'callup', 'scenic', 'drafted', 'round2', 'round1', 'lottery', 'top3', 'pick1', 'undrafted', 'debut', 'young', 'c-5levels', 'c-prep', 'c-g-league-mvp', 'y-19', 'y-late', 'tn-mcd', 'tn-youth', 'l-transfer', /^dn-/],
   // the years, the games and seasons, the scoring list, the farewell, the Hall and the rafters
-  career: [/^age\d+$/, /^gp\d+$/, /^idx/, /^fw-/, /^rc-/, 'vintage', 'finewine', 'methuselah', 'fountain', 'early', 'walkaway', 'lp50', 'hof', 'hof1', 'rafters', 'rafters2', 'top100', 'top25', 'top10', 'goat', 'peak5', 't-min40k', 't-20s', 't-15s', 't-gp1200', 's-gp82', 's-gp82x5', 'c-comeback', 'c-short', 'g-hofnoring', 'ft-c80', 'ft-m3k', 'ft-m6k', 'sa-sht80', 'c-dfig'],
-  // roles, trades, teammates, the coach and the rivals (round 35: friends among them)
-  team: [/^lk/, /^co-/, /^ro-/, /^rival/, 'starter', 'key', 'sixthrole', 'deep', 'captain', 'traded', 'flyer', 'journey', 'passport', 'oneclub', 'duo', 'trio', 'chaser', 'chaserring', 'chalk', 'l-trade3', 'l-asked', 'l-number', 'l-position', 'l-style', 'c-oneteam12', 'c-5teams', 'c-8teams', 's-best-bench', 'mp-beat1', 'mp-beat5', 'mp-top1', 'mp-top3', 'mp-class-as', 'mp-ans-ring', 'mp-made-hof', 'mp-rn1', 'mp-rn5', 'mp-fduo', 'mp-ftrio', 'fl-join'],
+  // (round 36: whose rafters, and how he got there)
+  career: [/^age\d+$/, /^gp\d+$/, /^idx/, /^fw-/, /^rc-/, 'vintage', 'finewine', 'methuselah', 'fountain', 'early', 'walkaway', 'lp50', 'hof', 'hof1', 'rafters', 'rafters2', 'top100', 'top25', 'top10', 'goat', 'peak5', 't-min40k', 't-20s', 't-15s', 't-gp1200', 's-gp82', 's-gp82x5', 'c-comeback', 'c-short', 'g-hofnoring', 'ft-c80', 'ft-m3k', 'ft-m6k', 'sa-sht80', 'c-dfig', /^rf-/],
+  // roles, trades, teammates, the coach and the rivals (round 35: friends among them; round 36:
+  // the night an old rival's number goes up)
+  team: [/^lk/, /^co-/, /^ro-/, /^rival/, 'starter', 'key', 'sixthrole', 'deep', 'captain', 'traded', 'flyer', 'journey', 'passport', 'oneclub', 'duo', 'trio', 'chaser', 'chaserring', 'chalk', 'l-trade3', 'l-asked', 'l-number', 'l-position', 'l-style', 'c-oneteam12', 'c-5teams', 'c-8teams', 's-best-bench', 'mp-beat1', 'mp-beat5', 'mp-top1', 'mp-top3', 'mp-class-as', 'mp-ans-ring', 'mp-made-hof', 'mp-rn1', 'mp-rn5', 'mp-fduo', 'mp-ftrio', 'fl-join', 'tp-rival'],
   // earnings and contracts, the shop and what it sells, the staff
   money: [/^m\d+$/, /^m-/, /^shop\d/, /^staff/, /^talk-/, /^own-/, /^wear/, /^(legacy|invest)-/, 'spree', 'cleanout', 'visit5', 'visit15', 'c-broke', 'c-saver'],
-  // nicknames and brands, the press and the fines, love, a family and the next generation
-  fame: [/^nick/, /^brand/, /^shoe/, /^fine(\d|-)/, /^press/, /^wed/, /^dad/, /^fam-/, /^gen2/, /^kid/, 'logo', 'military', 'love', 'breakup', 'sons3', 'mp-crown'],
+  // nicknames and brands, the press and the fines, love, a family and the next generation (round
+  // 36: the username, the speech under the lights, the JV coach and the fan account)
+  fame: [/^nick/, /^brand/, /^shoe/, /^fine(\d|-)/, /^press/, /^wed/, /^dad/, /^fam-/, /^gen2/, /^kid/, 'logo', 'military', 'love', 'breakup', 'sons3', 'mp-crown', /^nm-/, /^sp-/, 'tp-jv', 'tp-fan'],
   // the arcade, and the bonuses in a career
   arcade: [/^mg-/, 'side', 'l-mini10'],
   // the difficulties and challenges (round 35: play with friends, the road map's unlocks), and the
-  // game's own pages and habits (kept across careers)
-  modes: [/^c\d+$/, /^daily/, /^(lock|mic|card|fold|look)\d/, /^real/, /^star(\d|mvp)/, /^ns-/, /^comet/, /^mp-/, /^un-/, 'titles10', 'mvp10', 'share1', 'mixtape', 'album', 'undo1', 'cmp1', 'resume1', 'road-all', 'visit10', 'visit50', 'visit100', 'regularhof', 'allmodes', 'fastdone', 'masterdone', 'c-sim'],
+  // game's own pages and habits (kept across careers; round 36: the finale)
+  modes: [/^c\d+$/, /^daily/, /^(lock|mic|card|fold|look)\d/, /^real/, /^star(\d|mvp)/, /^ns-/, /^comet/, /^mp-/, /^un-/, 'titles10', 'mvp10', 'share1', 'mixtape', 'album', 'undo1', 'cmp1', 'resume1', 'road-all', 'visit10', 'visit50', 'visit100', 'regularhof', 'allmodes', 'fastdone', 'masterdone', 'c-sim', /^fn-/],
   // nights so bad they are hard to have, simple math and the odd shapes of a season or a career
-  odd: [/^b-/, /^n-/, 's-no3', 's-ft70', 's-volume', 's-tov35', 's-garbage', 'c-num0', 'c-num99', 'c-lefty', 'c-lowpeak-ring', 'g-rookie-high', 'g-hs-high', 'mp-made-low', 'ft-bad', 'x-upside', 'x-flash', 'rs-lost3'],
+  // (round 36: the credits it rolls)
+  odd: [/^b-/, /^n-/, 's-no3', 's-ft70', 's-volume', 's-tov35', 's-garbage', 'c-num0', 'c-num99', 'c-lefty', 'c-lowpeak-ring', 'g-rookie-high', 'g-hs-high', 'mp-made-low', 'ft-bad', 'x-upside', 'x-flash', 'rs-lost3', /^cr-/],
 };
 
 const NAMED = new Map<string, AchCat>();

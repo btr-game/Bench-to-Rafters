@@ -47,6 +47,9 @@ export const VISITS: Record<string, Visit> = {
   'hometown-film': { verb: 'Watch your film again', place: 'night', lines: ['The kid who plays you is better at defense than you were.', 'You cry at the same scene. Every time.'] },
   'nba-stake': { verb: 'Sit in an owners’ meeting', place: 'city', lines: ['They talk about the salary cap for three hours. You know more about it now than you want to.', 'You vote on the new uniforms. You lose.'], rep: 1 },
   'sneaker-buyout': { verb: 'Visit the factory', place: 'city', lines: ['A line of your shoes runs past on the belt. Thousands of them.', 'You sign the first pair of the new model. And the second. And the five-hundredth.'], rep: 1 },
+  // round 36: the rafters
+  'framed-jersey': { verb: 'Straighten the frame', place: 'home', lines: ['The number is smaller than you remember. So were you.', 'A visitor asks if it is a replica. You tell them about the hole in the left armpit.'] },
+  'rafters-banner': { verb: 'Look up at the banner', place: 'home', lines: ['The garage light hums. Your name on the banner, your car parked under it, your shot still going up every night.', 'Your neighbour asks when the real one goes up. Not yet, you tell him. Not yet.'] },
   // round 35: friends
   'gym-key': { verb: 'Run with your friends', place: 'court', lines: ['Ten guys, one ball, nobody calls fouls. You lose the last game to a dentist.', 'Your old coach unlocks the door and stays to watch. He still yells about your footwork.'] },
   'game-night': { verb: 'Host game night', place: 'home', lines: ['You lose four hands in a row to a friend who has never seen you play. He wants to keep it that way.', 'Midnight, pizza boxes, the same argument about the best team ever. Nobody wins it.'] },

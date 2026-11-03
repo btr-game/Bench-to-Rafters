@@ -10,8 +10,11 @@ import { isDev } from '../dev/mode';
 import { count, nbaTitles } from '../engine/awards/legacy';
 import { addMiniResult } from '../engine/achievementsMini';
 import type { MpKind } from '../engine/achievements35';
+import type { CareerRecord } from '../engine/career/record';
 import type { MiniResult } from '../engine/career/miniBonus';
 import { UNLOCK_FROM, islandDone, loadRoad, type Road, type Unlock } from './road';
+import { shownBy, username } from './names';
+import type { FinaleKind } from './finale';
 
 const KEY = 'btr-achv-v1';
 
@@ -208,6 +211,51 @@ export function recordReunion(code: string, won: number, of: number, mvp: boolea
   return got.some(Boolean);
 }
 
+/** Round 36: the username was saved (components/Username.tsx, right after setUsername), with the
+ * one it replaced ('' for none): a first pick and a change count apart. A device that had a name
+ * before the round (Play with friends kept one) counts as having picked it (checkAch). */
+export function recordUsername(before: string): void {
+  const now = username();
+  if (!now || now === before) return;
+  const d = loadAch();
+  d.totals.handle = 1;
+  if (before) d.totals.renamed = (d.totals.renamed ?? 0) + 1;
+  saveAch(d);
+}
+
+/** Round 36: a career went to the community boards (store.ts, with the card `signed` gave it). It
+ * counts only under a username (a Hall of Fame career counts again on its own); true when it counted. */
+export function recordPosted(r: CareerRecord): boolean {
+  if (!shownBy(r.by)) return false;
+  const d = loadAch();
+  d.totals.posted = (d.totals.posted ?? 0) + 1;
+  if (r.hof) d.totals.postedHof = (d.totals.postedHof ?? 0) + 1;
+  saveAch(d);
+  return true;
+}
+
+/** Round 36: a finale reached its thank-you (screens/Finale.tsx): `skipped` when the Skip button
+ * (or Enter) jumped there, `skippable` when the button was there to press. Each career counts once,
+ * the tutorial's levels never; true when it counted. */
+export function recordFinale(g: GameState, kind: FinaleKind, how: { skippable: boolean; skipped: boolean }): boolean {
+  if (kind === 'level') return false;
+  const d = loadAch();
+  const t = d.totals;
+  const run = runOf(g);
+  if (t.finSeen?.includes(run)) return false;
+  // the latest 200 careers are enough to keep one from counting twice
+  t.finSeen = [...(t.finSeen ?? []), run].slice(-200);
+  const fin = { ...t.fin };
+  if (how.skipped) fin.skipped = (fin.skipped ?? 0) + 1;
+  else {
+    fin[kind] = (fin[kind] ?? 0) + 1;
+    if (how.skippable) fin.encore = (fin.encore ?? 0) + 1;
+  }
+  t.fin = fin;
+  saveAch(d);
+  return true;
+}
+
 /** Round 29: cards locked in the career log right now (the most at once is kept). */
 export function recordLocks(n: number): void {
   const d = loadAch();
@@ -244,6 +292,8 @@ export function checkAch(g: GameState | null): Achievement[] {
   // round 35: the road map's stops cleared (kept once seen, like the daily days)
   const open = roadOpened(loadRoad()).filter((u) => !d.totals.unlocks?.includes(u));
   if (open.length) d.totals.unlocks = [...(d.totals.unlocks ?? []), ...open];
+  // round 36: a username on this device, whenever it was picked (kept once seen)
+  if (!d.totals.handle && username()) d.totals.handle = 1;
   const fresh = earnedNow(g, d.totals).filter((id) => !d.got[id]);
   if (!fresh.length) return [];
   const at = new Date().toISOString();
