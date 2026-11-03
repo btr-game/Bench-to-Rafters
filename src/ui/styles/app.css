@@ -2495,7 +2495,14 @@ input[type='range'] { width: 100%; min-height: 32px; accent-color: var(--accent)
 .lk-tag.you { visibility: hidden; }
 .lk-you { position: absolute; top: -18px; left: 50%; transform: translateX(-50%); padding: 0 6px; border-radius: 4px; background: var(--accent); color: var(--accent-ink); font-size: calc(12px * var(--ts)); font-weight: 700; white-space: nowrap; }
 .lk-me { bottom: calc(6% + 2px); }
-@media (max-width: 640px) { .lk-tag { font-size: calc(10.5px * var(--ts)); padding: 0 4px; } .lk-role { display: none; } .lk-who.near .lk-role { display: inline; } .lk-who.near { z-index: 1; } }
+@media (max-width: 640px) { .lk-tag { font-size: calc(10.5px * var(--ts)); padding: 0 4px; } .lk-role { display: none; } .lk-who.near .lk-role { display: inline; } .lk-who.near { z-index: 1; }
+  /* the people stand closer than their tags are wide: the tags leave the buttons' boxes, hanging
+     under the feet or, for every second one from the left, floating over the head */
+  .lk-who, .lk-me { bottom: calc(6% + 14px); }
+  .lk-tag { position: absolute; top: calc(100% + 1px); left: 50%; transform: translateX(-50%); }
+  .lk-who.up .lk-tag { top: auto; bottom: calc(100% + 1px); }
+  .lk-who.up .lk-alert { top: -36px; }
+}
 
 /* round 32: the farewell tour: the banner on Home in the last season, the gifts on Records */
 .farewell-bar { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 8px; border: 2px solid var(--gold); background: var(--surface); font-size: calc(15px * var(--ts)); }

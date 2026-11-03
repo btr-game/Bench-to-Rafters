@@ -25,8 +25,23 @@ The order the owner set:
   **heavy at times, always with a gentle path**; **the player names his friend, his family and his
   rival** (the rest generated; skipping the naming generates all). Not asked, so the plan's
   defaults: the cast of six, and the reporter at a newsstand on the street.
+  **The friend and the rival carry it** (owner: "the story mode will totally rely on the
+  relationship between the three"): the friend is with him from the driveway up to the NBA, and
+  how good he gets depends on the player's choices (out of the league early and his biggest fan,
+  or a turn to coaching and later his assistant, or a huge leap past him to an MVP and a friendly
+  rivalry to overcome); the rival is met in college and grows with him, always one small step
+  ahead (an OVR just above his). Storylines: the friend joins his team, the rival joins his team,
+  the rival and the friend on the same team, and a dramatic road where the rival badly injures the
+  friend and the rivalry turns personal.
 - **Round 39**: **The Floor**, one possession engine for every playable moment (crunch time, the
-  playable playoff games, the finals action cam, 3-on-3).
+  playable playoff games, the finals action cam, 3-on-3). Owner: "this should be a high level game,
+  with great detail and extensive design. we're gonna spend a lot of time building the interactions
+  and animations." Discussed with the owner while 38 and 40 are built; built last, before publishing.
+- **Round 40**: **languages**: Korean, Chinese, Japanese, Spanish and French. The last round with a
+  significant system; after it, only small balance changes and bug fixes (owner: "so let's keep up
+  the spark").
+- **Publishing**: rounds 38, 39 and 40 go out together (owner: "when doing round 38, dont do the
+  publishing"); priority is 38 and 40, then 39.
 - **Later**: a donation channel.
 - Turned down: careers framed as roguelite runs with meta-unlocks ("no").
 - Still to weigh before any paid release: a fictional league in place of the NBA's teams, colours

@@ -214,7 +214,9 @@ export function resetTour(): void {
 
 const shown = (el: HTMLElement) => {
   const r = el.getBoundingClientRect();
-  return r.width > 0 && r.height > 0 && !(el as HTMLButtonElement).disabled;
+  // round 37: the top bar's row of tabs keeps its size while the town stands in for it (it is only
+  // hidden), so a hidden match never takes the ring from the place in the town
+  return r.width > 0 && r.height > 0 && !(el as HTMLButtonElement).disabled && getComputedStyle(el).visibility !== 'hidden';
 };
 
 export function GuideTour() {
@@ -268,6 +270,8 @@ export function GuideTour() {
     find();
     const mo = new MutationObserver(later);
     mo.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['disabled', 'aria-expanded', 'aria-modal'] });
+    // round 37: the town scrolling in or out swaps which row of tabs shows (html.town-out)
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
     window.addEventListener('resize', later);
     return () => {
       mo.disconnect();

@@ -3237,3 +3237,13 @@ multiple times."
   city bike, a custom knee brace, a summer at a longevity clinic. No new decision kind, so the
   harness's `smartChoice` needed nothing. A dev deck card (`town-city`) stages the street with the
   sign, the mural, the car and the hoop.
+- **Two bugs the end-of-round checks found** (round 37's town): the tutorial's "The Player tab"
+  lesson drew its ring round an empty box in the top bar and the tutorial could not go on. The top
+  bar's row of tabs is only hidden (it keeps its size) while the town is on screen, and the lesson
+  had picked it while the town was scrolled away, then never looked again when the page came back
+  to the top (it watched the page for changes, not the root's `town-out` class). The lessons and
+  Guide mode now skip hidden targets and look again when the town comes and goes; the tutorial runs
+  end to end on a desktop, on a phone and with the plane's flight. And on a phone the locker room's
+  name tags were wider than the gaps between the people (round 36's `under` check had not looked at
+  it before): the tags now leave the buttons' boxes, under the feet or, for every second person
+  from the left, over the head.
