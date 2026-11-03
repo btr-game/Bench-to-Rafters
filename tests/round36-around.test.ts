@@ -29,10 +29,11 @@ describe('Around you', () => {
     g.rivalry = rival(g, g.year);
     expect(aroundPanes(g, false)[0]).toBe('rival');
     // an old rivalry gives way to the league's stories
-    g.rivalry = rival(g, g.year - 4);
-    g.rivalry.seasons = [{ year: g.year - 1, me: 70, him: 72 }];
+    const old = rival(g, g.year - 4)!;
+    old.seasons = [{ year: g.year - 1, me: 70, him: 72 }];
+    g.rivalry = old;
     expect(aroundPanes(g, false)).toEqual(['league', 'rival', 'talk']);
-    g.rivalry.ended = 'He retired.';
+    old.ended = 'He retired.';
     expect(aroundPanes(g, false).at(-1), 'an ended rivalry goes last').toBe('rival');
   });
 });

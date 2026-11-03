@@ -122,8 +122,8 @@ function inspect([phone, W]) {
 
   for (const t of texts) {
     const s = getComputedStyle(t.el);
-    // clipped by its own box
-    for (let e = t.el; e && e !== document.body; e = e.parentElement) {
+    // clipped by its own box (round 36: not a roll's lines coming in at the screen's edge)
+    for (let e = t.el; e && e !== document.body && !t.el.closest('[data-roll]'); e = e.parentElement) {
       const es = getComputedStyle(e);
       const hid = (v) => v === 'hidden' || v === 'clip';
       if ((hid(es.overflowX) && e.scrollWidth > e.clientWidth + 2 && es.textOverflow !== 'ellipsis') || (hid(es.overflowY) && e.scrollHeight > e.clientHeight + 2 && !es.webkitLineClamp?.match(/\d/))) {
@@ -276,7 +276,8 @@ function inspect([phone, W]) {
     const r = el.getBoundingClientRect();
     if (r.width < innerWidth * 0.9 || r.height < innerHeight * 0.9) continue;
     const out = [...el.querySelectorAll('button, a, input, h1, h2, h3, p, .moment-title')].find((c) => {
-      if (!shown(c) || c.closest('[aria-hidden="true"]')) return false;
+      // round 36: a roll that carries its text across the screen on purpose (the finale's credits)
+      if (!shown(c) || c.closest('[aria-hidden="true"], [data-roll]')) return false;
       for (let e = c.parentElement; e && e !== el; e = e.parentElement) if (/auto|scroll/.test(getComputedStyle(e).overflowY)) return false;
       const cr = c.getBoundingClientRect();
       return cr.bottom > Math.min(r.bottom, innerHeight) + 2 || cr.top < Math.max(r.top, 0) - 2;

@@ -43,7 +43,7 @@ export function devSetup(): void {
 
 /** Back to a clean slate between cards: no game, no page, no switches left on. */
 function clean(): void {
-  useStore.setState({ game: null, slot: null, page: null, mini: null, transition: null, daily: null, tab: 'home', toasts: [], guide: false, master: false, simple: false, intro: false, news: false, thanks: null, spots: null, tour: false, lookBack: false, ...roadView() });
+  useStore.setState({ game: null, slot: null, page: null, mini: null, transition: null, daily: null, tab: 'home', toasts: [], guide: false, master: false, simple: false, intro: false, news: false, finale: null, spots: null, tour: false, lookBack: false, ...roadView() });
   setAchievements(true);
   // round 34: every card the deck deals opens with every card open
   setFolds([]);

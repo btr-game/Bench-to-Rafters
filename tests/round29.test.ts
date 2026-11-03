@@ -190,9 +190,9 @@ describe('music', () => {
   });
 
   it('picks a loop for each part of the game: intro, curtain call, every level, the offseason, each mini-game but Lockdown', () => {
-    const base = { game: null, thanks: null, intro: false, mini: null };
+    const base = { game: null, finale: null, intro: false, mini: null };
     expect(trackOf({ ...base, intro: true })).toBe('intro');
-    expect(trackOf({ ...base, thanks: {} })).toBe('thanks');
+    expect(trackOf({ ...base, finale: {} })).toBe('thanks');
     expect(trackOf(base)).toBe('start');
     expect(trackOf({ ...base, mini: 'rhythm' })).toBeNull();
     expect(trackOf({ ...base, mini: 'daily' })).toBe('hub');

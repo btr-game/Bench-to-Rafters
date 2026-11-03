@@ -2331,10 +2331,10 @@ input[type='range'] { width: 100%; min-height: 32px; accent-color: var(--accent)
 .share-sites .btn { text-decoration: none; }
 .share-foot { display: flex; align-items: center; gap: 8px; margin: 0; padding-block: 12px; min-height: 61px; /* the closed feedback bar beside it */ font: inherit; font-weight: 600; color: var(--ink); text-align: left; cursor: pointer; }
 .share-foot:hover { border-color: var(--accent); }
-.th-go { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 12px; }
-/* the thank-you page is dark in both themes: its Share button reads light on it */
-.th-go .share-big { color: #f4f1ea; border-color: rgba(244, 241, 234, 0.7); background: transparent; }
-.th-go .share-big:hover, .th-go .share-big:focus-visible { background: rgba(244, 241, 234, 0.14); }
+.fn-go { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 12px; }
+/* the finale is dark in both themes: its Share button reads light on it */
+.fn-go .share-big { color: #f4f1ea; border-color: rgba(244, 241, 234, 0.7); background: transparent; }
+.fn-go .share-big:hover, .fn-go .share-big:focus-visible { background: rgba(244, 241, 234, 0.14); }
 @media (prefers-reduced-motion: reduce) { .share-card { animation: none; } }
 
 
@@ -2783,3 +2783,58 @@ td > .link-btn { min-width: 44px; text-align: left; }
 .around-part > .rival-card { border-top: 4px solid var(--bad); padding-top: 10px; }
 .around-part > .rival-card.lvl-mvp { border-top-color: var(--gold); }
 .around-part + .around-part { border-top: 1px solid var(--line); padding-top: 14px; }
+/* round 36: the finale, in place of Thank you for playing (screens/Finale.tsx). Dark in both themes. */
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.finale { position: fixed; inset: 0; z-index: 90; overflow: hidden; background: #07090f; color: #f4f1ea; }
+.fn-stage { position: absolute; inset: 0; }
+.fn-arena { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
+.fn-seats rect { fill: #141b31; }
+.fn-bank { fill: #262c44; }
+.fn-spot rect { fill: #fff3c4; opacity: 0; }
+/* the house lights come up a bank at a time, then the spot on him */
+.act-arena .fn-bank { animation: fn-bank 0.1s steps(1, end) forwards; }
+.act-arena .fn-bank.b1 { animation-delay: 0.8s; }
+.act-arena .fn-bank.b2 { animation-delay: 1.6s; }
+.act-arena .fn-bank.b0 { animation-delay: 2.4s; }
+.act-arena .fn-bank.b3 { animation-delay: 3.2s; }
+.act-arena .fn-seats rect { animation: fn-seats 3.2s steps(4, end) 0.8s forwards; }
+.act-arena .fn-spot rect { animation: fn-spot 0.6s steps(3, end) 4s forwards; }
+.act-speech .fn-bank, .act-jersey .fn-bank { fill: #fff3c4; }
+.act-speech .fn-seats rect, .act-jersey .fn-seats rect { fill: #2b3558; }
+.act-speech .fn-spot rect, .act-jersey .fn-spot rect { opacity: 0.1; }
+@keyframes fn-bank { to { fill: #fff3c4; } }
+@keyframes fn-seats { to { fill: #2b3558; } }
+@keyframes fn-spot { to { opacity: 0.1; } }
+.fn-him { position: absolute; left: 50%; bottom: 8%; transform: translateX(-50%); }
+.fn-him svg { display: block; width: min(clamp(120px, 30vh, 280px), 44vw); height: auto; }
+/* the jersey goes up from the floor; he stands aside to watch */
+.act-jersey .fn-him { left: 26%; }
+.fn-rise { position: absolute; left: 50%; top: 64%; transform: translateX(-50%); animation: fn-rise 9s steps(36, end) 1s both; }
+.fn-rise svg { display: block; width: min(clamp(90px, 17vh, 170px), 32vw); height: auto; }
+.fn-rope { position: absolute; bottom: 92%; left: 50%; width: 2px; height: 100vh; transform: translateX(-50%); background: repeating-linear-gradient(#9aa3b8 0 4px, #5c6478 4px 8px); }
+@keyframes fn-rise { from { top: 64%; } to { top: 9%; } }
+.fn-caption { position: absolute; left: 50%; top: 30%; transform: translateX(-50%); display: grid; justify-items: center; gap: 4px; width: min(640px, calc(100% - 32px)); text-align: center; animation: fn-fade 1.2s steps(4, end) 4.4s both; }
+.fn-caption span { font-family: var(--f-mono, monospace); font-size: calc(13px * var(--ts)); letter-spacing: 0.16em; text-transform: uppercase; color: #c9cfda; }
+.fn-caption b { font-family: var(--f-display); font-size: calc(30px * var(--ts)); text-transform: uppercase; letter-spacing: 0.04em; }
+.fn-caption.fn-late { top: 40%; left: 70%; width: min(320px, 44%); animation-delay: 9.6s; }
+@keyframes fn-fade { from { opacity: 0; } to { opacity: 1; } }
+.fn-speech { position: absolute; left: 50%; top: 26%; transform: translateX(-50%); width: min(760px, calc(100% - 32px)); min-height: 4.6em; padding: 14px 18px; background: rgba(7, 9, 15, 0.94); border: 4px solid #f4f1ea; box-shadow: 0 0 0 4px #07090f; font-size: calc(19px * var(--ts)); line-height: 1.45; }
+.fn-caret { display: inline-block; width: 0.5em; height: 1em; margin-left: 3px; vertical-align: -0.15em; background: currentColor; animation: fn-blink 0.8s steps(1, end) infinite; }
+@keyframes fn-blink { 50% { opacity: 0; } }
+.fn-roll { position: absolute; inset: 0; overflow: hidden; }
+.fn-roll-in { position: absolute; left: 0; right: 0; top: 62%; display: grid; justify-items: center; gap: 40px; padding-inline: max(16px, env(safe-area-inset-left, 0px)); text-align: center; animation: fn-roll linear forwards; }
+@keyframes fn-roll { to { transform: translateY(calc(-100% - 62vh)); } }
+.fn-icons { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; max-width: 560px; }
+.fn-block { display: grid; gap: 4px; max-width: 720px; }
+.fn-block h3 { margin: 0 0 6px; font-family: var(--f-display); font-size: calc(15px * var(--ts)); text-transform: uppercase; letter-spacing: 0.16em; color: #ffd43b; }
+.fn-block p { margin: 0; font-size: calc(19px * var(--ts)); line-height: 1.4; }
+.fn-makers { gap: 22px; padding-top: 30px; }
+.fn-maker { font-family: var(--f-display); font-size: calc(30px * var(--ts)) !important; text-transform: uppercase; letter-spacing: 0.04em; }
+.fn-title, .fn-thanks { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 3vh; padding: 16px; text-align: center; background: radial-gradient(ellipse at center, #1c2444 0%, #07090f 72%); }
+.fn-title { animation: fn-fade 1.4s steps(6, end) both; }
+.fn-word { display: block; width: min(76vw, 880px); height: auto; }
+.fn-word.big { width: min(92vw, 1180px); }
+.fn-thanks .fn-word { width: min(64vw, 560px); }
+.fn-line { margin: 0; font-size: calc(19px * var(--ts)); color: #c9cfda; }
+.fn-skip { position: absolute; z-index: 2; top: max(14px, env(safe-area-inset-top, 0px)); right: max(14px, env(safe-area-inset-right, 0px)); color: #f4f1ea; }
+@media (max-width: 640px) { .fn-caption.fn-late { left: 50%; top: 52%; width: min(320px, calc(100% - 32px)); } .act-jersey .fn-him { left: 20%; } }

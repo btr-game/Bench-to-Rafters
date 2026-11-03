@@ -75,7 +75,7 @@ export const TRACKS = {
   },
   thanks: {
     name: 'Curtain call',
-    where: 'The thank-you page, after every career',
+    where: 'The finale and its thank-you, after a finished career',
     icon: 'heart',
     step: bpm(140),
     voices: [
@@ -314,9 +314,9 @@ const LEVEL_TRACK: Record<string, TrackId> = { HS: 'hs', NCAA: 'college', GL: 'g
 
 /** The loop for what is on screen. A page of its own (the log, the book, the community) keeps the
  * one under it (Play with friends has its own); Lockdown has its own beat, so none. */
-export function trackOf(s: { game: GameState | null; thanks: unknown; intro: boolean; mini: string | null; road?: Road; creating?: unknown; page?: string | null }): TrackId | null {
+export function trackOf(s: { game: GameState | null; finale: unknown; intro: boolean; mini: string | null; road?: Road; creating?: unknown; page?: string | null }): TrackId | null {
   const g = s.game;
-  if (s.thanks && !g) return 'thanks';
+  if (s.finale && !g) return 'thanks';
   if (s.intro && !g) return 'intro';
   // round 35: Play with friends has a loop of its own
   if (s.page === 'multi') return 'friends';
