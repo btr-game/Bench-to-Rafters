@@ -90,6 +90,10 @@ The order the owner set:
   stays in English" list (events, storylines, press conferences and talks, the finale and
   endings, achievement names, What's new, the announcer). The manual and the achievements'
   descriptions are translated in that check anyway.
+- **Noted, to build** (owner, 3 November, feedback on the published game: "in the end credit, can you
+  make it speed up when the user presses on (continuous) space?"): the finale's end credits
+  (screens/Finale.tsx, the credits roll from finale.ts's `creditsOf`) run faster while Space is
+  held, back to their own pace when it is let go.
 - **Later**: a donation channel.
 - Turned down: careers framed as roguelite runs with meta-unlocks ("no").
 - Still to weigh before any paid release: a fictional league in place of the NBA's teams, colours
