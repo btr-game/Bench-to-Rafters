@@ -64,9 +64,9 @@ function HalfSim({ t: tr, g, onDone }: { t: Extract<Transition, { kind: 'half' }
   }, [done]);
   const recent = shown.slice(-5).reverse();
   return (
-    <div className="overlay sim" style={{ ['--team' as string]: tr.color }} role="dialog" aria-modal="true" aria-label={t('Simulating {label}', { label: tr.label })}>
+    <div className="overlay sim" style={{ ['--team' as string]: tr.color }} role="dialog" aria-modal="true" aria-label={t('Simulating {label}', { label: t(tr.label) })}>
       <div className="overlay-inner">
-        <div className="kicker on-dark">{tr.label}</div>
+        <div className="kicker on-dark">{t(tr.label)}</div>
         <div className="sim-team">{tr.teamName}</div>
         <div className="board sim-board">
           <div className="cell">
@@ -466,7 +466,7 @@ export function FinalReel({ m, g, onDone }: { m: Moment; g?: GameState; onDone?:
               winner={winner}
               me={g ? { name: g.player.name, number: g.player.number } : null}
               venue={venue}
-              note={curCall ? GRADE_NOTE[curCall.grade] : undefined}
+              note={curCall ? t(GRADE_NOTE[curCall.grade]) : undefined}
             />
           )}
           {!done && asking !== null && (

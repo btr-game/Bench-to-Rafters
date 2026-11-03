@@ -248,7 +248,7 @@ export function NextStep({ g }: { g: GameState }) {
   ) : (
     <button className="next-step go" onClick={advance}>
       <small>{t('Next')}</small>
-      <b>{pr.label}</b>
+      <b>{t(pr.label)}</b>
     </button>
   );
 }
