@@ -2994,7 +2994,7 @@ multiple times."
   look close stand (Hancock, Dickerson, Sexton, Cumberland); the list is kept encoded in
   `src/content/blocked.ts`. Usernames follow the same rules with numbers, `_`, `.` and `-` added,
   and so does a draft class's name. Every name the game picks at random passes (all 9,216 checked).
-  Not yet filtered: chat lines between friends.
+  Chat lines between friends stay unfiltered (owner: "no need for filtering friend chats").
 - **A new visual check, `under`** (round 27 rule: "add a check whenever a new kind of visual bug
   turns up"): text drawn over a button or a box it isn't part of. The name note slid under the
   phone's New name button with no two texts touching, so `overlap` missed it; the new check flags
