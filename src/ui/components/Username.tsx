@@ -6,6 +6,8 @@
 import { useState } from 'react';
 import { USERNAME_MAX, cleanUsername, isRude, setUsername, username } from '../names';
 import { sfx } from '../sound';
+import { recordUsername } from '../achievements';
+import { achievementsNow } from '../../store';
 
 export function UsernameBox({ onSet, note, compact }: { onSet?: (name: string) => void; note?: string; compact?: boolean }) {
   const [v, setV] = useState(username());
@@ -15,6 +17,9 @@ export function UsernameBox({ onSet, note, compact }: { onSet?: (name: string) =
   const save = () => {
     if (!v.trim() || rude || same) return;
     setUsername(v);
+    // round 36: picking one, and each change, count toward the username's achievements
+    recordUsername(kept);
+    achievementsNow();
     const now = username();
     setKept(now);
     onSet?.(now);

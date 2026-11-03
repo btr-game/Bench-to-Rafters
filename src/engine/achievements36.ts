@@ -20,7 +20,7 @@ import type { AchTier, CareerTotals } from './achievements';
 import { championships, count, hallOfFame } from './awards/legacy';
 import { raftersDetail } from './awards/details';
 import { legendarySeasons } from './awards/legendary';
-import { duoEffect } from './career/duo';
+import { duoAtEnd } from './career/duo';
 
 /** What a device has seen of the finale (ui/achievements.ts recordFinale counts each once a career):
  * a rafters ceremony or the credits alone played to the end, one played to the end when its Skip
@@ -55,9 +55,6 @@ const startedJv = (g: GameState) => g.history.some((h) => h.level === 'HSJV');
 /** The team he promised to finish with at the number talk (events/round36.ts), by his last NBA row that summer. */
 const pledgedTo = (g: GameState): string | null => (g.flags.pledge ? (g.history.filter((h) => h.level === 'NBA' && h.year === g.flags.pledge).pop()?.teamId ?? null) : null);
 const has = (f: Facts36, id: string) => f.g.purchases.includes(id);
-/** A duo of his own still together when he retired: growBonds drops a bond once the teammate is
- * gone, and nothing drops it after his last season. */
-const duoAtEnd = (g: GameState) => (g.bonds ?? []).some((b) => b.formed !== undefined);
 const logged = (f: Facts36, re: RegExp) => f.g.log.some((e) => e.kind === 'event' && re.test(e.text));
 
 // ---- the speech (ui/finale.ts speechOf): its third line and its person ----
@@ -69,13 +66,12 @@ function speechTurn(f: Facts36): 'rings' | 'mvp' | 'chase' | null {
   if (t.titles) return 'rings';
   return count(f.g, 'MVP') ? 'mvp' : 'chase';
 }
-/** The one person the speech thanks: his family first, then his running mate, then his rival. (Once
- * he has retired no duo is active, so the speech and the credits name the running mate only if the
- * finale comes to read him another way; `duoAtEnd` is the duo of his last season.) */
+/** The one person the speech thanks: his family first, then his running mate (his duo as the career
+ * ended), then his rival. */
 function speechPerson(f: Facts36): 'family' | 'duo' | 'rival' | null {
   if (!hangs(f)) return null;
   if (f.g.flags.child) return 'family';
-  if (duoEffect(f.g)?.b) return 'duo';
+  if (duoAtEnd(f.g)) return 'duo';
   return f.g.rivalry ? 'rival' : null;
 }
 
@@ -96,7 +92,7 @@ export function creditRows(g: GameState, retired = g.step === 'retired') {
   const labels = new Set(g.awards.filter((a) => !/champion/i.test(a.label)).map((a) => a.label)).size;
   const nba = g.history.some((h) => h.level === 'NBA' && h.line.gp > 0);
   const forever = (hallOfFame(g) ? 1 : 0) + (retired ? raftersDetail(g).length : 0);
-  const people = [!!duoEffect(g), !!g.rivalry, !!g.flags.wed, !!g.flags.child, !!g.parent].filter(Boolean).length;
+  const people = [!!duoAtEnd(g), !!g.rivalry, !!g.flags.wed, !!g.flags.child, !!g.parent].filter(Boolean).length;
   const rows = { starring: 2, teams, titles: championships(g).length, legend: legendarySeasons(g).length, awards: Math.min(12, labels), nba: nba ? 2 : 0, forever, people };
   return { ...rows, labels };
 }
@@ -126,7 +122,7 @@ export const ACHIEVEMENTS_36: Ach36[] = [
     const id = pledgedTo(f.g);
     return !!id && hung(f).some((t) => t.id === id);
   }),
-  A('rf-duo', 'Plus One', 'allstar', 'Have your number retired with your running mate still beside you.', (f) => hangs(f) && duoAtEnd(f.g)),
+  A('rf-duo', 'Plus One', 'allstar', 'Have your number retired with your running mate still beside you.', (f) => hangs(f) && !!duoAtEnd(f.g)),
   A('rf-real', 'Raised in Reality', 'starter', 'Have your number retired in Reality hits hard.', (f) => f.g.mode === 'reality' && hangs(f)),
   // ---- the speech under the lights ----
   A('sp-chase', 'We Never Stopped Chasing', 'allstar', 'Have your number retired by a team you never won a title with, and no MVP to show for it.', (f) => speechTurn(f) === 'chase'),

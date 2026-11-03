@@ -267,8 +267,8 @@ describe('the speech and the credits, as the finale writes them', () => {
       expect(test36('cr-champs5', g)).toBe(rows('Championships') >= 5);
       expect(test36('cr-short', g)).toBe(blocks.map((b) => b.head).join() === 'Starring,Teams');
     }
-    // the variant with everyone in it thanks three: the wife, the child, the rival
-    expect(variants().some((g) => creditRows(g).people === 3)).toBe(true);
+    // the variant with everyone in it names his running mate too (his duo as the career ended)
+    expect(variants().some((g) => creditRows(g).people >= 3 && !!g.bonds?.length)).toBe(true);
   });
 
   it('rolls short credits for a career with nothing but a name and his teams', () => {

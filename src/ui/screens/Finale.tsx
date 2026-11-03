@@ -12,6 +12,8 @@ import { JerseyArt } from '../art/Jersey';
 import { AwardArt } from '../art/Award';
 import { ShareButton } from '../components/Share';
 import { sfx } from '../sound';
+import { recordFinale } from '../achievements';
+import { achievementsNow } from '../../store';
 import { MAKERS, creditsOf, finaleKind, finaleSeen, markFinaleSeen, raftersTeam, speechOf, timeline, type Act } from '../finale';
 
 const NIGHT = '#0A0E1C';
@@ -160,17 +162,20 @@ export function Finale({ g, from }: { g: GameState; from?: Act }) {
   const team = raftersTeam(g);
   const p = g.player;
   const thanksBtn = useRef<HTMLButtonElement>(null);
+  // for the finale's achievements: whether it was skipped to the end (or opened past its start)
+  const skipped = useRef(!!from || i > 0);
 
   useEffect(() => {
     const secs = plan[i]?.secs ?? 0;
     if (!secs) {
       markFinaleSeen(kind);
+      if (recordFinale(g, kind, { skippable, skipped: skipped.current })) achievementsNow();
       thanksBtn.current?.focus();
       return;
     }
     const t = window.setTimeout(() => setI((k) => Math.min(plan.length - 1, k + 1)), secs * 1000);
     return () => window.clearTimeout(t);
-  }, [i, plan, kind]);
+  }, [i, plan, kind, g, skippable]);
 
   // the music follows the act (tracks.ts), and each act has its sounds: the house lights coming
   // up bank by bank, the jersey going up and reaching the rafters, the title, the thank-you
@@ -189,7 +194,10 @@ export function Finale({ g, from }: { g: GameState; from?: Act }) {
     return () => window.clearInterval(id);
   }, [act]);
 
-  const skip = () => setI(plan.length - 1);
+  const skip = () => {
+    skipped.current = true;
+    setI(plan.length - 1);
+  };
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
       if (document.querySelector('[role="dialog"]')) return;

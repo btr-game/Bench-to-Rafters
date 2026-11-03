@@ -15,15 +15,15 @@ import type { GameState } from '../engine/types';
 import { championships, hallOfFame, nbaCareerPoints, raftersTeams } from '../engine/awards/legacy';
 import { raftersDetail } from '../engine/awards/details';
 import { legendarySeasons } from '../engine/awards/legendary';
-import { duoEffect } from '../engine/career/duo';
+import { duoAtEnd } from '../engine/career/duo';
 
 export type Act = 'arena' | 'speech' | 'jersey' | 'roll' | 'title' | 'thanks';
-type FinaleKind = 'rafters' | 'credits' | 'level';
+export type FinaleKind = 'rafters' | 'credits' | 'level';
 
 /** The whole of it stays under two minutes (owner); the thank-you waits for the player. */
 export const FINALE_MAX = 120;
 /** Seconds for each act; the speech and the roll grow with the career, inside their limits. */
-const ACT_SECS = { arena: 7, speechLine: 5.5, jersey: 12, rollMin: 20, rollMax: 52, rollLine: 1.4, title: 6 } as const;
+export const ACT_SECS = { arena: 7, speechLine: 5.5, jersey: 12, rollMin: 20, rollMax: 52, rollLine: 1.4, title: 6 } as const;
 
 /** Which ending a career gets, or none (a career still going, the daily, a lab run). */
 export function finaleKind(g: GameState): FinaleKind | null {
@@ -69,7 +69,7 @@ export function speechOf(g: GameState): string[] {
   if (rings) lines.push(rings === 1 ? 'We hung one banner together. I still remember every second of that night.' : `We hung ${rings} banners together. I remember every one of those nights.`);
   else if (mvps) lines.push(`The MVP ${mvps === 1 ? 'trophy is' : 'trophies are'} nice. You are the part I will miss.`);
   else lines.push('We never got the ring. We never stopped chasing it, either.');
-  const duo = duoEffect(g)?.b;
+  const duo = duoAtEnd(g)?.b;
   if (g.flags.child) lines.push(`To my family: every time I looked up and saw that little jersey, I played a little harder.`);
   else if (duo) lines.push(`${first(duo.name)}, I would not be up there without you.`);
   else if (g.rivalry) lines.push(`${g.rivalry.name}, you made me better every single night. Don't tell anybody.`);
@@ -123,7 +123,7 @@ export function creditsOf(g: GameState): CreditBlock[] {
   const hung = raftersDetail(g);
   if (hof || hung.length) out.push({ head: 'Forever', rows: [...(hof ? [hof === 'first' ? 'Hall of Fame, first ballot' : 'Hall of Fame'] : []), ...hung.map((t) => `#${p.number} hangs in the ${t.name} rafters`)] });
   const people: string[] = [];
-  const duo = duoEffect(g);
+  const duo = duoAtEnd(g);
   if (duo) people.push(`Running mate · ${duo.b.name}${duo.third ? ` and ${duo.third.name}` : ''}`);
   if (g.rivalry) people.push(`Rival · ${g.rivalry.name}`);
   if (g.flags.wed) people.push(`Married · ${g.flags.wed}`);
@@ -141,7 +141,7 @@ export const MAKERS: { role: string; name: string }[] = [
 ];
 
 /** How long the roll runs: a line and a half a second's worth, inside its limits. */
-function rollSecs(blocks: CreditBlock[]): number {
+export function rollSecs(blocks: CreditBlock[]): number {
   const lines = blocks.reduce((n, b) => n + 2 + b.rows.length, 0) + 2 + MAKERS.length * 2;
   return Math.min(ACT_SECS.rollMax, Math.max(ACT_SECS.rollMin, lines * ACT_SECS.rollLine));
 }

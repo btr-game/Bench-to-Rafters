@@ -26,7 +26,7 @@ import { canPlayChild, childGame, childLegacy, childSeed } from './engine/nextGe
 import { attachChild, logCareer, type LogResult } from './ui/careerLog';
 import { signed, username } from './ui/names';
 import { finaleFor, type Act } from './ui/finale';
-import { checkAch, countCareer, earnedIn, recordMp, recordOpened, recordUndo, recordVisit, simOpen } from './ui/achievements';
+import { checkAch, countCareer, earnedIn, recordMp, recordOpened, recordPosted, recordUndo, recordVisit, simOpen } from './ui/achievements';
 import { community } from './ui/community';
 import { cleanProspect, multiplayer, pump, readLink, seasonLine, send, type Challenge, type MpLink } from './ui/multiplayer';
 import { deleteSlot, dropRun, importCode, newSlotId, readRun, readSlot, writeRun, writeSlot } from './ui/saves';
@@ -993,7 +993,12 @@ useStore.subscribe((now, before) => {
   // (owner: "the career played in multiplayer wont be counted towards the real leaderboards in
   // community"): a career with friends counts on its challenge's or class's board only
   // round 36: with the username it was played under, so the boards show whose player it is
-  if (!g.mp?.challenge && !g.mp?.klass) void community().then((c) => c.postCareer(signed(rec)));
+  if (!g.mp?.challenge && !g.mp?.klass) {
+    const mine = signed(rec);
+    void community().then((c) => c.postCareer(mine));
+    // round 36: a career posted under the username counts toward its achievements
+    recordPosted(mine);
+  }
   // round 35: a draft class gets the card, a friend's challenge its answer
   if (g.mp?.klass) send({ k: 'career', code: g.mp.klass, rec, run: g.mp.run });
   if (g.mp?.challenge) {
