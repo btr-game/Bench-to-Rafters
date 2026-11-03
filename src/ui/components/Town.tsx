@@ -100,6 +100,7 @@ export function Town({ g, fast }: { g: GameState; fast: boolean }) {
   const [from, setFrom] = useState(x);
   const [walking, setWalking] = useState(false);
   const [stride, setStride] = useState(false);
+  const entering = useRef(false);
   // the top bar shows the places in small once the town has scrolled out of view
   useEffect(() => {
     const el = box.current;
@@ -122,11 +123,19 @@ export function Town({ g, fast }: { g: GameState; fast: boolean }) {
       return;
     }
     setWalking(true);
-    const step = window.setInterval(() => setStride((v) => !v), 120);
+    // a footstep every other stride, and the bell over the door once he is there
+    let n = 0;
+    const step = window.setInterval(() => {
+      setStride((v) => !v);
+      if (n++ % 2 === 0) sfx('step');
+    }, 120);
     const done = window.setTimeout(() => {
       setWalking(false);
       setFrom(x);
       window.clearInterval(step);
+      // the bell only when he goes in, not when the arrow keys walk him past
+      if (entering.current) sfx('door');
+      entering.current = false;
     }, ms);
     return () => {
       window.clearInterval(step);
@@ -140,6 +149,7 @@ export function Town({ g, fast }: { g: GameState; fast: boolean }) {
   const timing = ms ? { transitionDuration: `${ms}ms`, transitionTimingFunction: `steps(${Math.max(2, Math.round(dist / 3))})` } : { transitionDuration: '0ms' };
 
   const go = (p: Place) => {
+    entering.current = true;
     setLast(p.id);
     setFocused(null);
     if (p.tab === tab) sfx('tab');

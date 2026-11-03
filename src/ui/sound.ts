@@ -77,6 +77,9 @@ export const SFX = [
   // round 35, the draft class: reunion night's awards, and a reaction on a friend's season
   ['toast', 'Reunion night: an award read out (glasses clink, a cheer)'],
   ['react', 'Play with friends: a reaction on a classmate’s season'],
+  // round 37: the town
+  ['step', 'The town: his footsteps as he walks along the street'],
+  ['door', 'The town: the bell over the door as he reaches a place'],
 ] as const;
 type Sfx = (typeof SFX)[number][0];
 
@@ -417,6 +420,15 @@ export function sfx(name: Sfx, always = false): void {
       tone(N(47), t + 0.06, 0.07, 'sine', 0.3);
       seq([19, 24], 0.09, 'square', 0.35);
       noise(t + 0.22, 0.25, 0.18);
+      break;
+    // ---- round 37: the town ----
+    case 'step': // a soft footfall on the pavement
+      noise(t, 0.025, 0.12);
+      tone(N(-5), t, 0.03, 'triangle', 0.12);
+      break;
+    case 'door': // the bell over a shop door
+      tone(N(28), t, 0.08, 'triangle', 0.3);
+      tone(N(33), t + 0.07, 0.12, 'triangle', 0.22);
       break;
     case 'react': // a pop and a bright note: one reaction on a friend's season
       noise(t, 0.02, 0.2);
