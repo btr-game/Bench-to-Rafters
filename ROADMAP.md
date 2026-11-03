@@ -37,6 +37,10 @@ The order the owner set:
   playable playoff games, the finals action cam, 3-on-3). Owner: "this should be a high level game,
   with great detail and extensive design. we're gonna spend a lot of time building the interactions
   and animations." Discussed with the owner while 38 and 40 are built; built last, before publishing.
+  Decided so far: **he is steered directly**, close to an action game ("make this a complete almost
+  shooter games. smth like nba 2k"); it plays **only the biggest moments** (the last quarter of a
+  final or an elimination game) with the clock sped up so a quarter takes **3 to 5 minutes**, and a
+  **Skip** is there mid-game.
 - **Round 40**: **languages**: Korean, Chinese, Japanese, Spanish and French. The last round with a
   significant system; after it, only small balance changes and bug fixes (owner: "so let's keep up
   the spark").
