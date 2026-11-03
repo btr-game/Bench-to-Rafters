@@ -2776,3 +2776,10 @@ td > .link-btn { min-width: 44px; text-align: left; }
 .board-by { font-weight: 400; color: var(--muted); font-size: 0.85em; margin-left: 6px; }
 .grad-username { margin-block: 14px; }
 .username-prompt { margin-bottom: 16px; }
+/* round 36: Around you, one card at Home's side; the parts inside drop their own card frame */
+.around-tabs { gap: 5px; }
+.around-tabs button { display: inline-flex; align-items: center; gap: 6px; padding: 5px 9px; min-height: 36px; min-width: 0; font-size: calc(13px * var(--ts)); }
+.around-part > .card { background: none; border: 0; border-radius: 0; padding: 0; }
+.around-part > .rival-card { border-top: 4px solid var(--bad); padding-top: 10px; }
+.around-part > .rival-card.lvl-mvp { border-top-color: var(--gold); }
+.around-part + .around-part { border-top: 1px solid var(--line); padding-top: 14px; }

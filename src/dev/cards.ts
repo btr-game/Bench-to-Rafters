@@ -317,7 +317,7 @@ export const CARDS: DevCard[] = [
 
   // career hub
   { id: 'home-hs', title: 'Home: high school', group: 'Career hub', icon: 'house', blurb: 'The first season, the first plan.', open: () => show(hsStart()) },
-  { id: 'home-nba', title: 'Home: an NBA star', group: 'Career hub', icon: 'stars', blurb: 'Third NBA season, MVP race, duo, stories.', open: () => show(nbaStar()) },
+  { id: 'home-nba', title: 'Home: an NBA star', group: 'Career hub', icon: 'stars', blurb: 'Third NBA season; Around you opens on what matters now (the MVP race, the duo, the rivalry, the league, the talk).', open: () => show(nbaStar()) },
   { id: 'season', title: 'Season tab', group: 'Career hub', icon: 'calendar', blurb: 'Season and league in one (round 29): team and form, standings beside team strength, the league leaders, his games, award voting, champions, the record book.', open: () => show(nbaStar(), 'season') },
   { id: 'player', title: 'Player tab', group: 'Career hub', icon: 'person', blurb: 'Ratings, status, contract, profile, scouting, body map.', open: () => show(nbaStar(), 'player') },
   { id: 'roster', title: 'Team roster and fit', group: 'Career hub', icon: 'roster', blurb: 'The five, the bench, the system and the chemistry.', open: () => show(nbaStar(), 'player'), press: '[data-tour="roster"]' },
@@ -328,10 +328,10 @@ export const CARDS: DevCard[] = [
     title: 'Cards folded on Home',
     group: 'Career hub',
     icon: 'fold',
-    blurb: 'Round 34: most cards fold, from their title or the tab on their top edge, to a one-line strip; folds stay on the device. Here the scouting report, Milestones, the MVP race and the fan talk are folded.',
+    blurb: 'Round 34: most cards fold, from their title or the tab on their top edge, to a one-line strip; folds stay on the device. Here the scouting report, Milestones and Around you are folded.',
     open: () => {
       const ok = show(nbaStar());
-      setFolds(['box:scout', 'card:Milestones', 'box:mvp', 'box:reaction']);
+      setFolds(['box:scout', 'card:Milestones', 'box:around']);
       return ok;
     },
   },
@@ -371,7 +371,7 @@ export const CARDS: DevCard[] = [
   },
   { id: 'modes', title: 'How you play', group: 'Career hub', icon: 'dial', blurb: 'Every mode as a switch, above Around the league.', open: () => show(loaded()), press: '[data-tour="modes"]' },
   { id: 'strength', title: 'Why it went this way', group: 'Career hub', icon: 'chart', blurb: 'Team strength, factor by factor.', open: () => show(nbaStar(), 'season') },
-  { id: 'rival', title: 'Rival', group: 'Career hub', icon: 'rival', blurb: 'Draft class, head to head, MVP race: you and him on one floor.', open: () => show(loaded()) },
+  { id: 'rival', title: 'Rival', group: 'Career hub', icon: 'rival', blurb: 'Draft class, head to head, MVP race: you and him on one floor, in Around you.', open: () => show(loaded()), press: '[data-pane="rival"]' },
   { id: 'name-card', title: 'Nickname and brand', group: 'Career hub', icon: 'crown', blurb: 'His nickname, its two-colour logo (locked until his first brand deal), the brand deal.', open: () => show(loaded(), 'player') },
   { id: 'staff', title: 'Staff', group: 'Career hub', icon: 'chef', blurb: 'Each at work in the role’s uniform: a talk once a season for a small edge, a raise, letting go.', open: () => show(loaded(), 'player') },
   { id: 'wardrobe', title: 'Wardrobe', group: 'Career hub', icon: 'hanger', blurb: 'Accessories on the avatar; swap or take them off.', open: () => show(loaded(), 'player') },
