@@ -6,6 +6,10 @@
 // left, the last shot is taken. On the full start page the modes the road map opens must still be
 // locked (Reality hits hard, Shoot for the stars, the mini-games). Fails on a script error, when a
 // lock is open, or when nothing on screen moves the tutorial on.
+// Round 37: graduation's button takes the plane to the main land, the start page's map. With
+// reduced motion (the default here) the flight is skipped; with MOTION=1 it must play and land by
+// itself, and the device must remember it (btr-plane-seen). The locks are the map's places: the
+// cage, the dome and the island.
 //
 //   node scripts/tutorial-e2e.cjs [desk|phone] [out dir]     (dev server on :5179)
 //   LESSON_IDS=<ids, comma-separated> lists the lessons never shown; MOTION=1 plays the animations
@@ -41,6 +45,7 @@ fs.rmSync(`${OUT}/live.txt`, { force: true });
   let same = 0;
   let repeat = 0;
   let lastDid = '';
+  let flew = false;
   const t0 = Date.now();
   const vis = async (sel) => {
     const l = p.locator(sel).first();
@@ -101,7 +106,12 @@ fs.rmSync(`${OUT}/live.txt`, { force: true });
         break;
       }
     } else if (await click('.intro-go')) did = 'intro/thanks';
-    else if (await click('[data-tour="graduate"]')) did = 'graduate';
+    // round 37: the flight lands by itself; it is waited for, not skipped
+    else if (await vis('.plane-flight')) {
+      if (!flew) log.push(`${((Date.now() - t0) / 1000).toFixed(1)}s the plane to the main land`);
+      flew = true;
+      did = 'flying';
+    } else if (await click('[data-tour="graduate"]')) did = 'graduate';
     else if ((await vis('[data-tour="mode-regular"]')) && !(await vis('.lesson-tip'))) {
       const road = await p.evaluate(() => JSON.parse(localStorage.getItem('btr-road-v1') || '{}'));
       if (road.free) {
@@ -146,23 +156,21 @@ fs.rmSync(`${OUT}/live.txt`, { force: true });
     }
   }
   const road = await p.evaluate(() => JSON.parse(localStorage.getItem('btr-road-v1') || '{}'));
-  // round 35: what the road map opens is still shut on the full start page
+  // round 35: what the road map opens is still shut on the full start page; round 37: on its map
   const locks = await p.evaluate(() => {
-    const card = (name) => [...document.querySelectorAll('.mode-card')].find((b) => b.textContent.includes(name));
-    return {
-      regular: !!card('Regular guy') && !card('Regular guy').disabled,
-      reality: !!card('Reality hits hard')?.disabled,
-      stars: !!card('Shoot for the stars')?.disabled,
-      minis: !!document.querySelector('.mini-locked'),
-    };
+    const st = (id) => document.querySelector(`.ml-spot[data-place="${id}"]`)?.getAttribute('data-state');
+    return { regular: !!st('gym') && st('gym') !== 'locked', reality: st('cage') === 'locked', stars: st('dome') === 'locked', minis: st('island') === 'locked' };
   });
   const shut = locks.regular && locks.reality && locks.stars && locks.minis;
+  // round 37: the flight plays once with motion (and is remembered), never with reduced motion
+  const seenPlane = await p.evaluate(() => localStorage.getItem('btr-plane-seen'));
+  const plane = process.env.MOTION ? flew && seenPlane === '1' : !flew;
   await p.screenshot({ path: `${OUT}/end.png`, fullPage: true });
   fs.writeFileSync(`${OUT}/log.txt`, log.join('\n'));
   const all = (process.env.LESSON_IDS || '').split(',').filter(Boolean);
   const missed = all.filter((id) => !(road.lessons || []).includes(id));
-  const out = { view: VIEW.width, seconds: Math.round((Date.now() - t0) / 1000), passed: Object.keys(road.passed || {}), free: !!road.free, locks, lessons: (road.lessons || []).length, missed, seen: Object.fromEntries(seen), errors };
+  const out = { view: VIEW.width, seconds: Math.round((Date.now() - t0) / 1000), passed: Object.keys(road.passed || {}), free: !!road.free, locks, plane: { flew, seen: seenPlane === '1', ok: plane }, lessons: (road.lessons || []).length, missed, seen: Object.fromEntries(seen), errors };
   console.log(JSON.stringify(out, null, 1));
   await b.close();
-  process.exit(road.free && shut && !errors.length ? 0 : 1);
+  process.exit(road.free && shut && plane && !errors.length ? 0 : 1);
 })();

@@ -421,7 +421,7 @@ export const FAN_VOTE = { share: 0.15, scale: 25 };
 // starters and one more); for the MVP voters want a clear case: `margin` off his score (value a
 // game plus team wins), and `fatigue` more for each MVP he has won. Measured on 600 Regular guy
 // careers: All-Star 39.0% to 32.5%, MVP 14.2% to about 9-10% (the balance harness: smart player, casual mini-games).
-export const ALL_STAR_BAR = { userTop: 6 };
+export const ALL_STAR_BAR = { userTop: 6, level: 12 };
 export const MVP_BAR = { margin: 6, fatigue: 2.5 };
 // per-game form (hot and cold nights) and a streaky rhythm across a half
 export const FORM = { gameSd: 0.17, halfSd: 0.08, min: 0.5, max: 1.7, shootingShare: 0.3 };

@@ -2633,8 +2633,6 @@ input[type='range'] { width: 100%; min-height: 32px; accent-color: var(--accent)
 .diploma-code > span { font-family: var(--f-mono); text-transform: uppercase; letter-spacing: 0.1em; font-size: calc(13px * var(--ts)); }
 .diploma-code b { font-family: var(--f-mono); font-size: calc(34px * var(--ts)); letter-spacing: 0.18em; color: #9B2C1A; user-select: all; }
 .diploma-code small { font-size: calc(13px * var(--ts)); color: #5A4229; max-width: 34ch; }
-.mode-card.recommended { box-shadow: 0 0 0 3px var(--accent); }
-.mode-card.recommended .tag { margin-left: 6px; }
 /* the tutorial guide: the page shaded around one control, which alone responds */
 .lesson-layer { position: fixed; inset: 0; z-index: 1200; pointer-events: none; }
 .lesson-shade { position: fixed; background: rgba(12, 14, 22, 0.58); pointer-events: auto; }
@@ -3035,3 +3033,62 @@ td > .link-btn { min-width: 44px; text-align: left; }
 @media (max-width: 640px) { .end-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; } }
 /* on a phone the team's tag would sit over a building: the street's own signs say enough */
 @media (max-width: 599px) { .tw-street-name { display: none; } }
+
+/* ---- round 37: the main land, the start page's first step (screens/MainLand.tsx, art/LandArt.tsx),
+   and the plane to it from graduation (screens/Plane.tsx, art/FlightArt.tsx). One block, so it
+   merges cleanly. ---- */
+/* the town by night in the dark theme: the shade over it, the lit windows and the halos show */
+.ml-night { display: none; }
+:root[data-theme='dark'] .ml-night { display: inline; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme='light']) .ml-night { display: inline; } }
+.ml-hero { display: grid; gap: 4px; padding-block: 4px 12px; }
+.ml-title { font-family: var(--f-display); font-weight: 900; font-size: calc(clamp(34px, 4.4vw, 54px) * var(--ts)); line-height: 0.9; text-transform: uppercase; }
+.ml-stage { position: relative; }
+.ml-art { display: block; width: 100%; height: auto; border-radius: 10px; border: 1px solid var(--line); image-rendering: pixelated; }
+.ml-spots { position: absolute; left: 0; top: 0; width: 100%; aspect-ratio: 224 / 100; pointer-events: none; z-index: 1; }
+.ml-spot { position: absolute; pointer-events: auto; padding: 0; background: transparent; border: 3px dashed transparent; border-radius: 6px; cursor: pointer; }
+.ml-spot:hover, .ml-spot:focus-visible, .ml-spot.on { border-color: #FFFFFF; box-shadow: 0 0 0 2px rgba(24, 20, 28, 0.75); outline: none; }
+/* the plates: a sign for each place on the avenue's side of it, the name beside its icon */
+.ml-plate { position: absolute; left: 50%; display: inline-flex; align-items: center; gap: 5px; padding: 2px 7px 2px 4px; border: 2px solid #18141C; border-radius: 5px; background: #FFFFFF; color: #18141C; font-family: var(--f-display); font-weight: 800; font-size: calc(13px * var(--ts)); letter-spacing: 0.03em; text-transform: uppercase; line-height: 1.15; white-space: nowrap; box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.35); }
+.ml-plate .art-icon { flex: none; }
+.ml-spot.ml-top .ml-plate { bottom: 0; transform: translate(-50%, 50%); }
+.ml-spot.ml-bottom .ml-plate { top: 0; transform: translate(-50%, -50%); }
+.ml-spot.locked .ml-plate { background: #DEE2E6; }
+.ml-spot.next .ml-plate { background: #FCC419; animation: ml-hop 0.9s steps(2, jump-none) infinite; }
+@keyframes ml-hop { 50% { translate: 0 -4px; } }
+:root[data-theme='dark'] .ml-plate { background: #1B1F27; color: #F1F3F5; border-color: #E9ECEF; }
+:root[data-theme='dark'] .ml-spot.locked .ml-plate { background: #343A40; }
+:root[data-theme='dark'] .ml-spot.next .ml-plate { background: #FCC419; color: #18141C; border-color: #18141C; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .ml-plate { background: #1B1F27; color: #F1F3F5; border-color: #E9ECEF; }
+  :root:not([data-theme='light']) .ml-spot.locked .ml-plate { background: #343A40; }
+  :root:not([data-theme='light']) .ml-spot.next .ml-plate { background: #FCC419; color: #18141C; border-color: #18141C; }
+}
+/* a map too small for the names keeps the icons; on a phone they sit inside their places */
+@media (max-width: 999px) { .ml-name { display: none; } .ml-plate { padding: 2px; } }
+@media (max-width: 720px) {
+  .ml-plate .art-icon { width: 14px; height: 14px; }
+  .ml-spot.ml-top .ml-plate { bottom: 2px; transform: translateX(-50%); }
+  .ml-spot.ml-bottom .ml-plate { top: 2px; transform: translateX(-50%); }
+}
+/* the card beside a place (round 34's road map pop-out, a little narrower for a busier map) */
+@media (min-width: 721px) { .ml-pop { width: min(440px, 40%); } .ml-pop.ml-top { max-height: none; overflow: visible; } }
+.ml-head { gap: 10px; align-items: center; padding-right: 44px; }
+.ml-crop { flex: none; border-radius: 6px; border: 1px solid var(--line); image-rendering: pixelated; }
+.ml-card > .card { background: none; border: 0; border-radius: 0; padding: 0; box-shadow: none; }
+.ml-venue-title { gap: 10px; align-items: center; flex-wrap: wrap; }
+.ml-venue .oath-card { display: block; padding: 12px; }
+@media (prefers-reduced-motion: reduce) { .ml-spot.next .ml-plate { animation: none; } }
+/* the flight: the strip at the foot of the screen under a sky (a smooth gradient, as backgrounds may be) */
+.plane-flight { position: fixed; inset: 0; z-index: 95; overflow: hidden; background: linear-gradient(#4FA8EC, #BFE3FF 72%, #E7F5FF); }
+:root[data-theme='dark'] .plane-flight, :root[data-theme='dark'] .grad-plane .pl-art { background: linear-gradient(#040817, #15214A 72%, #22305E); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme='light']) .plane-flight, :root:not([data-theme='light']) .grad-plane .pl-art { background: linear-gradient(#040817, #15214A 72%, #22305E); } }
+.plane-flight .pl-art { position: absolute; inset: 0; display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+.pl-caption { position: absolute; left: 50%; top: max(9%, 64px); transform: translateX(-50%); display: grid; justify-items: center; gap: 4px; width: max-content; max-width: calc(100% - 32px); padding: 10px 18px; background: #0C101C; border: 3px solid #F8F9FA; box-shadow: 0 0 0 3px #0C101C; color: #F8F9FA; text-align: center; }
+.pl-caption span { font-family: var(--f-mono); font-size: calc(13px * var(--ts)); letter-spacing: 0.14em; text-transform: uppercase; color: #C9CFDA; }
+.pl-caption b { font-family: var(--f-display); font-size: calc(clamp(26px, 4vw, 40px) * var(--ts)); text-transform: uppercase; letter-spacing: 0.04em; line-height: 1; }
+.pl-skip { position: absolute; top: max(14px, env(safe-area-inset-top, 0px)); right: max(14px, env(safe-area-inset-right, 0px)); }
+/* graduation's last card: the plane waiting on the island's airstrip */
+.grad-plane { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 16px; align-items: center; margin-block: 14px; }
+.grad-plane .pl-art { display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--line); background: linear-gradient(#4FA8EC, #BFE3FF 72%); image-rendering: pixelated; }
+@media (max-width: 640px) { .grad-plane { grid-template-columns: minmax(0, 1fr); } }

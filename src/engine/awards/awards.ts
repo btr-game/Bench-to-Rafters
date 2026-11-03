@@ -20,6 +20,7 @@ interface Cand {
   friend?: boolean; // round 35: a classmate's player (career/friendLeague.ts)
   /** Round 36: his MVP bar (MVP_BAR), taken off his MVP score: voters want a clear case. */
   mvpBar?: number;
+  allStarTop?: number; // round 37: the All-Star cut-off for him (see UserCandInput)
   age: number;
   ovr: number;
 }
@@ -51,6 +52,7 @@ interface UserCandInput {
   ovr?: number;
   dpoyWins?: number; // voter fatigue: past wins make the next one harder
   mvpWins?: number; // round 36: the same for the MVP (MVP_BAR)
+  allStarTop?: number; // round 37: how far down his conference's vote he can make the team (a tutorial level keeps all twelve)
 }
 
 // ratings above 85 count for less: past that, voters see the stops, not the rating
@@ -104,6 +106,7 @@ export function buildCandidates(league: League, user: UserCandInput | null, line
       age: user.age,
       ovr: user.ovr ?? 0,
       mvpBar: MVP_BAR.margin + MVP_BAR.fatigue * (user.mvpWins ?? 0),
+      allStarTop: user.allStarTop,
     });
   }
   // round 35: classmates, with their season's numbers. His line carries no defensive numbers, so
@@ -174,7 +177,7 @@ export function nbaAwards(cands: Cand[]): AwardOutcome {
     pool.sort((a, b) => score(b) - score(a));
     // round 36: twelve named, but he makes it only from the top ALL_STAR_BAR.userTop
     const me = pool.findIndex((c) => c.isUser);
-    if (me >= ALL_STAR_BAR.userTop && me < 12) pool.splice(me, 1);
+    if (me >= (pool[me]?.allStarTop ?? ALL_STAR_BAR.userTop) && me < 12) pool.splice(me, 1);
     pool.slice(0, 12).forEach((c) => {
       out.allStarIds.add(c.id);
       if (c.isUser) out.wins.push({ key: 'ALLSTAR', label: 'All-Star' });

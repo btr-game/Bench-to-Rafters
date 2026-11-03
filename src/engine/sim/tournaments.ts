@@ -3,6 +3,7 @@
 // game, and national-team events (youth World Cups, FIBA World Cup, Olympics).
 
 import { ALL_STAR_BAR, FAN_VOTE, LEVELS, MORALE_PERF, ROLE_MINUTES } from '../balance';
+import { levelOf } from '../levels';
 import { chance, clamp, int, logistic, normal, range, shuffle } from '../rng';
 import type { GameLog, GameState, LevelKey, RoleKey, StatLine, Team, TourneyRecord } from '../types';
 import { expected, expectedGameScore, gameScore, sampleGame, usageWeight, valuePerGame, genProfile, genUsageWeight, perGame } from './statModel';
@@ -234,7 +235,7 @@ export function allStarWeekend(s: GameState, firstHalf: StatLine): void {
   const friends = s.mp?.klass ? friendAllStars(s, nba, team.conf, vals, mine) : null;
   const rank = 1 + vals.filter((v) => v > mine).length + (friends?.ahead ?? 0);
   // round 36: twelve a conference, but he makes it only from the top ALL_STAR_BAR.userTop
-  season.allStar = rank <= ALL_STAR_BAR.userTop;
+  season.allStar = rank <= (levelOf(s) ? ALL_STAR_BAR.level : ALL_STAR_BAR.userTop); // round 37: a tutorial level keeps all twelve
   season.allStarRank = rank;
   const lines: string[] = [];
   if (season.allStar) {
