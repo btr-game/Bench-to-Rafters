@@ -83,6 +83,13 @@ The order the owner set:
   descriptions (they follow); the project summary and the dev deck's Catalog are brought up to
   date after it; the round's content batch (achievements, events, storylines, shop items) moves to
   the final end-of-round check, once round 39 is done; nothing in the dev deck is ever translated.
+- **Reminder for the final end-of-round check** (owner, 3 November: "by the eor final, can you remind
+  me to potentially add more translations?"): ask the owner whether to translate more. Still
+  English then: the lines the engine writes (league news, the log, roles such as Deep bench, the
+  season preview's notes), names of places inside sentences, and everything on the owner's "what
+  stays in English" list (events, storylines, press conferences and talks, the finale and
+  endings, achievement names, What's new, the announcer). The manual and the achievements'
+  descriptions are translated in that check anyway.
 - **Later**: a donation channel.
 - Turned down: careers framed as roguelite runs with meta-unlocks ("no").
 - Still to weigh before any paid release: a fictional league in place of the NBA's teams, colours
