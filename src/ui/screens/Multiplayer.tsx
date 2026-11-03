@@ -70,20 +70,24 @@ function useMp(): Multiplayer | null | false {
   return mp;
 }
 
-/** The entry on the start page. */
+/** The entry on the start page: under the difficulties, beside Regular guy's road map card (round 36,
+ * owner: "never put more that 4 cards here. move the play with friends elsewhere (under difficulties
+ * maybe)"). */
 export function MultiplayerCard() {
   const setPage = useStore((s) => s.setPage);
   return (
-    <section className="card stack">
-      <div className="sec-title with-icon">
-        <Icon name="versus" size={28} />
-        Play with friends
+    <div className="card oath-card" role="group" aria-label="Play with friends">
+      <Icon name="versus" size={48} />
+      <div className="stack" style={{ gap: 6 }}>
+        <div className="sec-title">Play with friends?</div>
+        <p className="small muted">Challenge a friend to beat your career from the same start, or start a draft class together and follow each other’s seasons. Regular guy, nobody has to be on at the same time.</p>
+        <div className="row" style={{ gap: 8 }}>
+          <button className="btn small ghost" data-tour="multi" onClick={() => (sfx('page'), setPage('multi'))}>
+            Play with friends
+          </button>
+        </div>
       </div>
-      <p className="small muted">Challenge a friend to beat your career from the same start, or start a draft class together and follow each other’s seasons. Regular guy, nobody has to be on at the same time.</p>
-      <button className="btn ghost" data-tour="multi" onClick={() => setPage('multi')}>
-        Play with friends
-      </button>
-    </section>
+    </div>
   );
 }
 

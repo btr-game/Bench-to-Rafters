@@ -397,6 +397,9 @@ export function Create({ level }: { level?: Level } = {}) {
               );
             })}
           </div>
+          {/* round 36: Play with friends sits here, under the difficulties (Regular guy only), so the
+              cards below stay four */}
+          {mode === 'standard' && !level && !draft && <MultiplayerCard />}
           {/* round 34 (owner: "put the levels (tutorial) card on the main page as a pop out challenge for
               regular"): Regular guy's own challenge is the road map, every level to play again */}
           {mode === 'standard' && !level && (
@@ -452,8 +455,8 @@ export function Create({ level }: { level?: Level } = {}) {
             </div>
           )}
           <p className="muted small">The league is the same at every difficulty. What changes is your potential, how fast you grow and how often you get hurt. Want it quicker? Flip the Fast break switch inside the game, any time.</p>
+          {/* round 36 (owner: "never put more that 4 cards here"): four cards at most, in one row */}
           {!draft && <div className="start-cards">
-            <MultiplayerCard />
             <MiniGamesCard />
             <CareerLogCard />
             <AchievementsCard />

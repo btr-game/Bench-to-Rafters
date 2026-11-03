@@ -2964,3 +2964,12 @@ multiple times."
   Editor, since the connector's confirmation never reached the owner's screen, so the project's
   migration list shows only 0001 to 0004 while every table, column and function of 0005 and 0006 is
   in place and checked), and the website (main at the round 35 merge, Netlify deploy ready).
+
+## Round 36 (owner requests)
+
+- **Four cards on the start page** (owner: "never put more that 4 cards here. move the play with
+  friends elsewhere (under difficulties maybe)"): Play with friends left the row of cards for a card
+  of its own under the difficulties (with Regular guy picked, beside the road map card, as both are
+  Regular guy's), so the row is the mini-games, the career log, the achievement book and the
+  community again. The row's grid now makes four columns at most at any width, and CLAUDE.md keeps
+  the rule.

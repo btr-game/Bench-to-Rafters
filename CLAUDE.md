@@ -68,6 +68,9 @@ Other preferences:
   unless asked otherwise.
 - Give calculations to at least 6 or 7 significant figures before rounding.
 - The game is played mostly on a computer: desktop layout first, phones still supported.
+- **Four cards at most** in the start page's row of cards (mini-games, career log, achievements,
+  community; owner, round 36: "never put more that 4 cards here"). Anything new goes elsewhere (Play
+  with friends sits under the difficulties); the grid itself never makes a fifth column.
 - Never put the owner's email address in the code, the docs or the published page.
 
 ## Lighter checks (owner, round 35)

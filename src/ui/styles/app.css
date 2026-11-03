@@ -1575,7 +1575,8 @@ td .art-team { display: inline-block; vertical-align: middle; margin: -3px 8px -
 @keyframes camFlash { 0% { opacity: 0; } 20% { opacity: 1; } 100% { opacity: 0; } }
 
 /* the career log (round 24) */
-.start-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+/* round 36 (owner: "never put more that 4 cards here"): four columns at most, however wide the page */
+.start-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(max(280px, calc((100% - 42px) / 4)), 1fr)); gap: 14px; }
 .log-entry { display: grid; gap: 12px; }
 .log-head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 14px; align-items: center; }
 .log-who { min-width: 0; display: grid; gap: 2px; }
