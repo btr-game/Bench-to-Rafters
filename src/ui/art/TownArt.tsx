@@ -223,14 +223,25 @@ function between(town: Town, slots: Slot[]): Px[] {
   return out;
 }
 
+/** His car, parked at the kerb in front of his house: a body in his team's colour, glass, wheels. */
+function car(x: number, color: string): Px[] {
+  return [[x + 3, G - 1, 6, 2, C.ink], [x + 4, G - 1, 4, 1, '.tw-win'], [x, G + 1, 12, 3, color], [x, G + 1, 12, 1, C.white], [x + 11, G + 2, 1, 1, '.tw-lamp'], [x + 2, G + 4, 2, 1, C.ink], [x + 8, G + 4, 2, 1, C.ink]];
+}
+
+/** A hoop beside the house: a pole, a backboard, an orange rim. */
+const hoop = (x: number): Px[] => [[x, G - 10, 1, 10, C.steelD], [x - 2, G - 13, 5, 3, C.white], [x - 1, G - 10, 3, 1, C.ball]];
+
+/** His statue outside the arena: a stone plinth and him in gold, an arm up. */
+const statue = (x: number): Px[] => [[x - 3, G - 3, 7, 3, C.stoneD], [x - 3, G - 3, 7, 1, C.stone], [x, G - 11, 2, 2, C.gold], [x - 1, G - 9, 4, 3, C.gold], [x + 3, G - 12, 1, 4, C.gold], [x - 1, G - 6, 1, 3, C.goldD], [x + 2, G - 6, 1, 3, C.goldD]];
+
 function building(id: PlaceKind, town: Town, s: Slot, open: boolean, banners: number, hof: boolean): Px[] {
   switch (id) {
     case 'gym':
       return gym(town.look, s, town.color, open);
     case 'arena':
-      return arena(town, s, open, banners);
+      return [...arena(town, s, open, banners), ...(town.statue ? statue(s.door - 13) : [])];
     case 'house':
-      return house(town.house, s, town.color, open);
+      return [...house(town.house, s, town.color, open), ...(town.hoop && town.house !== 'family' ? hoop(s.x + s.w - 2) : []), ...(town.car ? car(s.door + 4, town.color) : [])];
     case 'agent':
       return agent(s, town.color, open);
     case 'hall':
@@ -247,8 +258,8 @@ export const TownArt = memo(function TownArt({ town, here, pad = 0, banners = 0,
     const body: Px[] = [];
     const lights: Px[] = [];
     const add = (list: Px[]) => list.forEach((p) => (p[4].startsWith('.') ? lights : body).push(p));
-    const far = backdrop(town, W);
-    add(street(W));
+    // the skyline and the road go first, under everything that stands on the street
+    const far = [...backdrop(town, W), ...street(W)];
     add(between(town, slots));
     slots.forEach((s) => add(building(s.place.id, town, s, s.place.id === here, banners, hof)));
     return { far, body, lights };

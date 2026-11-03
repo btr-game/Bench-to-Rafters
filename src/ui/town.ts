@@ -7,7 +7,7 @@
 // decided here; ui/components/Town.tsx walks it and ui/art/TownArt.tsx draws it.
 
 import type { GameState, LevelKey } from '../engine/types';
-import { hallOfFame } from '../engine/awards/legacy';
+import { hallOfFame, raftersTeams } from '../engine/awards/legacy';
 import { team as teamOf } from './selectors';
 import { levelTabs } from './road';
 import { ARENA_W, MARK_W, NBA_ARENAS } from './arenas';
@@ -37,6 +37,11 @@ export interface Town {
   abbr?: string;
   /** his high school, which stands in the hometown */
   school: string;
+  /** what his career has put on the street: his car outside the house, a hoop at home, his statue
+   * outside the arena of the team that hung his jersey */
+  car: boolean;
+  hoop: boolean;
+  statue: boolean;
   house: HouseTier;
   places: Place[];
 }
@@ -115,7 +120,9 @@ export function townOf(g: GameState): Town {
   const places = open ? all.filter((p) => open.includes(p.tab) && p.id !== 'agent') : all;
   const name = look === 'hometown' ? short(g.player.hometown) : look === 'campus' ? t?.short ?? 'Campus' : t?.short ?? short(g.player.hometown);
   const abbr = g.stage === 'NBA' || (g.stage === 'RETIRED' && lastLevel(g) === 'NBA') ? t?.abbr : undefined;
-  return { look, name, color: t?.color ?? '#1C7ED6', club: t?.name ?? name, abbr: abbr && NBA_ARENAS[abbr] ? abbr : undefined, school: g.player.highSchool, house, places };
+  const owns = (...ids: string[]) => ids.some((id) => g.purchases.includes(id));
+  const statue = g.stage === 'RETIRED' && !!g.teamId && raftersTeams(g).includes(g.teamId);
+  return { look, name, color: t?.color ?? '#1C7ED6', club: t?.name ?? name, abbr: abbr && NBA_ARENAS[abbr] ? abbr : undefined, school: g.player.highSchool, house, places, car: pro && owns('car', 'car-collection'), hoop: owns('backyard-court', 'home-court', 'smart-court'), statue };
 }
 
 /** The place a tab belongs to (the agent's office only when it was the last one entered). */

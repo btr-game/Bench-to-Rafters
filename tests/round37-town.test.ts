@@ -65,6 +65,16 @@ describe('round 37: the town', () => {
     expect(with$(HOUSE_AT.mansion)).toBe('mansion');
   });
 
+  it('his car sits outside his house once he bought one as a pro, a hoop once he built a court at home', () => {
+    const g = at(game(), 'NBA');
+    expect(townOf(g).car).toBe(false);
+    expect(townOf({ ...g, purchases: ['car'] }).car).toBe(true);
+    expect(townOf({ ...at(g, 'HS'), purchases: ['car'] }).car).toBe(false);
+    expect(townOf({ ...g, purchases: ['home-court'] }).hoop).toBe(true);
+    // no statue while he plays
+    expect(townOf(g).statue).toBe(false);
+  });
+
   it('lays the street out left to right with no building over another, each door inside its building', () => {
     const g = game();
     for (const stage of ['HS', 'NCAA', 'NBA', 'EU'] as const) {
