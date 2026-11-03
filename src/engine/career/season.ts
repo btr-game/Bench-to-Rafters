@@ -204,7 +204,7 @@ export const PLAN_TEXT: Record<HalfPlan, PlanText> = {
 };
 const PLAN_IDS = Object.keys(PLAN_TEXT) as HalfPlan[];
 /** Fast break: five training groups, one a season. */
-const FAST_PLANS: PlanText[] = [
+export const FAST_PLANS: PlanText[] = [
   { id: 'balanced', label: 'General', detail: 'A bit of everything. Every rating grows at a normal pace.' },
   { id: 'strength', label: 'Weight room', detail: 'Strength and explosiveness: finishing, rebounding, athleticism and rim protection. A bit more injury risk.' },
   { id: 'shooting', label: 'Shooting', detail: 'Your jumper, your range and your free throws get the reps; the rest waits.' },
@@ -212,7 +212,7 @@ const FAST_PLANS: PlanText[] = [
   { id: 'playmaking', label: 'IQ', detail: 'Film, reads and passing: playmaking and basketball IQ. Coaches trust you more.' },
 ];
 /** Built in a lab: how hard to work, since the player picks the ratings himself. */
-const LAB_PLANS: PlanText[] = [
+export const LAB_PLANS: PlanText[] = [
   { id: 'balanced', label: 'Steady', detail: 'Normal credits, normal risk.' },
   { id: 'grind', label: 'Grind', detail: 'More credits, much more wear on your body, burnout possible.' },
   { id: 'recovery', label: 'Recovery', detail: 'Fewer credits, far fewer injuries, heal faster, feel better.' },

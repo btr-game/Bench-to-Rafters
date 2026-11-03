@@ -15,7 +15,9 @@ import path from 'node:path';
 import ts from 'typescript';
 import { tableOf, type Lang } from '../src/i18n';
 import { STORY_EN } from '../src/content/story';
-import { PLAN_TEXT } from '../src/engine/career/season';
+import { FAST_PLANS, LAB_PLANS, PLAN_TEXT } from '../src/engine/career/season';
+import { MODES } from '../src/engine/balance';
+import { ACH_CATS } from '../src/engine/achievementCats';
 import { SHOP_ITEMS } from '../src/content/shop';
 import { ACHIEVEMENTS } from '../src/engine/achievements';
 import { COMBOS } from '../src/engine/awards/legendary';
@@ -51,10 +53,12 @@ export function catalog(): { ui: Map<string, Set<string>>; bad: string[] } {
     };
     visit(src);
   }
-  for (const p of Object.values(PLAN_TEXT)) {
+  for (const p of [...Object.values(PLAN_TEXT), ...FAST_PLANS, ...LAB_PLANS]) {
     add(p.label, 'plan');
     add(p.detail, 'plan');
   }
+  for (const m of Object.values(MODES)) if (m.blurb) add(m.blurb, 'mode');
+  for (const c of ACH_CATS) add(c.name, 'achievement category');
   for (const it of SHOP_ITEMS) {
     add(it.name, 'shop');
     add(it.blurb, 'shop');

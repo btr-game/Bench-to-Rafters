@@ -146,10 +146,10 @@ function Venue({ mode, state, ch, onStart, onFly }: { mode: Mode; state: LandSta
         </>
       ) : (
         <>
-          <p className="small muted">{MODES[mode].blurb}</p>
+          <p className="small muted">{t(MODES[mode].blurb)}</p>
           {/* round 25 (owner): Reality, played the hardest way, asks once and is honoured for it */}
           {mode === 'reality' && (
-            <div className={`card oath-card${oath ? ' on' : ''}`} role="group" aria-label={t('The Rough Road challenge')}>
+            <div className={`card oath-card${oath ? ' on' : ''}`} role="group" data-tour="rough-road" aria-label={t('The Rough Road challenge')}>
               <div className="stack" style={{ gap: 6 }}>
                 <div className="sec-title with-icon">
                   <Icon name="oath" size={28} />

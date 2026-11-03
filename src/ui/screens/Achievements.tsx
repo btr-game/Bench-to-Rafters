@@ -241,7 +241,7 @@ export function AchievementBook() {
             return (
               <button key={c.key ?? 'all'} className="achv-cat" aria-pressed={cat === c.key} onClick={() => setCat(cat === c.key ? null : c.key)}>
                 <Icon name={c.icon} size={22} />
-                <span>{c.key === null ? t('All') : c.name}</span>
+                <span>{c.key === null ? t('All') : t(c.name)}</span>
                 <small className="num">
                   {have}/{n}
                 </small>
@@ -266,11 +266,11 @@ export function AchievementBook() {
         {chapters.map(({ c, items }) => {
           const { have, n } = catN(c.key);
           return (
-            <section key={c.key} className="achv-chapter" aria-label={c.name}>
+            <section key={c.key} className="achv-chapter" aria-label={t(c.name)}>
               {!cat && (
                 <h2 className="sec-title with-icon achv-cat-head">
                   <Icon name={c.icon} size={26} />
-                  {c.name}
+                  {t(c.name)}
                   <small className="num">
                     {have}/{n}
                   </small>

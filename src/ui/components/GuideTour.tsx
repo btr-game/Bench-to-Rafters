@@ -36,7 +36,7 @@ const TOUR: Step[] = [
   T('land-venues', D('mode-regular'), tx('Three venues, three difficulties: the gym is Regular guy, the cage Reality hits hard, the dome Shoot for the stars. A difficulty stays for the whole career; a locked one says which road map stop opens it.')),
   T('start-mode', '.modes', tx('How hard the road is. It stays for the whole career. A locked one says which road map stop opens it.')),
   T('comet', '.comet-card', tx('With Shoot for the stars: Comet, the stars at hyper speed. Fast break and Sim for the whole career, about five minutes.')),
-  T('oath', '.oath-card[aria-label="The Rough Road challenge"]', tx('With Reality hits hard: Rough Road, the hardest way to play. The road picks your player at random, then master mode with no Fast break or Sim, for the whole career, and a mark of honour for it.')),
+  T('oath', '[data-tour="rough-road"]', tx('With Reality hits hard: Rough Road, the hardest way to play. The road picks your player at random, then master mode with no Fast break or Sim, for the whole career, and a mark of honour for it.')),
   T('minis', D('minis'), tx('Mini-games. They open with the island on the road map; then free from the start page, and in a career each one opens with your ratings and pays a rating bonus.')),
   T('levels', D('levels-card'), tx('The airport flies back to the road map. Its stops open Reality hits hard, Shoot for the stars and the mini-games, and every level plays again. Level careers count nowhere.')),
   T('log', D('log'), tx('The career log: the cards of your last ten finished careers. Lock up to five to keep them for good.')),

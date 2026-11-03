@@ -372,7 +372,7 @@ export function Create({ level }: { level?: Level } = {}) {
                     <Icon name={shut ? 'lock' : ICON_FOR[m]} size={32} />
                     {MODES[m].name}
                   </span>
-                  <small className={shut ? 'keep' : undefined}>{shut ? t('A draft class plays Regular guy.') : MODES[m].blurb}</small>
+                  <small className={shut ? 'keep' : undefined}>{shut ? t('A draft class plays Regular guy.') : t(MODES[m].blurb)}</small>
                 </button>
               );
             })}

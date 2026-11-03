@@ -22,6 +22,8 @@ import { negotiable, type Ask } from '../../engine/career/negotiate';
 import { talksOpen } from '../../engine/levels';
 import { StoryPage } from '../components/StoryPage';
 import { t, tx } from '../../i18n';
+import { SHOP_ITEMS } from '../../content/shop';
+import { itemParts } from '../../engine/economy/shop';
 
 const TIER: Record<string, string> = { blue: tx('Blue blood'), power: tx('Power program'), major: tx('Major conference'), mid: tx('Mid-major') };
 
@@ -319,6 +321,17 @@ function LiveView({ g, d }: { g: GameState; d: Decision }) {
   );
 }
 
+/** A shop item's effect in the player's language, a part at a time (round 40); the engine's English
+ * if the item is not in the list. */
+function shopDetail(id: string, en?: string): string {
+  const it = SHOP_ITEMS.find((x) => x.id === id);
+  if (!it) return en ?? '';
+  const and = (xs: string[]) => (xs.length === 2 ? t('{a} and {b}', { a: xs[0], b: xs[1] }) : xs.join(', '));
+  return itemParts(it)
+    .map((p) => (p.what ? t(p.k, { what: and(p.what.map((w) => t(w))) }) : t(p.k)))
+    .join(' · ');
+}
+
 export function DecisionView({ g, d }: { g: GameState; d: Decision }) {
   const choose = useStore((s) => s.choose);
   const simple = useStore((s) => s.simple);
@@ -382,7 +395,7 @@ export function DecisionView({ g, d }: { g: GameState; d: Decision }) {
                 <span className="kicker">{c.tags?.[0] && t(c.tags[0])}</span>
                 <span className="name">{t(name)}</span>
                 <span className="price">{price}</span>
-                <small className="muted">{c.detail && t(c.detail)}</small>
+                <small className="muted">{shopDetail(c.id, c.detail)}</small>
               </button>
             );
           })}
