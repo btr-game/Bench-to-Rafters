@@ -115,6 +115,9 @@ export interface SkewDist {
   sigma: number;
   min: number;
   max: number;
+  /** round 37: a draw above this is drawn again (up to a few times) rather than clamped, so the
+   * long tail doesn't pile up on the cap */
+  redrawOver?: number;
 }
 const POTENTIAL: SkewDist = { base: 37, mu: 3.44, sigma: 0.4, min: 40, max: 103 };
 const ELITE_CLIMB = { from: 85, per: 0.07, min: 0.4 };
@@ -161,7 +164,7 @@ export const FAST_GROWTH = 1.3;
 // starting OVR barely predicts the peak (each point ahead adds about 0.3), so the old 1.2 a point
 // sent a 65 OVR freshman in Shoot for the stars past 99. Fast break and the lab use Regular guy's.
 interface FreshScout { mid: number; slope: number; sd: number }
-export const MODES: Record<Mode, { name: string; blurb: string; potential: SkewDist; growth: number; injury: number; scout: FreshScout; floor?: { age: number; ovr: number; until: number }; elite?: { from: number; per: number; min: number }; mini?: number; teamFx?: number; ringChase?: number }> = {
+export const MODES: Record<Mode, { name: string; blurb: string; potential: SkewDist; growth: number; injury: number; scout: FreshScout; floor?: { age: number; ovr: number; until: number }; elite?: { from: number; per: number; min: number }; mini?: number; teamFx?: number; ringChase?: number; settle?: { share: number; from: number } }> = {
   standard: { name: 'Regular guy', blurb: 'The full game. Most careers peak in the 60s and 70s; the NBA is common, stardom is earned.', potential: POTENTIAL, growth: 0.97, injury: 1, scout: { mid: 72.9, slope: 0.28, sd: 12.1 }, elite: ELITE_CLIMB, mini: 0.4, teamFx: 0.3, ringChase: 0.1 },
   // fast break: the regular game at a quick pace (engine/fast.ts). The quick pace means fewer
   // events, one training group a season and no shop, so the head start is set by simulation:

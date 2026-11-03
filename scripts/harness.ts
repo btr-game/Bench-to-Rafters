@@ -220,6 +220,8 @@ function playMinis(s: GameState, how: MiniPlay): void {
 export interface PlayModes {
   fast?: boolean;
   sim?: boolean;
+  /** round 37: called with the career at every season's summary (diagnostics) */
+  peek?: (s: GameState) => void;
 }
 
 export function runCareer(seed: number, policy: Policy, mode: Mode = 'standard', minis: MiniPlay = 'none', play: PlayModes = {}, force?: { pos: Pos; archetype: number }): CareerResult {
@@ -242,6 +244,7 @@ export function runCareer(seed: number, policy: Policy, mode: Mode = 'standard',
       choose(s, id);
     } else {
       if (s.step === 'summary' && ages[ages.length - 1]?.age !== s.player.age) ages.push({ age: s.player.age, ovr: ovrOf(s.player.attrs, s.player.pos), wear: s.player.wear });
+      if (s.step === 'summary' && play.peek) play.peek(s);
       if (s.step === 'summary' && s.stage === 'HS' && s.hsYear === 4) starsAt = s.stars;
       if (s.step === 'summary' && s.nbaSnapshot && s.year !== lastSnapYear && s.nba) {
         snapshots.push({ ...s.nbaSnapshot });

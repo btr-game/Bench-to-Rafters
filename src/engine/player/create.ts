@@ -28,7 +28,10 @@ import { startWeight } from './weight';
 import { touchStart } from './touch';
 
 export function drawPotential(rng: Rng, d: SkewDist): number {
-  return Math.round(clamp(d.base + Math.exp(normal(rng, d.mu, d.sigma)), d.min, d.max));
+  let v = d.base + Math.exp(normal(rng, d.mu, d.sigma));
+  // round 37: the tail past the cap is drawn again, not stacked on it
+  for (let i = 0; d.redrawOver !== undefined && v > d.redrawOver && i < 6; i++) v = d.base + Math.exp(normal(rng, d.mu, d.sigma));
+  return Math.round(clamp(v, d.min, d.max));
 }
 
 export interface CreateInput {

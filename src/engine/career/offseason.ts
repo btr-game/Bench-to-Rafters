@@ -87,6 +87,12 @@ export function beginOffseason(s: GameState): void {
   // round 24: a body kept fresh through a season builds longevity
   if ((p.wear ?? 0) < LONGEVITY.lowWearBelow) p.longevity = (p.longevity ?? 0) + LONGEVITY.lowWear;
   const aging = applyAging(s.rng, p);
+  // round 37 (owner: the peak curve above 70 should fall in a straight line): once he is a star,
+  // a rating pushed past its cap by a turning point, the shop or a mini-game settles back by a share
+  // of the excess every summer, so boosts past the ceiling stop stacking up at the top (the mode's
+  // `settle`); below its line nothing changes
+  const settle = MODES[s.mode ?? 'standard'].settle;
+  if (settle && ovrOf(p.attrs, p.pos) >= settle.from) for (const k of ATTRS) if (p.attrs[k] > p.caps[k]) p.attrs[k] -= (p.attrs[k] - p.caps[k]) * settle.share;
   // the body recovers a little every summer, and less as he gets older
   p.wear = clamp((p.wear ?? 0) - WEAR.summerRest + Math.max(0, p.age - 25) * WEAR.agePerYear, 0, 100);
   // shoot-for-the-stars mode: never too far behind the path to the floor
