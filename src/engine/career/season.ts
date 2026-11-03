@@ -1,5 +1,6 @@
 // The in-season loop: preseason → first half → midseason → second half + postseason.
 
+import { tx } from '../../i18n';
 import { midseasonSwing, startTeamFactors, winningEdge } from './team';
 import { palsOn } from './friends';
 import { storySeason } from '../story/pals';
@@ -232,12 +233,12 @@ export function pushPlanDecision(s: GameState, half: 1 | 2): void {
     const list = style === 'six' ? (injured ? [...SIX_PLANS, 'recovery' as HalfPlan] : SIX_PLANS).map((id) => PLAN_TEXT[id]) : PLAN_IDS.map((id) => PLAN_TEXT[id]);
     pushDecision(s, {
       kind: 'plan',
-      title: 'Season plan',
+      title: tx('Season plan'),
       text: injured
-        ? 'You are injured. Recovery is the only plan available.'
+        ? tx('You are injured. Recovery is the only plan available.')
         : style === 'six'
-          ? 'Pick one plan for the whole season.'
-          : 'Pick one or two plans for the whole season. One plan alone works a little better than its listing; add a second and the first keeps most of its effect while the side plan adds a smaller boost.',
+          ? tx('Pick one plan for the whole season.')
+          : tx('Pick one or two plans for the whole season. One plan alone works a little better than its listing; add a second and the first keeps most of its effect while the side plan adds a smaller boost.'),
       choices: list.map((p) => ({ id: p.id, label: p.label, detail: p.detail, disabled: injured && p.id !== 'recovery' })),
       data: { half, ...(style === 'six' ? { single: true } : {}), season: true },
     });
@@ -250,12 +251,12 @@ export function pushPlanDecision(s: GameState, half: 1 | 2): void {
     const list = injured && !quick.some((p) => p.id === 'recovery') ? [...quick, PLAN_TEXT.recovery] : quick;
     pushDecision(s, {
       kind: 'plan',
-      title: 'Season plan',
+      title: tx('Season plan'),
       text: injured
-        ? 'You are injured. Recovery is the only plan available.'
+        ? tx('You are injured. Recovery is the only plan available.')
         : s.mode === 'lab'
-          ? 'How hard do you work this season? Training pays out lab credits; spend them on any rating.'
-          : 'Pick one plan for the season.',
+          ? tx('How hard do you work this season? Training pays out lab credits; spend them on any rating.')
+          : tx('Pick one plan for the season.'),
       choices: list.map((p) => ({ id: p.id, label: p.label, detail: p.detail, disabled: injured && p.id !== 'recovery' })),
       data: { half, single: true },
     });
@@ -264,8 +265,8 @@ export function pushPlanDecision(s: GameState, half: 1 | 2): void {
   const plans = PLAN_IDS.map((id) => PLAN_TEXT[id]);
   pushDecision(s, {
     kind: 'plan',
-    title: half === 1 ? 'First-half plan' : 'Second-half plan',
-    text: injured ? 'You are injured. Recovery is the only plan available.' : 'Pick one or two plans for the next half. One plan alone works a little better than its listing (focused work); add a second and the first keeps most of its effect while the side plan adds a smaller boost.',
+    title: half === 1 ? tx('First-half plan') : tx('Second-half plan'),
+    text: injured ? tx('You are injured. Recovery is the only plan available.') : tx('Pick one or two plans for the next half. One plan alone works a little better than its listing (focused work); add a second and the first keeps most of its effect while the side plan adds a smaller boost.'),
     choices: plans.map((p) => ({ id: p.id, label: p.label, detail: p.detail, disabled: injured && p.id !== 'recovery' })),
     data: { half },
   });

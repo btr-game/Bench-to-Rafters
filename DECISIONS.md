@@ -3336,3 +3336,10 @@ multiple times."
 - To publish sooner (owner): the manual and the achievements' descriptions are translated after
   this publish; the project summary and the dev deck's Catalog are brought up to date after it; the
   content batch moves to the final end-of-round check; the dev deck is never translated.
+- Where it stands at this publish: each language has 2,731 of the 3,978 interface strings
+  (68.7%) and all 263 story lines; the 1,247 left are the manual and the achievements'
+  descriptions. Lines the engine writes (league news, the log, roles such as Deep bench, the season
+  preview's notes) stay English for now, as do names of places inside sentences. Ordinals follow
+  the language (5위, 5位, 第5, 5.º, 5e). One English word with two meanings takes a context in its
+  key (`Back@@body`, `Back@@view`), shown without it. The settings' names (Fast break, Sim, Simple
+  text, Guide, Master) are translated, each language using one name everywhere.

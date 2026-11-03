@@ -243,7 +243,7 @@ export function NextStep({ g }: { g: GameState }) {
   return pr.type === 'decision' ? (
     <button className="next-step" onClick={() => setTab('home')}>
       <small>{t('Waiting at Home')}</small>
-      <b>{pr.decision.title}</b>
+      <b>{t(pr.decision.title)}</b>
     </button>
   ) : (
     <button className="next-step go" onClick={advance}>

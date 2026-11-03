@@ -145,8 +145,8 @@ function PlanPicker({ d }: { d: Decision }) {
   if (enabled.length === 1 || d.data?.single) {
     return (
       <div className="stack">
-        <div className="sec-title">{d.title}</div>
-        <p className="muted small prose">{d.text}</p>
+        <div className="sec-title">{t(d.title)}</div>
+        <p className="muted small prose">{t(d.text)}</p>
         <div className={`plans${d.data?.single ? ' plan-groups' : ''}`}>
           {enabled.map((c) => (
             <button key={c.id} className="choice plan-card" style={planTint(c.id)} onClick={() => choose(c.id)}>
@@ -168,8 +168,8 @@ function PlanPicker({ d }: { d: Decision }) {
   const name = (id: string) => t(d.choices.find((c) => c.id === id)?.label ?? id);
   return (
     <div className="stack">
-      <div className="sec-title">{d.title}</div>
-      <p className="muted small prose">{d.text}</p>
+      <div className="sec-title">{t(d.title)}</div>
+      <p className="muted small prose">{t(d.text)}</p>
       <div className="plans">
         {d.choices.map((c) => {
           const on = picked.includes(c.id);

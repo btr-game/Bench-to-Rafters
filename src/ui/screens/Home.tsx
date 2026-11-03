@@ -522,12 +522,12 @@ function Todo({ g }: { g: GameState }) {
   const pr = prompt(g);
   const now =
     pr.type === "decision"
-      ? pr.decision.title
+      ? t(pr.decision.title)
       : pr.type === "advance"
-        ? pr.label
+        ? t(pr.label)
         : null;
   const items: { text: string; hot?: boolean; go?: string }[] = [
-    ...g.pending.slice(1).map((d) => ({ text: d.title })),
+    ...g.pending.slice(1).map((d) => ({ text: t(d.title) })),
     ...(canChangeFocus(g)
       ? [{ text: t("Pick new focus stats"), hot: true, go: ".o-moves" }]
       : []),
