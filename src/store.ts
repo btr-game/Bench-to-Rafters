@@ -25,7 +25,7 @@ import { careerRecord, type CareerRecord } from './engine/career/record';
 import { canPlayChild, childGame, childLegacy, childSeed } from './engine/nextGen';
 import { attachChild, logCareer, type LogResult } from './ui/careerLog';
 import { signed, username } from './ui/names';
-import { finaleFor, type Act } from './ui/finale';
+import { finaleFor, type Act, type FinaleKind } from './ui/finale';
 import { checkAch, countCareer, earnedIn, recordMp, recordOpened, recordPosted, recordUndo, recordVisit, simOpen } from './ui/achievements';
 import { community } from './ui/community';
 import { cleanProspect, multiplayer, pump, readLink, seasonLine, send, type Challenge, type MpLink } from './ui/multiplayer';
@@ -68,8 +68,8 @@ interface Store {
   showNews: () => void;
   endNews: () => void;
   /** Round 36: the finale for a career just finished (ui/finale.ts), in place of the thank-you
-   * page; `from` starts it at a later act (the dev deck). */
-  finale: { g: GameState; from?: Act; act?: Act } | null;
+   * page: which of the endings (the music follows it); `from` starts it at a later act (the dev deck). */
+  finale: { g: GameState; kind: FinaleKind; from?: Act; act?: Act } | null;
   endFinale: () => void;
   /** Set while a heavy step waits its turn (round 27): the loading pop-out shows if it runs long. */
   loading: number | null;

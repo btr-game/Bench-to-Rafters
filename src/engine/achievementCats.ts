@@ -42,11 +42,11 @@ export const ACH_CAT_RULES: Record<AchCat, (string | RegExp)[]> = {
   // and the cups, crunch time in a final
   titles: [/^w\d+$/, /^w-/, /^ring/, /^p-/, /^r-/, /^clutch/, /^crunch/, 'l60', 'playin', 'sidedoor', 'playoffs', 'round2win', 'conf', 'finals', 'lostfinal', 'threepeat', 'cinderella', 'youngring', 'oldring', 'cup', 'a-rings3teams', 'a-decades', 'a-pick1-ring', 'a-ncaa-nba', 'a-gold-ring', 'a-scoretitle', 'tn-cup3', 'g-2cities', 'k-quiet', 'g-post30', 'c-overseas-ring', /^rs-/, 'fl-ring-pal'],
   // high school, college, the leagues abroad and the G League, the draft (round 35: draft night),
-  // the way in
-  road: [/^(hs|ncaa|eu|int|gl|d)-/, 'fivestar', 'topclass', 'state', 'college', 'ncaa', 'naismith', 'euro', 'eutitle', 'abroad', 'gleague', 'callup', 'scenic', 'drafted', 'round2', 'round1', 'lottery', 'top3', 'pick1', 'undrafted', 'debut', 'young', 'c-5levels', 'c-prep', 'c-g-league-mvp', 'y-19', 'y-late', 'tn-mcd', 'tn-youth', 'l-transfer', /^dn-/],
+  // the way in (round 36: the endings of a dream that ended early and of a legend of Europe)
+  road: [/^(hs|ncaa|eu|int|gl|d)-/, 'fivestar', 'topclass', 'state', 'college', 'ncaa', 'naismith', 'euro', 'eutitle', 'abroad', 'gleague', 'callup', 'scenic', 'drafted', 'round2', 'round1', 'lottery', 'top3', 'pick1', 'undrafted', 'debut', 'young', 'c-5levels', 'c-prep', 'c-g-league-mvp', 'y-19', 'y-late', 'tn-mcd', 'tn-youth', 'l-transfer', /^dn-/, 'en-dream', 'en-euro'],
   // the years, the games and seasons, the scoring list, the farewell, the Hall and the rafters
-  // (round 36: whose rafters, and how he got there)
-  career: [/^age\d+$/, /^gp\d+$/, /^idx/, /^fw-/, /^rc-/, 'vintage', 'finewine', 'methuselah', 'fountain', 'early', 'walkaway', 'lp50', 'hof', 'hof1', 'rafters', 'rafters2', 'top100', 'top25', 'top10', 'goat', 'peak5', 't-min40k', 't-20s', 't-15s', 't-gp1200', 's-gp82', 's-gp82x5', 'c-comeback', 'c-short', 'g-hofnoring', 'ft-c80', 'ft-m3k', 'ft-m6k', 'sa-sht80', 'c-dfig', /^rf-/],
+  // (round 36: whose rafters, and how he got there; the endings a career can have)
+  career: [/^age\d+$/, /^gp\d+$/, /^idx/, /^fw-/, /^rc-/, 'vintage', 'finewine', 'methuselah', 'fountain', 'early', 'walkaway', 'lp50', 'hof', 'hof1', 'rafters', 'rafters2', 'top100', 'top25', 'top10', 'goat', 'peak5', 't-min40k', 't-20s', 't-15s', 't-gp1200', 's-gp82', 's-gp82x5', 'c-comeback', 'c-short', 'g-hofnoring', 'ft-c80', 'ft-m3k', 'ft-m6k', 'sa-sht80', 'c-dfig', /^rf-/, /^en-/],
   // roles, trades, teammates, the coach and the rivals (round 35: friends among them; round 36:
   // the night an old rival's number goes up)
   team: [/^lk/, /^co-/, /^ro-/, /^rival/, 'starter', 'key', 'sixthrole', 'deep', 'captain', 'traded', 'flyer', 'journey', 'passport', 'oneclub', 'duo', 'trio', 'chaser', 'chaserring', 'chalk', 'l-trade3', 'l-asked', 'l-number', 'l-position', 'l-style', 'c-oneteam12', 'c-5teams', 'c-8teams', 's-best-bench', 'mp-beat1', 'mp-beat5', 'mp-top1', 'mp-top3', 'mp-class-as', 'mp-ans-ring', 'mp-made-hof', 'mp-rn1', 'mp-rn5', 'mp-fduo', 'mp-ftrio', 'fl-join', 'tp-rival'],

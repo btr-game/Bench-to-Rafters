@@ -10,6 +10,7 @@ import { isDev } from '../dev/mode';
 import { count, nbaTitles } from '../engine/awards/legacy';
 import { addMiniResult } from '../engine/achievementsMini';
 import type { MpKind } from '../engine/achievements35';
+import { ENDING_IDS } from '../engine/achievements36';
 import type { CareerRecord } from '../engine/career/record';
 import type { MiniResult } from '../engine/career/miniBonus';
 import { UNLOCK_FROM, islandDone, loadRoad, type Road, type Unlock } from './road';
@@ -266,10 +267,13 @@ export function recordLocks(n: number): void {
 /** Round 29: a music loop was heard; true the first time. */
 /** The music loops of the tutorial, left out of Full Album (the levels count nowhere). */
 export const TUTORIAL_LOOPS = ['road', 'sad'];
+/** Round 36: each ending's theme (tracks.ts: a loop per ending, named as the ending), heard only at
+ * that ending, so left out of Full Album too. */
+export const ENDING_LOOPS: string[] = [...ENDING_IDS];
 
 export function recordHeard(id: string): boolean {
   // round 33: the tutorial's two loops (the road map, a missed goal) are not part of the album
-  if (TUTORIAL_LOOPS.includes(id)) return false;
+  if (TUTORIAL_LOOPS.includes(id) || ENDING_LOOPS.includes(id)) return false;
   const d = loadAch();
   if (d.totals.heard?.includes(id)) return false;
   d.totals.heard = [...(d.totals.heard ?? []), id];

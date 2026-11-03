@@ -11,6 +11,15 @@
 // choices it never makes (the duo, the Lifestyle shelf) or rare outcomes (hof). Same rules as the
 // rest of the book: cosmetic, pun names, conditions hidden.
 //
+// Then the twelve endings (owner: "do all 12"; ui/endings.ts), with the book's Endings page and a
+// few for seeing them: measured over 150 careers of the smart player at each difficulty, Regular
+// guy / Reality / Shoot for the stars ended in the rafters 12.00000 / 2.666667 / 58.66667%,
+// Enshrined 4.666667 / 0.6666667 / 24.66667%, Ring bearer 11.33333 / 8.666667 / 10.66667%, All-Star
+// 5.333333 / 2.000000 / 5.333333%, Legend of Europe 22.00000 / 26.00000 / 0.6666667%, The long haul
+// 14.66667 / 5.333333 / 0%, Made it 3.333333 / 13.33333 / 0%, Passport 23.33333 / 36.00000 / 0%,
+// Cap and gown 0.6666667 / 0.6666667 / 0% and Hoops dream 2.666667 / 4.666667 / 0%; the grinder and
+// One shining moment never (the harness never stays in the G League or stops after college).
+//
 // The speech and the credits are written in ui/finale.ts (speechOf, creditsOf); the engine never
 // reads the UI, so the checks here work them out the same way from the career, and a test keeps
 // the two in step (tests/round36-ach.test.ts).
@@ -22,10 +31,19 @@ import { raftersDetail } from './awards/details';
 import { legendarySeasons } from './awards/legendary';
 import { duoAtEnd } from './career/duo';
 
+/** The twelve endings of a finished career, the first that fits winning (ui/endings.ts endingOf
+ * decides; the book's Endings page shows them in this order). */
+export const ENDING_IDS = ['rafters', 'enshrined', 'ring', 'allstar', 'eurolegend', 'longhaul', 'madeit', 'passport', 'grinder', 'shining', 'gown', 'dream'] as const;
+export type EndingId = (typeof ENDING_IDS)[number];
+
 /** What a device has seen of the finale (ui/achievements.ts recordFinale counts each once a career):
- * a rafters ceremony or the credits alone played to the end, one played to the end when its Skip
- * button was there, one skipped. */
-export type FinaleSeen = 'rafters' | 'credits' | 'encore' | 'skipped';
+ * each ending played to the end, one played to the end when its Skip button was there, one skipped. */
+export type FinaleSeen = EndingId | 'encore' | 'skipped';
+
+/** The endings this device has watched to the end (the first time one plays it can't be skipped,
+ * so an ending seen is an ending watched). */
+export const endingsSeen = (t: CareerTotals): EndingId[] => ENDING_IDS.filter((k) => (t.fin?.[k] ?? 0) > 0);
+const endingsWatched = (t: CareerTotals) => ENDING_IDS.reduce((n, k) => n + (t.fin?.[k] ?? 0), 0);
 
 /** What these checks read (the book's facts, in part). */
 interface Facts36 {
@@ -93,14 +111,16 @@ export function creditRows(g: GameState, retired = g.step === 'retired') {
   const nba = g.history.some((h) => h.level === 'NBA' && h.line.gp > 0);
   const forever = (hallOfFame(g) ? 1 : 0) + (retired ? raftersDetail(g).length : 0);
   const people = [!!duoAtEnd(g), !!g.rivalry, !!g.flags.wed, !!g.flags.child, !!g.parent].filter(Boolean).length;
-  const rows = { starring: 2, teams, titles: championships(g).length, legend: legendarySeasons(g).length, awards: Math.min(12, labels), nba: nba ? 2 : 0, forever, people };
+  // the rare late leap and the career-altering injury, each a row of the turning points
+  const turns = [!!g.flags.nextStep, !!g.flags.careerInjury].filter(Boolean).length;
+  const rows = { starring: 2, teams, titles: championships(g).length, legend: legendarySeasons(g).length, awards: Math.min(12, labels), nba: nba ? 2 : 0, forever, turns, people };
   return { ...rows, labels };
 }
 
 /** Lines in the roll: each block's head and gap, its rows, then the makers' block. */
 export function creditLines(g: GameState, retired = g.step === 'retired'): number {
   const r = creditRows(g, retired);
-  const blocks = [r.starring, r.teams, r.titles, r.legend, r.awards, r.nba, r.forever, r.people].filter((n) => n > 0);
+  const blocks = [r.starring, r.teams, r.titles, r.legend, r.awards, r.nba, r.forever, r.turns, r.people].filter((n) => n > 0);
   return blocks.reduce((n, rows) => n + 2 + rows, 0) + 2 + ROLL.makers * 2;
 }
 
@@ -138,7 +158,7 @@ export const ACHIEVEMENTS_36: Ach36[] = [
   A('cr-long', 'Director’s Cut', 'rotation', 'Roll credits so long they run at full length.', (f) => f.retired && creditLines(f.g, true) * ROLL.line >= ROLL.max),
   A('cr-short', 'Indie Darling', 'allstar', 'Roll credits with nothing in them but your name and your teams.', (f) => {
     const c = credits(f);
-    return f.retired && !c.titles && !c.legend && !c.labels && !c.nba && !c.forever && !c.people;
+    return f.retired && !c.titles && !c.legend && !c.labels && !c.nba && !c.forever && !c.turns && !c.people;
   }),
   // ---- the round's turning points and shop things ----
   A('tp-jv', 'Full Circle', 'starter', 'Fly home for your JV coach’s last game.', (f) => logged(f, /^Flew home to speak at his JV coach/)),
@@ -158,10 +178,19 @@ export const ACHIEVEMENTS_36: Ach36[] = [
   // ---- the finale (ui/screens/Finale.tsx), kept on this device ----
   A('fn-encore', 'Stay for the Credits', 'bench', 'Watch a finale to the end when you could have skipped it.', (f) => fin(f, 'encore') >= 1),
   A('fn-skip', 'Skip to the Good Part', 'bench', 'Skip a finale.', (f) => fin(f, 'skipped') >= 1),
-  A('fn-double', 'Double Feature', 'starter', 'Watch both endings to the end: the rafters, and the credits alone.', (f) => fin(f, 'rafters') >= 1 && fin(f, 'credits') >= 1),
-  A('fn-five', 'Film Festival', 'rotation', 'Watch five finales to the end.', (f) => fin(f, 'rafters') + fin(f, 'credits') >= 5),
+  A('fn-double', 'Double Feature', 'starter', 'Watch two different endings to the end.', (f) => endingsSeen(f.t).length >= 2),
+  A('fn-five', 'Film Festival', 'rotation', 'Watch five finales to the end.', (f) => endingsWatched(f.t) >= 5),
   A('fn-rafters3', 'Not a Dry Eye in the House', 'allstar', 'Watch your jersey rise to the rafters in three careers.', (f) => fin(f, 'rafters') >= 3),
+  // ---- the twelve endings (the book's Endings page), kept on this device ----
+  A('en-1', 'Fade to Black', 'bench', 'See your first ending.', (f) => endingsSeen(f.t).length >= 1),
+  A('en-3', 'Alternate Endings', 'rotation', 'See three different endings.', (f) => endingsSeen(f.t).length >= 3),
+  A('en-6', 'Choose Your Own Ending', 'allstar', 'See six different endings.', (f) => endingsSeen(f.t).length >= 6),
+  A('en-12', 'Seen Them All', 'hof', 'See all twelve endings.', (f) => endingsSeen(f.t).length >= ENDING_IDS.length),
+  A('en-dream', 'The Love of the Game', 'starter', 'See the ending of a dream that ended before the pros.', (f) => fin(f, 'dream') >= 1),
+  A('en-hof', 'Dressed for the Occasion', 'allstar', 'See the Hall of Fame ending, with no number in any rafters.', (f) => fin(f, 'enshrined') >= 1),
+  A('en-euro', 'Scarves Up', 'starter', 'See the ending of a legend of Europe.', (f) => fin(f, 'eurolegend') >= 1),
+  A('en-both', 'Best of Times, Worst of Times', 'allstar', 'See the rafters ending, and the ending of a dream that ended early.', (f) => fin(f, 'rafters') >= 1 && fin(f, 'dream') >= 1),
 ];
 
 /** The ones that only read the totals kept across careers (checked with no career open). */
-export const R36_TOTALS_ONLY = ['nm-pick', 'nm-rename', 'nm-rename5', 'nm-post1', 'nm-post10', 'nm-posthof', 'fn-encore', 'fn-skip', 'fn-double', 'fn-five', 'fn-rafters3'];
+export const R36_TOTALS_ONLY = ['nm-pick', 'nm-rename', 'nm-rename5', 'nm-post1', 'nm-post10', 'nm-posthof', 'fn-encore', 'fn-skip', 'fn-double', 'fn-five', 'fn-rafters3', 'en-1', 'en-3', 'en-6', 'en-12', 'en-dream', 'en-hof', 'en-euro', 'en-both'];
