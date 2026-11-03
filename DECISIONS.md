@@ -3191,3 +3191,30 @@ multiple times."
   map itself is `mainland`. After graduation a first lesson shows the main land, then the gym; Guide
   mode has two new steps (the main land, the three venues), and its Rough Road step now finds only
   the Rough Road card (it used to match any dashed card, the road map's or the username's).
+- **Regular guy's peak curve above 70 falls in a straight line** (owner, with two charts: "in regular
+  guy, instead of what it is now (first image), i want the upper hand (above 70 ovr) to go linearly
+  down, like on the second image ... try to aim the more niche factors than the main factors
+  (stats)"). Above 70 the curve was thin from 72 to 85 and thick from 88 to 99. Two side systems
+  did it, not growth: boosts past a rating's cap (turning points, the shop, mini-game bonuses)
+  stacked up for good, worth 3 to 5 OVR to a player with a ceiling under 88 and under 1 near the
+  top (he hits 99 first), so the middle was lifted into the high 80s; and about 5% of potentials
+  were drawn above 99 and all landed on it. Two dials, Regular guy only: `settle` (a rating's part
+  past its cap shrinks each summer by a share that is nothing at OVR 76 and all of it at 98,
+  `settleBack` in player/growth.ts, run in the offseason after aging) and `redrawOver: 99` on its
+  potential (a draw above 99 is drawn again, up to six times). Calibrated on 1,200 smart careers a
+  setting (root-mean-square gap from the line, scaled to 2,000 careers): redraw alone 21.9026; a
+  settle above a fixed OVR stacks careers on that line (31.2927 to 33.8923, about 200 per 2,000 at
+  80 to 81 for the line at 80), a ramp from 70 piles them at 70 to 73 (22.4135), ramps from 72 and
+  74 14.8272 and 12.6236, the ramp from 76 to 98 10.9479. On 2,000 fresh careers (seeds 20000 on,
+  smart policy, casual mini-games), before → after: gap 28.9653 → 15.0327; 5-point bands as a share
+  of 70 to 74 (the line: 1, 0.818, 0.636, 0.455, 0.273, 0.091) 1, 0.617, 0.442, 0.493, 0.540, 0.260 →
+  1, 0.773, 0.569, 0.425, 0.258, 0.082; mean peak 74.0726 → 72.5173; 70+ 56.80% → 54.85% (the
+  redrawn potentials fall anywhere in the spread, about half under 70); 80+ 29.40% → 23.55%; 90+
+  13.55% → 6.00%; NBA 78.55% → 77.70%; All-Star 28.90% → 25.00%; MVP 9.25% → 3.85%; Hall of Fame
+  17.00% → 9.50%; titles 40.05% → 33.05%. The honours that need a star are rarer because the shape
+  has fewer stars; the owner decides whether to lower round 36's All-Star and MVP bars to win some
+  back. What is left: the bars from 72 to 79 sit 20 to 30 careers under the line, before as after
+  (filling them would lift the curve under 70 too). Word report: "Regular guy peak curve".
+- **The plane's sounds**: the engines spool up at take-off (graduation's flight and the airport's
+  flight back to the road map, which borrowed the feedback's paper plane), tyre chirps and the cabin
+  bell at touchdown (`takeoff`, `touchdown`, on the sound board).
