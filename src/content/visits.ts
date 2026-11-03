@@ -50,6 +50,9 @@ export const VISITS: Record<string, Visit> = {
   // round 36: the rafters
   'framed-jersey': { verb: 'Straighten the frame', place: 'home', lines: ['The number is smaller than you remember. So were you.', 'A visitor asks if it is a replica. You tell them about the hole in the left armpit.'] },
   'rafters-banner': { verb: 'Look up at the banner', place: 'home', lines: ['The garage light hums. Your name on the banner, your car parked under it, your shot still going up every night.', 'Your neighbour asks when the real one goes up. Not yet, you tell him. Not yet.'] },
+  // round 37: the town
+  'arena-prints': { verb: 'Walk the hallway of arenas', place: 'home', lines: ['You stop at the one where you scored your career high. The print is a little crooked. You leave it.', 'A guest asks which is your favourite. You point at the next one you have not played in yet.'] },
+  'city-bike': { verb: 'Ride across town', place: 'city', lines: ['Past the arena and the bus stops with your face on them. Nobody looks twice at a man your size on a bike. Then everybody does.', 'You ride to the old gym and back before breakfast. The bell on the handlebars still sticks.'] },
   // round 35: friends
   'gym-key': { verb: 'Run with your friends', place: 'court', lines: ['Ten guys, one ball, nobody calls fouls. You lose the last game to a dentist.', 'Your old coach unlocks the door and stays to watch. He still yells about your footwork.'] },
   'game-night': { verb: 'Host game night', place: 'home', lines: ['You lose four hands in a row to a friend who has never seen you play. He wants to keep it that way.', 'Midnight, pizza boxes, the same argument about the best team ever. Nobody wins it.'] },

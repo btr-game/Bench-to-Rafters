@@ -188,14 +188,21 @@ describe('friends on the All-Star teams', () => {
 });
 
 describe('a playoff series against the rival classmate', () => {
-  /** A season at midseason whose team meets `opp` in the first round when nothing changes. */
+  /** A season at midseason whose team meets `opp` in the first round when nothing changes, with him
+   * fit to play it (a player out for the season is never asked: round 37, a seed's career changed). */
   function meeting(): { g: GameState; opp: string } {
-    for (const seed of [3511, 3510, 3513, 3515]) {
-      const g = midseason(seed);
+    const hurt = (s: GameState) => !!s.player.injury && s.player.injury.key !== 'dtd';
+    for (const seed of [3511, 3510, 3513, 3515, 3512, 3514, 3516, 3517, 3518, 3519]) {
+      let g: GameState;
+      try {
+        g = midseason(seed);
+      } catch {
+        continue; // a seed whose career never reaches a second NBA season
+      }
       const a = structuredClone(g);
       advance(a);
       const sr = a.nba!.bracket!.rounds[0].series.find((x) => x.a === g.teamId || x.b === g.teamId);
-      if (sr) return { g, opp: sr.a === g.teamId ? sr.b : sr.a };
+      if (sr && !hurt(g) && !hurt(a)) return { g, opp: sr.a === g.teamId ? sr.b : sr.a };
     }
     throw new Error('no first round');
   }

@@ -7,7 +7,7 @@
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import type { GameState } from '../../engine/types';
-import { useStore } from '../../store';
+import { achievementsNow, useStore } from '../../store';
 import { UI } from '../../content/strings';
 import { tabKey, team as teamOf } from '../selectors';
 import { STREET, layoutOf, placeFor, townOf, type Place, type PlaceKind } from '../town';
@@ -15,6 +15,8 @@ import { TownArt } from '../art/TownArt';
 import { lookOf } from '../art/Player';
 import { championships, hallOfFame } from '../../engine/awards/legacy';
 import { sfx } from '../sound';
+import { NBA_ARENAS } from '../arenas';
+import { recordPlace, recordStreet, recordWalk, runOf } from '../achievements';
 
 /** How big an art pixel is on screen: the street fills a computer's width up to this, and on a
  * narrow screen keeps the smallest size and pans. */
@@ -97,6 +99,27 @@ export function Town({ g, fast }: { g: GameState; fast: boolean }) {
   // where he stands: at the door of the place in focus, or of the page that is open
   const target = slots.find((s) => s.place.id === (focused ?? here?.id)) ?? slots[0];
   const x = target?.door ?? STREET.margin;
+
+  // round 37: the book counts the doors he goes through (not the one he stands at when the street
+  // comes up), the streets and the landmarks he sees, and how far he walks, at his size (the walker
+  // is TOP and LEGS tall); ui/achievements.ts keeps them
+  const was = useRef<PlaceKind | null>(null);
+  useEffect(() => {
+    const id = here?.id ?? null;
+    if (was.current && id && id !== was.current && recordPlace(g, id)) achievementsNow();
+    was.current = id;
+  }, [here?.id]);
+  const landmark = town.abbr ? NBA_ARENAS[town.abbr].mark : undefined;
+  const run = runOf(g);
+  useEffect(() => {
+    if (recordStreet(g, town.look, landmark)) achievementsNow();
+  }, [run, town.look, landmark]);
+  const walkedFrom = useRef<PlaceKind | null>(null);
+  useEffect(() => {
+    const prev = slots.find((s) => s.place.id === walkedFrom.current);
+    if (prev && target && prev.place.id !== target.place.id && recordWalk(g, (Math.abs(target.door - prev.door) * g.player.height) / 12 / (TOP.length + LEGS.stand.length))) achievementsNow();
+    walkedFrom.current = target?.place.id ?? null;
+  }, [target?.place.id]);
   const [from, setFrom] = useState(x);
   const [walking, setWalking] = useState(false);
   const [stride, setStride] = useState(false);

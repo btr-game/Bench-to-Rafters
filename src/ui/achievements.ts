@@ -11,9 +11,10 @@ import { count, nbaTitles } from '../engine/awards/legacy';
 import { addMiniResult } from '../engine/achievementsMini';
 import type { MpKind } from '../engine/achievements35';
 import { ENDING_IDS } from '../engine/achievements36';
+import { TOWN_MARKS } from '../engine/achievements37';
 import type { CareerRecord } from '../engine/career/record';
 import type { MiniResult } from '../engine/career/miniBonus';
-import { UNLOCK_FROM, islandDone, loadRoad, type Road, type Unlock } from './road';
+import { UNLOCK_FROM, islandDone, loadRoad, offRecord, type Road, type Unlock } from './road';
 import { shownBy, username } from './names';
 import type { FinaleKind } from './finale';
 
@@ -255,6 +256,56 @@ export function recordFinale(g: GameState, kind: FinaleKind, how: { skippable: b
   t.fin = fin;
   saveAch(d);
   return true;
+}
+
+/** Round 37, the town (components/Town.tsx): the street of this career, started afresh when a
+ * different career is walked. */
+function townRunOf(t: CareerTotals, g: GameState) {
+  const run = runOf(g);
+  if (t.townRun?.run !== run) t.townRun = { run, places: [], looks: [] };
+  return t.townRun;
+}
+
+/** Round 37: a place on the town's street walked into (not the one he stood at when the street came
+ * up). Counts every door, the agent's office's apart, and the places of this career; true when a
+ * mark the book reads was reached. The tutorial's levels and the closing tour count nowhere. */
+export function recordPlace(g: GameState, place: string): boolean {
+  if (offRecord(g)) return false;
+  const d = loadAch();
+  const t = d.totals;
+  t.doors = (t.doors ?? 0) + 1;
+  if (place === 'agent') t.agentDoors = (t.agentDoors ?? 0) + 1;
+  const town = townRunOf(t, g);
+  const fresh = !town.places.includes(place);
+  if (fresh) town.places.push(place);
+  saveAch(d);
+  return fresh || TOWN_MARKS.doors.includes(t.doors) || (place === 'agent' && TOWN_MARKS.agent.includes(t.agentDoors ?? 0));
+}
+
+/** Round 37: the street of this career came up: its look (his hometown, a campus, a city, a city
+ * abroad) and the landmark beside an NBA arena on it. True when either is new. */
+export function recordStreet(g: GameState, look: string, landmark?: string): boolean {
+  if (offRecord(g)) return false;
+  const d = loadAch();
+  const t = d.totals;
+  const town = townRunOf(t, g);
+  const newLook = !town.looks.includes(look);
+  if (newLook) town.looks.push(look);
+  const newMark = !!landmark && !t.marks?.includes(landmark);
+  if (newMark) t.marks = [...(t.marks ?? []), landmark!];
+  saveAch(d);
+  return newLook || newMark;
+}
+
+/** Round 37: he walked along the street, `feet` at his size. True when a whole mile was passed. */
+export function recordWalk(g: GameState, feet: number): boolean {
+  if (offRecord(g) || !(feet > 0)) return false;
+  const d = loadAch();
+  const before = d.totals.walked ?? 0;
+  d.totals.walked = before + feet;
+  saveAch(d);
+  const marathon = TOWN_MARKS.mile * TOWN_MARKS.marathon;
+  return Math.floor(d.totals.walked / TOWN_MARKS.mile) > Math.floor(before / TOWN_MARKS.mile) || (before < marathon && d.totals.walked >= marathon);
 }
 
 /** Round 29: cards locked in the career log right now (the most at once is kept). */

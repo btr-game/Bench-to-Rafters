@@ -2320,6 +2320,83 @@ export const ICONS: Record<string, string[]> = {
     'ORRROBBBBBBOGGGO',
     'OOOOOOOOOOOOOOOO',
   ],
+  // ---- round 37: the shop's things for the town, its arenas, the knee and the long career ----
+  // framed prints of every arena: a wooden frame, a domed arena with its red band and a needle tower under the sky
+  arenaprints: [
+    'OOOOOOOOOOOOOOOO',
+    'OTTTTTTTTTTTTTtO',
+    'OTOOOOOOOOOOOOtO',
+    'OTOCCCCCCCMCCOtO',
+    'OTOCCCCCCCMCCOtO',
+    'OTOCCCCCCMMMCOtO',
+    'OTOCCCCCCCMCCOtO',
+    'OTOCCwwwCCMCCOtO',
+    'OTOCwwwwwCMCCOtO',
+    'OTOwwwwwwwMCCOtO',
+    'OTORRRRRRRRCCOtO',
+    'OTOwKwKwKwKwCOtO',
+    'OTOKKKKKKKKKKOtO',
+    'OTOOOOOOOOOOOOtO',
+    'OttttttttttttttO',
+    'OOOOOOOOOOOOOOOO',
+  ],
+  // a city bike: two wheels, a red frame, the black saddle and handlebar
+  citybike: [
+    '................',
+    '................',
+    '................',
+    '................',
+    '...........KKK..',
+    '...KKKK....K....',
+    '.....RRRRRRR....',
+    '.....R....RR....',
+    '......R..R.R....',
+    '.OOOO.R..R.OROO.',
+    'O....OR.R.O.R..O',
+    'O.MM.O.RR.O.MM.O',
+    'O.MMrrrKK.O.MM.O',
+    'O....O....O....O',
+    '.OOOO......OOOO.',
+    '................',
+  ],
+  // a custom knee brace: the leg, the black brace with blue straps and silver hinges, the kneecap's open patch
+  kneebrace: [
+    '....OSSSSSsO....',
+    '....OSSSSSsO....',
+    '....OSSSSSsO....',
+    '....OSSSSSsO....',
+    '....OOOOOOOO....',
+    '...OBBBBBBBBO...',
+    '..OMMKKKKKKMMO..',
+    '..OWMKSmmSKMMO..',
+    '..OMMKSmmSKMWO..',
+    '..OMMKKKKKKMMO..',
+    '...OBBBBBBBBO...',
+    '....OOOOOOOO....',
+    '....OSSSSSsO....',
+    '....OSSSSSsO....',
+    '....OSSSSSsO....',
+    '....OSSSSSsO....',
+  ],
+  // a longevity clinic: a cold-plunge tub of blue water with ice cubes, a snowflake of cold air above
+  plunge: [
+    '.......O........',
+    '......OBO.......',
+    '.....OBBBO......',
+    '....OBBWBBO.....',
+    '.....OBBBO......',
+    '......OBO.......',
+    '.......O........',
+    '.OOOOOOOOOOOOOO.',
+    'OwwwwwwwwwwwwwwO',
+    'OwWWWWWWWWWWWWwO',
+    'OwCCWWCCCCCWwCwO',
+    'OwCCwCCCCWWCCCwO',
+    'OwCCCCCCCwCCCCwO',
+    'OwwwwwwwwwwwwwwO',
+    '.OMMOOOOOOOOMMO.',
+    '..OO........OO..',
+  ],
   // ---- round 36: the shop's things for the rafters, the speech and the body ----
   // your first jersey, framed: gold frame, a grey mat, the red jersey with its number 1
   framedjersey: [
@@ -2707,6 +2784,11 @@ export const SHIFT_COLOR = ['#E03131', '#F76707', '#FCC419', '#2F9E44', '#1C7ED6
 export function shopIcon(id: string, name: string): string {
   const t = `${id} ${name}`.toLowerCase();
   const rules: [RegExp, string][] = [
+    // round 37: the town, its arenas, the knee and the long career
+    [/arena-prints/, 'arenaprints'],
+    [/city-bike/, 'citybike'],
+    [/knee-brace/, 'kneebrace'],
+    [/longevity-clinic/, 'plunge'],
     // round 36: the rafters, the speech and the body
     [/framed-jersey/, 'framedjersey'],
     [/rafters-banner/, 'rafterbanner'],

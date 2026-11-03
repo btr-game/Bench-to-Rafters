@@ -14,6 +14,7 @@ import { ARENA_W, MARK_W, arenaSpec, schoolSpec } from '../arenas';
 import { TEAM_STYLE } from '../../content/teamStyle';
 import { MOTIFS } from './motifs';
 import { GLYPH } from './PixelText';
+import { shade } from './color';
 
 // ---------- the buildings ----------
 
@@ -234,10 +235,47 @@ const hoop = (x: number): Px[] => [[x, G - 10, 1, 10, C.steelD], [x - 2, G - 13,
 /** His statue outside the arena: a stone plinth and him in gold, an arm up. */
 const statue = (x: number): Px[] => [[x - 3, G - 3, 7, 3, C.stoneD], [x - 3, G - 3, 7, 1, C.stone], [x, G - 11, 2, 2, C.gold], [x - 1, G - 9, 4, 3, C.gold], [x + 3, G - 12, 1, 4, C.gold], [x - 1, G - 6, 1, 3, C.goldD], [x + 2, G - 6, 1, 3, C.goldD]];
 
+// ---------- what his city put up for him (round 37's turning points, events/round37.ts) ----------
+
+/** Digits three pixels wide and five tall, for the number on the mural's jersey. */
+const DIGITS = ['###|#.#|#.#|#.#|###', '.#.|##.|.#.|.#.|###', '###|..#|###|#..|###', '###|..#|.##|..#|###', '#.#|#.#|###|..#|..#', '###|#..|###|..#|###', '###|#..|###|#.#|###', '###|..#|.#.|.#.|.#.', '###|#.#|###|#.#|###', '###|#.#|###|..#|###'];
+
+/** His mural on the practice facility's wall: him rising for a jumper in his team's colour, the
+ * ball over his head, his number on the chest, on two bands of paint in a dark frame. */
+const MURAL = { dx: 3, dy: 6, w: 15, h: 14 };
+function mural(s: Slot, color: string, num: number): Px[] {
+  const x = s.x + MURAL.dx;
+  const y = G - 22 + MURAL.dy;
+  const head = shade(color, 0.35);
+  const out: Px[] = [
+    [x, y, MURAL.w, MURAL.h, C.ink], [x + 1, y + 1, MURAL.w - 2, 4, '#4FC3D9'], [x + 1, y + 5, MURAL.w - 2, MURAL.h - 6, C.gold],
+    // the ball between his hands, his arms up, his head, then the jersey
+    [x + 6, y + 1, 3, 2, C.ball], [x + 5, y + 2, 1, 4, color], [x + 9, y + 2, 1, 4, color], [x + 6, y + 4, 3, 2, head],
+    [x + 3, y + 6, 9, 7, color],
+  ];
+  const digits = String(Math.max(0, Math.min(99, num))).split('').map(Number);
+  let dx = digits.length === 2 ? x + 4 : x + 6;
+  for (const d of digits) {
+    DIGITS[d].split('|').forEach((row, r) => [...row].forEach((c, k) => c === '#' && out.push([dx + k, y + 7 + r, 1, 1, C.white])));
+    dx += 4;
+  }
+  return out;
+}
+/** The practice facility with the mural over its windows on the left. */
+function muralWall(base: Px[], s: Slot, color: string, num: number): Px[] {
+  const x0 = s.x + MURAL.dx;
+  const y0 = G - 22 + MURAL.dy;
+  const under = (p: Px) => p[4].startsWith('.') && p[0] < x0 + MURAL.w && p[0] + p[2] > x0 && p[1] < y0 + MURAL.h && p[1] + p[3] > y0;
+  return [...base.filter((p) => !under(p)), ...mural(s, color, num)];
+}
+
+/** The street named after him: a green sign on the lamp post outside the arena. */
+const streetSign = (x: number): Px[] => [[x - 4, G - 9, 9, 3, '#1F7A3A'], [x - 3, G - 8, 2, 1, C.white], [x, G - 8, 1, 1, C.white], [x + 2, G - 8, 2, 1, C.white]];
+
 function building(id: PlaceKind, town: Town, s: Slot, open: boolean, banners: number, hof: boolean): Px[] {
   switch (id) {
     case 'gym':
-      return gym(town.look, s, town.color, open);
+      return town.mural !== null && town.look === 'city' ? muralWall(gym(town.look, s, town.color, open), s, town.color, town.mural) : gym(town.look, s, town.color, open);
     case 'arena':
       return [...arena(town, s, open, banners), ...(town.statue ? statue(s.door - 13) : [])];
     case 'house':
@@ -261,6 +299,9 @@ export const TownArt = memo(function TownArt({ town, here, pad = 0, banners = 0,
     // the skyline and the road go first, under everything that stands on the street
     const far = [...backdrop(town, W), ...street(W)];
     add(between(town, slots));
+    // the sign goes on the lamp post just before the arena
+    const arenaAt = slots.find((s) => s.place.id === 'arena');
+    if (town.sign && town.look === 'city' && arenaAt && arenaAt !== slots[0]) add(streetSign(arenaAt.x - Math.ceil(STREET.gap / 2)));
     slots.forEach((s) => add(building(s.place.id, town, s, s.place.id === here, banners, hof)));
     return { far, body, lights };
   }, [town, W, slots, here, banners, hof]);
