@@ -2768,7 +2768,19 @@
   "pause": "暂停",
   "Fly to the main land": "飞回主大陆",
   "Fly back to the main land. The road map waits for you here.": "飞回主大陆。Road map 会在这里等你。",
-  "The road map: the airport, high school, college, the NBA arena, and the island of mini-games across the sea": "Road map：机场、高中、大学、NBA 球馆，以及大海对面的小游戏之岛"
+  "The road map: the airport, high school, college, the NBA arena, and the island of mini-games across the sea": "Road map：机场、高中、大学、NBA 球馆，以及大海对面的小游戏之岛",
+  "Spun past him": "转身过人",
+  "Step-back": "后撤步",
+  "Crossed up": "交叉步晃过",
+  "Screen": "掩护",
+  "Switch": "换防",
+  "Help": "协防",
+  "Foul": "犯规",
+  "Stamina": "体力",
+  "Momentum": "势头",
+  "Free throw: hold J, let go in the green": "罚球：按住 J，在绿色区松开",
+  "Enter to go on": "按 Enter 继续",
+  "His fouls: {n}": "个人犯规：{n}"
  },
  "story": {
   "f-driveway.title": "车道",

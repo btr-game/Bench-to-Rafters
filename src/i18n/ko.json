@@ -2768,7 +2768,19 @@
   "pause": "일시정지",
   "Fly to the main land": "본토로 날아가기",
   "Fly back to the main land. The road map waits for you here.": "본토로 돌아가요. Road map은 여기서 기다리고 있어요.",
-  "The road map: the airport, high school, college, the NBA arena, and the island of mini-games across the sea": "Road map: 공항, 고등학교, 대학, NBA 경기장, 그리고 바다 건너 미니게임의 섬"
+  "The road map: the airport, high school, college, the NBA arena, and the island of mini-games across the sea": "Road map: 공항, 고등학교, 대학, NBA 경기장, 그리고 바다 건너 미니게임의 섬",
+  "Spun past him": "스핀 무브!",
+  "Step-back": "스텝백",
+  "Crossed up": "크로스오버!",
+  "Screen": "스크린",
+  "Switch": "스위치",
+  "Help": "도움 수비",
+  "Foul": "파울",
+  "Stamina": "체력",
+  "Momentum": "흐름",
+  "Free throw: hold J, let go in the green": "자유투: J를 누르고 있다가 초록색에서 떼세요",
+  "Enter to go on": "Enter로 계속",
+  "His fouls: {n}": "개인 파울: {n}"
  },
  "story": {
   "f-driveway.title": "집 앞 골대",

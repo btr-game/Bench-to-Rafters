@@ -90,7 +90,7 @@ export interface FloorPlayer extends FloorPlayerIn {
   box: FloorBox;
 }
 
-export type FloorEventKind = 'make' | 'miss' | 'block' | 'steal' | 'turnover' | 'foul' | 'ft' | 'rebound' | 'timeout' | 'shotclock' | 'beat' | 'out' | 'overtime' | 'end' | 'screen';
+export type FloorEventKind = 'make' | 'miss' | 'block' | 'steal' | 'turnover' | 'foul' | 'ft' | 'rebound' | 'timeout' | 'shotclock' | 'beat' | 'out' | 'overtime' | 'end' | 'screen' | 'reach' | 'switch' | 'help';
 
 export interface FloorEvent {
   tick: number;
@@ -102,6 +102,8 @@ export interface FloorEvent {
   pts?: number;
   zone?: Zone;
   dunk?: boolean;
+  /** The move that beat his man (kind 'beat'). */
+  move?: 'cross' | 'spin' | 'step';
   /** A made free throw (kind 'ft'), an and-one (kind 'make'). */
   good?: boolean;
   and?: boolean;
@@ -199,7 +201,7 @@ const secs = (n: number) => Math.max(1, Math.round(n / DT));
 const lerp = (a: number, b: number, k: number) => a + (b - a) * clamp(k, 0, 1);
 const other = (t: 0 | 1): 0 | 1 => (t === 0 ? 1 : 0);
 /** How far a rating goes from 40 (0) to 99 (1): the Floor's feel spreads over the ratings players have. */
-const ratingK = (v: number) => clamp((v - 40) / 59, 0, 1);
+export const ratingK = (v: number): number => clamp((v - 40) / 59, 0, 1);
 const zeroBox = (): FloorBox => ({ pts: 0, fgm: 0, fga: 0, tpm: 0, tpa: 0, ftm: 0, fta: 0, reb: 0, ast: 0, stl: 0, blk: 0, tov: 0, pf: 0 });
 
 // ---------------- the start ----------------
@@ -661,6 +663,14 @@ function bestPass(s: FloorState, from: FloorPlayer): { to: number; open: number 
   return best;
 }
 
+/** The teammate a pass of his would find, the most open (the screen marks him). */
+export function openMan(s: FloorState): number | null {
+  return bestPass(s, s.players[s.user])?.to ?? null;
+}
+
+/** Whether a player stands open: nobody from the other team within `FLOOR.open` feet. */
+export const isOpen = (s: FloorState, i: number): boolean => nearestFoe(s, s.players[i].team, s.players[i]).d >= FLOOR.open;
+
 function aiHandler(s: FloorState, i: number): void {
   if (s.tick < s.think || s.gather) return;
   const p = s.players[i];
@@ -761,7 +771,7 @@ function userActs(s: FloorState, inp: FloorInput): void {
         const M = FLOOR.move;
         if (next(s.rng) < clamp(M.beat + M.perPoint * (u.r.PLY - d.r.PER), 0.1, 0.9)) {
           d.slow = M.slow;
-          emit(s, { kind: 'beat', team: 0, by: ui, on: idx(s, d) });
+          emit(s, { kind: 'beat', team: 0, by: ui, on: idx(s, d), move: inp.move });
           if (inp.move === 'step') {
             const rim = rimOf(0);
             const k = 4 / (dist(u, rim) || 1);
@@ -788,6 +798,8 @@ function userActs(s: FloorState, inp: FloorInput): void {
   s.load = -1;
   const h = s.ball.holder !== null ? s.players[s.ball.holder] : null;
   if (inp.steal && h && !s.ball.flight) {
+    // the jab itself, whatever comes of it (the screen shows his reach)
+    emit(s, { kind: 'reach', team: 0, by: ui, on: s.ball.holder! });
     const S = FLOOR.steal;
     const d = dist(u, h);
     if (d <= S.reach) {
@@ -812,11 +824,15 @@ function userActs(s: FloorState, inp: FloorInput): void {
       const mate = s.guard.findIndex((g, k) => g === near && k !== ui);
       if (mate >= 0) s.guard[mate] = now;
       s.guard[ui] = near;
+      emit(s, { kind: 'switch', team: 0, by: ui, on: near });
     }
   }
   if (inp.help && h) {
     const mate = onCourt(s, 0).filter((q) => q !== u && s.guard[idx(s, q)] !== s.ball.holder).sort((a, b) => dist(a, h) - dist(b, h))[0];
-    if (mate) s.help = { by: idx(s, mate), t: 2 };
+    if (mate) {
+      s.help = { by: idx(s, mate), t: 2 };
+      emit(s, { kind: 'help', team: 0, by: idx(s, mate), on: s.ball.holder! });
+    }
   }
 }
 

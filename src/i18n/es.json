@@ -2768,7 +2768,19 @@
   "pause": "pausa",
   "Fly to the main land": "Volar a tierra firme",
   "Fly back to the main land. The road map waits for you here.": "Vuelve en avión a tierra firme. El Road map te espera aquí.",
-  "The road map: the airport, high school, college, the NBA arena, and the island of mini-games across the sea": "El Road map: el aeropuerto, el instituto, la universidad, el pabellón de la NBA y la isla de los minijuegos al otro lado del mar"
+  "The road map: the airport, high school, college, the NBA arena, and the island of mini-games across the sea": "El Road map: el aeropuerto, el instituto, la universidad, el pabellón de la NBA y la isla de los minijuegos al otro lado del mar",
+  "Spun past him": "Giro y fuera",
+  "Step-back": "Step-back",
+  "Crossed up": "Crossover",
+  "Screen": "Bloqueo",
+  "Switch": "Cambio",
+  "Help": "Ayuda",
+  "Foul": "Falta",
+  "Stamina": "Resistencia",
+  "Momentum": "Racha",
+  "Free throw: hold J, let go in the green": "Tiro libre: mantén J y suelta en el verde",
+  "Enter to go on": "Enter para seguir",
+  "His fouls: {n}": "Sus faltas: {n}"
  },
  "story": {
   "f-driveway.title": "La entrada de casa",

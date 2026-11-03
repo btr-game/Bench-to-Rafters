@@ -2,7 +2,7 @@
 // ends, four real minutes long, harder with the difficulty.
 import { describe, expect, it } from 'vitest';
 import { FLOOR } from '../src/engine/balance';
-import { floorResult, freshEvents, releaseQuality, skipFloor, startFloor, stepFloor, type FloorInput, type FloorPlayerIn, type FloorSetup, type FloorState } from '../src/engine/floor/sim';
+import { floorResult, freshEvents, meterWindow, openMan, releaseQuality, skipFloor, startFloor, stepFloor, type FloorEventKind, type FloorInput, type FloorPlayerIn, type FloorSetup, type FloorState } from '../src/engine/floor/sim';
 import { floorDue } from '../src/engine/floor/due';
 import { isThree, zoneOf } from '../src/engine/floor/court';
 
@@ -184,5 +184,36 @@ describe('round 39: the Floor', () => {
     expect(floorDue('NBA Finals', 2, 7)).toBe(false);
     expect(floorDue('Conference semifinals', 3, 7)).toBe(false);
     expect(floorDue('First round', 3, 7)).toBe(false);
+  });
+  it('step 2: his jab, his switch and the help he calls are told, so the screen can show them', () => {
+    const s = startFloor(setup(77));
+    const seen = new Set<FloorEventKind>();
+    for (let i = 0; i < 6000 && s.phase !== 'over'; i++) {
+      const k = s.tick;
+      // on defence he stays on the ball, jabs, switches and calls for help now and then
+      const h = s.ball.holder !== null ? s.players[s.ball.holder] : null;
+      const u = s.players[s.user];
+      const chase = h && s.poss === 1 ? { dx: h.x - u.x, dy: h.y - u.y } : { dx: 0, dy: 0 };
+      stepFloor(s, { ...chase, sprint: true, steal: k % 23 === 0, swap: k % 97 === 0, help: k % 89 === 0 });
+      for (const e of freshEvents(s)) seen.add(e.kind);
+    }
+    expect(seen.has('reach')).toBe(true);
+    expect(seen.has('switch')).toBe(true);
+    expect(seen.has('help')).toBe(true);
+  });
+
+  it('step 2: the open man is a teammate, and at the line his free-throw touch sets the meter', () => {
+    const s = startFloor(setup(5));
+    s.ball.holder = s.user;
+    const to = openMan(s);
+    expect(to).not.toBeNull();
+    expect(s.players[to!].team).toBe(0);
+    expect(to).not.toBe(s.user);
+    s.phase = 'ft';
+    const u = s.players[s.user];
+    u.r.FT = 95;
+    const wide = meterWindow(s, u);
+    u.r.FT = 40;
+    expect(meterWindow(s, u)).toBeLessThan(wide);
   });
 });

@@ -2768,7 +2768,19 @@
   "pause": "一時停止",
   "Fly to the main land": "The main landへ飛ぶ",
   "Fly back to the main land. The road map waits for you here.": "The main landに戻ります。Road mapはここで待っています。",
-  "The road map: the airport, high school, college, the NBA arena, and the island of mini-games across the sea": "Road map：空港、高校、大学、NBAアリーナ、そして海の向こうのミニゲームの島"
+  "The road map: the airport, high school, college, the NBA arena, and the island of mini-games across the sea": "Road map：空港、高校、大学、NBAアリーナ、そして海の向こうのミニゲームの島",
+  "Spun past him": "スピンで抜いた",
+  "Step-back": "ステップバック",
+  "Crossed up": "クロスオーバー",
+  "Screen": "スクリーン",
+  "Switch": "スイッチ",
+  "Help": "ヘルプ",
+  "Foul": "ファウル",
+  "Stamina": "スタミナ",
+  "Momentum": "流れ",
+  "Free throw: hold J, let go in the green": "フリースロー：Jを長押しして緑で離す",
+  "Enter to go on": "Enterで続ける",
+  "His fouls: {n}": "個人ファウル：{n}"
  },
  "story": {
   "f-driveway.title": "家の前のゴール",

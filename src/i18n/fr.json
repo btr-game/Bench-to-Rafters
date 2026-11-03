@@ -2768,7 +2768,19 @@
   "pause": "pause",
   "Fly to the main land": "S’envoler vers le continent",
   "Fly back to the main land. The road map waits for you here.": "Retour en avion vers le continent. La Road map vous attend ici.",
-  "The road map: the airport, high school, college, the NBA arena, and the island of mini-games across the sea": "La Road map : l’aéroport, le lycée, l’université, la salle NBA et l’île des mini-jeux de l’autre côté de la mer"
+  "The road map: the airport, high school, college, the NBA arena, and the island of mini-games across the sea": "La Road map : l’aéroport, le lycée, l’université, la salle NBA et l’île des mini-jeux de l’autre côté de la mer",
+  "Spun past him": "Spin, il est passé",
+  "Step-back": "Step-back",
+  "Crossed up": "Crossover",
+  "Screen": "Écran",
+  "Switch": "Changement",
+  "Help": "Aide",
+  "Foul": "Faute",
+  "Stamina": "Endurance",
+  "Momentum": "Dynamique",
+  "Free throw: hold J, let go in the green": "Lancer franc : maintenez J, relâchez dans le vert",
+  "Enter to go on": "Entrée pour continuer",
+  "His fouls: {n}": "Ses fautes : {n}"
  },
  "story": {
   "f-driveway.title": "L’allée",

@@ -3137,7 +3137,7 @@ td > .link-btn { min-width: 44px; text-align: left; }
 .set-langs { flex-wrap: wrap; }
 
 /* Round 39: the Floor. An arena at night whatever the theme, so its colours are its own. */
-.floor { display: grid; gap: 10px; justify-items: center; color: #f2eee6; width: 100%; }
+.floor { display: grid; gap: 8px; justify-items: center; align-content: start; color: #f2eee6; width: 100%; }
 .fb { display: grid; grid-template-columns: 1fr auto auto 1fr; background: #101218; border: 2px solid #000; box-shadow: 4px 4px 0 #000; width: min(100%, 820px); font-family: var(--f-display); text-transform: uppercase; }
 .fb-team { display: grid; grid-template-columns: auto 1fr; align-items: center; column-gap: 12px; row-gap: 2px; padding: 6px 14px; }
 .fb-team:last-child { grid-template-columns: 1fr auto; }
@@ -3175,8 +3175,33 @@ td > .link-btn { min-width: 44px; text-align: left; }
 .floor-final span { font-size: 24px; color: #c9c4ba; }
 .floor-line { margin: 0; font: 600 14px/1.4 var(--f-mono); color: #dcd6ca; max-width: 76ch; }
 .floor-end-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
-.floor-keys { margin: 0; display: grid; gap: 6px; font-size: 14px; color: #c9c4ba; width: min(100%, 1000px); }
+.floor-keys { margin: 0; display: grid; gap: 2px; font-size: 13px; color: #c9c4ba; width: min(100%, 1000px); }
 .floor-keys div { display: flex; gap: 10px; flex-wrap: wrap; align-items: baseline; }
 .floor-keys dt { font-weight: 800; color: #f2eee6; min-width: 70px; }
-.floor-keys dd { margin: 0; line-height: 1.9; }
+.floor-keys dd { margin: 0; line-height: 1.7; }
 .floor-keys kbd { font: 700 12px/1 var(--f-mono); padding: 3px 6px; background: #262a34; border: 1px solid #000; border-bottom-width: 3px; color: #f2eee6; }
+/* the Floor, step 2: small tags over a player, the free-throw tip, his strip under the court */
+.floor-tag { position: absolute; transform: translate(-50%, -100%); padding: 2px 7px; background: #101218; border: 2px solid #000; color: #f2eee6; font: 800 13px/1.2 var(--f-body, Archivo, sans-serif); white-space: nowrap; pointer-events: none; animation: floor-tag 0.9s steps(4) forwards; }
+.floor-tag.us { background: #ffd23f; color: #1a1205; }
+@keyframes floor-tag {
+  0% { opacity: 0; margin-top: 6px; }
+  20% { opacity: 1; margin-top: 0; }
+  80% { opacity: 1; }
+  100% { opacity: 0; margin-top: -6px; }
+}
+.floor-line-tip { position: absolute; left: 50%; bottom: 13%; transform: translateX(-50%); padding: 4px 10px; background: #101218; border: 2px solid #000; color: #f2eee6; font: 700 14px/1.3 var(--f-body, Archivo, sans-serif); white-space: nowrap; pointer-events: none; }
+.floor-me { display: flex; flex-wrap: wrap; gap: 8px 22px; align-items: center; width: min(100%, 1000px); padding: 6px 12px; background: #14161c; border: 2px solid #000; color: #dcd6ca; font: 600 13px/1.3 var(--f-mono); text-transform: uppercase; letter-spacing: 0.03em; }
+.floor-me > b { font-family: var(--f-display); font-size: 18px; color: #f2eee6; letter-spacing: 0.02em; }
+.floor-me-item { display: inline-flex; align-items: center; gap: 8px; }
+.floor-me-item.warn { color: #ff8a7a; }
+.floor-legs, .floor-mo { display: inline-flex; gap: 2px; }
+.floor-legs i, .floor-mo i { width: 8px; height: 10px; background: #2c3039; }
+.floor-legs i.on { background: #7cff9b; }
+.floor-legs i.on.low { background: #ff8a5c; }
+.floor-mo i { width: 5px; }
+.floor-mo i:nth-child(10) { box-shadow: 2px 0 0 #000; }
+.floor-hot { padding: 1px 6px; background: #ff6b2c; color: #1a0a02; font-family: var(--f-display); letter-spacing: 0.04em; }
+/* the Floor, step 3: the close-up after a big play, on the action cam */
+.floor-cam { position: absolute; left: 50%; top: 8%; width: 72%; transform: translateX(-50%); display: grid; gap: 4px; justify-items: end; }
+.floor-cam .cam { max-width: none; border: 3px solid #000; box-shadow: 5px 5px 0 #000; border-radius: 0; }
+.floor-cam-skip { padding: 2px 8px; background: #101218; color: #c9c4ba; font: 600 12px/1.3 var(--f-mono); }

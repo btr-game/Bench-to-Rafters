@@ -3349,6 +3349,43 @@ multiple times."
   seconds.
 - The Floor's 36 new words are translated into the five languages as they are written.
 
+- **After the owner's first play** ("their movement speed is way too high ... even the shift movement
+  should be slower than this", "make the arrow ... a bit larger", "the pace of 1.5x is suitable for
+  four minute game", the meter "could be slower actually (one real second?)", and a screenshot of a
+  bug): the right three-point arc ran the wrong way round, so its line jumped straight up the court
+  through the key; fixed. The clock runs at 1.5 times (a tick of 0.075 game seconds, twenty a real
+  second) and the Floor takes over with six minutes left (FLOOR.from), four real minutes; players
+  move 8 to 14 feet a game second by athleticism from 40 to 99 (sprinting 1.3 times), so a sprint
+  is now slower than the old walk; the meter's full load is one real second. Slower defenders left
+  the AI open sooner (33.5 points a quarter), so an open jumper now waits until nine seconds of the
+  shot clock are gone (a layup any time), and the shots and fouls were tuned back: over 1,000
+  twelve-minute quarters a difficulty, 27.75 points a team, 42.3% from the field, 35.5% from three,
+  4.9 free throws and 3.6 turnovers; his team wins 53.2% on Regular guy, 57.8% on Shoot for the
+  stars and 40.6% on Reality hits hard. The arrow over him is eleven pixels wide and bobs.
+- **Step 2, controls and feel** (owner: "let's carry on to steps 2. actually, can you build to 3?"):
+  with the ball, a white ring marks the teammate his pass would find (the one he aims at with the
+  arrows, else the most open man), and a "!" bubble rises over a teammate who has stood open long
+  enough for him to see it: 1.4 game seconds at Basketball IQ 40, 0.2 at 99. On defence a red ring
+  and a red marker show the man he guards. Small tags over a player tell a crossover, a spin, a
+  step-back, a screen, a switch, the help he called and a foul; the engine now tells his jab, his
+  switch and the help (events with no words). At the line his free-throw touch sets the meter's
+  window and nobody contests it, with its own long meter across the foot of the court and a
+  prompt. Under the court his strip: stamina in ten squares, his own fouls (red from five), the
+  momentum bar in both teams' colours, and "On fire" when it is full. His ratings carry further:
+  speed by athleticism and the meter by shooting both spread over 40 to 99.
+- **Step 3, animation and the close-up**: two new hand-drawn poses (a defender's slide, a reach for
+  the ball) and the back of the head for a spin; every pose stands on its own foot row, so a jumper
+  is off the floor and a low stance sits on it. The frames follow the play in steps: running, a
+  defender sliding and shuffling, the dribble, the crossover (the ball swept low across him), the
+  spin (facing, his back, turned round, facing again), the step-back, the gather and the rise as
+  his meter fills, the release, the landing, the dunk, the block, the reach on a jab or a steal, and
+  arms up after his own basket. The close-up (owner: "a short 2~3 second animation plays of the
+  player pulling up, and the ball swishing in") is the action cam from the finals, over the court
+  for 2.3 seconds with the game held: his made threes and dunks, a block by him or on him, and any
+  go-ahead, tying or buzzer basket in the last minute; Enter, Space or Esc moves on. The court fits
+  three times over on a 1440 by 900 screen again (its size now comes from the room the score bug,
+  his strip and the keys leave).
+
 - **The road map's airport** (owner, feedback on the previous round: "add airport on the road map to
   go back to mainland (opens when beginning level is complete)"): the first stop on the road, top
   left, a runway, the plane on the apron, the terminal and its tower; a road runs down from it to
