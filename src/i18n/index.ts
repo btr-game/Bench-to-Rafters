@@ -75,13 +75,19 @@ export function onLang(f: () => void): () => void {
 
 const fill = (s: string, v?: Record<string, string | number>): string => (v ? s.replace(/\{(\w+)\}/g, (m, k: string) => (k in v ? String(v[k]) : m)) : s);
 
-/** The interface's words in the player's language, keyed by the English. */
+/** The interface's words in the player's language, keyed by the English. One English word with two
+ * meanings takes a context after `@@` (`t('Back@@body')`, the back of the body, beside `t('Back')`,
+ * the button): the English shows without it, and each meaning gets a translation of its own. */
 export function t(en: string, v?: Record<string, string | number>): string {
-  return fill(cur === 'en' ? en : (TABLES[cur].ui[en] ?? en), v);
+  const plain = en.includes('@@') ? en.slice(0, en.indexOf('@@')) : en;
+  return fill(cur === 'en' ? plain : (TABLES[cur].ui[en] ?? plain), v);
 }
 
 /** Marks English kept in data for the catalog; the screen translates it with `t` when it shows it. */
 export const tx = (en: string): string => en;
+
+/** English a tx() marked with a context (`'Back@@body'`), as it shows in English. */
+export const plainOf = (en: string): string => (en.includes('@@') ? en.slice(0, en.indexOf('@@')) : en);
 
 /** Story mode's table in the player's language (missing lines in English). */
 export function storyTable(en: Record<string, string>): Record<string, string> {

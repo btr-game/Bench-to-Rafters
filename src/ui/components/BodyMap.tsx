@@ -82,7 +82,7 @@ const SPOT: Record<Exclude<BodyPart, 'whole'>, [number, number]> = {
   ankle: [87, 380],
   foot: [116, 394],
 };
-const PART_NAME: Record<BodyPart, string> = { head: tx('Head'), neck: tx('Neck'), shoulder: tx('Shoulder'), back: tx('Back'), hand: tx('Hand and wrist'), groin: tx('Hip and groin'), hamstring: tx('Hamstring'), knee: tx('Knee'), calf: tx('Calf and Achilles'), ankle: tx('Ankle'), foot: tx('Foot'), whole: tx('Illness and other') };
+const PART_NAME: Record<BodyPart, string> = { head: tx('Head'), neck: tx('Neck'), shoulder: tx('Shoulder'), back: tx('Back@@body'), hand: tx('Hand and wrist'), groin: tx('Hip and groin'), hamstring: tx('Hamstring'), knee: tx('Knee'), calf: tx('Calf and Achilles'), ankle: tx('Ankle'), foot: tx('Foot'), whole: tx('Illness and other') };
 
 /** Shade for a muscle: pale when untrained, deep orange when it is his most built. */
 const shade = (v: number, top: number) => `color-mix(in srgb, #E8590C ${Math.round(Math.min(1, v / top) * 85)}%, var(--body-base))`;
@@ -272,10 +272,10 @@ export function BodyCard({ g }: { g: GameState }) {
         <div className="bm-figure">
         <svg viewBox="0 0 410 428" className="bm-svg" role="img" aria-label={t('Body map, front and back')}>
           <text x={100} y={422} textAnchor="middle" className="bm-cap">
-            {t('Front')}
+            {t('Front@@view')}
           </text>
           <text x={BACK_X + 100} y={422} textAnchor="middle" className="bm-cap">
-            {t('Back')}
+            {t('Back@@view')}
           </text>
           <Figure shapes={FRONT} dx={0} muscles={muscles} top={top} hover={hover} setHover={setHover} />
           <Figure shapes={BACK} dx={BACK_X} muscles={muscles} top={top} hover={hover} setHover={setHover} />
