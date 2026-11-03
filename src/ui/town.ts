@@ -79,7 +79,7 @@ export function schoolSign(name: string): string {
 const short = (s: string) => s.split(',')[0].trim();
 
 /** Where he lives: the family house, a dorm, then a flat, a house or a mansion as the bank grows. */
-export function houseOf(g: GameState, look: TownLook): HouseTier {
+function houseOf(g: GameState, look: TownLook): HouseTier {
   if (look === 'hometown') return 'family';
   if (look === 'campus') return 'dorm';
   const bank = g.player.bank;
@@ -133,7 +133,7 @@ export function placeFor(town: Town, tab: Tab, last: PlaceKind | null): Place | 
 export const STREET = { h: 40, ground: 32, gap: 10, margin: 14 };
 
 /** How wide each building stands. */
-export function widthOf(id: PlaceKind, town: Town): number {
+function widthOf(id: PlaceKind, town: Town): number {
   switch (id) {
     case 'arena':
       return town.look === 'hometown' ? 70 : town.abbr ? ARENA_W + MARK_W : 72;

@@ -8,7 +8,7 @@
 import type { Landmark, Roof, SchoolSpec, Skin } from '../arenas';
 import { C, G, courses, dome, doorFill, gable, windows, type Px } from './townPx';
 
-export interface Colors {
+interface Colors {
   c1: string;
   c2: string;
   c3: string;

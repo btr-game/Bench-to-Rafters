@@ -13,7 +13,7 @@ export type Landmark =
   | 'peach' | 'crowntower' | 'deco' | 'coaster' | 'capitol' | 'rockies' | 'pines' | 'derrick' | 'hood' | 'rockarch'
   | 'gate' | 'mast' | 'lights' | 'cactus' | 'liftbridge' | 'reunion' | 'rocket' | 'pyramid' | 'balcony' | 'alamo';
 
-export interface ArenaSpec {
+interface ArenaSpec {
   roof: Roof;
   skin: Skin;
   /** the city's landmark beside it (NBA arenas), on its left or right */

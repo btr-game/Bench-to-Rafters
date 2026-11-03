@@ -3218,3 +3218,22 @@ multiple times."
 - **The plane's sounds**: the engines spool up at take-off (graduation's flight and the airport's
   flight back to the road map, which borrowed the feedback's paper plane), tyre chirps and the cabin
   bell at touchdown (`takeoff`, `touchdown`, on the sound board).
+- **Achievements, turning points and shop things for the round** (checklist items 5 to 7, a helper
+  in its own worktree): 45 achievements (`engine/achievements37.ts`; the book 825 → 870), filed in
+  the existing categories under the 10% cap, for the street (his house, the mansion, the statue,
+  five banners in one arena, the kerb, and on the device the doors he walks through, the agent's
+  office, the four looks of the town, the miles walked, the landmarks seen), aging and the bar (an
+  All-Star at 38, OVR 90 at 37, twenty a game at 40, ten All-Star teams in a row, three MVPs in a
+  row), and the two career changers. Tiers from 150 smart Regular guy careers on rough bands
+  (bench 50% or more, rotation 20 to 50%, starter 6 to 20%, All-Star 1.5 to 6%, Hall of Fame
+  under 1.5%), by judgement where the harness can't reach (choices it never makes, counts kept by
+  the UI). What the street shows now lives in `engine/career/street.ts`, which the town, the book
+  and the events all read. Nine turning points, each once a career (`events/round37.ts`): a street
+  named after him (its sign on the lamp post outside the arena), his mural on the practice
+  facility, his hometown rec center taking his name, the arena's naming rights, another agent in
+  the lobby, moving day (a house with a hoop on the street), the neighbour at midnight, the reporter
+  asking about the knee after the career-altering injury, and a late summer of work. Signs and
+  murals stay with the city that put them up. Four shop things: framed prints of every arena, a
+  city bike, a custom knee brace, a summer at a longevity clinic. No new decision kind, so the
+  harness's `smartChoice` needed nothing. A dev deck card (`town-city`) stages the street with the
+  sign, the mural, the car and the hoop.
