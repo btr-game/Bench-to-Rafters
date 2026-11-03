@@ -12,6 +12,7 @@ import type { DramaPlay } from '../../engine/story/drama';
 import { VERB2, VERB3 } from '../../engine/story/drama';
 import type { AttrKey } from '../../engine/types';
 import { Icon } from '../art/Icon';
+import { t, tx } from '../../i18n';
 
 export type Grade = 'perfect' | 'good' | 'ok';
 export interface ClutchMove {
@@ -23,19 +24,19 @@ export interface ClutchMove {
 }
 
 const THREES: ClutchMove[] = [
-  { id: 'pullup', label: 'Pull up from deep', verb: 'pulls up from deep', attr: 'SHT', icon: 'shoot' },
-  { id: 'stepback', label: 'Step back', verb: 'hits a step-back three', attr: 'SHT', icon: 'range' },
-  { id: 'corner', label: 'Spot up in the corner', verb: 'buries the corner three', attr: 'SHT', icon: 'threes' },
+  { id: 'pullup', label: tx('Pull up from deep'), verb: 'pulls up from deep', attr: 'SHT', icon: 'shoot' },
+  { id: 'stepback', label: tx('Step back'), verb: 'hits a step-back three', attr: 'SHT', icon: 'range' },
+  { id: 'corner', label: tx('Spot up in the corner'), verb: 'buries the corner three', attr: 'SHT', icon: 'threes' },
 ];
 const TWOS: ClutchMove[] = [
-  { id: 'dunk', label: 'Attack the rim', verb: 'throws it down', attr: 'ATH', icon: 'dunk' },
-  { id: 'drive', label: 'Drive and finish', verb: 'drives and scores', attr: 'FIN', icon: 'finish' },
-  { id: 'floater', label: 'Floater', verb: 'hits the floater', attr: 'FIN', icon: 'FIN' },
-  { id: 'turn', label: 'Post up, turn around', verb: 'hits the turnaround', attr: 'SHT', icon: 'post' },
+  { id: 'dunk', label: tx('Attack the rim'), verb: 'throws it down', attr: 'ATH', icon: 'dunk' },
+  { id: 'drive', label: tx('Drive and finish'), verb: 'drives and scores', attr: 'FIN', icon: 'finish' },
+  { id: 'floater', label: tx('Floater'), verb: 'hits the floater', attr: 'FIN', icon: 'FIN' },
+  { id: 'turn', label: tx('Post up, turn around'), verb: 'hits the turnaround', attr: 'SHT', icon: 'post' },
 ];
 const STOPS: ClutchMove[] = [
-  { id: 'block', label: 'Contest at the rim', verb: 'BLOCK', attr: 'INT', icon: 'INT' },
-  { id: 'steal', label: 'Jump the passing lane', verb: 'STEAL', attr: 'PER', icon: 'PER' },
+  { id: 'block', label: tx('Contest at the rim'), verb: 'BLOCK', attr: 'INT', icon: 'INT' },
+  { id: 'steal', label: tx('Jump the passing lane'), verb: 'STEAL', attr: 'PER', icon: 'PER' },
 ];
 
 /** Which plays are his to play: his team's baskets, and the stops his team makes. */
@@ -58,7 +59,7 @@ export function calledPlay(p: DramaPlay, m: ClutchMove, name: string, opp: strin
   return { ...p, mine: true, text: `${who} ${m.verb}${rest}` };
 }
 
-export const GRADE_NOTE: Record<Grade, string> = { perfect: 'Perfect timing', good: 'Good look', ok: 'Lucky bounce' };
+export const GRADE_NOTE: Record<Grade, string> = { perfect: tx('Perfect timing'), good: tx('Good look'), ok: tx('Lucky bounce') };
 export const GRADE_POINTS: Record<Grade, number> = { perfect: 3, good: 2, ok: 1 };
 
 /**
@@ -77,9 +78,9 @@ function Meter({ rating, onStop }: { rating: number; onStop: (g: Grade) => void 
   useEffect(() => {
     let raf = 0;
     const t0 = performance.now();
-    const tick = (t: number) => {
+    const tick = (now: number) => {
       // there and back every 1.3 seconds
-      const ph = ((t - t0) / 1300) % 2;
+      const ph = ((now - t0) / 1300) % 2;
       pos.current = ph < 1 ? ph : 2 - ph;
       setX(pos.current);
       raf = requestAnimationFrame(tick);
@@ -110,7 +111,7 @@ function Meter({ rating, onStop }: { rating: number; onStop: (g: Grade) => void 
     };
   }, [zone, onStop]);
   return (
-    <div className="clutch-meter" role="button" aria-label="Stop the meter">
+    <div className="clutch-meter" role="button" aria-label={t('Stop the meter')}>
       <div className="cm-zone" style={{ left: `${zone.a * 100}%`, width: `${(zone.b - zone.a) * 100}%` }} />
       <div className="cm-perfect" style={{ left: `${zone.pa * 100}%`, width: `${(zone.pb - zone.pa) * 100}%` }} />
       <div className="cm-mark" style={{ left: `${x * 100}%` }} />
@@ -123,24 +124,24 @@ export function ClutchPanel({ play, moves, ratings, onDone }: { play: DramaPlay;
   const [move, setMove] = useState<ClutchMove | null>(null);
   const stop = moves[0].verb === 'BLOCK' || moves[0].verb === 'STEAL';
   return (
-    <div className="clutch-panel" role="group" aria-label="Your call">
+    <div className="clutch-panel" role="group" aria-label={t('Your call')}>
       <div className="kicker on-dark with-icon">
         <Icon name="clutch" size={22} />
-        Q4 {play.clock} · {stop ? 'Their ball: get a stop' : `Your ball: ${play.pts} points on the line`}
+        Q4 {play.clock} · {stop ? t('Their ball: get a stop') : t('Your ball: {n} points on the line', { n: play.pts })}
       </div>
       {!move ? (
         <div className="clutch-moves">
           {moves.map((m) => (
             <button key={m.id} className="btn ghost-dark with-icon" onClick={() => setMove(m)}>
               <Icon name={m.icon} size={22} />
-              {m.label}
+              {t(m.label)}
             </button>
           ))}
         </div>
       ) : (
         <>
           <div className="on-dark small">
-            {move.label}: stop the meter in the green. Space, Enter or tap.
+            {t('{move}: stop the meter in the green. Space, Enter or tap.', { move: t(move.label) })}
           </div>
           <Meter rating={ratings[move.attr] ?? 60} onStop={(g) => onDone(move, g)} />
         </>

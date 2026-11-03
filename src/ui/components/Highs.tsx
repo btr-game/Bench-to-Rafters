@@ -3,6 +3,7 @@ import { HIGH_LABEL } from '../../engine/career/breakthrough';
 import { LEVELS } from '../../engine/balance';
 import { seasonLabel } from '../format';
 import { Card } from './bits';
+import { t } from '../../i18n';
 
 const KEYS: HighKey[] = ['pts', 'reb', 'ast', 'stl', 'blk', 'tpm'];
 
@@ -12,7 +13,7 @@ function Cell({ h, showLevel }: { h?: CareerHigh; showLevel?: boolean }) {
     <td className="hi-cell">
       <b className="num">{h.v}</b>
       <small>
-        vs {h.opp} · {seasonLabel(h.year)}
+        {t('vs {team}', { team: h.opp })} · {seasonLabel(h.year)}
         {showLevel ? ` · ${LEVELS[h.level].short}` : ''}
         {h.post ? ` · ${h.post}` : ''}
       </small>
@@ -26,14 +27,14 @@ export function CareerHighs({ g }: { g: GameState }) {
   if (!h || Object.keys(h.all).length === 0) return null;
   const nba = Object.keys(h.nba).length > 0;
   return (
-    <Card title="Career highs" kicker="Best single games">
+    <Card title={t('Career highs')} fold="Career highs" kicker={t('Best single games')}>
       <div className="tbl-wrap">
         <table className="highs">
           <thead>
             <tr>
-              <th className="l">Stat</th>
+              <th className="l">{t('Stat')}</th>
               {nba && <th className="l">NBA</th>}
-              <th className="l">Any level</th>
+              <th className="l">{t('Any level')}</th>
             </tr>
           </thead>
           <tbody>

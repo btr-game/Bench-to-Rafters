@@ -16,6 +16,7 @@ import { PlayerArt, styleLeague } from '../art/Player';
 import { RUN_A, RUN_B } from '../art/sprite';
 import { team as teamOf } from '../selectors';
 import { sfx } from '../sound';
+import { t } from '../../i18n';
 
 const W = 1000; // the room's width in its own units
 const REACH = 55; // how close he has to be to talk
@@ -49,10 +50,10 @@ function nearest(spots: Spot[], x: number): Spot | null {
   return near && Math.abs(near.x - x) <= REACH ? near : null;
 }
 
-const mix = (a: string, b: string, t: number) => {
+const mix = (a: string, b: string, f: number) => {
   const p = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
   const [x, y] = [p(a), p(b)];
-  return `#${x.map((v, i) => Math.round(v + (y[i] - v) * t).toString(16).padStart(2, '0')).join('')}`;
+  return `#${x.map((v, i) => Math.round(v + (y[i] - v) * f).toString(16).padStart(2, '0')).join('')}`;
 };
 
 /** The room in square pixels: the wall in the team's colour, lockers with nameplates, the bench,
@@ -82,7 +83,7 @@ function RoomArt({ color }: { color: string }) {
 
 export function LockerRoom({ g }: { g: GameState }) {
   const room = useMemo(() => lockerRoom(g), [g]);
-  const t = teamOf(g);
+  const club = teamOf(g);
   const talkAct = useStore((s) => s.lockerTalk);
   const fire = useStore((s) => s.fireCoach);
   const [x, setX] = useState(40);
@@ -198,11 +199,11 @@ export function LockerRoom({ g }: { g: GameState }) {
     };
   }, [active, open, talk, near, said, g, pick, talkTo, walk]);
 
-  if (!room || !t) {
+  if (!room || !club) {
     return (
       <section className="card stack locker" data-tour="locker">
-        <div className="sec-title">Locker room</div>
-        <p className="small muted keep">The room is empty between seasons. It opens again with the next one.</p>
+        <div className="sec-title">{t('Locker room')}</div>
+        <p className="small muted keep">{t('The room is empty between seasons. It opens again with the next one.')}</p>
       </section>
     );
   }
@@ -214,13 +215,12 @@ export function LockerRoom({ g }: { g: GameState }) {
   const feuders = room.feud ? room.feud.map(String) : [];
   const coachSpot = spots.find((s) => s.who === 'coach')!;
   return (
-    <section className="card stack locker" data-tour="locker" style={{ ['--team' as string]: t.color }}>
+    <section className="card stack locker" data-tour="locker" style={{ ['--team' as string]: club.color }}>
       <div className="row" style={{ flexWrap: 'wrap', gap: 8 }}>
-        <div className="sec-title">Locker room</div>
+        <div className="sec-title">{t('Locker room')}</div>
         <span className="spacer" />
         <span className="small muted keep">
-          Chemistry from the room this season: {built > 0 ? '+' : ''}
-          {built.toFixed(2)} (at most ±{cap})
+          {t('Chemistry from the room this season: {n} (at most ±{cap})', { n: `${built > 0 ? '+' : ''}${built.toFixed(2)}`, cap })}
         </span>
       </div>
       <div
@@ -228,7 +228,7 @@ export function LockerRoom({ g }: { g: GameState }) {
         className={`lk-scene${active ? ' on' : ''}`}
         tabIndex={0}
         role="application"
-        aria-label="The locker room. A and D or the arrow keys walk, Space talks, Escape steps out."
+        aria-label={t('The locker room. A and D or the arrow keys walk, Space talks, Escape steps out.')}
         onFocus={() => setActive(true)}
         onBlur={(e) => {
           if (!e.currentTarget.contains(e.relatedTarget as Node)) {
@@ -237,14 +237,14 @@ export function LockerRoom({ g }: { g: GameState }) {
           }
         }}
       >
-        <RoomArt color={t.color} />
+        <RoomArt color={club.color} />
         {room.mates.map((m) => {
           const at = spots.find((s) => s.who === String(m.id))!.x;
           const id = String(m.id);
           return (
-            <button key={id} className={`lk-who${done(id) ? ' done' : ''}${near?.who === id ? ' near' : ''}${upper.has(id) ? ' up' : ''}`} style={{ left: `${(at / W) * 100}%` }} onClick={() => talkTo(id)} tabIndex={-1} aria-label={`Talk to ${m.name}, ${PERSONA[m.persona]}`}>
+            <button key={id} className={`lk-who${done(id) ? ' done' : ''}${near?.who === id ? ' near' : ''}${upper.has(id) ? ' up' : ''}`} style={{ left: `${(at / W) * 100}%` }} onClick={() => talkTo(id)} tabIndex={-1} aria-label={t('Talk to {name}, {persona}', { name: m.name, persona: PERSONA[m.persona] })}>
               {feuders.includes(id) && !done('feud') && <span className="lk-alert">!!</span>}
-              <PlayerArt name={m.name} number={(m.id % 49) + 1} pos={m.pos} color={t.color} team={t.name} abbr={t.abbr} league={league} size={size} noBall mirror={at > x} />
+              <PlayerArt name={m.name} number={(m.id % 49) + 1} pos={m.pos} color={club.color} team={club.name} abbr={club.abbr} league={league} size={size} noBall mirror={at > x} />
               <span className="lk-tag">
                 {m.name.split(' ')[0]}
                 <span className="lk-role"> · {PERSONA[m.persona]}</span>
@@ -253,44 +253,44 @@ export function LockerRoom({ g }: { g: GameState }) {
             </button>
           );
         })}
-        <button className={`lk-who coach${done('coach') ? ' done' : ''}${near?.who === 'coach' ? ' near' : ''}${upper.has('coach') ? ' up' : ''}`} style={{ left: `${(coachSpot.x / W) * 100}%` }} onClick={() => talkTo('coach')} tabIndex={-1} aria-label={`Talk to coach ${room.coach.name}`}>
+        <button className={`lk-who coach${done('coach') ? ' done' : ''}${near?.who === 'coach' ? ' near' : ''}${upper.has('coach') ? ' up' : ''}`} style={{ left: `${(coachSpot.x / W) * 100}%` }} onClick={() => talkTo('coach')} tabIndex={-1} aria-label={t('Talk to coach {name}', { name: room.coach.name })}>
           <CoachArt coach={room.coach} color={room.team.color} size={size} mirror />
           <span className="lk-tag">
-            Coach<span className="lk-role"> · {TEMPER[room.coach.temper]}</span>
+            {t('Coach')}<span className="lk-role"> · {TEMPER[room.coach.temper]}</span>
             {done('coach') ? ' ✓' : ''}
           </span>
         </button>
         <div className="lk-me" style={{ left: `${(x / W) * 100}%` }} aria-hidden="true">
-          <PlayerArt name={g.player.name} number={g.player.number} pos={g.player.pos} color={t.color} team={t.name} abbr={t.abbr} league={league} size={size} noBall frame={moving ? (stride ? RUN_A : RUN_B) : undefined} mirror={facing === 'l'} wear={g.player.wardrobe?.on} />
-          <span className="lk-tag you" aria-hidden="true">You</span>
-          <span className="lk-you">You</span>
+          <PlayerArt name={g.player.name} number={g.player.number} pos={g.player.pos} color={club.color} team={club.name} abbr={club.abbr} league={league} size={size} noBall frame={moving ? (stride ? RUN_A : RUN_B) : undefined} mirror={facing === 'l'} wear={g.player.wardrobe?.on} />
+          <span className="lk-tag you" aria-hidden="true">{t('You')}</span>
+          <span className="lk-you">{t('You')}</span>
         </div>
         {/* on a touch screen the keys are not there (the buttons below are), so the hint is just the tap */}
         {!active && (
           <div className="lk-hint">
-            <span className="hide-touch">Click to walk in · A and D to walk, Space to talk</span>
-            <span className="show-touch">Tap to walk in, then use the buttons</span>
+            <span className="hide-touch">{t('Click to walk in · A and D to walk, Space to talk')}</span>
+            <span className="show-touch">{t('Tap to walk in, then use the buttons')}</span>
           </div>
         )}
-        {active && near && !open && <div className="lk-hint">{near.who === 'feud' ? 'Space: step into the argument' : `Space: talk to ${near.who === 'coach' ? 'the coach' : room.mates.find((m) => String(m.id) === near.who)?.name.split(' ')[0]}`}</div>}
+        {active && near && !open && <div className="lk-hint">{near.who === 'feud' ? t('Space: step into the argument') : near.who === 'coach' ? t('Space: talk to the coach') : t('Space: talk to {name}', { name: room.mates.find((m) => String(m.id) === near.who)?.name.split(' ')[0] ?? '' })}</div>}
       </div>
-      <div className="lk-pad" aria-label="Walk and talk">
-        <button className="btn ghost small" onPointerDown={() => walk(-1)} onPointerUp={() => walk(0)} onPointerLeave={() => dir === -1 && walk(0)} aria-label="Walk left">
+      <div className="lk-pad" aria-label={t('Walk and talk')}>
+        <button className="btn ghost small" onPointerDown={() => walk(-1)} onPointerUp={() => walk(0)} onPointerLeave={() => dir === -1 && walk(0)} aria-label={t('Walk left')}>
           ◀ A
         </button>
         <button className="btn small" disabled={!near} onClick={() => talkTo(near?.who ?? null)}>
-          Talk
+          {t('Talk')}
         </button>
-        <button className="btn ghost small" onPointerDown={() => walk(1)} onPointerUp={() => walk(0)} onPointerLeave={() => dir === 1 && walk(0)} aria-label="Walk right">
+        <button className="btn ghost small" onPointerDown={() => walk(1)} onPointerUp={() => walk(0)} onPointerLeave={() => dir === 1 && walk(0)} aria-label={t('Walk right')}>
           D ▶
         </button>
       </div>
       {talk && (
         <div className="lk-talk" aria-live="polite">
-          <div className="kicker">{talk.who === 'coach' ? `${room.coach.name} · ${TEMPER[room.coach.temper]}${room.coach.grade ? ` · ${room.coach.grade}` : ''}` : talk.who === 'feud' ? 'A feud' : talk.name}</div>
+          <div className="kicker">{talk.who === 'coach' ? `${room.coach.name} · ${TEMPER[room.coach.temper]}${room.coach.grade ? ` · ${room.coach.grade}` : ''}` : talk.who === 'feud' ? t('A feud') : talk.name}</div>
           <p className="lk-line">{talk.line}</p>
           {done(talk.who) ? (
-            <p className="small">{said[talk.who] ?? 'You have talked this half. Come back after the next stretch of games.'}</p>
+            <p className="small">{said[talk.who] ?? t('You have talked this half. Come back after the next stretch of games.')}</p>
           ) : (
             <div className="lk-opts">
               {talk.options.map((o, i) => (
@@ -302,11 +302,11 @@ export function LockerRoom({ g }: { g: GameState }) {
           )}
           {talk.who === 'coach' && canFireCoach(g) && (
             <button className={`btn small ${armed ? 'danger' : 'ghost'}`} onClick={() => (armed ? (sfx('whistle'), fire(), setArmed(false), setOpen(null)) : setArmed(true))}>
-              {armed ? 'Tap again: have him fired' : 'Go to the front office: have him fired'}
+              {armed ? t('Tap again: have him fired') : t('Go to the front office: have him fired')}
             </button>
           )}
           <button className="btn ghost small lk-close" onClick={() => setOpen(null)}>
-            Walk away <kbd className="hide-touch">Esc</kbd>
+            {t('Walk away')} <kbd className="hide-touch">Esc</kbd>
           </button>
         </div>
       )}

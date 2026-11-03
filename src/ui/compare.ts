@@ -4,6 +4,7 @@
 
 import type { CareerRecord } from '../engine/career/record';
 import { MODES } from '../engine/balance';
+import { t } from '../i18n';
 
 interface CompareRow {
   label: string;
@@ -27,19 +28,19 @@ export function compareRows(a: CareerRecord, b: CareerRecord): CompareRow[] {
   const hof = (r: CareerRecord) => (r.hof === 'first' ? 2 : r.hof ? 1 : 0);
   const rank = (r: CareerRecord) => (r.rank > 100 ? 101 : r.rank);
   return [
-    { label: 'Difficulty', a: `${MODES[a.mode].name}${a.oath ? ' · Rough Road' : ''}${a.comet ? ' · Comet' : ''}`, b: `${MODES[b.mode].name}${b.oath ? ' · Rough Road' : ''}${b.comet ? ' · Comet' : ''}`, better: null },
-    { label: 'Tier', a: a.tier, b: b.tier, better: null },
-    row('Peak OVR', a.peak, b.peak, int),
-    ...(a.index && b.index ? [row('Career index', a.index.score, b.index.score, one)] : []),
-    row('Legacy points', a.legacy, b.legacy, int),
-    row('All-time rank', rank(a), rank(b), (v) => (v > 100 ? 'outside the top 100' : `#${v}`), 'less'),
-    row('Hall of Fame', hof(a), hof(b), (v) => (v === 2 ? 'First ballot' : v === 1 ? 'Yes' : 'No')),
-    row('Titles', a.titles, b.titles, int),
+    { label: t('Difficulty'), a: `${MODES[a.mode].name}${a.oath ? ' · Rough Road' : ''}${a.comet ? ' · Comet' : ''}`, b: `${MODES[b.mode].name}${b.oath ? ' · Rough Road' : ''}${b.comet ? ' · Comet' : ''}`, better: null },
+    { label: t('Tier'), a: a.tier, b: b.tier, better: null },
+    row(t('Peak OVR'), a.peak, b.peak, int),
+    ...(a.index && b.index ? [row(t('Career index'), a.index.score, b.index.score, one)] : []),
+    row(t('Legacy points'), a.legacy, b.legacy, int),
+    row(t('All-time rank'), rank(a), rank(b), (v) => (v > 100 ? t('outside the top 100') : `#${v}`), 'less'),
+    row('Hall of Fame', hof(a), hof(b), (v) => (v === 2 ? t('First ballot') : v === 1 ? t('Yes') : t('No'))),
+    row(t('Titles'), a.titles, b.titles, int),
     row('MVPs', a.mvps, b.mvps, int),
-    row('All-Star picks', a.allStars, b.allStars, int),
-    row('NBA seasons', a.nbaSeasons, b.nbaSeasons, int),
-    row('NBA points', a.nbaPoints, b.nbaPoints, int),
-    row('Retired at', a.retiredAt, b.retiredAt, (v) => `age ${v}`, 'none'),
+    row(t('All-Star picks'), a.allStars, b.allStars, int),
+    row(t('NBA seasons'), a.nbaSeasons, b.nbaSeasons, int),
+    row(t('NBA points'), a.nbaPoints, b.nbaPoints, int),
+    row(t('Retired at'), a.retiredAt, b.retiredAt, (v) => t('age {age}', { age: v }), 'none'),
   ];
 }
 

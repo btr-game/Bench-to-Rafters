@@ -13,6 +13,7 @@ import { ICONS, PAL } from './art/icons';
 import { NAMES } from '../content/strings';
 import { NBA_TEAMS } from '../content/teams';
 import { recordCard } from './achievements';
+import { t } from '../i18n';
 
 const W = 1080;
 const H = 1850;
@@ -25,7 +26,7 @@ async function portrait(r: CareerRecord, color: string, teamName: string): Promi
   try {
     const host = document.createElement('div');
     const root = createRoot(host);
-    flushSync(() => root.render(createElement(PlayerArt, { name: r.name, number: r.number, pos: r.pos, color, team: teamName, abbr: NBA_TEAMS.find((t) => teamName.includes(t.nick))?.abbr ?? '', size: 240 })));
+    flushSync(() => root.render(createElement(PlayerArt, { name: r.name, number: r.number, pos: r.pos, color, team: teamName, abbr: NBA_TEAMS.find((x) => teamName.includes(x.nick))?.abbr ?? '', size: 240 })));
     // an SVG image can't reach the page's fonts: the jersey number falls back to a system face
     const svg = host.innerHTML.replace(/var\(--f-display\)/g, 'Impact, Arial Narrow, sans-serif');
     root.unmount();
@@ -52,7 +53,7 @@ function pixels(ctx: CanvasRenderingContext2D, rows: string[], pal: Record<strin
 
 // round 32: a medal for each achievement on the card, in its tier's colour
 const MEDAL = ['.RR...RR.', '..RR.RR..', '...RRR...', '..DDDDD..', '.DMMMMMD.', 'DMLLMMMMD', 'DMLMMMMMD', 'DMMMMMMMD', 'DMMMMMMSD', '.DMMMMSD.', '..DDDDD..'];
-const darker = (hex: string, t: number) => `#${[1, 3, 5].map((i) => Math.round(parseInt(hex.slice(i, i + 2), 16) * (1 - t)).toString(16).padStart(2, '0')).join('')}`;
+const darker = (hex: string, f: number) => `#${[1, 3, 5].map((i) => Math.round(parseInt(hex.slice(i, i + 2), 16) * (1 - f)).toString(16).padStart(2, '0')).join('')}`;
 const medalPal = (c: string) => ({ R: darker(c, 0.35), D: '#18141C', M: c, L: '#FFFFFF', S: darker(c, 0.25) });
 
 // round 32 (owner: "put the difficulty and challenge more deliberately"): each difficulty's badge colour
@@ -150,13 +151,13 @@ export async function drawCareerCard(rec: CareerRecord): Promise<HTMLCanvasEleme
   ctx.font = `400 26px ${BODY}`;
   // round 25: what the media called him, under his name
   const nick = rec.nickname ? `\u201c${rec.nickname.name}\u201d · ` : '';
-  const rival = rec.rival ? ` · rival ${rec.rival.name} (${rec.rival.w}–${rec.rival.l})` : '';
+  const rival = rec.rival ? ` · ${t('rival {name} ({w}–{l})', { name: rec.rival.name, w: rec.rival.w, l: rec.rival.l })}` : '';
   // round 25: the nickname and the rival can make it long: it wraps
-  wrap(ctx, `${nick}${rec.country} · retired at ${rec.retiredAt}${team ? ` · ${team.name}` : ''}${rival}`, 262, Math.min(400, nameBottom + 6), 500, 30);
+  wrap(ctx, `${nick}${rec.country} · ${t('retired at {age}', { age: rec.retiredAt })}${team ? ` · ${team.name}` : ''}${rival}`, 262, Math.min(400, nameBottom + 6), 500, 30);
   if (rec.ringChaser) {
     ctx.fillStyle = '#ffd76a';
     ctx.font = `600 22px ${MONO}`;
-    ctx.fillText(`RING CHASER: ${rec.ringChaser.toUpperCase()}`, 96, 428);
+    ctx.fillText(t('RING CHASER: {team}', { team: rec.ringChaser.toUpperCase() }), 96, 428);
   }
   ctx.textAlign = 'center';
   ctx.fillStyle = accent;
@@ -164,7 +165,7 @@ export async function drawCareerCard(rec: CareerRecord): Promise<HTMLCanvasEleme
   ctx.fillText(String(Math.round(rec.peak)), W - 190, 320);
   ctx.fillStyle = '#9aa0a6';
   ctx.font = `500 24px ${MONO}`;
-  ctx.fillText('PEAK OVR', W - 190, 360);
+  ctx.fillText(t('PEAK OVR'), W - 190, 360);
   ctx.textAlign = 'left';
 
   // verdict and legacy rank
@@ -179,18 +180,18 @@ export async function drawCareerCard(rec: CareerRecord): Promise<HTMLCanvasEleme
   y += 14;
   ctx.fillStyle = accent;
   ctx.font = `800 44px ${DISPLAY}`;
-  ctx.fillText(rec.rank <= 100 ? `ALL-TIME LEGACY RANK: NO. ${rec.rank}` : 'OUTSIDE THE ALL-TIME TOP 100', 60, y);
+  ctx.fillText(rec.rank <= 100 ? t('ALL-TIME LEGACY RANK: NO. {n}', { n: rec.rank }) : t('OUTSIDE THE ALL-TIME TOP 100'), 60, y);
   y += 40;
   ctx.fillStyle = '#9aa0a6';
   ctx.font = `500 24px ${MONO}`;
-  ctx.fillText(`${rec.legacy} LEGACY POINTS${rec.index ? ` · CAREER INDEX ${rec.index.score.toFixed(1)}` : ''}${rec.rankBehind ? ` · BEHIND ${rec.rankBehind.toUpperCase()}` : ''}`, 60, y);
+  ctx.fillText(`${t('{n} LEGACY POINTS', { n: rec.legacy })}${rec.index ? ` · ${t('CAREER INDEX {n}', { n: rec.index.score.toFixed(1) })}` : ''}${rec.rankBehind ? ` · ${t('BEHIND {name}', { name: rec.rankBehind.toUpperCase() })}` : ''}`, 60, y);
   y += 40;
 
   // the numbers, in tiles (round 15)
   const tiles: [string, string][] = [
-    ['NBA SEASONS', String(rec.nbaSeasons)],
-    ['NBA POINTS', rec.nbaPoints.toLocaleString()],
-    ['TITLES', String(rec.titles)],
+    [t('NBA SEASONS'), String(rec.nbaSeasons)],
+    [t('NBA POINTS'), rec.nbaPoints.toLocaleString()],
+    [t('TITLES'), String(rec.titles)],
     ['MVPS', String(rec.mvps)],
     ['ALL-STAR', String(rec.allStars)],
   ];
@@ -212,10 +213,10 @@ export async function drawCareerCard(rec: CareerRecord): Promise<HTMLCanvasEleme
   if (rec.ach && rec.ach.n > 0) {
     ctx.fillStyle = '#9aa0a6';
     ctx.font = `500 22px ${MONO}`;
-    ctx.fillText(`ACHIEVEMENTS · ${rec.ach.n} EARNED`, 60, y + 4);
+    ctx.fillText(t('ACHIEVEMENTS · {n} EARNED', { n: rec.ach.n }), 60, y + 4);
     y += 20;
     rec.ach.top.forEach((a, i) => {
-      const color = ACH_TIERS.find((t) => t.key === a.tier)?.color ?? '#9aa0a6';
+      const color = ACH_TIERS.find((x) => x.key === a.tier)?.color ?? '#9aa0a6';
       pixels(ctx, MEDAL, medalPal(color), 60 + i * 56, y, 5);
     });
     y += 11 * 5 + 34;
@@ -248,7 +249,7 @@ export async function drawCareerCard(rec: CareerRecord): Promise<HTMLCanvasEleme
   if (chips.length === 0) {
     ctx.fillStyle = '#9aa0a6';
     ctx.font = `400 28px ${BODY}`;
-    ctx.fillText('No major honours. The love of the game was enough.', 60, y);
+    ctx.fillText(t('No major honours. The love of the game was enough.'), 60, y);
   }
 
   // championships and the teams he won them with
@@ -290,20 +291,23 @@ export async function drawCareerCard(rec: CareerRecord): Promise<HTMLCanvasEleme
     ctx.fillRect(60, top, 8, 196);
     ctx.fillStyle = '#9aa0a6';
     ctx.font = `500 22px ${MONO}`;
-    ctx.fillText('THE NEXT GENERATION', 92, top + 38);
+    ctx.fillText(t('THE NEXT GENERATION'), 92, top + 38);
     ctx.fillStyle = '#f4f1ea';
     ctx.font = `800 40px ${DISPLAY}`;
     ctx.fillText(kid.name.toUpperCase(), 92, top + 86);
     ctx.fillStyle = '#ffd76a';
     ctx.font = `700 30px ${DISPLAY}`;
-    const add = `+${kid.adds} LEGACY`;
+    const add = t('+{n} LEGACY', { n: kid.adds });
     ctx.fillText(add, W - 92 - ctx.measureText(add).width, top + 86);
     ctx.fillStyle = '#c9c4ba';
     ctx.font = `500 24px ${BODY}`;
-    ctx.fillText(`Peak ${kid.peak} · ${kid.best}`, 92, top + 126, W - 184);
+    ctx.fillText(`${t('Peak {n}', { n: kid.peak })} · ${kid.best}`, 92, top + 126, W - 184);
     ctx.font = `500 22px ${MONO}`;
+    // MVP and ALL-STAR are the awards' own names; the seasons and titles are words
     const n = (k: number, one: string) => `${k} ${one}${k === 1 ? '' : 'S'}`;
-    ctx.fillText(`${n(kid.nbaSeasons, 'NBA SEASON')} · ${kid.nbaPoints.toLocaleString()} PTS · ${n(kid.mvps, 'MVP')} · ${n(kid.titles, 'TITLE')} · ${n(kid.allStars, 'ALL-STAR')}`, 92, top + 166, W - 184);
+    const seasons = kid.nbaSeasons === 1 ? t('1 NBA SEASON') : t('{n} NBA SEASONS', { n: kid.nbaSeasons });
+    const rings = kid.titles === 1 ? t('1 TITLE') : t('{n} TITLES', { n: kid.titles });
+    ctx.fillText(`${seasons} · ${kid.nbaPoints.toLocaleString()} PTS · ${n(kid.mvps, 'MVP')} · ${rings} · ${n(kid.allStars, 'ALL-STAR')}`, 92, top + 166, W - 184);
     y = top + 196;
   }
   const height = Math.min(H, Math.max(900, y + 40));
@@ -346,15 +350,15 @@ export async function downloadCareerCard(r: CareerRecord): Promise<string> {
     try {
       await dl.save({ filename: fileName(r), data: blob });
       recordCard();
-      return 'Career card saved as a PNG.';
+      return t('Career card saved as a PNG.');
     } catch (e) {
       const code = (e as { code?: string })?.code;
       if (code === 'declined') return '';
-      if (code === 'rate_limited') return 'A save is already waiting for you. Try again in a moment.';
-      return 'Saving files is not available here.';
+      if (code === 'rate_limited') return t('A save is already waiting for you. Try again in a moment.');
+      return t('Saving files is not available here.');
     }
   }
-  if (host()) return 'Saving files is not available here.';
+  if (host()) return t('Saving files is not available here.');
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -364,7 +368,7 @@ export async function downloadCareerCard(r: CareerRecord): Promise<string> {
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 2000);
   recordCard();
-  return 'Career card saved as a PNG.';
+  return t('Career card saved as a PNG.');
 }
 
 /** Opens the share sheet with the card where the browser supports it; returns false otherwise. */

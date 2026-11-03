@@ -12,6 +12,7 @@ import { isDev } from '../dev/mode';
 import { readReal } from '../dev/storage';
 import { MODES, type Mode } from '../engine/balance';
 import { todayKey } from '../engine/mini/daily';
+import { tx } from '../i18n';
 
 // ---------- what counts ----------
 
@@ -21,7 +22,7 @@ import { todayKey } from '../engine/mini/daily';
  */
 /** The leaderboards' score: the career index (round 25); records logged before it have their legacy points. */
 export const scoreOf = (r: CareerRecord): number => r.index?.score ?? r.legacy;
-export const SCORE_NOTE = 'Ranked by career index: every season scores its honours, its NBA points and how good you were; the index averages your career total with your best five seasons in a row.';
+export const SCORE_NOTE = tx('Ranked by career index: every season scores its honours, its NBA points and how good you were; the index averages your career total with your best five seasons in a row.');
 /** Round 24 (owner): the board ranks players by their best career; this many make it. */
 export const BOARD_SIZE = 100;
 
