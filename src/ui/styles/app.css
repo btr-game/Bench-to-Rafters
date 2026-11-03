@@ -2676,7 +2676,7 @@ input[type='range'] { width: 100%; min-height: 32px; accent-color: var(--accent)
 }
 
 /* round 35: play with friends (screens/Multiplayer.tsx) */
-.mp-handle .row input, .mp-code-entry input, .mp-classes-new input { flex: 1 1 200px; min-width: 0; }
+.mp-code-entry input, .mp-classes-new input { flex: 1 1 200px; min-width: 0; }
 .mp-code-entry input { max-width: 220px; font-family: var(--f-mono); letter-spacing: 0.18em; text-transform: uppercase; }
 .mp-code { font-family: var(--f-mono); font-weight: 700; font-size: calc(30px * var(--ts)); letter-spacing: 0.22em; padding: 6px 14px; border: 2px dashed var(--accent); border-radius: 6px; background: var(--surface-2); color: var(--ink); }
 .mp-share input { font-family: var(--f-mono); font-size: calc(14px * var(--ts)); }

@@ -18,12 +18,12 @@ import { legendarySeasons } from '../engine/awards/legendary';
 import { duoEffect } from '../engine/career/duo';
 
 export type Act = 'arena' | 'speech' | 'jersey' | 'roll' | 'title' | 'thanks';
-export type FinaleKind = 'rafters' | 'credits' | 'level';
+type FinaleKind = 'rafters' | 'credits' | 'level';
 
 /** The whole of it stays under two minutes (owner); the thank-you waits for the player. */
 export const FINALE_MAX = 120;
 /** Seconds for each act; the speech and the roll grow with the career, inside their limits. */
-export const ACT_SECS = { arena: 7, speechLine: 5.5, jersey: 12, rollMin: 20, rollMax: 52, rollLine: 1.4, title: 6 } as const;
+const ACT_SECS = { arena: 7, speechLine: 5.5, jersey: 12, rollMin: 20, rollMax: 52, rollLine: 1.4, title: 6 } as const;
 
 /** Which ending a career gets, or none (a career still going, the daily, a lab run). */
 export function finaleKind(g: GameState): FinaleKind | null {
@@ -77,7 +77,7 @@ export function speechOf(g: GameState): string[] {
   return lines.slice(0, 5);
 }
 
-export interface CreditBlock {
+interface CreditBlock {
   head: string;
   rows: string[];
 }
@@ -141,7 +141,7 @@ export const MAKERS: { role: string; name: string }[] = [
 ];
 
 /** How long the roll runs: a line and a half a second's worth, inside its limits. */
-export function rollSecs(blocks: CreditBlock[]): number {
+function rollSecs(blocks: CreditBlock[]): number {
   const lines = blocks.reduce((n, b) => n + 2 + b.rows.length, 0) + 2 + MAKERS.length * 2;
   return Math.min(ACT_SECS.rollMax, Math.max(ACT_SECS.rollMin, lines * ACT_SECS.rollLine));
 }
