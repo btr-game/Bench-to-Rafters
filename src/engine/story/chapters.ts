@@ -218,7 +218,7 @@ const CHAPTERS: Chapter[] = [
     when: (c) => nba(c) && !!c.s.contract && c.s.serviceYears >= 1,
     lines: (c) => (said(c, 'p-ride-promise') ? ['1', 'promise'] : ['1']),
     answers: (c) => [
-      { id: 'house', go: () => void ((c.s.player.bank -= STORY_CH.house), bond(c, 'parent', 2)) },
+      { id: 'house', go: () => void ((c.s.player.bank -= STORY_CH.house), bond(c, 'parent', 2), remember(c, 'parent', 'p-house-house')) },
       { id: 'debts', go: () => void ((c.s.player.bank -= STORY_CH.debts), bond(c, 'parent', 1)) },
       { id: 'wait', go: () => void bond(c, 'parent', -1) },
     ],

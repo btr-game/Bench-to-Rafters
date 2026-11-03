@@ -6,7 +6,7 @@
 // is at the door the moment it opens. Which places stand where: ui/town.ts; the art: art/TownArt.tsx.
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
-import type { GameState } from '../../engine/types';
+import type { GameState, StoryRole } from '../../engine/types';
 import { achievementsNow, useStore } from '../../store';
 import { UI } from '../../content/strings';
 import { tabKey, team as teamOf } from '../selectors';
@@ -36,7 +36,12 @@ const LEGS = {
 };
 
 function Walker({ g, color, frame, facing, scale }: { g: GameState; color: string; frame: keyof typeof LEGS; facing: 'l' | 'r'; scale: number }) {
-  const look = lookOf(g.player.name, '#F1F3F5', g.player.wardrobe?.on);
+  return <Figure name={g.player.name} wear={g.player.wardrobe?.on} color={color} frame={frame} facing={facing} scale={scale} />;
+}
+
+/** Anyone on the street, drawn like him: the look from the name, a shirt and shorts in `color`. */
+function Figure({ name, wear, color, frame, facing, scale }: { name: string; wear?: Parameters<typeof lookOf>[2]; color: string; frame: keyof typeof LEGS; facing: 'l' | 'r'; scale: number }) {
+  const look = lookOf(name, '#F1F3F5', wear);
   const fill: Record<string, string> = { H: look.hair, S: look.skin, L: look.skin, J: color, P: color, N: '#FFFFFF', W: '#F1F3F5' };
   const rows = [...TOP, ...LEGS[frame]];
   return (
@@ -46,6 +51,23 @@ function Walker({ g, color, frame, facing, scale }: { g: GameState; color: strin
       <rect x={2} y={7} width={3} height={1} fill="#000" opacity={0.18} />
     </svg>
   );
+}
+
+/** Round 38: story mode's people on his street. The friend waits by the gym (by the arena once he
+ * plays beside him, sits behind the bench or coaches on it), the parent by the house, the rival by
+ * the arena once they share a team. The one his next chapter is with has a word to say. */
+function storyFolk(g: GameState, home: boolean, talk?: StoryRole): { who: StoryRole; name: string; at: PlaceKind; color: string }[] {
+  const st = g.story;
+  if (!st) return [];
+  const mine = teamOf(g)?.name;
+  const f = st.friend;
+  const near = (f.lv === 'NBA' && f.team === mine) || f.lv === 'OUT' || (f.lv === 'COACH' && !!st.f.friendCoach && f.team === mine);
+  const out: { who: StoryRole; name: string; at: PlaceKind; color: string }[] = [{ who: 'friend', name: st.names.friend, at: near && g.stage === 'NBA' ? 'arena' : 'gym', color: '#2F9E44' }];
+  // the family lives in his hometown: in a city of his own they come by only for their chapter
+  if (home || talk === 'parent') out.push({ who: 'parent', name: st.names.parent, at: 'house', color: '#8B5A2B' });
+  if (talk === 'sibling') out.push({ who: 'sibling', name: st.names.sibling, at: 'house', color: '#7048E8' });
+  if (st.rival && st.rival.lv === 'NBA' && st.rival.team === mine) out.push({ who: 'rival', name: st.names.rival, at: 'arena', color: '#C92A2A' });
+  return out;
 }
 
 /** Bring a card into view and ring it for a moment (the agent's office: the contract). */
@@ -78,6 +100,8 @@ export function Town({ g, fast }: { g: GameState; fast: boolean }) {
   const tm = teamOf(g);
   const banners = useMemo(() => (town.look === 'city' && tm ? championships(g).filter((c) => c.teamName === tm.name).length : 0), [g, town.look, tm]);
   const hof = g.stage === 'RETIRED' && !!hallOfFame(g);
+  const talk = g.pending[0]?.kind === 'story' ? (g.pending[0].data?.who as StoryRole | undefined) : undefined;
+  const folk = storyFolk(g, town.look === 'hometown', talk);
 
   // the street's size follows the box; a narrow screen keeps the smallest size and pans
   const box = useRef<HTMLElement>(null);
@@ -225,6 +249,18 @@ export function Town({ g, fast }: { g: GameState; fast: boolean }) {
                 {!simple && <span className="tw-tab">{s.place.spot ? 'Contract' : UI.tabs[t]}</span>}
               </span>
             </button>
+          );
+        })}
+        {folk.map((f, i) => {
+          const slot = slots.find((x) => x.place.id === f.at);
+          if (!slot) return null;
+          // beside the door, a step further for a second person at the same place
+          const fx = slot.door + 7 + 6 * folk.slice(0, i).filter((o) => o.at === f.at).length;
+          return (
+            <div key={f.who} className="tw-folk" style={{ left: (fx - 3.5) * scale, top: (STREET.ground - 9) * scale }} aria-hidden="true">
+              {talk === f.who && <span className="tw-say">…</span>}
+              <Figure name={f.name} color={f.color} frame="stand" facing="l" scale={scale} />
+            </div>
           );
         })}
         <div className={`tw-me${walking ? ' walking' : ''}`} style={{ left: (x - 3.5) * scale, top: (STREET.ground - 9) * scale, ...timing }} aria-hidden="true">

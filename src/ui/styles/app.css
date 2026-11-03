@@ -3125,3 +3125,5 @@ td > .link-btn { min-width: 44px; text-align: left; }
 .bond i.mid { width: 2px; background: var(--muted); }
 .bond i.warm { background: var(--good); }
 .bond i.cold { background: var(--bad); }
+.tw-folk { position: absolute; z-index: 2; pointer-events: none; }
+.tw-say { position: absolute; left: 50%; bottom: 100%; transform: translate(-50%, -4px); background: #FFFFFF; color: #18141C; border: 2px solid #18141C; font: 700 12px/1 var(--f-mono); padding: 2px 5px 4px; white-space: nowrap; }

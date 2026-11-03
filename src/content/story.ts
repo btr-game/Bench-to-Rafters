@@ -147,6 +147,7 @@ export const STORY_EN: Record<string, string> = {
   'p-house.r.house': 'Keys on a ribbon. A porch. The old hoop comes too.',
   'p-house.r.debts': 'No more envelopes on the kitchen table.',
   'p-house.r.wait': '“There is no rush,” {P} says, a little too quickly.',
+  'mem.p-house-house': 'You bought me the house.',
 
   // ---------------- the friend, grown up ----------------
   'f-fan.title': 'The loudest seat',
