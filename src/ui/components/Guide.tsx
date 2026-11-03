@@ -37,7 +37,7 @@ const SECTIONS: { title: string; where: string; items: [string, string[]][] }[] 
   },
   {
     title: 'The road map',
-    where: 'The tutorial, then Regular guy’s card on the start page',
+    where: 'The tutorial, then the main land’s airport',
     items: [
       ['The tutorial', ['Every device starts with the beginner level (high school): a short career at fast break’s pace with one goal, an NBA All-Star team in 5 NBA seasons. Goal or not, the level is passed.', 'It keeps to the essentials: Home (plans, turning points, the coach, the scouts) and a Player tab of ratings and status.', 'Then graduation, and the full game opens with Regular guy.']],
       ['Lessons', ['The tutorial guide shades the page but for one control and says what it does: Got it (Enter or Space) to read on, or use the control.', 'One lesson at a time, none skipped.']],
@@ -45,12 +45,12 @@ const SECTIONS: { title: string; where: string; items: [string, string[]][] }[] 
       ['The island', ['Every mini-game once, with a C or better in each: the mark to beat is on its card. Built in a lab is one of them.']],
       ['The closing tour', ['A star’s career, stop by stop, for everything no level has (the locker room, duos, the press, love, the farewell tour and more). Any time, from the road map.', 'Next stop goes on once a stop’s lessons are done.']],
       ['Graduation', ['The diploma shows the exit code, and the full game opens on this device for good.', 'Skip tutorial floats at the top of every tutorial page, lessons included, and takes the code: for another device, or anyone who has played before.']],
-      ['Back on the road map', ['In the full game, picking Regular guy on the start page pops out a card for the road map: play any level again.', 'Level careers count nowhere: no save slot, career log, achievements or leaderboards.']],
+      ['Back on the road map', ['In the full game, the main land’s airport flies you back to the road map: play any level again.', 'Level careers count nowhere: no save slot, career log, achievements or leaderboards.']],
     ],
   },
   {
     title: 'Starting a career',
-    where: 'The start page',
+    where: 'The main land',
     items: [
       ['Difficulty', ['Regular guy, Reality hits hard or Shoot for the stars.', 'Regular guy is open from the start; the other two open on the road map (their cards say which stop).', 'Fixed for the whole career, and always shown by the game’s name.']],
       ['Rough Road', ['Picking Reality hits hard offers the hardest way to play: the road picks your whole player at random (position, archetype, focus, country, hand, name, number and his look), then master mode with no Fast break, Sim mode or undo, locked for the whole career. Simple text is allowed.', 'Such a career carries the mark in the top bar, on the leaderboards, the career log and its own banner when it ends, with achievements of its own.']],
@@ -59,8 +59,9 @@ const SECTIONS: { title: string; where: string; items: [string, string[]][] }[] 
       ['Where you start', ['Pick a country for its road to the pros, or Surprise me.', 'Hometown and first school are revealed when the career starts.']],
       ['Position, hand and archetype', ['Pick each yourself, or tap Random next to it.', 'Each archetype has its own traced action pose.']],
       ['Focus stats', ['Two ratings that grow almost twice as fast.', 'Changing them later takes a breakthrough season.']],
-      ['Continue', ['The career log card on the start page opens every career, in progress or finished.', 'Continue lands on the career’s Home.']],
-      ['Intro and What’s new', ['The intro opens every visit: the title over a one-on-one, from a high school gym to the NBA. Intro (top of the start page) plays it again.', 'What’s new pops up over the start page once after each update with the latest changes; the What’s new button next to Intro opens it again (a dot means you haven’t opened it yet).']],
+      ['The main land', ['After the beginner level you take the plane to the main land, the start page as a pixel town (the flight plays once on a device; Skip, Enter or Escape lands at once).', 'Click a place, or drive between them with the arrow keys, and its card pops out beside it; Enter opens it, Escape closes it.', 'The gym is Regular guy, the street court Reality hits hard (with Rough Road), the dome Shoot for the stars (with Comet): each card ends with Make your player.', 'His house (while a career is going) continues it; the park is Play with friends; the library the career log; the museum the achievement book; the statue plaza the community; the newsstand What’s new; the cinema the intro; the airport the road map; the dock’s boat the island of mini-games. Night in the dark theme.']],
+      ['Continue', ['His house on the main land, while a career is going, and the career log (the library) open every career, in progress or finished.', 'Continue lands on the career’s Home.']],
+      ['Intro and What’s new', ['The intro opens every visit: the title over a one-on-one, from a high school gym to the NBA. Intro (top of the main land, or its cinema) plays it again.', 'What’s new pops up over the start page once after each update with the latest changes; the What’s new button next to Intro opens it again (a dot means you haven’t opened it yet).']],
       ['Share the game', ['Share (top of every page, at the foot of each tab, and on the finale’s thank-you) gives you the game’s link: copy it, send it with your phone’s share sheet, or post it on X, Reddit, Facebook, WhatsApp or by email.']],
     ],
   },
@@ -116,9 +117,9 @@ const SECTIONS: { title: string; where: string; items: [string, string[]][] }[] 
   },
   {
     title: 'Mini-games',
-    where: 'The Mini-games card on the Extras tab, or the start page',
+    where: 'The arcade in a career’s town (Extras), or the main land’s island',
     items: [
-      ['Unlocking them', ['They open with the island on the road map: each game once there, a C or better in each.', 'Then free from the start page; in a career, each opens when a rating reaches its mark, and stays open.']],
+      ['Unlocking them', ['They open with the island on the road map: each game once there, a C or better in each.', 'Then free from the main land’s island; in a career, each opens when a rating reaches its mark, and stays open.']],
       ['Career bonus', ['A good result gives your player a real rating bonus.', 'Two a season: the second at half value.']],
       ['Front Office', ['Run an NBA franchise for three seasons.', 'Miss the playoffs in seasons two and three and you are fired.']],
       ['Three-point contest', ['Five racks, 60 seconds, starting at rack 1. Stop the meter in the green.', 'Pick which rack is all money balls.']],
@@ -127,7 +128,7 @@ const SECTIONS: { title: string; where: string; items: [string, string[]][] }[] 
       ['Built in a lab', ['Design a player and spend credits on his ratings, season by season.', 'His art evolves as his OVR climbs.']],
       ['3-on-3 streetball', ['One game to 11 against the crew that holds the court.', 'Drives and pull-ups ask for a timing tap and play out on the action cam.', 'Pays finishing.']],
       ['Lockdown', ['A rhythm game on defense: A blocks, S steals, on the beat.', 'Every run deals 30 to 60 seconds of their sets in a new order; hold the long notes.', 'Pays perimeter and interior defense.']],
-      ['Daily challenge', ['The same prospect for everyone, every day, from the start page (not during a career: it is a career of its own).', 'Fast break and simple text stay on, and mini-games are locked, so a run stays quick.', 'Friends today: your best run of the day beside your friends’ (everyone you share a draft class or a challenge with), online.']],
+      ['Daily challenge', ['The same prospect for everyone, every day, from the mini-games on the main land’s island (not during a career: it is a career of its own).', 'Fast break and simple text stay on, and mini-games are locked, so a run stays quick.', 'Friends today: your best run of the day beside your friends’ (everyone you share a draft class or a challenge with), online.']],
     ],
   },
   {
@@ -137,7 +138,7 @@ const SECTIONS: { title: string; where: string; items: [string, string[]][] }[] 
       ['Season', ['Your season and the league in one, the most worth a look first.', 'The locker room first; then your team’s strength beside its city and fans; then the playoff bracket while there is one (every series folds out below it).', 'Standings as win bars with every crest and the playoff line, your conference first.', 'The league leaders, your games, last season’s award voting, the champions’ banners and the record book.']],
       ['Player', ['Ratings (shape and bars), status, kits, scouting (the projected peak stays a rough range until college).', 'Your name card (nickname and brand), then Your life: staff, wardrobe and collection as tabs (it opens on the last one you picked).', 'The Body panel, folded until you open it: height and where it is headed, weight and your best weight, wingspan, body wear, the free-throw touch and weak hand, and the body map (muscles training built; hover or tap a red spot to see an injury).', 'The roster: the five, the bench, the system and how they fit.']],
       ['Records', ['The career timeline first (OVR season to season, with the big moments), then banners and rings, trophies and totals, career highs and the farewell tour’s gifts.', 'The journal and season by season below.']],
-      ['Extras', ['The start page’s four cards, inside a career: the mini-games, the career log, the achievement book (with what this career has earned, in gold) and the community.', 'A dot when a mini-game opens or this career earns an achievement.', 'While a career is on, the start page keeps a few things: the daily challenge, deleting log cards, and starting or continuing another career.']],
+      ['Extras', ['The arcade in the town: the main land’s four big places, inside a career: the mini-games, the career log, the achievement book (with what this career has earned, in gold) and the community.', 'A dot when a mini-game opens or this career earns an achievement.', 'While a career is on, the start page keeps a few things: the daily challenge, deleting log cards, and starting or continuing another career.']],
     ],
   },
   {
@@ -156,13 +157,13 @@ const SECTIONS: { title: string; where: string; items: [string, string[]][] }[] 
   },
   {
     title: 'Beyond one career',
-    where: 'The start page',
+    where: 'The main land',
     items: [
       ['Career log', ['Every career in one list: in progress first (Continue), then the career cards of your last 10 finished careers (Look back), each with its code.', 'A warning at 9; when full, a new career replaces the oldest card that is not locked.', 'Lock up to 5 to keep them for good: a locked card is never replaced or deleted until you unlock it.', 'Show, download, lock or delete any card (from a career: no deleting).', 'Compare: pick two cards to see them side by side, peak to NBA points, the better of each marked ▲.']],
       ['Looking back', ['Look back on a finished career opens it on its Home, with a bar along the top that says whose career it is.', 'Leave, on that bar, takes you back to the career log.']],
       ['Career card', ['Download or share it from the end of a career or the career log.', 'It shows the difficulty and any challenge (Comet, Rough Road) as badges, the career index, the best ten achievements as medals and the best three by name, and the son, if he played.']],
       ['Achievements', ['More than 800 milestones in five tiers, kept for good across careers, in 13 short categories: tap one (with a tier, or Earned) to see only it.', 'Some are for playing with friends and for opening the road map’s modes, some for the free-throw line and a jumper that lasts.', 'Some are simple math (your age or your jersey number in points, a points total that reads the same both ways), some for the game’s own pages (folding cards, looking back, coming back day after day).', 'Some are for efficiency (a perfect night from the field, 50-40-90 at 25 a game), some for nights so bad they are hard to have (0 for 12, a team that wins 15).', 'Mini-games have their own: for the arcade itself, and for what the bonuses did for your career.', 'A banner drops in when you earn one; tap it away.', 'The Endings page at the top of the book: the twelve endings a career can have, each as its scene once you have seen it, dark until then.', 'Ones you haven’t earned show only their name: a riddle.']],
-      ['Play with friends', ['On the website and the itch.io download (the claude.ai page can’t reach the game’s server): a card under the difficulties on the start page. Regular guy only, and nobody has to be on at the same time.', 'Your username goes beside everything you post. The game keeps no email or login.', 'Find a game by its six-letter code, its link, or quick match (others’ open games).', 'Careers with friends have turning points of their own: the class group chat, a class workout, the other you in a challenge, a friendly wager at the line.', 'While you play one, its leaderboard stays beside every tab (above it on a phone), with your career so far, your rival’s record and the chat. Careers with friends count there, not on the community’s leaderboards.', 'Fair play: Fast break and Sim stay off, mini-games pay no rating bonus, a challenge only comes from a career played without Fast break or Sim, and a posted season stands.']],
+      ['Play with friends', ['On the website and the itch.io download (the claude.ai page can’t reach the game’s server): the park on the main land. Regular guy only, and nobody has to be on at the same time.', 'Your username goes beside everything you post. The game keeps no email or login.', 'Find a game by its six-letter code, its link, or quick match (others’ open games).', 'Careers with friends have turning points of their own: the class group chat, a class workout, the other you in a challenge, a friendly wager at the line.', 'While you play one, its leaderboard stays beside every tab (above it on a phone), with your career so far, your rival’s record and the chat. Careers with friends count there, not on the community’s leaderboards.', 'Fair play: Fast break and Sim stay off, mini-games pay no rating bonus, a challenge only comes from a career played without Fast break or Sim, and a posted season stands.']],
       ['Challenge a friend', ['At the end of a Regular guy career: Challenge a friend gives a code and a link.', 'Your friend plays the same prospect from the same start (the same seed and start page) their own way, with no undo; every answer is ranked beside yours by career index. Play one again and your best counts.']],
       ['Draft class', ['Start a class, name it, make your player and send the code: up to twelve friends start careers on one seed.', 'Draft night: each of you was his college’s first option, at OVR 65 to 75, projected and picked in the first round of the same NBA draft. The rest is history.', 'Each season posts a short line to the class and each finished career its card: the standings, and every season side by side with the best of the class each year. A seat plays one career.', 'Tap a friend in the standings to watch his career season by season, and react to a season (four pixel reactions, one each).', 'Reunion night: once every career in the class is over (or a friend has posted nothing for two weeks), eleven awards come out one at a time, the least first and the class MVP last.']],
       ['Friends in your career', ['A draft class’s seasons reach each other’s careers (the game copies them in, so each career still plays out the same from its own choices).', 'Rivals: send one classmate a rivalry from the standings; when they send one back (Accept the rivalry), you are rivals. Either of you can take it back.', 'Rival nights: once a season, when your NBA teams meet, a turning point of its own: guard your rival yourself, outscore them, or play it like any other night. Your strength, your teams and the call decide it; the record stays on the side board.', 'Duos of friends: two classmates on one team for a season form a duo (three, a Big Three of friends), like a duo with a teammate but built on years of knowing each other.', 'Join a friend: the trade request can aim at a classmate’s NBA team. Your two salaries limit it: the more of the cap you take together, the lower the odds, and past 60% it is not on offer.', 'Rival series: when your team meets your rival’s in the playoffs, pick how you play the whole series (guard him, outscore him, or the team game).', 'Classmates in your league: they show in your game log against their teams, in the MVP and award races (they can beat you) and on All-Star teams.', 'The chat: every challenge and class has one, under its leaderboard, for its people only. 200 characters a line. Class news (drafted, traded, a first All-Star, an MVP, a title, retired) shows there too.']],
@@ -174,7 +175,7 @@ const SECTIONS: { title: string; where: string; items: [string, string[]][] }[] 
       ['Reality 99 hall', ['Every Reality hits hard career that reaches 99, seated on the benches of a hall; a bench fills before the next one opens.', 'Tap a player for the career card.']],
       ['Statue plaza', ['Regular guy careers with 150+ legacy can raise a statue: your player cast in bronze, or gold from 220 or a first-ballot Hall of Famer.', 'Up to 100 statues, with a few house statues until real ones come. Pay your respects to the others.']],
       ['Send feedback', ['Found a bug or have an idea? The bar at the foot of every tab and every mini-game sends it, with where you were; so does the Community page.', 'Online (on itch.io, or the game’s claude.ai page) it goes to the maker; on claude.ai, if the page lets you comment but not post, it opens the page’s comment box instead. Offline it stays on the device.']],
-      ['Developer', ['The card at the foot of the start page, and the Developer fold next to the feedback bar on every page, open the maker’s dev deck as a page of the game. It needs a password.', 'Back to the game returns to where you were, with the same theme and court.']],
+      ['Developer', ['The card at the foot of the main land, and the Developer fold next to the feedback bar on every page, open the maker’s dev deck as a page of the game. It needs a password.', 'Back to the game returns to where you were, with the same theme and court.']],
     ],
   },
 ];
@@ -188,7 +189,7 @@ const QUICK: [string, string][] = [
   ['6', 'Changed your mind? Undo (U) takes back the last choice.'],
   ['7', 'Want the basics again? Pick Regular guy: its card opens the road map.'],
   ['8', 'Too much on screen? Fold a card from its title.'],
-  ['9', 'With friends? Play with friends, under the difficulties on the start page: a challenge or a draft class, with a rival, a chat and a board of its own.'],
+  ['9', 'With friends? Play with friends, at the park on the main land: a challenge or a draft class, with a rival, a chat and a board of its own.'],
 ];
 
 const SEEN = 'btr-guide-seen';
