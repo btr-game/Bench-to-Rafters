@@ -2955,3 +2955,7 @@ multiple times."
 - **What's new for round 35**: play with friends, the class's league, reunion night, fair play, the
   Sim unlock, free throws and aging shooting, the 50-40-90 Club, the shorter tutorial, the
   achievement categories (776) and the shop prices.
+- **Sim needs an All-Star career at each difficulty** (owner: "for sim to unlock, lets go with allstar
+  as the requirement"): a career counts toward opening Sim only if it made an NBA All-Star team
+  (`starBy` in the totals, `simReady`), so three quick early retirements no longer open it. The Grand
+  Tour achievement keeps its own rule (any finished career at each difficulty).

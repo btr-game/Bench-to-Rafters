@@ -23,7 +23,7 @@ export const NEWS: News[] = [
       { icon: 'draftclass', text: 'A class shares one league: rival nights, playoff series against each other, and asking to join a friend’s team (if the money works). Class news in the chat, reactions to a season, a friends-only daily board, and every friend’s career season by season.' },
       { icon: 'podium', text: 'Reunion night: once every career in the class is over, eleven awards come out one at a time, the class MVP last.' },
       { icon: 'rival', text: 'Fair play: with friends, Fast break and Sim stay off and mini-game bonuses wait, so every season is played the same way.' },
-      { icon: 'sim', text: 'Sim mode opens once you have played a career to retirement on every difficulty: Regular guy, Reality hits hard and Shoot for the stars.' },
+      { icon: 'sim', text: 'Sim mode opens once you have played a career to retirement with an NBA All-Star team on every difficulty: Regular guy, Reality hits hard and Shoot for the stars.' },
       { icon: 'shoot', text: 'Free throws have a touch of their own, and shooting ages like the other ratings. A new legendary season: the 50-40-90 Club.' },
       { icon: 'cap', text: 'A shorter tutorial: the beginner level alone, with fewer cards, and Skip tutorial on every page of it. The road map’s other stops open the other modes.' },
       { icon: 'laurel', text: 'The achievement book in categories, 776 in all. Shop prices are up about a third.' },

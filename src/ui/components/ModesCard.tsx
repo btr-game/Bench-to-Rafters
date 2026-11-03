@@ -69,7 +69,7 @@ export function ModesCard({ g }: { g: GameState }) {
   if (g.flags.comet) notes.unshift('Comet: Fast break and Sim stay on for the whole career, and only the biggest nights get a page.');
   // round 35: and a career with friends says why they are locked off
   if (g.flags.friends) notes.unshift('With friends: Fast break and Sim stay off, so everyone in the challenge or class plays every season the same way.');
-  if (simShut && !locked) notes.unshift(`Sim opens once you have played a career to retirement on every difficulty. Still to go: ${left.map((m) => MODES[m].name).join(', ')}.`);
+  if (simShut && !locked) notes.unshift(`Sim opens once you have played a career to retirement with an NBA All-Star team on every difficulty. Still to go: ${left.map((m) => MODES[m].name).join(', ')}.`);
   return (
     <section className="card stack modes-card" data-tour="modes">
       <div className="kicker">How you play</div>

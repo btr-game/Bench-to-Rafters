@@ -355,7 +355,7 @@ export const CARDS: DevCard[] = [
       return show(g);
     },
   },
-  { id: 'sim-shut', title: 'Sim, not open yet', group: 'Career hub', icon: 'sim', blurb: 'Round 35: Sim opens once a career has been played to retirement on every difficulty (Regular guy, Reality hits hard, Shoot for the stars; a Comet does not count), as the Grand Tour is earned. Until then its chip is grey, with the difficulties still to go.', open: () => show(nbaStar(), 'home', { simShut: true }) },
+  { id: 'sim-shut', title: 'Sim, not open yet', group: 'Career hub', icon: 'sim', blurb: 'Round 35: Sim opens once a career has been played to retirement with an NBA All-Star team on every difficulty (Regular guy, Reality hits hard, Shoot for the stars; a Comet does not count). Until then its chip is grey, with the difficulties still to go.', open: () => show(nbaStar(), 'home', { simShut: true }) },
   { id: 'simple', title: 'Simple text', group: 'Career hub', icon: 'simple', blurb: 'Explanations hidden on every tab, just the choices.', open: () => show(nbaStar(), 'home', { simple: true }) },
   {
     id: 'sim',

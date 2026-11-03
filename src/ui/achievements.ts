@@ -2,7 +2,8 @@
 // remembers when it came and which player earned it; the totals (careers finished, titles over
 // every career...) feed the achievements that count more than one career.
 
-import { ACHIEVEMENTS, DIFFICULTIES, NO_TOTALS, earnedNow, type Achievement, type CareerTotals } from '../engine/achievements';
+import { ACHIEVEMENTS, DIFFICULTIES, NO_TOTALS, earnedNow, simReady, type Achievement, type CareerTotals } from '../engine/achievements';
+import { madeAllStar } from '../engine/levels';
 import type { Mode } from '../engine/balance';
 import type { GameState } from '../engine/types';
 import { isDev } from '../dev/mode';
@@ -73,8 +74,10 @@ export function countCareer(g: GameState, master: boolean): void {
   const t = d.totals;
   const mode = g.mode ?? 'standard';
   t.finished += 1;
-  // round 35: a Comet (a son's career is one) is played by Sim, so it is no career at its difficulty
+  // round 35: a Comet (a son's career is one) is played by Sim, so it is no career at its difficulty;
+  // one with an NBA All-Star team counts toward opening Sim
   if (!g.flags.comet) t.byMode = { ...t.byMode, [mode]: (t.byMode[mode] ?? 0) + 1 };
+  if (!g.flags.comet && madeAllStar(g)) t.starBy = { ...t.starBy, [mode]: (t.starBy?.[mode] ?? 0) + 1 };
   t.titles += nbaTitles(g);
   t.mvps += count(g, 'MVP');
   if (g.flags.fast) t.fast += 1;
@@ -86,15 +89,16 @@ export function countCareer(g: GameState, master: boolean): void {
 }
 
 /** Round 35 (owner: "sim mode should be unlocked once the user completes one full round (until
- * retirement) of each difficulty"): the difficulties with no career played to its end on this device
- * yet. */
+ * retirement) of each difficulty", then "lets go with allstar as the requirement"): the difficulties
+ * with no career played to its end with an NBA All-Star team on this device yet. */
 export function difficultiesLeft(): Mode[] {
   const t = loadAch().totals;
-  return DIFFICULTIES.filter((m) => !(t.byMode[m] ?? 0));
+  return DIFFICULTIES.filter((m) => !(t.starBy?.[m] ?? 0));
 }
 
-/** Sim mode is open on this device: a career finished at every difficulty (the dev deck: always). */
-export const simOpen = (): boolean => isDev() || difficultiesLeft().length === 0;
+/** Sim mode is open on this device: an All-Star career finished at every difficulty (the dev deck:
+ * always). */
+export const simOpen = (): boolean => isDev() || simReady(loadAch().totals);
 
 /** A mini-game run just ended (round 27): count it for the arcade achievements. */
 export function recordMini(r: MiniResult): void {
