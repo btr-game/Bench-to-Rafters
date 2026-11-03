@@ -19,6 +19,10 @@ export const NEWS: News[] = [
     id: '2026-11-03-r36',
     date: '3 November 2026',
     items: [
+      { icon: 'map', text: 'The main land: after the tutorial, take the plane to a pixel town where every part of the game is a place. The gym, the street court and the dome are the three difficulties; the library, the museum, the statue plaza, the park and the island hold the rest.' },
+      { icon: 'arena', text: 'In a career, the tabs are places on your street: the gym, the arena, your home, the agent’s office, the hall and the arcade. Walk there by clicking, or with the arrow keys. It is your hometown in high school, the campus in college, then your team’s city, and night in the dark theme.' },
+      { icon: 'statue', text: 'Every NBA arena is its own, with its team’s emblem and a landmark of its city beside it. Your home grows with the bank, and your car, title banners and, in the end, your statue appear on the street.' },
+      { icon: 'chart', text: 'Legends age slower and can play into their 40s; the All-Star team and the MVP take more to win; and two rare turns of a career: the next step, and an injury that changes everything.' },
       { icon: 'jersey', text: 'Twelve endings for a finished career, each with a theme of its own: the rafters (the empty arena, your speech, the jersey going up), Enshrined, Ring bearer, All-Star, Legend of Europe, The long haul, Made it, Passport, The grinder, One shining moment, Cap and gown and Hoops dream, each opening on a scene of its place and where he is now. Then the credits, the title and a thank-you, all under two minutes. The achievement book has an Endings page.' },
       { icon: 'crowd', text: 'A username, apart from your player’s name: it shows beside your careers on the leaderboards, in the hall and on the plaza, and to friends. Pick it after the tutorial or in Settings.' },
       { icon: 'globe', text: 'Around you: the MVP race, your duo, the rivalry, the league and the fans’ talk in one card on Home, opening on what matters most right now.' },
