@@ -6,7 +6,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { newGame } from '../src/engine/flow';
 import { raftersTeams } from '../src/engine/awards/legacy';
 import { play } from '../src/dev/stage';
-import { FINALE_MAX, MAKERS, actsOf, creditsOf, finaleKind, speechOf, timeline } from '../src/ui/finale';
+import { FINALE_MAX, MAKERS, actsOf, creditsOf, finaleFor, finaleKind, speechOf, timeline } from '../src/ui/finale';
+import { trackOf } from '../src/ui/tracks';
 import type { GameState } from '../src/engine/types';
 
 class FakeStorage {
@@ -88,5 +89,16 @@ describe('the finale itself', () => {
     f.markFinaleSeen('rafters');
     expect(f.finaleSeen('rafters')).toBe(true);
     expect(f.finaleSeen('credits'), 'each ending counts on its own').toBe(false);
+  });
+
+  it('starts on its first act, and its music follows the act: its own theme, then Curtain call', () => {
+    expect(finaleFor(newGame(5, { ...input, mode: 'standard' })), 'a career still going').toBeNull();
+    expect(finaleFor(hung!)?.act).toBe('arena');
+    expect(finaleFor(plain!)?.act).toBe('roll');
+    expect(finaleFor(hung!, 'jersey')?.act).toBe('jersey');
+    const base = { game: null, intro: false, mini: null };
+    for (const act of ['arena', 'speech', 'jersey', 'roll'] as const) expect(trackOf({ ...base, finale: { act } })).toBe('rafters');
+    expect(trackOf({ ...base, finale: { act: 'title' } })).toBe('thanks');
+    expect(trackOf({ ...base, finale: { act: 'thanks' } })).toBe('thanks');
   });
 });

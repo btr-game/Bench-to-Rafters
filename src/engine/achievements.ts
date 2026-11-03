@@ -60,7 +60,7 @@ export interface CareerTotals {
 }
 
 /** Round 29: how many music loops the game has (ui/tracks.ts; a test keeps the two in step). */
-export const MUSIC_LOOPS = 19; // round 35: Play with friends has its own loop
+export const MUSIC_LOOPS = 20; // round 35: Play with friends has its own loop; round 36: the finale has its theme
 /** The three difficulties. */
 export const DIFFICULTIES: Mode[] = ['standard', 'reality', 'stars'];
 /** A career has been finished at every difficulty (the Grand Tour). */
@@ -414,7 +414,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   A('cmp1', 'Tale of the Tape', 'bench', 'Set two careers side by side in the career log.', (f) => (f.t.compared ?? 0) >= 1),
   A('spree', 'Shopping Spree', 'rotation', 'Buy four things in one visit to the shop.', (f) => (f.g.flags.spree ?? 0) >= 4),
   A('cleanout', 'Cleaned Out', 'allstar', 'Buy all six things in one visit to the shop.', (f) => (f.g.flags.spree ?? 0) >= 6),
-  A('album', 'Full Album', 'allstar', `Hear all ${MUSIC_LOOPS} music loops: every level and league, the offseason, the mini-games, the intro and the curtain call.`, (f) => (f.t.heard?.length ?? 0) >= MUSIC_LOOPS),
+  A('album', 'Full Album', 'allstar', `Hear all ${MUSIC_LOOPS} music loops: every level and league, the offseason, the mini-games, the intro, the finale's theme and the curtain call.`, (f) => (f.t.heard?.length ?? 0) >= MUSIC_LOOPS),
   // round 25: the book past 500 (achievements25.ts)
   ...ACHIEVEMENTS_25,
   // round 27: the mini-games, in the arcade and in a career (achievementsMini.ts)

@@ -2192,37 +2192,6 @@ input[type='range'] { width: 100%; min-height: 32px; accent-color: var(--accent)
   .news-panel { top: auto; left: max(12px, env(safe-area-inset-left, 0px)); right: max(12px, env(safe-area-inset-right, 0px)); bottom: max(12px, env(safe-area-inset-bottom, 0px)); width: auto; max-height: 74dvh; padding: 16px; animation-name: news-up; }
 }
 
-/* ---------- thank you for playing (round 27): a cheering crowd, confetti, the trophy held high ---------- */
-.thanks { position: fixed; inset: 0; z-index: 90; display: grid; place-items: start center; overflow: hidden; background: #0d0f15; color: #f4f1ea; }
-.th-scene { position: absolute; inset: 0; }
-/* three rows of pixel fans, dim and darker the further back; only the front row waves, slowly */
-.th-crowd { position: absolute; left: 0; right: 0; }
-.th-crowd svg { display: block; width: 100%; height: 100%; }
-.th-crowd.r1 { top: 34%; height: 8%; filter: brightness(0.26) saturate(0.4); }
-.th-crowd.r2 { top: 42%; height: 9.5%; filter: brightness(0.38) saturate(0.5); }
-.th-crowd.r3 { top: 51.5%; height: 11.5%; filter: brightness(0.55) saturate(0.6); }
-.th-wave { position: absolute; inset: 0; }
-.th-wave.b { opacity: 0; }
-.th-crowd.r3 .th-wave.b { animation: th-wave 1.6s steps(1, end) infinite; }
-@keyframes th-wave { 0% { opacity: 0; } 50% { opacity: 1; } }
-.th-light { position: absolute; top: 0; left: 50%; width: 28vw; height: 80%; transform: translateX(-50%); fill: rgba(255, 236, 170, 0.08); }
-.th-floor { position: absolute; inset: 66% 0 0 0; background: repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.14) 0 3px, transparent 3px 56px), linear-gradient(#c98d52, #a46c38); border-top: 5px solid #f4f1ea; }
-.th-bit { position: absolute; top: -4%; width: 6px; height: 6px; opacity: 0.7; will-change: transform; animation: th-fall steps(40, end) infinite; }
-@keyframes th-fall { from { transform: translateY(0); } to { transform: translateY(112vh); } }
-.th-hero { position: absolute; left: 50%; bottom: 3%; width: clamp(230px, 48vh, 460px); transform: translateX(-50%); }
-/* his honours on the wall behind, left and right of the title, bobbing gently in steps */
-.th-honours { position: absolute; inset: 0; }
-.th-honour { position: absolute; opacity: 0.8; animation: th-bob 1.6s steps(2, end) infinite; }
-.th-honour svg { display: block; }
-@keyframes th-bob { 0% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
-@media (max-width: 640px) { .th-honour { transform: scale(0.7); } .th-honour svg { width: 36px; height: auto; } .th-hero { width: clamp(200px, 40vh, 320px); } }
-.th-hero .art-celebrate { display: block; width: 100%; height: auto; }
-.th-front { position: relative; z-index: 1; display: grid; justify-items: center; gap: 10px; margin-top: 6vh; padding: 22px max(20px, env(safe-area-inset-left, 0px)); text-align: center; background: radial-gradient(ellipse at center, rgba(14, 16, 22, 0.82) 0 45%, rgba(14, 16, 22, 0) 72%); }
-.th-front .kicker { color: #c9cfda; }
-.th-title { display: grid; justify-items: center; gap: 1vh; margin: 0; }
-.th-word { display: block; height: clamp(34px, 6.5vh, 70px); width: auto; max-width: 86vw; }
-@media (prefers-reduced-motion: reduce) { .th-wave.b, .th-bit, .th-honour { animation: none !important; } .th-bit { display: none; } }
-
 /* round 27: staff, wardrobe and the collection under the Player tab's columns; round 36: one card,
    Your life, a tab each (the picked tab marked by a hard bar along its foot) */
 .life-tabs button { display: inline-flex; align-items: center; gap: 8px; }

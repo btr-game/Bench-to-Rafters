@@ -35,7 +35,7 @@ import { ROAD_MINIS, type Road } from '../ui/road';
 import type { ChosenLook } from '../content/looks';
 import { LoadingLab } from './LoadingLab';
 import { raftersTeams } from '../engine/awards/legacy';
-import type { Act } from '../ui/finale';
+import { finaleFor, type Act } from '../ui/finale';
 
 export type Group = 'Start' | 'Tutorial' | 'Career hub' | 'Decisions' | 'Big moments' | 'Modes' | 'Mini-games' | 'Records & community';
 export const GROUPS: { key: Group; color: string; icon: string }[] = [
@@ -82,7 +82,9 @@ const legend = () => endWith('end-rafters', true);
 const plainEnd = () => endWith('end-plain', false);
 function ending(g: GameState | null, from?: Act): boolean {
   if (!g) return false;
-  useStore.setState({ game: null, page: null, mini: null, intro: false, news: false, finale: { g, from } });
+  const finale = finaleFor(g, from);
+  if (!finale) return false;
+  useStore.setState({ game: null, page: null, mini: null, intro: false, news: false, finale });
   return true;
 }
 

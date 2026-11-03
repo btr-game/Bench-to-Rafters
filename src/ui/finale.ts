@@ -38,6 +38,15 @@ export function actsOf(kind: FinaleKind): Act[] {
   return ['title', 'thanks'];
 }
 
+/** What the store keeps for an ending: the career, where it starts, and the act on screen (the
+ * music follows it). */
+export function finaleFor(g: GameState, from?: Act): { g: GameState; from?: Act; act: Act } | null {
+  const kind = finaleKind(g);
+  if (!kind) return null;
+  const acts = actsOf(kind);
+  return { g, from, act: from && acts.includes(from) ? from : acts[0] };
+}
+
 /** The team whose rafters it is: the one he spent longest with among those that hang it. */
 export function raftersTeam(g: GameState) {
   return raftersDetail(g).sort((a, b) => b.seasons - a.seasons || b.titles - a.titles)[0] ?? null;

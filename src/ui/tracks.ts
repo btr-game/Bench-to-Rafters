@@ -73,9 +73,23 @@ export const TRACKS = {
     ],
     drums: 'khshkksh',
   },
+  // round 36: the finale's own theme, slow and warm, under the empty arena, the speech, the
+  // jersey going up and the credits; Curtain call comes back for the title and the thank-you
+  rafters: {
+    name: 'Up in the rafters',
+    where: 'The finale: the empty arena, the speech, the jersey and the credits',
+    icon: 'jersey',
+    step: bpm(84),
+    voices: [
+      { wave: 'pulse25', vol: 0.1, notes: 'E5 - - - G5 - C6 - | B5 - - - A5 - G5 - | A5 - - - C6 - E6 - | D6 - - - C6 - A5 - | G5 - E5 - G5 - C6 - | D6 - - - B5 - G5 - | A5 - C6 - F6 - E6 D6 | C6 - - - - - . .' },
+      { wave: 'triangle', vol: 0.3, notes: 'C2 . G2 . C3 . G2 . | G2 . D3 . G3 . D3 . | A2 . E3 . A3 . E3 . | F2 . C3 . F3 . C3 . | C2 . G2 . C3 . G2 . | G2 . D3 . G3 . D3 . | F2 . C3 . F3 . C3 . | C2 . G2 . C3 . . .' },
+      { wave: 'pulse12', vol: 0.045, notes: '. E4+G4 . E4+G4 . E4+G4 . E4+G4 | . D4+B4 . D4+B4 . D4+B4 . D4+B4 | . C4+E4 . C4+E4 . C4+E4 . C4+E4 | . C4+F4 . C4+F4 . C4+F4 . C4+F4 | . E4+G4 . E4+G4 . E4+G4 . E4+G4 | . D4+B4 . D4+B4 . D4+B4 . D4+B4 | . C4+F4 . C4+F4 . C4+F4 . C4+F4 | . E4+G4 . E4+G4 . E4+G4 . .' },
+    ],
+    drums: 'k...s...',
+  },
   thanks: {
     name: 'Curtain call',
-    where: 'The finale and its thank-you, after a finished career',
+    where: 'The finale’s title and thank-you (and a level’s)',
     icon: 'heart',
     step: bpm(140),
     voices: [
@@ -314,9 +328,9 @@ const LEVEL_TRACK: Record<string, TrackId> = { HS: 'hs', NCAA: 'college', GL: 'g
 
 /** The loop for what is on screen. A page of its own (the log, the book, the community) keeps the
  * one under it (Play with friends has its own); Lockdown has its own beat, so none. */
-export function trackOf(s: { game: GameState | null; finale: unknown; intro: boolean; mini: string | null; road?: Road; creating?: unknown; page?: string | null }): TrackId | null {
+export function trackOf(s: { game: GameState | null; finale: { act?: string } | null; intro: boolean; mini: string | null; road?: Road; creating?: unknown; page?: string | null }): TrackId | null {
   const g = s.game;
-  if (s.finale && !g) return 'thanks';
+  if (s.finale && !g) return s.finale.act === 'title' || s.finale.act === 'thanks' || !s.finale.act ? 'thanks' : 'rafters';
   if (s.intro && !g) return 'intro';
   // round 35: Play with friends has a loop of its own
   if (s.page === 'multi') return 'friends';

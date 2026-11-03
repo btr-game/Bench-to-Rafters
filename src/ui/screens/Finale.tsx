@@ -11,6 +11,7 @@ import { PlayerArt, kitFor } from '../art/Player';
 import { JerseyArt } from '../art/Jersey';
 import { AwardArt } from '../art/Award';
 import { ShareButton } from '../components/Share';
+import { sfx } from '../sound';
 import { MAKERS, creditsOf, finaleKind, finaleSeen, markFinaleSeen, raftersTeam, speechOf, timeline, type Act } from '../finale';
 
 const NIGHT = '#0A0E1C';
@@ -152,7 +153,8 @@ export function Finale({ g, from }: { g: GameState; from?: Act }) {
   const lines = useMemo(() => speechOf(g), [g]);
   // decided once, when it starts: the first time through it plays to the end
   const [skippable] = useState(() => finaleSeen(kind));
-  const [i, setI] = useState(() => Math.max(0, plan.findIndex((x) => x.act === from)));
+  // fast break skips an ending already seen on this device, straight to the thank-you
+  const [i, setI] = useState(() => (!from && skippable && (g.flags.fast || g.flags.sim) ? plan.length - 1 : Math.max(0, plan.findIndex((x) => x.act === from))));
   const [line, setLine] = useState(0);
   const act = plan[i]?.act ?? 'thanks';
   const team = raftersTeam(g);
@@ -169,6 +171,15 @@ export function Finale({ g, from }: { g: GameState; from?: Act }) {
     const t = window.setTimeout(() => setI((k) => Math.min(plan.length - 1, k + 1)), secs * 1000);
     return () => window.clearTimeout(t);
   }, [i, plan, kind]);
+
+  // the music follows the act (tracks.ts), and each act has its sounds: the house lights coming
+  // up bank by bank, the jersey going up and reaching the rafters, the title, the thank-you
+  useEffect(() => {
+    useStore.setState((s) => (s.finale && s.finale.act !== act ? { finale: { ...s.finale, act } } : {}));
+    const at: [number, Parameters<typeof sfx>[0]][] = act === 'arena' ? [800, 1600, 2400, 3200].map((ms) => [ms, 'tick']) : act === 'jersey' ? [[1000, 'rise'], [10000, 'boom']] : act === 'title' ? [[200, 'reveal']] : act === 'thanks' ? [[100, 'chime']] : [];
+    const ids = at.map(([ms, name]) => window.setTimeout(() => sfx(name), ms));
+    return () => ids.forEach((id) => window.clearTimeout(id));
+  }, [act]);
 
   // the speech: a line every few seconds
   useEffect(() => {

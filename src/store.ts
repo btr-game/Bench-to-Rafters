@@ -25,7 +25,7 @@ import { careerRecord, type CareerRecord } from './engine/career/record';
 import { canPlayChild, childGame, childLegacy, childSeed } from './engine/nextGen';
 import { attachChild, logCareer, type LogResult } from './ui/careerLog';
 import { signed, username } from './ui/names';
-import { finaleKind, type Act } from './ui/finale';
+import { finaleFor, type Act } from './ui/finale';
 import { checkAch, countCareer, earnedIn, recordMp, recordOpened, recordUndo, recordVisit, simOpen } from './ui/achievements';
 import { community } from './ui/community';
 import { cleanProspect, multiplayer, pump, readLink, seasonLine, send, type Challenge, type MpLink } from './ui/multiplayer';
@@ -69,7 +69,7 @@ interface Store {
   endNews: () => void;
   /** Round 36: the finale for a career just finished (ui/finale.ts), in place of the thank-you
    * page; `from` starts it at a later act (the dev deck). */
-  finale: { g: GameState; from?: Act } | null;
+  finale: { g: GameState; from?: Act; act?: Act } | null;
   endFinale: () => void;
   /** Set while a heavy step waits its turn (round 27): the loading pop-out shows if it runs long. */
   loading: number | null;
@@ -537,7 +537,7 @@ export const useStore = create<Store>((set, get) => ({
     dropRun();
     // the thank-you (the finale's last two acts for a level), then the road map (owner: "still
     // include thank you for playing")
-    set({ road, game: null, finale: { g }, tab: 'home', transition: null, undo: null, page: road.free ? 'road' : null, ...savedSwitches() });
+    set({ road, game: null, finale: finaleFor(g), tab: 'home', transition: null, undo: null, page: road.free ? 'road' : null, ...savedSwitches() });
     top();
   },
   recommend: false,
@@ -861,7 +861,7 @@ export const useStore = create<Store>((set, get) => ({
     // round 36 (owner): the finale in place of the thank-you page, and only for a career that is
     // over ("leaving a career that isnt finished doesnt deserve the ending card")
     const g = get().game;
-    const finale = g && finaleKind(g) ? { g } : null;
+    const finale = g ? finaleFor(g) : null;
     set({ game: null, slot: null, tab: 'home', transition: null, finale, lookBack: false });
   },
   mini: null,
