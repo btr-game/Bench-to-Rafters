@@ -14,7 +14,7 @@ import { tabNews } from '../src/ui/tabNews';
 import { lineCells } from '../src/ui/art/pixel';
 import { TRACKS, parseVoice, trackOf, type TrackId } from '../src/ui/tracks';
 import { MUSIC_LOOPS, NO_TOTALS, earnedNow } from '../src/engine/achievements';
-import { TUTORIAL_LOOPS } from '../src/ui/achievements';
+import { ENDING_LOOPS, TUTORIAL_LOOPS } from '../src/ui/achievements';
 import { MINI_NAMES, syncMiniUnlocks } from '../src/engine/career/miniBonus';
 import { CAREER_ICONS } from '../src/ui/art/careerIcons';
 import { ICONS } from '../src/ui/art/icons';
@@ -169,9 +169,11 @@ describe('the career timeline line', () => {
 
 describe('music', () => {
   const ids = Object.keys(TRACKS) as TrackId[];
+  const album = ids.filter((x) => !TUTORIAL_LOOPS.includes(x) && !ENDING_LOOPS.includes(x));
   it('has every loop written out cleanly, each voice a whole number of times round the loop', () => {
-    // round 33: the tutorial's two loops are not part of Full Album
-    expect(ids.filter((x) => !TUTORIAL_LOOPS.includes(x))).toHaveLength(MUSIC_LOOPS);
+    // round 33: the tutorial's two loops are not part of Full Album; round 36: nor the twelve endings' themes
+    expect(album).toHaveLength(MUSIC_LOOPS);
+    expect(ids.filter((x) => ENDING_LOOPS.includes(x))).toHaveLength(12);
     for (const id of ids) {
       const t = TRACKS[id];
       const lens = t.voices.map((v) => parseVoice(v.notes).length);
@@ -214,7 +216,7 @@ describe('music', () => {
     expect(got({ locked: 4 })).not.toContain('lock5');
     expect(got({ locked: 5 })).toContain('lock5');
     expect(got({ heard: ids.slice(0, 5) })).toContain('mixtape');
-    expect(got({ heard: ids.slice(0, MUSIC_LOOPS - 1) })).not.toContain('album');
-    expect(got({ heard: ids })).toContain('album');
+    expect(got({ heard: album.slice(0, MUSIC_LOOPS - 1) })).not.toContain('album');
+    expect(got({ heard: album })).toContain('album');
   });
 });

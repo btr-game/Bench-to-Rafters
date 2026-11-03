@@ -3,7 +3,7 @@
 
 import { useStore, type Tab } from '../store';
 import { setFolds } from '../ui/fold';
-import type { GameState, Moment } from '../engine/types';
+import type { GameState, LevelKey, Moment } from '../engine/types';
 import { ACHIEVEMENTS, ACH_TIERS } from '../engine/achievements';
 import { careerRecord, type CareerRecord } from '../engine/career/record';
 import { canSetStyle } from '../engine/career/identity';
@@ -36,6 +36,7 @@ import type { ChosenLook } from '../content/looks';
 import { LoadingLab } from './LoadingLab';
 import { raftersTeams } from '../engine/awards/legacy';
 import { finaleFor, type Act } from '../ui/finale';
+import { endingOf, type EndingId } from '../ui/endings';
 
 export type Group = 'Start' | 'Tutorial' | 'Career hub' | 'Decisions' | 'Big moments' | 'Modes' | 'Mini-games' | 'Records & community';
 export const GROUPS: { key: Group; color: string; icon: string }[] = [
@@ -80,6 +81,61 @@ const at = (key: string, until: Parameters<typeof play>[0], o: PlayOpts = {}) =>
 const endWith = (key: string, hung: boolean) => fixture(key, () => play((s) => s.step === 'retired' && raftersTeams(s).length > 0 === hung, { mode: hung ? 'stars' : 'standard', fast: true, tries: 16 }));
 const legend = () => endWith('end-rafters', true);
 const plainEnd = () => endWith('end-plain', false);
+/** Round 36: a finished career that ends on this ending, played until one does. */
+const endsAs = (kind: EndingId, mode: PlayOpts['mode'] = 'standard', tries = 24) => fixture(`end-${kind}-${mode}`, () => play((s) => s.step === 'retired' && endingOf(s) === kind, { mode, fast: true, tries }));
+/** Round 36: the rare endings, built (the deck's smart player never stays in the G League or stops
+ * after college, and seldom stops after high school): a played career cut back to its high-school
+ * seasons, then given the seasons and honours the ending needs, and a reason to retire. */
+function builtEnd(key: string, rows: { level: LevelKey; team: string; color: string; n: number }[], keys: string[], why: string): GameState | null {
+  return fixture(`built-${key}`, () => {
+    const g = plainEnd();
+    if (!g) return null;
+    g.history = g.history.filter((h) => h.level === 'HSJV' || h.level === 'HSV');
+    const last = g.history[g.history.length - 1];
+    if (!last) return null;
+    g.awards = g.awards.filter((a) => a.year <= last.year);
+    for (const r of rows)
+      for (let i = 0; i < r.n; i++) {
+        const prev = g.history[g.history.length - 1];
+        g.history.push({ ...structuredClone(last), year: prev.year + 1, age: prev.age + 1, level: r.level, stage: r.level === 'HSJV' || r.level === 'HSV' ? 'HS' : r.level, teamId: r.team, teamName: r.team, teamColor: r.color, awards: [], role: 'starter', result: r.level === 'NCAA' ? 'Lost in the Second round of March Madness' : 'Lost in the Playoffs' });
+      }
+    const end = g.history[g.history.length - 1];
+    keys.forEach((k, i) => g.awards.push({ year: end.year - i, level: 'NCAA', key: k, label: k === 'NCAATITLE' ? 'NCAA champion' : k === 'NAISMITH' ? 'Naismith Player of the Year' : 'All-American 1st Team' }));
+    Object.assign(g, { nbaGames: 0, bonds: [], rivalry: undefined, draftedBy: null, retiredAt: end.age + 1 });
+    g.player.age = end.age + 1;
+    g.log = [...g.log.filter((l) => l.kind !== 'retire'), { year: end.year, age: end.age + 1, kind: 'retire', text: `Retired at ${end.age + 1}. ${why}` }];
+    return g;
+  });
+}
+const COLLEGE = { level: 'NCAA' as const, team: 'Gonzaga', color: '#041E42', n: 4 };
+/** Round 36: each of the eleven endings after the rafters, as a finished career that has it. */
+const ENDS: Record<Exclude<EndingId, 'rafters'>, () => GameState | null> = {
+  enshrined: () => endsAs('enshrined', 'stars'),
+  ring: () => endsAs('ring'),
+  // an NBA career of six seasons or more, given three All-Star years
+  allstar: () =>
+    fixture('built-allstar', () => {
+      const g = endsAs('longhaul');
+      if (!g) return null;
+      for (const h of g.history.filter((x) => x.level === 'NBA' && x.line.gp > 0).slice(-4, -1)) g.awards.push({ year: h.year, level: 'NBA', key: 'ALLSTAR', label: 'All-Star' });
+      return g;
+    }),
+  eurolegend: () => endsAs('eurolegend'),
+  longhaul: () => endsAs('longhaul'),
+  madeit: () => endsAs('madeit', 'reality'),
+  passport: () => endsAs('passport', 'reality'),
+  grinder: () => builtEnd('grinder', [COLLEGE, { level: 'GL', team: 'Austin Spurs', color: '#C4CED4', n: 2 }, { level: 'GL', team: 'Rio Grande Valley Vipers', color: '#CE1141', n: 2 }], [], 'No contract offers came.'),
+  shining: () => builtEnd('shining', [COLLEGE], ['NCAATITLE', 'AA1'], 'No team called after the draft.'),
+  gown: () => builtEnd('gown', [COLLEGE], [], 'No team called after the draft.'),
+  dream: () => builtEnd('dream', [], [], 'Chose to walk away.'),
+};
+/** The endings the deck's book shows as seen: seven of the twelve. */
+const SEVEN_SEEN: EndingId[] = ['rafters', 'ring', 'eurolegend', 'longhaul', 'madeit', 'passport', 'dream'];
+/** The ending a card asks for, or nothing (so the card says no career got there). */
+const endOn = (kind: Exclude<EndingId, 'rafters'>) => {
+  const g = ENDS[kind]();
+  return g && endingOf(g) === kind ? g : null;
+};
 function ending(g: GameState | null, from?: Act): boolean {
   if (!g) return false;
   const finale = finaleFor(g, from);
@@ -240,10 +296,11 @@ function forward(g: GameState | null, until: (s: GameState) => boolean, max = 30
 }
 
 /** Every achievement earned (so none pop up while you look around), or none. */
-export function setAchievements(all: boolean): void {
+export function setAchievements(all: boolean, fin?: Partial<Record<EndingId, number>>): void {
   const got = all ? Object.fromEntries(ACHIEVEMENTS.map((a) => [a.id, { at: new Date().toISOString(), who: 'Dev deck' }])) : {};
   try {
-    localStorage.setItem('btr-achv-v1', JSON.stringify({ got, totals: {} }));
+    // round 36: `fin`, the endings seen (the book's Endings page)
+    localStorage.setItem('btr-achv-v1', JSON.stringify({ got, totals: fin ? { fin } : {} }));
   } catch {
     // nothing to keep
   }
@@ -437,7 +494,46 @@ export const CARDS: DevCard[] = [
   { id: 'finale-roll', title: 'Finale: the credits', group: 'Start', icon: 'cards', blurb: 'The career as film credits: teams, titles, legendary seasons, awards, the numbers, who was with him; then the developer and Claude, two lines.', open: () => ending(legend(), 'roll') },
   { id: 'finale-title', title: 'Finale: the title', group: 'Start', icon: 'laurel', blurb: 'Bench to Rafters fills the screen.', open: () => ending(legend(), 'title') },
   { id: 'finale-thanks', title: 'Finale: thank you', group: 'Start', icon: 'heart', blurb: 'The last card: thank you for playing, Play again and Share.', open: () => ending(legend(), 'thanks') },
-  { id: 'finale-credits', title: 'Finale: no rafters', group: 'Start', icon: 'cards', blurb: 'A finished career nobody hangs a jersey for: the credits, the title and the thank-you (its own opening comes later).', open: () => ending(plainEnd()) },
+  { id: 'finale-credits', title: 'Finale: credits without rafters', group: 'Start', icon: 'cards', blurb: 'The credits of a career nobody hangs a jersey for, under its own ending’s theme.', open: () => ending(plainEnd(), 'roll') },
+  // round 36: the other eleven endings, each opening on its scene (owner: "do all 12")
+  { id: 'finale-enshrined', title: 'Finale: Enshrined', group: 'Start', icon: 'hall', blurb: 'The Hall of Fame with no number retired: the stage, his plaque unveiled, the jacket, his words at the podium.', open: () => ending(endOn('enshrined')) },
+  { id: 'finale-ring', title: 'Finale: Ring bearer', group: 'Start', icon: 'crown', blurb: 'An NBA title, no rafters or Hall: the ring box opening under a desk lamp, parade confetti in the jacket pocket.', open: () => ending(endOn('ring')) },
+  { id: 'finale-allstar', title: 'Finale: All-Star', group: 'Start', icon: 'stars', blurb: 'All-Star teams and no ring: every All-Star jersey hung in his garage like banners, a year under each. (A six-season career given three All-Star years.)', open: () => ending(endOn('allstar')) },
+  { id: 'finale-eurolegend', title: 'Finale: Legend of Europe', group: 'Start', icon: 'flame', blurb: 'Three seasons abroad and a EuroLeague title or MVP: flares, scarves and his number on the fans’ banner. It outranks the NBA tenures.', open: () => ending(endOn('eurolegend')) },
+  { id: 'finale-longhaul', title: 'Finale: The long haul', group: 'Start', icon: 'locker', blurb: 'Six NBA seasons or more: his last locker cleared out, the nameplate peeled off, the lights going out a row at a time.', open: () => ending(endOn('longhaul')) },
+  { id: 'finale-madeit', title: 'Finale: Made it', group: 'Start', icon: 'framedjersey', blurb: 'One to five NBA seasons: his first NBA jersey framed on his old bedroom wall, the debut’s ticket stub beside it.', open: () => ending(endOn('madeit')) },
+  { id: 'finale-passport', title: 'Finale: Passport', group: 'Start', icon: 'jet', blurb: 'A pro career overseas: a departures board of every city he played in, a passport full of stamps.', open: () => ending(endOn('passport')) },
+  { id: 'finale-grinder', title: 'Finale: The grinder', group: 'Start', icon: 'calendar', blurb: 'The G League and never the NBA: the team bus at night, ten-day contracts in his window, the NBA exit going by. (Built: four college seasons and four in the G League.)', open: () => ending(endOn('grinder')) },
+  { id: 'finale-shining', title: 'Finale: One shining moment', group: 'Start', icon: 'spotlight', blurb: 'A college star who never went pro: cutting down the net, his number in the gym’s rafters. (Built: a national title and All-American.)', open: () => ending(endOn('shining')) },
+  { id: 'finale-gown', title: 'Finale: Cap and gown', group: 'Start', icon: 'cap', blurb: 'College and never pro: graduation day, a ball under his arm. (Built: four seasons at Gonzaga.)', open: () => ending(endOn('gown')) },
+  { id: 'finale-dream', title: 'Finale: Hoops dream', group: 'Start', icon: 'ball', blurb: 'It ended in high school: the driveway hoop at dusk, the phone on the step that never rang. (Built: his high-school seasons alone.)', open: () => ending(endOn('dream')) },
+  {
+    id: 'finale-now',
+    title: 'Finale: where he is now',
+    group: 'Start',
+    icon: 'statue',
+    blurb: 'A scene’s last shot, where he is now: here the long haul with an Olympic gold in the open locker, a wife and a daughter in the line before it.',
+    open: () => {
+      const g = endOn('longhaul');
+      if (!g) return false;
+      g.awards.push({ year: g.history[g.history.length - 1].year - 4, level: 'NBA', key: 'OLYGOLD', label: 'Olympic gold' });
+      Object.assign(g.flags, { wed: g.year - 8, child: g.year - 5, childGirl: 1 });
+      return ending(g, 'now');
+    },
+  },
+  {
+    id: 'finale-ovation',
+    title: 'Finale: the farewell ovation',
+    group: 'Start',
+    icon: 'crowd',
+    blurb: 'A career that ended on a farewell tour opens on the last road game first, the house lights up and every seat on its feet.',
+    open: () => {
+      const g = endOn('longhaul');
+      if (!g) return false;
+      g.log.push({ year: g.year, age: g.player.age, kind: 'retire', text: `Retired at ${g.player.age}. Said goodbye on a farewell tour, every arena on its feet.` });
+      return ending(g);
+    },
+  },
   { id: 'loading', title: 'Loading pop-out', group: 'Start', icon: 'ball', blurb: 'The pixel player who dribbles while a slow step runs: all nine moves, and a button to make the page lag.', open: () => true, page: LoadingLab },
   ...TUTORIAL,
   { id: 'm-intro', title: 'Intro moment', group: 'Big moments', icon: 'door', blurb: 'The career begins.', open: () => withMoment('m-intro', (m) => m.kind === 'intro', { mode: 'standard' }) },
@@ -666,6 +762,17 @@ export const CARDS: DevCard[] = [
   },
   { id: 'ach-cats', title: 'Achievement book by category', group: 'Records & community', icon: 'laurel', blurb: 'Round 35: the book in short-named categories, a chip each with what is earned of it; tap one (here the second) to see only it, with a tier or on its own.', open: () => (setAchievements(true), useStore.setState({ game: null, mini: null, page: 'achievements' })), press: '.achv-cats .achv-cat:nth-child(2)' },
   { id: 'ach-none', title: 'Achievement book (new player)', group: 'Records & community', icon: 'lock', blurb: 'Every name a riddle.', open: () => (setAchievements(false), useStore.setState({ game: null, mini: null, page: 'achievements' })) },
+  {
+    id: 'ach-endings',
+    title: 'Achievement book: Endings',
+    group: 'Records & community',
+    icon: 'cards',
+    blurb: 'Round 36: the twelve endings a career can have, seven of them seen on this device and shown as their scenes, the rest dark with ???.',
+    open: () => {
+      setAchievements(true, Object.fromEntries(SEVEN_SEEN.map((k) => [k, 1])));
+      useStore.setState({ game: null, mini: null, page: 'achievements' });
+    },
+  },
   {
     id: 'ach-toast',
     title: 'Achievement banners',

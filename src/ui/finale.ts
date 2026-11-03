@@ -6,45 +6,54 @@
 // (screens/Finale.tsx).
 //
 // A career whose jersey hangs gets the whole ceremony: the empty arena at night, his speech, the
-// jersey rising, then the credits. Any other finished career gets the credits (its own opening
-// comes later: owner, "let's catagorize that a bit later, because there are many paths"). A level
-// of the tutorial gets only the title and the thank-you. Leaving a career that isn't over gets no
-// ending at all (owner: "leaving a career that isn't finished doesn't deserve the ending card").
+// jersey rising, then the credits. Every other finished career gets an ending of its own (owner: "do
+// all 12"; ui/endings.ts decides which): a scene of its place, three lines and where he is now, then
+// the same credits; a career that ended on a farewell tour opens on the last road ovation first. A
+// level of the tutorial gets only the title and the thank-you. Leaving a career that isn't over
+// gets no ending at all (owner: "leaving a career that isn't finished doesn't deserve the ending card").
 
 import type { GameState } from '../engine/types';
-import { championships, hallOfFame, nbaCareerPoints, raftersTeams } from '../engine/awards/legacy';
+import { championships, hallOfFame, nbaCareerPoints } from '../engine/awards/legacy';
 import { raftersDetail } from '../engine/awards/details';
 import { legendarySeasons } from '../engine/awards/legendary';
 import { duoAtEnd } from '../engine/career/duo';
+import { endingOf, sceneOf, twistsOf, type EndingId } from './endings';
 
-export type Act = 'arena' | 'speech' | 'jersey' | 'roll' | 'title' | 'thanks';
-export type FinaleKind = 'rafters' | 'credits' | 'level';
+/** The rafters' acts (the arena, the speech, the jersey), every other ending's (the ovation of a
+ * farewell tour, the scene, where he is now), then everyone's: the credits, the title, the thank-you. */
+export type Act = 'arena' | 'speech' | 'jersey' | 'ovation' | 'scene' | 'now' | 'roll' | 'title' | 'thanks';
+/** One of the twelve endings, or a tutorial level's short one. */
+export type FinaleKind = EndingId | 'level';
 
 /** The whole of it stays under two minutes (owner); the thank-you waits for the player. */
 export const FINALE_MAX = 120;
-/** Seconds for each act; the speech and the roll grow with the career, inside their limits. */
-export const ACT_SECS = { arena: 7, speechLine: 5.5, jersey: 12, rollMin: 20, rollMax: 52, rollLine: 1.4, title: 6 } as const;
+/** Seconds for each act; the speech and the roll grow with the career, inside their limits. A scene
+ * opens on its place, then a line every few seconds; where he is now holds a little longer. */
+export const ACT_SECS = { arena: 7, speechLine: 5.5, jersey: 12, ovation: 6, sceneOpen: 6, sceneLine: 6, now: 7, rollMin: 20, rollMax: 52, rollLine: 1.4, title: 6 } as const;
 
 /** Which ending a career gets, or none (a career still going, the daily, a lab run). */
 export function finaleKind(g: GameState): FinaleKind | null {
   if (g.step !== 'retired' || g.flags.daily || g.mode === 'lab') return null;
   if (g.flags.level || g.flags.tour) return 'level';
-  return raftersTeams(g).length ? 'rafters' : 'credits';
+  return endingOf(g);
 }
 
-export function actsOf(kind: FinaleKind): Act[] {
+/** The acts of an ending in order; `ovation` when the career ended on a farewell tour. */
+export function actsOf(kind: FinaleKind, ovation = false): Act[] {
   if (kind === 'rafters') return ['arena', 'speech', 'jersey', 'roll', 'title', 'thanks'];
-  if (kind === 'credits') return ['roll', 'title', 'thanks'];
-  return ['title', 'thanks'];
+  if (kind === 'level') return ['title', 'thanks'];
+  return [...(ovation ? (['ovation'] as const) : []), 'scene', 'now', 'roll', 'title', 'thanks'];
 }
 
-/** What the store keeps for an ending: the career, where it starts, and the act on screen (the
- * music follows it). */
-export function finaleFor(g: GameState, from?: Act): { g: GameState; from?: Act; act: Act } | null {
+const actsFor = (g: GameState, kind: FinaleKind) => actsOf(kind, kind !== 'rafters' && kind !== 'level' && twistsOf(g).farewell);
+
+/** What the store keeps for an ending: the career, which ending, where it starts, and the act on
+ * screen (the music follows both). */
+export function finaleFor(g: GameState, from?: Act): { g: GameState; kind: FinaleKind; from?: Act; act: Act } | null {
   const kind = finaleKind(g);
   if (!kind) return null;
-  const acts = actsOf(kind);
-  return { g, from, act: from && acts.includes(from) ? from : acts[0] };
+  const acts = actsFor(g, kind);
+  return { g, kind, from, act: from && acts.includes(from) ? from : acts[0] };
 }
 
 /** The team whose rafters it is: the one he spent longest with among those that hang it. */
@@ -122,6 +131,10 @@ export function creditsOf(g: GameState): CreditBlock[] {
   const hof = hallOfFame(g);
   const hung = raftersDetail(g);
   if (hof || hung.length) out.push({ head: 'Forever', rows: [...(hof ? [hof === 'first' ? 'Hall of Fame, first ballot' : 'Hall of Fame'] : []), ...hung.map((t) => `#${p.number} hangs in the ${t.name} rafters`)] });
+  // the rare late leap and the career-altering injury, when the career had them
+  const tw = twistsOf(g);
+  const turns = [...(tw.leap ? [`The leap · ${tw.leap}`] : []), ...(tw.injury ? [`The injury · ${tw.injury}`] : [])];
+  if (turns.length) out.push({ head: 'Turning points', rows: turns });
   const people: string[] = [];
   const duo = duoAtEnd(g);
   if (duo) people.push(`Running mate · ${duo.b.name}${duo.third ? ` and ${duo.third.name}` : ''}`);
@@ -146,12 +159,33 @@ export function rollSecs(blocks: CreditBlock[]): number {
   return Math.min(ACT_SECS.rollMax, Math.max(ACT_SECS.rollMin, lines * ACT_SECS.rollLine));
 }
 
-/** Every act with its length in seconds (the thank-you has none: it waits for the player). */
+/** How long an act runs, in seconds (the thank-you has none: it waits for the player). */
+function secsOf(g: GameState, act: Act): number {
+  switch (act) {
+    case 'arena':
+      return ACT_SECS.arena;
+    case 'speech':
+      return speechOf(g).length * ACT_SECS.speechLine;
+    case 'jersey':
+      return ACT_SECS.jersey;
+    case 'ovation':
+      return ACT_SECS.ovation;
+    case 'scene':
+      return ACT_SECS.sceneOpen + sceneOf(g).lines.length * ACT_SECS.sceneLine;
+    case 'now':
+      return ACT_SECS.now;
+    case 'roll':
+      return rollSecs(creditsOf(g));
+    case 'title':
+      return ACT_SECS.title;
+    default:
+      return 0;
+  }
+}
+
+/** Every act with its length in seconds. */
 export function timeline(g: GameState, kind: FinaleKind): { act: Act; secs: number }[] {
-  return actsOf(kind).map((act) => ({
-    act,
-    secs: act === 'arena' ? ACT_SECS.arena : act === 'speech' ? speechOf(g).length * ACT_SECS.speechLine : act === 'jersey' ? ACT_SECS.jersey : act === 'roll' ? rollSecs(creditsOf(g)) : act === 'title' ? ACT_SECS.title : 0,
-  }));
+  return actsFor(g, kind).map((act) => ({ act, secs: secsOf(g, act) }));
 }
 
 // ---- the first time on a device it can't be skipped (owner); each ending counts on its own ----

@@ -6,7 +6,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { GameState, SeasonRecord } from '../src/engine/types';
 import { ACHIEVEMENTS, NO_TOTALS, earnedNow, type CareerTotals } from '../src/engine/achievements';
-import { ACHIEVEMENTS_36, R36_TOTALS_ONLY, ROLL, creditLines, creditRows } from '../src/engine/achievements36';
+import { ACHIEVEMENTS_36, ENDING_IDS, R36_TOTALS_ONLY, ROLL, creditLines, creditRows, endingsSeen, type EndingId } from '../src/engine/achievements36';
 import { achCatOf } from '../src/engine/achievementCats';
 import { hallOfFame, legacyScore, raftersTeams } from '../src/engine/awards/legacy';
 import { teamById } from '../src/engine/career/common';
@@ -51,8 +51,8 @@ describe('the book: round 36', () => {
   it('keeps every id and every name unique across the whole book, and files each one', () => {
     expect(new Set(ACHIEVEMENTS.map((a) => a.id)).size).toBe(ACHIEVEMENTS.length);
     expect(new Set(ACHIEVEMENTS.map((a) => a.name.toLowerCase())).size).toBe(ACHIEVEMENTS.length);
-    expect(ACHIEVEMENTS_36.length).toBe(41);
-    expect(ACHIEVEMENTS.length).toBe(817);
+    expect(ACHIEVEMENTS_36.length).toBe(49);
+    expect(ACHIEVEMENTS.length).toBe(825);
     for (const a of ACHIEVEMENTS_36) {
       expect(ACHIEVEMENTS, a.id).toContain(a);
       expect(achCatOf(a.id), a.id).not.toBeNull();
@@ -67,6 +67,10 @@ describe('the book: round 36', () => {
     expect(achCatOf('cr-long')).toBe('odd');
     expect(achCatOf('own-banner')).toBe('money');
     expect(achCatOf('tp-rival')).toBe('team');
+    // the endings: most under the long career, the two that end before or away from the NBA under the road there
+    expect(achCatOf('en-6')).toBe('career');
+    expect(achCatOf('en-dream')).toBe('road');
+    expect(achCatOf('en-euro')).toBe('road');
   });
 
   it('earns the username and the finale ones from the totals alone, with no career open', () => {
@@ -75,7 +79,7 @@ describe('the book: round 36', () => {
     const once = earnedNow(null, { ...NO_TOTALS, handle: 1, renamed: 1, posted: 1, fin: { rafters: 1, encore: 1, skipped: 1 } });
     for (const id of ['nm-pick', 'nm-rename', 'nm-post1', 'fn-encore', 'fn-skip']) expect(once, id).toContain(id);
     for (const id of ['nm-rename5', 'nm-post10', 'nm-posthof', 'fn-double', 'fn-five', 'fn-rafters3']) expect(once, id).not.toContain(id);
-    const more = earnedNow(null, { ...NO_TOTALS, renamed: 5, posted: 10, postedHof: 1, fin: { rafters: 3, credits: 2 } });
+    const more = earnedNow(null, { ...NO_TOTALS, renamed: 5, posted: 10, postedHof: 1, fin: { rafters: 3, dream: 2 } });
     for (const id of ['nm-rename5', 'nm-post10', 'nm-posthof', 'fn-double', 'fn-five', 'fn-rafters3']) expect(more, id).toContain(id);
     // the career ones never come from the totals
     for (const a of ACHIEVEMENTS_36.filter((x) => !R36_TOTALS_ONLY.includes(x.id))) expect(more, a.id).not.toContain(a.id);
@@ -259,6 +263,7 @@ describe('the speech and the credits, as the finale writes them', () => {
       expect(c.nba).toBe(rows('In the NBA'));
       expect(c.forever).toBe(rows('Forever'));
       expect(c.people).toBe(rows('With'));
+      expect(c.turns).toBe(rows('Turning points'));
       expect(Math.min(ROLL.max, Math.max(ACT_SECS.rollMin, creditLines(g) * ROLL.line))).toBeCloseTo(rollSecs(blocks), 9);
       expect(test36('cr-long', g)).toBe(rollSecs(blocks) === ACT_SECS.rollMax);
       expect(test36('cr-teams12', g)).toBe(rows('Teams') >= 12);
@@ -381,14 +386,53 @@ describe('the UI\'s part (ui/achievements.ts): the username, the boards, the fin
     expect(ach.recordFinale(career(1), 'rafters', { skippable: false, skipped: false })).toBe(true);
     expect(ach.recordFinale(career(1), 'rafters', { skippable: true, skipped: false }), 'the same career again').toBe(false);
     expect(book.earnedNow(null, ach.loadAch().totals)).not.toContain('fn-encore');
-    expect(ach.recordFinale(career(2), 'credits', { skippable: true, skipped: false })).toBe(true);
+    expect(ach.recordFinale(career(2), 'dream', { skippable: true, skipped: false })).toBe(true);
     expect(ach.recordFinale(career(3), 'rafters', { skippable: true, skipped: true })).toBe(true);
-    expect(ach.loadAch().totals.fin).toEqual({ rafters: 1, credits: 1, encore: 1, skipped: 1 });
+    expect(ach.loadAch().totals.fin).toEqual({ rafters: 1, dream: 1, encore: 1, skipped: 1 });
     const got = book.earnedNow(null, ach.loadAch().totals);
     for (const id of ['fn-encore', 'fn-skip', 'fn-double']) expect(got, id).toContain(id);
     for (const id of ['fn-five', 'fn-rafters3']) expect(got, id).not.toContain(id);
     for (const k of [4, 5, 6]) ach.recordFinale(career(k), 'rafters', { skippable: true, skipped: false });
     const more = book.earnedNow(null, ach.loadAch().totals);
     for (const id of ['fn-five', 'fn-rafters3']) expect(more, id).toContain(id);
+  });
+
+  it('keeps the endings a device has seen for the book, and their themes out of Full Album', async () => {
+    const { ach, book } = await fresh();
+    const career = (seed: number) => ({ seed, player: { name: 'Marcus Hale' } }) as unknown as GameState;
+    ach.recordFinale(career(1), 'gown', { skippable: false, skipped: false });
+    ach.recordFinale(career(2), 'gown', { skippable: true, skipped: true });
+    ach.recordFinale(career(3), 'level', { skippable: true, skipped: false });
+    expect(endingsSeen(ach.loadAch().totals)).toEqual(['gown']);
+    expect(book.earnedNow(null, ach.loadAch().totals)).toContain('en-1');
+    for (const id of ['dream', 'rafters', 'road']) expect(ach.recordHeard(id), id).toBe(false);
+    expect(ach.recordHeard('hub')).toBe(true);
+    expect(ach.loadAch().totals.heard).toEqual(['hub']);
+  });
+});
+
+describe('the endings in the book (the Endings page and its achievements)', () => {
+  const seen = (...kinds: EndingId[]) => earnedNow(null, { ...NO_TOTALS, fin: Object.fromEntries(kinds.map((k) => [k, 1])) });
+  it('counts the endings seen from the totals alone: one, three, six, all twelve', () => {
+    expect(endingsSeen({ ...NO_TOTALS })).toEqual([]);
+    // a skip or an encore is not an ending of its own
+    expect(endingsSeen({ ...NO_TOTALS, fin: { skipped: 4, encore: 2, longhaul: 1 } })).toEqual(['longhaul']);
+    expect(seen('longhaul')).toContain('en-1');
+    expect(seen('longhaul', 'madeit')).not.toContain('en-3');
+    expect(seen('longhaul', 'madeit', 'gown')).toContain('en-3');
+    expect(seen(...ENDING_IDS.slice(0, 5))).not.toContain('en-6');
+    expect(seen(...ENDING_IDS.slice(0, 6))).toContain('en-6');
+    expect(seen(...ENDING_IDS.slice(0, 11))).not.toContain('en-12');
+    expect(seen(...ENDING_IDS)).toContain('en-12');
+  });
+
+  it('has one for the bittersweet ending, the Hall without the rafters, Europe, and both ends of it', () => {
+    expect(seen('dream')).toContain('en-dream');
+    expect(seen('enshrined')).toContain('en-hof');
+    expect(seen('rafters')).not.toContain('en-hof');
+    expect(seen('eurolegend')).toContain('en-euro');
+    expect(seen('passport')).not.toContain('en-euro');
+    expect(seen('rafters')).not.toContain('en-both');
+    expect(seen('rafters', 'dream')).toContain('en-both');
   });
 });

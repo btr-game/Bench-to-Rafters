@@ -10,6 +10,7 @@
 // sound.ts plays them; the dev deck's Music tab lists them with their icons.
 
 import type { GameState } from '../engine/types';
+import { ENDING_IDS } from '../engine/achievements36';
 import { inTutorial, nextLevel, type Road } from './road';
 
 export type Wave = 'square' | 'triangle' | 'sawtooth' | 'pulse25' | 'pulse12';
@@ -77,7 +78,7 @@ export const TRACKS = {
   // jersey going up and the credits; Curtain call comes back for the title and the thank-you
   rafters: {
     name: 'Up in the rafters',
-    where: 'The finale: the empty arena, the speech, the jersey and the credits',
+    where: 'The rafters: the empty arena, the speech, the jersey and the credits',
     icon: 'jersey',
     step: bpm(84),
     voices: [
@@ -86,6 +87,139 @@ export const TRACKS = {
       { wave: 'pulse12', vol: 0.045, notes: '. E4+G4 . E4+G4 . E4+G4 . E4+G4 | . D4+B4 . D4+B4 . D4+B4 . D4+B4 | . C4+E4 . C4+E4 . C4+E4 . C4+E4 | . C4+F4 . C4+F4 . C4+F4 . C4+F4 | . E4+G4 . E4+G4 . E4+G4 . E4+G4 | . D4+B4 . D4+B4 . D4+B4 . D4+B4 | . C4+F4 . C4+F4 . C4+F4 . C4+F4 | . E4+G4 . E4+G4 . E4+G4 . .' },
     ],
     drums: 'k...s...',
+  },
+  // round 36: a theme for each of the other endings (owner: "a music for each doesnt seem like too
+  // much work. make all 12"), under its scene and the credits; heard only there, so not in Full Album
+  enshrined: {
+    name: 'Gold jacket',
+    where: 'Enshrined: the Hall of Fame stage, and its credits',
+    icon: 'hall',
+    step: bpm(80),
+    voices: [
+      { wave: 'square', vol: 0.08, notes: 'D5 - - - F5 - Bb5 - | G5 - - - F5 - Eb5 - | F5 - - - A5 - C6 - | Bb5 - - - - - . . | Bb5 - - - A5 - G5 - | G5 - - - F5 - Eb5 - | D5 - Eb5 - F5 - A5 - | Bb5 - - - - - . .' },
+      { wave: 'triangle', vol: 0.3, notes: 'Bb2 - - - - - - - | Eb2 - - - - - - - | F2 - - - - - - - | Bb2 - - - F2 - - - | G2 - - - - - - - | Eb2 - - - - - - - | F2 - - - - - - - | Bb2 - - - - - - -' },
+      { wave: 'pulse12', vol: 0.04, notes: 'Bb3+D4+F4 - - - - - - - | Bb3+Eb4+G4 - - - - - - - | A3+C4+F4 - - - - - - - | Bb3+D4+F4 - - - - - - - | Bb3+D4+G4 - - - - - - - | Bb3+Eb4+G4 - - - - - - - | A3+C4+F4 - - - - - - - | Bb3+D4+F4 - - - - - - -' },
+    ],
+    drums: 'k.......k...s...',
+  },
+  ring: {
+    name: 'Parade route',
+    where: 'Ring bearer: the ring box under the lamp, and its credits',
+    icon: 'crown',
+    step: bpm(150),
+    voices: [
+      { wave: 'sawtooth', vol: 0.06, notes: 'C5 F5 A5 C6 - A5 F5 A5 | G5 - E5 G5 C6 - - - | D6 - C6 Bb5 A5 - G5 - | G5 A5 Bb5 G5 E5 - C5 - | C5 F5 A5 C6 - A5 F5 A5 | D6 - C6 - A5 - F5 - | Bb5 - D6 - E6 - C6 - | F6 - C6 - F5 - - .' },
+      { wave: 'triangle', vol: 0.32, notes: 'F2 . C3 . F2 . C3 . | C2 . G2 . C2 . G2 . | Bb1 . F2 . Bb1 . F2 . | C2 . G2 . C2 . E2 . | F2 . C3 . F2 . C3 . | D2 . A2 . D2 . A2 . | Bb1 . F2 . C2 . G2 . | F2 . C3 . F2 . . .' },
+      { wave: 'pulse25', vol: 0.05, notes: '. A4+C5 . A4+C5 . A4+C5 . A4+C5 | . G4+C5 . G4+C5 . G4+C5 . G4+C5 | . F4+Bb4 . F4+Bb4 . F4+Bb4 . F4+Bb4 | . G4+C5 . G4+C5 . G4+C5 . G4+C5 | . A4+C5 . A4+C5 . A4+C5 . A4+C5 | . F4+A4 . F4+A4 . F4+A4 . F4+A4 | . F4+Bb4 . F4+Bb4 . G4+C5 . G4+C5 | . A4+C5 . A4+C5 . A4+C5 . .' },
+    ],
+    drums: 'khskkhss',
+  },
+  allstar: {
+    name: 'Garage banners',
+    where: 'All-Star: the jerseys in his garage, and its credits',
+    icon: 'stars',
+    step: bpm(112),
+    voices: [
+      { wave: 'pulse25', vol: 0.1, notes: 'F#5 - A5 - D6 - C#6 D6 | E6 - - - C#6 - A5 - | B5 - D6 - F#6 - E6 D6 | D6 - - - B5 - G5 - | A5 - F#5 - A5 - D6 - | C#6 - E6 - A5 - - . | B5 - D6 - G6 - F#6 E6 | E6 - - - - - . .' },
+      { wave: 'triangle', vol: 0.32, notes: 'D2 . D3 . D2 . D3 . | A1 . A2 . A1 . A2 . | B1 . B2 . B1 . B2 . | G1 . G2 . G1 . G2 . | D2 . D3 . D2 . D3 . | A1 . A2 . A1 . A2 . | G1 . G2 . G1 . G2 . | A1 . A2 . C#3 . E3 .' },
+      { wave: 'pulse12', vol: 0.05, notes: '. D4+F#4+A4 . D4+F#4+A4 . D4+F#4+A4 . D4+F#4+A4 | . C#4+E4+A4 . C#4+E4+A4 . C#4+E4+A4 . C#4+E4+A4 | . D4+F#4+B4 . D4+F#4+B4 . D4+F#4+B4 . D4+F#4+B4 | . D4+G4+B4 . D4+G4+B4 . D4+G4+B4 . D4+G4+B4' },
+    ],
+    drums: 'k.h.s.h.k.k.s.h.',
+  },
+  eurolegend: {
+    name: 'Ultras',
+    where: 'Legend of Europe: flares and scarves in the arena, and its credits',
+    icon: 'flame',
+    step: bpm(138),
+    voices: [
+      { wave: 'square', vol: 0.08, notes: 'A4 - A4 - C5 - E5 - | A5 - G5 - E5 - - . | G4 - G4 - B4 - D5 - | G5 - F5 - D5 - - . | F4 - A4 - C5 - F5 - | A5 - G5 - F5 - E5 - | E5 - G#5 - B5 - E6 - | D6 - C6 - B5 - G#5 -' },
+      { wave: 'triangle', vol: 0.34, notes: 'A2 A2 . A2 A2 . A2 . | A2 A2 . A2 E2 . A2 . | G2 G2 . G2 G2 . G2 . | G2 G2 . G2 D2 . G2 . | F2 F2 . F2 F2 . F2 . | F2 F2 . F2 C3 . F2 . | E2 E2 . E2 E2 . E2 . | E2 E2 . E2 B2 . E2 .' },
+      { wave: 'pulse12', vol: 0.05, notes: '. . A3+C4+E4 . . . A3+C4+E4 . | . . A3+C4+E4 . . . A3+C4+E4 . | . . G3+B3+D4 . . . G3+B3+D4 . | . . G3+B3+D4 . . . G3+B3+D4 . | . . F3+A3+C4 . . . F3+A3+C4 . | . . F3+A3+C4 . . . F3+A3+C4 . | . . E3+G#3+B3 . . . E3+G#3+B3 . | . . E3+G#3+B3 . . . E3+G#3+B3 .' },
+    ],
+    drums: 'k.k.S...',
+  },
+  longhaul: {
+    name: 'Lights out',
+    where: 'The long haul: his last locker, and its credits',
+    icon: 'locker',
+    step: bpm(88),
+    voices: [
+      { wave: 'pulse25', vol: 0.09, notes: 'D5 - - B4 D5 - E5 - | G5 - - - E5 - D5 - | E5 - - C5 E5 - G5 - | F#5 - - - - - . . | D5 - - B4 D5 - G5 - | F#5 - - - D5 - B4 - | C5 - E5 - D5 - C5 - | A4 - - - D5 - . .' },
+      { wave: 'triangle', vol: 0.3, notes: 'G2 - - - D3 - - - | E2 - - - B2 - - - | C3 - - - G2 - - - | D3 - - - A2 - - - | G2 - - - D3 - - - | B1 - - - F#2 - - - | C3 - - - G2 - - - | D3 - - - D2 - - -' },
+      { wave: 'pulse12', vol: 0.04, notes: 'G3+B3+D4 - - - - - - - | G3+B3+E4 - - - - - - - | G3+C4+E4 - - - - - - - | F#3+A3+D4 - - - - - - - | G3+B3+D4 - - - - - - - | F#3+B3+D4 - - - - - - - | G3+C4+E4 - - - - - - - | F#3+A3+C4 - - - - - - -' },
+    ],
+    drums: 'k...h...s...h...',
+  },
+  madeit: {
+    name: 'First jersey',
+    where: 'Made it: the framed jersey in his old bedroom, and its credits',
+    icon: 'framedjersey',
+    step: bpm(120),
+    voices: [
+      { wave: 'pulse25', vol: 0.09, notes: 'E5 - G5 C6 - B5 | A5 - - E5 - - | F5 - A5 C6 - A5 | G5 - - D5 - - | E5 - G5 C6 - E6 | D6 - C6 A5 - - | F5 - A5 G5 - F5 | G5 - - - - .' },
+      { wave: 'triangle', vol: 0.3, notes: 'C3 . . G2 . . | A2 . . E2 . . | F2 . . C3 . . | G2 . . D3 . . | C3 . . G2 . . | A2 . . E2 . . | F2 . . C3 . . | G2 . . G2 . .' },
+      { wave: 'pulse12', vol: 0.04, notes: 'C4 E4 G4 C4 E4 G4 | A3 C4 E4 A3 C4 E4 | F3 A3 C4 F3 A3 C4 | G3 B3 D4 G3 B3 D4' },
+    ],
+    drums: 'k..h..',
+  },
+  passport: {
+    name: 'Departures',
+    where: 'Passport: the departures board, and its credits',
+    icon: 'jet',
+    step: bpm(118),
+    voices: [
+      { wave: 'pulse25', vol: 0.09, notes: '. D5 - F5 . A5 - G5 | E5 - - C5 . Bb4 - . | . C5 - E5 . A5 - G5 | F5 - - D5 - - . . | . D5 - F5 . Bb5 - A5 | G5 - E5 - Bb5 - G5 - | A5 - - F5 . C5 - . | F5 - - - - - . .' },
+      { wave: 'triangle', vol: 0.32, notes: 'G2 . . D3 G2 . . D3 | C3 . . G2 C3 . . G2 | F2 . . C3 F2 . . C3 | D2 . . A2 D2 . . A2 | G2 . . D3 G2 . . D3 | C3 . . G2 C3 . . G2 | F2 . . C3 F2 . . C3 | F2 . . C3 F2 . . .' },
+      { wave: 'pulse12', vol: 0.045, notes: '. Bb3+D4+F4 . . Bb3+D4+F4 . . . | . Bb3+E4+G4 . . Bb3+E4+G4 . . . | . A3+C4+E4 . . A3+C4+E4 . . . | . A3+C4+F4 . . A3+C4+F4 . . .' },
+    ],
+    drums: 'k.h.shh.',
+  },
+  grinder: {
+    name: 'Mile markers',
+    where: 'The grinder: the team bus at night, and its credits',
+    icon: 'calendar',
+    step: bpm(100),
+    voices: [
+      { wave: 'pulse25', vol: 0.09, notes: 'E5 - . E5 G5 - B5 - | A5 - G5 - E5 - . . | E5 - . E5 G5 - C6 - | B5 - A5 - F#5 - D5 - | E5 - . E5 G5 - B5 - | D6 - B5 - A5 - G5 - | E5 - G5 - A5 - B5 - | A5 - - - F#5 - . .' },
+      { wave: 'triangle', vol: 0.34, notes: 'E2 E2 E3 E2 E2 E2 E3 E2 | E2 E2 E3 E2 E2 E2 E3 E2 | C2 C2 C3 C2 C2 C2 C3 C2 | D2 D2 D3 D2 D2 D2 D3 D2' },
+    ],
+    drums: 'k.h.s.hkk.h.s.h.',
+  },
+  shining: {
+    name: 'Net cutters',
+    where: 'One shining moment: cutting down the net, and its credits',
+    icon: 'spotlight',
+    step: bpm(96),
+    voices: [
+      { wave: 'pulse25', vol: 0.1, notes: 'G5 - - - Bb5 - Eb6 - | D6 - - - Bb5 - F5 - | G5 - Bb5 - C6 - Eb6 - | Eb6 - - - C6 - Ab5 - | G5 - Bb5 - Eb6 - G6 - | F6 - - - D6 - Bb5 - | C6 - Eb6 - Ab6 - G6 F6 | F6 - - - - - . .' },
+      { wave: 'triangle', vol: 0.32, notes: 'Eb2 . Bb2 . Eb3 . Bb2 . | D2 . Bb2 . D3 . Bb2 . | C2 . G2 . C3 . G2 . | Ab1 . Eb2 . Ab2 . Eb2 . | Eb2 . Bb2 . Eb3 . Bb2 . | Bb1 . F2 . Bb2 . F2 . | Ab1 . Eb2 . Ab2 . Eb2 . | Bb1 . F2 . Bb2 . D3 .' },
+      { wave: 'pulse12', vol: 0.045, notes: '. Eb4+G4 . Eb4+G4 . Eb4+G4 . Eb4+G4 | . D4+F4 . D4+F4 . D4+F4 . D4+F4 | . Eb4+G4 . Eb4+G4 . Eb4+G4 . Eb4+G4 | . Eb4+Ab4 . Eb4+Ab4 . Eb4+Ab4 . Eb4+Ab4 | . Eb4+G4 . Eb4+G4 . Eb4+G4 . Eb4+G4 | . D4+F4 . D4+F4 . D4+F4 . D4+F4 | . Eb4+Ab4 . Eb4+Ab4 . Eb4+Ab4 . Eb4+Ab4 | . D4+F4 . D4+F4 . D4+F4 . D4+F4' },
+    ],
+    drums: 'k...s...k.k.s...',
+  },
+  gown: {
+    name: 'Commencement',
+    where: 'Cap and gown: graduation day, and its credits',
+    icon: 'cap',
+    step: bpm(104),
+    voices: [
+      { wave: 'square', vol: 0.08, notes: 'B4 - D5 - G5 - - B5 | A5 - - F#5 D5 - - . | E5 - G5 - B5 - - A5 | G5 - - E5 C5 - - . | B4 - D5 - G5 - B5 - | C6 - B5 - A5 - G5 - | F#5 - A5 - D6 - C6 - | B5 - - - G5 - . .' },
+      { wave: 'triangle', vol: 0.3, notes: 'G2 . . . D3 . . . | D2 . . . A2 . . . | E2 . . . B2 . . . | C3 . . . G2 . . . | G2 . . . D3 . . . | C3 . . . G2 . . . | D3 . . . A2 . . . | G2 . . . G2 . . .' },
+      { wave: 'pulse12', vol: 0.04, notes: '. G3+B3+D4 . . . G3+B3+D4 . . | . F#3+A3+D4 . . . F#3+A3+D4 . . | . G3+B3+E4 . . . G3+B3+E4 . . | . G3+C4+E4 . . . G3+C4+E4 . . | . G3+B3+D4 . . . G3+B3+D4 . . | . G3+C4+E4 . . . G3+C4+E4 . . | . F#3+A3+D4 . . . F#3+A3+C4 . . | . G3+B3+D4 . . . G3+B3+D4 . .' },
+    ],
+    drums: 'k.h.s.h.',
+  },
+  dream: {
+    name: 'Streetlight',
+    where: 'Hoops dream: the driveway hoop at dusk, and its credits',
+    icon: 'ball',
+    step: bpm(78),
+    voices: [
+      { wave: 'pulse25', vol: 0.09, notes: 'E5 - - - A5 - G5 - | F5 - - - C5 - A4 - | E5 - - - G5 - C6 - | B5 - - - - - . . | A5 - - - C6 - B5 - | A5 - - - F5 - E5 - | D5 - - - G5 - F5 - | E5 - - - C#5 - - -' },
+      { wave: 'triangle', vol: 0.28, notes: 'A2 - - - - - - - | F2 - - - - - - - | C3 - - - - - - - | G2 - - - - - - - | A2 - - - - - - - | F2 - - - - - - - | G2 - - - - - - - | A2 - - - - - - -' },
+      { wave: 'pulse12', vol: 0.04, notes: 'A3+C4+E4 - - - - - - - | F3+A3+C4 - - - - - - - | C4+E4+G4 - - - - - - - | G3+B3+D4 - - - - - - - | A3+C4+E4 - - - - - - - | F3+A3+C4 - - - - - - - | G3+B3+D4 - - - - - - - | A3+C#4+E4 - - - - - - -' },
+    ],
+    drums: 'k.......',
   },
   thanks: {
     name: 'Curtain call',
@@ -328,9 +462,11 @@ const LEVEL_TRACK: Record<string, TrackId> = { HS: 'hs', NCAA: 'college', GL: 'g
 
 /** The loop for what is on screen. A page of its own (the log, the book, the community) keeps the
  * one under it (Play with friends has its own); Lockdown has its own beat, so none. */
-export function trackOf(s: { game: GameState | null; finale: { act?: string } | null; intro: boolean; mini: string | null; road?: Road; creating?: unknown; page?: string | null }): TrackId | null {
+export function trackOf(s: { game: GameState | null; finale: { act?: string; kind?: string } | null; intro: boolean; mini: string | null; road?: Road; creating?: unknown; page?: string | null }): TrackId | null {
   const g = s.game;
-  if (s.finale && !g) return s.finale.act === 'title' || s.finale.act === 'thanks' || !s.finale.act ? 'thanks' : 'rafters';
+  // round 36: each ending's own theme under its opening and the credits (the loop is named as the
+  // ending), Curtain call for the title and the thank-you
+  if (s.finale && !g) return s.finale.act === 'title' || s.finale.act === 'thanks' || !s.finale.act ? 'thanks' : (ENDING_IDS as readonly string[]).includes(s.finale.kind ?? '') ? (s.finale.kind as TrackId) : 'rafters';
   if (s.intro && !g) return 'intro';
   // round 35: Play with friends has a loop of its own
   if (s.page === 'multi') return 'friends';

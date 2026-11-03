@@ -90,6 +90,8 @@ import { FACE_NAME, HAIR_NAME, LookPreview, STYLE_NAME } from '../ui/components/
 import { PlayerArt, PlayerStatue, SKIN_COLORS, kitFor, type KitName } from '../ui/art/Player';
 import { VENUES, Venue } from '../ui/screens/Intro';
 import { houseRecords } from '../ui/house';
+import { ENDINGS, ENDING_IDS } from '../ui/endings';
+import { EndingArt } from '../ui/art/Endings';
 
 interface Entry {
   key: string;
@@ -1016,6 +1018,29 @@ const CATEGORIES: Category[] = [
         };
       });
     },
+  },
+  // ---------- round 36 ----------
+  {
+    key: 'endings',
+    name: 'Endings',
+    icon: 'cards',
+    blurb: 'The twelve endings of a finished career, in the order they are tried, the first that fits winning (ui/endings.ts): the rafters keeps its ceremony, the rest open on a scene of their own (art/Endings.tsx), shown here as the book’s tiles, under a theme of their own.',
+    entries: () =>
+      ENDING_IDS.map((k, i) => ({
+        key: k,
+        title: ENDINGS[k].name,
+        sub: `${i + 1} of ${ENDING_IDS.length}`,
+        text: ENDINGS[k].fits,
+        art: () => (
+          <div className="end-frame" style={{ width: '100%' }}>
+            <EndingArt kind={k} className="end-art" />
+          </div>
+        ),
+        facts: [
+          ['Place', ENDINGS[k].place],
+          ['Theme', TRACKS[k].name],
+        ] as [string, string][],
+      })),
   },
   {
     key: 'unlocks',
