@@ -23,7 +23,7 @@ import { CommunityPage } from './screens/Community';
 import { MpBoard, MultiplayerPage } from './screens/Multiplayer';
 import { FootBar } from './components/FootBar';
 import { Intro } from './screens/Intro';
-import { Thanks } from './screens/Thanks';
+import { Finale } from './screens/Finale';
 import { ICON_FOR } from './art/icons';
 import { music, onHeard, sfx, wakeOnClick } from './sound';
 import { recordHeard } from './achievements';
@@ -193,7 +193,7 @@ export function App() {
   const mini = useStore((s) => s.mini);
   const page = useStore((s) => s.page);
   const intro = useStore((s) => s.intro);
-  const thanks = useStore((s) => s.thanks);
+  const finale = useStore((s) => s.finale);
   const simple = useStore((s) => s.simple);
   const road = useStore((s) => s.road);
   const creating = useStore((s) => s.creating);
@@ -262,7 +262,7 @@ export function App() {
     [],
   );
 
-  if (thanks && !game) return <Thanks g={thanks} />;
+  if (finale && !game) return <Finale key={`${finale.g.seed}-${finale.from ?? ""}`} g={finale.g} from={finale.from} />;
   if (intro) return <Intro />;
   // round 33: the tutorial, until the full game opens on this device. Round 35 (owner: "make only the
   // beginner level of tutorial necessary"): the beginner career, then graduation; the road map's

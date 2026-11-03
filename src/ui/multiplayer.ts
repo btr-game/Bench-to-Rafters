@@ -210,25 +210,6 @@ export function cleanProspect(p: unknown): Prospect | null {
   return { seed: x.seed, input };
 }
 
-// ---------- the name friends see ----------
-
-const HANDLE = 'btr-mp-name';
-export const HANDLE_MAX = 20;
-export function handle(): string {
-  try {
-    return localStorage.getItem(HANDLE) ?? '';
-  } catch {
-    return '';
-  }
-}
-export function setHandle(name: string): void {
-  try {
-    localStorage.setItem(HANDLE, name.trim().slice(0, HANDLE_MAX));
-  } catch {
-    // storage blocked: asked again next visit
-  }
-}
-
 // ---------- a link to a challenge or a class ----------
 
 /** `#challenge-CODE` or `#class-CODE`, the links a player shares. Kept on this device until the

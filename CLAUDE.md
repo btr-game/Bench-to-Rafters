@@ -68,6 +68,9 @@ Other preferences:
   unless asked otherwise.
 - Give calculations to at least 6 or 7 significant figures before rounding.
 - The game is played mostly on a computer: desktop layout first, phones still supported.
+- **Four cards at most** in the start page's row of cards (mini-games, career log, achievements,
+  community; owner, round 36: "never put more that 4 cards here"). Anything new goes elsewhere (Play
+  with friends sits under the difficulties); the grid itself never makes a fifth column.
 - Never put the owner's email address in the code, the docs or the published page.
 
 ## Lighter checks (owner, round 35)
@@ -97,7 +100,8 @@ python3 scripts/visual-diff.py <last out dir> <out dir>  # the screens that chan
 python3 scripts/visual-diff.py --sheet <out dir>         # contact sheets to look through
 ```
 
-It flags sideways scrolling, content off screen, clipped or spilling text, overlapping text,
+It flags sideways scrolling, content off screen, clipped or spilling text, overlapping text, text
+slid under a button it isn't part of,
 contrast below WCAG AA, tap targets under 32px on a phone, script errors, a buried main card,
 content left under the bars fixed to a phone's foot, and a layer fixed to the screen trapped inside
 a moving parent (a pop-up that then covers only part of the page). For states no screen shows on

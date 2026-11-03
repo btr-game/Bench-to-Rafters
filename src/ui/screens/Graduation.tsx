@@ -12,6 +12,7 @@ import { FootBar } from '../components/FootBar';
 import { ShareButton } from '../components/Share';
 import { SettingsMenu } from '../components/Settings';
 import { sfx } from '../sound';
+import { UsernameBox } from '../components/Username';
 
 export function Graduation() {
   const graduate = useStore((s) => s.graduate);
@@ -74,6 +75,14 @@ export function Graduation() {
         </div>
         <Roll />
       </div>
+      {/* round 36 (owner: "ask the user for a username(changable) after the tutorial") */}
+      <section className="card stack grad-username" data-tour="grad-username">
+        <div className="sec-title with-icon">
+          <Icon name="crowd" size={28} />
+          Pick a username
+        </div>
+        <UsernameBox note="Shown beside your careers on the community boards and to friends, so people know whose player it is; your players keep their own names. Letters A to Z and numbers. You can change it any time in Settings." />
+      </section>
       <div className="row-end">
         <button className="btn with-icon" data-tour="graduate" onClick={() => (sfx('graduate'), graduate())}>
           <Icon name="door" size={22} />

@@ -34,6 +34,8 @@ import { LEVEL_IDS, type Level } from '../engine/levels';
 import { ROAD_MINIS, type Road } from '../ui/road';
 import type { ChosenLook } from '../content/looks';
 import { LoadingLab } from './LoadingLab';
+import { raftersTeams } from '../engine/awards/legacy';
+import type { Act } from '../ui/finale';
 
 export type Group = 'Start' | 'Tutorial' | 'Career hub' | 'Decisions' | 'Big moments' | 'Modes' | 'Mini-games' | 'Records & community';
 export const GROUPS: { key: Group; color: string; icon: string }[] = [
@@ -74,6 +76,15 @@ const nbaStar = () => fixture('nba', () => play((s, p) => s.stage === 'NBA' && s
 const hsStart = (mode: PlayOpts['mode'] = 'standard') => fixture(`hs-${mode}`, () => play((_, p) => p.type === 'decision' && p.decision.kind === 'plan', { mode }));
 const retired = (seed: number) => fixture(`retired-${seed}`, () => play((s) => s.step === 'retired', { mode: 'stars', seed, fast: true }));
 const at = (key: string, until: Parameters<typeof play>[0], o: PlayOpts = {}) => fixture(key, () => play(until, { mode: 'stars', ...o }));
+/** Round 36: a finished career whose jersey hangs, and one whose doesn't. */
+const endWith = (key: string, hung: boolean) => fixture(key, () => play((s) => s.step === 'retired' && raftersTeams(s).length > 0 === hung, { mode: hung ? 'stars' : 'standard', fast: true, tries: 16 }));
+const legend = () => endWith('end-rafters', true);
+const plainEnd = () => endWith('end-plain', false);
+function ending(g: GameState | null, from?: Act): boolean {
+  if (!g) return false;
+  useStore.setState({ game: null, page: null, mini: null, intro: false, news: false, finale: { g, from } });
+  return true;
+}
 
 /** An NBA star with round 25's systems on: a nickname and a brand, staff, accessories and things
  * to visit. */
@@ -317,7 +328,7 @@ export const CARDS: DevCard[] = [
 
   // career hub
   { id: 'home-hs', title: 'Home: high school', group: 'Career hub', icon: 'house', blurb: 'The first season, the first plan.', open: () => show(hsStart()) },
-  { id: 'home-nba', title: 'Home: an NBA star', group: 'Career hub', icon: 'stars', blurb: 'Third NBA season, MVP race, duo, stories.', open: () => show(nbaStar()) },
+  { id: 'home-nba', title: 'Home: an NBA star', group: 'Career hub', icon: 'stars', blurb: 'Third NBA season; Around you opens on what matters now (the MVP race, the duo, the rivalry, the league, the talk).', open: () => show(nbaStar()) },
   { id: 'season', title: 'Season tab', group: 'Career hub', icon: 'calendar', blurb: 'Season and league in one (round 29): team and form, standings beside team strength, the league leaders, his games, award voting, champions, the record book.', open: () => show(nbaStar(), 'season') },
   { id: 'player', title: 'Player tab', group: 'Career hub', icon: 'person', blurb: 'Ratings, status, contract, profile, scouting, body map.', open: () => show(nbaStar(), 'player') },
   { id: 'roster', title: 'Team roster and fit', group: 'Career hub', icon: 'roster', blurb: 'The five, the bench, the system and the chemistry.', open: () => show(nbaStar(), 'player'), press: '[data-tour="roster"]' },
@@ -328,10 +339,10 @@ export const CARDS: DevCard[] = [
     title: 'Cards folded on Home',
     group: 'Career hub',
     icon: 'fold',
-    blurb: 'Round 34: most cards fold, from their title or the tab on their top edge, to a one-line strip; folds stay on the device. Here the scouting report, Milestones, the MVP race and the fan talk are folded.',
+    blurb: 'Round 34: most cards fold, from their title or the tab on their top edge, to a one-line strip; folds stay on the device. Here the scouting report, Milestones and Around you are folded.',
     open: () => {
       const ok = show(nbaStar());
-      setFolds(['box:scout', 'card:Milestones', 'box:mvp', 'box:reaction']);
+      setFolds(['box:scout', 'card:Milestones', 'box:around']);
       return ok;
     },
   },
@@ -371,7 +382,7 @@ export const CARDS: DevCard[] = [
   },
   { id: 'modes', title: 'How you play', group: 'Career hub', icon: 'dial', blurb: 'Every mode as a switch, above Around the league.', open: () => show(loaded()), press: '[data-tour="modes"]' },
   { id: 'strength', title: 'Why it went this way', group: 'Career hub', icon: 'chart', blurb: 'Team strength, factor by factor.', open: () => show(nbaStar(), 'season') },
-  { id: 'rival', title: 'Rival', group: 'Career hub', icon: 'rival', blurb: 'Draft class, head to head, MVP race: you and him on one floor.', open: () => show(loaded()) },
+  { id: 'rival', title: 'Rival', group: 'Career hub', icon: 'rival', blurb: 'Draft class, head to head, MVP race: you and him on one floor, in Around you.', open: () => show(loaded()), press: '[data-pane="rival"]' },
   { id: 'name-card', title: 'Nickname and brand', group: 'Career hub', icon: 'crown', blurb: 'His nickname, its two-colour logo (locked until his first brand deal), the brand deal.', open: () => show(loaded(), 'player') },
   { id: 'staff', title: 'Staff', group: 'Career hub', icon: 'chef', blurb: 'Each at work in the role’s uniform: a talk once a season for a small edge, a raise, letting go.', open: () => show(loaded(), 'player') },
   { id: 'wardrobe', title: 'Wardrobe', group: 'Career hub', icon: 'hanger', blurb: 'Accessories on the avatar; swap or take them off.', open: () => show(loaded(), 'player') },
@@ -406,13 +417,16 @@ export const CARDS: DevCard[] = [
   // big moments
   { id: 'cam-lab', title: 'Action cam lab', group: 'Big moments', icon: 'camera', blurb: 'Any play on the finals cam, slowed right down, any two teams.', open: () => true, page: CamLab },
   { id: 'intro', title: 'Intro page', group: 'Start', icon: 'ball', blurb: 'The title over a side-on one-on-one: runs, steals, blocks and jumpers in pixel frames, the venue changing every five seconds. First visit only, or the Intro button on the start page.', open: () => void useStore.setState({ game: null, page: null, mini: null, intro: true }) },
-  { id: 'whats-new', title: 'What’s new', group: 'Start', icon: 'news', blurb: 'The latest changes in a panel over part of the start page. It opens by itself once after each update; What’s new beside Intro opens it again.', open: () => void useStore.setState({ game: null, page: null, mini: null, intro: false, thanks: null, news: true }) },
-  { id: 'share', title: 'Share the game', group: 'Start', icon: 'share', blurb: 'The Share button on every page: the link to copy, the phone’s share sheet, and posts for X, Reddit, Facebook, WhatsApp and email. Sharing earns Word of Mouth.', open: () => void useStore.setState({ game: null, page: null, mini: null, intro: false, thanks: null, news: false }), press: '[data-tour="share-btn"]' },
-  { id: 'thanks', title: 'Thank you for playing', group: 'Start', icon: 'laurel', blurb: 'Every time someone leaves a career: the crowd, the confetti, the trophy held high.', open: () => {
-    const g = nbaStar();
-    if (!g) return false;
-    useStore.setState({ game: null, page: null, mini: null, thanks: g });
-  } },
+  { id: 'whats-new', title: 'What’s new', group: 'Start', icon: 'news', blurb: 'The latest changes in a panel over part of the start page. It opens by itself once after each update; What’s new beside Intro opens it again.', open: () => void useStore.setState({ game: null, page: null, mini: null, intro: false, finale: null, news: true }) },
+  { id: 'share', title: 'Share the game', group: 'Start', icon: 'share', blurb: 'The Share button on every page: the link to copy, the phone’s share sheet, and posts for X, Reddit, Facebook, WhatsApp and email. Sharing earns Word of Mouth.', open: () => void useStore.setState({ game: null, page: null, mini: null, intro: false, finale: null, news: false }), press: '[data-tour="share-btn"]' },
+  // round 36: the finale, in place of Thank you for playing; each act can be opened on its own
+  { id: 'finale', title: 'Finale: the rafters', group: 'Start', icon: 'jersey', blurb: 'A finished career whose jersey hangs: the empty arena at night, then his speech, the jersey rising, the credits, the title and the thank-you. Under two minutes; no Skip the first time on a device.', open: () => ending(legend()) },
+  { id: 'finale-speech', title: 'Finale: the speech', group: 'Start', icon: 'mic', blurb: 'Four or five lines under the lights, written from the career: the city, where he started, the rings, the people, the number.', open: () => ending(legend(), 'speech') },
+  { id: 'finale-jersey', title: 'Finale: the jersey rises', group: 'Start', icon: 'jersey', blurb: 'His jersey goes up into the rafters, among the team’s banners.', open: () => ending(legend(), 'jersey') },
+  { id: 'finale-roll', title: 'Finale: the credits', group: 'Start', icon: 'cards', blurb: 'The career as film credits: teams, titles, legendary seasons, awards, the numbers, who was with him; then the developer and Claude, two lines.', open: () => ending(legend(), 'roll') },
+  { id: 'finale-title', title: 'Finale: the title', group: 'Start', icon: 'laurel', blurb: 'Bench to Rafters fills the screen.', open: () => ending(legend(), 'title') },
+  { id: 'finale-thanks', title: 'Finale: thank you', group: 'Start', icon: 'heart', blurb: 'The last card: thank you for playing, Play again and Share.', open: () => ending(legend(), 'thanks') },
+  { id: 'finale-credits', title: 'Finale: no rafters', group: 'Start', icon: 'cards', blurb: 'A finished career nobody hangs a jersey for: the credits, the title and the thank-you (its own opening comes later).', open: () => ending(plainEnd()) },
   { id: 'loading', title: 'Loading pop-out', group: 'Start', icon: 'ball', blurb: 'The pixel player who dribbles while a slow step runs: all nine moves, and a button to make the page lag.', open: () => true, page: LoadingLab },
   ...TUTORIAL,
   { id: 'm-intro', title: 'Intro moment', group: 'Big moments', icon: 'door', blurb: 'The career begins.', open: () => withMoment('m-intro', (m) => m.kind === 'intro', { mode: 'standard' }) },

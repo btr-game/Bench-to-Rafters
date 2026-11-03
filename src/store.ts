@@ -24,9 +24,11 @@ import type { WearSlot } from './content/shop';
 import { careerRecord, type CareerRecord } from './engine/career/record';
 import { canPlayChild, childGame, childLegacy, childSeed } from './engine/nextGen';
 import { attachChild, logCareer, type LogResult } from './ui/careerLog';
+import { signed, username } from './ui/names';
+import { finaleKind, type Act } from './ui/finale';
 import { checkAch, countCareer, earnedIn, recordMp, recordOpened, recordUndo, recordVisit, simOpen } from './ui/achievements';
 import { community } from './ui/community';
-import { cleanProspect, handle, multiplayer, pump, readLink, seasonLine, send, type Challenge, type MpLink } from './ui/multiplayer';
+import { cleanProspect, multiplayer, pump, readLink, seasonLine, send, type Challenge, type MpLink } from './ui/multiplayer';
 import { deleteSlot, dropRun, importCode, newSlotId, readRun, readSlot, writeRun, writeSlot } from './ui/saves';
 import { bestGrade, exitCode, levelTabs, loadRoad, offRecord, roadGrade, saveRoad, type Road } from './ui/road';
 import { STOPS, stopsLeft } from './ui/tutorial/closing';
@@ -65,9 +67,10 @@ interface Store {
   news: boolean;
   showNews: () => void;
   endNews: () => void;
-  /** The career just left, for the thank-you page (round 27): the first time only. */
-  thanks: GameState | null;
-  endThanks: () => void;
+  /** Round 36: the finale for a career just finished (ui/finale.ts), in place of the thank-you
+   * page; `from` starts it at a later act (the dev deck). */
+  finale: { g: GameState; from?: Act } | null;
+  endFinale: () => void;
   /** Set while a heavy step waits its turn (round 27): the loading pop-out shows if it runs long. */
   loading: number | null;
   start: (input: CreateInput, seed?: number, mp?: GameState['mp']) => void;
@@ -430,9 +433,9 @@ export const useStore = create<Store>((set, get) => ({
     markNews();
     set({ news: false });
   },
-  thanks: null,
-  endThanks: () => {
-    set({ thanks: null });
+  finale: null,
+  endFinale: () => {
+    set({ finale: null });
   },
   loading: null,
   start: (input, seed, mp) =>
@@ -455,7 +458,7 @@ export const useStore = create<Store>((set, get) => ({
     if (get().game) flushSave();
     get().start(p.input, p.seed, { challenge: c.code });
     // round 35: he has taken it, so its chat is his too
-    void multiplayer().then((mp) => mp?.take(c.code, handle() || 'A friend'));
+    void multiplayer().then((mp) => mp?.take(c.code, username() || 'A friend'));
     return true;
   },
   draft: null,
@@ -532,8 +535,9 @@ export const useStore = create<Store>((set, get) => ({
     const road = { ...get().road, passed: { ...get().road.passed, [level]: { star: g.flags.levelEnd === 2 } }, ...(g.player.look ? { look: g.player.look } : {}) };
     saveRoad(road);
     dropRun();
-    // the thank-you page, then the road map (owner: "still include thank you for playing")
-    set({ road, game: null, thanks: g, tab: 'home', transition: null, undo: null, page: road.free ? 'road' : null, ...savedSwitches() });
+    // the thank-you (the finale's last two acts for a level), then the road map (owner: "still
+    // include thank you for playing")
+    set({ road, game: null, finale: { g }, tab: 'home', transition: null, undo: null, page: road.free ? 'road' : null, ...savedSwitches() });
     top();
   },
   recommend: false,
@@ -854,11 +858,11 @@ export const useStore = create<Store>((set, get) => ({
     // round 33: New career inside the closing tour moves on to its next stop
     if (get().closing) return get().nextStop();
     flushSave();
-    // round 27 (owner): a thank-you page first. Round 28 (owner: "make the thank you page appear
-    // everytime the user exits a career"): every time, not only the first
+    // round 36 (owner): the finale in place of the thank-you page, and only for a career that is
+    // over ("leaving a career that isnt finished doesnt deserve the ending card")
     const g = get().game;
-    const thanks = g && !g.flags.daily && g.mode !== 'lab' ? g : null;
-    set({ game: null, slot: null, tab: 'home', transition: null, thanks, lookBack: false });
+    const finale = g && finaleKind(g) ? { g } : null;
+    set({ game: null, slot: null, tab: 'home', transition: null, finale, lookBack: false });
   },
   mini: null,
   claimMini: (r) => {
@@ -925,7 +929,7 @@ export const useStore = create<Store>((set, get) => ({
 
 // round 27: the career's chosen look applies wherever his name is drawn (content/looks.ts)
 useStore.subscribe((now) => {
-  const g = now.game ?? now.thanks;
+  const g = now.game ?? now.finale?.g;
   if (g?.player.look) chooseLook(g.player.name, g.player.look);
 });
 
@@ -988,11 +992,12 @@ useStore.subscribe((now, before) => {
   // round 24: onto the leaderboards (and the news feed) for everyone who shares this page. Round 35
   // (owner: "the career played in multiplayer wont be counted towards the real leaderboards in
   // community"): a career with friends counts on its challenge's or class's board only
-  if (!g.mp?.challenge && !g.mp?.klass) void community().then((c) => c.postCareer(rec));
+  // round 36: with the username it was played under, so the boards show whose player it is
+  if (!g.mp?.challenge && !g.mp?.klass) void community().then((c) => c.postCareer(signed(rec)));
   // round 35: a draft class gets the card, a friend's challenge its answer
   if (g.mp?.klass) send({ k: 'career', code: g.mp.klass, rec, run: g.mp.run });
   if (g.mp?.challenge) {
-    send({ k: 'answer', code: g.mp.challenge, name: handle() || 'A friend', rec });
+    send({ k: 'answer', code: g.mp.challenge, name: username() || 'A friend', rec });
     if (recordMp('answered', g.mp.challenge)) achievementsNow();
   }
 });
@@ -1049,7 +1054,7 @@ export function viewNow(): View {
 /** The road as this storage has it, with nothing of the tutorial's on screen. */
 export const roadView = (): View => ({ road: loadRoad(), creating: null, closing: null, recommend: false, lessonUp: false });
 export function startView(): View {
-  return { game: null, tab: 'home', page: null, mini: null, transition: null, daily: null, toasts: [], thanks: null, spots: null, intro: false, news: false, slot: null, seen: {}, logged: null, tour: false, simple: loadFlag('btr-simple'), master: loadFlag('btr-master'), guide: loadFlag('btr-guide-mode'), lookBack: false, ...roadView() };
+  return { game: null, tab: 'home', page: null, mini: null, transition: null, daily: null, toasts: [], finale: null, spots: null, intro: false, news: false, slot: null, seen: {}, logged: null, tour: false, simple: loadFlag('btr-simple'), master: loadFlag('btr-master'), guide: loadFlag('btr-guide-mode'), lookBack: false, ...roadView() };
 }
 /** Settles what is waiting to be written as the deck opens (`flush`: the game's last move is
  * saved where it belongs) or closes (dropped: nothing of the deck's reaches the game). */

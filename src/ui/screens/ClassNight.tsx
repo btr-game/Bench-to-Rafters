@@ -9,7 +9,8 @@ import { CardActions } from './CareerLog';
 import { Icon } from '../art/Icon';
 import { ReunionArt } from '../art/Reunion';
 import { sfx } from '../sound';
-import { handle, LEVEL_SHORT, EMOTES, multiplayer, reunionAwards, reunionReady, reunionWon, REUNION_WAIT_DAYS, MP_FAIL, type ClassMember, type DailyRow, type DraftClass, type Emote, type Multiplayer } from '../multiplayer';
+import { username } from '../names';
+import { LEVEL_SHORT, EMOTES, multiplayer, reunionAwards, reunionReady, reunionWon, REUNION_WAIT_DAYS, MP_FAIL, type ClassMember, type DailyRow, type DraftClass, type Emote, type Multiplayer } from '../multiplayer';
 import { scoreOf } from '../community';
 import { recordMp, recordReunion } from '../achievements';
 import { achievementsNow } from '../../store';
@@ -227,7 +228,7 @@ export function DailyFriends({ day, best }: { day: string; best: { points: numbe
     void (async () => {
       const mp = await multiplayer();
       if (!mp) return live && setRows(null);
-      if (best && handle()) await mp.dailyPost(day, handle(), best.points, best.legacy, best.peak);
+      if (best && username()) await mp.dailyPost(day, username(), best.points, best.legacy, best.peak);
       const r = await mp.dailyFriends(day);
       if (live) setRows(r);
       if (r !== 'error' && r.length >= 2 && r[0].mine && recordMp('dailyTop', day)) achievementsNow();
@@ -245,7 +246,7 @@ export function DailyFriends({ day, best }: { day: string; best: { points: numbe
         <Icon name="versus" size={24} />
         Friends today
       </div>
-      <p className="small muted desc">Today’s daily challenge among your friends: everyone you share a draft class or a challenge with.{!handle() ? ' Pick a name for friends (Play with friends) to put your run on it.' : ''}</p>
+      <p className="small muted desc">Today’s daily challenge among your friends: everyone you share a draft class or a challenge with.{!username() ? ' Pick a username (in Settings) to put your run on it.' : ''}</p>
       {rows === undefined ? (
         <p className="small muted">Loading…</p>
       ) : rows === 'error' ? (
