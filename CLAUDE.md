@@ -100,7 +100,8 @@ python3 scripts/visual-diff.py <last out dir> <out dir>  # the screens that chan
 python3 scripts/visual-diff.py --sheet <out dir>         # contact sheets to look through
 ```
 
-It flags sideways scrolling, content off screen, clipped or spilling text, overlapping text,
+It flags sideways scrolling, content off screen, clipped or spilling text, overlapping text, text
+slid under a button it isn't part of,
 contrast below WCAG AA, tap targets under 32px on a phone, script errors, a buried main card,
 content left under the bars fixed to a phone's foot, and a layer fixed to the screen trapped inside
 a moving parent (a pop-up that then covers only part of the page). For states no screen shows on

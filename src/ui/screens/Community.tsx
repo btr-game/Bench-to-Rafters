@@ -23,6 +23,13 @@ import { CometMark, OathMark } from '../components/OathMark';
 import { sfx } from '../sound';
 import { houseScores, houseStatues } from '../house';
 import { houseEnded, houseOnCourt } from '../houseLive';
+import { shownBy, signed } from '../names';
+
+/** Whose player a card is (round 36): the username it was posted under, when it has one. */
+function By({ rec }: { rec: CareerRecord }) {
+  const by = shownBy(rec.by);
+  return by ? <span className="board-by"> by {by}</span> : null;
+}
 
 const OPENED = Date.now();
 
@@ -229,6 +236,7 @@ function Boards({ c }: { c: Api }) {
                 <span className="board-who">
                   <b>
                     {r.rec.name}
+                    <By rec={r.rec} />
                     {r.mine ? <span className="you"> you</span> : null}
                     {r.house ? <HouseTag /> : null}
                     {r.rec.oath ? <OathMark size={16} /> : null}
@@ -415,6 +423,7 @@ function Hall({ c }: { c: Api }) {
                 <span className="hall-99">99</span>
                 <b className="hall-story-name">
                   {picked.rec.name}
+                  <By rec={picked.rec} />
                   {picked.rec.oath ? <OathMark size={16} /> : null}
                   {picked.rec.comet ? <CometMark size={16} /> : null}
                 </b>
@@ -493,7 +502,10 @@ function Plaza({ c }: { c: Api }) {
                 <StatueArt rec={shown.rec} metal={shown.metal} size={150} />
               </span>
               <div style={{ minWidth: 0 }}>
-                <b className="hall-story-name">{shown.rec.name}</b>
+                <b className="hall-story-name">
+                  {shown.rec.name}
+                  <By rec={shown.rec} />
+                </b>
                 <div className="small muted">
                   {shown.metal === 'gold' ? 'Gold' : 'Bronze'} statue · {shown.rec.legacy} legacy · {shown.respects} respect{shown.respects === 1 ? '' : 's'}
                 </div>
@@ -687,7 +699,7 @@ export function CommunityNote({ rec }: { rec: CareerRecord }) {
   if (!c) return null;
   const build = async () => {
     setBuilt('busy');
-    setBuilt(await c.buildStatue(rec));
+    setBuilt(await c.buildStatue(signed(rec)));
   };
   const mode = boardName(homeBoard(rec));
   const ranked = (n: number) => n <= BOARD_SIZE;

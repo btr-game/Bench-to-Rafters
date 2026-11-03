@@ -22,7 +22,9 @@ import { GuideButton } from '../components/Guide';
 import { AchievementsCard } from './Achievements';
 import { CommunityCard, LiveStrip } from './Community';
 import { MultiplayerCard } from './Multiplayer';
-import { MP_FAIL, handle, multiplayer } from '../multiplayer';
+import { MP_FAIL, multiplayer } from '../multiplayer';
+import { NAME_MAX, cleanName, nameProblem, username } from '../names';
+import { UsernameBox } from '../components/Username';
 import { recordMp } from '../achievements';
 import { FlagArt } from '../art/Flag';
 import { POS_STYLE, PositionCard } from '../art/PositionCard';
@@ -156,7 +158,7 @@ export function Create({ level }: { level?: Level } = {}) {
     }
     window.scrollTo(0, 0);
   }, [step]);
-  const [name, setName] = useState(`${pick(FIRST_NAMES)} ${pick(LAST_NAMES)}`);
+  const [name, setName] = useState(cleanName(`${pick(FIRST_NAMES)} ${pick(LAST_NAMES)}`));
   const [number, setNumber] = useState(String(Math.floor(Math.random() * 35)));
   const [pos, setPos] = useState<Pos>('SG');
   const [arch, setArch] = useState(0);
@@ -209,7 +211,7 @@ export function Create({ level }: { level?: Level } = {}) {
   // "when there's already randomizers" beside each pick)
   const randomAll = () => {
     const p = pick(POSITIONS);
-    setName(`${pick(FIRST_NAMES)} ${pick(LAST_NAMES)}`);
+    setName(cleanName(`${pick(FIRST_NAMES)} ${pick(LAST_NAMES)}`));
     setNumber(String(Math.floor(Math.random() * 35)));
     setPos(p);
     setCands(cards(p));
@@ -241,7 +243,9 @@ export function Create({ level }: { level?: Level } = {}) {
   const attrs = cands[arch];
   const archetype = ARCHETYPES[pos][arch];
   const [hMin, hMax] = HEIGHT_RANGE[pos];
-  const canNext = cur === 'Identity' ? name.trim().length > 0 : cur === 'Focus' ? focus.length === 2 : true;
+  // round 36 (owner: "filter out curse words or non english characters in the player name")
+  const badName = nameProblem(name);
+  const canNext = cur === 'Identity' ? !badName : cur === 'Focus' ? focus.length === 2 : true;
   // beginner picks no focus: his archetype's two best ratings
   const autoFocus = [...ATTRS].sort((a, b) => attrs[b] - attrs[a]).slice(0, 2);
 
@@ -283,7 +287,7 @@ export function Create({ level }: { level?: Level } = {}) {
     if (!mp) return setSeatErr(MP_FAIL.error);
     setSeating(true);
     setSeatErr('');
-    const who = handle() || 'A friend';
+    const who = username() || 'A friend';
     // round 35: a seat plays one career; one already under way (or done) is not started again
     if (draft.code) {
       const k = await mp.draftClass(draft.code);
@@ -377,6 +381,7 @@ export function Create({ level }: { level?: Level } = {}) {
         </section>
       )}
 
+      {cur === 'Difficulty' && !level && !draft && <UsernamePrompt />}
       {cur === 'Difficulty' && (
         <section className="stack">
           <div className="kicker">Choose how hard the road is</div>
@@ -486,13 +491,14 @@ export function Create({ level }: { level?: Level } = {}) {
               <div className="id-row">
                 <div className="field">
                   <label htmlFor="f-name">{UI.create.name}</label>
-                  <input id="f-name" type="text" maxLength={28} value={name} onChange={(e) => setName(e.target.value)} />
+                  <input id="f-name" type="text" maxLength={NAME_MAX} value={name} aria-describedby="f-name-note" onChange={(e) => setName(cleanName(e.target.value))} />
+                  <small id="f-name-note" className={badName ? 'name-note bad' : 'name-note muted'}>{badName || 'Letters A to Z.'}</small>
                 </div>
                 <div className="field id-num">
                   <label htmlFor="f-num">{UI.create.number}</label>
                   <input id="f-num" type="number" min={0} max={99} value={number} onChange={(e) => setNumber(e.target.value)} />
                 </div>
-                <button className="btn ghost small id-dice" onClick={() => setName(`${pick(FIRST_NAMES)} ${pick(LAST_NAMES)}`)} title="Pick a random name">
+                <button className="btn ghost small id-dice" onClick={() => setName(cleanName(`${pick(FIRST_NAMES)} ${pick(LAST_NAMES)}`))} title="Pick a random name">
                   New name
                 </button>
               </div>
@@ -773,5 +779,41 @@ export function Create({ level }: { level?: Level } = {}) {
       )}
       {level ? <FootBar where={`level ${level}, create, ${cur.toLowerCase()}`} /> : <WhatsNewPanel />}
     </div>
+  );
+}
+
+// round 36: the username, asked once on the start page of a device that has none yet (it skipped the
+// tutorial with the exit code, or graduated before usernames came in); Not now hides it for good
+const LATER = 'btr-username-later';
+function UsernamePrompt() {
+  const [hidden, setHidden] = useState(() => {
+    try {
+      return !!username() || !!localStorage.getItem(LATER);
+    } catch {
+      return true;
+    }
+  });
+  if (hidden) return null;
+  const later = () => {
+    try {
+      localStorage.setItem(LATER, '1');
+    } catch {
+      // storage blocked: asked again next visit
+    }
+    setHidden(true);
+  };
+  return (
+    <section className="card oath-card username-prompt" role="group" aria-label="Pick a username" data-tour="username-prompt">
+      <Icon name="crowd" size={48} />
+      <div className="stack" style={{ gap: 6 }}>
+        <div className="sec-title">Pick a username?</div>
+        <UsernameBox onSet={() => setHidden(true)} note="Shown beside your careers on the community boards and to friends, so people know whose player it is. Letters A to Z and numbers; change it any time in Settings." />
+        <div className="row" style={{ gap: 8 }}>
+          <button className="btn small ghost" onClick={later}>
+            Not now
+          </button>
+        </div>
+      </div>
+    </section>
   );
 }

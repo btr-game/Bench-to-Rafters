@@ -730,11 +730,14 @@ button.scout-row { text-align: left; background: var(--surface); color: inherit;
 .look-seg { flex-wrap: wrap; }
 @media (max-width: 560px) { .look-row { grid-template-columns: minmax(0, 1fr); gap: 4px; } }
 .id-fields { gap: 8px; }
-.id-row { display: grid; grid-template-columns: minmax(0, 340px) 136px auto; gap: 10px; align-items: end; justify-content: start; }
+.id-row { display: grid; grid-template-columns: minmax(0, 340px) 136px auto; gap: 10px; align-items: end; justify-content: start; padding-bottom: calc(20px * var(--ts)); }
+/* round 36: the name's note hangs under its box, so the boxes in the row stay level */
+.id-row > .field:first-child { position: relative; }
+.id-row > .field:first-child .name-note { position: absolute; left: 0; right: 0; top: 100%; }
 @media (max-width: 560px) {
   .id-card { grid-template-columns: minmax(0, 1fr); justify-items: center; }
   .id-fields { width: 100%; }
-  .id-row { grid-template-columns: minmax(0, 1fr) 84px; }
+  .id-row { grid-template-columns: minmax(0, 1fr) 84px; row-gap: calc(30px * var(--ts)); padding-bottom: 0; }
   .id-dice { grid-column: 1 / -1; justify-self: start; }
 }
 .nation-card { border-top: 4px solid var(--accent); }
@@ -2763,3 +2766,13 @@ td > .link-btn { min-width: 44px; text-align: left; }
   .mp-award { flex-direction: column; }
 }
 .mp-friends p { margin: 0; }
+
+/* round 36: names and the username */
+.name-note { display: block; margin-top: 4px; font-size: calc(13px * var(--ts)); }
+.name-note.bad { color: var(--bad); font-weight: 600; }
+.username-box input { flex: 1; min-width: 0; }
+.username-box.compact .desc { margin: 0; }
+.set-user { display: block; }
+.board-by { font-weight: 400; color: var(--muted); font-size: 0.85em; margin-left: 6px; }
+.grad-username { margin-block: 14px; }
+.username-prompt { margin-bottom: 16px; }

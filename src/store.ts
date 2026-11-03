@@ -24,9 +24,10 @@ import type { WearSlot } from './content/shop';
 import { careerRecord, type CareerRecord } from './engine/career/record';
 import { canPlayChild, childGame, childLegacy, childSeed } from './engine/nextGen';
 import { attachChild, logCareer, type LogResult } from './ui/careerLog';
+import { signed, username } from './ui/names';
 import { checkAch, countCareer, earnedIn, recordMp, recordOpened, recordUndo, recordVisit, simOpen } from './ui/achievements';
 import { community } from './ui/community';
-import { cleanProspect, handle, multiplayer, pump, readLink, seasonLine, send, type Challenge, type MpLink } from './ui/multiplayer';
+import { cleanProspect, multiplayer, pump, readLink, seasonLine, send, type Challenge, type MpLink } from './ui/multiplayer';
 import { deleteSlot, dropRun, importCode, newSlotId, readRun, readSlot, writeRun, writeSlot } from './ui/saves';
 import { bestGrade, exitCode, levelTabs, loadRoad, offRecord, roadGrade, saveRoad, type Road } from './ui/road';
 import { STOPS, stopsLeft } from './ui/tutorial/closing';
@@ -455,7 +456,7 @@ export const useStore = create<Store>((set, get) => ({
     if (get().game) flushSave();
     get().start(p.input, p.seed, { challenge: c.code });
     // round 35: he has taken it, so its chat is his too
-    void multiplayer().then((mp) => mp?.take(c.code, handle() || 'A friend'));
+    void multiplayer().then((mp) => mp?.take(c.code, username() || 'A friend'));
     return true;
   },
   draft: null,
@@ -988,11 +989,12 @@ useStore.subscribe((now, before) => {
   // round 24: onto the leaderboards (and the news feed) for everyone who shares this page. Round 35
   // (owner: "the career played in multiplayer wont be counted towards the real leaderboards in
   // community"): a career with friends counts on its challenge's or class's board only
-  if (!g.mp?.challenge && !g.mp?.klass) void community().then((c) => c.postCareer(rec));
+  // round 36: with the username it was played under, so the boards show whose player it is
+  if (!g.mp?.challenge && !g.mp?.klass) void community().then((c) => c.postCareer(signed(rec)));
   // round 35: a draft class gets the card, a friend's challenge its answer
   if (g.mp?.klass) send({ k: 'career', code: g.mp.klass, rec, run: g.mp.run });
   if (g.mp?.challenge) {
-    send({ k: 'answer', code: g.mp.challenge, name: handle() || 'A friend', rec });
+    send({ k: 'answer', code: g.mp.challenge, name: username() || 'A friend', rec });
     if (recordMp('answered', g.mp.challenge)) achievementsNow();
   }
 });

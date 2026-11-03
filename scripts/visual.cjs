@@ -6,6 +6,7 @@
 //   clipped    text cut off by its own box (overflow hidden, no ellipsis)
 //   spill      text running out of its card, button or chip
 //   overlap    two pieces of text drawn over each other
+//   under      text drawn over a button or a box it isn't part of (round 36: a name note under New name)
 //   contrast   text below WCAG AA against what is behind it
 //   tap        a control smaller than 32 px on a phone
 //   error      a script error or a console error
@@ -212,6 +213,26 @@ function inspect([phone, W]) {
         break;
       }
     }
+
+  // text drawn over a button or a box it isn't part of, on the same layer (round 36: the name rule's
+  // note slid under the phone's New name button, and no two texts touched)
+  const controls = [...document.querySelectorAll('button, input, select, textarea')].filter(shown).map((el) => ({ el, r: el.getBoundingClientRect(), layer: layerOf(el) }));
+  let unders = 0;
+  for (const { t, q } of lines) {
+    if (unders >= 20) break;
+    const top = q.top + q.height * 0.22;
+    const bottom = q.bottom - q.height * 0.22;
+    for (const c of controls) {
+      if (c.layer !== t.layer || c.el.contains(t.el) || t.el.contains(c.el) || c.el.closest('label')?.contains(t.el)) continue;
+      const w = Math.min(q.right, c.r.right) - Math.max(q.left, c.r.left);
+      const h = Math.min(bottom, c.r.bottom) - Math.max(top, c.r.top);
+      if (w > 4 && h > (bottom - top) * 0.4) {
+        add('under', t.el, `under ${where(c.el)}`);
+        unders++;
+        break;
+      }
+    }
+  }
 
   if (phone)
     for (const el of document.querySelectorAll('button, a[href], input, select, textarea, [role="switch"]')) {

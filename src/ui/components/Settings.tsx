@@ -7,6 +7,7 @@ import type { GameState } from '../../engine/types';
 import { prompt } from '../../engine/flow';
 import { canUndo, useStore, type Court, type Tab, type TextSize, type Theme } from '../../store';
 import { inTutorial } from '../road';
+import { UsernameBox } from './Username';
 import { allows } from '../../engine/levels';
 import { setMusic, setSfx, setVolume, sfx, soundSettings } from '../sound';
 import { announce, announcerOn, setAnnouncer } from '../announcer';
@@ -147,6 +148,12 @@ export function SettingsMenu({ g }: { g: GameState | null }) {
               ))}
             </div>
           </div>
+          {/* round 36 (owner: a username "changable"): the same one the graduation page asked for */}
+          {!tut && !level && (
+            <div className="set-row set-user" data-tour="set-username">
+              <UsernameBox compact note="Shown beside your careers on the community boards and to friends." />
+            </div>
+          )}
           {/* round 24 (owner): New career sits right under the court, not at the bottom of the menu */}
           {/* round 25 (owner: no confirmation text, small and easy to miss): a full-size button, then
               a plain question with its answer spelled out */}

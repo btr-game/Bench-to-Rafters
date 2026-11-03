@@ -18,7 +18,6 @@ import { FriendCareer, ReactCounts, ReunionNight } from './ClassNight';
 import {
   CLASS_MAX,
   CODE_RE,
-  HANDLE_MAX,
   LEVEL_SHORT,
   MP_FAIL,
   SITE,
@@ -28,7 +27,6 @@ import {
   cleanCode,
   cleanProspect,
   dropLink,
-  handle,
   linkFor,
   mpScore,
   multiplayer,
@@ -37,7 +35,6 @@ import {
   mutualRival,
   rivalRequests,
   seasonLine,
-  setHandle,
   standings,
   type Challenge,
   type ChatLine,
@@ -49,6 +46,8 @@ import {
   type Multiplayer,
   type OpenChallenge,
 } from '../multiplayer';
+import { cleanUsername, isRude, username } from '../names';
+import { UsernameBox } from '../components/Username';
 
 /** The career index as the page shows it: a whole number. */
 const idx = (r: CareerRecord): number => Math.round(mpScore(r));
@@ -92,32 +91,6 @@ export function MultiplayerCard() {
 }
 
 // ---------- small parts ----------
-
-/** The name friends see beside a career. */
-function HandleBox({ onSet }: { onSet: (h: string) => void }) {
-  const [v, setV] = useState(handle());
-  const [saved, setSaved] = useState(!!handle());
-  const save = () => {
-    setHandle(v);
-    setSaved(true);
-    onSet(v.trim());
-    sfx('confirm');
-  };
-  return (
-    <section className="card stack mp-handle">
-      <label className="field">
-        <span className="small muted">Your name for friends</span>
-        <div className="row" style={{ gap: 8 }}>
-          <input maxLength={HANDLE_MAX} value={v} placeholder="Shown beside your careers" onChange={(e) => (setV(e.target.value), setSaved(false))} onKeyDown={(e) => e.key === 'Enter' && v.trim() && save()} />
-          <button className="btn" disabled={!v.trim() || (saved && v.trim() === handle())} onClick={save}>
-            {saved && v.trim() === handle() ? 'Saved' : 'Save'}
-          </button>
-        </div>
-      </label>
-      <p className="small muted desc">Friends see this name, not your account: the game keeps no email or login. Your player keeps his own name.</p>
-    </section>
-  );
-}
 
 /** A box for a code a friend sent. */
 function CodeEntry({ label, onOpen }: { label: string; onOpen: (code: string) => void }) {
@@ -209,7 +182,7 @@ function MpChat({ mp, room, code, compact }: { mp: Multiplayer; room: Room; code
     const body = text.trim();
     if (!body || sending) return;
     setSending(true);
-    const r = await mp.say(room, code, handle() || 'A friend', body);
+    const r = await mp.say(room, code, username() || 'A friend', body);
     setSending(false);
     if (r === 'ok') {
       setText('');
@@ -247,7 +220,7 @@ function MpChat({ mp, room, code, compact }: { mp: Multiplayer; room: Room; code
         )}
       </ol>
       <div className="row mp-chat-say" style={{ gap: 6 }}>
-        <input aria-label="Say something" maxLength={CHAT_MAX} value={text} placeholder={handle() ? `Say something as ${handle()}` : 'Say something'} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && void say()} />
+        <input aria-label="Say something" maxLength={CHAT_MAX} value={text} placeholder={username() ? `Say something as ${username()}` : 'Say something'} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && void say()} />
         <button className="btn small" disabled={!text.trim() || sending} onClick={() => void say()}>
           Send
         </button>
@@ -655,8 +628,8 @@ function Classes({ mp, open, setOpen, name }: { mp: Multiplayer; open: string | 
         <div className="sec-title">Start a class</div>
         <p className="small muted desc">Name it, make your player, and send the code: up to twelve friends, first options from their colleges, start on the same draft night.</p>
         <div className="row mp-classes-new" style={{ gap: 8 }}>
-          <input aria-label="Name of the class" maxLength={40} value={title} placeholder="Class of the rooftop" onChange={(e) => setTitle(e.target.value)} />
-          <button className="btn" disabled={!title.trim() || !name || career} onClick={() => (sfx('confirm'), setDraft({ name: title.trim() }))}>
+          <input aria-label="Name of the class" maxLength={40} value={title} placeholder="Class of the rooftop" onChange={(e) => setTitle(cleanUsername(e.target.value, 40))} />
+          <button className="btn" disabled={!title.trim() || isRude(title) || !name || career} onClick={() => (sfx('confirm'), setDraft({ name: title.trim() }))}>
             Make your player
           </button>
         </div>
@@ -691,7 +664,7 @@ export function MultiplayerPage() {
   const mpOpen = useStore((s) => s.mpOpen);
   const openMp = useStore((s) => s.openMp);
   const mp = useMp();
-  const [name, setName] = useState(handle());
+  const [name, setName] = useState(username());
   const [tab, setTab] = useState<'challenge' | 'class'>(mpOpen?.kind ?? 'challenge');
   // a link opens once: after that the page is the player's to move around
   useEffect(() => {
@@ -723,7 +696,7 @@ export function MultiplayerPage() {
         ) : (
           <>
             {mp.kind === 'local' && <p className="small muted">Dev deck: a stand-in on this device with house players; nothing reaches the real server.</p>}
-            <HandleBox onSet={setName} />
+            <UsernameBox onSet={setName} />
             <div className="seg" role="group" aria-label="Kind of game" data-tour="mp-tabs">
               <button className="with-icon" aria-pressed={tab === 'challenge'} onClick={() => (setTab('challenge'), openMp(null))}>
                 <Icon name="versus" size={20} />
@@ -734,7 +707,7 @@ export function MultiplayerPage() {
                 Draft class
               </button>
             </div>
-            {!name && <p className="small">Pick your name for friends first: it goes beside everything you post.</p>}
+            {!name && <p className="small">Pick your username first: it goes beside everything you post.</p>}
             {tab === 'challenge' ? <Challenges mp={mp} open={open} setOpen={setOpen} /> : <Classes mp={mp} open={open} setOpen={setOpen} name={name} />}
           </>
         )}
@@ -837,7 +810,7 @@ export function MpBoard({ g }: { g: GameState }) {
     rows.push({ id: 'set', name: c.name, score: mpScore(c.rec), peak: c.rec.peak, me: false, done: true });
     for (const a of c.answers) if (!a.mine) rows.push({ id: a.id, name: a.name, score: mpScore(a.rec), peak: a.rec.peak, me: false, done: true });
   }
-  if (kind === 'challenge') rows.push({ id: 'me', name: handle() || 'You', score: mpScore(now), peak: now.peak, me: true, done: g.step === 'retired' });
+  if (kind === 'challenge') rows.push({ id: 'me', name: username() || 'You', score: mpScore(now), peak: now.peak, me: true, done: g.step === 'retired' });
   rows.sort((a, b) => b.score - a.score);
   // the class, with this career's seasons as they are on this device
   const klass: DraftClass | null = kind === 'class' && k ? { ...k, members: k.members.map((m) => (m.mine ? { ...m, seasons: g.history.map((h) => seasonLine(h, g.player.name)), rec: g.step === 'retired' ? now : null } : m)) } : null;
@@ -899,7 +872,7 @@ export function RetirementMp({ g, rec }: { g: GameState; rec: CareerRecord }) {
   const mutate = useStore((s) => s.mutate);
   const openMp = useStore((s) => s.openMp);
   const mp = useMp();
-  const [name, setName] = useState(handle());
+  const [name, setName] = useState(username());
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const [theirs, setTheirs] = useState<Challenge | null>(null);
@@ -968,7 +941,7 @@ export function RetirementMp({ g, rec }: { g: GameState; rec: CareerRecord }) {
             <>
               <p className="small">Challenge a friend: they play this same prospect from the same start, and both cards go side by side.</p>
               {!name ? (
-                <HandleBox onSet={setName} />
+                <UsernameBox onSet={setName} />
               ) : (
                 <div className="row" style={{ gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                   <button className="btn" data-tour="mp-challenge" disabled={busy} onClick={() => void make()}>

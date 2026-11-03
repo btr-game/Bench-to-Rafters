@@ -13,6 +13,7 @@ export interface CareerRecord {
   savedAt: string; // ISO time it was logged
   mode: Mode;
   name: string;
+  by?: string; // round 36: the username it was posted under (community boards only; never in the log)
   number: number;
   pos: Pos;
   role: string; // archetype, or his late-career specialist role

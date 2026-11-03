@@ -2978,3 +2978,24 @@ multiple times."
   of the Thank you for playing page (unskippable the first time, skippable after). Round 37: a world
   to walk around instead of menus. Round 38: story mode and maybe one signature on-court engine.
   Roguelite runs turned down. ROADMAP.md keeps the order.
+- **A username, apart from the player's name** (owner: "ask the user for a username(changable) after
+  the tutorial. this is for the community function(so that users can know who's player it is
+  without having constraints on the player name)"): one username per device (`src/ui/names.ts`,
+  kept under the key Play with friends already used, so a friend name carries over). It is asked
+  on the graduation page, once on the difficulty step for a device that finished the tutorial
+  before this round ("Not now" hides it), and changed any time in Settings or on the friends page.
+  A career card posted to the boards, the Reality 99 Hall or the statue plaza carries it as `by`
+  inside the record, so the database needs no migration; the boards show "by <username>" and
+  re-check it when they draw, since the server does not.
+- **Clean names** (owner: "filter out curse words or non english characters in the player name"):
+  a player's name keeps letters A to Z, spaces, apostrophes, hyphens and dots; accents become plain
+  letters (Kovač is Kovac) and other alphabets, numbers and emoji drop as they are typed. Swear
+  words and slurs are refused (spelled with numbers or spaced out too), while real names that only
+  look close stand (Hancock, Dickerson, Sexton, Cumberland); the list is kept encoded in
+  `src/content/blocked.ts`. Usernames follow the same rules with numbers, `_`, `.` and `-` added,
+  and so does a draft class's name. Every name the game picks at random passes (all 9,216 checked).
+  Not yet filtered: chat lines between friends.
+- **A new visual check, `under`** (round 27 rule: "add a check whenever a new kind of visual bug
+  turns up"): text drawn over a button or a box it isn't part of. The name note slid under the
+  phone's New name button with no two texts touching, so `overlap` missed it; the new check flags
+  that layout and runs clean on the fix.
