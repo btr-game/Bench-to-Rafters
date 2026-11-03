@@ -184,7 +184,16 @@ describe('press conferences', () => {
     const press = sim.log.slice(before).filter((x) => x.kind === 'press');
     expect(press.filter((x) => /humble/.test(x.text)).length).toBeGreaterThanOrEqual(PRESS.bigQuestions);
     expect(press.every((x) => /humble/.test(x.text))).toBe(true);
-    expect(sim.pending.some((x) => x.kind === 'press')).toBe(false);
+    // sim never stops on a press conference: when it stops, it stops for a call that shapes the
+    // career (free agency, say), and a conference queued behind that one is answered once he makes it
+    const stop = prompt(sim);
+    expect(stop.type === 'decision' && stop.decision.kind === 'press').toBe(false);
+    if (stop.type === 'decision') {
+      choose(sim, smartChoice(sim, stop.decision, makeRng(1)));
+      fastForward(sim);
+      const next = prompt(sim);
+      expect(next.type === 'decision' && next.decision.kind === 'press').toBe(false);
+    }
   });
 });
 

@@ -19,8 +19,12 @@ The order the owner set:
 - **Round 38** (next; the plan is the Word document "Round 38 plan: story mode"): **story mode**, a
   cast of six (the friend, the rival, the mentor, the agent, the reporter, family), six chapters each
   at fixed moments of a career, with memories later chapters quote, met on the town's street, paid
-  off in the finale. Six decisions are the owner's (every career or its own mode, the cast, how
-  much choices matter on the court, the tone, names, the newsstand).
+  off in the finale. The owner's decisions: **its own mode** (a Story mode venue on the main land,
+  one written hero, apart from the other careers); **mostly story, with a few real hooks** (the
+  agent in contract talks, the mentor's plan edge, the friend as a trainer, the rival trade);
+  **heavy at times, always with a gentle path**; **the player names his friend, his family and his
+  rival** (the rest generated; skipping the naming generates all). Not asked, so the plan's
+  defaults: the cast of six, and the reporter at a newsstand on the street.
 - **Round 39**: **The Floor**, one possession engine for every playable moment (crunch time, the
   playable playoff games, the finals action cam, 3-on-3).
 - **Later**: a donation channel.
