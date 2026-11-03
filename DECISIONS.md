@@ -3349,6 +3349,13 @@ multiple times."
   seconds.
 - The Floor's 36 new words are translated into the five languages as they are written.
 
+- **The road map's airport** (owner, feedback on the previous round: "add airport on the road map to
+  go back to mainland (opens when beginning level is complete)"): the first stop on the road, top
+  left, a runway, the plane on the apron, the terminal and its tower; a road runs down from it to
+  high school. Its card opens once beginner is passed, and its button flies the plane down the
+  runway and off the map, then the main land (the header's "Back to the main land" stays). The road
+  map's places are found by name now, not by their place in the list. A card in the dev deck.
+
 ## Round 40 (owner requests): languages
 
 - Korean, Chinese (simplified), Japanese, Spanish and French, the interface only (owner: "let's

@@ -1921,7 +1921,6 @@
   "Teams": "球队",
   "Best season: {season} with {team} ({level}): {pts} PTS, {reb} REB, {ast} AST.": "最佳赛季：{season}，效力 {team}（{level}）：{pts} PTS、{reb} REB、{ast} AST。",
   "The last word": "最后的话",
-  "The road map: high school, college, the NBA arena, and the island of mini-games across the sea": "Road map：高中、大学、NBA 球馆，以及大海对面的小游戏之岛",
   "Island · every mini-game at C or better": "小岛 · 每个小游戏都拿到 C 或以上",
   "Bucket list": "心愿清单",
   "{mode}: open.": "{mode}：已开放。",
@@ -2766,7 +2765,10 @@
   "switch": "换防",
   "call for help": "呼叫协防",
   "timeout": "暂停",
-  "pause": "暂停"
+  "pause": "暂停",
+  "Fly to the main land": "飞回主大陆",
+  "Fly back to the main land. The road map waits for you here.": "飞回主大陆。Road map 会在这里等你。",
+  "The road map: the airport, high school, college, the NBA arena, and the island of mini-games across the sea": "Road map：机场、高中、大学、NBA 球馆，以及大海对面的小游戏之岛"
  },
  "story": {
   "f-driveway.title": "车道",

@@ -1921,7 +1921,6 @@
   "Teams": "Equipos",
   "Best season: {season} with {team} ({level}): {pts} PTS, {reb} REB, {ast} AST.": "Mejor temporada: {season} con {team} ({level}): {pts} PTS, {reb} REB, {ast} AST.",
   "The last word": "La última palabra",
-  "The road map: high school, college, the NBA arena, and the island of mini-games across the sea": "El Road map: el instituto, la universidad, el pabellón de la NBA y la isla de los minijuegos al otro lado del mar",
   "Island · every mini-game at C or better": "Isla · todos los minijuegos con C o más",
   "Bucket list": "Lista de pendientes",
   "{mode}: open.": "{mode}: abierto.",
@@ -2766,7 +2765,10 @@
   "switch": "cambio",
   "call for help": "pedir ayuda",
   "timeout": "tiempo muerto",
-  "pause": "pausa"
+  "pause": "pausa",
+  "Fly to the main land": "Volar a tierra firme",
+  "Fly back to the main land. The road map waits for you here.": "Vuelve en avión a tierra firme. El Road map te espera aquí.",
+  "The road map: the airport, high school, college, the NBA arena, and the island of mini-games across the sea": "El Road map: el aeropuerto, el instituto, la universidad, el pabellón de la NBA y la isla de los minijuegos al otro lado del mar"
  },
  "story": {
   "f-driveway.title": "La entrada de casa",

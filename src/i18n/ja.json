@@ -1921,7 +1921,6 @@
   "Teams": "チーム",
   "Best season: {season} with {team} ({level}): {pts} PTS, {reb} REB, {ast} AST.": "ベストシーズン：{season}、{team}（{level}）：{pts} PTS、{reb} REB、{ast} AST。",
   "The last word": "最後の言葉",
-  "The road map: high school, college, the NBA arena, and the island of mini-games across the sea": "Road map：高校、大学、NBAアリーナ、そして海の向こうのミニゲームの島",
   "Island · every mini-game at C or better": "島 · すべてのミニゲームでC以上",
   "Bucket list": "やりたいことリスト",
   "{mode}: open.": "{mode}：解放済み。",
@@ -2766,7 +2765,10 @@
   "switch": "スイッチ",
   "call for help": "ヘルプを呼ぶ",
   "timeout": "タイムアウト",
-  "pause": "一時停止"
+  "pause": "一時停止",
+  "Fly to the main land": "The main landへ飛ぶ",
+  "Fly back to the main land. The road map waits for you here.": "The main landに戻ります。Road mapはここで待っています。",
+  "The road map: the airport, high school, college, the NBA arena, and the island of mini-games across the sea": "Road map：空港、高校、大学、NBAアリーナ、そして海の向こうのミニゲームの島"
  },
  "story": {
   "f-driveway.title": "家の前のゴール",

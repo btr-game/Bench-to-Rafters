@@ -1921,7 +1921,6 @@
   "Teams": "Équipes",
   "Best season: {season} with {team} ({level}): {pts} PTS, {reb} REB, {ast} AST.": "Meilleure saison : {season} avec {team} ({level}) : {pts} PTS, {reb} REB, {ast} AST.",
   "The last word": "Le mot de la fin",
-  "The road map: high school, college, the NBA arena, and the island of mini-games across the sea": "La Road map : le lycée, l’université, la salle NBA et l’île des mini-jeux de l’autre côté de la mer",
   "Island · every mini-game at C or better": "Île · chaque mini-jeu à C ou mieux",
   "Bucket list": "Liste de rêves",
   "{mode}: open.": "{mode} : ouvert.",
@@ -2766,7 +2765,10 @@
   "switch": "changer",
   "call for help": "demander de l’aide",
   "timeout": "temps mort",
-  "pause": "pause"
+  "pause": "pause",
+  "Fly to the main land": "S’envoler vers le continent",
+  "Fly back to the main land. The road map waits for you here.": "Retour en avion vers le continent. La Road map vous attend ici.",
+  "The road map: the airport, high school, college, the NBA arena, and the island of mini-games across the sea": "La Road map : l’aéroport, le lycée, l’université, la salle NBA et l’île des mini-jeux de l’autre côté de la mer"
  },
  "story": {
   "f-driveway.title": "L’allée",
