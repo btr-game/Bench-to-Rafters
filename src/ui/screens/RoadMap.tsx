@@ -26,6 +26,7 @@ import { isDev } from '../../dev/mode';
 import { PixelX } from '../art/PixelX';
 import { BOAT, CAR, Sprite } from '../art/Sprites';
 import { reducedMotion as reduced } from '../mainland';
+import { t, tx } from '../../i18n';
 
 // ---------- the map, on a 192 by 108 pixel grid ----------
 
@@ -247,7 +248,7 @@ function MapArt({ road, first, goal, sailing, onSailed }: { road: Road; first: n
   const boatX = 156 + sail * 1.5;
   const boatY = 60 + sail * 2;
   return (
-    <svg className="roadmap-art" viewBox={`0 0 ${W} ${H}`} shapeRendering="crispEdges" role="img" aria-label="The road map: high school, college, the NBA arena, and the island of mini-games across the sea">
+    <svg className="roadmap-art" viewBox={`0 0 ${W} ${H}`} shapeRendering="crispEdges" role="img" aria-label={t('The road map: high school, college, the NBA arena, and the island of mini-games across the sea')}>
       {px.map(([x, y, w, h, c], i) => (
         <rect key={i} x={x} y={y} width={w} height={h} fill={c} />
       ))}
@@ -265,14 +266,14 @@ function BucketList({ road }: { road: Road }) {
   const minis = MINIS.filter((m) => passGrade(road.minis[m])).length;
   const items: [string, boolean, string?][] = [
     ...LEVEL_IDS.map((l) => [`${LEVEL_NAME[l]} · ${LEVEL_COPY[l].place}`, !!road.passed[l], road.passed[l]?.star ? 'All-Star' : undefined] as [string, boolean, string?]),
-    ['Island · every mini-game at C or better', minis === MINIS.length, `${minis}/${MINIS.length}`],
-    ['The closing tour', !!road.toured],
+    [t('Island · every mini-game at C or better'), minis === MINIS.length, `${minis}/${MINIS.length}`],
+    [t('The closing tour'), !!road.toured],
   ];
   return (
-    <aside className="bucket" aria-label="Bucket list">
+    <aside className="bucket" aria-label={t('Bucket list')}>
       <Roll />
       <div className="scroll-paper">
-        <div className="bucket-title">Bucket list</div>
+        <div className="bucket-title">{t('Bucket list')}</div>
         <ul>
           {items.map(([label, on, tag]) => (
             <li key={label} className={on ? 'done' : ''}>
@@ -298,7 +299,7 @@ function Opens({ stop, road }: { stop: Level | 'island'; road: Road }) {
   return (
     <p className={`small with-icon road-opens${done ? ' done' : ''}`}>
       <Icon name={done ? 'unlock' : 'lock'} size={18} />
-      <span>{done ? `${UNLOCK_NAME[u][0].toUpperCase()}${UNLOCK_NAME[u].slice(1)}: open.` : `Clear it to open ${UNLOCK_NAME[u]}.`}</span>
+      <span>{done ? t('{mode}: open.', { mode: `${UNLOCK_NAME[u][0].toUpperCase()}${UNLOCK_NAME[u].slice(1)}` }) : t('Clear it to open {mode}.', { mode: UNLOCK_NAME[u] })}</span>
     </p>
   );
 }
@@ -315,7 +316,7 @@ function LevelStop({ level, road }: { level: Level; road: Road }) {
         <PlaceArt place={level} size={88} />
         <div style={{ minWidth: 0 }}>
           <div className="kicker">
-            Level {copy.n} · {copy.place}
+            {t('Level {n}', { n: copy.n })} · {copy.place}
           </div>
           <div className="sec-title">{LEVEL_NAME[level]}</div>
         </div>
@@ -323,12 +324,12 @@ function LevelStop({ level, road }: { level: Level; road: Road }) {
         {passed ? (
           <span className="tag good with-icon">
             <Icon name={passed.star ? 'stars' : 'checklist'} size={18} />
-            {passed.star ? 'Passed · All-Star' : 'Passed'}
+            {passed.star ? `${t('Passed')} · All-Star` : t('Passed')}
           </span>
         ) : !open ? (
           <span className="tag with-icon">
             <Icon name="lock" size={18} />
-            Locked
+            {t('Locked')}
           </span>
         ) : null}
       </div>
@@ -336,7 +337,7 @@ function LevelStop({ level, road }: { level: Level; road: Road }) {
       {next && (
         <>
           <p className="small">
-            The goal: {LEVEL_GOAL} in {ROADMAP[level].nbaSeasons} NBA seasons.
+            {t('The goal: {goal} in {n} NBA seasons.', { goal: t(LEVEL_GOAL), n: ROADMAP[level].nbaSeasons })}
           </p>
           <LevelAdds level={level} />
         </>
@@ -344,11 +345,11 @@ function LevelStop({ level, road }: { level: Level; road: Road }) {
       {open && (
         <div className="row-end">
           <button className={`btn${next ? '' : ' ghost small'}`} onClick={() => (sfx('confirm'), setCreating(level))}>
-            {next ? `Drive to ${copy.place.toLowerCase()}: play ${LEVEL_NAME[level].toLowerCase()}` : 'Play it again'}
+            {next ? t('Drive to {place}: play {level}', { place: copy.place.toLowerCase(), level: LEVEL_NAME[level].toLowerCase() }) : t('Play it again')}
           </button>
         </div>
       )}
-      {!open && <p className="small muted">Opens after {LEVEL_NAME[LEVEL_IDS[LEVEL_IDS.indexOf(level) - 1]].toLowerCase()}.</p>}
+      {!open && <p className="small muted">{t('Opens after {level}.', { level: LEVEL_NAME[LEVEL_IDS[LEVEL_IDS.indexOf(level) - 1]].toLowerCase() })}</p>}
     </section>
   );
 }
@@ -363,16 +364,16 @@ function IslandStop({ road, onSail }: { road: Road; onSail: () => void }) {
         <PlaceArt place="island" size={88} />
         <div style={{ minWidth: 0 }}>
           <div className="kicker">Overseas league · the island</div>
-          <div className="sec-title">The mini-games</div>
+          <div className="sec-title">{t('The mini-games')}</div>
         </div>
         <div className="spacer" />
         <span className="tag with-icon">
           <Icon name={open ? 'controller' : 'lock'} size={18} />
-          {open ? `${done}/${MINIS.length} at C or better` : 'Locked'}
+          {open ? t('{done}/{n} at C or better', { done, n: MINIS.length }) : t('Locked')}
         </span>
       </div>
       <Opens stop="island" road={road} />
-      <p className={open ? 'small prose' : 'small'}>{open ? 'Play each one once and get a C or better. Any time, between levels.' : 'Opens after beginner.'}</p>
+      <p className={open ? 'small prose' : 'small'}>{open ? t('Play each one once and get a C or better. Any time, between levels.') : t('Opens after beginner.')}</p>
       {open && (
         <ul className="island-grid">
           {MINIS.map((m) => (
@@ -386,7 +387,7 @@ function IslandStop({ road, onSail }: { road: Road; onSail: () => void }) {
       {open && (
         <div className="row-end">
           <button className="btn ghost" onClick={onSail}>
-            Take the boat to the island
+            {t('Take the boat to the island')}
           </button>
         </div>
       )}
@@ -403,27 +404,27 @@ function TourStop({ road }: { road: Road }) {
       <div className="row road-stop-head">
         <PlaceArt place="tour" size={88} />
         <div style={{ minWidth: 0 }}>
-          <div className="kicker">The last stop</div>
-          <div className="sec-title">The closing tour</div>
+          <div className="kicker">{t('The last stop')}</div>
+          <div className="sec-title">{t('The closing tour')}</div>
         </div>
         <div className="spacer" />
         {road.toured ? (
           <span className="tag good with-icon">
             <Icon name="checklist" size={18} />
-            Done
+            {t('Done')}
           </span>
         ) : !open ? (
           <span className="tag with-icon">
             <Icon name="lock" size={18} />
-            Locked
+            {t('Locked')}
           </span>
         ) : null}
       </div>
-      <p className={open ? 'small prose' : 'small'}>{open ? 'A star’s career, already under way: the rest of the game, stop by stop. About ten minutes.' : 'Opens after advanced.'}</p>
+      <p className={open ? 'small prose' : 'small'}>{open ? t('A star’s career, already under way: the rest of the game, stop by stop. About ten minutes.') : t('Opens after advanced.')}</p>
       {open && !road.toured && (
         <div className="row-end">
           <button className="btn" onClick={() => (sfx('confirm'), start())}>
-            Start the closing tour
+            {t('Start the closing tour')}
           </button>
         </div>
       )}
@@ -440,7 +441,7 @@ function firstPlace(road: Road): number {
   return 0;
 }
 
-const PLACE_NAME: Record<Place, string> = { beginner: 'Beginner · High school', intermediate: 'Intermediate · College', advanced: 'Advanced · NBA arena', tour: 'The closing tour', island: 'The island of mini-games' };
+const PLACE_NAME: Record<Place, string> = { beginner: 'Beginner · High school', intermediate: 'Intermediate · College', advanced: 'Advanced · NBA arena', tour: tx('The closing tour'), island: tx('The island of mini-games') };
 
 /** Each place's state, for its pin on the map: done, the next thing to do, open, or locked. */
 function placeState(road: Road, id: Place): 'done' | 'next' | 'open' | 'locked' {
@@ -449,6 +450,7 @@ function placeState(road: Road, id: Place): 'done' | 'next' | 'open' | 'locked' 
   return road.passed[id] ? 'done' : nextLevel(road) === id ? 'next' : levelOpen(road, id) ? 'open' : 'locked';
 }
 const PIN: Record<ReturnType<typeof placeState>, string> = { done: 'checklist', next: 'arrow', open: 'map', locked: 'lock' };
+const STATE_WORD: Record<ReturnType<typeof placeState>, string> = { done: tx('done'), next: tx('next'), open: tx('open'), locked: tx('locked') };
 
 export function RoadMap() {
   const road = useStore((s) => s.road);
@@ -521,7 +523,7 @@ export function RoadMap() {
         <div className="row" style={{ gap: 8 }}>
           {!tut && (
             <button className="icon-btn" onClick={() => setPage(null)}>
-              Back to the main land
+              {t('Back to the main land')}
             </button>
           )}
           <ShareButton />
@@ -530,10 +532,11 @@ export function RoadMap() {
       </header>
       <section className="hero level-hero">
         <div className="kicker">The road map</div>
-        <h1>Your road</h1>
-        <p className="lede">Three levels and an island of mini-games. Finish them all and the full game opens.</p>
+        <h1>{t('Your road')}</h1>
+        <p className="lede">{t('Three levels and an island of mini-games. Finish them all and the full game opens.')}</p>
         <p className="small muted road-hint">
-          Tap a place on the map<span className="hide-touch">, or drive along the road with the arrow keys (Enter opens where you are)</span>.
+          {t('Tap a place on the map')}
+          <span className="hide-touch">{t(', or drive along the road with the arrow keys (Enter opens where you are)')}</span>.
         </p>
       </section>
       <div className="roadmap">
@@ -548,7 +551,7 @@ export function RoadMap() {
                   key={p.id}
                   className={`road-spot ${st}${i === sel && open ? ' on' : ''}`}
                   style={{ left: `${(x / W) * 100}%`, top: `${(y / H) * 100}%`, width: `${(w / W) * 100}%`, height: `${(h / H) * 100}%` }}
-                  aria-label={`${PLACE_NAME[p.id]}: ${st === 'next' ? 'next' : st}`}
+                  aria-label={`${t(PLACE_NAME[p.id])}: ${t(STATE_WORD[st])}`}
                   aria-pressed={i === sel && open}
                   onClick={() => go(i)}
                 >
@@ -561,7 +564,7 @@ export function RoadMap() {
           </div>
           {open && (
             <div className={`road-pop ${place.side}`} style={popAt} ref={pop} key={place.id}>
-              <button className="pop-x road-pop-x" aria-label="Close" onClick={() => setOpen(false)}>
+              <button className="pop-x road-pop-x" aria-label={t('Close')} onClick={() => setOpen(false)}>
                 <PixelX />
               </button>
               {place.id === 'island' ? <IslandStop road={road} onSail={() => (sfx('sail'), setSailing(true))} /> : place.id === 'tour' ? <TourStop road={road} /> : <LevelStop level={place.id} road={road} />}

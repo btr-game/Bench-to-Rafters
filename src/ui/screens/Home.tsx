@@ -52,7 +52,7 @@ import {
 } from "../components/bits";
 import { PlayerCard } from "../components/PlayerCard";
 import { ScoutCard } from "../components/ScoutCard";
-import { DecisionView } from "./Decision";
+import { DecisionView, riskText } from "./Decision";
 import { fmtMoney, ht, ordinal, pg, seasonLabel, signed } from "../format";
 import { team } from "../selectors";
 import { TeamArt } from "../art/Crest";
@@ -69,6 +69,13 @@ import { ModesCard } from '../components/ModesCard';
 import { StrengthCard } from '../components/StrengthCard';
 import { CoachTalk } from '../components/CoachTalk';
 import { leanLevel } from '../road';
+import { t, tx } from '../../i18n';
+
+/** Two (or more) joined with and, or with or. */
+const both = (xs: string[]): string => (xs.length === 2 ? t('{a} and {b}', { a: xs[0], b: xs[1] }) : xs.join(" and "));
+const either = (xs: string[]): string => (xs.length === 2 ? t('{a} or {b}', { a: xs[0], b: xs[1] }) : xs.join(" or "));
+const ODDS: Record<ReturnType<typeof oddsWord>, string> = { High: tx('High odds'), Moderate: tx('Moderate odds'), Low: tx('Low odds') };
+const FIT: Record<ReturnType<typeof fitLabel>, string> = { 'Great fit': tx('Great fit'), 'Good fit': tx('Good fit'), Okay: tx('Okay'), 'Poor fit': tx('Poor fit') };
 
 function SeasonSummary({ rec }: { rec: SeasonRecord }) {
   const delta = rec.ovrEnd - rec.ovrStart;
@@ -87,8 +94,8 @@ function SeasonSummary({ rec }: { rec: SeasonRecord }) {
           <div className="muted small">
             {NAMES.role[rec.role]} ·{" "}
             {l.gp > 0
-              ? `${l.gs} starts · ${(l.min / l.gp).toFixed(1)} MPG`
-              : "Did not play"}
+              ? t('{n} starts · {mpg} MPG', { n: l.gs, mpg: (l.min / l.gp).toFixed(1) })
+              : t("Did not play")}
           </div>
         </div>
       </div>
@@ -98,11 +105,11 @@ function SeasonSummary({ rec }: { rec: SeasonRecord }) {
           {delta >= 0 ? "▲" : "▼"} {signed(delta)}
         </span>
       </div>
-      <div className="kicker">Regular season</div>
+      <div className="kicker">{t('Regular season')}</div>
       <Scoreboard line={l} />
       {rec.post.gp > 0 && (
         <p className="num small">
-          Postseason · {rec.post.gp} games · {pg(rec.post, "pts")} PTS ·{" "}
+          {t('Postseason · {n} games', { n: rec.post.gp })} · {pg(rec.post, "pts")} PTS ·{" "}
           {pg(rec.post, "reb")} REB · {pg(rec.post, "ast")} AST
         </p>
       )}
@@ -116,15 +123,15 @@ function SeasonSummary({ rec }: { rec: SeasonRecord }) {
       )}
       {rec.breakthrough && (
         <div className="unlock-banner">
-          <span className="unlock-tag">Breakthrough</span>
+          <span className="unlock-tag">{t('Breakthrough')}</span>
           <span>
-            {rec.breakthrough} Focus change unlocked for this offseason.
+            {rec.breakthrough} {t('Focus change unlocked for this offseason.')}
           </span>
         </div>
       )}
       {rec.newHighs && rec.newHighs.length > 0 && (
         <div className="small">
-          <b>New NBA career high{rec.newHighs.length > 1 ? "s" : ""}:</b>{" "}
+          <b>{rec.newHighs.length > 1 ? t('New NBA career highs:') : t('New NBA career high:')}</b>{" "}
           {rec.newHighs.join(", ")}
         </div>
       )}
@@ -135,9 +142,9 @@ function SeasonSummary({ rec }: { rec: SeasonRecord }) {
             .map((r) => (
               <li key={r.award}>
                 <b>{r.award}:</b>{" "}
-                {r.userRank === 1 ? "Won" : `${ordinal(r.userRank!)}`}
+                {r.userRank === 1 ? t("Won") : `${ordinal(r.userRank!)}`}
                 {r.userRank !== 1 && r.top[0]
-                  ? `. Winner: ${r.top[0].name}, ${r.top[0].team}`
+                  ? `. ${t('Winner: {name}, {team}', { name: r.top[0].name, team: r.top[0].team })}`
                   : ""}
               </li>
             ))}
@@ -145,14 +152,12 @@ function SeasonSummary({ rec }: { rec: SeasonRecord }) {
       )}
       {rec.bestGame?.line && (
         <p className="muted small keep">
-          Best game: {rec.bestGame.line.pts} PTS, {rec.bestGame.line.reb} REB,{" "}
-          {rec.bestGame.line.ast} AST vs {rec.bestGame.opp} ({rec.bestGame.res}{" "}
-          {rec.bestGame.us}–{rec.bestGame.them})
+          {t('Best game: {pts} PTS, {reb} REB, {ast} AST vs {opp} ({res} {us}–{them})', { pts: rec.bestGame.line.pts, reb: rec.bestGame.line.reb, ast: rec.bestGame.line.ast, opp: rec.bestGame.opp, res: rec.bestGame.res, us: rec.bestGame.us, them: rec.bestGame.them })}
         </p>
       )}
       {rec.salary > 0 && (
         <p className="muted small keep">
-          Salary this season: {fmtMoney(rec.salary)}
+          {t('Salary this season: {money}', { money: fmtMoney(rec.salary) })}
         </p>
       )}
     </div>
@@ -160,33 +165,33 @@ function SeasonSummary({ rec }: { rec: SeasonRecord }) {
 }
 
 function SeasonHeader({ g }: { g: GameState }) {
-  const t = team(g);
+  const tm = team(g);
   const s = g.season;
   const stepName =
     g.step === "preseason"
-      ? "Preseason"
+      ? t("Preseason")
       : g.step === "midseason"
-        ? "Midseason"
+        ? t("Midseason")
         : g.step === "postseason"
-          ? "Postseason"
+          ? t("Postseason")
           : g.step === "summary"
-            ? "Season over"
+            ? t("Season over")
             : g.step === "offseason"
-              ? "Offseason"
+              ? t("Offseason")
               : "";
   return (
     <div className="turn-head">
-      {t && <TeamArt name={t.name} abbr={t.abbr || t.short} color={t.color} league={styleLeague(g.stage)} size={56} />}
-      {t && (
+      {tm && <TeamArt name={tm.name} abbr={tm.abbr || tm.short} color={tm.color} league={styleLeague(g.stage)} size={56} />}
+      {tm && (
         <div className="crest-mark" aria-hidden="true">
-          <TeamArt name={t.name} abbr={t.abbr || t.short} color={t.color} league={styleLeague(g.stage)} size={120} />
+          <TeamArt name={tm.name} abbr={tm.abbr || tm.short} color={tm.color} league={styleLeague(g.stage)} size={120} />
         </div>
       )}
       <div style={{ minWidth: 0, flex: 1 }}>
         <div className="kicker">
           {seasonLabel(g.year)} · {stepName}
         </div>
-        <h2>{t ? t.name : "Offseason"}</h2>
+        <h2>{tm ? tm.name : t("Offseason")}</h2>
         {g.step === "offseason" ? (
           <div className="muted small">
             {g.stage === "NBA" ||
@@ -217,10 +222,10 @@ function SeasonHeader({ g }: { g: GameState }) {
         )}
       </div>
       <div className="turn-side">
-        {t && s && g.step !== "offseason" && (
+        {tm && s && g.step !== "offseason" && (
           <div className="record">
-            {t.w}–{t.l}
-            <small>RECORD</small>
+            {tm.w}–{tm.l}
+            <small>{t('RECORD')}</small>
           </div>
         )}
         {g.mode === "lab" && (
@@ -239,7 +244,7 @@ function SimCalls({ calls }: { calls: EventResult[] }) {
     <div className="sim-calls" data-tour="sim-calls">
       <div className="kicker with-icon">
         <Icon name="sim" size={18} />
-        {calls.length === 1 ? "Sim made a call for you" : `Sim made ${calls.length} calls for you`}
+        {calls.length === 1 ? t("Sim made a call for you") : t('Sim made {n} calls for you', { n: calls.length })}
       </div>
       {calls.map((c, i) => (
         <div key={i} className={`result-card sim-call${c.tierKey ? ` tier-${c.tierKey}` : ""}`}>
@@ -269,7 +274,7 @@ function Reel({ items }: { items: NonNullable<GameState["reel"]> }) {
     <div className="comet-reel" data-tour="comet-reel">
       <div className="kicker with-icon">
         <Icon name="comet" size={18} />
-        On the way here
+        {t('On the way here')}
       </div>
       <ul>
         {items.map((x, i) => (
@@ -291,10 +296,10 @@ function UndoBar({ g }: { g: GameState }) {
   if (!undo || !canUndo(g)) return null;
   return (
     <div className="undo-bar">
-      <button className="btn ghost small with-icon" data-tour="undo" onClick={() => (sfx("undo"), undoLast())} title="Undo (U)">
-        <Icon name="undo" size={18} /> Undo
+      <button className="btn ghost small with-icon" data-tour="undo" onClick={() => (sfx("undo"), undoLast())} title={t('Undo (U)')}>
+        <Icon name="undo" size={18} /> {t('Undo')}
       </button>
-      <span className="small muted">Takes back: {undo.label}</span>
+      <span className="small muted">{t('Takes back: {what}', { what: undo.label })}</span>
     </div>
   );
 }
@@ -306,10 +311,10 @@ function SimpleStats({ g }: { g: GameState }) {
   if (!simple) return null;
   const s = g.season;
   const half = g.step === "midseason" ? s?.halfLines[0] : undefined;
-  if (half?.gp) return <StatStrip line={half} label="First half" />;
+  if (half?.gp) return <StatStrip line={half} label={t('First half')} />;
   const rec = g.step === "summary" ? s?.summary : g.lastSummary;
   if (!rec) return null;
-  return <StatStrip line={rec.line} label={`${seasonLabel(rec.year)}${g.step === "summary" ? "" : " · last season"}`} />;
+  return <StatStrip line={rec.line} label={`${seasonLabel(rec.year)}${g.step === "summary" ? "" : ` · ${t('last season')}`}`} />;
 }
 
 /** Round 32: a record within reach, said quietly; the scoring list can be chased for a season. */
@@ -321,17 +326,17 @@ function RecordWatch({ g }: { g: GameState }) {
     <div className="record-watch" data-tour="record-watch">
       <Icon name="record" size={22} />
       <div className="stack" style={{ gap: 4, minWidth: 0 }}>
-        <span className="kicker">Record watch</span>
+        <span className="kicker">{t('Record watch')}</span>
         {watch.map((w) => (
           <span key={w.text} className="small">
             {w.text}
           </span>
         ))}
         {chasing(g) ? (
-          <span className="small muted keep">Chasing it this season: a few more shots, a little more risk.</span>
+          <span className="small muted keep">{t('Chasing it this season: a few more shots, a little more risk.')}</span>
         ) : canChase(g) ? (
           <button className="btn ghost small" onClick={() => (sfx("clutch"), chase())}>
-            Chase it this season
+            {t('Chase it this season')}
           </button>
         ) : null}
       </div>
@@ -346,7 +351,7 @@ function FastRecap({ g }: { g: GameState }) {
   return (
     <div className="fast-recap">
       <div className="kicker">
-        Last season · {seasonLabel(r.year)} · {r.teamName}
+        {t('Last season')} · {seasonLabel(r.year)} · {r.teamName}
       </div>
       <div>
         <b>
@@ -355,7 +360,7 @@ function FastRecap({ g }: { g: GameState }) {
         , {r.result.toLowerCase()} ·{" "}
         {r.line.gp > 0
           ? `${perGame(r.line, "pts").toFixed(1)} PTS, ${perGame(r.line, "reb").toFixed(1)} REB, ${perGame(r.line, "ast").toFixed(1)} AST`
-          : "did not play"}{" "}
+          : t("did not play")}{" "}
         · OVR {Math.round(r.ovrStart)} → {Math.round(r.ovrEnd)}{" "}
         <span className={d >= 0 ? "up" : "down"}>({signed(d)})</span>
       </div>
@@ -364,12 +369,12 @@ function FastRecap({ g }: { g: GameState }) {
       )}
       {r.breakthrough && (
         <div className="small">
-          <span className="unlock-tag">Breakthrough</span> {r.breakthrough}
+          <span className="unlock-tag">{t('Breakthrough')}</span> {r.breakthrough}
         </div>
       )}
       {r.newHighs && r.newHighs.length > 0 && (
         <div className="small">
-          New NBA career high: {r.newHighs.join(", ")}
+          {t('New NBA career high: {list}', { list: r.newHighs.join(", ") })}
         </div>
       )}
     </div>
@@ -389,8 +394,8 @@ function PlanOutcomes({ g, half }: { g: GameState; half?: number }) {
           className={`outcome ${o.outcome.split(" ")[0].toLowerCase()}`}
         >
           <div className="kicker">
-            {o.half === 1 ? "First half" : "Second half"} · {NAMES.plan[o.plan]}
-            {o.plan2 ? ` + ${NAMES.plan[o.plan2]}` : ""} · {o.outcome}
+            {o.half === 1 ? t("First half") : t("Second half")} · {t(NAMES.plan[o.plan])}
+            {o.plan2 ? ` + ${t(NAMES.plan[o.plan2])}` : ""} · {o.outcome}
           </div>
           <div>{o.text}</div>
         </div>
@@ -409,17 +414,17 @@ function TeamOutlook({ g }: { g: GameState }) {
   const edge = winningEdge(g.player.attrs, ovrOf(g.player.attrs, g.player.pos));
   const tag =
     rank <= Math.max(1, Math.round(n * 0.1))
-      ? "title contender"
+      ? t("title contender")
       : rank <= Math.round(n * 0.3)
-        ? "playoff team"
+        ? t("playoff team")
         : rank <= Math.round(n * 0.6)
-          ? "middle of the pack"
-          : "rebuilding";
+          ? t("middle of the pack")
+          : t("rebuilding");
   return (
     <div className="small">
-      Roster:{" "}
+      {t('Roster:')}{" "}
       <b>
-        {ordinal(rank)} of {n}
+        {t('{rank} of {n}', { rank: ordinal(rank), n })}
       </b>{" "}
       ({tag})
       {(s.teamNotes ?? []).map((x) => (
@@ -429,12 +434,11 @@ function TeamOutlook({ g }: { g: GameState }) {
       ))}
       {edge.traits.length > 0 && (
         <div className="muted">
-          Winning player:{" "}
+          {t('Winning player:')}{" "}
           {edge.traits
             .map((x) => (x === "3&D" ? x : x.toLowerCase()))
             .join(", ")}{" "}
-          (+{edge.regular.toFixed(1)} to the team, +{edge.playoff.toFixed(1)} in
-          the playoffs, at full minutes)
+          ({t('+{regular} to the team, +{playoff} in the playoffs, at full minutes', { regular: edge.regular.toFixed(1), playoff: edge.playoff.toFixed(1) })})
         </div>
       )}
     </div>
@@ -446,17 +450,17 @@ function Context({ g }: { g: GameState }) {
   if (g.step === "preseason" && s) {
     return (
       <div className="recap">
-        <div className="kicker">Season preview</div>
+        <div className="kicker">{t('Season preview')}</div>
         <div>
-          Projected role: <b>{NAMES.role[s.role]}</b> (number {s.roleRank} on
-          the depth chart).
+          {t('Projected role:')} <b>{NAMES.role[s.role]}</b> {t('(number {n} on the depth chart).', { n: s.roleRank })}
         </div>
         <TeamOutlook g={g} />
         {s.preReport && <div className="small">{s.preReport}</div>}
         {g.contract && g.stage !== "HS" && g.stage !== "NCAA" && (
           <div className="muted small">
-            Contract: {fmtMoney(g.contract.salary)} a year, {g.contract.years}{" "}
-            year{g.contract.years === 1 ? "" : "s"} left.
+            {g.contract.years === 1
+              ? t('Contract: {money} a year, 1 year left.', { money: fmtMoney(g.contract.salary) })
+              : t('Contract: {money} a year, {n} years left.', { money: fmtMoney(g.contract.salary), n: g.contract.years })}
           </div>
         )}
       </div>
@@ -467,18 +471,18 @@ function Context({ g }: { g: GameState }) {
     return (
       <div className="stack">
         <div className="recap">
-          <div className="kicker">Half report</div>
+          <div className="kicker">{t('Half report')}</div>
           {s.midReport.map((line, i) => (
             <div key={i}>{line}</div>
           ))}
           {s.preReport && (
-            <div className="muted small">Preseason: {s.preReport}</div>
+            <div className="muted small">{t('Preseason: {report}', { report: s.preReport })}</div>
           )}
           {s.allStarRank !== undefined && (
             <div className="small">
               {s.allStar
-                ? "All-Star selection"
-                : `All-Star voting: ${ordinal(s.allStarRank)} in the conference`}
+                ? t("All-Star selection")
+                : t('All-Star voting: {rank} in the conference', { rank: ordinal(s.allStarRank) })}
             </div>
           )}
         </div>
@@ -492,15 +496,15 @@ function Context({ g }: { g: GameState }) {
       <div className="stack">
         <SeasonSummary rec={s.summary} />
         <PlanOutcomes g={g} />
-        <StrengthCard g={g} title="Why it went this way" />
+        <StrengthCard g={g} title={t('Why it went this way')} />
       </div>
     );
   if (g.step === "offseason") {
     return (
       <div className="recap">
-        <div className="kicker">Offseason · age {g.player.age}</div>
+        <div className="kicker">{t('Offseason · age {n}', { n: g.player.age })}</div>
         {g.notes.length === 0 ? (
-          <div className="muted">A quiet summer.</div>
+          <div className="muted">{t('A quiet summer.')}</div>
         ) : (
           g.notes.map((n, i) => <div key={i}>{n}</div>)
         )}
@@ -525,41 +529,41 @@ function Todo({ g }: { g: GameState }) {
   const items: { text: string; hot?: boolean; go?: string }[] = [
     ...g.pending.slice(1).map((d) => ({ text: d.title })),
     ...(canChangeFocus(g)
-      ? [{ text: "Pick new focus stats", hot: true, go: ".o-moves" }]
+      ? [{ text: t("Pick new focus stats"), hot: true, go: ".o-moves" }]
       : []),
     ...(canRecruit(g) && (g.recruit?.moves ?? 0) < STARTERS_RECRUIT.moves
-      ? [{ text: "Build the starting five", hot: true, go: ".o-moves" }]
+      ? [{ text: t("Build the starting five"), hot: true, go: ".o-moves" }]
       : []),
     ...(canSetStyle(g) && !currentStyle(g)
-      ? [{ text: "Set your team's style", hot: true, go: ".o-moves" }]
+      ? [{ text: t("Set your team's style"), hot: true, go: ".o-moves" }]
       : []),
     ...(heightMismatch(g) && canChangePosition(g)
-      ? [{ text: "Size check: think about another position", hot: true, go: ".o-moves" }]
+      ? [{ text: t("Size check: think about another position"), hot: true, go: ".o-moves" }]
       : []),
     ...(g.mode === "lab" && (g.player.lab?.credits ?? 0) >= 1
       ? [
           {
-            text: `Spend ${Math.floor(g.player.lab!.credits)} lab credits`,
+            text: t('Spend {n} lab credits', { n: Math.floor(g.player.lab!.credits) }),
             hot: true,
             go: ".lab-card",
           },
         ]
       : []),
     ...g.player.programs.map((p) => ({
-      text: `${p.name}: ${p.seasonsLeft} season${p.seasonsLeft === 1 ? "" : "s"} left`,
+      text: p.seasonsLeft === 1 ? t('{name}: 1 season left', { name: p.name }) : t('{name}: {n} seasons left', { name: p.name, n: p.seasonsLeft }),
     })),
   ];
   return (
     <section className="card stack todo">
-      <div className="sec-title">{UI.hub.todo}</div>
+      <div className="sec-title">{t(UI.hub.todo)}</div>
       {now && (
         <button className="todo-now" onClick={() => jump(".o-main")}>
-          <span className="kicker">Now</span>
+          <span className="kicker">{t('Now')}</span>
           <b>{now}</b>
         </button>
       )}
       {items.length === 0 ? (
-        !now && <p className="muted small keep">{UI.hub.nothingPending}</p>
+        !now && <p className="muted small keep">{t(UI.hub.nothingPending)}</p>
       ) : (
         <ul className="todo-list">
           {items.map((x, i) => (
@@ -606,21 +610,20 @@ function FocusCard({ g }: { g: GameState }) {
   return (
     <section className="card stack focus-unlocked">
       <div className="unlock-banner">
-        <span className="unlock-tag">Unlocked</span>
-        <b>Breakthrough season: pick two new focus stats</b>
+        <span className="unlock-tag">{t('Unlocked')}</span>
+        <b>{t('Breakthrough season: pick two new focus stats')}</b>
       </div>
       {b && (
         <p className="small" style={{ margin: 0 }}>
           {b.ovr >= breakthroughBar(p.age).ovr
-            ? `Your OVR jumped ${b.ovr} this season.`
-            : `Your ${NAMES.attr[b.key].toLowerCase()} jumped ${b.gain} this season.`}{" "}
-          Focus stats grow about twice as fast. This chance lasts until next
-          season starts; the next one comes with your next breakthrough.
+            ? t('Your OVR jumped {n} this season.', { n: b.ovr })
+            : t('Your {rating} jumped {n} this season.', { rating: NAMES.attr[b.key].toLowerCase(), n: b.gain })}{" "}
+          {t('Focus stats grow about twice as fast. This chance lasts until next season starts; the next one comes with your next breakthrough.')}
         </p>
       )}
       <div className="row">
         <span className="small muted">
-          Now: {p.focus.map((k) => NAMES.attr[k]).join(" + ")}
+          {t('Now: {focus}', { focus: p.focus.map((k) => NAMES.attr[k]).join(" + ") })}
         </span>
       </div>
       <div className="focus-grid">
@@ -644,8 +647,8 @@ function FocusCard({ g }: { g: GameState }) {
         onClick={() => change(pick)}
       >
         {same
-          ? "Pick two new focus stats"
-          : `Focus on ${pick.map((k) => NAMES.attr[k]).join(" and ")}`}
+          ? t("Pick two new focus stats")
+          : t('Focus on {focus}', { focus: both(pick.map((k) => NAMES.attr[k])) })}
       </button>
     </section>
   );
@@ -676,21 +679,21 @@ function OffseasonMoves({ g }: { g: GameState }) {
   }[] = [
     {
       id: "focus",
-      label: "Focus stats",
+      label: t("Focus stats"),
       sub: focusDone
-        ? "Changed this offseason"
+        ? t("Changed this offseason")
         : focusOpen
-          ? "Unlocked by your breakthrough"
-          : `Locked: needs a breakthrough season (OVR +${bar.ovr} or one rating +${bar.attr} at your age)`,
+          ? t("Unlocked by your breakthrough")
+          : t('Locked: needs a breakthrough season (OVR +{ovr} or one rating +{attr} at your age)', { ovr: bar.ovr, attr: bar.attr }),
       state: focusOpen ? "hot" : "locked",
       show: g.mode !== "lab",
     },
     {
       id: "position",
-      label: "Position",
+      label: t("Position"),
       sub: heightMismatch(g)
-        ? "Size check: another spot fits you"
-        : `${NAMES.pos[p.pos]} · one move a summer`,
+        ? t("Size check: another spot fits you")
+        : `${NAMES.pos[p.pos]} · ${t('one move a summer')}`,
       state: canChangePosition(g)
         ? heightMismatch(g)
           ? "hot"
@@ -700,17 +703,19 @@ function OffseasonMoves({ g }: { g: GameState }) {
     },
     {
       id: "number",
-      label: "Jersey number",
-      sub: `Now #${p.number}`,
+      label: t("Jersey number"),
+      sub: t('Now #{n}', { n: p.number }),
       state: "ready",
       show: g.stage !== "RETIRED",
     },
     {
       id: "roster",
-      label: "Starting five",
+      label: t("Starting five"),
       sub: canRecruit(g)
-        ? `Scout and recruit: ${Math.max(0, STARTERS_RECRUIT.moves - rec.moves)} signing${STARTERS_RECRUIT.moves - rec.moves === 1 ? "" : "s"} left`
-        : "Locked: become your team’s first option",
+        ? STARTERS_RECRUIT.moves - rec.moves === 1
+          ? t('Scout and recruit: 1 signing left')
+          : t('Scout and recruit: {n} signings left', { n: Math.max(0, STARTERS_RECRUIT.moves - rec.moves) })
+        : t("Locked: become your team’s first option"),
       state: canRecruit(g)
         ? rec.moves === 0 && rec.asks === 0
           ? "hot"
@@ -720,28 +725,28 @@ function OffseasonMoves({ g }: { g: GameState }) {
     },
     {
       id: "style",
-      label: "Team style",
+      label: t("Team style"),
       sub: canSetStyle(g)
         ? style
-          ? `${TEAM_STYLES[style].name} · change it`
-          : "Set how your team plays"
+          ? `${TEAM_STYLES[style].name} · ${t('change it')}`
+          : t("Set how your team plays")
         : g.flags.styleYear === g.year
-          ? "Set this summer"
-          : "Locked: start for your NBA team first",
+          ? t("Set this summer")
+          : t("Locked: start for your NBA team first"),
       state: canSetStyle(g) ? (style ? "ready" : "hot") : "locked",
       show: g.stage === "NBA" && !!g.contract && g.contract.years > 0,
     },
     {
       id: "trade",
-      label: "Request a trade",
+      label: t("Request a trade"),
       sub:
         g.tradeResult?.year === g.year
           ? g.tradeResult.ok
-            ? `Traded to the ${g.tradeResult.team}`
-            : "Asked this summer: no deal"
+            ? t('Traded to the {team}', { team: g.tradeResult.team ?? '' })
+            : t("Asked this summer: no deal")
           : g.flags.tradeAsk === g.year
-            ? "Asked this summer"
-            : "Ask out for a better team",
+            ? t("Asked this summer")
+            : t("Ask out for a better team"),
       state:
         canRequestTrade(g) || g.tradeResult?.year === g.year
           ? "ready"
@@ -750,16 +755,16 @@ function OffseasonMoves({ g }: { g: GameState }) {
     },
     {
       id: "retire",
-      label: "Retire",
-      sub: "Hang it up on your terms",
+      label: t("Retire"),
+      sub: t("Hang it up on your terms"),
       state: "ready",
       show: canRetire(g),
     },
     {
       // round 32: say the next season is the last, and go out on a tour
       id: "farewell",
-      label: "Farewell tour",
-      sub: g.flags.farewell ? "Announced: next season is your last" : "Make next season your last",
+      label: t("Farewell tour"),
+      sub: g.flags.farewell ? t("Announced: next season is your last") : t("Make next season your last"),
       state: canFarewell(g) ? "hot" : "locked",
       show: g.stage === "NBA" && (canFarewell(g) || !!g.flags.farewell),
     },
@@ -767,9 +772,9 @@ function OffseasonMoves({ g }: { g: GameState }) {
   return (
     <section className="card stack moves">
       <div className="row">
-        <div className="sec-title">Offseason moves</div>
+        <div className="sec-title">{t('Offseason moves')}</div>
         <div className="spacer" />
-        <span className="small muted">Between seasons only</span>
+        <span className="small muted">{t('Between seasons only')}</span>
       </div>
       <div className="move-tiles">
         {tiles
@@ -783,8 +788,8 @@ function OffseasonMoves({ g }: { g: GameState }) {
               aria-expanded={open === x.id}
               onClick={() => setOpen(open === x.id ? null : x.id)}
             >
-              {x.state === "hot" && <span className="unlock-tag">New</span>}
-              {x.state === "locked" && <span className="lock-tag">Locked</span>}
+              {x.state === "hot" && <span className="unlock-tag">{t('New')}</span>}
+              {x.state === "locked" && <span className="lock-tag">{t('Locked')}</span>}
               <b>{x.label}</b>
               <small>{x.sub}</small>
             </button>
@@ -819,13 +824,13 @@ function NumberCard({ g }: { g: GameState }) {
   return (
     <section className="card stack">
       <div className="row">
-        <div className="sec-title">Jersey number</div>
+        <div className="sec-title">{t('Jersey number')}</div>
         <div className="spacer" />
-        <span className="small muted">Now #{g.player.number}</span>
+        <span className="small muted">{t('Now #{n}', { n: g.player.number })}</span>
       </div>
       <div className="row" style={{ gap: 8 }}>
         <input
-          aria-label="New jersey number"
+          aria-label={t('New jersey number')}
           type="number"
           min={0}
           max={99}
@@ -834,7 +839,7 @@ function NumberCard({ g }: { g: GameState }) {
           style={{ maxWidth: 110 }}
         />
         <button className="btn ghost" disabled={!ok} onClick={() => change(v)}>
-          Switch number
+          {t('Switch number')}
         </button>
       </div>
     </section>
@@ -850,18 +855,18 @@ function PositionCard({ g }: { g: GameState }) {
   return (
     <section className={`card stack${mm ? " warn-card" : ""}`}>
       <div className="row">
-        <div className="sec-title">Position</div>
+        <div className="sec-title">{t('Position')}</div>
         <div className="spacer" />
         <span className="small muted">
           {NAMES.pos[p.pos]} · {ht(p.height)}
-          {p.height < p.heightProj ? ` (projected ${ht(p.heightProj)})` : ""} · {weightOf(p)} lb · {ht(p.wingspan)} wingspan
+          {p.height < p.heightProj ? ` (${t('projected {h}', { h: ht(p.heightProj) })})` : ""} · {weightOf(p)} lb · {t('{w} wingspan', { w: ht(p.wingspan) })}
         </span>
       </div>
       {mm && (
         <p className="height-warn-text">
-          <b>Size check:</b> {mm.text}
+          <b>{t('Size check:')}</b> {mm.text}
           {mm.better.length > 0
-            ? ` ${mm.better.map((o) => NAMES.pos[o.pos]).join(" or ")} would fit.`
+            ? ` ${t('{pos} would fit.', { pos: either(mm.better.map((o) => NAMES.pos[o.pos])) })}`
             : ""}
         </p>
       )}
@@ -882,13 +887,12 @@ function PositionCard({ g }: { g: GameState }) {
             </button>
           ))}
           <p className="small muted">
-            One move per offseason. Your OVR is re-weighted for the new spot,
-            and the coach needs time to trust you there.
+            {t('One move per offseason. Your OVR is re-weighted for the new spot, and the coach needs time to trust you there.')}
           </p>
         </div>
       ) : (
         <button className="btn ghost" onClick={() => setOpen(true)}>
-          Try another position
+          {t('Try another position')}
         </button>
       )}
     </section>
@@ -913,20 +917,18 @@ function TradeCard({ g }: { g: GameState }) {
         className={`card stack trade-result ${res.ok ? "ok" : "no"}`}
         style={res.color ? { ["--team" as string]: res.color } : undefined}
       >
-        <div className="kicker">Trade request</div>
+        <div className="kicker">{t('Trade request')}</div>
         <div className="trade-result-head">
-          {res.ok ? `You are a member of the ${res.team}` : "No deal"}
+          {res.ok ? t('You are a member of the {team}', { team: res.team ?? '' }) : t("No deal")}
         </div>
         <p>{res.text}</p>
       </section>
     );
   return (
     <section className="card stack">
-      <div className="sec-title">Request a trade</div>
+      <div className="sec-title">{t('Request a trade')}</div>
       <p className="small muted">
-        Your team ranks {ordinal(rank)}. Where do you want to go? If nobody
-        bites, your coach will not forget it. Your reputation makes teams
-        listen: the higher it is, the better your odds.
+        {t('Your team ranks {rank}. Where do you want to go? If nobody bites, your coach will not forget it. Your reputation makes teams listen: the higher it is, the better your odds.', { rank: ordinal(rank) })}
       </p>
       <div className="stack trade-aims">
         {opts.map((o) => (
@@ -942,19 +944,19 @@ function TradeCard({ g }: { g: GameState }) {
                 <span
                   className={`scout-rec rec-${oddsWord(o.chance) === "High" ? "high" : oddsWord(o.chance) === "Moderate" ? "moderate" : "low"}`}
                 >
-                  {oddsWord(o.chance)} odds
+                  {t(ODDS[oddsWord(o.chance)])}
                 </span>
               )}
               <span
                 className={`risk risk-${TRADE_AIM[o.aim].risk.toLowerCase()}`}
               >
-                {TRADE_AIM[o.aim].risk} risk
+                {riskText(TRADE_AIM[o.aim].risk)}
               </span>
             </span>
             <small>
               {o.text ?? TRADE_AIM[o.aim].text}{" "}
               {!o.to && o.teams.length <= 3
-                ? `(${o.teams.map((t) => t.short).join(", ")})`
+                ? `(${o.teams.map((x) => x.short).join(", ")})`
                 : ""}
             </small>
           </button>
@@ -962,7 +964,7 @@ function TradeCard({ g }: { g: GameState }) {
       </div>
       {blocked.map((x) => (
         <p key={x.team.id} className="small muted">
-          Join {x.friends.map((f) => f.pn).join(" and ")} on the {x.team.name}: {x.why}
+          {t('Join {names} on the {team}: {why}', { names: both(x.friends.map((f) => f.pn)), team: x.team.name, why: x.why ?? '' })}
         </p>
       ))}
       <button
@@ -971,8 +973,8 @@ function TradeCard({ g }: { g: GameState }) {
         onClick={() => pick && ask(pick.aim, pick.to)}
       >
         {pick
-          ? `Ask for a trade: ${pick.label ? pick.label.replace(/^Join/, "join") : TRADE_AIM[pick.aim].label.toLowerCase()}`
-          : "Pick where you want to go"}
+          ? t('Ask for a trade: {aim}', { aim: pick.label ? pick.label.replace(/^Join/, "join") : TRADE_AIM[pick.aim].label.toLowerCase() })
+          : t("Pick where you want to go")}
       </button>
     </section>
   );
@@ -992,15 +994,14 @@ function StyleCard({ g, onTalk }: { g: GameState; onTalk: (k: TeamStyle) => void
   return (
     <section className="card stack">
       <div className="row">
-        <div className="sec-title">Team style</div>
+        <div className="sec-title">{t('Team style')}</div>
         <div className="spacer" />
         <span className="small muted">
-          {now ? `Now: ${TEAM_STYLES[now].name}` : "Not set"}
+          {now ? t('Now: {style}', { style: TEAM_STYLES[now].name }) : t("Not set")}
         </span>
       </div>
       <p className="small muted">
-        You start here, so you have a say in how the team plays. The style moves
-        the team's strength and how well you fit in it. One change a summer.
+        {t("You start here, so you have a say in how the team plays. The style moves the team's strength and how well you fit in it. One change a summer.")}
       </p>
       <div className="stack style-list">
         {(Object.keys(TEAM_STYLES) as TeamStyle[])
@@ -1023,18 +1024,18 @@ function StyleCard({ g, onTalk }: { g: GameState; onTalk: (k: TeamStyle) => void
                     <span
                       className={`scout-rec rec-${fitLabel(f) === "Poor fit" ? "low" : fitLabel(f) === "Okay" ? "moderate" : "high"}`}
                     >
-                      {fitLabel(f)}
+                      {t(FIT[fitLabel(f)])}
                     </span>
                     <span className="style-fx">
                       {e.regular >= 0 ? "+" : ""}
-                      {e.regular} / playoffs {e.playoff >= 0 ? "+" : ""}
+                      {e.regular} / {t('playoffs')} {e.playoff >= 0 ? "+" : ""}
                       {e.playoff}
                     </span>
                   </>
                 )}
               </span>
               <small>
-                {TEAM_STYLES[k].text} Fits {TEAM_STYLES[k].fits}.
+                {TEAM_STYLES[k].text} {t('Fits {who}.', { who: TEAM_STYLES[k].fits })}
               </small>
             </button>
           ))}
@@ -1049,14 +1050,12 @@ function FarewellCard() {
   const [armed, setArmed] = useState(false);
   return (
     <section className="card stack">
-      <div className="sec-title">Farewell tour</div>
+      <div className="sec-title">{t('Farewell tour')}</div>
       <p className="small muted">
-        Tell the world next season is your last. Every arena gets to say goodbye: a lift for your mood
-        and your name now, the team rallying for one last playoff run, a gift from road arenas and a
-        place in your legacy. When it ends, you retire.
+        {t('Tell the world next season is your last. Every arena gets to say goodbye: a lift for your mood and your name now, the team rallying for one last playoff run, a gift from road arenas and a place in your legacy. When it ends, you retire.')}
       </p>
       <button className={`btn ${armed ? "danger" : ""}`} onClick={() => (armed ? (sfx("respect"), farewell()) : setArmed(true))} onBlur={() => setArmed(false)}>
-        {armed ? "Tap again: next season is my last" : "Announce the farewell tour"}
+        {armed ? t("Tap again: next season is my last") : t("Announce the farewell tour")}
       </button>
     </section>
   );
@@ -1067,27 +1066,24 @@ function RetireCard({ g }: { g: GameState }) {
   const [armed, setArmed] = useState(false);
   return (
     <section className="card stack">
-      <div className="sec-title">Your call</div>
+      <div className="sec-title">{t('Your call')}</div>
       <p className="small muted">
-        You can hang it up between any two seasons. At {g.player.age}, with{" "}
-        {g.history.filter((h) => h.level === "NBA").length} NBA season
         {g.history.filter((h) => h.level === "NBA").length === 1
-          ? ""
-          : "s"}{" "}
-        behind you.
+          ? t('You can hang it up between any two seasons. At {age}, with 1 NBA season behind you.', { age: g.player.age })
+          : t('You can hang it up between any two seasons. At {age}, with {n} NBA seasons behind you.', { age: g.player.age, n: g.history.filter((h) => h.level === "NBA").length })}
       </p>
       {armed ? (
         <div className="row" style={{ gap: 8 }}>
           <button className="btn danger" onClick={retire}>
-            Yes, retire now
+            {t('Yes, retire now')}
           </button>
           <button className="btn ghost" onClick={() => setArmed(false)}>
-            Keep playing
+            {t('Keep playing')}
           </button>
         </div>
       ) : (
         <button className="btn ghost" onClick={() => setArmed(true)}>
-          Retire
+          {t('Retire')}
         </button>
       )}
     </section>
@@ -1106,15 +1102,15 @@ export function Home({ g }: { g: GameState }) {
           <Todo g={g} />
         </div>
         <PlayerCard g={g} />
-        <FoldBox id="coach" title="Head coach" icon="whistle">
+        <FoldBox id="coach" title={t('Head coach')} icon="whistle">
           <CoachCard g={g} />
         </FoldBox>
         <Extra>
-          <FoldBox id="scout" title="Scouting report" icon="scouts">
+          <FoldBox id="scout" title={t('Scouting report')} icon="scouts">
             <ScoutCard g={g} compact />
           </FoldBox>
           {!lean && (
-            <Card title="Milestones">
+            <Card title={t('Milestones')} fold="Milestones">
               <MilestoneStrip reached={g.milestones} />
             </Card>
           )}
@@ -1129,7 +1125,7 @@ export function Home({ g }: { g: GameState }) {
             <div className="farewell-bar with-icon">
               <Icon name="gift" size={22} />
               <span>
-                <b>Farewell tour.</b> Your last season: every arena is saying goodbye, and the team wants one more run for you.
+                <b>{t('Farewell tour.')}</b> {t('Your last season: every arena is saying goodbye, and the team wants one more run for you.')}
               </span>
             </div>
           )}
@@ -1196,7 +1192,7 @@ export function Home({ g }: { g: GameState }) {
         {g.mode === "lab" && <LabCard g={g} />}
         {g.step === "summary" && canRetire(g) && <RetireCard g={g} />}
         {last && g.step !== "summary" && !g.flags.fast && (
-          <Card title="Last season">
+          <Card title={t('Last season')} fold="Last season">
             <div className="small prose">
               {seasonLabel(last.year)} · {last.teamName}: {last.w}–{last.l},{" "}
               {last.result}. {perGame(last.line, "pts").toFixed(1)} PPG.
@@ -1207,12 +1203,12 @@ export function Home({ g }: { g: GameState }) {
       <div className="stack home-side">
         {/* round 35: a career with friends keeps its board in sight */}
         {(g.mp?.challenge || g.mp?.klass) && <MpBoard g={g} />}
-        <FoldBox id="modes" title="How you play" icon="dial">
+        <FoldBox id="modes" title={t('How you play')} icon="dial">
           <ModesCard g={g} />
         </FoldBox>
         {/* round 36 (owner: "merge 12"): the MVP race, the duo, the rivalry, the league and the talk in one card */}
         <Extra>
-          <FoldBox id="around" title="Around you" icon="globe">
+          <FoldBox id="around" title={t('Around you')} icon="globe">
             <AroundCard g={g} />
           </FoldBox>
         </Extra>

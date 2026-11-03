@@ -22,6 +22,7 @@ import { compareRows, compareScore } from '../compare';
 import { deleteSlot, exportCode, listSlots, readSlot, type SlotMeta } from '../saves';
 import { seasonLabel } from '../format';
 import { isDev } from '../../dev/mode';
+import { t, tx } from '../../i18n';
 
 /** Download (and on phones, share) the career card. */
 export function CardActions({ rec }: { rec: CareerRecord }) {
@@ -34,21 +35,21 @@ export function CardActions({ rec }: { rec: CareerRecord }) {
       if (share && (await shareCareerCard(rec))) setMsg('');
       else setMsg(await downloadCareerCard(rec));
     } catch {
-      setMsg('Could not make the image in this browser.');
+      setMsg(tx('Could not make the image in this browser.'));
     }
     setBusy(false);
   };
   return (
     <>
       <button className="btn" data-tour="card-download" disabled={busy} onClick={() => run(false)}>
-        Download career card
+        {t('Download career card')}
       </button>
       {canShareFiles() && (
         <button className="btn ghost" disabled={busy} onClick={() => run(true)}>
-          Share
+          {t('Share')}
         </button>
       )}
-      {msg && <span className="small muted">{msg}</span>}
+      {msg && <span className="small muted">{t(msg)}</span>}
     </>
   );
 }
@@ -59,8 +60,10 @@ function fullness(n: number): string | null {
   if (n < LOG_WARN) return null;
   const out = nextOut();
   return n >= LOG_MAX
-    ? `The log is full (${LOG_MAX} of ${LOG_MAX}). The next career you finish replaces the oldest card that is not locked${out ? `: ${out.name}` : ''}.`
-    : `${n} of ${LOG_MAX} cards. One more and the log is full; after that each new career replaces the oldest card that is not locked.`;
+    ? out
+      ? t('The log is full ({max} of {max}). The next career you finish replaces the oldest card that is not locked: {name}.', { max: LOG_MAX, name: out.name })
+      : t('The log is full ({max} of {max}). The next career you finish replaces the oldest card that is not locked.', { max: LOG_MAX })
+    : t('{n} of {max} cards. One more and the log is full; after that each new career replaces the oldest card that is not locked.', { n, max: LOG_MAX });
 }
 
 /** The note on the retirement page: the card went into the log (and which one it pushed out). */
@@ -73,10 +76,10 @@ export function LoggedNote() {
     <div className="log-note">
       <Icon name="cards" size={22} />
       <span>
-        Career card saved to your log{logged.dropped ? `, replacing the oldest (${logged.dropped.name})` : ''}. {warn && !logged.dropped ? warn : ''}
+        {logged.dropped ? t('Career card saved to your log, replacing the oldest ({name}).', { name: logged.dropped.name }) : t('Career card saved to your log.')} {warn && !logged.dropped ? warn : ''}
       </span>
       <button className="btn ghost small" onClick={() => setPage('log')}>
-        Open the log
+        {t('Open the log')}
       </button>
     </div>
   );
@@ -94,11 +97,20 @@ export function CareerLogCard() {
         Career log
       </div>
       <p className="small muted">
-        Your saved careers (continue or look back) and the cards of your last {LOG_MAX} finished careers, on this device. {n[0] ? `${n[0]} card${n[0] === 1 ? '' : 's'}${n[1] ? `, ${n[1]} locked` : ''}.` : 'Finish a career for its first card.'}
-        {live ? ' During a career you can look, download and lock; deleting waits for the start page.' : ` Lock up to ${LOCK_MAX} to keep them for good.`}
+        {t('Your saved careers (continue or look back) and the cards of your last {n} finished careers, on this device.', { n: LOG_MAX })}{' '}
+        {n[0]
+          ? n[1]
+            ? n[0] === 1
+              ? t('1 card, {locked} locked.', { locked: n[1] })
+              : t('{n} cards, {locked} locked.', { n: n[0], locked: n[1] })
+            : n[0] === 1
+              ? t('1 card.')
+              : t('{n} cards.', { n: n[0] })
+          : t('Finish a career for its first card.')}
+        {live ? ` ${t('During a career you can look, download and lock; deleting waits for the start page.')}` : ` ${t('Lock up to {n} to keep them for good.', { n: LOCK_MAX })}`}
       </p>
       <button className="btn ghost" data-tour="log" onClick={() => setPage('log')}>
-        Open the career log
+        {t('Open the career log')}
       </button>
     </section>
   );
@@ -114,21 +126,21 @@ function Compare({ a, b, onClear }: { a: CareerRecord; b: CareerRecord; onClear:
         <PlayerArt name={r.name} number={r.number} pos={r.pos} color={r.team?.color} team={r.team?.name ?? ''} size={56} />
         <span>
           <b>{r.name}</b>
-          <small>{n} row{n === 1 ? '' : 's'} ahead</small>
+          <small>{n === 1 ? t('1 row ahead') : t('{n} rows ahead', { n })}</small>
         </span>
       </span>
     </th>
   );
   return (
-    <section className="card stack cmp" data-tour="log-compare" aria-label={`${a.name} and ${b.name} side by side`}>
+    <section className="card stack cmp" data-tour="log-compare" aria-label={t('{a} and {b} side by side', { a: a.name, b: b.name })}>
       <div className="row">
         <div className="sec-title with-icon">
           <Icon name="compare" size={26} />
-          Side by side
+          {t('Side by side')}
         </div>
         <span className="spacer" />
         <button className="btn ghost small" onClick={onClear}>
-          Clear
+          {t('Clear')}
         </button>
       </div>
       <div className="cmp-scroll">
@@ -154,7 +166,7 @@ function Compare({ a, b, onClear }: { a: CareerRecord; b: CareerRecord; onClear:
           </tbody>
         </table>
       </div>
-      <p className="small muted">▲ marks the better of the two. Retiring age and the difficulty are facts, not scores.</p>
+      <p className="small muted">{t('▲ marks the better of the two. Retiring age and the difficulty are facts, not scores.')}</p>
     </section>
   );
 }
@@ -171,7 +183,7 @@ async function codeOf(id: string): Promise<string | null> {
 function CodeBox({ text }: { text: string }) {
   return (
     <div className="stack" style={{ gap: 4 }}>
-      <span className="small muted">This code is the whole career as it stands. Copied if your browser allows it; otherwise select it and copy. Found a bug? Send it with your feedback and the maker can open the career exactly as it is.</span>
+      <span className="small muted">{t('This code is the whole career as it stands. Copied if your browser allows it; otherwise select it and copy. Found a bug? Send it with your feedback and the maker can open the career exactly as it is.')}</span>
       <textarea className="save-code" readOnly value={text} rows={3} onFocus={(e) => e.currentTarget.select()} />
     </div>
   );
@@ -192,21 +204,21 @@ function SaveEntry({ meta, live, onGone }: { meta: SlotMeta; live: boolean; onGo
         <PlayerArt name={meta.name} number={meta.number ?? 0} pos={meta.pos ?? 'SF'} color={meta.team?.color} team={meta.team?.name ?? ''} size={84} />
         <div className="log-who">
           <div className="kicker">
-            {MODES[meta.mode as Mode]?.name ?? meta.mode} · saved {new Date(meta.at).toLocaleDateString()}
+            {MODES[meta.mode as Mode]?.name ?? meta.mode} · {t('saved {date}', { date: new Date(meta.at).toLocaleDateString() })}
           </div>
           <b className="log-name">{meta.name}</b>
-          <span className={`tag${meta.retired ? '' : ' good'}`}>{here ? 'This career' : meta.retired ? 'Finished' : 'In progress'}</span>
+          <span className={`tag${meta.retired ? '' : ' good'}`}>{here ? t('This career') : meta.retired ? t('Finished') : t('In progress')}</span>
           <div className="small">
             {seasonLabel(meta.year)}
             {meta.team ? ` · ${meta.team.name}` : ''}
-            {meta.age ? ` · age ${meta.age}` : ''}
+            {meta.age ? ` · ${t('age {n}', { n: meta.age })}` : ''}
           </div>
-          {failed && <div className="small" style={{ color: 'var(--bad)' }}>That save could not be read.</div>}
+          {failed && <div className="small" style={{ color: 'var(--bad)' }}>{t('That save could not be read.')}</div>}
         </div>
         <div className="log-nums">
           <div>
             <b>{meta.ovr ?? '–'}</b>
-            <small>peak</small>
+            <small>{t('peak')}</small>
           </div>
         </div>
       </div>
@@ -214,16 +226,16 @@ function SaveEntry({ meta, live, onGone }: { meta: SlotMeta; live: boolean; onGo
       <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
         {!live && (
           <button className="btn" onClick={() => void resume(meta.id).then((ok) => !ok && setFailed(true))}>
-            {meta.retired ? 'Look back' : 'Continue'}
+            {meta.retired ? t('Look back') : t('Continue')}
           </button>
         )}
-        <button className="btn ghost small" onClick={() => void codeOf(meta.id).then((t) => (t ? setCode(t) : setFailed(true)))}>
-          Code
+        <button className="btn ghost small" onClick={() => void codeOf(meta.id).then((x) => (x ? setCode(x) : setFailed(true)))}>
+          {t('Code')}
         </button>
         <span className="spacer" />
         {!live && (
           <button className={`btn small ${armed ? 'danger' : 'ghost'}`} onClick={() => (armed ? (deleteSlot(meta.id), onGone()) : setArmed(true))} onBlur={() => setArmed(false)}>
-            {armed ? 'Tap again to delete' : 'Delete'}
+            {armed ? t('Tap again to delete') : t('Delete')}
           </button>
         )}
       </div>
@@ -263,52 +275,52 @@ function LogEntry({ rec, save, locked, canLock, live, onDelete, onLock, picked, 
           {locked && (
             <span className="log-lock-tag with-icon">
               <Icon name="lock" size={16} />
-              Locked
+              {t('Locked')}
             </span>
           )}
           <div className="small">
-            {NAMES.pos[rec.pos]} · {rec.role} · retired at {rec.retiredAt}
+            {NAMES.pos[rec.pos]} · {rec.role} · {t('retired at {age}', { age: rec.retiredAt })}
           </div>
           <div className="small muted">{rec.tier}</div>
           {/* round 32: his son's career, and what it added */}
           {rec.child && (
             <div className="small log-child">
-              Son {rec.child.name}: peak {rec.child.peak} · +{rec.child.adds} legacy
+              {t('Son {name}: peak {peak} · +{adds} legacy', { name: rec.child.name, peak: rec.child.peak, adds: rec.child.adds })}
             </div>
           )}
-          {failed && <div className="small" style={{ color: 'var(--bad)' }}>That save could not be read.</div>}
+          {failed && <div className="small" style={{ color: 'var(--bad)' }}>{t('That save could not be read.')}</div>}
         </div>
         <div className="log-nums">
           <div>
             <b>{Math.round(rec.peak)}</b>
-            <small>peak</small>
+            <small>{t('peak')}</small>
           </div>
           <div>
             <b>{rec.legacy}</b>
-            <small>legacy</small>
+            <small>{t('legacy')}</small>
           </div>
         </div>
       </div>
-      {open && (img === null ? <p className="small muted keep">Drawing the card…</p> : img ? <img className="log-card-img" src={img} alt={`Career card of ${rec.name}`} /> : <p className="small muted">This browser could not draw the card.</p>)}
+      {open && (img === null ? <p className="small muted keep">{t('Drawing the card…')}</p> : img ? <img className="log-card-img" src={img} alt={t('Career card of {name}', { name: rec.name })} /> : <p className="small muted">{t('This browser could not draw the card.')}</p>)}
       {code && <CodeBox text={code} />}
       <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
         {/* round 34: the career itself, when its save is still on this device */}
         {save && !live && (
           <button className="btn" onClick={() => void resume(save.id).then((ok) => !ok && setFailed(true))}>
-            Look back
+            {t('Look back')}
           </button>
         )}
         <button className="btn ghost" onClick={() => setOpen(!open)} aria-expanded={open}>
-          {open ? 'Hide the card' : 'Show the card'}
+          {open ? t('Hide the card') : t('Show the card')}
         </button>
         <CardActions rec={rec} />
         {save && (
-          <button className="btn ghost small" onClick={() => void codeOf(save.id).then((t) => (t ? setCode(t) : setFailed(true)))}>
-            Code
+          <button className="btn ghost small" onClick={() => void codeOf(save.id).then((x) => (x ? setCode(x) : setFailed(true)))}>
+            {t('Code')}
           </button>
         )}
-        <button className={`btn small${picked ? '' : ' ghost'}`} data-tour="log-pick" aria-pressed={picked} disabled={!picked && !canPick} onClick={onPick} title={picked ? 'Take it out of the comparison' : 'Compare it with another card'}>
-          {picked ? 'Comparing' : 'Compare'}
+        <button className={`btn small${picked ? '' : ' ghost'}`} data-tour="log-pick" aria-pressed={picked} disabled={!picked && !canPick} onClick={onPick} title={picked ? t('Take it out of the comparison') : t('Compare it with another card')}>
+          {picked ? t('Comparing') : t('Compare')}
         </button>
         <span className="spacer" />
         <button
@@ -316,15 +328,15 @@ function LogEntry({ rec, save, locked, canLock, live, onDelete, onLock, picked, 
           data-tour="log-lock"
           aria-pressed={locked}
           disabled={!locked && !canLock}
-          title={!locked && !canLock ? `${LOCK_MAX} cards are locked already: unlock one first` : locked ? 'Unlock: it can be replaced or deleted again' : 'Lock: never replaced, never deleted'}
+          title={!locked && !canLock ? t('{n} cards are locked already: unlock one first', { n: LOCK_MAX }) : locked ? t('Unlock: it can be replaced or deleted again') : t('Lock: never replaced, never deleted')}
           onClick={onLock}
         >
           <Icon name="lock" size={16} />
-          {locked ? 'Unlock' : 'Lock'}
+          {locked ? t('Unlock') : t('Lock')}
         </button>
         {!live && !locked && (
           <button className={`btn small ${armed ? 'danger' : 'ghost'}`} onClick={() => (armed ? onDelete() : setArmed(true))} onBlur={() => setArmed(false)}>
-            {armed ? 'Tap again to delete' : 'Delete'}
+            {armed ? t('Tap again to delete') : t('Delete')}
           </button>
         )}
       </div>
@@ -379,34 +391,34 @@ export function CareerLog() {
       <section className="stack stage-in">
         <div>
           <div className="kicker">
-            {going.length} in progress · {cards.length} of {LOG_MAX} finished · {locks.length} of {LOCK_MAX} locked · on this device
+            {t('{going} in progress · {n} of {max} finished · {locked} of {lockMax} locked · on this device', { going: going.length, n: cards.length, max: LOG_MAX, locked: locks.length, lockMax: LOCK_MAX })}
           </div>
           <h1 className="hub-title with-icon">
             <Icon name="cards" size={40} />
             Career log
           </h1>
           <p className="prose">
-            Every career on this device. The ones in progress come first: continue one, or copy its code (the maker can open it, to look into a bug). Then a card for each finished career: look back at it, download or share the card, compare two side by side. The log keeps {LOG_MAX} finished careers: when it is full, a new one replaces the oldest card that is not locked. Lock up to {LOCK_MAX} you never want to lose.
+            {t('Every career on this device. The ones in progress come first: continue one, or copy its code (the maker can open it, to look into a bug). Then a card for each finished career: look back at it, download or share the card, compare two side by side. The log keeps {max} finished careers: when it is full, a new one replaces the oldest card that is not locked. Lock up to {locks} you never want to lose.', { max: LOG_MAX, locks: LOCK_MAX })}
           </p>
         </div>
         {live && (
           <div className="log-warn with-icon">
             <Icon name="lock" size={20} />
-            <span>You are in a career: look, copy codes, download and lock here. Continuing another career, importing and deleting wait for the start page.</span>
+            <span>{t('You are in a career: look, copy codes, download and lock here. Continuing another career, importing and deleting wait for the start page.')}</span>
           </div>
         )}
-        {going.length > 0 && <div className="sec-title">In progress</div>}
+        {going.length > 0 && <div className="sec-title">{t('In progress')}</div>}
         {going.map((x) => (
           <SaveEntry key={x.id} meta={x} live={live} onGone={() => setSlots(listSlots())} />
         ))}
-        <div className="sec-title">Finished careers</div>
+        <div className="sec-title">{t('Finished careers')}</div>
         {warn && <div className="log-warn">{warn}</div>}
         {picked.length === 2 ? (
           <Compare a={picked[0]} b={picked[1]} onClear={() => setPick([])} />
         ) : cards.length > 1 ? (
-          <p className="small muted keep">{picked.length === 1 ? `Comparing ${picked[0].name}: pick one more card.` : 'Pick two cards with Compare to see them side by side.'}</p>
+          <p className="small muted keep">{picked.length === 1 ? t('Comparing {name}: pick one more card.', { name: picked[0].name }) : t('Pick two cards with Compare to see them side by side.')}</p>
         ) : null}
-        {cards.length === 0 && loose.length === 0 && <p className="muted">No cards yet. Finish a career and its card lands here.</p>}
+        {cards.length === 0 && loose.length === 0 && <p className="muted">{t('No cards yet. Finish a career and its card lands here.')}</p>}
         {cards.map((c) => (
           <LogEntry
             key={c.id}

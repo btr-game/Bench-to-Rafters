@@ -23,18 +23,19 @@ import { CareerTimeline } from '../components/Timeline';
 import { DailyResult } from '../mini/Daily';
 import { BannerArt } from '../art/Trophy';
 import { ChildEnd, NextGen } from '../components/NextGen';
+import { t } from '../../i18n';
 
 function CareerAnalysis({ g }: { g: GameState }) {
   const c = compareCareer(g);
   if (!c.eligible) {
     return (
-      <Card title="Closest careers among the greats" kicker="Career analysis">
+      <Card title={t('Closest careers among the greats')} fold="Closest careers among the greats" kicker={t('Career analysis')}>
         <p className="muted small">{c.reason}</p>
       </Card>
     );
   }
   return (
-    <Card title="Closest careers among the greats" kicker="Career analysis · style model vs 100 real legends">
+    <Card title={t('Closest careers among the greats')} fold="Closest careers among the greats" kicker={t('Career analysis · style model vs 100 real legends')}>
       <div className="stack" style={{ gap: 6 }}>
         {/* the ranking itself comes from the legacy tier list above; this card compares styles */}
         {c.analysis!.slice(1).map((x, i) => (
@@ -44,7 +45,7 @@ function CareerAnalysis({ g }: { g: GameState }) {
         ))}
       </div>
       <div className="sec-title" style={{ marginTop: 12 }}>
-        Closest careers
+        {t('Closest careers')}
       </div>
       <div className="stack" style={{ gap: 6 }}>
         {c.comps!.map((x) => (
@@ -52,10 +53,10 @@ function CareerAnalysis({ g }: { g: GameState }) {
             <div className="row">
               <b>{x.name}</b>
               <div className="spacer" />
-              <span className="num">{x.similarity}% similar</span>
+              <span className="num">{t('{n}% similar', { n: x.similarity })}</span>
             </div>
             <div className="small muted">
-              All-time No. {x.rank} · {x.line} · {x.honours}
+              {t('All-time No. {n}', { n: x.rank })} · {x.line} · {x.honours}
             </div>
           </div>
         ))}
@@ -64,9 +65,9 @@ function CareerAnalysis({ g }: { g: GameState }) {
         <table>
           <thead>
             <tr>
-              <th className="l">Stat</th>
-              <th>You</th>
-              <th>Rank among the 100</th>
+              <th className="l">{t('Stat')}</th>
+              <th>{t('You')}</th>
+              <th>{t('Rank among the 100')}</th>
             </tr>
           </thead>
           <tbody>
@@ -81,8 +82,7 @@ function CareerAnalysis({ g }: { g: GameState }) {
         </table>
       </div>
       <p className="muted small">
-        The comparison set is 100 of the greatest NBA players with approximate career averages and honours through 2024–25. Comparables come
-        from a nearest-neighbour search over scoring, rebounding, playmaking, best season, longevity, honours, size and position.
+        {t('The comparison set is 100 of the greatest NBA players with approximate career averages and honours through 2024–25. Comparables come from a nearest-neighbour search over scoring, rebounding, playmaking, best season, longevity, honours, size and position.')}
       </p>
     </Card>
   );
@@ -98,7 +98,7 @@ function Championships({ g }: { g: GameState }) {
     return n > 1 ? `${t} (${n})` : t;
   });
   return (
-    <Card title="Championships" kicker={nba.length ? `${nba.length}× NBA champion · ${byTeam.join(', ')}` : `${titles.length} title${titles.length > 1 ? 's' : ''}`}>
+    <Card title={t('Championships')} fold="Championships" kicker={nba.length ? t('{n}× NBA champion · {teams}', { n: nba.length, teams: byTeam.join(', ') }) : titles.length > 1 ? t('{n} titles', { n: titles.length }) : t('1 title')}>
       <BannersAndRings g={g} />
       <div className="titles">
         {titles.map((x, i) => (
@@ -139,18 +139,18 @@ function NbaTeams({ g }: { g: GameState }) {
     if (/champion/i.test(h.result)) t.titles++;
   }
   return (
-    <Card title="NBA teams" kicker={`${teams.length} team${teams.length > 1 ? 's' : ''} · ${rows.length} season${rows.length > 1 ? 's' : ''}`}>
+    <Card title={t('NBA teams')} fold="NBA teams" kicker={`${teams.length > 1 ? t('{n} teams', { n: teams.length }) : t('1 team')} · ${rows.length > 1 ? t('{n} seasons', { n: rows.length }) : t('1 season')}`}>
       <div className="titles">
-        {teams.map((t) => (
-          <div key={t.id} className="title-row" style={{ borderLeftColor: t.color }}>
+        {teams.map((tm) => (
+          <div key={tm.id} className="title-row" style={{ borderLeftColor: tm.color }}>
             <div className="title-year">
-              {t.from === t.to ? seasonLabel(t.from) : `${t.from}–${String(t.to + 1).slice(2)}`}
+              {tm.from === tm.to ? seasonLabel(tm.from) : `${tm.from}–${String(tm.to + 1).slice(2)}`}
             </div>
             <div>
-              <div className="title-team">{t.name}</div>
+              <div className="title-team">{tm.name}</div>
               <div className="small muted">
-                {t.seasons} season{t.seasons > 1 ? 's' : ''} · {(t.pts / t.gp).toFixed(1)} PTS, {(t.reb / t.gp).toFixed(1)} REB, {(t.ast / t.gp).toFixed(1)} AST
-                {t.titles ? ` · ${t.titles}× champion` : ''}
+                {tm.seasons > 1 ? t('{n} seasons', { n: tm.seasons }) : t('1 season')} · {(tm.pts / tm.gp).toFixed(1)} PTS, {(tm.reb / tm.gp).toFixed(1)} REB, {(tm.ast / tm.gp).toFixed(1)} AST
+                {tm.titles ? ` · ${t('{n}× champion', { n: tm.titles })}` : ''}
               </div>
             </div>
           </div>
@@ -190,7 +190,7 @@ export function Retirement({ g }: { g: GameState }) {
       {g.flags.daily ? <DailyResult g={g} /> : null}
       <section className="final stack" style={{ gap: 10 }}>
         <div className="kicker">
-          Retired at {g.retiredAt ?? p.age} · {legacyIndex(g)} legacy points · {MODES[g.mode ?? 'standard'].name}
+          {t('Retired at {age} · {n} legacy points', { age: g.retiredAt ?? p.age, n: legacyIndex(g) })} · {MODES[g.mode ?? 'standard'].name}
         </div>
         <div className="verdict">{v.tier}</div>
         <p className="lede">{v.line}</p>
@@ -199,18 +199,18 @@ export function Retirement({ g }: { g: GameState }) {
             {/* round 27 (owner): its own banner for the rafters */}
             <BannerArt kind="oath" color="#7A1E1E" trim="#C9CFDA" lines={['ROUGH', 'ROAD']} size={132} />
             <span>
-              <b>Rough Road, kept to the end</b>
-              <small className="muted">Reality hits hard, master mode, every season played in full. Nobody handed this career anything.</small>
+              <b>{t('Rough Road, kept to the end')}</b>
+              <small className="muted">{t('Reality hits hard, master mode, every season played in full. Nobody handed this career anything.')}</small>
             </span>
           </div>
         ) : null}
         {/* round 32: a son's career has no card of its own: it goes onto his father's */}
         {g.flags.gen2 ? <ChildEnd g={g} /> : <LoggedNote />}
-        {hof && <div className="toast">{hof === 'first' ? 'Inducted into the Hall of Fame on the first ballot.' : 'Inducted into the Hall of Fame.'}</div>}
+        {hof && <div className="toast">{hof === 'first' ? t('Inducted into the Hall of Fame on the first ballot.') : t('Inducted into the Hall of Fame.')}</div>}
         <div className="row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
           {!g.flags.gen2 && <CardActions rec={rec} />}
           <button className="btn ghost" data-tour="retire-new" onClick={reset}>
-            {UI.newCareer}
+            {t(UI.newCareer)}
           </button>
         </div>
       </section>
@@ -229,41 +229,40 @@ export function Retirement({ g }: { g: GameState }) {
       />
       <LegacyRankCard g={g} />
       <CareerAnalysis g={g} />
-      <Card title="Career card" kicker={`${NAMES.pos[p.pos]} · ${p.archetype}`} fold={false}>
+      <Card title={t('Career card')} kicker={`${NAMES.pos[p.pos]} · ${p.archetype}`} fold={false}>
         <div className="row">
           <div className="pc-name">{p.name}</div>
           <div className="spacer" />
           <div className="ovr">
             <b>{Math.round(p.peakOvr)}</b>
-            <small>PEAK</small>
+            <small>{t('PEAK')}</small>
           </div>
         </div>
         <dl className="facts">
           <div>
-            <dt>NBA seasons</dt>
+            <dt>{t('NBA seasons')}</dt>
             <dd>{nbaSeasons}</dd>
           </div>
           <div>
-            <dt>NBA points</dt>
+            <dt>{t('NBA points')}</dt>
             <dd>{Math.round(nbaCareerPoints(g)).toLocaleString()}</dd>
           </div>
           <div>
-            <dt>NBA games</dt>
+            <dt>{t('NBA games')}</dt>
             <dd>{g.nbaGames}</dd>
           </div>
           <div>
-            <dt>Earnings</dt>
+            <dt>{t('Earnings')}</dt>
             <dd>{fmtMoney(p.earnings)}</dd>
           </div>
           <div style={{ gridColumn: '1 / -1' }}>
-            <dt>Teams</dt>
+            <dt>{t('Teams')}</dt>
             <dd>{teams.join(' · ') || p.highSchool}</dd>
           </div>
         </dl>
         {best && (
           <p className="small">
-            Best season: {seasonLabel(best.year)} with {best.teamName} ({LEVELS[best.level].short}): {perGame(best.line, 'pts').toFixed(1)} PTS,{' '}
-            {perGame(best.line, 'reb').toFixed(1)} REB, {perGame(best.line, 'ast').toFixed(1)} AST.
+            {t('Best season: {season} with {team} ({level}): {pts} PTS, {reb} REB, {ast} AST.', { season: seasonLabel(best.year), team: best.teamName, level: LEVELS[best.level].short, pts: perGame(best.line, 'pts').toFixed(1), reb: perGame(best.line, 'reb').toFixed(1), ast: perGame(best.line, 'ast').toFixed(1) })}
           </p>
         )}
       </Card>
@@ -273,16 +272,16 @@ export function Retirement({ g }: { g: GameState }) {
       <CareerHighs g={g} />
       <LegacyTierList g={g} />
       {g.feed[0] && (
-        <Card title="The last word">
+        <Card title={t('The last word')} fold="The last word">
           <ReactionCard r={g.feed[0]} />
         </Card>
       )}
       <CareerTimeline g={g} journal />
-      <Card title="Season by season">
+      <Card title={t('Season by season')} fold="Season by season">
         <HistoryTable rows={g.history} />
       </Card>
       <button className="btn block" onClick={reset}>
-        {UI.newCareer}
+        {t(UI.newCareer)}
       </button>
     </div>
   );

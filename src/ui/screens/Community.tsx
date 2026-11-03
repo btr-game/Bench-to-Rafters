@@ -24,11 +24,12 @@ import { sfx } from '../sound';
 import { houseScores, houseStatues } from '../house';
 import { houseEnded, houseOnCourt } from '../houseLive';
 import { shownBy, signed } from '../names';
+import { t, tx } from '../../i18n';
 
 /** Whose player a card is (round 36): the username it was posted under, when it has one. */
 function By({ rec }: { rec: CareerRecord }) {
   const by = shownBy(rec.by);
-  return by ? <span className="board-by"> by {by}</span> : null;
+  return by ? <span className="board-by"> {t('by {name}', { name: by })}</span> : null;
 }
 
 const OPENED = Date.now();
@@ -48,12 +49,13 @@ function useCommunity(): Api | null {
 /** Today's theme: the daily challenge's prospect, the same for everyone. */
 function theme(): string {
   const d = dailyInput(todayKey());
-  return `${ARCHETYPES[d.pos][d.archetype].name}s from ${d.country ?? 'everywhere'}`;
+  const arch = ARCHETYPES[d.pos][d.archetype].name;
+  return d.country ? t('{arch}s from {country}', { arch, country: d.country }) : t('{arch}s from everywhere', { arch });
 }
 
 const ago = (at: number) => {
   const m = Math.max(0, Math.round((Date.now() - at) / 60000));
-  return m < 1 ? 'just now' : m < 60 ? `${m} min ago` : m < 1440 ? `${Math.round(m / 60)} h ago` : `${Math.round(m / 1440)} d ago`;
+  return m < 1 ? t('just now') : m < 60 ? t('{n} min ago', { n: m }) : m < 1440 ? t('{n} h ago', { n: Math.round(m / 60) }) : t('{n} d ago', { n: Math.round(m / 1440) });
 };
 
 /** The real numbers behind the strip: who is here now and the careers ended since `opened`. */
@@ -91,15 +93,15 @@ export function LiveStrip() {
         <Icon name="live" size={40} />
         <div>
           <b>{n.toLocaleString('en-US')}</b>
-          <small>players on the court right now</small>
+          <small>{t('players on the court right now')}</small>
         </div>
         <div>
           <b>{ended.toLocaleString('en-US')}</b>
-          <small>careers ended since you opened this page</small>
+          <small>{t('careers ended since you opened this page')}</small>
         </div>
       </div>
       <div className="live-theme">
-        <span className="live-chip">Today’s theme</span> <b>{theme()}</b> <span className="muted">· the daily challenge’s prospect</span>
+        <span className="live-chip">{t('Today’s theme')}</span> <b>{theme()}</b> <span className="muted">· {t('the daily challenge’s prospect')}</span>
       </div>
       {items[0] && (
         <div className="live-feed" aria-live="polite">
@@ -108,7 +110,7 @@ export function LiveStrip() {
           <small>{ago(items[0].at)}</small>
         </div>
       )}
-      <small className="live-house">House players included</small>
+      <small className="live-house">{t('House players included')}</small>
     </section>
   );
 }
@@ -122,9 +124,9 @@ export function CommunityCard() {
         <Icon name="crowd" size={28} />
         Community
       </div>
-      <p className="small muted">Leaderboards for every difficulty, the Reality 99 hall, the statue plaza and a line to the game’s maker.</p>
+      <p className="small muted">{t('Leaderboards for every difficulty, the Reality 99 hall, the statue plaza and a line to the game’s maker.')}</p>
       <button className="btn ghost" data-tour="community" onClick={() => setPage('community')}>
-        Open the community
+        {t('Open the community')}
       </button>
     </section>
   );
@@ -142,8 +144,8 @@ function CardImage({ rec }: { rec: CareerRecord }) {
       live = false;
     };
   }, [rec]);
-  if (src === null) return <p className="small muted keep">Drawing the card…</p>;
-  return src ? <img className="log-card-img" src={src} alt={`Career card of ${rec.name}`} /> : null;
+  if (src === null) return <p className="small muted keep">{t('Drawing the card…')}</p>;
+  return src ? <img className="log-card-img" src={src} alt={t('Career card of {name}', { name: rec.name })} /> : null;
 }
 
 /** A pixel X for the close button. */
@@ -166,12 +168,12 @@ function CardPop({ rec, label, tone, head, onClose }: { rec: CareerRecord; label
   return createPortal(
     <div className="hall-pop" role="dialog" aria-modal="true" aria-label={label} onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className={`hall-pop-card card-pop ${tone}`}>
-        <button className="pop-x" aria-label="Close" onClick={onClose} autoFocus>
+        <button className="pop-x" aria-label={t('Close')} onClick={onClose} autoFocus>
           <PixelX />
         </button>
         <div className="hall-pop-head">{head}</div>
         <CardImage rec={rec} />
-        <p className="small muted keep pop-hint">Space, Enter or Esc to close</p>
+        <p className="small muted keep pop-hint">{t('Space, Enter or Esc to close')}</p>
       </div>
     </div>,
     document.body,
@@ -180,9 +182,9 @@ function CardPop({ rec, label, tone, head, onClose }: { rec: CareerRecord; label
 
 /** What each challenge board holds, under its tabs. */
 const BOARD_NOTE: Partial<Record<Board, string>> = {
-  reality: 'Rough Road careers rank here too, marked: they are Reality careers played the hard way.',
-  rough: 'Rough Road careers only: Reality hits hard in master mode, the whole player picked at random, nothing simplified, no undo. They rank on the Reality board too.',
-  comet: 'Comet careers only: Shoot for the stars at hyper speed, with fast break and sim for the whole career. They rank here and not on the Shoot for the stars board, which keeps careers played by hand.',
+  reality: tx('Rough Road careers rank here too, marked: they are Reality careers played the hard way.'),
+  rough: tx('Rough Road careers only: Reality hits hard in master mode, the whole player picked at random, nothing simplified, no undo. They rank on the Reality board too.'),
+  comet: tx('Comet careers only: Shoot for the stars at hyper speed, with fast break and sim for the whole career. They rank here and not on the Shoot for the stars board, which keeps careers played by hand.'),
 };
 
 function Boards({ c }: { c: Api }) {
@@ -210,22 +212,22 @@ function Boards({ c }: { c: Api }) {
         </div>
         <div className="seg">
           <button aria-pressed={scope === 'day'} onClick={() => setScope('day')}>
-            Today
+            {t('Today')}
           </button>
           <button aria-pressed={scope === 'all'} onClick={() => setScope('all')}>
-            All time
+            {t('All time')}
           </button>
         </div>
       </div>
       <p className="small muted">
-        {c.kind === 'shared' ? `The top ${BOARD_SIZE} players, each at their best career.` : 'Offline: your own best careers on this device.'} {SCORE_NOTE}
+        {c.kind === 'shared' ? t('The top {n} players, each at their best career.', { n: BOARD_SIZE }) : t('Offline: your own best careers on this device.')} {t(SCORE_NOTE)}
       </p>
-      {BOARD_NOTE[board] && <p className="small">{BOARD_NOTE[board]}</p>}
-      <p className="small muted">House players (marked) are careers the game played itself, here to keep the boards warm until real ones push them down.</p>
+      {BOARD_NOTE[board] && <p className="small">{t(BOARD_NOTE[board]!)}</p>}
+      <p className="small muted">{t('House players (marked) are careers the game played itself, here to keep the boards warm until real ones push them down.')}</p>
       {rows === null ? (
-        <p className="muted">Loading…</p>
+        <p className="muted">{t('Loading…')}</p>
       ) : rows.length === 0 ? (
-        <p className="muted">{scope === 'day' ? 'Nobody has finished a career here today. Be the first.' : 'No careers on this board yet.'}</p>
+        <p className="muted">{scope === 'day' ? t('Nobody has finished a career here today. Be the first.') : t('No careers on this board yet.')}</p>
       ) : (
         <ol className="board-list">
           {rows.map((r, i) => (
@@ -237,13 +239,13 @@ function Boards({ c }: { c: Api }) {
                   <b>
                     {r.rec.name}
                     <By rec={r.rec} />
-                    {r.mine ? <span className="you"> you</span> : null}
+                    {r.mine ? <span className="you"> {t('you')}</span> : null}
                     {r.house ? <HouseTag /> : null}
                     {r.rec.oath ? <OathMark size={16} /> : null}
                     {r.rec.comet ? <CometMark size={16} /> : null}
                   </b>
                   <small>
-                    {NAMES.pos[r.rec.pos]} · {r.rec.tier} · peak {Math.round(r.rec.peak)} · {r.rec.titles} title{r.rec.titles === 1 ? '' : 's'}
+                    {NAMES.pos[r.rec.pos]} · {r.rec.tier} · {t('peak {n}', { n: Math.round(r.rec.peak) })} · {r.rec.titles === 1 ? t('1 title') : t('{n} titles', { n: r.rec.titles })}
                   </small>
                 </span>
                 <span className="board-score">{r.score.toFixed(1)}</span>
@@ -260,8 +262,8 @@ function Boards({ c }: { c: Api }) {
 /** Marks one of the game's own careers (house.ts). */
 function HouseTag() {
   return (
-    <span className="house-tag" title="A house player: a career the game played itself">
-      house
+    <span className="house-tag" title={t('A house player: a career the game played itself')}>
+      {t('house')}
     </span>
   );
 }
@@ -370,29 +372,30 @@ function Hall({ c }: { c: Api }) {
   return (
     <div className="stack">
       <p className="prose">
-        Reality hits hard is built so almost nobody gets there. Every career that reaches a 99 there takes a seat in this hall, for good. {seated.length ? 'Tap a silhouette to see who it is.' : 'Nobody has made it yet: about one Reality career in a thousand does.'}
+        {t('Reality hits hard is built so almost nobody gets there. Every career that reaches a 99 there takes a seat in this hall, for good.')}{' '}
+        {seated.length ? t('Tap a silhouette to see who it is.') : t('Nobody has made it yet: about one Reality career in a thousand does.')}
       </p>
       {rows === null ? (
-        <p className="muted">Loading…</p>
+        <p className="muted">{t('Loading…')}</p>
       ) : (
         <div className="hall-room">
           <HallBackdrop />
           <div className="hall-sign">
             <Icon name="hall" size={30} />
-            Reality 99 hall · {seated.length} seated
+            Reality 99 hall · {t('{n} seated', { n: seated.length })}
           </div>
           {benches.map((bench, b) => (
             <div key={b} className="hall-bench">
               <div className="hall-seats">
                 {bench.map((r, i) =>
                   r ? (
-                    <button key={r.id} className={`hall-seat${pick === r.id ? ' on' : ''}`} aria-pressed={pick === r.id} aria-label={`Seat ${b * per + i + 1}: who is it?`} onClick={() => (sfx('reveal'), setPick(r.id))}>
+                    <button key={r.id} className={`hall-seat${pick === r.id ? ' on' : ''}`} aria-pressed={pick === r.id} aria-label={t('Seat {n}: who is it?', { n: b * per + i + 1 })} onClick={() => (sfx('reveal'), setPick(r.id))}>
                       <span className="hall-sit">
                         <PlayerArt name={r.rec.name} number={r.rec.number} pos="SG" color={r.rec.team?.color} team={r.rec.team?.name ?? ''} size={200} noBall />
                       </span>
                     </button>
                   ) : (
-                    <span key={`empty-${i}`} className="hall-seat locked" role="img" aria-label="An empty seat, locked">
+                    <span key={`empty-${i}`} className="hall-seat locked" role="img" aria-label={t('An empty seat, locked')}>
                       <span className="hall-sit">
                         <PlayerArt name={['Empty Seat', 'Open Chair', 'Waiting Spot', 'Vacant Place', 'Free Bench'][i % 5]} number={0} pos="SG" size={200} noBall />
                       </span>
@@ -454,37 +457,36 @@ function Plaza({ c }: { c: Api }) {
     const r = await c.respect(id);
     if (r === 'ok') sfx('respect');
     // an invitation is a claude.ai matter; anywhere players can write, a failed respect just did not get through
-    setMsg(r === 'ok' ? '' : c.canWrite ? 'That did not go through. Try again in a moment.' : 'Paying respects needs an invitation to post here.');
+    setMsg(r === 'ok' ? '' : c.canWrite ? tx('That did not go through. Try again in a moment.') : tx('Paying respects needs an invitation to post here.'));
     load();
   };
   return (
     <div className="stack">
       <p className="prose">
-        Regular guy careers with {STATUE.minLegacy}+ legacy points can raise a statue (gold from {STATUE.gold}, or a first-ballot Hall of Famer). The plaza holds {STATUE.max}: {rows?.length ?? '…'} stand
-        today. Tap a statue for its career card, and pay your respects.
+        {t('Regular guy careers with {min}+ legacy points can raise a statue (gold from {gold}, or a first-ballot Hall of Famer). The plaza holds {max}: {n} stand today. Tap a statue for its career card, and pay your respects.', { min: STATUE.minLegacy, gold: STATUE.gold, max: STATUE.max, n: rows?.length ?? '…' })}
       </p>
-      {msg && <p className="small" style={{ color: 'var(--bad)' }}>{msg}</p>}
+      {msg && <p className="small" style={{ color: 'var(--bad)' }}>{t(msg)}</p>}
       {rows && rows.length === 0 && (
         <p className="muted with-icon">
           <Icon name="statue" size={34} />
-          No statues yet. The first one is waiting for a great career.
+          {t('No statues yet. The first one is waiting for a great career.')}
         </p>
       )}
       <div className="plaza">
         {rows?.map((s) => (
           <div key={s.id} className="plaza-spot">
-            <button className="plaza-statue" onClick={() => (sfx('reveal'), setOpen(s.id))} aria-haspopup="dialog" aria-label={`The statue of ${s.rec.name}: see the career card`}>
+            <button className="plaza-statue" onClick={() => (sfx('reveal'), setOpen(s.id))} aria-haspopup="dialog" aria-label={t('The statue of {name}: see the career card', { name: s.rec.name })}>
               <StatueArt rec={s.rec} metal={s.metal} size={130} />
             </button>
             <small>
-              {s.rec.legacy} legacy · {s.respects} respect{s.respects === 1 ? '' : 's'}
+              {s.respects === 1 ? t('{legacy} legacy · 1 respect', { legacy: s.rec.legacy }) : t('{legacy} legacy · {n} respects', { legacy: s.rec.legacy, n: s.respects })}
             </small>
             {s.house ? (
               <HouseTag />
             ) : (
               <button className="btn small ghost with-icon" disabled={s.paid} onClick={() => pay(s.id)}>
                 <Icon name="respect" size={18} />
-                {s.paid ? 'Respects paid' : 'Pay respects'}
+                {s.paid ? t('Respects paid') : t('Pay respects')}
               </button>
             )}
           </div>
@@ -507,7 +509,7 @@ function Plaza({ c }: { c: Api }) {
                   <By rec={shown.rec} />
                 </b>
                 <div className="small muted">
-                  {shown.metal === 'gold' ? 'Gold' : 'Bronze'} statue · {shown.rec.legacy} legacy · {shown.respects} respect{shown.respects === 1 ? '' : 's'}
+                  {shown.metal === 'gold' ? t('Gold statue') : t('Bronze statue')} · {shown.respects === 1 ? t('{legacy} legacy · 1 respect', { legacy: shown.rec.legacy }) : t('{legacy} legacy · {n} respects', { legacy: shown.rec.legacy, n: shown.respects })}
                 </div>
                 <div className="small muted">
                   {shown.rec.country} · {NAMES.pos[shown.rec.pos]} · {shown.rec.tier}
@@ -557,40 +559,40 @@ function Feedback({ c, where }: { c: Api; where?: string }) {
       {inbox && state !== 'denied' ? (
         <>
           <p className="prose">
-            Found a bug, have an idea, or just want to say something?{' '}
-            {c.kind === 'local' ? 'This copy of the game is not online right now, so the message stays on this device.' : 'It goes straight to the maker’s inbox and nobody else can read it.'}
-            {where ? ' The tab you are on is sent with it.' : ''}
+            {t('Found a bug, have an idea, or just want to say something?')}{' '}
+            {c.kind === 'local' ? t('This copy of the game is not online right now, so the message stays on this device.') : t('It goes straight to the maker’s inbox and nobody else can read it.')}
+            {where ? ` ${t('The tab you are on is sent with it.')}` : ''}
           </p>
           <label className="field">
-            <span className="small muted">Your message</span>
-            <textarea rows={where ? 4 : 6} maxLength={2000} value={text} onChange={(e) => setText(e.target.value)} placeholder="What should the maker know?" />
+            <span className="small muted">{t('Your message')}</span>
+            <textarea rows={where ? 4 : 6} maxLength={2000} value={text} onChange={(e) => setText(e.target.value)} placeholder={t('What should the maker know?')} />
           </label>
           <label className="field">
-            <span className="small muted">How to reach you (optional)</span>
-            <input maxLength={200} value={contact} onChange={(e) => setContact(e.target.value)} placeholder="Only if you want an answer" />
+            <span className="small muted">{t('How to reach you (optional)')}</span>
+            <input maxLength={200} value={contact} onChange={(e) => setContact(e.target.value)} placeholder={t('Only if you want an answer')} />
           </label>
           <div className="row" style={{ gap: 10, alignItems: 'center' }}>
             <button className="btn with-icon" data-tour="feedback-send" disabled={!text.trim() || state === 'sending'} onClick={send}>
               <Icon name="envelope" size={22} />
-              {c.kind === 'local' ? 'Keep the note' : 'Send feedback'}
+              {c.kind === 'local' ? t('Keep the note') : t('Send feedback')}
             </button>
-            {state === 'ok' && <span className="small">{c.kind === 'local' ? 'Kept on this device.' : 'Sent to the maker. Thank you!'}</span>}
-            {state === 'error' && <span className="small" style={{ color: 'var(--bad)' }}>It did not go through. Try again in a moment.</span>}
+            {state === 'ok' && <span className="small">{c.kind === 'local' ? t('Kept on this device.') : t('Sent to the maker. Thank you!')}</span>}
+            {state === 'error' && <span className="small" style={{ color: 'var(--bad)' }}>{t('It did not go through. Try again in a moment.')}</span>}
           </div>
         </>
       ) : (
-        <p className="prose">Found a bug, have an idea, or just want to say something? Leave it as a comment on the game’s page: the maker reads every one.</p>
+        <p className="prose">{t('Found a bug, have an idea, or just want to say something? Leave it as a comment on the game’s page: the maker reads every one.')}</p>
       )}
       {viaComment && (
         <div className="row" style={{ gap: 10, alignItems: 'center' }}>
           <button className="btn with-icon" data-tour="feedback-send" onClick={() => void comment()}>
             <Icon name="envelope" size={22} />
-            Write a comment
+            {t('Write a comment')}
           </button>
-          <span className="small muted">Opens the page’s comment box right here.</span>
+          <span className="small muted">{t('Opens the page’s comment box right here.')}</span>
         </div>
       )}
-      {!inbox && (commentable === false || boxGone) && <p className="small muted">Comments are off for you on this page. Ask the maker for an invitation to send feedback from the game.</p>}
+      {!inbox && (commentable === false || boxGone) && <p className="small muted">{t('Comments are off for you on this page. Ask the maker for an invitation to send feedback from the game.')}</p>}
     </div>
   );
 }
@@ -603,7 +605,7 @@ export function FeedbackFoot({ where }: { where: string }) {
     <details className="card feedback-foot">
       <summary className="with-icon">
         <Icon name="envelope" size={20} />
-        Report a bug or send feedback
+        {t('Report a bug or send feedback')}
       </summary>
       <Feedback c={c} where={where} />
     </details>
@@ -617,23 +619,23 @@ export function CommunityPage() {
   const c = useCommunity();
   const [tab, setTab] = useState<Tab>('boards');
   const tabs: [Tab, string, string][] = [
-    ['boards', 'Leaderboards', 'podium'],
+    ['boards', t('Leaderboards'), 'podium'],
     ['hall', 'Reality 99 hall', 'hall'],
     ['plaza', 'Statue plaza', 'statue'],
-    ['feedback', 'Send feedback', 'envelope'],
+    ['feedback', t('Send feedback'), 'envelope'],
   ];
   return (
     <div className="wrap">
       <PageTop trail={['Community']} back={() => setPage(null)} />
       <section className="stack stage-in">
         <div>
-          <div className="kicker">{c?.kind === 'shared' ? 'Shared with everyone on this page' : 'Offline: this device only'}</div>
+          <div className="kicker">{c?.kind === 'shared' ? t('Shared with everyone on this page') : t('Offline: this device only')}</div>
           <h1 className="hub-title with-icon">
             <Icon name="crowd" size={40} />
             Community
           </h1>
-          {c && c.kind === 'shared' && !c.canWrite && <p className="small muted">You can look around. Posting scores, statues and feedback needs an invitation to the game as a Contributor.</p>}
-          {c?.kind === 'local' && <p className="small muted">This copy of the game is not connected, so the boards and the plaza only hold careers from this device.</p>}
+          {c && c.kind === 'shared' && !c.canWrite && <p className="small muted">{t('You can look around. Posting scores, statues and feedback needs an invitation to the game as a Contributor.')}</p>}
+          {c?.kind === 'local' && <p className="small muted">{t('This copy of the game is not connected, so the boards and the plaza only hold careers from this device.')}</p>}
         </div>
         <LiveStrip />
         <div className="seg" data-tour="comm-tabs">
@@ -645,7 +647,7 @@ export function CommunityPage() {
           ))}
         </div>
         {!c ? (
-          <p className="muted">Connecting…</p>
+          <p className="muted">{t('Connecting…')}</p>
         ) : tab === 'boards' ? (
           <Boards c={c} />
         ) : tab === 'hall' ? (
@@ -707,21 +709,21 @@ export function CommunityNote({ rec }: { rec: CareerRecord }) {
     <section className="card community-note stack" data-tour="community-note" aria-live="polite">
       <div className="sec-title with-icon">
         <Icon name="podium" size={26} />
-        This career and the community
+        {t('This career and the community')}
       </div>
       <div className="cn-row">
         <Icon name="podium" size={30} />
         <div>
           <b>
             {!rank
-              ? `Career index ${scoreOf(rec).toFixed(1)}: checking the ${mode} boards…`
+              ? t('Career index {index}: checking the {mode} boards…', { index: scoreOf(rec).toFixed(1), mode })
               : ranked(rank.day) || ranked(rank.all)
-                ? `On the ${mode} leaderboard: ${[ranked(rank.day) ? `#${rank.day} today` : '', ranked(rank.all) ? `#${rank.all} all time` : ''].filter(Boolean).join(', ')}`
-                : `Career index ${scoreOf(rec).toFixed(1)}: outside the ${mode} top ${BOARD_SIZE} this time`}
+                ? t('On the {mode} leaderboard: {places}', { mode, places: [ranked(rank.day) ? t('#{n} today', { n: rank.day }) : '', ranked(rank.all) ? t('#{n} all time', { n: rank.all }) : ''].filter(Boolean).join(', ') })
+                : t('Career index {index}: outside the {mode} top {n} this time', { index: scoreOf(rec).toFixed(1), mode, n: BOARD_SIZE })}
           </b>
           <small className="muted">
-            Career index {scoreOf(rec).toFixed(1)}
-            {rec.index ? ` (career ${rec.index.total.toFixed(1)}, best five seasons ${rec.index.best.toFixed(1)})` : ''}. The boards keep each player’s best career{c.kind === 'local' ? ', on this device' : ''}.
+            {rec.index ? t('Career index {index} (career {total}, best five seasons {best}).', { index: scoreOf(rec).toFixed(1), total: rec.index.total.toFixed(1), best: rec.index.best.toFixed(1) }) : t('Career index {index}.', { index: scoreOf(rec).toFixed(1) })}{' '}
+            {c.kind === 'local' ? t('The boards keep each player’s best career, on this device.') : t('The boards keep each player’s best career.')}
           </small>
         </div>
       </div>
@@ -729,8 +731,8 @@ export function CommunityNote({ rec }: { rec: CareerRecord }) {
         <div className="cn-row">
           <Icon name="hall" size={30} />
           <div>
-            <b>In the Reality 99 hall</b>
-            <small className="muted">A 99 in Reality hits hard: your seat in the hall is lit.</small>
+            <b>{t('In the Reality 99 hall')}</b>
+            <small className="muted">{t('A 99 in Reality hits hard: your seat in the hall is lit.')}</small>
           </div>
         </div>
       )}
@@ -740,36 +742,36 @@ export function CommunityNote({ rec }: { rec: CareerRecord }) {
           <div>
             {statueOk(rec) ? (
               <>
-                <b>{built === 'ok' ? 'Your statue stands in the plaza' : `This career can raise a statue (${rec.legacy >= STATUE.gold || rec.hof === 'first' ? 'gold' : 'bronze'})`}</b>
+                <b>{built === 'ok' ? t('Your statue stands in the plaza') : rec.legacy >= STATUE.gold || rec.hof === 'first' ? t('This career can raise a statue (gold)') : t('This career can raise a statue (bronze)')}</b>
                 <small className="muted">
                   {built === 'full'
-                    ? 'The plaza is full (100 statues).'
+                    ? t('The plaza is full (100 statues).')
                     : built === 'denied' && !c.canWrite
-                      ? 'Raising a statue needs an invitation to post here.'
+                      ? t('Raising a statue needs an invitation to post here.')
                       : built === 'error' || built === 'denied'
-                        ? 'The statue could not be raised. Try again.'
-                        : `${rec.legacy} legacy points: ${STATUE.minLegacy} raise a statue, ${STATUE.gold} or a first-ballot Hall of Famer make it gold.`}
+                        ? t('The statue could not be raised. Try again.')
+                        : t('{n} legacy points: {min} raise a statue, {gold} or a first-ballot Hall of Famer make it gold.', { n: rec.legacy, min: STATUE.minLegacy, gold: STATUE.gold })}
                 </small>
               </>
             ) : (
               <>
-                <b>No statue this time</b>
+                <b>{t('No statue this time')}</b>
                 <small className="muted">
-                  {rec.legacy} legacy points; a statue takes {STATUE.minLegacy} on Regular guy.
+                  {t('{n} legacy points; a statue takes {min} on Regular guy.', { n: rec.legacy, min: STATUE.minLegacy })}
                 </small>
               </>
             )}
           </div>
           {statueOk(rec) && built !== 'ok' && (
             <button className="btn small" data-tour="statue-raise" disabled={built === 'busy'} onClick={build}>
-              Raise a statue
+              {t('Raise a statue')}
             </button>
           )}
         </div>
       )}
       <div className="row" style={{ gap: 8 }}>
         <button className="btn ghost small" onClick={() => setPage('community')}>
-          See the community
+          {t('See the community')}
         </button>
       </div>
     </section>
