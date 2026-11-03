@@ -1235,10 +1235,10 @@ export const FLOOR = {
   shot: { rim: 0.67, paint: 0.48, mid: 0.44, three: 0.385, perPoint: { rim: 0.006, paint: 0.0055, mid: 0.005, three: 0.005 }, deep: 26, deepPerFt: 0.04, min: 0.02, max: 0.93 },
   /** A defender closer than `within` feet takes up to `max` off the chance; tired legs up to `tired`. */
   contest: { within: 6, max: 0.17, tired: 0.08 },
-  /** His meter: how long a full load takes (game seconds), the window's half-width at 0 and 100
+  /** His meter: how long a full load takes (game seconds; 1.5 is half a real second at the tripled clock), the window's half-width at 0 and 100
    * shooting, what being contested or tired takes off it, and what a perfect or a missed release does
    * to the chance (scaled between). */
-  meter: { load: 0.9, window: [0.1, 0.26], contested: 0.45, tired: 0.4, best: 1.15, worst: 0.55 },
+  meter: { load: 1.5, window: [0.1, 0.26], contested: 0.45, tired: 0.4, best: 1.15, worst: 0.55 },
   /** Free throws: the chance from free-throw touch 0 to 100. */
   ft: [0.5, 0.95],
   /** Fouls on a shot: at the rim, on a jumper; bonus from this many team fouls; out at six. */

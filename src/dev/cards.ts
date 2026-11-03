@@ -30,6 +30,7 @@ import { resetTour } from '../ui/components/GuideTour';
 import { decision, moment, onlyMoment, play, type PlayOpts } from './stage';
 import { isFinal, type LiveRequest } from '../engine/career/live';
 import { CamLab } from './CamLab';
+import { FloorLab } from './FloorLab';
 import { LEVEL_IDS, type Level } from '../engine/levels';
 import { ROAD_MINIS, type Road } from '../ui/road';
 import type { ChosenLook } from '../content/looks';
@@ -511,6 +512,7 @@ export const CARDS: DevCard[] = [
   { id: 'd-recruit', title: 'Build the starting five', group: 'Decisions', icon: 'superteam', blurb: 'The scouting board and recruiting.', open: () => show(at('recruit', (s) => canRecruit(s))), press: '[data-tour="move-roster"]' },
 
   // big moments
+  { id: 'floor-lab', title: 'The Floor: first court', group: 'Big moments', icon: 'clutch', blurb: 'Round 39, step 1: the fourth quarter of an elimination game, played. The high three-quarter court in his team’s arena (the court, the crowd, the vibes), ten pixel players, the shot meter and the score bug. Pick the teams, the difficulty, how good he is, the start and the pace.', open: () => true, page: FloorLab },
   { id: 'cam-lab', title: 'Action cam lab', group: 'Big moments', icon: 'camera', blurb: 'Any play on the finals cam, slowed right down, any two teams.', open: () => true, page: CamLab },
   { id: 'intro', title: 'Intro page', group: 'Start', icon: 'ball', blurb: 'The title over a side-on one-on-one: runs, steals, blocks and jumpers in pixel frames, the venue changing every five seconds. First visit only, or the Intro button on the start page.', open: () => void useStore.setState({ game: null, page: null, mini: null, intro: true }) },
   { id: 'whats-new', title: 'What’s new', group: 'Start', icon: 'news', blurb: 'The latest changes in a panel over part of the start page. It opens by itself once after each update; What’s new beside Intro opens it again.', open: () => void useStore.setState({ game: null, page: null, mini: null, intro: false, finale: null, news: true }) },

@@ -28,7 +28,7 @@ const setup = (seed: number, mode: FloorSetup['mode'] = 'standard', o: { FT?: nu
 /** A scripted player: drifts, sprints now and then, shoots with a fixed hold, steals and jumps. */
 function scripted(s: FloorState): FloorInput {
   const k = s.tick;
-  const hold = k % 40 < 6; // presses for six ticks (0.9 s: a full load), then lets go
+  const hold = k % 40 < 10; // presses for ten ticks (1.5 s: a full load), then lets go
   return { dx: Math.sin(k / 30), dy: Math.cos(k / 45), sprint: k % 50 < 10, shoot: hold, pass: k % 97 === 0 ? 'auto' : null, steal: k % 61 === 0, block: k % 73 === 0, move: k % 89 === 0 ? 'cross' : null };
 }
 

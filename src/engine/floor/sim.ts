@@ -179,6 +179,9 @@ export interface FloorInput {
   dy?: number;
   sprint?: boolean;
   shoot?: boolean;
+  /** At the release, how long he held the shoot key (game seconds), timed by the screen to the
+   * millisecond; without it the engine counts whole ticks. */
+  load?: number;
   /** Pass to this player (index), or to the most open man; off the ball, call for it. */
   pass?: number | 'auto' | null;
   move?: 'cross' | 'spin' | 'step' | null;
@@ -737,7 +740,7 @@ function userActs(s: FloorState, inp: FloorInput): void {
     // the shot: held loads the meter, the release shoots
     if (mine && inp.shoot) s.load = s.load < 0 ? 0 : s.load + DT;
     else if (mine && s.load >= 0) {
-      const q = releaseQuality(s, u, s.load);
+      const q = releaseQuality(s, u, inp.load ?? s.load);
       s.load = -1;
       return release(s, ui, q);
     } else s.load = -1;
@@ -842,7 +845,7 @@ export function stepFloor(s: FloorState, inp: FloorInput | null): void {
       // his free throw waits for his release
       if (inp!.shoot) s.load = s.load < 0 ? 0 : s.load + DT;
       else if (s.load >= 0) {
-        const q = releaseQuality(s, u, s.load);
+        const q = releaseQuality(s, u, inp!.load ?? s.load);
         s.load = -1;
         shootFt(s, q);
       }
@@ -993,10 +996,4 @@ export function floorResult(s: FloorState): { us: number; them: number; win: boo
     line: { ...s.players[s.user].box },
     box: s.players.map((p) => ({ name: p.name, team: p.team, box: { ...p.box } })),
   };
-}
-
-/** The meter as the screen shows it: how full (1 = the sweet spot) and how wide the window is. */
-export function meterOf(s: FloorState): { fill: number; window: number } | null {
-  if (s.load < 0) return null;
-  return { fill: s.load / FLOOR.meter.load, window: meterWindow(s, s.players[s.user]) };
 }

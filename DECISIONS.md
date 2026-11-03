@@ -3320,6 +3320,35 @@ multiple times."
   stars 56.33% (2 warmer, 1.5 colder). A bias found and fixed on the way: under Skip his own
   defender never reached in, so the other team turned it over less.
 
+- **Step 1, the first court** (owner: "let's start with step 1"; a card in the dev deck, the Floor
+  lab, not yet in careers). The court is drawn a pixel at a time on a 400 by 225 canvas scaled up
+  by a whole number (three times on a 1440-wide screen): the camera stands high behind the near
+  sideline and only slides along the court, so each screen row keeps one depth and the floor (the
+  planks banded in three tones, the paint and the centre circle in the team's colours, the apron),
+  the one-pixel lines and the stands are a few sums a pixel; it runs at 60 frames a second. His
+  team's arena, as the owner asked: the court, the crowd and the vibes, no banners. The crowd sits
+  in two tiers at their own depths (they slide at their own pace), with a ribbon board in the
+  team's colours between them, the roof's lights above, flashes in the stands, and courtside
+  heads in front; the crowd bounces with the momentum and the last minutes of a close game. The
+  baskets are seen almost edge-on, the broadcast look: the padded stanchion, the arm, the glass,
+  the rim and the net. The players are the game's own sprites in their kits and looks, drawn a
+  sprite pixel to a canvas pixel: scaled down for depth, the hand-drawn faces and numbers lost
+  columns (a 23 read as 21), so the court's perspective carries the depth instead. Ten players, a
+  ring under him and a marker over him, the ball dribbled, passed and shot in arcs, and the meter
+  beside him (its window in green, his load in yellow, red past it, and the release's colour for a
+  moment after). The score bug: both teams in their colours with the score, timeouts, fouls and
+  the bonus, the quarter and the clock, the series, the shot clock (red from five). Big words over
+  the court after a play, a pause (resume, a timeout, skip to the end, start again) and the final
+  (the score, his line). The keys as the ideas document set them: WASD or the arrows, Shift, J, K
+  (aimed with the arrows), L, Space, T and Esc.
+- **The meter, timed for a person**: a full load is 1.5 game seconds (half a real second at the
+  tripled clock; 0.9 was 0.3 of a real second, too quick to time), and the screen sends the hold it
+  timed to the millisecond (`load` in the input), so a release is not rounded to a 50 ms tick.
+- **Pace** in the lab: 3x (the four-minute quarter, the owner's choice), 2x or 1.5x, to feel how
+  fast everyone moves: at three times the clock, a sprint crosses the court in about two real
+  seconds.
+- The Floor's 36 new words are translated into the five languages as they are written.
+
 ## Round 40 (owner requests): languages
 
 - Korean, Chinese (simplified), Japanese, Spanish and French, the interface only (owner: "let's
@@ -3343,3 +3372,6 @@ multiple times."
   the language (5위, 5位, 第5, 5.º, 5e). One English word with two meanings takes a context in its
   key (`Back@@body`, `Back@@view`), shown without it. The settings' names (Fast break, Sim, Simple
   text, Guide, Master) are translated, each language using one name everywhere.
+- **Published** (owner: "you can publish. i checked the korean choices"): rounds 38 and 40 together,
+  round 39's engine with them (not yet on screen): the game artifact (version 79) and the website
+  (main at 47bff40, Netlify's deploy ready).

@@ -3135,3 +3135,48 @@ td > .link-btn { min-width: 44px; text-align: left; }
 :root:lang(zh) { --f-display: 'Big Shoulders Display', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif; --f-body: 'Archivo', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', system-ui, sans-serif; --f-mono: 'IBM Plex Mono', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', monospace; }
 :root:lang(ko) body { word-break: keep-all; }
 .set-langs { flex-wrap: wrap; }
+
+/* Round 39: the Floor. An arena at night whatever the theme, so its colours are its own. */
+.floor { display: grid; gap: 10px; justify-items: center; color: #f2eee6; width: 100%; }
+.fb { display: grid; grid-template-columns: 1fr auto auto 1fr; background: #101218; border: 2px solid #000; box-shadow: 4px 4px 0 #000; width: min(100%, 820px); font-family: var(--f-display); text-transform: uppercase; }
+.fb-team { display: grid; grid-template-columns: auto 1fr; align-items: center; column-gap: 12px; row-gap: 2px; padding: 6px 14px; }
+.fb-team:last-child { grid-template-columns: 1fr auto; }
+.fb-team:last-child .fb-name { order: 2; }
+.fb-team:last-child .fb-score { order: 1; justify-self: start; }
+.fb-team:last-child .fb-meta { order: 3; justify-content: flex-end; }
+.fb-name { font-weight: 900; font-size: 22px; letter-spacing: 0.04em; display: inline-flex; align-items: center; gap: 8px; }
+.fb-team.ball .fb-name::after { content: ''; width: 8px; height: 8px; background: currentColor; }
+.fb-score { font: 700 34px/1 var(--f-mono); justify-self: end; }
+.fb-meta { grid-column: 1 / -1; display: flex; gap: 10px; align-items: center; font: 600 12px/1.2 var(--f-mono); letter-spacing: 0.04em; }
+.fb-meta b { padding: 1px 5px; background: #000; color: #ffd23f; }
+.fb-tos { display: inline-flex; gap: 3px; }
+.fb-tos i { width: 7px; height: 7px; background: currentColor; opacity: 0.3; }
+.fb-tos i.on { opacity: 1; }
+.fb-clock { display: grid; justify-items: center; align-content: center; gap: 2px; padding: 4px 18px; background: #181b22; }
+.fb-period { font: 700 12px/1 var(--f-mono); color: #ffd23f; }
+.fb-time { font: 700 30px/1 var(--f-mono); color: #f2eee6; }
+.fb-series { font: 600 11px/1.2 var(--f-mono); color: #c9c4ba; }
+.fb-shot { display: grid; place-items: center; min-width: 58px; padding: 0 10px; background: #0b0c10; color: #ff9a52; font: 700 28px/1 var(--f-mono); }
+.fb-shot.low { color: #ff6b5e; }
+.floor-stage { position: relative; max-width: 100%; background: #0c0d12; border: 2px solid #000; box-shadow: 4px 4px 0 #000; }
+.floor-stage canvas { display: block; image-rendering: pixelated; }
+.floor-word { position: absolute; left: 0; right: 0; top: 14%; text-align: center; font: 900 clamp(28px, 5vw, 56px)/1 var(--f-display); text-transform: uppercase; color: #f2eee6; text-shadow: 3px 3px 0 #000; animation: floor-word 1.1s steps(6) forwards; pointer-events: none; }
+.floor-word.us { color: #ffd23f; }
+@keyframes floor-word {
+  0% { transform: translateY(10px); opacity: 0; }
+  15% { transform: none; opacity: 1; }
+  80% { opacity: 1; }
+  100% { transform: translateY(-12px); opacity: 0; }
+}
+.floor-pause { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 10px; background: rgba(8, 9, 12, 0.84); text-align: center; padding: 16px; }
+.floor-pause h2 { margin: 0 0 6px; font: 900 34px/1 var(--f-display); text-transform: uppercase; color: #f2eee6; }
+.floor-pause .kicker { color: #ffd23f; }
+.floor-final { font: 900 44px/1 var(--f-display); color: #f2eee6; }
+.floor-final span { font-size: 24px; color: #c9c4ba; }
+.floor-line { margin: 0; font: 600 14px/1.4 var(--f-mono); color: #dcd6ca; max-width: 76ch; }
+.floor-end-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.floor-keys { margin: 0; display: grid; gap: 6px; font-size: 14px; color: #c9c4ba; width: min(100%, 1000px); }
+.floor-keys div { display: flex; gap: 10px; flex-wrap: wrap; align-items: baseline; }
+.floor-keys dt { font-weight: 800; color: #f2eee6; min-width: 70px; }
+.floor-keys dd { margin: 0; line-height: 1.9; }
+.floor-keys kbd { font: 700 12px/1 var(--f-mono); padding: 3px 6px; background: #262a34; border: 1px solid #000; border-bottom-width: 3px; color: #f2eee6; }
