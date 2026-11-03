@@ -2821,3 +2821,86 @@ td > .link-btn { min-width: 44px; text-align: left; }
 .fn-line { margin: 0; font-size: calc(19px * var(--ts)); color: #c9cfda; }
 .fn-skip { position: absolute; z-index: 2; top: max(14px, env(safe-area-inset-top, 0px)); right: max(14px, env(safe-area-inset-right, 0px)); color: #f4f1ea; }
 @media (max-width: 640px) { .fn-caption.fn-late { left: 50%; top: 52%; width: min(320px, calc(100% - 32px)); } .act-jersey .fn-him { left: 20%; } }
+
+/* round 37: the town, his street of places in place of the row of tabs (ui/components/Town.tsx).
+   The sky is the one smooth gradient; the street is square pixels; the signs are pixel-cornered
+   plates: gold where he is, street-sign green elsewhere. Night in the dark theme. */
+.town { position: relative; overflow: hidden; margin: 0 0 14px; border-radius: 10px; border: 1px solid var(--line); background: linear-gradient(180deg, #7DBDEB 0%, #BFE0F6 62%, #E3F1FB 100%); }
+.tw-street { position: absolute; left: 0; top: 0; transition-property: transform; will-change: transform; }
+.tw-art-wrap { position: absolute; left: 0; top: 0; }
+.tw-art { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+.tw-street::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 36px; background: #3A3F47; border-top: 2px solid #2C3037; }
+.tw-place { position: absolute; top: 0; z-index: 1; background: transparent; border: 0; padding: 0; cursor: pointer; border-radius: 0; }
+.tw-place:hover .tw-sign { transform: translate(-50%, -2px); }
+.tw-place:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
+.tw-sign { position: absolute; z-index: 2; left: 50%; bottom: 3px; transform: translateX(-50%); display: grid; justify-items: center; padding: 1px 7px 2px; background: #1E6B42; color: #FFFFFF; border: 2px solid #124A2C; box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.35); white-space: nowrap; line-height: 1.05; transition: transform 0.12s steps(2); }
+.tw-name { font-weight: 800; font-size: calc(12.5px * var(--ts)); }
+.tw-tab { font-size: calc(10.5px * var(--ts)); font-weight: 600; opacity: 0.9; text-transform: uppercase; letter-spacing: 0.05em; }
+.tw-place.here .tw-sign { background: #F2C14E; color: #20242B; border-color: #B8891C; }
+.tw-new { position: absolute; z-index: 2; left: 50%; top: 2px; transform: translateX(-50%); min-width: 18px; height: 18px; display: grid; place-items: center; background: var(--accent); color: #FFFFFF; font-weight: 900; font-size: 13px; border: 2px solid #20242B; animation: twBob 1.2s steps(2) infinite; }
+@keyframes twBob { 50% { transform: translate(-50%, -3px); } }
+.tw-me { position: absolute; z-index: 3; pointer-events: none; transition-property: left; }
+.tw-walker { display: block; image-rendering: pixelated; }
+.tw-street-name { position: absolute; z-index: 3; right: 8px; top: 6px; padding: 1px 7px; background: rgba(255, 255, 255, 0.85); color: #20242B; border: 2px solid #20242B; font-weight: 800; font-size: calc(11px * var(--ts)); text-transform: uppercase; letter-spacing: 0.06em; pointer-events: none; }
+.tw-ring { box-shadow: 0 0 0 3px var(--accent) !important; transition: box-shadow 0.2s; }
+/* the theme's lights: windows are glass by day and lit at night, lamps, bulbs and neon glow at night */
+.tw-art .tw-win { fill: #A9D4F5; }
+.tw-art .tw-open { fill: #FFE08A; }
+.tw-art .tw-lamp { fill: #E9ECEF; }
+.tw-art .tw-bulb { fill: #FFF3BF; }
+.tw-art .tw-neon { fill: #FF8FB1; }
+.tw-art .tw-neon-p { fill: #E64C9A; }
+.tw-art .tw-neon-c { fill: #33B5C9; }
+.tw-art .tw-far { fill: #8FAAC2; }
+.tw-art .tw-far2 { fill: #A1BAD0; }
+.tw-art .tw-farwin { fill: #B9CEDF; }
+.tw-art .tw-hill { fill: #7CBF6B; }
+.tw-art .tw-walk { fill: #CFC9BC; }
+.tw-art .tw-curb { fill: #8D8A82; }
+.tw-art .tw-road { fill: #3A3F47; }
+.tw-art .tw-dash { fill: #F2C14E; }
+.tw-art .tw-gap { fill: #BFE0F6; }
+.tw-art .tw-beam { fill: #F4F8FC; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .town { background: linear-gradient(180deg, #060A1A 0%, #111934 62%, #1D2545 100%); }
+  :root:not([data-theme='light']) .tw-body { filter: brightness(0.62) saturate(0.85); }
+  :root:not([data-theme='light']) .tw-art .tw-win { fill: #FFD66B; }
+  :root:not([data-theme='light']) .tw-art .tw-lamp { fill: #FFF3A6; }
+  :root:not([data-theme='light']) .tw-art .tw-bulb { fill: #FFE066; }
+  :root:not([data-theme='light']) .tw-art .tw-neon { fill: #FF5C93; }
+  :root:not([data-theme='light']) .tw-art .tw-neon-p { fill: #FF3FA4; }
+  :root:not([data-theme='light']) .tw-art .tw-neon-c { fill: #3BE8FF; }
+  :root:not([data-theme='light']) .tw-art .tw-far { fill: #1B2340; }
+  :root:not([data-theme='light']) .tw-art .tw-far2 { fill: #222B4C; }
+  :root:not([data-theme='light']) .tw-art .tw-farwin { fill: #E8C35A; }
+  :root:not([data-theme='light']) .tw-art .tw-hill { fill: #1F3A2E; }
+  :root:not([data-theme='light']) .tw-art .tw-walk { fill: #5A5750; }
+  :root:not([data-theme='light']) .tw-art .tw-curb { fill: #403E39; }
+  :root:not([data-theme='light']) .tw-art .tw-road { fill: #23262C; }
+  :root:not([data-theme='light']) .tw-art .tw-gap { fill: #111934; }
+  :root:not([data-theme='light']) .tw-art .tw-beam { fill: #FFF3BF; }
+  :root:not([data-theme='light']) .tw-street::after { background: #23262C; border-top-color: #181A1F; }
+  :root:not([data-theme='light']) .tw-street-name { background: rgba(17, 25, 52, 0.85); color: #F1F3F5; border-color: #F1F3F5; }
+}
+:root[data-theme='dark'] .town { background: linear-gradient(180deg, #060A1A 0%, #111934 62%, #1D2545 100%); }
+:root[data-theme='dark'] .tw-body { filter: brightness(0.62) saturate(0.85); }
+:root[data-theme='dark'] .tw-art .tw-win { fill: #FFD66B; }
+:root[data-theme='dark'] .tw-art .tw-lamp { fill: #FFF3A6; }
+:root[data-theme='dark'] .tw-art .tw-bulb { fill: #FFE066; }
+:root[data-theme='dark'] .tw-art .tw-neon { fill: #FF5C93; }
+:root[data-theme='dark'] .tw-art .tw-neon-p { fill: #FF3FA4; }
+:root[data-theme='dark'] .tw-art .tw-neon-c { fill: #3BE8FF; }
+:root[data-theme='dark'] .tw-art .tw-far { fill: #1B2340; }
+:root[data-theme='dark'] .tw-art .tw-far2 { fill: #222B4C; }
+:root[data-theme='dark'] .tw-art .tw-farwin { fill: #E8C35A; }
+:root[data-theme='dark'] .tw-art .tw-hill { fill: #1F3A2E; }
+:root[data-theme='dark'] .tw-art .tw-walk { fill: #5A5750; }
+:root[data-theme='dark'] .tw-art .tw-curb { fill: #403E39; }
+:root[data-theme='dark'] .tw-art .tw-road { fill: #23262C; }
+:root[data-theme='dark'] .tw-art .tw-gap { fill: #111934; }
+:root[data-theme='dark'] .tw-art .tw-beam { fill: #FFF3BF; }
+:root[data-theme='dark'] .tw-street::after { background: #23262C; border-top-color: #181A1F; }
+:root[data-theme='dark'] .tw-street-name { background: rgba(17, 25, 52, 0.85); color: #F1F3F5; border-color: #F1F3F5; }
+/* the row of tabs in the top bar waits until the town has scrolled out of view */
+@media (min-width: 900px) { html:not(.town-out) .toptabs { visibility: hidden; } }
+@media (prefers-reduced-motion: reduce) { .tw-new { animation: none; } .tw-street, .tw-me { transition: none !important; } }

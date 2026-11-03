@@ -567,7 +567,7 @@ export function PlayerTab({ g }: { g: GameState }) {
           </Card>
           {!lean && (
           <>
-          <Card title="Contract and money">
+          <Card title="Contract and money" tour="contract">
             {c && g.stage !== 'HS' ? (
               <p>
                 {contractTeam ?? c.teamId}: {g.stage === 'NCAA' ? (c.kind === 'walkon' ? 'walk-on' : 'scholarship') : `${fmtMoney(c.salary)} a year`}, {c.years} year

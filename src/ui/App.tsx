@@ -34,6 +34,7 @@ import { STOPS } from './tutorial/closing';
 import { LEVEL_NAME, levelOf } from '../engine/levels';
 import { RoadMap } from './screens/RoadMap';
 import { LevelEnd } from './screens/LevelEnd';
+import { Town } from './components/Town';
 
 
 // round 28 (owner: "any graphic that isnt pixels, change them"): the tab icons on a 12x12 pixel
@@ -299,6 +300,8 @@ export function App() {
             <SettingsMenu g={game} />
           </div>
         </header>
+        {/* round 37: the town, his street of places in place of the row of tabs */}
+        <Town g={game} fast={fast} />
         {game.flags.daily ? <DailyStrip g={game} /> : null}
         <LookBackBar g={game} />
         {game.flags.tour ? <TourBar /> : null}
