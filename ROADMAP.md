@@ -2,6 +2,25 @@
 
 Ideas the owner has asked to keep for later. Not started unless marked.
 
+## The indie lane (owner, round 36)
+
+Owner: "i think the game is way past the minigame inspired from the football game. so, i want to
+switch lanes to an indie game." The game stays **free** (a donation channel, in a later round).
+The order the owner set:
+
+- **Round 36**: cut and merge features so the core stands out (the list is the owner's to confirm),
+  then **the rafters finale**: the ending scene (the jersey raised, a speech, an epilogue) replaces
+  the Thank you for playing page; unskippable the first time it plays on a device, with a Skip
+  button from then on.
+- **Round 37**: **a world to walk around instead of menus**: a pixel hometown, then a city, whose
+  places (the gym, the agent's office, home, the arena) open what the tabs open today.
+- **Round 38**: **story mode**: a recurring cast (a childhood friend, a draft-class rival, the coach,
+  an agent, family) with written arcs that remember the player's choices; and possibly **one
+  signature thing to play on the court**, a single possession engine for every playable moment.
+- Turned down: careers framed as roguelite runs with meta-unlocks ("no").
+- Still to weigh before any paid release: a fictional league in place of the NBA's teams, colours
+  and legends.
+
 ## Next (owner, round 26)
 
 - A UI and convenience update, once the round 26 requests are done: under way as round 27 (screen

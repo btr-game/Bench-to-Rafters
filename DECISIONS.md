@@ -2973,3 +2973,8 @@ multiple times."
   Regular guy's), so the row is the mini-games, the career log, the achievement book and the
   community again. The row's grid now makes four columns at most at any width, and CLAUDE.md keeps
   the rule.
+- **The indie lane** (owner: "i want to switch lanes to an indie game"): free, a donation channel
+  later. Round 36 cuts features (the owner confirms the list) and builds the rafters finale in place
+  of the Thank you for playing page (unskippable the first time, skippable after). Round 37: a world
+  to walk around instead of menus. Round 38: story mode and maybe one signature on-court engine.
+  Roguelite runs turned down. ROADMAP.md keeps the order.
