@@ -3247,3 +3247,92 @@ multiple times."
   name tags were wider than the gaps between the people (round 36's `under` check had not looked at
   it before): the tags now leave the buttons' boxes, under the feet or, for every second person
   from the left, over the head.
+
+## Round 38 (owner requests): story mode
+
+- **Story mode is its own career** (owner's answers on the plan: "Separate Story mode", "Mostly
+  story, a few hooks", "Heavy at times, gentle path", and "Player names friend, family, and rival,
+  and rest are generated. the player can skip the naming and all are generated"). It starts from
+  the old neighbourhood, an island north of the main land (his house and his friend's next door,
+  the driveway hoop between; the boat takes him over from the dock). The hero is written
+  (`STORY_HERO` in engine/story/cast.ts: Eli Carter, a shooting guard and sharpshooter from Dayton,
+  Ohio, number 3 at Fairview High, on Regular guy's road); his name may change, and he never rolls a
+  rare archetype. The naming page asks for his best friend, a parent, a younger sibling and his
+  rival, each a pixel bust that follows the name typed; an empty box is named by the game, Skip
+  names them all, and a one-word name for the family takes his surname.
+- **The friend and the rival carry it** (owner: "the story mode will totally rely on the
+  relationship between the three"). The friend grows beside him until the scouts decide, the summer
+  he turns 22, faster for each bit of drive the hero's answers gave him; then his road is set: out of
+  the game early (his biggest fan, or a coach who later joins the hero's bench), a pro, or a star who
+  passes him (`setTrack`: a star from 3% with no drive to 30% at most; out early from 62% to 15%).
+  The rival appears his first college season (or at 19) and is always a small step ahead, his OVR
+  the hero's plus 1 to 3 drawn each season; he retires a season before the hero is likely to. Both
+  go into the friends system's season lines, so they play in his league: box scores, award races,
+  All-Star votes, rival nights and playoff series. Their rolls come from streams of their own, so
+  the career's balance is a Regular guy career's apart from what the chapters do.
+- **Twenty-four chapters**, one a summer at most (a few open a season: meeting the rival, the
+  friend's road, draft night), each a page of its own with the two of them face to face on a
+  backdrop for who it is. The owner's storylines are all there: the friend joins his team, the
+  rival joins his team, the friend signs with the rival's team, and the injury road (the rival
+  comes down on the friend's knee, and an apology the hero may or may not believe). A bug fixed on
+  the way: the injury chapter hurt the friend twice (once when the page opened, again on the
+  answer); a chapter now has an `open` step that runs once.
+- **All in the States** (owner: "exclude overseas offers to the main character as well. focus only on
+  the states. all three main chracters should be american, or living in america at least"): no road
+  abroad, a G League deal when no American team calls, a floor of OVR 70 from 22 to 31, and the
+  friend and the rival never play in Toronto.
+- **Where his people show**: the People card on the Player tab (where each is, the friend's and
+  the rival's OVR, the bond in seven squares, the last line they remember); the town's street (the
+  friend by the gym or the arena, the parent at home, the rival at the arena when they share a team,
+  a word bubble over whoever the waiting chapter is with); and the rafters finale (the speech
+  names them by what happened between them; the credits list them under With and end on where they
+  are now).
+- **Keyed words**: every line, answer and result is a key in content/story.ts with slots for names
+  and places, so round 40's languages translate story mode without touching the chapters.
+- Fast break stops for chapters; Sim answers them with the warm answer (the first), as the plan
+  said. Simple text keeps the line the answer replies to. Dev deck: six story mode cards.
+
+## Round 39 (owner requests): the Floor, its engine
+
+- The owner's answers on the ideas document: four minutes a quarter ("time is tripled"), defence
+  too, only his own team's elimination games from the conference finals on, the difficulty moving
+  both teams' shooting, a high three-quarter pseudo-3D view, the arena's court and crowd with no
+  banners, a short animation once a play is decided, phones set aside (the Floor simulates on one),
+  and free throws among the ratings that matter. Order (owner): build up to the engine, then one
+  end-of-round checklist and the publish of rounds 38 and 40, then the rest of round 39.
+- **The engine** (engine/floor/): ten players on a 94 by 50 foot court, a tick every 0.15 game
+  seconds, twenty a real second. He moves, sprints, shoots on a meter (a full load of 0.9 game
+  seconds is the sweet spot; the window is wider for a good shooter, narrower contested or tired;
+  a perfect release is 1.15 times the chance, a missed one 0.55), passes (to a man or the most
+  open), drives, calls a pick, crosses over, spins and steps back; on defence he moves, reaches
+  in, jumps to block, switches and calls for help. The AI spaces the floor by position, cuts when
+  its man looks away, runs picks, drives open lanes and passes to the open man (him first); its
+  defence plays man to man, helps on a drive that beats its man near the rim, reaches in, and fouls
+  on purpose late when behind. Fouls, the bonus at five, free throws on his touch (his on the meter),
+  fouling out at six, rebounds by board work and nearness, stamina, momentum, timeouts (the other
+  bench stops an 8-0 run), overtime, and Skip, which plays the rest from the score at that moment.
+  Every outcome is decided when it happens, so the screen can animate it; events carry kinds and
+  numbers, no words, so the screen writes them in the player's language.
+- **Tuning**, 300 AI quarters a difficulty between equal teams (OVR 75): about 28 points a team, 42%
+  from the field, 37% from three, five free throws and four turnovers a team, overtime about one
+  game in twenty, about 4.3 real minutes with the stoppages. Regular guy 47.67% wins (noise around
+  half), Reality hits hard 36.67% (his team 3 points colder, theirs 2.5 hotter), Shoot for the
+  stars 56.33% (2 warmer, 1.5 colder). A bias found and fixed on the way: under Skip his own
+  defender never reached in, so the other team turned it over less.
+
+## Round 40 (owner requests): languages
+
+- Korean, Chinese (simplified), Japanese, Spanish and French, the interface only (owner: "let's
+  only go with interface"), by the owner's marks on "Round 40 - what stays in English", plus story
+  mode's dialogue and descriptions. `t('English', { slots })` returns the player's language or the
+  English, so a missing translation falls back and the English stays readable where it is written;
+  `tx()` marks English kept in data. The tables are bundled (the artifact is one file). The language
+  is kept on the device, the browser's own at first when the game has it; a change draws every
+  screen again. Settings has a Language row, each language by its own name. Korean, Chinese and
+  Japanese read in the system's own faces.
+- `scripts/i18n.ts` lists the English catalog (every t()/tx() string, the plans, the shop, the
+  achievements' descriptions, the legendary seasons' lines, story mode), each language's coverage,
+  the missing strings for a translator, and checks that translations keep their {slots}.
+- To publish sooner (owner): the manual and the achievements' descriptions are translated after
+  this publish; the project summary and the dev deck's Catalog are brought up to date after it; the
+  content batch moves to the final end-of-round check; the dev deck is never translated.
