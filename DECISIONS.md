@@ -2999,3 +2999,32 @@ multiple times."
   turns up"): text drawn over a button or a box it isn't part of. The name note slid under the
   phone's New name button with no two texts touching, so `overlap` missed it; the new check flags
   that layout and runs clean on the fix.
+- **No cuts; three merges** (owner: "i dont really want to cut anything you suggested, so lets scrap
+  6. but the merges, i like. merge 11, 12, 14"). Every function stays; the merges only regroup.
+  Item 11 suggested hiring staff like shop items, but since nothing is cut, staff keeps its talk,
+  raise and let-go steps.
+- **Around you** (merge 12): Home's side column (the MVP race, the duo, the rivalry, the league's
+  stories, the fans' talk) is one card with small tabs, opening on what matters most right now
+  (`src/ui/around.ts`: a close MVP race, a duo or a rivalry new this season, news about him, story
+  calls left) and holding a pick until the season moves on. With the tutorial or Guide mode on,
+  every part shows stacked, so each lesson and tour step still finds its target.
+- **The rafters finale** (owner: "i like steps 123, but let's combine 45 ... like movie credits,
+  the title of the game fills the screen and then a thank you message. i dont want this to be any
+  longer than 2 minutes"): it replaces Thank you for playing (`src/ui/finale.ts`,
+  `src/ui/screens/Finale.tsx`). A finished career whose jersey hangs gets the empty arena at night
+  (the house lights come up a bank at a time), his speech (four or five lines written from the
+  career: the city, where he started, the rings or the MVP, a person, his number), the jersey
+  rising to the rafters, then the credits roll: the career (Starring, Teams, Championships,
+  Legendary seasons, Awards, In the NBA, Forever, With), then the makers in two lines
+  ("Developer: MJ Kwon", "Code, art and sound: Claude"; owner: "make that part extremely short"),
+  the title filling the screen and the thank-you with Play again and Share. Its longest run is
+  about 105 seconds (tested under 120). The first time each ending plays on a device it can't be
+  skipped (`btr-finale-seen`); after that a Skip button (and Enter) jumps to the thank-you.
+- **Who gets which ending**: careers that don't make the rafters get their own endings later
+  (owner: "let's catagorize that a bit later, because there are many paths"); until then a finished
+  career without the rafters gets the credits, the title and the thank-you. A tutorial level gets
+  the title and the thank-you (skippable). Leaving a career that isn't over gets no ending (owner:
+  "leaving a career that isnt finished doesnt deserve the ending card"); the start page's Continue
+  card already holds it. The daily and Built in a Lab still end without one. A father whose son's
+  career is played next reaches his ending through the son's (the son's credits name him): to look
+  at when the endings are categorized.
