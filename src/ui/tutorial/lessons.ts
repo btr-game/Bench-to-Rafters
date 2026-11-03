@@ -143,6 +143,8 @@ export const LESSONS: Lesson[] = [
   T('t-card', D('card-download'), 'The career card: save it as an image.'),
 
   // ---------- after graduation ----------
-  L('graduated', 'g-regular', D('mode-regular'), 'The full game. Start a Regular guy career: recommended for your first one.'),
+  // round 37: the start page is the main land, a flight from the road map
+  L('graduated', 'g-land', D('mainland'), 'The main land: the full game, a place for each part of it. Click a place, or move between them with the arrow keys; Enter opens its card.'),
+  L('graduated', 'g-regular', D('mode-regular'), 'The gym is Regular guy, the full game. Start your first career here: recommended.'),
 ];
 

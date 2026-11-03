@@ -264,9 +264,9 @@ const levelRun = (key: string, level: Level, until: Parameters<typeof play>[0], 
 const ended = (star: boolean) => (s: GameState) => s.step === 'retired' && s.flags.levelEnd === (star ? 2 : 1);
 
 const TUTORIAL: DevCard[] = [
-  { id: 'road-map', title: 'The road map', group: 'Tutorial', icon: 'map', blurb: 'Round 35: after graduation (beginner alone is the tutorial), from Regular guy’s card: the pixel map with the car driving on, a pin on every place (the next one hops), the bucket list on a paper scroll. Click a place, or drive with the arrow keys, and its card pops out: here intermediate, with what it adds and the mode it opens.', open: () => onRoad(['beginner'], { free: 1 }, 'page', { page: 'road' }), press: '.road-spot.next' },
+  { id: 'road-map', title: 'The road map', group: 'Tutorial', icon: 'map', blurb: 'Round 35: after graduation (beginner alone is the tutorial), from the main land’s airport (round 37): the pixel map with the car driving on, a pin on every place (the next one hops), the bucket list on a paper scroll. Click a place, or drive with the arrow keys, and its card pops out: here intermediate, with what it adds and the mode it opens.', open: () => onRoad(['beginner'], { free: 1 }, 'page', { page: 'road' }), press: '.road-spot.next' },
   { id: 'road-late', title: 'The road map, near its end', group: 'Tutorial', icon: 'map', blurb: 'All three levels passed (one short of the All-Star goal): the island’s card with the grades so far, and the closing tour waiting on its stage.', open: () => onRoad(LEVEL_IDS, { minis: { threes: 'A', dunk: 'C', street: 'C', lab: 'B' }, free: 1 }, 'page', { page: 'road' }), press: '.road-spot.next' },
-  { id: 'road-free', title: 'The road map from the start page', group: 'Tutorial', icon: 'map', blurb: 'Once the full game is open, Regular guy’s card on the start page brings the road back: every level to play again, kept nowhere.', open: () => onRoad(LEVEL_IDS, { minis: ALL_C, toured: 1, free: 1 }, 'page', { page: 'road' }) },
+  { id: 'road-free', title: 'The road map from the main land', group: 'Tutorial', icon: 'map', blurb: 'Once the full game is open, the airport on the main land flies back to the road: every level to play again, kept nowhere.', open: () => onRoad(LEVEL_IDS, { minis: ALL_C, toured: 1, free: 1 }, 'page', { page: 'road' }) },
   { id: 'level-1', title: 'Level 1: Beginner', group: 'Tutorial', icon: 'lvl-HSV', blurb: 'The first page of every device: the school on the map, the goal (an NBA All-Star team), a name, a number, a position and an archetype; the rest is chosen for him.', open: () => onRoad([]) },
   { id: 'level-2', title: 'Level 2: Intermediate', group: 'Tutorial', icon: 'lvl-NCAA', blurb: 'The level’s start page: the college on the map, the icons for what the level adds, and the focus to pick.', open: () => onRoad(['beginner'], { free: 1 }, 'page', { creating: 'intermediate' }) },
   { id: 'level-3', title: 'Level 3: Advanced', group: 'Tutorial', icon: 'lvl-NBA', blurb: 'The last level’s start page: the arena on the map, the country and the shooting hand as well.', open: () => onRoad(['beginner', 'intermediate'], { free: 1 }, 'page', { creating: 'advanced' }) },
@@ -276,10 +276,11 @@ const TUTORIAL: DevCard[] = [
   { id: 'level-won', title: 'A level passed: the goal reached', group: 'Tutorial', icon: 'stars', blurb: 'The end of a level career that made an All-Star team: its numbers, and what the next level adds.', open: () => show(levelRun('won', 'beginner', ended(true))) },
   { id: 'level-missed', title: 'A level passed: so close', group: 'Tutorial', icon: 'morale', blurb: 'The end of a level career with no All-Star team: its own card and its own sad loop, and the road still goes on.', open: () => show(levelRun('missed', 'intermediate', ended(false), { tries: 30 })) },
   { id: 'island', title: 'The island of mini-games', group: 'Tutorial', icon: 'palm', blurb: 'Every mini-game once, a C or better in each: the mark to beat and the best grade so far on every card.', open: () => onRoad(LEVEL_IDS, { minis: { threes: 'B', dunk: 'C', lab: 'D' }, free: 1 }, 'page', { mini: 'hub' }) },
-  { id: 'graduation', title: 'Graduation', group: 'Tutorial', icon: 'cap', blurb: 'Round 35: right after the beginner level: the diploma with the exit code, what each later stop opens, and the way into the full game.', open: () => onRoad(['beginner']) },
+  { id: 'graduation', title: 'Graduation', group: 'Tutorial', icon: 'cap', blurb: 'Round 35: right after the beginner level: the diploma with the exit code, what each later stop opens, and (round 37) the plane waiting to take him to the main land.', open: () => onRoad(['beginner']) },
+  { id: 'plane', title: 'The plane to the main land', group: 'Tutorial', icon: 'jet', blurb: 'Round 37: Take the plane on the graduation page: about five seconds from the road map’s island over the sea to the main land, in steps; Skip, Enter or Escape lands at once. Once a device, never with reduced motion (here, with it, a still over the sea).', open: () => onRoad(['beginner']), press: '[data-tour="graduate"]' },
   { id: 'lesson', title: 'A lesson on screen', group: 'Tutorial', icon: 'guide', blurb: 'The tutorial guide: the page shaded but for one control, the note beside it, Got it or Your turn, and the exit code for anyone who has it.', open: () => onRoad([], {}, 'lesson') },
   { id: 'closing-tour', title: 'The closing tour', group: 'Tutorial', icon: 'arena', blurb: 'After the levels: a star’s career, stop by stop, for every system no level has; the bar says which stop, Next stop goes on once its lessons are done.', open: () => (onRoad(LEVEL_IDS, { minis: ALL_C, free: 1 }, 'lesson'), useStore.getState().startClosing()) },
-  { id: 'recommended', title: 'The full game, first look', group: 'Tutorial', icon: 'door', blurb: 'Just after graduation: the start page with Regular guy recommended and its own few lessons; Reality hits hard, Shoot for the stars and the mini-games locked until their stops on the road map.', open: () => onRoad(['beginner'], { free: 1 }, 'lesson', { recommend: true }) },
+  { id: 'recommended', title: 'The full game, first look', group: 'Tutorial', icon: 'door', blurb: 'Just after landing: the main land with the gym (Regular guy) recommended and its own few lessons; the cage (Reality hits hard), the dome (Shoot for the stars) and the island (the mini-games) locked until their stops on the road map.', open: () => onRoad(['beginner'], { free: 1 }, 'lesson', { recommend: true }) },
   { id: 'skip-door', title: 'The Skip button', group: 'Tutorial', icon: 'lock', blurb: 'Beside Share at the top of the tutorial’s pages, and above the shade while a lesson is up (round 35): the exit code (shown at graduation) opens the full game, with Regular guy, on this device for good.', open: () => onRoad([]), press: '[data-tour="skip-door"]' },
 ];
 
@@ -300,7 +301,22 @@ const MINI: DevCard[] = (
 
 export const CARDS: DevCard[] = [
   // start
-  { id: 'start', title: 'Start page and player creation', group: 'Start', icon: 'person', blurb: 'Name, position, archetype, focus, country, difficulty.', open: () => void useStore.setState({ game: null, page: null, mini: null }) },
+  { id: 'start', title: 'The main land', group: 'Start', icon: 'map', blurb: 'Round 37: the start page is a pixel town along one avenue: a venue for each difficulty (the gym, the cage, the dome), the airport back to the road map, the cinema (the intro), the park (Play with friends), the library (the career log), the newsstand (What’s new), the statue plaza (the community), the trophy museum (the achievements) and the island of mini-games; at night in the dark theme.', open: () => void useStore.setState({ game: null, page: null, mini: null }) },
+  {
+    id: 'mainland',
+    title: 'The main land: a place’s card',
+    group: 'Start',
+    icon: 'regular',
+    blurb: 'Click a place, or drive the car to it with the arrow keys, and its card pops out beside it (under the map on a phone): here the gym, Regular guy, with the way on to making a player. With a career going, his house stands on the avenue with Continue.',
+    open: () => {
+      const g = loaded();
+      if (!g) return false;
+      void writeSlot(newSlotId(), g).then(() => useStore.setState({ game: null, page: null, mini: null }));
+    },
+    press: '[data-place="gym"]',
+  },
+  { id: 'mainland-new', title: 'The main land, just landed', group: 'Start', icon: 'lock', blurb: 'Straight from graduation: the gym’s plate hops (Regular guy recommended), and the cage, the dome and the island show their locks; a locked place’s card says which road map stop opens it.', open: () => onRoad(['beginner'], { free: 1 }, 'page', { recommend: true }), press: '[data-place="cage"]' },
+  { id: 'mainland-island', title: 'The main land: the island', group: 'Start', icon: 'boat', blurb: 'The car drives to the dock and the boat takes him across to the island of mini-games; its card opens the hub.', open: () => void useStore.setState({ game: null, page: null, mini: null }), press: '[data-place="island"]' },
   { id: 'username', title: 'Pick a username', group: 'Start', icon: 'crowd', blurb: 'Round 36: the start page asks once for a username, apart from the player’s name, on a device that finished the tutorial before it was asked there (Not now puts it off). It shows beside careers on the boards, the hall and the plaza.', open: () => {
     try {
       localStorage.removeItem('btr-mp-name');
@@ -310,13 +326,13 @@ export const CARDS: DevCard[] = [
     }
     useStore.setState({ game: null, page: null, mini: null, intro: false, news: false, finale: null });
   } },
-  { id: 'look', title: 'Your look', group: 'Start', icon: 'jersey', blurb: 'The identity step: skin, hair colour, hair and facial hair on the player, in a plain white or black jersey with his number, and the back of the jersey with his name.', open: () => void useStore.setState({ game: null, page: null, mini: null }), press: '[data-tour="create-next"]' },
+  { id: 'look', title: 'Your look', group: 'Start', icon: 'jersey', blurb: 'The identity step: skin, hair colour, hair and facial hair on the player, in a plain white or black jersey with his number, and the back of the jersey with his name.', open: () => void useStore.setState({ game: null, page: null, mini: null }), press: ['[data-tour="mode-regular"]', '[data-tour="create-next"]'] },
   {
     id: 'saves',
     title: 'Careers in the career log, and their codes',
     group: 'Start',
     icon: 'disk',
-    blurb: 'One list of every career on this device: those in progress first (continue, copy a code, delete), then a card for each finished one (look back, the card, its code). Paste a code to import. The start page keeps a Continue card for the latest.',
+    blurb: 'One list of every career on this device: those in progress first (continue, copy a code, delete), then a card for each finished one (look back, the card, its code). Paste a code to import. His house on the main land keeps Continue for the latest.',
     open: () => {
       const g = loaded();
       if (!g) return false;
@@ -505,8 +521,8 @@ export const CARDS: DevCard[] = [
 
   // modes
   // round 26-27: Rough Road, from the offer to the banner
-  { id: 'oath-offer', title: 'Rough Road: the offer', group: 'Modes', icon: 'oath', blurb: 'Picking Reality asks once: take the hardest way to play?', open: () => void useStore.setState({ game: null, page: null, mini: null }), press: '.modes .mode-card:nth-child(2)' },
-  { id: 'comet-offer', title: 'Comet, offered', group: 'Modes', icon: 'comet', blurb: 'Round 30: Shoot for the stars at hyper speed, offered on the start page with the stars.', open: () => void useStore.setState({ game: null, page: null, mini: null }), press: '.modes .mode-card:nth-child(3)' },
+  { id: 'oath-offer', title: 'Rough Road: the offer', group: 'Modes', icon: 'oath', blurb: 'The cage on the main land (Reality hits hard) asks once: take the hardest way to play?', open: () => void useStore.setState({ game: null, page: null, mini: null }), press: '[data-place="cage"]' },
+  { id: 'comet-offer', title: 'Comet, offered', group: 'Modes', icon: 'comet', blurb: 'Round 30: Shoot for the stars at hyper speed, offered in the dome on the main land.', open: () => void useStore.setState({ game: null, page: null, mini: null }), press: '[data-place="dome"]' },
   { id: 'comet-career', title: 'Comet career', group: 'Modes', icon: 'comet', blurb: 'Fast break and Sim locked on; the story it did not stop for, in a list of highlights; the Comet mark.', open: () => show(at('comet', (s, p) => s.stage === 'NBA' && !!s.reel?.length && p.type === 'decision', { quick: 'comet' }), 'home', {}, true) },
   { id: 'sim-calls', title: 'Sim made the call', group: 'Modes', icon: 'sim', blurb: 'Round 30: sim mode makes the turning points too, and lists each call with how it went.', open: () => show(at('sim-calls', (s) => !!s.simCalls?.length, { quick: 'sim' }), 'home') },
   { id: 'oath-career', title: 'Rough Road career', group: 'Modes', icon: 'oath', blurb: 'Master mode on, Fast break and Sim locked off; the mark in the top bar.', open: () => oath(hsStart('reality')) },

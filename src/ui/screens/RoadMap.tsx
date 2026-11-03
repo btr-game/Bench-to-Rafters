@@ -24,6 +24,8 @@ import { FootBar } from '../components/FootBar';
 import { sfx } from '../sound';
 import { isDev } from '../../dev/mode';
 import { PixelX } from '../art/PixelX';
+import { BOAT, CAR, Sprite } from '../art/Sprites';
+import { reducedMotion as reduced } from '../mainland';
 
 // ---------- the map, on a 192 by 108 pixel grid ----------
 
@@ -198,18 +200,6 @@ export function PlaceArt({ place, size = 132 }: { place: Place; size?: number })
   );
 }
 
-const CAR = ['...hh....', '..gssg...', '.RRRRRRR.', 'RRRRRRRRY', 'RRRRRRRRR', '.OO...OO.'];
-const BOAT = ['....S.....', '....SS....', '....SSS...', '..hhSSSS..', '..ss.S....', 'TTTTTTTTTT', '.TTTTTTTT.'];
-
-function Sprite({ rows, x, y, colors, flip = false }: { rows: string[]; x: number; y: number; colors: Record<string, string>; flip?: boolean }) {
-  const w = rows[0].length;
-  return (
-    <g transform={`translate(${x},${y})${flip ? ` translate(${w},0) scale(-1,1)` : ''}`}>
-      {rows.flatMap((row, j) => [...row].map((ch, i) => (colors[ch] ? <rect key={`${i}-${j}`} x={i} y={j} width={1} height={1} fill={colors[ch]} /> : null)))}
-    </g>
-  );
-}
-
 /** Every pixel of the road, start to dock, so the car can drive it a step at a time. */
 const ROUTE: [number, number][] = (() => {
   const out: [number, number][] = [];
@@ -223,8 +213,6 @@ const ROUTE: [number, number][] = (() => {
   return out;
 })();
 const stopAt = (s: [number, number]) => ROUTE.findIndex(([x, y]) => x === s[0] && y === s[1]);
-
-const reduced = () => typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /** The pixel map: the places, the road, the car (it drives to the place on screen, a step at a time),
  * and the boat at the dock or sailing to the island. */
@@ -533,7 +521,7 @@ export function RoadMap() {
         <div className="row" style={{ gap: 8 }}>
           {!tut && (
             <button className="icon-btn" onClick={() => setPage(null)}>
-              Back to the start page
+              Back to the main land
             </button>
           )}
           <ShareButton />

@@ -3050,3 +3050,54 @@ multiple times."
   returned nothing and the speech and the credits never named his running mate. `duoAtEnd`
   (engine/career/duo.ts) reads the bonds still formed when he retired, for the finale and its
   achievements alike.
+
+## Round 37 (owner requests)
+
+- **The main land** (owner: "can we make the main home page a map as well? let's do it this way:
+  once the user completes the first tutorial beginner level, they can take a plane to the "main
+  land". in the main land, there's buildings/islands/areas/... where the user can access the main
+  contents"): the start page's first step (with no level and no draft class) is a pixel town along
+  one avenue (`ui/mainland.ts`, `screens/MainLand.tsx`, `art/LandArt.tsx`), on a 224 by 100 grid,
+  wide across the page on a computer and scaled to the width on a phone. Above the avenue: the
+  airport (back to the road map), the cinema (the intro), and a venue for each difficulty: the gym
+  (Regular guy), the cage, a fenced street court under a wall of tags (Reality hits hard), and the
+  dome under its star (Shoot for the stars). Below it: his house (Continue, only while a career is
+  going; a lot for sale otherwise), the park (Play with friends), the library (the career log), the
+  newsstand (What's new), the statue plaza (the community), the trophy museum (the achievements),
+  and the dock, with the island of mini-games across the water.
+- **How it works** (round 34's road map pattern, owner: "when the user clicks on the buildings, or use
+  the arrow keys to move around, the cards pop out"): every place is a button with a plate (its icon
+  and name; the icon alone below 1000 px). Click it, or drive his car to it with the arrow keys, and
+  its card pops out beside it (under the map on a phone); the arrows go to the nearest place that
+  way, Tab reaches every place, Enter opens the card where the car is (the focus goes to its main
+  button), Escape folds it away and gives the place the focus back. The island's card sends the boat
+  across with him in it; the airport's plane takes off before the road map opens (skipped with
+  reduced motion). Right after graduation the gym's plate hops; a difficulty or the island the road
+  map hasn't opened shows its lock and today's hint. In the dark theme the town is at night: a shade
+  over it, lit windows, lamps and signs, square halos and the dome's searchlights. Simple text keeps
+  the names and buttons and hides the descriptions, as everywhere.
+- **Where the old start page went**: the difficulty cards are the venues, each card holding its blurb,
+  its challenge exactly as before (Rough Road in the cage, Comet in the dome) and Make your player,
+  which goes on to the Identity step; the stepper and the Next button are gone from that step. The
+  four cards of the start page's row (mini-games, career log, achievements, community) are four
+  places now (the island, the library, the trophy museum, the statue plaza), so there is no row of
+  cards any more: round 36's "four cards at most" rule was about clutter, and the map has none.
+  Play with friends is the park, a place of its own beside the gym rather than inside it, so it is
+  found without picking Regular guy first; its careers stay Regular guy. "Back on the road map?" is
+  the airport's card. The username prompt sits between the title and the map; the live strip, the
+  Developer door and the fan note stay under it. A draft class keeps the old difficulty step (only
+  Regular guy open), without the road map card.
+- **The plane** (`screens/Plane.tsx`, `art/FlightArt.tsx`): graduation's last button is Take the plane
+  to the main land, under a card with the plane waiting on the island's airstrip. The flight is five
+  seconds in steps of twelve frames a second: wheels up from the road map's island, over the sea,
+  down onto the main land's runway, with a caption for each part. Skip, Enter or Escape lands at
+  once. It plays once on a device (`btr-plane-seen`) and never with reduced motion; the dev deck
+  always shows it (a still over the sea with reduced motion). On a screen taller than it is wide the
+  flight shows a narrower window with the sky above.
+- **Targets kept** for the tutorial, the closing tour, Guide mode and What's new: `mode-regular` is the
+  gym, `levels-card` the airport card's button, `saves` his house's card, `create-next` a venue's Make
+  your player, `minis`, `log`, `ach`, `community` and `multi` their places' cards, `intro-btn`,
+  `whats-new`, `share-btn`, `settings-btn`, `guide-btn` the header, `username-prompt` the prompt; the
+  map itself is `mainland`. After graduation a first lesson shows the main land, then the gym; Guide
+  mode has two new steps (the main land, the three venues), and its Rough Road step now finds only
+  the Rough Road card (it used to match any dashed card, the road map's or the username's).

@@ -69,9 +69,8 @@ function useMp(): Multiplayer | null | false {
   return mp;
 }
 
-/** The entry on the start page: under the difficulties, beside Regular guy's road map card (round 36,
- * owner: "never put more that 4 cards here. move the play with friends elsewhere (under difficulties
- * maybe)"). */
+/** The entry on the start page (round 36, owner: "never put more that 4 cards here. move the play with
+ * friends elsewhere (under difficulties maybe)"): round 37, the park's card on the main land. */
 export function MultiplayerCard() {
   const setPage = useStore((s) => s.setPage);
   return (
