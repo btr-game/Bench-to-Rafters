@@ -2,6 +2,7 @@
 // It drives the game only through flow.ts, exactly like the UI.
 
 import { claimMini, miniProgress, type MiniId, type MiniResult } from '../src/engine/career/miniBonus';
+import { endingOf } from '../src/ui/endings';
 import { canSetStyle, setStyle, styleEffect, TEAM_STYLES, type TeamStyle } from '../src/engine/career/identity';
 import { advance, choose, newGame, prompt } from '../src/engine/flow';
 import { fastForward } from '../src/engine/fast';
@@ -174,6 +175,7 @@ export interface CareerResult {
   leap: boolean;
   tragedy: boolean;
   nextStep: boolean; // round 36: the late-career leap
+  ending: string; // round 36: which of the twelve endings the career gets (ui/endings.ts)
   anomaly: string;
   country: string;
   stars: number;
@@ -305,6 +307,7 @@ export function runCareer(seed: number, policy: Policy, mode: Mode = 'standard',
     leap: s.log.some((l) => l.kind === 'leap'),
     tragedy: s.log.some((l) => l.kind === 'tragedy'),
     nextStep: s.log.some((l) => l.kind === 'nextStep'), // round 36
+    ending: endingOf(s),
     anomaly: s.player.anomaly ?? '',
     country: s.player.country,
     stars: starsAt,

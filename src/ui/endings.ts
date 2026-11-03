@@ -23,7 +23,7 @@ export const ENDINGS: Record<EndingId, { name: string; place: string; fits: stri
   enshrined: { name: 'Enshrined', place: 'The Hall of Fame stage', fits: 'The Hall of Fame, with no number retired.' },
   ring: { name: 'Ring bearer', place: 'A ring box under a desk lamp', fits: 'An NBA title.' },
   allstar: { name: 'All-Star', place: 'Every All-Star jersey in his garage', fits: 'An All-Star or All-NBA team, or an MVP.' },
-  eurolegend: { name: 'Legend of Europe', place: 'Flares and scarves in a European arena', fits: 'Three seasons abroad, and a EuroLeague title or its MVP.' },
+  eurolegend: { name: 'Legend of Europe', place: 'Flares and scarves in a European arena', fits: 'Three seasons abroad, at least as many as in the NBA, and a EuroLeague title or its MVP.' },
   longhaul: { name: 'The long haul', place: 'Clearing out his last locker', fits: 'Six NBA seasons or more.' },
   madeit: { name: 'Made it', place: 'His first NBA jersey, framed at home', fits: 'An NBA game.' },
   passport: { name: 'Passport', place: 'A departures board of every city he played in', fits: 'A season abroad, in Europe or another league.' },
@@ -50,7 +50,9 @@ export function endingOf(g: GameState): EndingId {
   if (nbaTitles(g) > 0) return 'ring';
   if (has(g, STAR_KEYS)) return 'allstar';
   const abroad = seasonsAt(g, ...ABROAD);
-  if (abroad >= 3 && has(g, EURO_KEYS)) return 'eurolegend';
+  // round 36 (owner: "make legend of europe need more seasons abroad. but not too much"): at least
+  // as many seasons abroad as in the NBA, so an NBA career that ends with a title in Europe is the long haul
+  if (abroad >= 3 && abroad >= seasonsAt(g, 'NBA') && has(g, EURO_KEYS)) return 'eurolegend';
   if (seasonsAt(g, 'NBA') >= 6) return 'longhaul';
   if (g.nbaGames > 0) return 'madeit';
   if (abroad > 0) return 'passport';

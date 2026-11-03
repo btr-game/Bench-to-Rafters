@@ -70,7 +70,7 @@ const BUILT: Record<Exclude<EndingId, 'rafters'>, GameState> = {
   enshrined: career([HS, ['NBA', 8]], ['TITLE'], 150),
   ring: career([HS, ['NBA', 5]], ['TITLE', 'ALLSTAR', 'ALLSTAR']),
   allstar: career([HS, ['EU', 3], ['NBA', 4]], ['EUTITLE', 'ALLSTAR', 'ALLNBA2']),
-  eurolegend: career([HS, ['EU', 3], ['NBA', 6]], ['EUTITLE']),
+  eurolegend: career([HS, ['EU', 6], ['NBA', 6]], ['EUTITLE']),
   longhaul: career([HS, ['NCAA', 2], ['NBA', 6]], ['NAISMITH']),
   madeit: career([HS, ['EU', 2], ['NBA', 1]], []),
   passport: career([HS, ['GL', 2], ['INT', 1]], []),
@@ -109,9 +109,13 @@ describe('which ending a career gets', () => {
     expect(endingOf(BUILT.enshrined)).toBe('enshrined');
     expect(endingOf(BUILT.ring)).toBe('ring');
     expect(endingOf(BUILT.allstar)).toBe('allstar');
-    // a legend of Europe over six NBA seasons, and over a few NBA games
+    // a legend of Europe over six NBA seasons when as many were abroad, and over a few NBA games
     expect(endingOf(BUILT.eurolegend)).toBe('eurolegend');
     expect(endingOf(career([HS, ['EU', 3], ['NBA', 2]], ['EUMVP']))).toBe('eurolegend');
+    // owner: "make legend of europe need more seasons abroad. but not too much": fewer seasons abroad
+    // than in the NBA is the long haul, a title over there or not
+    expect(endingOf(career([HS, ['EU', 3], ['NBA', 6]], ['EUTITLE']))).toBe('longhaul');
+    expect(endingOf(career([HS, ['EU', 3], ['NBA', 4]], ['EUTITLE']))).toBe('madeit');
     // it takes three seasons abroad (any league overseas counts) and the EuroLeague's title or MVP
     expect(endingOf(career([HS, ['EU', 2], ['NBA', 6]], ['EUTITLE']))).toBe('longhaul');
     expect(endingOf(career([HS, ['EU', 2], ['INT', 1]], ['EUTITLE']))).toBe('eurolegend');
