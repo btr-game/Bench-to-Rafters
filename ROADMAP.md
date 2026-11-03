@@ -10,17 +10,20 @@ The order the owner set:
 
 - **Round 36** (done): no cuts (owner: "i dont really want to cut anything"), three merges (Around
   you, Your life, the Body panel), and **the rafters finale** in place of Thank you for playing.
-- **Endings for the other paths** (owner: "careers that dont make the rafters can have their own
-  ending. let's catagorize that a bit later, because there are many paths"): today a finished career
-  without the rafters gets the credits, the title and the thank-you. Candidates: the Hall of Fame
-  without a retired number, a long overseas career, the G League grinder, the cup of coffee, the
-  dream that ended before the pros, the ring chaser. Also: a father whose son's career is played
-  next reaches his ending only through the son's (the son's credits name him).
-- **Round 37**: **a world to walk around instead of menus**: a pixel hometown, then a city, whose
-  places (the gym, the agent's office, home, the arena) open what the tabs open today.
-- **Round 38**: **story mode**: a recurring cast (a childhood friend, a draft-class rival, the coach,
-  an agent, family) with written arcs that remember the player's choices; and possibly **one
-  signature thing to play on the court**, a single possession engine for every playable moment.
+- **Endings for the other paths** (done in round 36): twelve endings, each with its scene and
+  theme. Still open: a father whose son's career is played next reaches his ending only through the
+  son's (the son's credits name him).
+- **Round 37** (done): **a world to walk around**: the town in a career (the tabs as places on his
+  street, every arena its own) and the main land (the start page as a map, reached by plane after
+  the tutorial).
+- **Round 38** (next; the plan is the Word document "Round 38 plan: story mode"): **story mode**, a
+  cast of six (the friend, the rival, the mentor, the agent, the reporter, family), six chapters each
+  at fixed moments of a career, with memories later chapters quote, met on the town's street, paid
+  off in the finale. Six decisions are the owner's (every career or its own mode, the cast, how
+  much choices matter on the court, the tone, names, the newsstand).
+- **Round 39**: **The Floor**, one possession engine for every playable moment (crunch time, the
+  playable playoff games, the finals action cam, 3-on-3).
+- **Later**: a donation channel.
 - Turned down: careers framed as roguelite runs with meta-unlocks ("no").
 - Still to weigh before any paid release: a fictional league in place of the NBA's teams, colours
   and legends.
