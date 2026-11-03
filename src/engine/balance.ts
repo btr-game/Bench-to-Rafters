@@ -2,7 +2,7 @@
 // The balance targets in SPEC section 15 are the real requirement; change these
 // constants (not the code) to hit them.
 
-import type { AttrKey, Pos, LevelKey, HalfPlan, RoleKey, GrowthType, AgingProfile } from './types';
+import type { AttrKey, Pos, LevelKey, HalfPlan, RoleKey, GrowthType, AgingProfile, NcaaTier } from './types';
 
 export const ATTRS: AttrKey[] = ['SHT', 'FIN', 'PLY', 'PER', 'INT', 'REB', 'ATH', 'IQ'];
 export const POSITIONS: Pos[] = ['PG', 'SG', 'SF', 'PF', 'C'];
@@ -250,6 +250,7 @@ export interface PlanDef {
   other?: number;
   rangeGain?: number;
   offhandGain?: number;
+  touchGain?: number; // round 35: free-throw touch each half (player/touch.ts)
   chem?: number; // round 20: team chemistry (team strength) added for the rest of the season
   swing?: { attrs: AttrKey[]; mean: number; sd: number }; // round 20: a gamble on these ratings each half
 }
@@ -324,6 +325,7 @@ export function blendPlans(a: HalfPlan, b?: HalfPlan | null, age?: number): Plan
       other: A.other !== undefined ? m(A.other) : undefined,
       rangeGain: A.rangeGain ? A.rangeGain * k : undefined,
       offhandGain: A.offhandGain ? A.offhandGain * k : undefined,
+      touchGain: A.touchGain ? A.touchGain * k : undefined,
       chem: A.chem ? A.chem * k : undefined,
       swing: A.swing ? { ...A.swing, mean: A.swing.mean * k, sd: A.swing.sd * k } : undefined,
     };
@@ -350,6 +352,7 @@ export function blendPlans(a: HalfPlan, b?: HalfPlan | null, age?: number): Plan
     other: keys.size ? mult(otherA, otherB) : undefined,
     rangeGain: add(A.rangeGain ?? 0, B.rangeGain ?? 0) || undefined,
     offhandGain: add(A.offhandGain ?? 0, B.offhandGain ?? 0) || undefined,
+    touchGain: add(A.touchGain ?? 0, B.touchGain ?? 0) || undefined,
     chem: add(A.chem ?? 0, B.chem ?? 0) || undefined,
     swing: A.swing ? { ...A.swing, mean: A.swing.mean * main, sd: A.swing.sd * main } : B.swing ? { ...B.swing, mean: B.swing.mean * side, sd: B.swing.sd * side } : undefined,
   };
@@ -364,7 +367,7 @@ export const HALF_PLANS: Record<HalfPlan, PlanDef> = {
   // the opposite: safer, a little IQ, a little chemistry for the rest of the season
   spotlight: { growth: 0.85, injury: 1.2, morale: 2, trust: -3, rep: [3, 8], usage: 1.15, teamBoost: -0.3, attrs: { IQ: 0.6 }, other: 1, chem: -0.15, swing: { attrs: ['SHT', 'FIN'], mean: 0.6, sd: 1.3 } },
   teamfirst: { growth: 0.95, injury: 0.85, morale: 2, trust: 6, rep: [0, 1], usage: 0.88, teamBoost: 0.7, attrs: { IQ: 1.4 }, other: 1, chem: 0.15 }, // round 15: a bigger lift to the team (was 0.6)
-  shooting: { growth: 1.0, injury: 0.95, morale: 0, trust: 0, rep: [0, 0], usage: 1.03, teamBoost: 0, attrs: { SHT: 2.05 }, other: 0.6, rangeGain: 2 },
+  shooting: { growth: 1.0, injury: 0.95, morale: 0, trust: 0, rep: [0, 0], usage: 1.03, teamBoost: 0, attrs: { SHT: 2.05 }, other: 0.6, rangeGain: 2, touchGain: 2.5 },
   strength: { growth: 1.0, injury: 1.2, morale: -1, trust: 0, rep: [0, 0], usage: 1, teamBoost: 0, attrs: { FIN: 2.1, REB: 2.15, ATH: 1.9, INT: 1.6 }, other: 0.55 },
   playmaking: { growth: 1.0, injury: 1.0, morale: 0, trust: 2, rep: [0, 0], usage: 0.97, teamBoost: 0.2, attrs: { PLY: 2.3, IQ: 1.5 }, other: 0.6 },
   defense: { growth: 1.0, injury: 1.05, morale: 0, trust: 3, rep: [0, 0], usage: 0.95, teamBoost: 0.3, attrs: { PER: 2.6, INT: 2.0 }, other: 0.6 },
@@ -445,7 +448,10 @@ export const WEAR = {
   // the most a prime can be pushed back by the hidden growth rate when it comes to aging
   maxPrimeShift: 2,
 };
-export const DECLINE_ATTR_MULT: Partial<Record<AttrKey, number>> = { ATH: 1.8, SHT: 0.5, IQ: 0.3 };
+// round 35 (owner: "the shooting barely gets affected by age, which makes the stat easy to max out
+// ... make shooting drop as well. just level it to similar levels of other stats"): shooting ages
+// like the rest (it was 0.5); basketball IQ still barely does
+export const DECLINE_ATTR_MULT: Partial<Record<AttrKey, number>> = { ATH: 1.8, IQ: 0.3 };
 export const IQ_LATE_GAIN = { perSeason: 0.3, untilAge: 33 };
 export const SUDDEN_DECLINE = { fromAge: 31, chance: 0.08, min: 4, max: 8 };
 export const DECLINE_NOISE = 0.3;
@@ -543,7 +549,8 @@ export const STAT = {
   threeShare: { base: 0.04, range: 0.0078, sht: 0.0025, min: 0.01, max: 0.66 },
   two: { base: 0.515, rating: 0.0048, height: 0.0035, offhand: 0.0009, min: 0.36, max: 0.7 },
   ftRate: { base: 0.2, fin: 0.004, ath: 0.002, min: 0.06, max: 0.55 },
-  ft: { base: 0.76, sht: 0.0045, min: 0.42, max: 0.94 },
+  // round 35: free-throw touch adds `touch` per point over TOUCH.mid (player/touch.ts)
+  ft: { base: 0.76, sht: 0.0045, touch: 0.0015, min: 0.42, max: 0.94 },
   reb36: { base: 6.4, rating: 0.17, height: 0.33, wing: 0.12, min: 1.2, max: 16 },
   // round 7: elite playmakers can average 10+ (PLY 80 about 6 a game, 92 with high IQ about 10)
   ast36: { base: 4.2, rating: 0.2, iq: 0.065, eliteFrom: 80, elite: 0.045, min: 0.4, max: 14 },
@@ -551,6 +558,22 @@ export const STAT = {
   blk36: { base: 0.55, int: 0.035, height: 0.12, wing: 0.06, min: 0, max: 4.2 },
   tov36: { base: 1.0, fga: 0.055, ast: 0.16, iq: 0.02, min: 0.4, max: 5 },
   moraleSwing: 0.12,
+};
+
+/**
+ * Round 35: free-throw touch (player/touch.ts), a 0-99 feel at the line on top of the shooting
+ * rating: STAT.ft.touch per point over `mid`, which adds nothing (generated players sit there). It
+ * starts from his shooting card at 14 (`start`: base, plus `sht` per point of SHT over 40, plus up to
+ * `jitter` either way from his name and number), and every season of reps adds `season` (more while
+ * he is young). The shooting plan (HALF_PLANS.shooting.touchGain), the shooting summer (`summer`), a
+ * shooting coach on staff (`staff` at level 1), the round's turning points and the shop add more.
+ */
+export const TOUCH = {
+  mid: 50,
+  start: { base: 27, sht: 0.35, jitter: 6, min: 10, max: 60 },
+  season: { young: 1.6, youngTo: 24, prime: 0.8, primeTo: 30, late: 0.3 },
+  summer: 2,
+  staff: 0.5,
 };
 
 // §10 value score
@@ -606,7 +629,10 @@ export const VISIT = { morale: 3, rest: 1 };
  * - spread: how far from that price the draw strays (the sd of the log of price over target).
  * - wear: the chance one of the six is an accessory (cheap at any price level, for the wardrobe).
  */
-export const SHOP = { stock: 6, inflate: { from: 1, to: 50, max: 3 }, share: 0.42, rich: { from: 20, to: 50, share: 0.03 }, spread: 0.45, wear: 0.4 };
+// - markup (round 35, owner: "increase shop item prices up a bit again (about +20~40%?)"): every
+//   price, and the price the six are drawn around, times this, so the same things come up and each
+//   costs this much more against his bank.
+export const SHOP = { stock: 6, inflate: { from: 1, to: 50, max: 3 }, share: 0.42, rich: { from: 20, to: 50, share: 0.03 }, spread: 0.45, wear: 0.4, markup: 1.3 };
 // round 25: personal staff (career/staff.ts). Pay and benefit by level (a raise moves him up one);
 // benefits a season at level 1, times `effect[level - 1]`; a talk once a season lifts morale and
 // (round 28) does `talkShare` of his season's benefit on the spot.
@@ -862,6 +888,47 @@ export const DRAFT = {
   ovrNoise: 2.2,
 };
 
+/**
+ * Round 35: a draft class starts on draft night (career/draftNight.ts). Owner: "the 12 of you
+ * (max) were the first options of your colleges. you're going for the nba draft, and all of you
+ * are predicted to be entering as a 1st round pick (1~30th). ovr starts at a 65~75 range."
+ */
+export const DRAFT_NIGHT = {
+  ovr: [65, 75] as [number, number], // his OVR on draft night, drawn evenly across the range
+  // a freshman one-and-done to a senior: the younger ones twice as often (round 35, with the stars
+  // below: a first-round pick of a career played from high school is usually 19 or 20)
+  ages: [[19, 2], [20, 2], [21, 1], [22, 1]] as [number, number][],
+  // the mock drafts put the best of the range near the top pick and the least near the 30th,
+  // give or take this many picks (redrawn, not clamped, so the ends do not pile up)
+  pickSd: 4,
+  mockSpread: [2, 4] as [number, number], // picks either side of the projection in the mock range
+  firstRound: 30, // the last pick he can go: a team takes him there if he is still on the board
+  // his potential is the one he was made with, but never under the growth curve's for his OVR
+  // and age (the curve the draft class is drawn on), give or take potSd, nor under his OVR plus
+  // potRoom, so a first-round pick can still grow
+  potSd: 3,
+  potRoom: 2,
+  // Stars about as often as for a first-round pick of a career played from high school (owner,
+  // round 35: "potential so stars come up about as often as for a normal first-round pick? yes"):
+  // the potential moved by potLift and spread by potSpread (the best of them can become MVPs), and
+  // his hidden growth rate raised by growthLift (a first-round pick is one who grew fast). Over 200
+  // smart draft-night careers: mean peak 82.40946, All-Star 69.0%, MVP 9.5%, Hall of Fame 19.5%,
+  // against 80.60136, 60.49383%, 9.876543% and 23.45679% for the first-round picks of 150 Regular
+  // guy careers (before: 77.89626, 39.33333%, 0.6666667%, 2.000000%).
+  potLift: -3,
+  potSpread: 10,
+  growthLift: 0.3,
+  // where a first option bound for the first round played: mostly the big programs
+  tiers: [['blue', 5], ['power', 3], ['major', 1.5], ['mid', 0.5]] as [NcaaTier, number][],
+  // his fame with a mock at the 30th pick and at the first, a straight line between: 32.3836 on
+  // average over 400 draft nights, against 32.1433 for the first-round picks of 300 smart Regular
+  // guy careers on the day they were drafted (round 35)
+  rep: { last: 20, top: 45 },
+  // three or four seasons of college ball on his body: the mean wear of those same first-round
+  // picks on draft day (16.2515)
+  wear: 16,
+};
+
 // §8 recruiting
 export const RECRUIT = {
   classSize: 300,
@@ -995,6 +1062,61 @@ export const STARTERS_RECRUIT = { capShare: 1, match: 1.25, moves: 2, asks: 3, c
 // season up to 1: team strength + team, his efficiency x(1 + perf), assists x(1 + ast) and
 // shots x(1 + usage), all times that strength.
 export const DUO = { realChance: 0.25, real: [0.65, 1] as [number, number], plain: [0.05, 0.3] as [number, number], fit: 0.1, grow: 55, winW: 30, trustW: 0.2, sd: 8, start: 0.6, perSeason: 0.15, team: 1.2, perf: 0.035, ast: 0.12, usage: 0.04, stay: 3, restart: 60, trio: { team: 1.0, perf: 0.02, ast: 0.06, usage: -0.03 } };
+
+// Round 35, friends in each other's leagues (career/friendLeague.ts). A classmate's player lives in
+// this league only through his season line: points, rebounds and assists a game, games, salary.
+// What the line does not carry is filled in at a regular starter's rates (steals, blocks and
+// turnovers a game; minutes; shots at the league's average true shooting, so his value score
+// neither gains nor loses for an efficiency nobody measured here).
+// - gp: his games when the line does not say; games: an NBA season, for his share of the games.
+// - rep: his fan vote for the All-Star teams, from his rating: `repPer` a point over `repFrom`
+//   (a 90 is a 75).
+// - box: his line in one game, drawn around his averages; the spread is a share of the average,
+//   never under the floor ([share, floor]).
+// - nudge: his team here was generated without him, so in games against you it plays a little
+//   better while he is on the floor: `per` strength for each OVR point over `from`, at most `max`
+//   for all the classmates on that team together (a 85 adds 1.0, about what home court does).
+export const FRIEND_LEAGUE = {
+  games: 82,
+  gp: 72,
+  min: 34,
+  stl: 0.9,
+  blk: 0.5,
+  tovPerPt: 0.12,
+  ftPerFga: 0.28,
+  threeShare: 0.38,
+  p3: 0.36,
+  ftp: 0.78,
+  repFrom: 60,
+  repPer: 2.5,
+  box: { pts: [0.28, 3], reb: [0.35, 1.5], ast: [0.4, 1.2] } as Record<'pts' | 'reb' | 'ast', [number, number]>,
+  nudge: { from: 75, per: 0.1, max: 1 },
+};
+
+// Round 35, a playoff series against the rival classmate's team (career/rivalSeries.ts). Before
+// game 1 he makes one call for the whole series:
+// - edge: strength his team gets in every game of the series;
+// - usage: his shots (times);
+// - cut: what it takes off his rival's scoring (a negative adds to it);
+// - hot: his form decides more; in a simulated game, each point of game score above or below what
+//   was expected of him moves his team's strength by `hot`, never more than `hotMax` either way;
+// - when the series ends: morale and reputation for a series won or lost ([morale, rep]), coach
+//   trust either way, and `outscored` on top when he outscored his rival over the series.
+// Over a coin-flip series, guard (+0.6) makes it 57.24871%, the team game (+0.3) 53.64044%.
+export const RIVAL_SERIES = {
+  guard: { edge: 0.6, usage: 0.9, cut: 0.2, hot: 0, hotMax: 0, won: [6, 3], lost: [-6, 0], trust: 0, outscored: [0, 0] },
+  duel: { edge: 0, usage: 1.25, cut: -0.05, hot: 0.12, hotMax: 2.5, won: [5, 2], lost: [-4, 0], trust: 0, outscored: [2, 2] },
+  team: { edge: 0.3, usage: 1, cut: 0.05, hot: 0, hotMax: 0, won: [4, 2], lost: [-3, 0], trust: 3, outscored: [0, 0] },
+} as Record<'guard' | 'duel' | 'team', { edge: number; usage: number; cut: number; hot: number; hotMax: number; won: [number, number]; lost: [number, number]; trust: number; outscored: [number, number] }>;
+
+// Round 35, asking to join a classmate's team (career/team.ts, the trade request's 'friend' aim;
+// owner: "salary still has to be a limit factor"). His salary and the friend's together, as a
+// share of next season's cap, set the odds: up to `free` the money is no obstacle; past it the odds
+// fall by `perShare` for each share of the cap, never under `minFit`; past `ceiling` (two near-max
+// deals) no team can carry both and it is not offered. The team's own payroll counts too: with
+// both contracts it may not pass `apron` times the cap. `odds` is the aim's own multiplier, as the
+// other aims have.
+export const JOIN_FRIEND = { odds: 1.1, free: 0.1, perShare: 1.5, minFit: 0.25, ceiling: 0.6, apron: 1.3 };
 
 /** A mode's dial (round 14): 1 unless the mode sets it. */
 export const modeDial = (mode: Mode, k: 'mini' | 'teamFx' | 'ringChase'): number => MODES[mode]?.[k] ?? 1;

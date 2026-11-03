@@ -78,6 +78,9 @@ import { changeWeight, halfPlanWeight, weightWear } from '../player/weight';
 import { recordInjury, trainMuscles } from '../player/body';
 import { cityHalf } from './cityCulture';
 import { duoEffect, growBonds } from './duo';
+import { meetFriends } from './friends';
+import { friendCandidates, friendGame } from './friendLeague';
+import { askRivalSeries, rivalSeriesFx, rivalSeriesGame, rivalSeriesPossible } from './rivalSeries';
 import { NAMES } from '../../content/strings';
 import { awardNickname, payBrand } from './nickname';
 import { rollFine } from './fines';
@@ -85,6 +88,7 @@ import { payStaff } from './staff';
 import { updateRivalry } from './rivalry';
 import { writeNews } from './news';
 import { coachOfYear, temperFx, temperNote } from './coach';
+import { addTouch, touchOf } from '../player/touch';
 
 /** What he adds to winning beyond his OVR, scaled by his share of the game (career/team.ts). */
 const edgeFor = (a: Attrs, ovr: number, share: number, post: boolean): number => {
@@ -99,7 +103,7 @@ export function activeLeague(s: GameState): League {
 export function userProfile(s: GameState): Profile {
   const p = s.player;
   // lefties get a small edge: defenders rarely see the left hand
-  return { attrs: p.attrs, height: p.height, wingspan: p.wingspan, range: p.range, offhand: p.offhand + (p.hand === 'L' ? 6 : 0) };
+  return { attrs: p.attrs, height: p.height, wingspan: p.wingspan, range: p.range, offhand: p.offhand + (p.hand === 'L' ? 6 : 0), touch: touchOf(p) };
 }
 
 // ---------- preseason ----------
@@ -171,6 +175,7 @@ export function beginSeason(s: GameState): void {
   s.season = season;
   s.step = 'preseason';
   startStories(s, league);
+  meetFriends(s);
   pushPlanDecision(s, 1);
 }
 
@@ -181,7 +186,7 @@ const PLAN_TEXT: Record<HalfPlan, PlanText> = {
   recovery: { id: 'recovery', label: 'Recovery', detail: 'Ease off. Slower development, far fewer injuries, heal faster, feel better.' },
   spotlight: { id: 'spotlight', label: 'Spotlight', detail: 'Hunt shots and attention. Fame and money, and your shooting and finishing can jump, or slump. Less feel for the game, a more selfish locker room, more injury risk; coaches and teammates notice.' },
   teamfirst: { id: 'teamfirst', label: 'Team first', detail: 'Make the right play. Fewer shots for you, but the team plays better in your games and the chemistry lasts all season. A little more feel for the game, fewer injuries, and the coach loves it.' },
-  shooting: { id: 'shooting', label: 'Shooting lab', detail: 'Live in the gym with a shooting coach. Your jumper and range get the reps; the rest waits.' },
+  shooting: { id: 'shooting', label: 'Shooting lab', detail: 'Live in the gym with a shooting coach. Your jumper, your range and your free throws get the reps; the rest waits.' },
   strength: { id: 'strength', label: 'Weight room', detail: 'Get stronger and more explosive inside. A bit more injury risk.' },
   playmaking: { id: 'playmaking', label: 'Film and reads', detail: 'Study the game. Passing and feel improve; coaches trust you more.' },
   defense: { id: 'defense', label: 'Lockdown', detail: 'Make defense your identity. Coaches notice.' },
@@ -194,7 +199,7 @@ const PLAN_IDS = Object.keys(PLAN_TEXT) as HalfPlan[];
 const FAST_PLANS: PlanText[] = [
   { id: 'balanced', label: 'General', detail: 'A bit of everything. Every rating grows at a normal pace.' },
   { id: 'strength', label: 'Weight room', detail: 'Strength and explosiveness: finishing, rebounding, athleticism and rim protection. A bit more injury risk.' },
-  { id: 'shooting', label: 'Shooting', detail: 'Your jumper and your range get the reps; the rest waits.' },
+  { id: 'shooting', label: 'Shooting', detail: 'Your jumper, your range and your free throws get the reps; the rest waits.' },
   { id: 'defense', label: 'Defense', detail: 'Perimeter and interior defense. Coaches notice.' },
   { id: 'playmaking', label: 'IQ', detail: 'Film, reads and passing: playmaking and basketball IQ. Coaches trust you more.' },
 ];
@@ -288,6 +293,17 @@ function makeHook(s: GameState, league: League, level: LevelKey, acc: HalfAcc, s
   const replacement = sorted[Math.min(sorted.length - 1, Math.max(0, slot.rank - 1))]?.ovr ?? L.avg;
   const usageMean = teamUsageMean(level, team.roster, slot);
   const daysPerGame = L.seasonDays / L.games;
+  /** Round 35: his team's strength in a playoff game with him on the floor at his role's usual
+   * minutes, as the simulated games reckon it (the odds of a rival series, career/rivalSeries.ts). */
+  const playoffStrength = (): number => {
+    const season = s.season!;
+    const p = s.player;
+    const ovr = ovrOf(p.attrs, p.pos);
+    const [a, b] = ROLE_MINUTES[season.role];
+    const share = Math.min(1, ((a + b) / 2 + (season.role === 'key' || season.role === 'starter' ? 2 : 0)) / 48);
+    const plan = blendPlans(season.plan, season.plan2, p.age);
+    return team.strength + (season.teamBonus ?? 0) + (season.postBonus ?? 0) + (ovr - replacement) * share * IMPACT_MULT + edgeFor(p.attrs, ovr, share, true) + plan.teamBoost - TEAM_FACTORS.playoffGrind;
+  };
   const hook: UserGameHook = (opp: Team, home: boolean, post?: string, series?: SeriesCtx) => {
     const season = s.season!;
     const p = s.player;
@@ -300,6 +316,8 @@ function makeHook(s: GameState, league: League, level: LevelKey, acc: HalfAcc, s
     let liveResult: { us: number; them: number; win: boolean; lastShot?: string } | null = null;
     if (post && s.live && !(p.injury && p.injury.key !== 'dtd')) {
       const key = `${post}|${opp.id}`;
+      // round 35: his rival classmate's team in a playoff series: the call for the series first
+      if (s.mp?.rival && level === 'NBA') askRivalSeries(s, opp, post, home, series, playoffStrength());
       // beginner's one last shot: the first game he plays, then the rest are simulated
       if (s.live.shot) live = !s.flags.levelShot;
       else if (!s.live.simAll && s.live.simSeries !== key) {
@@ -313,6 +331,12 @@ function makeHook(s: GameState, league: League, level: LevelKey, acc: HalfAcc, s
         }
       }
     }
+    // round 35: classmates in this game (career/friendLeague.ts): their lines, the lift the ones on
+    // the other team give it, and a rival series' call (career/rivalSeries.ts)
+    const rs = post && s.live?.rival ? rivalSeriesFx(s, post, opp) : null;
+    const fr = level === 'NBA' && s.mp?.klass ? friendGame(s, team, opp, (post ? season.postGames : season.games).length + 1, post, rs ? { id: rs.id, by: rs.cut } : undefined) : null;
+    const oppStrength = fr ? opp.strength + fr.nudge : opp.strength;
+    let hot = 0;
     acc.games++;
     const plan = blendPlans(season.plan, season.plan2, p.age);
     // hot and cold nights, inside a streaky rhythm for the half
@@ -329,7 +353,7 @@ function makeHook(s: GameState, league: League, level: LevelKey, acc: HalfAcc, s
       if (minutes > 0) {
         const duo = season.duoFx;
         const moraleMult = MORALE_PERF(p.morale) * (1 + (form - 1) * FORM.shootingShare) * (season.styleFx?.perf ?? 1) * (duo?.perf ?? 1);
-        const usage = (usageWeight(p.attrs) / usageMean) * (season.fuel ? 1.06 : 1) * plan.usage * Math.pow(form, 0.8) * (season.styleFx?.usage ?? 1) * (duo?.usage ?? 1) * (s.flags.chase === s.year ? 1 + RECORD_CHASE.usage : 1);
+        const usage = (usageWeight(p.attrs) / usageMean) * (season.fuel ? 1.06 : 1) * plan.usage * Math.pow(form, 0.8) * (season.styleFx?.usage ?? 1) * (duo?.usage ?? 1) * (s.flags.chase === s.year ? 1 + RECORD_CHASE.usage : 1) * (rs ? rs.usage : 1);
         const e = expected(userProfile(s), level, minutes, usage, moraleMult);
         if (duo) e.ast *= duo.ast;
         const started = season.role === 'key' || season.role === 'starter';
@@ -339,8 +363,8 @@ function makeHook(s: GameState, league: League, level: LevelKey, acc: HalfAcc, s
             e,
             started,
             level,
-            my: team.strength + (season.teamBonus ?? 0) + (post ? (season.postBonus ?? 0) : 0) + impact + edgeFor(p.attrs, ovr, minutes / L.gameLen, true) + plan.teamBoost - (level === 'NBA' ? TEAM_FACTORS.playoffGrind : 0),
-            opp: opp.strength,
+            my: team.strength + (season.teamBonus ?? 0) + (post ? (season.postBonus ?? 0) : 0) + impact + edgeFor(p.attrs, ovr, minutes / L.gameLen, true) + plan.teamBoost - (level === 'NBA' ? TEAM_FACTORS.playoffGrind : 0) + (rs ? rs.edge : 0),
+            opp: oppStrength,
             oppName: opp.name,
             homeAdv: level !== 'NBA' ? 0 : home ? 1 : -1,
             round: post!,
@@ -348,7 +372,11 @@ function makeHook(s: GameState, league: League, level: LevelKey, acc: HalfAcc, s
           });
           line = r.line;
           liveResult = r;
-        } else line = sampleGame(rng, e, started);
+        } else {
+          line = sampleGame(rng, e, started);
+          // a duel in a rival series: his night moves the game more
+          if (rs?.hot) hot = clamp((gameScore(line) - expectedGameScore(e)) * rs.hot, -rs.hotMax, rs.hotMax);
+        }
         acc.expGmsc += expectedGameScore(e);
         acc.gmsc += gameScore(line);
         acc.minutes += minutes;
@@ -385,7 +413,7 @@ function makeHook(s: GameState, league: League, level: LevelKey, acc: HalfAcc, s
     else {
       // round 22: in the NBA playoffs every opponent raises its game (titles are harder)
       const grind = post && level === 'NBA' ? TEAM_FACTORS.playoffGrind : 0;
-      win = chance(rng, winProb(team.strength + (season.teamBonus ?? 0) + (post ? (season.postBonus ?? 0) : 0) + impact + boost - grind, opp.strength, post && level !== 'NBA' ? 0 : home ? 1 : -1));
+      win = chance(rng, winProb(team.strength + (season.teamBonus ?? 0) + (post ? (season.postBonus ?? 0) : 0) + impact + boost - grind + (rs ? rs.edge + hot : 0), oppStrength, post && level !== 'NBA' ? 0 : home ? 1 : -1));
       us = Math.round(GAME_POINTS[level] + normal(rng, 0, 9));
       if (line && line.pts > us - 15) us = line.pts + int(rng, 15, 30);
       // postseason games run closer: more of them come down to the last minutes
@@ -397,9 +425,10 @@ function makeHook(s: GameState, league: League, level: LevelKey, acc: HalfAcc, s
       if (liveResult?.lastShot) s.live.recent.push(liveResult.lastShot);
       s.live.recent.push(`${tag}: ${win ? 'W' : 'L'} ${us}–${them} vs ${opp.short}${line ? ` (you: ${line.pts} pts)` : ''}`);
     }
-    const log: GameLog = { n: (post ? season.postGames : season.games).length + 1, opp: opp.short, home, res: win ? 'W' : 'L', us, them, line, post };
+    const log: GameLog = { n: (post ? season.postGames : season.games).length + 1, opp: opp.short, home, res: win ? 'W' : 'L', us, them, line, post, ...(fr?.box.length ? { friends: fr.box } : {}) };
     (post ? season.postGames : season.games).push(log);
     hook.last = { us, them };
+    if (rs) rivalSeriesGame(s, post, opp, series, win, line, fr?.rival ?? null);
     if (line && level === 'NBA') {
       s.nbaGames++;
       milestone(s, 'debut');
@@ -471,7 +500,9 @@ export function playHalf(s: GameState): void {
 const LIVE_LEVELS = new Set<LevelKey>(['HSV', 'NCAA', 'GL', 'EU', 'INT', 'NBA']);
 
 function startPostseason(s: GameState): void {
-  if (!LIVE_LEVELS.has(s.season!.level) || (s.flags.simPostseason && !shotDue(s))) {
+  // round 35: a simulated postseason is still replayed when a rival series can come up, so the
+  // series' call can be asked (career/rivalSeries.ts)
+  if (!LIVE_LEVELS.has(s.season!.level) || (s.flags.simPostseason && !shotDue(s) && !rivalSeriesPossible(s))) {
     finishSeason(s);
     return;
   }
@@ -486,7 +517,9 @@ export function runPostseason(s: GameState): void {
   const ps = s.postSnap;
   if (!ps) return;
   const trial = structuredClone(ps.snap);
-  trial.live = { picks: ps.picks, i: 0, simAll: false, simSeries: null, recent: [], ...(shotDue(trial) ? { shot: true } : {}) };
+  // round 35: a simulated postseason replayed only for a rival series plays its games unasked
+  const quiet = !!trial.flags.simPostseason && !shotDue(trial) && !!trial.mp?.rival;
+  trial.live = { picks: ps.picks, i: 0, simAll: quiet, simSeries: null, recent: [], ...(shotDue(trial) ? { shot: true } : {}) };
   try {
     finishSeason(trial);
   } catch (e) {
@@ -561,6 +594,7 @@ function growthAfterHalf(s: GameState, acc: HalfAcc, level: LevelKey, ovr: numbe
   if (lb) changeWeight(p, lb, 0.3);
   if (plan.rangeGain) p.range = clamp(p.range + plan.rangeGain * outcome.growth, 0, 99);
   if (plan.offhandGain) p.offhand = clamp(p.offhand + plan.offhandGain * outcome.growth, 0, 99);
+  if (plan.touchGain) addTouch(p, plan.touchGain * outcome.growth);
   if (outcome.injury) p.injuryMultNext *= outcome.injury;
   // round 20: chemistry built (or burned) for the rest of the season
   if (plan.chem) season.teamBonus = Math.round(((season.teamBonus ?? 0) + plan.chem) * 100) / 100;
@@ -739,7 +773,8 @@ function finishSeason(s: GameState): void {
     ovr: userOvr(s),
     dpoyWins: s.awards.filter((a) => a.key === 'DPOY').length,
   };
-  const cands = buildCandidates(league, userCand);
+  // round 35: classmates run for the NBA's awards too (career/friendLeague.ts)
+  const cands = buildCandidates(league, userCand, undefined, level === 'NBA' && s.mp?.klass ? friendCandidates(s, league) : undefined);
   let aw: AwardOutcome;
   if (level === 'NBA') {
     aw = nbaAwards(cands);
@@ -828,6 +863,7 @@ function finishSeason(s: GameState): void {
   if (keys.some((k) => k.key === 'MVP')) milestone(s, 'mvp');
   // rivals: generated winners who beat you
   for (const w of aw.winners) {
+    if (w.friend) continue; // round 35: a classmate is not on a roster here (career/rivalry.ts looks there)
     const r = aw.races.find((x) => x.award === 'MVP' || x.award.startsWith('Naismith'));
     if (r && r.userRank !== null && r.userRank <= 10) s.rivals[w.name] = (s.rivals[w.name] ?? 0) + 1;
   }

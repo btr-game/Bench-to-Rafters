@@ -1,14 +1,14 @@
 import { Icon } from '../art/Icon';
 import { ICON_FOR, archetypeIcon } from '../art/icons';
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ARCHETYPES } from '../../engine/player/archetypes';
 import { rerollAttrs } from '../../engine/player/create';
 import { makeRng } from '../../engine/rng';
-import { ATTRS, DIFFICULTIES, HEIGHT_RANGE, MODES, POSITIONS, type Mode } from '../../engine/balance';
+import { ATTRS, DIFFICULTIES, DRAFT_NIGHT, HEIGHT_RANGE, MODES, POSITIONS, type Mode } from '../../engine/balance';
 import type { AttrKey, Attrs, Pos } from '../../engine/types';
 import { NAMES, UI } from '../../content/strings';
 import { FIRST_NAMES, LAST_NAMES } from '../../content/names';
-import { useStore } from '../../store';
+import { achievementsNow, useStore } from '../../store';
 import { listSlots } from '../saves';
 import { ORIGINS } from '../../content/origins';
 import { edgeOf } from '../../engine/career/nationality';
@@ -21,6 +21,9 @@ import { ShareButton } from '../components/Share';
 import { GuideButton } from '../components/Guide';
 import { AchievementsCard } from './Achievements';
 import { CommunityCard, LiveStrip } from './Community';
+import { MultiplayerCard } from './Multiplayer';
+import { MP_FAIL, handle, multiplayer } from '../multiplayer';
+import { recordMp } from '../achievements';
 import { FlagArt } from '../art/Flag';
 import { POS_STYLE, PositionCard } from '../art/PositionCard';
 import { HeroArt, archPose } from '../art/Hero';
@@ -37,6 +40,7 @@ import { ROADMAP } from '../../engine/balance';
 import { FootBar } from '../components/FootBar';
 import { LevelAdds } from '../components/LevelAdds';
 import { PlaceArt } from './RoadMap';
+import { modeOpen, unlockHint } from '../road';
 
 const pick = <T,>(a: readonly T[]): T => a[Math.floor(Math.random() * a.length)];
 const uiRng = makeRng(Math.floor(Math.random() * 2 ** 31));
@@ -130,6 +134,9 @@ function backName(name: string): string {
   return (words[words.length - 1] ?? '').toUpperCase().replace(/[^A-Z0-9-]/g, '');
 }
 
+/** Round 35: what a draft class's player finds out when his career starts (it opens on draft night). */
+const DRAFT_ASSIGNED = 'You do not pick these. You find out which town you grew up in and which college you led when the career starts.';
+
 /** The new-career page; with `level`, a career on the road map (round 33): fewer steps, no difficulty. */
 export function Create({ level }: { level?: Level } = {}) {
   const start = useStore((s) => s.start);
@@ -157,6 +164,15 @@ export function Create({ level }: { level?: Level } = {}) {
   const [focus, setFocus] = useState<AttrKey[]>([]);
   const [hand, setHand] = useState<'R' | 'L'>('R');
   const [mode, setMode] = useState<Mode>('standard');
+  const road = useStore((s) => s.road);
+  // round 35: a draft class waiting for this player (Regular guy only); made or joined on Start
+  const draft = useStore((s) => (level ? null : s.draft));
+  const setDraft = useStore((s) => s.setDraft);
+  const [seatErr, setSeatErr] = useState('');
+  const [seating, setSeating] = useState(false);
+  useEffect(() => {
+    if (draft) setMode('standard');
+  }, [draft]);
   const [country, setCountry] = useState(''); // '' = the game decides, by real-world odds
   const [oath, setOath] = useState(false); // round 25: Rough Road, offered with Reality
   const [comet, setComet] = useState(false); // round 30: Comet, offered with Shoot for the stars
@@ -243,7 +259,9 @@ export function Create({ level }: { level?: Level } = {}) {
           look,
           level,
         })
-      : start({
+      : draft
+        ? void takeSeat()
+        : start({
       name: name.trim() || 'Rookie',
       number: Math.max(0, Math.min(99, Number(number) || 0)),
       pos,
@@ -257,6 +275,31 @@ export function Create({ level }: { level?: Level } = {}) {
       comet: mode === 'stars' && comet,
       look,
     });
+
+  // round 35: the class is made (or joined) as he starts, and its seed is his career's
+  const takeSeat = async () => {
+    if (!draft || seating) return;
+    const mp = await multiplayer();
+    if (!mp) return setSeatErr(MP_FAIL.error);
+    setSeating(true);
+    setSeatErr('');
+    const who = handle() || 'A friend';
+    // round 35: a seat plays one career; one already under way (or done) is not started again
+    if (draft.code) {
+      const k = await mp.draftClass(draft.code);
+      const me = k && k !== 'error' ? k.members.find((m) => m.mine) : null;
+      if (me && (me.seasons.length > 0 || me.rec)) {
+        setSeating(false);
+        return setSeatErr(MP_FAIL.taken);
+      }
+    }
+    const seat = draft.code ? await mp.joinClass(draft.code, who) : await mp.makeClass(draft.name, who);
+    setSeating(false);
+    if (typeof seat === 'string') return setSeatErr(MP_FAIL[seat]);
+    sfx('roll');
+    if (recordMp('joined', seat.code)) achievementsNow();
+    start({ name: name.trim() || 'Rookie', number: Math.max(0, Math.min(99, Number(number) || 0)), pos, archetype: arch, attrs, focus, hand, mode: 'standard', country: country || undefined, look }, seat.seed, { klass: seat.code });
+  };
 
   const copy = level ? LEVEL_COPY[level] : null;
   return (
@@ -321,21 +364,38 @@ export function Create({ level }: { level?: Level } = {}) {
         ))}
       </div>
       <div style={{ height: 12 }} />
+      {draft && (
+        <section className="card mp-draft row" role="group" aria-label="Draft class">
+          <Icon name="draftclass" size={32} />
+          <span className="mp-draft-text">
+            <b>Draft class: {draft.name}</b>
+            <small className="muted">{draft.code ? `Code ${draft.code}. ` : 'A new class: its code comes when you start. '}Regular guy, on the class’s seed. The class starts on draft night. Make your player and start.</small>
+          </span>
+          <button className="btn ghost small" onClick={() => setDraft(null)}>
+            Leave the class
+          </button>
+        </section>
+      )}
 
       {cur === 'Difficulty' && (
         <section className="stack">
           <div className="kicker">Choose how hard the road is</div>
           <div className="modes">
-            {DIFFICULTIES.map((m) => (
-              <button key={m} className={`choice mode-card${mode === m ? ' selected' : ''}${recommend && m === 'standard' ? ' recommended' : ''}`} aria-pressed={mode === m} onClick={() => setMode(m)} data-tour={m === 'standard' ? 'mode-regular' : undefined}>
-                <span className="label with-icon">
-                  <Icon name={ICON_FOR[m]} size={32} />
-                  {MODES[m].name}
-                  {recommend && m === 'standard' && <span className="tag good">Recommended</span>}
-                </span>
-                <small>{MODES[m].blurb}</small>
-              </button>
-            ))}
+            {DIFFICULTIES.map((m) => {
+              // round 35: a difficulty past Regular guy opens with its level on the road map
+              const shut = !modeOpen(road, m) || (!!draft && m !== 'standard');
+              const why = m === 'reality' ? 'reality' : 'stars';
+              return (
+                <button key={m} className={`choice mode-card${mode === m ? ' selected' : ''}${recommend && m === 'standard' ? ' recommended' : ''}${shut ? ' mode-locked' : ''}`} aria-pressed={mode === m} disabled={shut} onClick={() => setMode(m)} data-tour={m === 'standard' ? 'mode-regular' : undefined}>
+                  <span className="label with-icon">
+                    <Icon name={shut ? 'lock' : ICON_FOR[m]} size={32} />
+                    {MODES[m].name}
+                    {recommend && m === 'standard' && <span className="tag good">Recommended</span>}
+                  </span>
+                  <small className={shut ? 'keep' : undefined}>{shut ? (draft ? 'A draft class plays Regular guy.' : unlockHint(why)) : MODES[m].blurb}</small>
+                </button>
+              );
+            })}
           </div>
           {/* round 34 (owner: "put the levels (tutorial) card on the main page as a pop out challenge for
               regular"): Regular guy's own challenge is the road map, every level to play again */}
@@ -344,7 +404,7 @@ export function Create({ level }: { level?: Level } = {}) {
               <PlaceArt place="advanced" size={96} />
               <div className="stack" style={{ gap: 6 }}>
                 <div className="sec-title">Back on the road map?</div>
-                <p className="small muted">The tutorial’s three levels, beginner, intermediate and advanced: short careers at fast break’s pace with one goal, an NBA All-Star team. Play any of them again; they count nowhere (no save, career log, achievements or leaderboards).</p>
+                <p className="small muted">The tutorial’s levels and the island: intermediate opens Reality hits hard, advanced Shoot for the stars, the island the mini-games. Short careers at fast break’s pace with one goal, an NBA All-Star team; they count nowhere (no save, career log, achievements or leaderboards).</p>
                 <div className="row" style={{ gap: 8 }}>
                   <button className="btn small ghost" data-tour="levels-card" onClick={() => (sfx('page'), setPage('road'))}>
                     Open the road map
@@ -392,12 +452,13 @@ export function Create({ level }: { level?: Level } = {}) {
             </div>
           )}
           <p className="muted small">The league is the same at every difficulty. What changes is your potential, how fast you grow and how often you get hurt. Want it quicker? Flip the Fast break switch inside the game, any time.</p>
-          <div className="start-cards">
+          {!draft && <div className="start-cards">
+            <MultiplayerCard />
             <MiniGamesCard />
             <CareerLogCard />
             <AchievementsCard />
             <CommunityCard />
-          </div>
+          </div>}
         </section>
       )}
 
@@ -439,7 +500,8 @@ export function Create({ level }: { level?: Level } = {}) {
           {roads && (
           <div className="card stack nation-card">
             <div className="sec-title">Where do you start?</div>
-            <p className="small muted">Your country sets your road until college or the pros: the youth system, the showcases, and who calls first.</p>
+            {/* round 35: a draft class starts on draft night, so the youth road is behind him */}
+            <p className="small muted">{draft ? 'Where he grew up, and the national team he can play for.' : 'Your country sets your road until college or the pros: the youth system, the showcases, and who calls first.'}</p>
             <div className="nation-grid">
               <button className={`nation${country === '' ? ' on' : ''}`} aria-pressed={country === ''} onClick={() => setCountry('')}>
                 <b>Surprise me</b>
@@ -467,7 +529,7 @@ export function Create({ level }: { level?: Level } = {}) {
                   ))}
               </select>
             </div>
-            <div className="nation-notes">
+            {!draft && <div className="nation-notes">
               <div className="kicker with-flag">
                 {country && <FlagArt country={country} size={30} />}
                 {country ? `Your road from ${country === 'USA' ? 'the United States' : country}` : 'Your road'}
@@ -481,7 +543,7 @@ export function Create({ level }: { level?: Level } = {}) {
               ) : (
                 <p className="small">Half of all careers start in the United States; the rest begin in academies and clubs around the world.</p>
               )}
-            </div>
+            </div>}
           </div>
           )}
 
@@ -549,8 +611,8 @@ export function Create({ level }: { level?: Level } = {}) {
             </fieldset>
             )}
             <div className="assigned">
-              <div className="kicker">{UI.create.assignedTitle}</div>
-              <div className="small">{UI.create.assignedText}{level === 'beginner' ? ' So are your archetype and your two focus ratings: the ones a ' + NAMES.pos[pos].toLowerCase() + ' like you is best at.' : ''}</div>
+              <div className="kicker">{draft ? 'Hometown and college' : UI.create.assignedTitle}</div>
+              <div className="small">{draft ? DRAFT_ASSIGNED : UI.create.assignedText}{level === 'beginner' ? ' So are your archetype and your two focus ratings: the ones a ' + NAMES.pos[pos].toLowerCase() + ' like you is best at.' : ''}</div>
             </div>
           </div>
         </section>
@@ -629,7 +691,7 @@ export function Create({ level }: { level?: Level } = {}) {
         <section className="card stack">
           <div className="row">
             <div style={{ minWidth: 0 }}>
-              <div className="kicker">{level ? 'High school senior · age 17' : 'Freshman · age 14'}</div>
+              <div className="kicker">{level ? 'High school senior · age 17' : draft ? 'Draft night · a college junior or senior' : 'Freshman · age 14'}</div>
               <div className="pc-name">{name || 'Rookie'}</div>
               <div className="muted">
                 #{number} · {NAMES.pos[pos]} · {archetype.name}
@@ -663,7 +725,10 @@ export function Create({ level }: { level?: Level } = {}) {
                 Rough Road: the road picked all of this for you, his look included. No rerolls.{' '}
               </span>
             )}
-            Focus: {focus.map((k) => NAMES.attr[k]).join(' and ')}. Height: still growing, most end up {ht(hMin + (archetype.height ?? 0))}–{ht(hMax + (archetype.height ?? 0))}, some well outside it. This card is a typical {archetype.name.toLowerCase()}; your real starting level is set at tryouts. {UI.create.assignedText}
+            Focus: {focus.map((k) => NAMES.attr[k]).join(' and ')}.{' '}
+            {draft
+              ? `The class starts on draft night: his college’s first option, done growing (most end up ${ht(hMin + (archetype.height ?? 0))}–${ht(hMax + (archetype.height ?? 0))}), OVR ${DRAFT_NIGHT.ovr[0]} to ${DRAFT_NIGHT.ovr[1]} and projected in the first round. This card is a typical ${archetype.name.toLowerCase()}; his college years shaped it. ${DRAFT_ASSIGNED}`
+              : `Height: still growing, most end up ${ht(hMin + (archetype.height ?? 0))}–${ht(hMax + (archetype.height ?? 0))}, some well outside it. This card is a typical ${archetype.name.toLowerCase()}; your real starting level is set at tryouts. ${UI.create.assignedText}`}
           </p>
           )}
         </section>
@@ -686,14 +751,15 @@ export function Create({ level }: { level?: Level } = {}) {
             {UI.create.next}
           </button>
         ) : (
-          <button className="btn" data-tour="create-start" onClick={begin}>
-            {UI.create.start}
+          <button className="btn" data-tour="create-start" disabled={seating} onClick={begin}>
+            {seating ? 'Taking your seat…' : UI.create.start}
           </button>
         )}
       </div>
       {/* round 25 (owner): the live strip and the saves sit under the hero and the cards (and under
           Next, so starting a career is no further away), the dev deck's door last */}
-      {cur === 'Difficulty' && (
+      {seatErr && <p className="small row-end" style={{ color: 'var(--bad)' }}>{seatErr}</p>}
+      {cur === 'Difficulty' && !draft && (
         <section className="stack start-foot">
           <LiveStrip />
           <ContinueCard />

@@ -21,6 +21,7 @@ import { CometMark, OathMark } from '../components/OathMark';
 import { compareRows, compareScore } from '../compare';
 import { deleteSlot, exportCode, listSlots, readSlot, type SlotMeta } from '../saves';
 import { seasonLabel } from '../format';
+import { isDev } from '../../dev/mode';
 
 /** Download (and on phones, share) the career card. */
 export function CardActions({ rec }: { rec: CareerRecord }) {
@@ -93,7 +94,7 @@ export function CareerLogCard() {
         Career log
       </div>
       <p className="small muted">
-        Your saved careers (continue, look back, a code to move one) and the cards of your last {LOG_MAX} finished careers, on this device. {n[0] ? `${n[0]} card${n[0] === 1 ? '' : 's'}${n[1] ? `, ${n[1]} locked` : ''}.` : 'Finish a career for its first card.'}
+        Your saved careers (continue or look back) and the cards of your last {LOG_MAX} finished careers, on this device. {n[0] ? `${n[0]} card${n[0] === 1 ? '' : 's'}${n[1] ? `, ${n[1]} locked` : ''}.` : 'Finish a career for its first card.'}
         {live ? ' During a career you can look, download and lock; deleting waits for the start page.' : ` Lock up to ${LOCK_MAX} to keep them for good.`}
       </p>
       <button className="btn ghost" data-tour="log" onClick={() => setPage('log')}>
@@ -170,7 +171,7 @@ async function codeOf(id: string): Promise<string | null> {
 function CodeBox({ text }: { text: string }) {
   return (
     <div className="stack" style={{ gap: 4 }}>
-      <span className="small muted">This code is the whole career. Copied if your browser allows it; otherwise select it and copy. Paste it into another browser&rsquo;s career log, under Import.</span>
+      <span className="small muted">This code is the whole career as it stands. Copied if your browser allows it; otherwise select it and copy. Found a bug? Send it with your feedback and the maker can open the career exactly as it is.</span>
       <textarea className="save-code" readOnly value={text} rows={3} onFocus={(e) => e.currentTarget.select()} />
     </div>
   );
@@ -336,7 +337,10 @@ function LogEntry({ rec, save, locked, canLock, live, onDelete, onLock, picked, 
 const saveOf = (rec: CareerRecord, slots: SlotMeta[]): SlotMeta | undefined =>
   rec.slot ? slots.find((x) => x.id === rec.slot) : slots.find((x) => x.retired && x.name === rec.name && x.mode === rec.mode);
 
-/** Paste a code from another browser: the career opens at once. */
+/** Paste a code: the career opens at once. Round 35 (owner: "let's put the import function exclusive
+ * to devs. i dont want people abusing the export codes"): only in the dev deck, where it opens in
+ * the deck's own storage (a code is the whole career as plain packed text, so an edited one could
+ * carry made-up ratings or honours into the boards). */
 function ImportBox() {
   const importCareer = useStore((s) => s.importCareer);
   const [paste, setPaste] = useState('');
@@ -382,7 +386,7 @@ export function CareerLog() {
             Career log
           </h1>
           <p className="prose">
-            Every career on this device. The ones in progress come first: continue one, or copy its code to carry it to another browser. Then a card for each finished career: look back at it, download or share the card, compare two side by side. The log keeps {LOG_MAX} finished careers: when it is full, a new one replaces the oldest card that is not locked. Lock up to {LOCK_MAX} you never want to lose.
+            Every career on this device. The ones in progress come first: continue one, or copy its code (the maker can open it, to look into a bug). Then a card for each finished career: look back at it, download or share the card, compare two side by side. The log keeps {LOG_MAX} finished careers: when it is full, a new one replaces the oldest card that is not locked. Lock up to {LOCK_MAX} you never want to lose.
           </p>
         </div>
         {live && (
@@ -446,7 +450,7 @@ export function CareerLog() {
         {loose.map((x) => (
           <SaveEntry key={x.id} meta={x} live={live} onGone={() => setSlots(listSlots())} />
         ))}
-        {!live && <ImportBox />}
+        {!live && isDev() && <ImportBox />}
       </section>
       <FootBar where={`career log page${live ? ', from a career' : ''}`} />
     </div>

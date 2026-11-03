@@ -4,7 +4,7 @@
 import { FootBar } from '../components/FootBar';
 import { Icon } from '../art/Icon';
 import { ICON_FOR } from '../art/icons';
-import { ROAD_MINIS, ROAD_NEED, inTutorial, passGrade, type RoadMini } from '../road';
+import { ROAD_MINIS, ROAD_NEED, passGrade, unlockHint, unlocked, type RoadMini } from '../road';
 import { useStore } from '../../store';
 import { PageTop } from '../components/PageTop';
 import { MINI_CLAIMS, claimsUsed, miniProgress, type MiniId } from '../../engine/career/miniBonus';
@@ -36,9 +36,9 @@ function Hub() {
   const setMini = useStore((s) => s.setMini);
   const game = useStore((s) => s.game);
   const career = game && game.step !== 'retired' ? game : null;
-  // round 33: in the tutorial this is the island: every game once, a C or better
+  // round 33: the island: every game once, a C or better (round 35: while the mini-games are locked)
   const road = useStore((s) => s.road);
-  const island = inTutorial(road);
+  const island = !unlocked(road, 'minis');
   return (
     <section className="stack stage-in">
       <div>
@@ -134,7 +134,8 @@ export function MiniGames() {
   const mini = useStore((s) => s.mini);
   const setMini = useStore((s) => s.setMini);
   const hasCareer = useStore((s) => !!s.game);
-  const island = useStore((s) => inTutorial(s.road));
+  // round 35: while the mini-games are locked, the hub is the island (the road map's way to open them)
+  const island = useStore((s) => !unlocked(s.road, 'minis'));
   return (
     <div className="wrap no-tabs">
       {/* round 27: the shared page top; in a game the way back is the hub, and the career is one tap away */}
@@ -167,15 +168,28 @@ export function MiniGames() {
 /** The entry on the start page and on a career's Extras tab (round 29; at the foot of Home before). */
 export function MiniGamesCard() {
   const setMini = useStore((s) => s.setMini);
+  const setPage = useStore((s) => s.setPage);
   const daily = useStore((s) => !!s.game?.flags.daily);
   const live = useStore((s) => !!s.game && s.game.step !== 'retired');
+  // round 35: the mini-games open with the island on the road map
+  const shut = useStore((s) => !unlocked(s.road, 'minis'));
+  const career = useStore((s) => !!s.game);
   return (
-    <section className={`card stack${daily ? ' mini-locked' : ''}`}>
+    <section className={`card stack${daily || shut ? ' mini-locked' : ''}`}>
       <div className="sec-title with-icon">
-        <Icon name={daily ? 'lock' : 'controller'} size={28} />
+        <Icon name={daily || shut ? 'lock' : 'controller'} size={28} />
         Mini-games
       </div>
-      {daily ? (
+      {shut ? (
+        <>
+          <p className="small muted keep">{unlockHint('minis')} Every game once, a C or better in each.</p>
+          {!career && (
+            <button className="btn ghost" data-tour="minis-locked" onClick={() => setPage('road')}>
+              Open the road map
+            </button>
+          )}
+        </>
+      ) : daily ? (
         <p className="small muted">Locked during the daily challenge, so a run stays quick. They open again when you go back to your career.</p>
       ) : (
         <>

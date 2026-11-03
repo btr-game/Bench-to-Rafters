@@ -2,12 +2,16 @@
 // remembers when it came and which player earned it; the totals (careers finished, titles over
 // every career...) feed the achievements that count more than one career.
 
-import { ACHIEVEMENTS, NO_TOTALS, earnedNow, type Achievement, type CareerTotals } from '../engine/achievements';
+import { ACHIEVEMENTS, DIFFICULTIES, NO_TOTALS, earnedNow, simReady, type Achievement, type CareerTotals } from '../engine/achievements';
+import { madeAllStar } from '../engine/levels';
+import type { Mode } from '../engine/balance';
 import type { GameState } from '../engine/types';
 import { isDev } from '../dev/mode';
 import { count, nbaTitles } from '../engine/awards/legacy';
 import { addMiniResult } from '../engine/achievementsMini';
+import type { MpKind } from '../engine/achievements35';
 import type { MiniResult } from '../engine/career/miniBonus';
+import { UNLOCK_FROM, islandDone, loadRoad, type Road, type Unlock } from './road';
 
 const KEY = 'btr-achv-v1';
 
@@ -70,7 +74,10 @@ export function countCareer(g: GameState, master: boolean): void {
   const t = d.totals;
   const mode = g.mode ?? 'standard';
   t.finished += 1;
-  t.byMode = { ...t.byMode, [mode]: (t.byMode[mode] ?? 0) + 1 };
+  // round 35: a Comet (a son's career is one) is played by Sim, so it is no career at its difficulty;
+  // one with an NBA All-Star team counts toward opening Sim
+  if (!g.flags.comet) t.byMode = { ...t.byMode, [mode]: (t.byMode[mode] ?? 0) + 1 };
+  if (!g.flags.comet && madeAllStar(g)) t.starBy = { ...t.starBy, [mode]: (t.starBy?.[mode] ?? 0) + 1 };
   t.titles += nbaTitles(g);
   t.mvps += count(g, 'MVP');
   if (g.flags.fast) t.fast += 1;
@@ -80,6 +87,18 @@ export function countCareer(g: GameState, master: boolean): void {
   if (g.flags.gen2) t.sons = (t.sons ?? 0) + 1;
   saveAch(d);
 }
+
+/** Round 35 (owner: "sim mode should be unlocked once the user completes one full round (until
+ * retirement) of each difficulty", then "lets go with allstar as the requirement"): the difficulties
+ * with no career played to its end with an NBA All-Star team on this device yet. */
+export function difficultiesLeft(): Mode[] {
+  const t = loadAch().totals;
+  return DIFFICULTIES.filter((m) => !(t.starBy?.[m] ?? 0));
+}
+
+/** Sim mode is open on this device: an All-Star career finished at every difficulty (the dev deck:
+ * always). */
+export const simOpen = (): boolean => isDev() || simReady(loadAch().totals);
 
 /** A mini-game run just ended (round 27): count it for the arcade achievements. */
 export function recordMini(r: MiniResult): void {
@@ -155,6 +174,40 @@ export function recordVisit(): void {
   saveAch(d);
 }
 
+/**
+ * Round 35, Play with friends (ui/multiplayer.ts): one thing done with friends, counted for the book.
+ * Like the other recorders it only counts; the caller checks the book after (`achievementsNow()`).
+ * - 'made': a challenge set from a finished career (the retirement page's Challenge a friend, once
+ *   its code comes back)
+ * - 'answered': the answer to a friend's challenge posted (a challenge career finished)
+ * - 'beat': that answer beat the career that set the challenge (a higher career index)
+ * - 'joined': a draft class made or joined (a seat in it taken)
+ * - 'classTop': first in a draft class's standings, with two members or more
+ * - the class's pages (ui/screens/ClassNight.tsx): 'reunionMvp', 'reunion3' and 'reunionSweep'
+ *   (recordReunion), 'react' (a reaction on a classmate's season, once a season), 'crowned' (a
+ *   crown on one of his), 'dailyTop' (first on the friends' daily board, once a day), 'watched'
+ *   (a classmate's career opened, once a classmate)
+ * With `code` (the challenge's or the class's), each one counts once however often it is seen; the
+ * result is true when it counted.
+ */
+export function recordMp(kind: MpKind, code?: string): boolean {
+  const d = loadAch();
+  const t = d.totals;
+  const key = code ? `${kind}:${code}` : '';
+  if (key && t.mpSeen?.includes(key)) return false;
+  if (key) t.mpSeen = [...(t.mpSeen ?? []), key];
+  t.mp = { ...t.mp, [kind]: (t.mp?.[kind] ?? 0) + 1 };
+  saveAch(d);
+  return true;
+}
+
+/** Round 35: a class's reunion night seen to its last award (ui/screens/ClassNight.tsx): named
+ * Class MVP, `won` of its `of` awards. Each counts once a class; true when any of them counted. */
+export function recordReunion(code: string, won: number, of: number, mvp: boolean): boolean {
+  const got = [mvp && recordMp('reunionMvp', code), won >= 3 && recordMp('reunion3', code), won === of && recordMp('reunionSweep', code)];
+  return got.some(Boolean);
+}
+
 /** Round 29: cards locked in the career log right now (the most at once is kept). */
 export function recordLocks(n: number): void {
   const d = loadAch();
@@ -176,10 +229,21 @@ export function recordHeard(id: string): boolean {
   return true;
 }
 
+/** Round 35: the modes this road has opened by clearing their stops (not by `all`, the gift to a
+ * device that graduated before the locks, nor by the dev deck having everything). */
+const roadOpened = (r: Road): Unlock[] =>
+  (Object.keys(UNLOCK_FROM) as Unlock[]).filter((u) => {
+    const from = UNLOCK_FROM[u];
+    return from === 'island' ? islandDone(r) : !!r.passed[from];
+  });
+
 /** Checks everything against the career on screen; returns what is new (and keeps it). */
 export function checkAch(g: GameState | null): Achievement[] {
   const d = loadAch();
   d.totals.daily = Math.max(d.totals.daily, dailyDays(d.since));
+  // round 35: the road map's stops cleared (kept once seen, like the daily days)
+  const open = roadOpened(loadRoad()).filter((u) => !d.totals.unlocks?.includes(u));
+  if (open.length) d.totals.unlocks = [...(d.totals.unlocks ?? []), ...open];
   const fresh = earnedNow(g, d.totals).filter((id) => !d.got[id]);
   if (!fresh.length) return [];
   const at = new Date().toISOString();

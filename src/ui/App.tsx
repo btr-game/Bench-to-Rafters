@@ -20,6 +20,7 @@ import { Icon } from './art/Icon';
 import { CareerLog } from './screens/CareerLog';
 import { AchievementBook } from './screens/Achievements';
 import { CommunityPage } from './screens/Community';
+import { MpBoard, MultiplayerPage } from './screens/Multiplayer';
 import { FootBar } from './components/FootBar';
 import { Intro } from './screens/Intro';
 import { Thanks } from './screens/Thanks';
@@ -27,7 +28,7 @@ import { ICON_FOR } from './art/icons';
 import { music, onHeard, sfx, wakeOnClick } from './sound';
 import { recordHeard } from './achievements';
 import { trackOf } from './tracks';
-import { inTutorial, levelTabs, nextLevel, roadDone } from './road';
+import { inTutorial, levelTabs } from './road';
 import { Graduation } from './screens/Graduation';
 import { STOPS } from './tutorial/closing';
 import { LEVEL_NAME, levelOf } from '../engine/levels';
@@ -205,7 +206,7 @@ export function App() {
     window.scrollTo(0, 0); // braces: newer browsers return a promise from scrollTo, and an effect may only return its clean-up
   }, [tab, page, mini]);
   useEffect(() => {
-    const where = mini ? 'Mini-games' : page === 'log' ? 'Career log' : page === 'achievements' ? 'Achievement book' : page === 'community' ? 'Community' : game ? UI.tabs[tab] : '';
+    const where = mini ? 'Mini-games' : page === 'log' ? 'Career log' : page === 'achievements' ? 'Achievement book' : page === 'community' ? 'Community' : page === 'multi' ? 'Play with friends' : game ? UI.tabs[tab] : '';
     document.title = where ? `${where} · Bench to Rafters` : 'Bench to Rafters';
   }, [tab, page, mini, game]);
   // round 33: a level plays at fast break's pace but keeps every card in view
@@ -263,23 +264,23 @@ export function App() {
 
   if (thanks && !game) return <Thanks g={thanks} />;
   if (intro) return <Intro />;
-  // round 33: the tutorial, until the full game opens on this device: the beginner career first,
-  // then the road map; none of the start page's pages
-  if (inTutorial(road) && !game) {
-    if (mini) return <MiniGames />;
-    if (roadDone(road)) return <Graduation />;
-    const next = nextLevel(road);
-    return creating || next === 'beginner' ? <Create level={creating ?? 'beginner'} /> : <RoadMap />;
-  }
+  // round 33: the tutorial, until the full game opens on this device. Round 35 (owner: "make only the
+  // beginner level of tutorial necessary"): the beginner career, then graduation; the road map's
+  // other stops wait in the full game, where they open the other modes
+  if (inTutorial(road) && !game) return road.passed.beginner ? <Graduation /> : <Create level="beginner" />;
   if (creating && !game) return <Create level={creating} />;
+  // the island from the road map (the hub over the map, which stays the page to go back to)
+  if (mini && !game) return <MiniGames />;
   if (page === 'road' && !game) return <RoadMap />;
   if (page === 'log') return <CareerLog />;
   if (page === 'achievements') return <AchievementBook />;
   if (page === 'community') return <CommunityPage />;
+  if (page === 'multi') return <MultiplayerPage />;
   if (mini) return <MiniGames />;
   if (!game) return <Create />;
 
   const retired = game.step === 'retired';
+  const sideBoard = !!(game.mp?.challenge || game.mp?.klass) && (tab !== 'home' || retired);
   return (
     <>
       <div className="wrap">
@@ -301,13 +302,21 @@ export function App() {
         {game.flags.daily ? <DailyStrip g={game} /> : null}
         <LookBackBar g={game} />
         {game.flags.tour ? <TourBar /> : null}
-        <TabView key={tab} fast={fast}>
-          {tab === 'home' && (retired ? game.flags.level ? <LevelEnd g={game} /> : <Retirement g={game} /> : <Home g={game} />)}
-          {tab === 'season' && <SeasonTab g={game} />}
-          {tab === 'player' && <PlayerTab g={game} />}
-          {tab === 'records' && <RecordsTab g={game} />}
-          {tab === 'extras' && <ExtrasTab g={game} />}
-        </TabView>
+        <div className={sideBoard ? 'mp-layout' : undefined}>
+          <TabView key={tab} fast={fast}>
+            {tab === 'home' && (retired ? game.flags.level ? <LevelEnd g={game} /> : <Retirement g={game} /> : <Home g={game} />)}
+            {tab === 'season' && <SeasonTab g={game} />}
+            {tab === 'player' && <PlayerTab g={game} />}
+            {tab === 'records' && <RecordsTab g={game} />}
+            {tab === 'extras' && <ExtrasTab g={game} />}
+          </TabView>
+          {/* round 35: a career with friends keeps its board beside every tab (Home has it in its own side column) */}
+          {sideBoard && (
+            <aside className="mp-aside">
+              <MpBoard g={game} />
+            </aside>
+          )}
+        </div>
         <FootBar where={`${tab} tab, ${MODES[game.mode]?.name ?? game.mode}, age ${game.player.age}`} />
       </div>
       <Overlays g={game} />

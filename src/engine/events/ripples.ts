@@ -12,6 +12,7 @@ import type { AttrKey, GameState } from '../types';
 import { adjust } from '../career/common';
 import { nudgeBonds } from '../career/duo';
 import { addPounds } from '../player/weight';
+import { addTouch } from '../player/touch';
 
 type Ripple = (s: GameState, rng: Rng) => string | void;
 
@@ -214,6 +215,7 @@ export const RIPPLES: Record<string, Record<string, Ripple>> = {
       if (!chance(rng, 0.35)) return;
       morale(s, -4);
       bump(s, 'SHT', -0.4);
+      addTouch(s.player, -1.5); // round 35: free-throw touch
       return 'It catches up with you at the free-throw line.';
     },
   },

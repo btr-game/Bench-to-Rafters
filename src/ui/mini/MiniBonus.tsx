@@ -19,9 +19,10 @@ export function MiniBonus({ result }: { result: MiniResult }) {
     if (counted.current) return;
     counted.current = true;
     recordMini(result);
-    achievementsNow();
-    // round 33: the island's grade for the road map
+    // round 33: the island's grade for the road map (round 35: before the book is checked, which
+    // reads the island for the mini-games' unlock)
     useStore.getState().gradeMini(result);
+    achievementsNow();
   }, [result]);
   if (!game || game.step === 'retired') return <MiniEnd />;
   const reward = scaledReward(game, result);
@@ -35,6 +36,8 @@ export function MiniBonus({ result }: { result: MiniResult }) {
       <div className="sec-title">Career bonus</div>
       {text ? (
         <p className="small">{text}</p>
+      ) : game.flags.friends ? (
+        <p className="small muted keep">A career with friends takes no mini-game bonus, so everyone in it stays even. This run is for fun.</p>
       ) : !canClaimMini(game, result.game) && claimsUsed(game) < MINI_CLAIMS.perSeason ? (
         <p className="small muted keep">This game is not unlocked for {game.player.name} yet, so this run is for fun. The lobby shows what it takes.</p>
       ) : !canClaimMini(game, result.game) ? (

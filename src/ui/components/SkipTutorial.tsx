@@ -2,8 +2,13 @@
 // code to skip it. this allows old users to skip"). Round 34 (owner: "put the skip the tutorial door
 // on the top next to share instead of the bottom"): a button just before Share in every top bar
 // while the tutorial is on; it opens a small pop-up for the exit code (the graduation page shows it).
+// Round 35 (owner: "the skip button of the tutorial doesnt appear. let users skip mid tutorial if
+// possible"): the lessons shade the whole page but for one control, top bar included, so the button
+// was dimmed and could not be pressed for almost the whole tutorial. The lesson layer now carries a
+// Skip tutorial button of its own, fixed to a corner above the shade, and the pop-up opens above
+// the lesson too (its field types even while a lesson to read holds the keys).
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 import { useStore } from '../../store';
 import { inTutorial } from '../road';
@@ -33,7 +38,7 @@ function SkipPanel({ onClose }: { onClose: () => void }) {
     };
   }, [onClose]);
   return createPortal(
-    <div className="hall-pop share-pop" role="dialog" aria-modal="true" aria-label="Skip the tutorial" onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <div className="hall-pop share-pop skip-pop" data-lesson-free role="dialog" aria-modal="true" aria-label="Skip the tutorial" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="share-card">
         <button className="pop-x" aria-label="Close" onClick={onClose}>
           <PixelX />
@@ -67,14 +72,16 @@ function SkipPanel({ onClose }: { onClose: () => void }) {
   );
 }
 
-/** Beside Share in a top bar, while the tutorial is on (the word hides on a phone, as Share's does). */
-export function SkipButton() {
-  const on = useStore((s) => inTutorial(s.road));
+/** Beside Share in a top bar, while the tutorial is on (the word hides on a phone, as Share's does).
+ * `float` is the lesson layer's own (round 35), fixed to a corner above the shade; while a lesson
+ * is up the top bar's steps aside for it. */
+export function SkipButton({ float, style }: { float?: boolean; style?: CSSProperties }) {
+  const on = useStore((s) => inTutorial(s.road) && (!!float || !s.lessonUp));
   const [open, setOpen] = useState(false);
   if (!on) return null;
   return (
     <>
-      <button className="icon-btn share-btn skip-btn" data-tour="skip-door" aria-haspopup="dialog" aria-expanded={open} aria-label="Skip the tutorial" onClick={() => (sfx('page'), setOpen(true))}>
+      <button className={`icon-btn share-btn skip-btn${float ? ' skip-float' : ''}`} style={style} data-lesson-free={float || undefined} data-tour={float ? undefined : 'skip-door'} aria-haspopup="dialog" aria-expanded={open} aria-label="Skip the tutorial" onClick={() => (sfx('page'), setOpen(true))}>
         <Icon name="door" size={18} />
         <span className="share-word">Skip tutorial</span>
       </button>

@@ -9,6 +9,7 @@ import type { AttrKey, EventResult, GameState } from '../types';
 import { NAMES } from '../../content/strings';
 import { fmtMoney } from '../economy/salary';
 import { idealWeight, weightOf } from '../player/weight';
+import { touchOf } from '../player/touch';
 
 interface Snap {
   attrs: Record<AttrKey, number>;
@@ -18,6 +19,7 @@ interface Snap {
   bank: number;
   range: number;
   offhand: number;
+  touch: number;
   height: number;
   weight: number;
   growth: number;
@@ -40,6 +42,7 @@ export function snap(s: GameState): Snap {
     bank: p.bank,
     range: p.range,
     offhand: p.offhand,
+    touch: touchOf(p),
     height: p.height,
     weight: weightOf(p),
     growth: p.growthMultNext,
@@ -72,6 +75,7 @@ export function vary(s: GameState, before: Snap, good?: number, bad?: number): n
   p.bank = Math.max(0, before.bank + (p.bank - before.bank) * k(before.bank, p.bank));
   p.range = scale(before.range, p.range, 0, 99);
   p.offhand = scale(before.offhand, p.offhand, 0, 99);
+  p.touch = scale(before.touch, touchOf(p), 0, 99);
   p.wear = scale(before.wear, p.wear ?? 0, 0, 100, false);
   if (s.season && (s.season.teamBonus ?? 0) !== before.chem) s.season.teamBonus = Math.round(scale(before.chem, s.season.teamBonus ?? 0, -20, 20) * 10) / 10;
   // pounds toward his best playing weight are the good kind
@@ -113,6 +117,7 @@ export function changes(s: GameState, before: Snap): EventResult['changes'] {
   num('Reputation', p.rep - before.rep);
   num('Range', p.range - before.range);
   num('Weak hand', p.offhand - before.offhand);
+  num('Free-throw touch', touchOf(p) - before.touch);
   num('Body wear', (p.wear ?? 0) - before.wear, false);
   num('Team chemistry', (s.season?.teamBonus ?? 0) - before.chem, true, 1);
   const lb = weightOf(p) - before.weight;

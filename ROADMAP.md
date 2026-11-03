@@ -209,6 +209,47 @@ no statue or hall.
   kept on the device, could give the road map card (Regular guy's, on the start page) a reason to
   come back.
 
+## Round 35: multiplayer (built; see DECISIONS.md)
+
+Owner: "let's start round 35. the theme here is multiplayer". Owner's picks: **Draft class with
+friends** and **Challenge a friend**; players find each other **both** ways (an invite code or
+link, and quick match). Defaults proposed, for the owner to confirm or change:
+
+- **Challenge a friend** (asynchronous): from the end of a career, or any finished career in the
+  career log, Challenge a friend makes a short code and link for the same starting player (seed,
+  difficulty, position, archetype, focus, country, hand and look). The friend plays that prospect
+  their own way; when their career ends the two sit side by side (the career log's Compare), the
+  winner by career index, and the result reaches the challenger too. Quick match: an open-challenges
+  board, to take on a stranger's prospect. Undo off, as for the daily challenge, so it stays fair.
+- **Draft class with friends** (asynchronous): create a class (up to 8), share its code or link;
+  quick match joins an open class with room. Every member starts on the class's seed, so the same
+  league world and the same draft year, each with their own player. Each finished season posts to
+  the class: a Class page with everyone's careers season by season, class standings by career
+  index, and class awards each season (the class MVP and more). No one has to be online together.
+  Later step: friends' players appear on their NBA teams in each other's leagues for the seasons
+  they have already played.
+- **Where**: the website and itch.io (the online database: new tables and functions, a migration),
+  and the claude.ai page (its shared database). A copy with neither says multiplayer needs the
+  online game.
+
+## Kept from round 35
+
+- **Challenges from the career log**: a challenge is set from a career's last page, since a career
+  card does not keep its start. Keeping the start on the card (a few hundred bytes) would let any
+  logged Regular guy career be sent.
+- **Friends in each other's leagues**: built in round 35 (game logs, award races, All-Star teams,
+  rival series, joining a friend). Still open: a classmate on your team's roster page, and in the
+  playoff bracket's MVP lists.
+- **More class awards**: reunion night was built in round 35 (owner: all the awards at once, at
+  the end). Still open: a class All-Star game, a shareable image of the night's awards.
+- **Multiplayer on the claude.ai page**: its shared database (the community's) could hold
+  challenges too, with what it can check (each write is the player's own, but not validated as the
+  website's functions validate it).
+
+- **Ideas the owner passed on** (round 35): a 3-on-3 against a friend's player ("no, too much").
+- **Shop items for careers with friends**, if the shop can offer them without changing its draws
+  for other careers.
+
 ## Kept from round 34
 
 - **A recorded announcer**: the owner asked for a much more booming voice. Round 34 went as far as

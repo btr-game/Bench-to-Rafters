@@ -66,6 +66,17 @@ export interface GameLog {
   them: number;
   line: StatLine | null; // null = did not play
   post?: string; // round name in postseason
+  friends?: FriendGame[]; // round 35: classmates in this game (career/friendLeague.ts)
+}
+
+/** Round 35: a classmate's line in one of his games, on the other team or (mate) on his. */
+export interface FriendGame {
+  pn: string; // his player
+  name: string; // the friend
+  pts: number;
+  reb?: number; // left out when his season line has none
+  ast?: number;
+  mate?: boolean;
 }
 
 interface Program {
@@ -111,6 +122,7 @@ export interface UserPlayer {
   caps: Attrs;
   range: number;
   offhand: number; // skill with the weaker hand
+  touch?: number; // round 35: free-throw touch, 0-99 (player/touch.ts); missing in careers saved before round 35
   hand: 'R' | 'L'; // dominant hand
   focus: AttrKey[];
   focusChanges: number;
@@ -428,6 +440,29 @@ export interface DraftPick {
   from: string;
 }
 
+/** Round 35: a classmate in a draft class, as his career sees him: the friend's name, his player
+ * and the lines of the seasons he has played so far. */
+export interface FriendLine {
+  id: string;
+  name: string; // the friend's name for friends
+  pn: string; // his player
+  pos: string;
+  /** A season as the class has it: per-game points, rebounds and assists, games, salary ($M) and
+   * honours (round 35: the later fields are optional, for lines posted before they existed). */
+  seasons: { year: number; lv: string; team: string; ovr: number; pts: number; reb?: number; ast?: number; gp?: number; sal?: number; aw?: string[] }[];
+}
+
+/** Round 35: a rival night, his team against his rival classmate's, or a playoff series between them. */
+interface RivalMeet {
+  year: number;
+  won: boolean;
+  me: number; // his points (a game, over a series)
+  him: number; // the rival's points (a game, over a series)
+  score: string; // "112–104", his team first (a series: "4–2")
+  how: string; // the choice he made
+  series?: string; // a playoff series: its round (career/rivalSeries.ts)
+}
+
 export interface Rivalry {
   level: 'draft' | 'starter' | 'mvp'; // it only ever goes up
   pid: number; // the rival, a generated NBA player
@@ -493,6 +528,23 @@ export interface GameState {
   version: 1;
   mode: import('./balance').Mode;
   seed: number;
+  /** Round 35: how the career began (the seed and what was picked on the start page), so a challenge
+   * can hand a friend the same prospect. Careers from before round 35 have none. */
+  start?: { seed: number; input: import('./player/create').CreateInput };
+  /** Round 35, multiplayer: the challenge this career takes (its code), or the draft class it plays in. */
+  mp?: {
+    challenge?: string;
+    klass?: string;
+    made?: string;
+    /** Round 35: his classmates' season lines as the server had them (ui/multiplayer.ts copies them in before each season). */
+    friends?: FriendLine[];
+    /** The classmate he and his rival picked each other (a member id), once both have. */
+    rival?: string;
+    /** Rival nights: each meeting with the rival classmate's team. */
+    meets?: RivalMeet[];
+    /** Round 35: this career's id in its class (a seat holds one career; the server refuses another's lines). */
+    run?: string;
+  };
   rng: Rng;
   nextId: number;
   year: number;

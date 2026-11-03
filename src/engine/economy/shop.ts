@@ -8,6 +8,7 @@ import { SHOP_ITEMS, type ShopItem, type WearSlot } from '../../content/shop';
 import { logDecision, pushDecision } from '../career/common';
 import { fmtMoney } from './salary';
 import { changeWeight, idealWeight, weightOf } from '../player/weight';
+import { addTouch } from '../player/touch';
 import { levelOf } from '../levels';
 
 /** His income, $M a year: salary and brand deal. */
@@ -29,12 +30,12 @@ const nice = (x: number): number => {
   const e = 10 ** (Math.floor(Math.log10(x)) - 1);
   return Math.round(x / e) * e;
 };
-export const priceFor = (s: GameState, it: ShopItem): number => nice(it.price * priceMult(s));
+export const priceFor = (s: GameState, it: ShopItem): number => nice(it.price * priceMult(s) * SHOP.markup);
 
 /** The price the six are drawn around: about a third of his bank, much less once he is very rich. */
 function target(s: GameState): number {
   const share = SHOP.share * (SHOP.rich.share / SHOP.share) ** ((logLerp(incomeOf(s), SHOP.rich.from, SHOP.rich.to, 0, 1)));
-  return Math.max(s.player.bank, 0.00005) * share;
+  return Math.max(s.player.bank, 0.00005) * share * SHOP.markup;
 }
 
 const HELPS: Record<string, string> = {
@@ -56,6 +57,7 @@ function describeItem(it: ShopItem): string {
   if (it.focus) parts.push('Sharpens your focus skills');
   if (it.range) parts.push('Extends your range');
   if (it.offhand) parts.push('Builds your weak hand');
+  if (it.touch) parts.push('Steadies you at the free-throw line');
   if (it.growthMult) parts.push('Speeds up your development');
   if (it.injuryMult) parts.push('Keeps your body healthier');
   if (it.declineMult) parts.push('Slows down aging');
@@ -84,7 +86,9 @@ function stock(s: GameState): string[] {
   // wardrobe keeps filling; the rest are drawn around his price
   const wear = SHOP_ITEMS.filter((i) => i.wear && !owned.has(i.id));
   const picks: ShopItem[] = wear.length && chance(s.rng, SHOP.wear) ? [pick(s.rng, wear)] : [];
-  let pool = SHOP_ITEMS.filter((i) => !i.wear);
+  // round 35: the draft class's own things only in a class career (any other draws as before)
+  const klass = s.mode === 'standard' && !!s.mp?.klass;
+  let pool = SHOP_ITEMS.filter((i) => !i.wear && (!i.klass || klass));
   // first one a shelf, among things near his price; then the nearest of the rest, any shelf
   for (const oneShelf of [true, false]) {
     let left = pool.filter((i) => !oneShelf || (near(i) > 0.05 && !picks.some((x) => x.category === i.category)));
@@ -133,6 +137,7 @@ export function applyItem(s: GameState, it: ShopItem, price = it.price): void {
   if (it.focus) for (const k of p.focus) p.attrs[k] = clamp(p.attrs[k] + it.focus, 15, ATTR_MAX);
   if (it.range) p.range = clamp(p.range + it.range, 0, 99);
   if (it.offhand) p.offhand = clamp(p.offhand + it.offhand, 0, 99);
+  if (it.touch) addTouch(p, it.touch);
   if (it.growthMult) p.growthMultNext *= it.growthMult;
   if (it.injuryMult) p.injuryMultNext *= it.injuryMult;
   if (it.declineMult) p.declineMultNext *= it.declineMult;

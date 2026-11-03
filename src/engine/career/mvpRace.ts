@@ -8,6 +8,7 @@ import { sumLines } from '../sim/statModel';
 import { valuePerGame } from '../sim/statModel';
 import { userOvr } from './common';
 import { projectedLines } from '../sim/genStats';
+import { friendCandidates } from './friendLeague';
 
 const MVP_RACE = { fromOvr: 92, top: 5 };
 
@@ -37,6 +38,8 @@ export function liveMvpRace(s: GameState): (MvpLadder & { final: boolean }) | nu
     { name: p.name, teamId: s.teamId!, line, firstHalfLine: season.halfLines[0] ?? line, rep: p.rep, rookie: s.serviceYears === 0, per: p.attrs.PER, int: p.attrs.INT, prevValue: prev ? valuePerGame(prev.line) : null, age: p.age, ovr: userOvr(s) },
     MVP_RACE.top,
     projectedLines(s.nba, s.teamId, season.roleRank),
+    // round 35: classmates in the race, at their share of the games so far (career/friendLeague.ts)
+    s.mp?.klass ? friendCandidates(s, s.nba, true) : undefined,
   );
   if (userOvr(s) < MVP_RACE.fromOvr && (ladder.userRank === null || ladder.userRank > MVP_RACE.top)) return null;
   return { ...ladder, final: false };

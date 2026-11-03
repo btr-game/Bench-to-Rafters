@@ -1,10 +1,11 @@
 // The tutorial, played end to end in a browser (round 33, owner: "let's just try to prepare as much
-// as possible so that no bug appears in the tutorial"). From a fresh device: the intro, beginner,
-// the road map, intermediate, advanced, the closing tour, the graduation page and the full start
-// page, the way a player would: every lesson is answered (Got it, or the highlighted control),
-// every decision takes its first choice, story pages are read, the shop is left, the last shot is
-// taken. The island's mini-games each have their own play, so their grades are seeded (the grading
-// has unit tests). Fails on a script error, or when nothing on screen moves the tutorial on.
+// as possible so that no bug appears in the tutorial"). Round 35 (owner: "make only the beginner
+// level of tutorial necessary"): from a fresh device, the intro, the beginner level, the graduation
+// page and the full start page, the way a player would: every lesson is answered (Got it, or the
+// highlighted control), every decision takes its first choice, story pages are read, the shop is
+// left, the last shot is taken. On the full start page the modes the road map opens must still be
+// locked (Reality hits hard, Shoot for the stars, the mini-games). Fails on a script error, when a
+// lock is open, or when nothing on screen moves the tutorial on.
 //
 //   node scripts/tutorial-e2e.cjs [desk|phone] [out dir]     (dev server on :5179)
 //   LESSON_IDS=<ids, comma-separated> lists the lessons never shown; MOTION=1 plays the animations
@@ -26,8 +27,6 @@ fs.rmSync(`${OUT}/live.txt`, { force: true });
     if (sessionStorage.getItem('e2e')) return;
     sessionStorage.setItem('e2e', '1');
     localStorage.clear();
-    const minis = Object.fromEntries(['threes', 'dunk', 'street', 'legends', 'lab', 'rhythm', 'office'].map((m) => [m, 'C']));
-    localStorage.setItem('btr-road-v1', JSON.stringify({ passed: {}, minis }));
   });
   const p = await ctx.newPage();
   const errors = [];
@@ -115,10 +114,7 @@ fs.rmSync(`${OUT}/live.txt`, { force: true });
     else if (await vis('.set-menu')) {
       await p.keyboard.press('Escape');
       did = 'close settings';
-    } else if (await click('.tour-bar .btn')) did = 'next stop';
-    else if (await click('.level-end .btn')) did = 'level end';
-    else if (await click('.road-pop .road-stop.next .btn')) did = 'road';
-    else if (await click('.road-spot.next:not(.on)')) did = 'road place';
+    } else if (await click('.level-end .btn')) did = 'level end';
     else if (await vis('.focus-grid') && (await p.locator('.focus-grid button[aria-pressed="true"]').count()) < 2) {
       await p.locator('.focus-grid button[aria-pressed="false"]').first().click();
       did = 'focus';
@@ -150,12 +146,23 @@ fs.rmSync(`${OUT}/live.txt`, { force: true });
     }
   }
   const road = await p.evaluate(() => JSON.parse(localStorage.getItem('btr-road-v1') || '{}'));
+  // round 35: what the road map opens is still shut on the full start page
+  const locks = await p.evaluate(() => {
+    const card = (name) => [...document.querySelectorAll('.mode-card')].find((b) => b.textContent.includes(name));
+    return {
+      regular: !!card('Regular guy') && !card('Regular guy').disabled,
+      reality: !!card('Reality hits hard')?.disabled,
+      stars: !!card('Shoot for the stars')?.disabled,
+      minis: !!document.querySelector('.mini-locked'),
+    };
+  });
+  const shut = locks.regular && locks.reality && locks.stars && locks.minis;
   await p.screenshot({ path: `${OUT}/end.png`, fullPage: true });
   fs.writeFileSync(`${OUT}/log.txt`, log.join('\n'));
   const all = (process.env.LESSON_IDS || '').split(',').filter(Boolean);
   const missed = all.filter((id) => !(road.lessons || []).includes(id));
-  const out = { view: VIEW.width, seconds: Math.round((Date.now() - t0) / 1000), passed: Object.keys(road.passed || {}), toured: !!road.toured, free: !!road.free, lessons: (road.lessons || []).length, missed, seen: Object.fromEntries(seen), errors };
+  const out = { view: VIEW.width, seconds: Math.round((Date.now() - t0) / 1000), passed: Object.keys(road.passed || {}), free: !!road.free, locks, lessons: (road.lessons || []).length, missed, seen: Object.fromEntries(seen), errors };
   console.log(JSON.stringify(out, null, 1));
   await b.close();
-  process.exit(road.free && !errors.length ? 0 : 1);
+  process.exit(road.free && shut && !errors.length ? 0 : 1);
 })();

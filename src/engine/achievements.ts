@@ -16,6 +16,7 @@ import { weightOf } from './player/weight';
 import { ACHIEVEMENTS_32, R32_TOTALS_ONLY } from './achievements32';
 import { ACHIEVEMENTS_33 } from './achievements33';
 import { ACHIEVEMENTS_34, R34_TOTALS_ONLY } from './achievements34';
+import { ACHIEVEMENTS_35, R35_TOTALS_ONLY, type MpKind } from './achievements35';
 import { ACHIEVEMENTS_25 } from './achievements25';
 import { ACHIEVEMENTS_MINI, MINI_TOTALS_ONLY, type MiniTotals } from './achievementsMini';
 
@@ -32,6 +33,7 @@ export const ACH_TIERS: { key: AchTier; name: string; color: string }[] = [
 export interface CareerTotals {
   finished: number;
   byMode: Partial<Record<Mode, number>>;
+  starBy?: Partial<Record<Mode, number>>; // round 35: careers finished with an NBA All-Star team, by difficulty (they open Sim)
   titles: number; // NBA titles over every career
   mvps: number;
   fast: number; // careers finished on Fast break
@@ -52,10 +54,22 @@ export interface CareerTotals {
   resumed?: number; // round 34: careers in progress continued from the career log
   roadSeen?: string[]; // round 34: road map places whose card was opened after the tutorial
   visits?: number; // round 34: visits to the game (the intro passed)
+  mp?: Partial<Record<MpKind, number>>; // round 35: what was done with friends (ui/achievements.ts recordMp)
+  mpSeen?: string[]; // round 35: `kind:code` of each challenge or class already counted, so none counts twice
+  unlocks?: string[]; // round 35: the modes the road map opened by clearing their stops (ui/road.ts Unlock)
 }
 
 /** Round 29: how many music loops the game has (ui/tracks.ts; a test keeps the two in step). */
-export const MUSIC_LOOPS = 18;
+export const MUSIC_LOOPS = 19; // round 35: Play with friends has its own loop
+/** The three difficulties. */
+export const DIFFICULTIES: Mode[] = ['standard', 'reality', 'stars'];
+/** A career has been finished at every difficulty (the Grand Tour). */
+export const grandTour = (t: CareerTotals): boolean => DIFFICULTIES.every((m) => (t.byMode[m] ?? 0) > 0);
+/** Round 35 (owner: "sim mode should be unlocked once the user completes one full round (until
+ * retirement) of each difficulty", then "lets go with allstar as the requirement"): a career finished
+ * with an NBA All-Star team at every difficulty opens Sim mode. */
+export const simReady = (t: CareerTotals): boolean => DIFFICULTIES.every((m) => (t.starBy?.[m] ?? 0) > 0);
+
 export const NO_TOTALS: CareerTotals = { finished: 0, byMode: {}, titles: 0, mvps: 0, fast: 0, master: 0, daily: 0 };
 
 /** Everything the checks read, worked out once per look. */
@@ -373,7 +387,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   A('c25', 'Silver Anniversary', 'allstar', 'Finish 25 careers.', (f) => f.t.finished >= 25),
   A('c50', 'Golden Anniversary', 'hof', 'Finish 50 careers.', (f) => f.t.finished >= 50),
   A('c100', 'Centurion', 'hof', 'Finish 100 careers.', (f) => f.t.finished >= 100),
-  A('allmodes', 'Grand Tour', 'starter', 'Finish a career at every difficulty.', (f) => (['standard', 'reality', 'stars'] as Mode[]).every((m) => (f.t.byMode[m] ?? 0) > 0)),
+  A('allmodes', 'Grand Tour', 'starter', 'Finish a career at every difficulty (a Comet does not count).', (f) => grandTour(f.t)),
   A('fastdone', 'Speed Reader', 'bench', 'Finish a career on Fast break.', (f) => f.t.fast > 0),
   A('masterdone', 'No Training Wheels', 'starter', 'Finish a career in Master mode.', (f) => f.t.master > 0),
   A('titles10', 'Ring Hoarder', 'allstar', 'Win ten NBA titles over all your careers.', (f) => f.t.titles >= 10),
@@ -411,10 +425,12 @@ export const ACHIEVEMENTS: Achievement[] = [
   ...ACHIEVEMENTS_33,
   // round 34: simple math, the fundamentals, and the round's new pages (achievements34.ts)
   ...ACHIEVEMENTS_34,
+  // round 35: play with friends, the road map's unlocks, free throws, the late jump shot, and more (achievements35.ts)
+  ...ACHIEVEMENTS_35,
 ];
 
 // the ones that only read the totals kept across careers (they can be checked with no career open)
-const TOTALS_ONLY = new Set(['c1', 'c3', 'c5', 'c10', 'c25', 'c50', 'c100', 'allmodes', 'fastdone', 'masterdone', 'titles10', 'mvp10', 'daily1', 'daily7', 'daily30', 'share1', 'lock1', 'lock5', 'mixtape', 'album', 'undo1', 'cmp1', ...MINI_TOTALS_ONLY, ...R32_TOTALS_ONLY, ...R34_TOTALS_ONLY]);
+const TOTALS_ONLY = new Set(['c1', 'c3', 'c5', 'c10', 'c25', 'c50', 'c100', 'allmodes', 'fastdone', 'masterdone', 'titles10', 'mvp10', 'daily1', 'daily7', 'daily30', 'share1', 'lock1', 'lock5', 'mixtape', 'album', 'undo1', 'cmp1', ...MINI_TOTALS_ONLY, ...R32_TOTALS_ONLY, ...R34_TOTALS_ONLY, ...R35_TOTALS_ONLY]);
 
 /** The achievements this career (and the totals) have earned, by id. */
 export function earnedNow(g: GameState | null, t: CareerTotals): string[] {

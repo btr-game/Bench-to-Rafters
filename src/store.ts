@@ -12,6 +12,7 @@ import { advance as engineAdvance, changeFocus, changeNumber, changePosition, ch
 import { seasonLabel } from './ui/format';
 import { tabKey } from './ui/selectors';
 import { weightOf } from './engine/player/weight';
+import { touchOf } from './engine/player/touch';
 import { visitItem, wearItem } from './engine/economy/shop';
 import { letGo, raiseStaff, talkStaff } from './engine/career/staff';
 import { negotiate, type Ask } from './engine/career/negotiate';
@@ -23,8 +24,9 @@ import type { WearSlot } from './content/shop';
 import { careerRecord, type CareerRecord } from './engine/career/record';
 import { canPlayChild, childGame, childLegacy, childSeed } from './engine/nextGen';
 import { attachChild, logCareer, type LogResult } from './ui/careerLog';
-import { checkAch, countCareer, earnedIn, recordOpened, recordUndo, recordVisit } from './ui/achievements';
+import { checkAch, countCareer, earnedIn, recordMp, recordOpened, recordUndo, recordVisit, simOpen } from './ui/achievements';
 import { community } from './ui/community';
+import { cleanProspect, handle, multiplayer, pump, readLink, seasonLine, send, type Challenge, type MpLink } from './ui/multiplayer';
 import { deleteSlot, dropRun, importCode, newSlotId, readRun, readSlot, writeRun, writeSlot } from './ui/saves';
 import { bestGrade, exitCode, levelTabs, loadRoad, offRecord, roadGrade, saveRoad, type Road } from './ui/road';
 import { STOPS, stopsLeft } from './ui/tutorial/closing';
@@ -42,7 +44,7 @@ export type Theme = 'auto' | 'light' | 'dark';
 export type Court = 'classic' | 'hardwood' | 'street';
 /** Round 31: the text size, a multiplier on every font size (tokens.css, --ts). */
 export type TextSize = 'm' | 'l' | 'xl';
-type Page = 'log' | 'achievements' | 'community' | 'road';
+type Page = 'log' | 'achievements' | 'community' | 'road' | 'multi';
 export type Mini = 'hub' | 'office' | 'threes' | 'legends' | 'lab' | 'dunk' | 'street' | 'rhythm' | 'daily';
 
 /** A short interstitial between steps (not part of the saved game). */
@@ -68,7 +70,15 @@ interface Store {
   endThanks: () => void;
   /** Set while a heavy step waits its turn (round 27): the loading pop-out shows if it runs long. */
   loading: number | null;
-  start: (input: CreateInput, seed?: number) => void;
+  start: (input: CreateInput, seed?: number, mp?: GameState['mp']) => void;
+  /** Round 35: a friend's challenge, played from the same start (the same seed and start page). */
+  startChallenge: (c: Challenge) => boolean;
+  /** Round 35: a draft class waiting for its player (made or joined when he starts), and the
+   * multiplayer page's open challenge or class. */
+  draft: { code?: string; name: string } | null;
+  setDraft: (d: { code?: string; name: string } | null) => void;
+  mpOpen: MpLink | null;
+  openMp: (l: MpLink | null) => void;
   choose: (choiceId: string) => void;
   advance: () => void;
   dismissMoment: () => void;
@@ -77,7 +87,9 @@ interface Store {
   togglePlayoffs: () => void;
   toggleFast: () => void;
   toggleSim: () => void;
-  requestTrade: (aim?: import('./engine/career/team').TradeAim) => void;
+  /** Dev deck only (round 35): shows Sim as a player who has not opened it yet sees it. */
+  simShut: boolean;
+  requestTrade: (aim?: import('./engine/career/team').TradeAim, to?: string) => void;
   /** Round 31: the career as it was before his last choice (one step), with what that choice was. */
   undo: { game: GameState; label: string } | null;
   undoLast: () => void;
@@ -293,7 +305,7 @@ function loadTheme(): Theme {
 
 /** Whether this career can step back: not a challenge (Rough Road, Comet), not the daily
  * challenge, and not once it has ended (it is logged and posted by then). */
-export const canUndo = (g: GameState | null): boolean => !!g && !g.flags.oath && !g.flags.comet && !g.flags.daily && !g.flags.level && g.step !== 'retired';
+export const canUndo = (g: GameState | null): boolean => !!g && !g.flags.oath && !g.flags.comet && !g.flags.daily && !g.flags.level && !g.mp && g.step !== 'retired';
 
 /** Keeps the career as it was before a choice (the old state is never changed: every action works on a copy). */
 function remember(g: GameState, label: string): { undo: Store['undo'] } {
@@ -325,7 +337,7 @@ function teamOf(g: GameState) {
 /** The page a link names: …#community. (…#inbox opens the dev door on the start page, then the deck's inbox.) */
 function linkedPage(): Page | null {
   try {
-    return location.hash === '#community' ? 'community' : null;
+    return location.hash === '#community' ? 'community' : readLink() ? 'multi' : null;
   } catch {
     return null;
   }
@@ -423,14 +435,37 @@ export const useStore = create<Store>((set, get) => ({
     set({ thanks: null });
   },
   loading: null,
-  start: (input, seed) =>
+  start: (input, seed, mp) =>
     later(() => {
       const s = seed ?? Math.floor(Math.random() * 2 ** 31);
-      const game = newGame(s, input);
+      // round 35 (owner): with friends, Fast break and Sim stay off for the whole career, and a
+      // draft class starts on draft night (engine/career/draftNight.ts)
+      const friends = !!(mp?.challenge || mp?.klass);
+      // round 35: a draft class starts on draft night (engine/career/draftNight.ts)
+      const game = newGame(s, friends ? { ...input, fast: false, mode: input.mode === 'fast' ? 'standard' : input.mode, ...(mp?.klass ? { start: 'draft' as const } : {}) } : input);
+      if (mp) game.mp = mp.klass && !mp.run ? { ...mp, run: `${s.toString(36)}-${Date.now().toString(36)}` } : mp;
+      if (friends) game.flags.friends = 1;
       fastForward(game);
       // round 33: a level career has a save of its own (ui/saves.ts writeRun), not a slot
-      set({ game, slot: input.level ? null : newSlotId(), creating: null, tab: 'home', transition: null, mini: null, seen: allSeen(game), lookBack: false, ...oathLock(game) });
+      set({ game, slot: input.level ? null : newSlotId(), creating: null, draft: null, page: null, tab: 'home', transition: null, mini: null, seen: allSeen(game), lookBack: false, ...oathLock(game) });
     }),
+  startChallenge: (c) => {
+    const p = cleanProspect(c.prospect);
+    if (!p || c.mine) return false;
+    if (get().game) flushSave();
+    get().start(p.input, p.seed, { challenge: c.code });
+    // round 35: he has taken it, so its chat is his too
+    void multiplayer().then((mp) => mp?.take(c.code, handle() || 'A friend'));
+    return true;
+  },
+  draft: null,
+  setDraft: (draft) => {
+    // a finished career on screen steps aside first (its thank-you page, then the start page)
+    if (draft && get().game) get().reset();
+    set({ draft, page: draft ? null : get().page, creating: null });
+  },
+  mpOpen: readLink(),
+  openMp: (mpOpen) => set({ mpOpen, ...(mpOpen ? { page: 'multi' as Page } : {}) }),
   seen: {},
   undo: null,
   undoLast: () => {
@@ -559,6 +594,7 @@ export const useStore = create<Store>((set, get) => ({
     const game = await readSlot(id);
     if (!game) return false;
     weightOf(game.player); // careers saved before round 20 get a weight
+    touchOf(game.player); // and before round 35 a free-throw touch
     // round 34 (owner: "when i look back or continue from the career log, it doesnt instantly direct
     // me to the career's homepage"): straight to its Home, from wherever Continue was pressed
     set({ game, slot: id, tab: 'home', page: null, transition: null, mini: null, seen: allSeen(game), daily: null, logged: null, lookBack: game.step === 'retired', ...oathLock(game) });
@@ -568,6 +604,8 @@ export const useStore = create<Store>((set, get) => ({
     return true;
   },
   importCareer: async (code) => {
+    // round 35: the dev deck's alone (owner: "i dont want people abusing the export codes")
+    if (!isDev()) return false;
     const game = await importCode(code);
     if (!game) return false;
     weightOf(game.player);
@@ -745,11 +783,11 @@ export const useStore = create<Store>((set, get) => ({
     if (text) set({ game: next, ...remember(g, 'A staff move') });
     return text;
   },
-  requestTrade: (aim) => {
+  requestTrade: (aim, to) => {
     const g = get().game;
     if (!g) return;
     const next = structuredClone(g);
-    requestTrade(next, aim);
+    requestTrade(next, aim, to);
     set({ game: next, ...remember(g, 'A trade request') });
   },
   mutate: (fn) => {
@@ -770,10 +808,13 @@ export const useStore = create<Store>((set, get) => ({
   toggleSim: () => {
     const g = get().game;
     if (!g || g.flags.daily || g.mode === 'lab') return;
+    // round 35: on only once a career has been finished at every difficulty (a level has its own rule)
+    if (!g.flags.sim && !g.flags.level && (get().simShut || !simOpen())) return;
     const next = structuredClone(g);
     setSim(next, !next.flags.sim);
     set({ game: next, transition: null });
   },
+  simShut: false,
   togglePlayoffs: () => {
     const g = get().game;
     if (!g || g.flags.daily) return;
@@ -944,9 +985,27 @@ useStore.subscribe((now, before) => {
   // round 34: a card pushed out of the log takes its save with it (the log is the saved careers)
   if (logged.dropped?.slot) deleteSlot(logged.dropped.slot);
   useStore.setState({ logged });
-  // round 24: onto the leaderboards (and the news feed) for everyone who shares this page
-  void community().then((c) => c.postCareer(rec));
+  // round 24: onto the leaderboards (and the news feed) for everyone who shares this page. Round 35
+  // (owner: "the career played in multiplayer wont be counted towards the real leaderboards in
+  // community"): a career with friends counts on its challenge's or class's board only
+  if (!g.mp?.challenge && !g.mp?.klass) void community().then((c) => c.postCareer(rec));
+  // round 35: a draft class gets the card, a friend's challenge its answer
+  if (g.mp?.klass) send({ k: 'career', code: g.mp.klass, rec, run: g.mp.run });
+  if (g.mp?.challenge) {
+    send({ k: 'answer', code: g.mp.challenge, name: handle() || 'A friend', rec });
+    if (recordMp('answered', g.mp.challenge)) achievementsNow();
+  }
 });
+
+// round 35: each finished season of a draft class career goes to the class, a short line
+useStore.subscribe((now, before) => {
+  const g = now.game;
+  const b = before.game;
+  if (!g?.mp?.klass || !b || g === b || g.seed !== b.seed || g.player.name !== b.player.name || g.history.length <= b.history.length) return;
+  for (const h of g.history.slice(b.history.length)) send({ k: 'season', code: g.mp.klass, s: { ...seasonLine(h, g.player.name, g.player.pos), ...(g.mp.run ? { run: g.mp.run } : {}) } });
+});
+// anything a closed page left unsent goes now
+setTimeout(() => void pump(), 4000);
 
 // round 31: the step back belongs to the career it was taken in; another career on screen (a new
 // one, a save picked up, the daily challenge) drops it

@@ -40,7 +40,10 @@ function sparkMate(s: GameState) {
 function duoMate(s: GameState) {
   const d = activeDuo(s);
   const t = teamById(s.nba, s.teamId);
-  return d && t ? { d, mate: t.roster.find((x) => x.id === d.id)! } : null;
+  // round 35: a duo of friends (career/friends.ts friendBonds) has no player on this roster and no
+  // contract here to extend, so it is no partner for these
+  const mate = d && t ? t.roster.find((x) => x.id === d.id) : undefined;
+  return d && mate ? { d, mate } : null;
 }
 
 export const ROUND21_EVENTS: EventDef[] = [

@@ -18,6 +18,7 @@ import { newSlotId, writeSlot } from '../ui/saves';
 import { todayKey } from '../engine/mini/daily';
 import { ATTRS } from '../engine/balance';
 import { attachChild, lockCard, logCards, logCareer } from '../ui/careerLog';
+import { seasonLine, seedLocalMultiplayer, type ClassSeason, type MpLink } from '../ui/multiplayer';
 import { advance as step, choose as pickChoice, prompt as nextPrompt } from '../engine/flow';
 import { offerEvent } from '../engine/events/resolver';
 import { announceFarewell, canFarewell, isFarewellSeason } from '../engine/career/farewell';
@@ -97,7 +98,7 @@ const PRO = ['NBA', 'EU', 'INT', 'GL'];
 function show(g: GameState | null, tab: Tab = 'home', extra: Partial<ReturnType<typeof useStore.getState>> = {}, keepMoments = false): boolean {
   if (!g) return false;
   if (!keepMoments) g.moments = [];
-  useStore.setState({ game: g, tab, page: null, mini: null, transition: null, ...extra });
+  useStore.setState({ game: g, tab, page: null, mini: null, transition: null, simShut: false, ...extra });
   return true;
 }
 const withMoment = (key: string, ok: (m: Moment) => boolean, o: PlayOpts = {}) => {
@@ -160,6 +161,44 @@ function seedCommunity(): void {
   }
 }
 
+/** An NBA career played with friends (a copy, so the fixture stays as it was), on the stand-in. */
+function friendsCareer(mp: GameState['mp'], tab: Tab = 'home', event?: string): boolean {
+  const g = nbaStar();
+  if (!g) return false;
+  seedLocalMultiplayer(records());
+  const c = structuredClone(g);
+  c.mode = 'standard';
+  c.mp = mp;
+  if (event && !offerEvent(c, event)) return false;
+  return show(c, tab);
+}
+
+/** Round 35: a draft class around the deck's NBA star: his rival classmate on another team (they
+ * picked each other), and, with `duo`, a classmate on his own team. */
+function classCareer(duo: boolean, event?: string): boolean {
+  const g = nbaStar();
+  if (!g?.nba) return false;
+  const c = structuredClone(g);
+  c.mode = 'standard';
+  const mine = c.nba!.teams.find((t) => t.id === c.teamId)!;
+  const other = c.nba!.teams.find((t) => t.id !== c.teamId && t.conf === mine.conf) ?? c.nba!.teams.find((t) => t.id !== c.teamId)!;
+  const line = (team: string, pn: string, pos: string, ovr: number, pts: number): ClassSeason => ({ year: c.year, age: c.player.age, lv: 'NBA', team, color: '#2b4c9b', ovr, gp: 70, pts, reb: 5, ast: 4, w: 44, l: 38, result: 'Lost in first round', aw: [], pn, pos });
+  const members = [
+    { id: 'me00000000', name: 'Deck', seasons: c.history.map((h) => seasonLine(h, c.player.name, c.player.pos)), rival: 'house00002', me: true },
+    { id: 'house00002', name: 'Dee', seasons: [line(other.name, 'Andre Cole', 'SG', 82, 24.1)], rival: 'me00000000' },
+    ...(duo ? [{ id: 'house00003', name: 'Big Tal', seasons: [line(mine.name, 'Luka Venn', 'C', 80, 17.4)], rival: null }] : []),
+  ];
+  seedLocalMultiplayer(records(), { code: 'FRIEND', name: 'The deck’s class', seed: c.seed, members });
+  c.mp = { klass: 'FRIEND', friends: members.filter((m) => !m.me).map((m) => ({ id: m.id, name: m.name, pn: m.seasons[0].pn, pos: m.seasons[0].pos ?? 'SF', seasons: m.seasons.map((x) => ({ year: x.year, lv: x.lv, team: x.team, ovr: x.ovr, pts: x.pts })) })), rival: 'house00002' };
+  if (event && !offerEvent(c, event)) return false;
+  return show(c, 'home');
+}
+/** The multiplayer page on the deck's stand-in, seeded with the deck's careers. */
+function mpPage(open: MpLink | null): boolean {
+  seedLocalMultiplayer(records());
+  useStore.setState({ game: null, mini: null, page: 'multi', mpOpen: open, draft: null });
+  return true;
+}
 function seedLog(locks = false): void {
   // round 32: the newest two show the card's challenge badges and achievement medals
   const tiers = ['hof', 'allstar', 'allstar', 'starter', 'starter', 'starter', 'rotation', 'rotation', 'bench', 'bench'] as const;
@@ -212,23 +251,23 @@ const levelRun = (key: string, level: Level, until: Parameters<typeof play>[0], 
 const ended = (star: boolean) => (s: GameState) => s.step === 'retired' && s.flags.levelEnd === (star ? 2 : 1);
 
 const TUTORIAL: DevCard[] = [
-  { id: 'road-map', title: 'The road map', group: 'Tutorial', icon: 'map', blurb: 'The tutorial between levels: the pixel map with the car driving on to the next stop, a pin on every place (the next one hops), the bucket list on a paper scroll. Click a place, or drive with the arrow keys, and its card pops out: here the next level, with what it adds.', open: () => onRoad(['beginner']), press: '.road-spot.next' },
-  { id: 'road-late', title: 'The road map, near its end', group: 'Tutorial', icon: 'map', blurb: 'All three levels passed (one short of the All-Star goal): the island’s card with the grades so far, and the closing tour waiting on its stage.', open: () => onRoad(LEVEL_IDS, { minis: { threes: 'A', dunk: 'C', street: 'C', lab: 'B' } }), press: '.road-spot.next' },
+  { id: 'road-map', title: 'The road map', group: 'Tutorial', icon: 'map', blurb: 'Round 35: after graduation (beginner alone is the tutorial), from Regular guy’s card: the pixel map with the car driving on, a pin on every place (the next one hops), the bucket list on a paper scroll. Click a place, or drive with the arrow keys, and its card pops out: here intermediate, with what it adds and the mode it opens.', open: () => onRoad(['beginner'], { free: 1 }, 'page', { page: 'road' }), press: '.road-spot.next' },
+  { id: 'road-late', title: 'The road map, near its end', group: 'Tutorial', icon: 'map', blurb: 'All three levels passed (one short of the All-Star goal): the island’s card with the grades so far, and the closing tour waiting on its stage.', open: () => onRoad(LEVEL_IDS, { minis: { threes: 'A', dunk: 'C', street: 'C', lab: 'B' }, free: 1 }, 'page', { page: 'road' }), press: '.road-spot.next' },
   { id: 'road-free', title: 'The road map from the start page', group: 'Tutorial', icon: 'map', blurb: 'Once the full game is open, Regular guy’s card on the start page brings the road back: every level to play again, kept nowhere.', open: () => onRoad(LEVEL_IDS, { minis: ALL_C, toured: 1, free: 1 }, 'page', { page: 'road' }) },
   { id: 'level-1', title: 'Level 1: Beginner', group: 'Tutorial', icon: 'lvl-HSV', blurb: 'The first page of every device: the school on the map, the goal (an NBA All-Star team), a name, a number, a position and an archetype; the rest is chosen for him.', open: () => onRoad([]) },
-  { id: 'level-2', title: 'Level 2: Intermediate', group: 'Tutorial', icon: 'lvl-NCAA', blurb: 'The level’s start page: the college on the map, the icons for what the level adds, and the focus to pick.', open: () => onRoad(['beginner'], {}, 'page', { creating: 'intermediate' }) },
-  { id: 'level-3', title: 'Level 3: Advanced', group: 'Tutorial', icon: 'lvl-NBA', blurb: 'The last level’s start page: the arena on the map, the country and the shooting hand as well.', open: () => onRoad(['beginner', 'intermediate'], {}, 'page', { creating: 'advanced' }) },
-  { id: 'level-career', title: 'A beginner career', group: 'Tutorial', icon: 'lvl-HSV', blurb: 'A level career at its first call: Home and Player only, the level’s badge, fast break’s pace, two plans of its own.', open: () => show(levelRun('beg', 'beginner', decision('plan'))) },
+  { id: 'level-2', title: 'Level 2: Intermediate', group: 'Tutorial', icon: 'lvl-NCAA', blurb: 'The level’s start page: the college on the map, the icons for what the level adds, and the focus to pick.', open: () => onRoad(['beginner'], { free: 1 }, 'page', { creating: 'intermediate' }) },
+  { id: 'level-3', title: 'Level 3: Advanced', group: 'Tutorial', icon: 'lvl-NBA', blurb: 'The last level’s start page: the arena on the map, the country and the shooting hand as well.', open: () => onRoad(['beginner', 'intermediate'], { free: 1 }, 'page', { creating: 'advanced' }) },
+  { id: 'level-career', title: 'A beginner career', group: 'Tutorial', icon: 'lvl-HSV', blurb: 'A level career at its first call: Home and Player only, the level’s badge, fast break’s pace, two plans of its own. Round 35: the essentials only (no milestones or fan talk on Home; ratings and status on Player).', open: () => show(levelRun('beg', 'beginner', decision('plan'))) },
   { id: 'level-nba', title: 'An intermediate career in the NBA', group: 'Tutorial', icon: 'lvl-NCAA', blurb: 'Intermediate with three tabs, its sim and fast break chips, and the first NBA season ahead.', open: () => show(levelRun('int', 'intermediate', (s, p) => p.type === 'decision' && p.decision.kind === 'plan' && s.stage === 'NBA')) },
   { id: 'level-shot', title: 'Beginner’s last shot', group: 'Tutorial', icon: 'shoot', blurb: 'Beginner’s one playoff moment: the game comes down to his shot, on the timing meter.', open: () => show(levelRun('shot', 'beginner', liveAt('clutch'), { live: true })) },
   { id: 'level-won', title: 'A level passed: the goal reached', group: 'Tutorial', icon: 'stars', blurb: 'The end of a level career that made an All-Star team: its numbers, and what the next level adds.', open: () => show(levelRun('won', 'beginner', ended(true))) },
   { id: 'level-missed', title: 'A level passed: so close', group: 'Tutorial', icon: 'morale', blurb: 'The end of a level career with no All-Star team: its own card and its own sad loop, and the road still goes on.', open: () => show(levelRun('missed', 'intermediate', ended(false), { tries: 30 })) },
-  { id: 'island', title: 'The island of mini-games', group: 'Tutorial', icon: 'palm', blurb: 'Every mini-game once, a C or better in each: the mark to beat and the best grade so far on every card.', open: () => onRoad(LEVEL_IDS, { minis: { threes: 'B', dunk: 'C', lab: 'D' } }, 'page', { mini: 'hub' }) },
-  { id: 'graduation', title: 'Graduation', group: 'Tutorial', icon: 'cap', blurb: 'The tutorial done: the diploma with the exit code, a copy button, and the way into the full game.', open: () => onRoad(LEVEL_IDS, { minis: ALL_C, toured: 1 }) },
+  { id: 'island', title: 'The island of mini-games', group: 'Tutorial', icon: 'palm', blurb: 'Every mini-game once, a C or better in each: the mark to beat and the best grade so far on every card.', open: () => onRoad(LEVEL_IDS, { minis: { threes: 'B', dunk: 'C', lab: 'D' }, free: 1 }, 'page', { mini: 'hub' }) },
+  { id: 'graduation', title: 'Graduation', group: 'Tutorial', icon: 'cap', blurb: 'Round 35: right after the beginner level: the diploma with the exit code, what each later stop opens, and the way into the full game.', open: () => onRoad(['beginner']) },
   { id: 'lesson', title: 'A lesson on screen', group: 'Tutorial', icon: 'guide', blurb: 'The tutorial guide: the page shaded but for one control, the note beside it, Got it or Your turn, and the exit code for anyone who has it.', open: () => onRoad([], {}, 'lesson') },
-  { id: 'closing-tour', title: 'The closing tour', group: 'Tutorial', icon: 'arena', blurb: 'After the levels: a star’s career, stop by stop, for every system no level has; the bar says which stop, Next stop goes on once its lessons are done.', open: () => (onRoad(LEVEL_IDS, { minis: ALL_C }, 'lesson'), useStore.getState().startClosing()) },
-  { id: 'recommended', title: 'The full game, first look', group: 'Tutorial', icon: 'door', blurb: 'Just after graduation: the start page with Regular guy recommended and its own few lessons.', open: () => onRoad(LEVEL_IDS, { minis: ALL_C, toured: 1, free: 1 }, 'lesson', { recommend: true }) },
-  { id: 'skip-door', title: 'The Skip button', group: 'Tutorial', icon: 'lock', blurb: 'Beside Share at the top of every tutorial page: the exit code (shown at graduation) opens the full game on this device for good.', open: () => onRoad(['beginner']), press: '[data-tour="skip-door"]' },
+  { id: 'closing-tour', title: 'The closing tour', group: 'Tutorial', icon: 'arena', blurb: 'After the levels: a star’s career, stop by stop, for every system no level has; the bar says which stop, Next stop goes on once its lessons are done.', open: () => (onRoad(LEVEL_IDS, { minis: ALL_C, free: 1 }, 'lesson'), useStore.getState().startClosing()) },
+  { id: 'recommended', title: 'The full game, first look', group: 'Tutorial', icon: 'door', blurb: 'Just after graduation: the start page with Regular guy recommended and its own few lessons; Reality hits hard, Shoot for the stars and the mini-games locked until their stops on the road map.', open: () => onRoad(['beginner'], { free: 1 }, 'lesson', { recommend: true }) },
+  { id: 'skip-door', title: 'The Skip button', group: 'Tutorial', icon: 'lock', blurb: 'Beside Share at the top of the tutorial’s pages, and above the shade while a lesson is up (round 35): the exit code (shown at graduation) opens the full game, with Regular guy, on this device for good.', open: () => onRoad([]), press: '[data-tour="skip-door"]' },
 ];
 
 // ---------- the deck ----------
@@ -316,6 +355,7 @@ export const CARDS: DevCard[] = [
       return show(g);
     },
   },
+  { id: 'sim-shut', title: 'Sim, not open yet', group: 'Career hub', icon: 'sim', blurb: 'Round 35: Sim opens once a career has been played to retirement with an NBA All-Star team on every difficulty (Regular guy, Reality hits hard, Shoot for the stars; a Comet does not count). Until then its chip is grey, with the difficulties still to go.', open: () => show(nbaStar(), 'home', { simShut: true }) },
   { id: 'simple', title: 'Simple text', group: 'Career hub', icon: 'simple', blurb: 'Explanations hidden on every tab, just the choices.', open: () => show(nbaStar(), 'home', { simple: true }) },
   {
     id: 'sim',
@@ -485,6 +525,19 @@ export const CARDS: DevCard[] = [
       return show(g);
     },
   },
+  {
+    // round 35: a turning point at the line (the free-throw touch)
+    id: 'd-iced',
+    title: 'Iced at the line',
+    group: 'Decisions',
+    icon: 'touch',
+    blurb: 'Round 35: two free throws to win, a timeout to ice him; the odds of making both, from his shooting and his free-throw touch.',
+    open: () => {
+      const g = at('iced', (s) => s.stage === 'NBA' && s.step === 'midseason');
+      if (g) offerEvent(g, 'ftIced');
+      return show(g);
+    },
+  },
   { id: 'farewell-offer', title: 'Farewell tour: the offer', group: 'Decisions', icon: 'gift', blurb: 'An offseason move for a veteran: announce that next season is the last.', open: () => show(at('farewell', (s) => canFarewell(s))), press: '[data-tour="move-farewell"]' },
   {
     id: 'farewell-season',
@@ -586,6 +639,7 @@ export const CARDS: DevCard[] = [
     },
     press: '[data-tour="ach"]',
   },
+  { id: 'ach-cats', title: 'Achievement book by category', group: 'Records & community', icon: 'laurel', blurb: 'Round 35: the book in short-named categories, a chip each with what is earned of it; tap one (here the second) to see only it, with a tier or on its own.', open: () => (setAchievements(true), useStore.setState({ game: null, mini: null, page: 'achievements' })), press: '.achv-cats .achv-cat:nth-child(2)' },
   { id: 'ach-none', title: 'Achievement book (new player)', group: 'Records & community', icon: 'lock', blurb: 'Every name a riddle.', open: () => (setAchievements(false), useStore.setState({ game: null, mini: null, page: 'achievements' })) },
   {
     id: 'ach-toast',
@@ -598,6 +652,25 @@ export const CARDS: DevCard[] = [
       useStore.setState({ toasts: ACH_TIERS.slice(0, 3).map((t, i) => ({ id: `dev-${t.key}`, name: ACHIEVEMENTS.find((a) => a.tier === t.key)!.name, tier: t.key, more: i === 2 ? 9 : undefined })) });
     },
   },
+  // round 35: play with friends (the deck's stand-in, with house players)
+  // round 35 (owner: "for the multiplayer, a leaderboard should always appear on the side")
+  { id: 'mp-board', title: 'A career with friends', group: 'Career hub', icon: 'draftclass', blurb: 'A draft-class career’s Home: the class’s board at the top of the side column, this career as it stands now; it never folds.', open: () => friendsCareer({ klass: 'CLASS2' }) },
+  { id: 'mp-board-tab', title: 'The board beside every tab', group: 'Career hub', icon: 'versus', blurb: 'A challenge career on the Season tab: the challenge’s board beside the tab (above it on a phone), with this career so far.', open: () => friendsCareer({ challenge: 'HSE2AB' }, 'season') },
+  { id: 'd-wager', title: 'A friendly wager', group: 'Decisions', icon: 'versus', blurb: 'A turning point only careers with friends have: nine of ten from the line, the odds from his shooting and his touch.', open: () => friendsCareer({ klass: 'CLASS2' }, 'home', 'friendWager') },
+  { id: 'mp-rival-night', title: 'Rival night', group: 'Decisions', icon: 'rival', blurb: 'His rival from the draft class (they sent each other the rivalry) plays for another team: once a season, how he plays the meeting, both players’ nights, and their record.', open: () => classCareer(false, 'rivalNight') },
+  { id: 'mp-friend-duo', title: 'A duo of friends', group: 'Career hub', icon: 'draftclass', blurb: 'A classmate on his NBA team this season: a duo of friends (two make a Big Three), on the board and in the duo card, with the duo bonus to team strength. The class chat under the board.', open: () => classCareer(true) },
+  { id: 'mp-draft-night', title: 'A class career on draft night', group: 'Start', icon: 'draftclass', blurb: 'A draft class career opens on draft night: his college, the seasons he played there, the mock draft range in the first round, then the draft itself. OVR 65 to 75; Fast break and Sim locked off.', open: () => (seedLocalMultiplayer(records()), useStore.getState().start({ name: 'Deck Rookie', number: 4, pos: 'SG', archetype: 0, focus: ['SHT', 'ATH'], mode: 'standard' }, 2026, { klass: 'NIGHT6' }), true) },
+  { id: 'mp-night', title: 'A class on draft night', group: 'Records & community', icon: 'draftclass', blurb: 'A draft class on the round 35 story: first options from their colleges, all first-round picks, three seasons in; the class news in its chat and reactions on its seasons.', open: () => mpPage({ kind: 'class', code: 'NIGHT6' }) },
+  { id: 'mp-watch', title: 'Watching a friend’s career', group: 'Records & community', icon: 'eye', blurb: 'A classmate’s career season by season: his rating as a pixel chart, each season’s line and honours, and the four reactions to tap.', open: () => mpPage({ kind: 'class', code: 'NIGHT6' }), press: 'td.l > button.link-btn' },
+  { id: 'mp-reunion', title: 'Reunion night', group: 'Records & community', icon: 'laurel', blurb: 'A class whose careers are all over: the awards one at a time, the least first and the class MVP last.', open: () => mpPage({ kind: 'class', code: 'REUNI8' }) },
+  { id: 'mp-reunion-on', title: 'Reunion night, an award', group: 'Records & community', icon: 'laurel', blurb: 'Reunion night under way: the first award revealed, the class ranked under it.', open: () => mpPage({ kind: 'class', code: 'REUNI8' }), press: '.mp-reunion .btn' },
+  { id: 'mp-daily', title: 'Friends today', group: 'Records & community', icon: 'calendar', blurb: 'The daily challenge’s page with today’s board among friends: everyone the player shares a class or a challenge with.', open: () => (seedLocalMultiplayer(records()), useStore.setState({ game: null, page: null, mini: 'daily' }), true) },
+  { id: 'mp', title: 'Play with friends', group: 'Records & community', icon: 'versus', blurb: 'Challenges and draft classes: a code, a link or quick match, your name for friends. Regular guy only.', open: () => mpPage(null) },
+  { id: 'mp-challenge', title: 'A challenge', group: 'Records & community', icon: 'versus', blurb: 'One prospect, played again from the same start: every answer ranked by career index beside the one that set it.', open: () => mpPage({ kind: 'challenge', code: 'DECK22' }) },
+  { id: 'mp-classes', title: 'Draft classes', group: 'Records & community', icon: 'draftclass', blurb: 'Start a class, open one by its code, yours, and the open ones with a seat left.', open: () => mpPage(null), press: '[data-mp-tab="class"]' },
+  { id: 'mp-class', title: 'A draft class', group: 'Records & community', icon: 'draftclass', blurb: 'Up to twelve careers on one seed: the standings and every season side by side, the best of the class marked each year; tap a friend to watch his career.', open: () => mpPage({ kind: 'class', code: 'CLASS2' }) },
+  { id: 'mp-draft', title: 'Starting in a draft class', group: 'Start', icon: 'draftclass', blurb: 'The start page with a class waiting: Regular guy only, the class made or joined as he starts.', open: () => (useStore.setState({ game: null, page: null, mini: null, creating: null, draft: { code: 'CLASS2', name: 'Rooftop runs' } }), true) },
+  { id: 'mp-retire', title: 'Challenge a friend', group: 'Big moments', icon: 'versus', blurb: 'A finished Regular guy career sets a challenge: the code and the link to send.', open: () => show(fixture('retired-std-5', () => play((s) => s.step === 'retired', { mode: 'standard', seed: 5, fast: true }))) },
   { id: 'c-boards', title: 'Leaderboards', group: 'Records & community', icon: 'podium', blurb: 'Daily and all-time, a board for each difficulty and each challenge, ranked by career index, with the house players at the foot.', open: () => (seedCommunity(), useStore.setState({ game: null, mini: null, page: 'community' })) },
   { id: 'c-rough', title: 'Rough Road board', group: 'Records & community', icon: 'oath', blurb: 'Rough Road careers only, today and all time; they rank on the Reality board too.', open: () => (seedCommunity(), useStore.setState({ game: null, mini: null, page: 'community' })), press: '[data-board="rough"]' },
   { id: 'c-comet', title: 'Comet board', group: 'Records & community', icon: 'comet', blurb: 'Comet careers only, off the Shoot for the stars board, so careers played by hand compete with each other.', open: () => (seedCommunity(), useStore.setState({ game: null, mini: null, page: 'community' })), press: '[data-board="comet"]' },

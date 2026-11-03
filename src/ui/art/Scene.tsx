@@ -600,7 +600,9 @@ function SceneArt({ kind, kit, name, number, pos, accent, prize }: { kind: Scene
 export function StoryScene({ g, title, kind, prize }: { g: GameState; title: string; kind?: string; prize?: string }) {
   const t = teamOf(g);
   const kit = useMemo(() => kitFor(t?.name ?? '', t?.abbr ?? '', t?.color ?? '#2A2F36', 'home', styleLeague(g.stage)), [t?.name, t?.abbr, t?.color, g.stage]);
-  return <SceneArt kind={sceneFor(title, kind)} kit={kit} name={g.player.name} number={g.player.number} pos={g.player.pos} accent={t?.color ?? '#E8590C'} prize={prize} />;
+  // round 35: a draft class career opens on draft night, on the draft stage, not on a street court
+  const k = kind === 'intro' && g.start?.input.start === 'draft' ? 'draft' : kind;
+  return <SceneArt kind={sceneFor(title, k)} kit={kit} name={g.player.name} number={g.player.number} pos={g.player.pos} accent={t?.color ?? '#E8590C'} prize={prize} />;
 }
 
 // ---- round 25: his staff at work, and his rival across the floor ----

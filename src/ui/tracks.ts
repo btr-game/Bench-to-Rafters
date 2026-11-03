@@ -213,6 +213,19 @@ export const TRACKS = {
     ],
     drums: 'k.......',
   },
+  // round 35: Play with friends: a call and its answer, two voices taking turns
+  friends: {
+    name: 'Call and answer',
+    where: 'Play with friends: challenges and draft classes',
+    icon: 'versus',
+    step: bpm(132),
+    voices: [
+      { wave: 'pulse25', vol: 0.1, notes: 'F5 - A5 C6 - A5 . . | . . . . . . . . | G5 - Bb5 D6 - Bb5 . . | . . . . . . . . | A5 - C6 F6 - C6 . . | . . . . . . . . | Bb5 - A5 G5 - E5 . . | F5 - - - . . . .' },
+      { wave: 'pulse12', vol: 0.07, notes: '. . . . . . . . | C5 - F5 A5 - C6 . . | . . . . . . . . | D5 - G5 Bb5 - A5 . . | . . . . . . . . | F5 - A5 C6 - A5 . . | . . . . . . . . | C5 - E5 G5 - C6 . .' },
+      { wave: 'triangle', vol: 0.32, notes: 'F2 . C3 . F2 . C3 . | D2 . A2 . D2 . A2 . | G2 . D3 . G2 . D3 . | C3 . G2 . C3 . E2 . | F2 . C3 . F2 . C3 . | D2 . A2 . D2 . A2 . | Bb2 . F3 . C3 . G2 . | F2 . C3 . F2 . . .' },
+    ],
+    drums: 'k.hsk.hs',
+  },
   hub: {
     name: 'Arcade',
     where: 'The mini-games hub and the daily challenge’s page',
@@ -300,11 +313,13 @@ export type TrackId = keyof typeof TRACKS;
 const LEVEL_TRACK: Record<string, TrackId> = { HS: 'hs', NCAA: 'college', GL: 'gleague', EU: 'europe', INT: 'intl', NBA: 'nba' };
 
 /** The loop for what is on screen. A page of its own (the log, the book, the community) keeps the
- * one under it; Lockdown has its own beat, so none. */
+ * one under it (Play with friends has its own); Lockdown has its own beat, so none. */
 export function trackOf(s: { game: GameState | null; thanks: unknown; intro: boolean; mini: string | null; road?: Road; creating?: unknown; page?: string | null }): TrackId | null {
   const g = s.game;
   if (s.thanks && !g) return 'thanks';
   if (s.intro && !g) return 'intro';
+  // round 35: Play with friends has a loop of its own
+  if (s.page === 'multi') return 'friends';
   if (s.mini) return s.mini === 'rhythm' ? null : s.mini === 'hub' || s.mini === 'daily' ? 'hub' : s.mini in TRACKS ? (s.mini as TrackId) : 'hub';
   // round 33: the road map (in the tutorial, or opened from the start page: Regular guy's card)
   if (!g && !s.creating && (s.page === 'road' || (s.road && inTutorial(s.road) && nextLevel(s.road) !== 'beginner'))) return 'road';

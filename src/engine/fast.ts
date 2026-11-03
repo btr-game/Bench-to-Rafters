@@ -36,13 +36,17 @@ function isBig(m: Moment): boolean {
  * employs fastbreak and sim ... an estimate playtime of 5~10 minutes, more towards the 5 minute
  * bound"; then "make balance changes or additional features to fastbreak and sim to achieve the 5
  * minute goal"): on top of sim, the game takes the brand deal (a signature line for a big name,
- * the sure deal otherwise) and the youth academy's call, and never stops between seasons. What is
+ * the sure deal otherwise), the youth academy's call and a storyline's chapters (round 35), and never stops between seasons. What is
  * left is his: where to play, the draft, and when to retire. Only the career's biggest days get a
  * page of their own (cometPage); the rest of the story goes into a list of highlights on Home.
  */
 function cometChoice(d: Decision): string | null {
   const open = d.choices.filter((c) => !c.disabled).map((c) => c.id);
   if (d.kind === 'youth') return open.includes('promote') ? 'promote' : open.includes('move') ? 'move' : (open[0] ?? null);
+  // round 35: a storyline's chapter is answered as sim answers a turning point (the first choice
+  // that is not high risk); the chapter keeps its page (cometPage). It used to stop the career,
+  // which Comet never meant to: only where he plays, the draft, brands and retiring are his
+  if (d.kind === 'arc') return (d.choices.find((c) => !c.disabled && c.risk !== 'High') ?? d.choices.find((c) => !c.disabled))?.id ?? null;
   return null;
 }
 
@@ -177,8 +181,13 @@ export function fastForward(s: GameState): void {
  */
 export function setFast(s: GameState, on: boolean): void {
   if (on && s.flags.oath) return; // Rough Road (round 25): no quick pace, for the whole career
+  // round 35 (owner: "for equality purposes, i think sim and fastbreak should be locked in
+  // multiplayer"): a career with friends is played at full pace by everyone in it
+  if (on && s.flags.friends) return;
   if (!on && s.flags.comet) return; // Comet (round 30): the quick pace, for the whole career
   s.flags.fast = on ? 1 : 0;
+  // round 35: a career that ever ran quick is marked, so it is never sent as a challenge
+  if (on) s.flags.quick = 1;
   if (!on) {
     s.flags.simPostseason = 0;
     s.flags.sim = 0; // sim mode rides on fast break
@@ -194,7 +203,7 @@ export function setFast(s: GameState, on: boolean): void {
 
 /** Sim mode on or off (round 25). It turns fast break on with it; turning fast break off ends it. */
 export function setSim(s: GameState, on: boolean): void {
-  if (on && s.flags.oath) return;
+  if (on && (s.flags.oath || s.flags.friends)) return;
   if (!on && s.flags.comet) return;
   s.flags.sim = on ? 1 : 0;
   if (on) setFast(s, true);

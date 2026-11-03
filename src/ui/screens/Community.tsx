@@ -50,7 +50,7 @@ const ago = (at: number) => {
 };
 
 /** The real numbers behind the strip: who is here now and the careers ended since `opened`. */
-export function useRealLive(opened: number): { here: number; since: number; items: FeedItem[] } {
+function useRealLive(opened: number): { here: number; since: number; items: FeedItem[] } {
   const c = useCommunity();
   const [here, setHere] = useState(1);
   const [items, setItems] = useState<FeedItem[]>([]);

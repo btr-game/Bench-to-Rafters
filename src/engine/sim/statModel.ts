@@ -1,7 +1,7 @@
 // Per-game stat model (§9). The same expected-rate function feeds full box scores
 // for the user and season-level lines for every generated player.
 
-import { EFF_KNEE, LEVELS, STAT, USAGE_KNEE, USAGE_SCORING_W, USAGE_TEMP, VALUE } from '../balance';
+import { EFF_KNEE, LEVELS, STAT, TOUCH, USAGE_KNEE, USAGE_SCORING_W, USAGE_TEMP, VALUE } from '../balance';
 import { binomial, clamp, poisson, type Rng } from '../rng';
 import type { Attrs, GenPlayer, LevelKey, Pos, StatLine } from '../types';
 import { genAttrs, genRange, shapeOvr } from '../player/ovr';
@@ -13,6 +13,7 @@ export interface Profile {
   wingspan: number;
   range: number;
   offhand: number;
+  touch: number; // round 35: free-throw touch (player/touch.ts)
 }
 
 export interface Expected {
@@ -39,6 +40,8 @@ export function genProfile(g: GenPlayer): Profile {
     range: genRange(g.pos, g.shape, g.ovr),
     // better players have a better weak hand
     offhand: Math.max(30, Math.min(88, g.ovr - 12)),
+    // their free throws come from their shooting alone
+    touch: TOUCH.mid,
   };
 }
 
@@ -82,7 +85,7 @@ export function expected(pr: Profile, level: LevelKey, minutes: number, usageMul
     s.two.max,
   ) * moraleMult;
   const ftRate = clamp(s.ftRate.base + (a.FIN - lv) * s.ftRate.fin + (a.ATH - lv) * s.ftRate.ath, s.ftRate.min, s.ftRate.max);
-  const ftp = clamp(s.ft.base + (a.SHT - lv) * s.ft.sht, s.ft.min, s.ft.max);
+  const ftp = clamp(s.ft.base + (a.SHT - lv) * s.ft.sht + (pr.touch - TOUCH.mid) * s.ft.touch, s.ft.min, s.ft.max);
   const tpa = fga * share3;
   const fta = fga * ftRate;
   const reb36 = clamp(

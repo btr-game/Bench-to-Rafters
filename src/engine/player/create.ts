@@ -25,6 +25,7 @@ import { ARCHETYPES } from './archetypes';
 import { ovrOf } from './ovr';
 import { rollAnomaly } from './anomaly';
 import { startWeight } from './weight';
+import { touchStart } from './touch';
 
 export function drawPotential(rng: Rng, d: SkewDist): number {
   return Math.round(clamp(d.base + Math.exp(normal(rng, d.mu, d.sigma)), d.min, d.max));
@@ -48,6 +49,7 @@ export interface CreateInput {
   oath?: boolean; // round 25: Rough Road (Reality only): master mode, no fast break or sim (round 27: simple text allowed, a random player)
   look?: import('../../content/looks').ChosenLook; // round 27: the look he picked (from his name if not)
   level?: import('../levels').Level; // round 33: a career on the road map (engine/levels.ts)
+  start?: 'draft'; // round 35: a draft class's career opens on draft night (career/draftNight.ts)
 }
 
 /** "See other candidates": each stat ±3, then re-normalized to exactly 320. */
@@ -73,6 +75,7 @@ export function createPlayer(rng: Rng, input: CreateInput): UserPlayer {
   rollAnomaly(rng, p);
   startWeight(rng, p);
   p.startAttrs = { ...p.attrs };
+  p.touch = touchStart(p);
   return p;
 }
 

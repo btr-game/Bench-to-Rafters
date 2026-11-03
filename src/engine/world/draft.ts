@@ -73,11 +73,19 @@ export interface DraftPickResult {
   pick: number;
 }
 
-export function runDraft(rng: Rng, order: Team[], cls: Prospect[]): DraftPickResult[] {
+/** `userBy`: the last pick the player can go (round 35, a draft-night career is a first-round pick). */
+export function runDraft(rng: Rng, order: Team[], cls: Prospect[], userBy?: number): DraftPickResult[] {
   const avail = [...cls];
   const out: DraftPickResult[] = [];
   order.forEach((team, i) => {
     if (avail.length === 0) return;
+    // still on the board at his last pick: that team takes him (no draw, so other drafts are as they were)
+    const due = userBy === i + 1 ? avail.findIndex((c) => c.isUser) : -1;
+    if (due >= 0) {
+      out.push({ team, prospect: avail[due], pick: i + 1 });
+      avail.splice(due, 1);
+      return;
+    }
     let best = 0;
     let bestScore = -Infinity;
     for (let j = 0; j < Math.min(avail.length, 12); j++) {

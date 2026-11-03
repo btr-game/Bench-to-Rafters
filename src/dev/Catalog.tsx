@@ -33,11 +33,18 @@ import { ROUND25_EVENTS } from '../engine/events/round25';
 import { ROUND32_EVENTS } from '../engine/events/round32';
 import { ROUND33_EVENTS } from '../engine/events/round33';
 import { ROUND34_EVENTS } from '../engine/events/round34';
+import { ROUND35_EVENTS } from '../engine/events/round35';
+import { ROUND35B_EVENTS } from '../engine/events/round35b';
+import { FRIEND_EVENTS } from '../engine/events/friends';
+import { ROUND35C_EVENTS } from '../engine/events/round35c';
+import { ACHIEVEMENTS } from '../engine/achievements';
+import { ACH_CATS, achCatOf } from '../engine/achievementCats';
+import { CLASS_MAX } from '../ui/multiplayer';
 import { BEGINNER_EVENTS, LEVEL_IDS, LEVEL_NAME } from '../engine/levels';
-import { ROADMAP, ROAD_GRADES } from '../engine/balance';
+import { DRAFT_NIGHT, JOIN_FRIEND, ROADMAP, ROAD_GRADES } from '../engine/balance';
 import { SIX_PLANS } from '../engine/career/season';
 import { LEVEL_COPY } from '../content/roadmap';
-import { ROAD_MINIS, ROAD_NEED } from '../ui/road';
+import { ROAD_MINIS, ROAD_NEED, UNLOCK_FROM, UNLOCK_NAME, unlockHint, type Unlock } from '../ui/road';
 import { PlaceArt } from '../ui/screens/RoadMap';
 import { GAMES, miniIcon } from '../ui/mini/MiniGames';
 import { LESSONS, type Where } from '../ui/tutorial/lessons';
@@ -150,6 +157,7 @@ function itemEffects(i: ShopItem): string[] {
   if (i.focus) out.push(`Focus ratings ${signed(i.focus, 2)}`);
   if (i.range) out.push(`Range ${signed(i.range, 2)}`);
   if (i.offhand) out.push(`Off hand ${signed(i.offhand, 2)}`);
+  if (i.touch) out.push(`Free-throw touch ${signed(i.touch, 1)}`);
   if (i.injuryMult) out.push(`Injury risk ${mult(i.injuryMult)}`);
   if (i.declineMult) out.push(`Decline ${mult(i.declineMult)}`);
   if (i.growthMult) out.push(`Growth next season ${mult(i.growthMult)}`);
@@ -179,6 +187,7 @@ const EVENT_SETS: [string, EventDef[]][] = [
   ['Round 32', ROUND32_EVENTS],
   ['Round 33', ROUND33_EVENTS],
   ['Round 34', ROUND34_EVENTS],
+  ['Round 35', [...ROUND35_EVENTS, ...ROUND35B_EVENTS, ...FRIEND_EVENTS, ...ROUND35C_EVENTS]],
 ];
 
 function eventEntry(set: string, e: EventDef): Entry {
@@ -248,7 +257,7 @@ const CATEGORIES: Category[] = [
         key: i.id,
         title: i.name,
         group: i.category,
-        sub: `${i.category} · ${fmtMoney(i.price)}`,
+        sub: `${i.category} · ${fmtMoney(i.price)}${i.klass ? ' · draft class only' : ''}`,
         text: i.blurb,
         art: () => (
           <span className="shop-tile" style={{ ['--tile' as string]: SHIFT_COLOR[shopShift(i.id)] }}>
@@ -512,6 +521,7 @@ const CATEGORIES: Category[] = [
             ...attrList(p.attrs).map((x) => `${x} a half`),
             ...(p.rangeGain ? [`Range +${p.rangeGain}`] : []),
             ...(p.offhandGain ? [`Off hand +${p.offhandGain}`] : []),
+            ...(p.touchGain ? [`Free-throw touch +${p.touchGain} a half`] : []),
             ...(p.swing ? [`A gamble on ${p.swing.attrs.map((a) => NAMES.attr[a]).join(' and ')}: ${signed(p.swing.mean)} on average, give or take ${p.swing.sd}`] : []),
           ],
         };
@@ -982,6 +992,150 @@ const CATEGORIES: Category[] = [
         group: i < 9 ? 'What no level has' : i < STOPS.length - 1 ? 'The catch-up' : 'The switches',
         lines: st.lessons.map((id) => LESSONS.find((x) => x.id === id)?.text ?? id),
       })),
+  },
+  // ---------- round 35 ----------
+  {
+    key: 'ach-cats',
+    name: 'Achievement categories',
+    icon: 'laurel',
+    blurb: 'The book’s chapters (engine/achievementCats.ts): a short name each, so a category says where to look without giving a riddle away. None holds more than a tenth of the book.',
+    entries: () => {
+      const n = ACHIEVEMENTS.length;
+      return ACH_CATS.map((c) => {
+        const k = ACHIEVEMENTS.filter((a) => achCatOf(a.id) === c.key).length;
+        return {
+          key: c.key,
+          title: c.name,
+          art: () => <Icon name={c.icon} size={44} />,
+          facts: [
+            ['Achievements', String(k)],
+            ['Share of the book', `${((100 * k) / n).toFixed(1)}%`],
+          ] as [string, string][],
+        };
+      });
+    },
+  },
+  {
+    key: 'unlocks',
+    name: 'What the road map opens',
+    icon: 'unlock',
+    blurb: 'Beginner is the tutorial; the rest of the road map opens the rest of the game (ui/road.ts). A device that finished the old tutorial keeps everything.',
+    entries: () =>
+      (Object.keys(UNLOCK_FROM) as Unlock[]).map((u) => ({
+        key: u,
+        title: UNLOCK_NAME[u][0].toUpperCase() + UNLOCK_NAME[u].slice(1),
+        sub: `From ${UNLOCK_FROM[u] === 'island' ? 'the island' : `the ${UNLOCK_FROM[u]} level`}`,
+        text: unlockHint(u),
+        art: () => <Icon name="unlock" size={44} />,
+      })),
+  },
+  {
+    key: 'friends',
+    name: 'Play with friends',
+    icon: 'versus',
+    blurb: 'The two ways to play with friends (ui/multiplayer.ts), on the game’s database in the online build (supabase/migrations/0004 to 0006), with what friends bring into each other’s careers. Regular guy only; Fast break and Sim locked off.',
+    entries: () => [
+      {
+        key: 'challenge',
+        title: 'Challenge a friend',
+        text: 'A finished Regular guy career’s start (its seed and start page) with its card; a friend plays the same prospect, with no undo, and every answer is ranked beside it by career index.',
+        art: () => <Icon name="versus" size={44} />,
+        facts: [
+          ['Code', '6 characters, no I, O, 0 or 1'],
+          ['Answers', 'one a player, the best counts'],
+          ['Quick match', 'the last 30 days, fewest answers first'],
+          ['Limits', 'a challenge every 20 s, 30 a day'],
+        ] as [string, string][],
+      },
+      {
+        key: 'class',
+        title: 'Draft class',
+        text: 'Careers on one seed: each season posts a short line, each finished career its card. Standings by best rating so far, then honours; the best of the class each year.',
+        art: () => <Icon name="draftclass" size={44} />,
+        facts: [
+          ['Players', `${CLASS_MAX} at most`],
+          ['Season lines', '45 at most, 1.5 KB each'],
+          ['Quick match', 'the last 14 days, a seat left'],
+          ['Limits', 'a season every 2 s, 600 a day'],
+        ] as [string, string][],
+      },
+      {
+        key: 'rivals',
+        title: 'Rivals in a class',
+        text: 'Each member picks one classmate; two who pick each other are rivals. Once a season their NBA teams meet in a rival night (events/friends.ts), from the classmate’s season line copied into the career.',
+        art: () => <Icon name="rival" size={44} />,
+        facts: [
+          ['Odds', '15% to 85%: team strength, OVR, the call'],
+          ['Kept', 'the last 30 meetings'],
+          ['Limits', 'a pick every 5 s, 50 a day'],
+        ] as [string, string][],
+      },
+      {
+        key: 'friend-duo',
+        title: 'Duo of friends',
+        text: 'Two classmates on one team in one season form a duo, three a Big Three (career/friends.ts); it counts as the career’s duo or Big Three when it has none of its own.',
+        art: () => <Icon name="superteam" size={44} />,
+        facts: [['From', 'last season’s line, or this one’s']] as [string, string][],
+      },
+      {
+        key: 'chat',
+        title: 'Chat',
+        text: 'One for each challenge and each class, under its board, for its people only (a class’s members; a challenge’s maker, takers and answerers).',
+        art: () => <Icon name="envelope" size={44} />,
+        facts: [
+          ['Line', '200 characters, no control characters'],
+          ['Kept', 'the latest 200 lines, 50 shown'],
+          ['Limits', 'a line every 3 s, 300 a day'],
+          ['News', 'drafted, traded, left the NBA, Rookie of the Year, first All-Star, MVP, a title, retired'],
+        ] as [string, string][],
+      },
+      {
+        key: 'draft-night',
+        title: 'Draft night',
+        text: 'A draft class career opens on draft night (engine/career/draftNight.ts): his college’s first option, projected and picked in the first round, the whole class in the same draft.',
+        art: () => <Icon name="draftclass" size={44} />,
+        facts: [
+          ['OVR', `${DRAFT_NIGHT.ovr[0]} to ${DRAFT_NIGHT.ovr[1]}`],
+          ['Ages', DRAFT_NIGHT.ages.map(([a, w]) => `${a} (${w})`).join(', ')],
+          ['Pick', `1 to ${DRAFT_NIGHT.firstRound}, near the mock`],
+        ] as [string, string][],
+      },
+      {
+        key: 'league',
+        title: 'Classmates in your league',
+        text: 'A classmate on his NBA team this season is in your game log against that team, in the award races (he can win MVP) and on the All-Star teams (engine/career/friendLeague.ts).',
+        art: () => <Icon name="crown" size={44} />,
+        facts: [['Lift', 'his team a little stronger against you, at most about home court']] as [string, string][],
+      },
+      {
+        key: 'series',
+        title: 'Rival series',
+        text: 'When his team meets his rival classmate’s in the playoffs, one call for the whole series: guard him, outscore him, or the team game (engine/career/rivalSeries.ts).',
+        art: () => <Icon name="bracket" size={44} />,
+      },
+      {
+        key: 'join',
+        title: 'Join a friend',
+        text: 'A trade request aimed at a classmate’s NBA team, limited by the two salaries together against the cap.',
+        art: () => <Icon name="swap" size={44} />,
+        facts: [
+          ['Off', `over ${Math.round(JOIN_FRIEND.ceiling * 100)}% of the cap together`],
+          ['Payroll', `no more than ${JOIN_FRIEND.apron} × the cap with both`],
+        ] as [string, string][],
+      },
+      {
+        key: 'reunion',
+        title: 'Reunion night',
+        text: 'When every career in a class is over (or quiet for two weeks), eleven awards one at a time: most games, most teams, rebounds, assists, earnings, points, highest peak, All-Stars, MVPs, rings, then the class MVP.',
+        art: () => <Icon name="laurel" size={44} />,
+      },
+      {
+        key: 'reactions',
+        title: 'Reactions and the daily board',
+        text: 'Four reactions on a classmate’s season (on fire, royalty, love it, ice cold), one each; and the daily challenge among friends: everyone a player shares a class or a challenge with.',
+        art: () => <Icon name="flame" size={44} />,
+      },
+    ],
   },
   {
     key: 'beginner-events',

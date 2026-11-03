@@ -46,8 +46,10 @@ import { fmtMoney, ht, pct, pg, seasonLabel } from '../format';
 import { ordinal } from '../format';
 import { league as leagueOf, ovr, roleName, stageLine, team as teamOf } from '../selectors';
 import { buildWord, idealWeight, weightOf } from '../../engine/player/weight';
+import { touchOf } from '../../engine/player/touch';
 import { polyCells, type Pt } from '../art/pixel';
 import { ChampionStrip, LeaderBars, StandingsBars, VoteBars } from '../components/LeagueVisuals';
+import { leanLevel } from '../road';
 
 /** The ratings his weight is adding or taking away right now, biggest first. */
 function frameLine(p: GameState['player']): string {
@@ -79,6 +81,7 @@ function GameLogTable({ g }: { g: GameState }) {
             <th>AST</th>
             <th>FG</th>
             <th>3P</th>
+            <th>FT</th>
           </tr>
         </thead>
         <tbody>
@@ -88,6 +91,14 @@ function GameLogTable({ g }: { g: GameState }) {
               <td className="l">
                 {x.home ? 'vs' : '@'} {x.opp}
                 {x.post ? <span className="muted"> · {x.post}</span> : null}
+                {/* round 35: classmates in this game (engine/career/friendLeague.ts) */}
+                {x.friends?.map((f, k) => (
+                  <div key={k} className="small muted">
+                    {f.mate ? 'With you: ' : ''}
+                    {f.pn} ({f.name}): {f.pts} pts{f.reb !== undefined ? `, ${f.reb} reb` : ''}
+                    {f.ast !== undefined ? `, ${f.ast} ast` : ''}
+                  </div>
+                ))}
               </td>
               <td className={`l ${x.res === 'W' ? 'w' : 'lo'}`}>
                 {x.res} {x.us}–{x.them}
@@ -104,9 +115,12 @@ function GameLogTable({ g }: { g: GameState }) {
                   <td>
                     {x.line.tpm}-{x.line.tpa}
                   </td>
+                  <td>
+                    {x.line.ftm}-{x.line.fta}
+                  </td>
                 </>
               ) : (
-                <td colSpan={6} className="l muted">
+                <td colSpan={7} className="l muted">
                   DNP
                 </td>
               )}
@@ -500,6 +514,7 @@ export function PlayerTab({ g }: { g: GameState }) {
   const now = Math.round(ovr(g));
   const start = g.season?.attrsStart ? Math.round(ovrOf(g.season.attrsStart as GameState['player']['attrs'], p.pos)) : now;
   const [kit, setKit] = useState<KitName>('home');
+  const lean = leanLevel(g);
   return (
     <div className="page">
       <PageHero
@@ -527,18 +542,21 @@ export function PlayerTab({ g }: { g: GameState }) {
           { k: 'Scouts', v: p.scoutGrade ?? '—' },
         ]}
       />
-      <div className="page-grid three">
+      <div className={`page-grid ${lean ? 'two' : 'three'}`}>
         <Card title="Ratings" kicker={now !== start ? `OVR ${start} → ${now} this season` : 'This season'} tour="ratings">
           <Radar g={g} compare={g.season?.attrsStart} />
           <AttrRows g={g} compare={g.season?.attrsStart} />
           <p className="muted small">● focus stat · the dashed shape is where you started the season.</p>
-          <div className="meters">
-            <Meter label="Range" value={p.range} tone="ink" />
-            <Meter label={`${p.hand === 'L' ? 'Right' : 'Left'} hand (weak hand)`} value={p.offhand} tone="ink" />
-          </div>
+          {!lean && (
+            <div className="meters">
+              <Meter label="Range" value={p.range} tone="ink" />
+              <Meter label="Free-throw touch" value={touchOf(p)} tone="ink" />
+              <Meter label={`${p.hand === 'L' ? 'Right' : 'Left'} hand (weak hand)`} value={p.offhand} tone="ink" />
+            </div>
+          )}
         </Card>
         <div className="stack">
-          {t && (
+          {t && !lean && (
             <Extra>
             <Card title="Kits" kicker={t.name}>
               <div className="kits">
@@ -552,7 +570,7 @@ export function PlayerTab({ g }: { g: GameState }) {
             </Card>
             </Extra>
           )}
-          <Card title="Status">
+          <Card title="Status" tour="status">
             <div className="meters">
               <Meter label="Morale" value={p.morale} tone={p.morale < 35 ? 'bad' : p.morale > 70 ? 'good' : undefined} />
               <Meter label="Coach trust" value={p.trust} tone={p.trust <= 30 ? 'bad' : p.trust >= 70 ? 'good' : undefined} />
@@ -561,6 +579,8 @@ export function PlayerTab({ g }: { g: GameState }) {
             </div>
             <p className="small muted">Body wear builds with heavy minutes, hard plans and injuries, and makes aging hit harder after 30. Recovery plans, rest summers and health purchases bring it down.</p>
           </Card>
+          {!lean && (
+          <>
           <Card title="Contract and money">
             {c && g.stage !== 'HS' ? (
               <p>
@@ -668,7 +688,10 @@ export function PlayerTab({ g }: { g: GameState }) {
             </dl>
           </Card>
           </Extra>
+          </>
+          )}
         </div>
+        {!lean && (
         <div className="stack">
           <Extra>
           <ScoutCard g={g} />
@@ -681,19 +704,24 @@ export function PlayerTab({ g }: { g: GameState }) {
           <BodyMap g={g} narrow />
           </Extra>
         </div>
+        )}
       </div>
       {/* round 27 (owner: "staff, wardrobe, collection are all stacked in one row ... the sides are
           completely empty"): their own full-width row, side by side */}
-      <Extra>
-        <div className="player-extras">
-          <StaffCard g={g} />
-          <WardrobeCard g={g} kit={kit} />
-          <CollectionCard g={g} />
-        </div>
-      </Extra>
-      <Extra>
-        <RosterCard g={g} />
-      </Extra>
+      {!lean && (
+        <>
+          <Extra>
+            <div className="player-extras">
+              <StaffCard g={g} />
+              <WardrobeCard g={g} kit={kit} />
+              <CollectionCard g={g} />
+            </div>
+          </Extra>
+          <Extra>
+            <RosterCard g={g} />
+          </Extra>
+        </>
+      )}
     </div>
   );
 }
@@ -778,6 +806,7 @@ export function HistoryTable({ rows }: { rows: SeasonRecord[] }) {
             <th>AST</th>
             <th>FG%</th>
             <th>3P%</th>
+            <th>FT%</th>
             <th>OVR</th>
             <th className="l">Result</th>
           </tr>
@@ -800,6 +829,7 @@ export function HistoryTable({ rows }: { rows: SeasonRecord[] }) {
               <td>{pg(h.line, 'ast')}</td>
               <td>{pct(h.line.fgm, h.line.fga)}</td>
               <td>{pct(h.line.tpm, h.line.tpa)}</td>
+              <td>{pct(h.line.ftm, h.line.fta)}</td>
               <td>{Math.round(h.ovrEnd)}</td>
               <td className="l">
                 {h.result}
@@ -951,7 +981,7 @@ export function RecordsTab({ g }: { g: GameState }) {
  * cards in the homepage (minigames, career logs, achievements, community). try to limit access to
  * some (such as going into career log and continuing a career mid-career) to prevent bugs"). Each
  * opens as it does from the start page, less what belongs to the start page alone: the daily
- * challenge (a career of its own), deleting log cards, and starting, continuing or importing
+ * challenge (a career of its own), deleting log cards, and starting or continuing
  * another career, which the start page keeps.
  */
 export function ExtrasTab({ g }: { g: GameState }) {
@@ -1001,7 +1031,7 @@ export function ExtrasTab({ g }: { g: GameState }) {
             <ul className="small">
               <li>The daily challenge: it is a career of its own.</li>
               <li>Deleting career log cards (looking, downloading and locking are fine).</li>
-              <li>Starting, continuing or importing another career.</li>
+              <li>Starting or continuing another career.</li>
             </ul>
           </div>
         </section>

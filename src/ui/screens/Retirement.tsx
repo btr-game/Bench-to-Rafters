@@ -17,6 +17,7 @@ import { useMemo, useState } from 'react';
 import { careerRecord } from '../../engine/career/record';
 import { CardActions, LoggedNote } from './CareerLog';
 import { CommunityNote } from './Community';
+import { RetirementMp } from './Multiplayer';
 import { LegendarySeasons } from '../components/Legendary';
 import { CareerTimeline } from '../components/Timeline';
 import { DailyResult } from '../mini/Daily';
@@ -214,7 +215,9 @@ export function Retirement({ g }: { g: GameState }) {
         </div>
       </section>
       {/* round 28: what the career means for the community, as a card of its own right under the verdict */}
-      {!g.flags.daily && !g.flags.gen2 && g.mode !== 'lab' && <CommunityNote rec={rec} />}
+      {!g.flags.daily && !g.flags.gen2 && g.mode !== 'lab' && !g.mp?.challenge && !g.mp?.klass && <CommunityNote rec={rec} />}
+      {/* round 35: play with friends: a challenge from this career, or how the challenge or the class went */}
+      {!g.flags.daily && !g.flags.gen2 && !g.flags.level && (g.mode === 'standard' || g.mp) && <RetirementMp g={g} rec={rec} />}
       <NextGen g={g} />
       <NbaTeams g={g} />
       <RaftersSummary

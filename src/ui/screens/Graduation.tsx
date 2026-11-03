@@ -38,17 +38,28 @@ export function Graduation() {
         <Icon name="cap" size={72} />
         <div className="kicker">The road map · done</div>
         <h1>Graduation</h1>
-        <p className="lede">You played all three levels, every mini-game and the closing tour. The full game is yours.</p>
+        <p className="lede">You passed the beginner level: the full game is open, with Regular guy. The road map&rsquo;s other stops open the rest.</p>
       </section>
       <div className="diploma" aria-label="Your diploma">
         <Roll />
         <div className="scroll-paper diploma-paper">
           <div className="bucket-title">Diploma</div>
           <ul className="diploma-list">
-            {['Beginner · High school', 'Intermediate · College', 'Advanced · NBA arena', 'The island', 'The closing tour'].map((x) => (
+            {/* round 35: beginner is the tutorial; each later stop opens a mode */}
+            {(
+              [
+                ['Beginner · High school', 'the full game, with Regular guy', true],
+                ['Intermediate · College', 'opens Reality hits hard', false],
+                ['Advanced · NBA arena', 'opens Shoot for the stars', false],
+                ['The island', 'opens the mini-games', false],
+                ['The closing tour', 'any time, for the rest', false],
+              ] as const
+            ).map(([x, what, on]) => (
               <li key={x}>
-                <Tick on />
-                <span>{x}</span>
+                <Tick on={on} />
+                <span>
+                  {x} <small>· {what}</small>
+                </span>
               </li>
             ))}
           </ul>

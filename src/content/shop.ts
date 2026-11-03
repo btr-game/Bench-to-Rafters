@@ -18,6 +18,7 @@ export interface ShopItem {
   focus?: number; // added to both focus stats
   range?: number;
   offhand?: number;
+  touch?: number; // round 35: free-throw touch (player/touch.ts)
   injuryMult?: number;
   declineMult?: number;
   growthMult?: number; // next season's growth
@@ -27,6 +28,7 @@ export interface ShopItem {
   weight?: number; // lb on (or off)
   toIdeal?: number; // share of the way to his best playing weight
   wear?: { slot: WearSlot; color: string }; // an accessory: he wears it
+  klass?: boolean; // round 35: sold only in a draft-class career (economy/shop.ts stock leaves it out of any other)
 }
 
 const K = 0.001; // $1K in $M
@@ -161,10 +163,23 @@ export const SHOP_ITEMS: ShopItem[] = [
   { id: 'physio-visits', name: 'Weekly physio visits', category: 'Recovery', price: 2 * K, blurb: 'Catch the small things before they turn big.', injuryMult: 0.93 },
   { id: 'nutritionist', name: 'Sports nutritionist', category: 'Recovery', price: 15 * K, blurb: 'Real food, on a plan.', attrs: { ATH: 0.5 }, injuryMult: 0.95, declineMult: 0.98 },
   { id: 'altitude-tent', name: 'Altitude sleeping tent', category: 'Recovery', price: 6 * K, blurb: 'Sleep at 9,000 feet, play at sea level.', attrs: { ATH: 0.5 }, morale: -1 },
-  { id: 'sports-psych', name: 'Sports psychologist', category: 'Recovery', price: 50 * K, blurb: 'Quiet mind at the free-throw line.', morale: 6, attrs: { SHT: 0.5 } },
+  { id: 'sports-psych', name: 'Sports psychologist', category: 'Recovery', price: 50 * K, blurb: 'Quiet mind at the free-throw line.', morale: 6, attrs: { SHT: 0.5 }, touch: 1.5 },
   { id: 'meditation', name: 'Meditation app', category: 'Lifestyle', price: 0.07 * K, blurb: 'Ten minutes a day. Breathe.', morale: 3 },
   { id: 'stream-setup', name: 'Streaming setup', category: 'Lifestyle', price: 2 * K, blurb: 'Fans watch you play video games. You gain followers.', rep: 3, morale: 2 },
   { id: 'team-dinner', name: 'Dinner for the whole team', category: 'Lifestyle', price: 4 * K, blurb: 'Steaks on you. The locker room remembers.', trust: 4, morale: 3 },
+  // round 35: free-throw touch (the round's theme: the line, and the 50-40-90)
+  { id: 'ft-line-tape', name: 'A free-throw line taped on the garage floor', category: 'Gear', price: 0.03 * K, blurb: 'Fifteen feet from the door, measured twice. A hundred makes before dinner.', touch: 2.5 },
+  { id: 'ft-shot-machine', name: 'A free-throw rebounding machine', category: 'Training', price: 9 * K, blurb: 'It catches every make and sends it back. It never gets tired; you do.', touch: 4, attrs: { SHT: 0.3 } },
+  // round 35, end of the round: friends (a draft class, a friend's challenge) and the jumper that ages
+  { id: 'gym-key', name: 'A gym key for Sunday runs with friends', category: 'Lifestyle', price: 2 * K, blurb: 'Your old high school gym, every Sunday at ten. Whoever shows up plays.', attrs: { FIN: 0.3, PER: 0.3 }, morale: 3 },
+  { id: 'rival-film', name: 'Film on every rival your age', category: 'Training', price: 15 * K, blurb: 'Every player from your draft class, every tendency, on one hard drive.', attrs: { IQ: 0.5, PER: 0.5 } },
+  { id: 'game-night', name: 'A game-night table for the old crew', category: 'Lifestyle', price: 0.8 * K, blurb: 'Cards on Thursdays, the same five friends since the eighth grade.', morale: 4 },
+  { id: 'friends-cabin', name: 'A lake cabin for the summer crew', category: 'Lifestyle', price: 350 * K, blurb: 'Bunk beds for eight, a dock, and a hoop nailed to the boathouse.', morale: 8, rep: 1 },
+  { id: 'release-coach', name: 'A shooting coach for older legs', category: 'Training', price: 80 * K, blurb: 'Less dip, less leg, the ball out a beat sooner. The jumper that ages well.', attrs: { SHT: 0.5 }, declineMult: 0.97 },
+  // round 35, later: only in a draft-class career, for the class itself (so no other career's shop draws change)
+  { id: 'class-jersey-art', name: 'Framed art of your draft class’s jerseys', category: 'Lifestyle', price: 15 * K, blurb: 'Your whole draft class in its college colors, one draft night, on one wall.', morale: 3, rep: 1, klass: true },
+  { id: 'class-trainer', name: 'A trainer you share with a classmate', category: 'Training', price: 20 * K, blurb: 'Two first-round picks, one trainer, every rep a race.', focus: 1, morale: 2, klass: true },
+  { id: 'reunion-suit', name: 'A stylist’s suit for reunion night', category: 'Lifestyle', price: 6 * K, blurb: 'Cut now, worn the night every career in the class is over.', rep: 2, morale: 2, klass: true },
   // round 34: simplification (the round's theme: fewer, better things)
   { id: 'career-scrapbook', name: 'A career scrapbook', category: 'Lifestyle', price: 0.3 * K, blurb: 'Every clipping since high school, in one fat binder.', morale: 3, rep: 1 },
   { id: 'one-move-coach', name: 'A one-move coach', category: 'Training', price: 3 * K, blurb: 'One move, a thousand times a day, until it is yours.', attrs: { FIN: 0.5 }, morale: 1 },
@@ -173,7 +188,7 @@ export const SHOP_ITEMS: ShopItem[] = [
   { id: 'minimal-locker', name: 'A minimalist locker', category: 'Lifestyle', price: 0.5 * K, blurb: 'One hook, one shelf, one pair of shoes. The room follows.', morale: 2, trust: 1 },
   // round 33: efficiency, and the nights that go wrong (the round's achievements)
   { id: 'shot-chart-wall', name: 'Your shot chart, poster size', category: 'Training', price: 0.15 * K, blurb: 'Green where you make them. Red where you should stop.', attrs: { IQ: 0.5 } },
-  { id: 'ft-routine-coach', name: 'Free-throw routine specialist', category: 'Training', price: 4 * K, blurb: 'Same breath, same dribbles, same spin. Underhand, if you dare.', attrs: { SHT: 0.5 }, morale: 1 },
+  { id: 'ft-routine-coach', name: 'Free-throw routine specialist', category: 'Training', price: 4 * K, blurb: 'Same breath, same dribbles, same spin. Underhand, if you dare.', attrs: { SHT: 0.5 }, touch: 4, morale: 1 },
   { id: 'ball-security', name: 'Ball-security camp with a retired point guard', category: 'Training', price: 6 * K, blurb: 'Two hands in traffic. Fewer giveaways.', attrs: { PLY: 0.5, IQ: 0.5 } },
   { id: 'box-score-frame', name: 'Your best box score, framed', category: 'Lifestyle', price: 0.4 * K, blurb: 'Every number from your best night, behind glass.', rep: 1, morale: 3 },
   { id: 'gold-brick', name: 'A gold-painted brick', category: 'Lifestyle', price: 0.05 * K, blurb: 'For the night nothing went in. You can laugh about it now.', morale: 4 },

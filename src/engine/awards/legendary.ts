@@ -1,6 +1,6 @@
 // Round 22: legendary seasons. A season earns a card on the end-of-career page when it stacks
 // the big honours in one year (MVP and Defensive Player of the Year, MVP and the title, ...) or
-// puts up numbers few seasons ever have (a triple-double average, thirty a night). Each season
+// puts up numbers few seasons ever have (a triple-double average, 50-40-90, thirty a night). Each season
 // gets one card, the rarest combination it reached; the rest of its honours show as chips.
 
 import type { GameState, SeasonRecord } from '../types';
@@ -28,6 +28,9 @@ interface Combo {
 
 const pg = (h: SeasonRecord, k: 'pts' | 'reb' | 'ast') => perGame(h.line, k);
 const full = (h: SeasonRecord) => h.level === 'NBA' && h.line.gp >= 50;
+const pct = (m: number, a: number) => (a > 0 ? m / a : 0);
+// the 50-40-90 club, on the same line as the achievement: at least two threes and two free throws tried a game
+const club = ({ line: l }: SeasonRecord) => l.tpa / l.gp >= 2 && l.fta / l.gp >= 2 && pct(l.fgm, l.fga) >= 0.5 && pct(l.tpm, l.tpa) >= 0.4 && pct(l.ftm, l.fta) >= 0.9;
 
 // rarest first: a season shows the first one it matches
 const COMBOS: Combo[] = [
@@ -37,6 +40,7 @@ const COMBOS: Combo[] = [
   { id: 'ringmvp', name: 'Ring and Trophy', line: 'The MVP trophy and a championship ring in the same season.', need: [['MVP'], TITLE] },
   { id: 'scoringmvp', name: 'Scoring King', line: 'The scoring title and the MVP.', need: [['MVP'], ['SCORING']] },
   { id: 'tripledouble', name: 'Triple-Double Season', line: 'Double figures in points, rebounds and assists, on average, for a whole NBA season.', need: [], stat: (h) => full(h) && pg(h, 'pts') >= 10 && pg(h, 'reb') >= 10 && pg(h, 'ast') >= 10 },
+  { id: 'fiftyfortyninety', name: 'The 50-40-90 Club', line: 'Half his shots from the field, 40% from three and 90% at the line, over a full NBA season.', need: [], stat: (h) => full(h) && club(h) },
   { id: 'finalshero', name: 'Finals Hero', line: 'Finals MVP as the best player on a champion, with an All-NBA First Team season behind it.', need: [['FMVP'], ['ALLNBA1']] },
   { id: 'defensewins', name: 'Defense Wins Championships', line: 'Defensive Player of the Year and the title.', need: [['DPOY'], TITLE] },
   { id: 'wall', name: 'The Wall', line: 'Defensive Player of the Year and the league lead in blocks or steals.', need: [['DPOY'], ['BLKLEAD', 'STLLEAD']] },

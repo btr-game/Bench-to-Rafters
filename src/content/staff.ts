@@ -62,10 +62,10 @@ export const STAFF: Record<StaffRole, StaffDef> = {
     title: 'Shooting coach',
     salary: 0.3,
     place: 'court',
-    does: 'A little better shooting and a little more range every season.',
+    does: 'A little better shooting, a little more range and steadier free throws every season.',
     pitch: 'A shooting coach who rebuilt three NBA jumpers wants to work with you every day.',
-    talk: ['"Elbow in. Follow through. Hold it until it drops."', '"Five hundred makes, not five hundred shots."', '"You dip the ball on the catch. Stop it."'],
-    edge: '(A small edge: a touch better shooting and range.)',
+    talk: ['"Elbow in. Follow through. Hold it until it drops."', '"Five hundred makes, not five hundred shots."', '"You dip the ball on the catch. Stop it."', '"Same breath at the line. Every time."'],
+    edge: '(A small edge: a little better shooting, range and free throws.)',
   },
   skills: {
     role: 'skills',

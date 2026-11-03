@@ -4,12 +4,13 @@
 // a season (a share of that benefit on the spot, round 28), given a raise (a bigger benefit for more pay, up to level 3), or let go. If the bank
 // cannot pay him, he leaves.
 
-import { ATTR_MAX, STAFF_PAY } from '../balance';
+import { ATTR_MAX, STAFF_PAY, TOUCH } from '../balance';
 import { STAFF, type StaffRole } from '../../content/staff';
 import { FIRST_NAMES, LAST_NAMES } from '../../content/names';
 import { clamp, pick } from '../rng';
 import { adjust, logDecision } from './common';
 import { changeWeight, idealWeight, weightOf } from '../player/weight';
+import { addTouch } from '../player/touch';
 import type { AttrKey, GameState, StaffMember } from '../types';
 
 /** What he costs a season at his level ($M). */
@@ -53,6 +54,7 @@ function staffEffect(s: GameState, m: StaffMember, k: number): void {
     case 'shooting':
       bump(s, 'SHT', 0.3 * k);
       p.range = clamp(p.range + 0.4 * k, 0, 99);
+      addTouch(p, TOUCH.staff * k);
       break;
     case 'skills':
       bump(s, 'PLY', 0.3 * k);

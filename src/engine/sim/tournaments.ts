@@ -13,6 +13,8 @@ import { ovrOf } from '../player/ovr';
 import { adjust, logDecision, pushDecision, pushMoment, rankOnRoster } from '../career/common';
 import { originOf } from '../../content/origins';
 import { teamUsageMean, rankMinutes } from './genStats';
+import { touchOf } from '../player/touch';
+import { friendAllStars } from '../career/friendLeague';
 
 interface Opp {
   name: string;
@@ -26,7 +28,7 @@ const BASE: Record<LevelKey, number> = { HSJV: 48, HSV: 60, NCAA: 72, GL: 112, E
 
 function profile(s: GameState) {
   const p = s.player;
-  return { attrs: p.attrs, height: p.height, wingspan: p.wingspan, range: p.range, offhand: p.offhand + (p.hand === 'L' ? 6 : 0) };
+  return { attrs: p.attrs, height: p.height, wingspan: p.wingspan, range: p.range, offhand: p.offhand + (p.hand === 'L' ? 6 : 0), touch: touchOf(p) };
 }
 
 /** One game outside the regular season with a full box score for the player. */
@@ -227,7 +229,10 @@ export function allStarWeekend(s: GameState, firstHalf: StatLine): void {
     });
   }
   const mine = firstHalf.gp >= 15 ? (1 - FAN_VOTE.share) * valuePerGame(firstHalf) + FAN_VOTE.share * (p.rep / 100) * FAN_VOTE.scale : 0;
-  const rank = 1 + vals.filter((v) => v > mine).length;
+  // round 35: classmates stand in the vote with their season's numbers (career/friendLeague.ts);
+  // one in his conference can take a place ahead of him
+  const friends = s.mp?.klass ? friendAllStars(s, nba, team.conf, vals, mine) : null;
+  const rank = 1 + vals.filter((v) => v > mine).length + (friends?.ahead ?? 0);
   season.allStar = rank <= 12;
   season.allStarRank = rank;
   const lines: string[] = [];
@@ -252,6 +257,14 @@ export function allStarWeekend(s: GameState, firstHalf: StatLine): void {
     const win = chance(s.rng, clamp(0.15 + (p.attrs.ATH - 82) * 0.04, 0.05, 0.6));
     lines.push(win ? 'Won the Slam Dunk Contest' : 'Competed in the Slam Dunk Contest');
     if (win) s.awards.push({ year: s.year, level: 'NBA', key: 'DUNK', label: 'Slam Dunk champion' });
+  }
+  if (friends?.picked.length) {
+    const who = friends.picked.length > 1 ? `Classmates on the All-Star teams: ${friends.picked.join(', ')}.` : `A classmate on an All-Star team: ${friends.picked[0]}.`;
+    season.midReport.push(who);
+    // on his own page when there is one (a classmate's place is no page of his)
+    if (lines.length > 0) lines.push(who);
+    // All-Star weekends he shared with a classmate (the book's All-Star Alumni reads it)
+    if (season.allStar) s.flags.asPal = (s.flags.asPal ?? 0) + 1;
   }
   if (lines.length > 0) {
     p.rep = clamp(p.rep + (season.allStar ? 4 : 2), 0, 100);

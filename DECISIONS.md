@@ -2715,3 +2715,247 @@ multiple times."
   13. The project summary: the road map's pop-out cards and the stage, the turning points (187),
       the shop (213), the career log, the achievements (with how often each happens), cards that
       fold, the announcer, the intro, what a device keeps and the dev deck (129 cards).
+
+## Round 35 (owner requests): multiplayer
+
+- **The dev deck's real numbers** (owner: "real numbers of user in the dev deck doesnt seem to
+  work (not sure) just verify it works"): they did not. The deck's community is its own (this
+  device's, so it never posts to or reads the real one), and the Real numbers line read that, so it
+  only ever counted the deck. It now reads the real community, read only (community.ts watchReal):
+  on the website, the presence channel watched without joining it (so the deck is never counted and
+  never uses the player's identity) and the feed; on the claude.ai page, the room's visits that
+  joined the court and the shared feed; a copy with neither says there is nothing real to count.
+  The website's feed held 11 careers, 3 in the last 24 hours, when checked.
+- **Skip tutorial mid-tutorial** (owner: "the skip button of the tutorial doesnt appear. let users
+  skip mid tutorial if possible"): the lessons shade the whole page but one control, top bar
+  included, so the button was dimmed and could not be pressed for almost the whole tutorial. The
+  lesson layer now has its own Skip tutorial, fixed to the top-right corner above the shade (the
+  top-left when the control is in that corner); its pop-up opens above the lesson and takes its
+  keys. The exit code is still what skips (the owner's round 33 design). The note's own "Have the
+  exit code?" link went, so there is one way out.
+- **The career code, explained** (owner: "how the import/export code works? is it that a code line
+  is added when the user makes a choice"): no. Code packs the whole career as it stands (gzip, then
+  base64, after BTR1.); 12 finished careers measured 149,803 to 192,599 characters. The project
+  summary has a section on it.
+- **Import for devs only** (owner: "let's put the import function exclusive to devs. i dont want
+  people abusing the export codes"): a code has no signature, so an edited one could carry made-up
+  ratings or honours to the boards. The import box shows only in the dev deck, and the store refuses
+  an import anywhere else. Players keep Code, to send the maker with a bug report.
+- **The tutorial is the beginner level** (owner: "make only the beginner level of tutorial
+  necessary. once the user graduates from it, they get the key and gain access to the main game.
+  but, can you lock the other difficulties ... also lock minigame"). Graduation follows beginner;
+  the full game opens with Regular guy. The owner's answers: one mode per stop (intermediate opens
+  Reality hits hard, advanced Shoot for the stars, the island the mini-games, Built in a lab with
+  them since it is one); the exit code opens what beginner does; a device that finished the old
+  tutorial keeps everything (the road's first load sets a version and `all`). Locked cards on the
+  start page say which stop opens them; the road map's cards and a level's last page say what
+  they open. In the dev deck everything is open unless a card previews the tutorial.
+- **Multiplayer: Play with friends** (owner's picks: Draft class with friends, Challenge a friend;
+  an invite code or link and quick match; "i want the multiplayer under regular guy"). Both are
+  asynchronous. A career now keeps its start (seed and start page; `GameState.start`) and what it
+  is to friends (`GameState.mp`).
+  - Challenge a friend: from the last page of a finished Regular guy career, a six-letter code (no
+    I, O, 0 or 1) and a link (`#challenge-CODE`). A friend plays the same prospect from the same
+    seed, with no undo; every answer is ranked beside the career that set it by career index, a
+    player's best counting. Quick match lists others' challenges of the last 30 days, the least
+    answered first.
+  - Draft class: up to 8 friends start Regular guy careers on one seed. The class is made or joined
+    as the player starts (its seed is his career's). Each finished season sends a short line, each
+    finished career its card: standings (best rating so far, then honours), every season side by
+    side, the best of the class each year. Quick match lists classes of the last 14 days with a
+    seat left.
+  - Players pick a name for friends; the game keeps no email or login (the anonymous secret of the
+    online community). A prospect from another player is checked before it is played (only what
+    the start page can pick, a rerolled card within reach of its archetype's, Regular guy), so a
+    challenge cannot carry a made-up player onto the leaderboards. Posts wait on the device until
+    the server takes them.
+  - Where: the website and itch.io, on the game's database (supabase/migrations/0004: four tables
+    no player can read or write directly, twelve checked, rate-limited functions). The claude.ai
+    page cannot reach that database, so it points to the website. The dev deck plays on a stand-in
+    on the device, with house players.
+  - Measured on the dev server: a challenge started on its prospect's seed (108) with no undo; a
+    class made, its seed given to the career (849007920), the first season's line in the class.
+- **A board beside a career with friends, and off the community's** (owner: "for the multiplayer, a
+  leaderboard should always appear on the side. the career played in multiplayer wont be counted
+  towards the real leaderboards in community"). A challenge or draft-class career shows its board
+  on every tab: at the top of Home's side column, and beside the other tabs and the career's last
+  page (sticky on a computer; above the tab on a phone). It never folds. It holds this career as it
+  stands now (its index so far for a challenge; its seasons so far for a class, ahead of the
+  server's copy), and refreshes after each season and every minute. Such a career is never posted
+  to the community (boards, feed, statues, the hall), and its last page shows its own board instead
+  of what it qualifies for there.
+- **Achievement categories** (owner: "add catagories for achievments (very brief so that it doesnt
+  reveal too much about it ... right now, there's so much achievements but too hard to look at)"):
+  13 categories, a short name and an icon each, none over a tenth of the book; chips under the
+  tiers (each with what is earned of it), combining with a tier and Earned or Still a riddle; the
+  full book reads in chapters, one a category.
+- **Free-throw percentage** (owner: "add free throw percentage to the game, with events and other
+  stuff that helps it. this is mostly for the 50-40-90 achievemnet"): a hidden free-throw touch (it
+  starts from his shooting, grows with every season of reps, and faster with the shooting plan, a
+  shooting summer, a shooting coach, three turning points at the line and shop items) adds to the
+  FT% his shooting gives. FT% shows on Home, Records, the game log and the season tables; the touch
+  has a meter on the Player tab. Over 600 smart careers the mean FT% stayed 0.8004567 to 0.8006348
+  and 50-40-90 seasons went from 1.0% to 3.0% of careers; a shooter who builds his touch on purpose
+  reached it in 37% (100 careers): the lever is the shooting plan's touch, for the owner.
+- **Shooting ages** (owner: "the shooting barely gets affected by age ... make shooting drop as well.
+  just level it to similar levels of other stats, no balance check needed"): shooting declined at
+  half the rate of the other ratings; now at the same rate (basketball IQ keeps its slower one).
+  Over the six-year decline table a small forward's shooting now loses 19.21569 points, not
+  10.37037; the OVR he loses is the same.
+- **Shop prices up 30%** (owner: "increase shop item prices up a bit again (about +20~40%?)"): every
+  price, and the price the six are drawn around, times 1.3, so the same things come up and each costs
+  more against his bank. Over 400 visits: at $4M a year and a $6M bank, 2.727500 items fit, now
+  2.375000 (the mean item 20.3% dearer); at $12M and $30M, 3.295000 now 2.630000 (29.1%); at $60M
+  nothing he can afford changes.
+- **Friends in each other's careers** (owner: "can you add multiplayer specific features? for
+  example, each user can send a rivalry to one other, and if they accept, they become draft rivals.
+  their dynamics when they meet should be more deliberate. if two users join the same team, they can
+  form duos (or a big three if three are in the same team) try to make a chat below the leaderboard
+  so that the users can communicate"). Each friend's career is played on their own device, so
+  before each season the side board copies the class's season lines into the career
+  (`GameState.mp.friends`, with the rival pick in `mp.rival`), and the engine reads only that copy:
+  the same copy gives the same career. A friend is where their line for this year says, or a season
+  behind, where last year's says.
+  - **Rivals**: each member of a class picks one classmate from the standings (Send a rivalry; Sent,
+    take back; Accept the rivalry when one has picked you); two who pick each other are rivals.
+  - **Rival nights**: once a season, when the two are in the NBA on different teams, their meeting is
+    a turning point that is never left to chance (it is queued before the season's random ones):
+    guard them yourself, outscore them, or play it like any other night. The odds start at a half,
+    move 3 points for each point of team strength and 1.2 for each point of OVR between the two, plus
+    1 or 2 for the call, between 15% and 85%; both players' points come from their season so far.
+    The record (the last 30 meetings) is on the side board and in the career.
+  - **Duos and Big Threes of friends**: a classmate on his NBA team for a season is a duo, two are a
+    Big Three, formed the first season of their run together. A friend counts only when the career
+    has no duo or Big Three of its own (or as the third of its own duo), with the duo's usual edge,
+    and a moment marks the season it forms.
+  - **The chat**: one for each challenge and each class, under its board (on the Play with friends
+    page and beside the career), for its people only: a class's members; a challenge's maker, the
+    friends who have started it and those who have answered it. 200 characters a line, a line every
+    3 seconds and 300 a day; a room keeps its latest 200 lines and shows 50. New functions in
+    `supabase/migrations/0005_multiplayer_friends.sql` (tested on a local Postgres with two players
+    and a stranger, who reads nothing and posts nothing); the dev deck's stand-in has a classmate who
+    has already picked you and a chat with a few lines.
+  - Five achievements (Grudge Match, Bad Blood, Friends on the Floor, The Old Gang, Chirp), the rival
+    night's pixel icon (two jerseys and a bolt), Catalog entries, the manual and Guide mode.
+- **End of round** (owner: "go til here. dont publish yet": the list up to the summary and this
+  file). Pixel icons for a challenge (two players squared up), a draft class (classmates on a bench
+  under the class banner) and the unlock (the padlock, open); sound for a challenge, a seat taken in
+  a class and a mode opening, and a loop of its own for Play with friends (Call and answer); simple
+  text keeps the notes a player needs on the new pages; the manual and Guide mode; the dev deck's
+  cards and Catalog lists; the tutorial's end-to-end check now plays beginner alone and checks the
+  locks hold. Balance was not run (the owner's list stopped short of it). Not published.
+  The full checks after the friends features: 316 tests in 29 files, the build, the visual check on
+  all 142 cards in four looks (diffed against round 34: the new screens, pages a little longer for
+  FT% and the new cards, and two cards whose made-up careers now end differently), class contrast,
+  dev-apart (the deck writes only its own keys, the friends stand-in among them). The visual check
+  found one bug: a risk tag on the highlighted (first) choice of a decision, green, amber or red on
+  the accent at 1.09:1; it now takes the button's ink. class-contrast.cjs missed it, so it now also
+  draws every tag the code puts inside a choice button in each state of the button, and fills in a
+  class built as prefix-${...} (risk-${level}) from the stylesheets: 223 combinations, none under AA.
+- **The draft class, and fair play with friends** (owner: "for equality purposes, i think sim and
+  fastbreak should be locked in multiplayer. think of other ways to balance", and "here's the story
+  line. the 12 of you (max) were the first options of your colleges. you're going for the nba
+  draft, and all of you are predicted to be entering as a 1st round pick (1~30th). ovr starts at a
+  65~75 range. the rest is history").
+  - **Fair play**: in a challenge or class career Fast break and Sim are locked off (the engine
+    refuses them, as for Rough Road; the chips and Settings say why). Other balance, ours: a career
+    that ever ran Fast break or Sim is marked and cannot be sent as a challenge (the friend answers
+    at full pace); mini-games pay no rating bonus with friends (they still play, for fun); a season
+    once posted to a class stands (a career played again from an older save cannot replace it); and
+    a seat holds one career (its first line names its run; another run's lines and card are
+    refused, and the start page says so before a second career starts).
+  - **Draft night** (engine/career/draftNight.ts, a helper agent's work): a class career skips high
+    school and college. He was his college's first option (mostly the big programs), at OVR 65 to
+    75 drawn evenly, projected in the first round with a mock range, and picked there (1 to 30;
+    the 30th team takes him if he is still on the board). Age, OVR, college and projection come
+    from a stream of his own (seed and picks), the league and the draft from the seed alone, so the
+    whole class goes into the same draft. The intro page is on the draft stage, headed Draft night.
+    Classes seat 12. Careers outside a class are unchanged (60 careers' full states hashed the same).
+  - **Stars as often as a first-round pick** (owner: "potential so stars come up about as often as
+    for a normal first-round pick? yes"). Entering at 21 or 22, the first draft-night careers
+    peaked at 77.89626 on average with 0.6666667% MVPs and 2.000000% Hall of Famers, against the
+    first-round picks of Regular guy careers played from high school (80.60136, 9.876543%,
+    23.45679%). A lift to the potential alone raised the mean but not the stars (MVPs come from the
+    top tail, the Hall of Fame from long, strong careers), so three things changed: the class is a
+    freshman one-and-done to a senior (19 to 22, the younger twice as often), his potential is
+    spread (sd 10, lifted -3, never under his OVR plus 2), and his hidden growth rate is raised by
+    0.3 (a first-round pick is one who grew fast). Over 200 smart careers: mean peak 82.40946,
+    All-Star 69.0%, MVP 9.5%, Hall of Fame 19.5% (titles 61.5%), 13.75 NBA seasons.
+  - **Join a friend** (career/team.ts): a trade aim at a classmate's NBA team. The two salaries
+    against next season's cap set the odds (fit = 1 - 1.5 x (share - 0.10), at least 0.25; the
+    usual trade odds x 1.1 x fit, 5% to 85%); not offered past 60% of the cap together, or with the
+    team's payroll and both deals over 1.3 x the cap. Measured: about 66% for a cheap friend, 20%
+    when he takes half the cap.
+  - **Rival series** (career/rivalSeries.ts): when his team meets his rival classmate's in the NBA
+    playoffs, one call for the series (guard him +0.6 strength; outscore him, a hot hand; the team
+    game +0.3 and the coach's trust), asked whether the games are played or simulated. On a
+    coin-flip series, guarding makes it 57.24871% and the team game 53.64044%. Recorded with the
+    rival nights, counted apart on the side board.
+  - **Classmates in your league** (career/friendLeague.ts): a classmate on his NBA team that season
+    shows in the game log against that team (his line drawn around his averages, on a stream of its
+    own), in the award races (he can win MVP), and on the All-Star teams; his team is a little
+    stronger against you (+0.1 for each OVR point over 75, at most +1.0).
+  - **Reunion night**: once every career in the class is over (a friend quiet for 14 days counts as
+    he stands), eleven awards revealed one at a time, the least first: Iron Man (games), Journeyman
+    (teams), Glass Cleaner, Floor General, Moneybags (earnings), Bucket Getter, Highest Peak,
+    All-Star Regular, Hardware (MVPs), Ring Leader, then the Class MVP (career index when every card
+    is in). A pixel banquet over it (the class at a long table, the lights coming on, the trophy
+    raised); a toast for each award and the championship sound for the class MVP.
+  - **Watch a friend's career**: tap a name in the standings: his rating each season as a pixel
+    chart, every season's line and honours, his card once he retires. **Reactions**: on fire,
+    royalty, love it, ice cold, one each on a classmate's season (a pop when given).
+    **Class news**: the server writes a line to the class chat when a season changes something
+    (drafted, a move, leaving the NBA, Rookie of the Year, a first All-Star, an MVP, a title) or a
+    career ends. **Friends today**: the daily challenge among the players one shares a class or a
+    challenge with, on the daily pages.
+  - The server: supabase/migrations/0006_multiplayer_class.sql (12 seats; the first line stands;
+    the run; class news; reactions; the daily board), tested on a local Postgres with two players
+    and a stranger.
+  - **Achievements** (25 more, the book at 776, a helper agent's work): for draft night (First
+    Chair, Honor Roll, Chip on the Shoulder, Believe the Hype, Thirty for Thirty, Pick of the
+    Litter), the rival series (Best of Enemies, Rent Free, Revenge Tour, Final Word, Brooms Out, Home
+    and Away, Same Time Next Year), classmates in the league (Head of the Class, Green with Envy,
+    All-Star Alumni, Phone a Friend, Friendship Ring), and the class pages (Homecoming King,
+    Superlatives, The Whole Yearbook, Hype Man, Heavy Is the Head, King of the Hill, Binge Watcher).
+    Tiers from measured rates (300 draft nights and careers: first overall 1.333333%, top five
+    16.66667%).
+  - **Turning points** (events/round35c.ts, class careers only): the rookie dinner, a classmate on
+    the trade block, the bracket math (both teams in their conference's top six), a classmate's MVP,
+    the reunion invitation (32 or older), each with a pixel icon. **Shop**: three things only a class
+    career is offered (framed art of the class's jerseys, a trainer shared with a classmate, a suit
+    for reunion night), kept out of every other career's draws, each with its own pixel icon.
+  - **A crash fixed on the way**: the duo-extension turning point read a duo of friends as a
+    teammate on the roster and threw in any class career with a classmate on his team.
+  - Sound: a toast for each reunion award (the championship sound for the class MVP) and a pop for a
+    reaction. Art: the banquet, the draft stage for draft night's intro, three shop icons.
+- **The 50-40-90 Club** (owner: "add 50-40-90 season to a legendary season"): a legendary season card
+  for half the shots from the field, 40% from three and 90% at the line over a full NBA season (50
+  games), on the same line as the Fifty-Forty-Ninety achievement (two threes and two free throws
+  tried a game at least). It ranks just below the Triple-Double Season, so a rarer card the same
+  year still wins. Measured on 150 careers (Standard, smart policy): 6 careers (4.000000%) had one,
+  8 of 773 full NBA seasons (1.034929%).
+- **A leaner tutorial** (owner: "i think there are still too much features accessible in the tutorial
+  mode"; the owner picked what goes): the beginner level drops the milestones strip and the fan talk
+  (the paper's headline and the made-up posts) from Home, and its Player tab keeps only the ratings
+  and the status meters (no kits, contract and money, nickname and brand, profile, second scouting
+  report, body map, staff, wardrobe, collection or roster). The coach card, the scouting report and
+  the whole Settings menu stay. One rule (`leanLevel` in src/ui/road.ts) for both screens; the
+  lessons follow: the milestones and fan-talk lessons are gone, the Player tab teaches the ratings
+  and the status, and the scouts' lesson moves to Home. Intermediate and advanced are unchanged.
+- **Sim mode opens with the Grand Tour** (owner: "i think sim mode should be unlocked once the user
+  completes one full round (until retirement) of each difficulty"): Sim switches on only once this
+  device has a career finished at Regular guy, Reality hits hard and Shoot for the stars, the same
+  rule as the Grand Tour achievement (`grandTour`, `DIFFICULTIES` in src/engine/achievements.ts;
+  `simOpen`, `difficultiesLeft` in src/ui/achievements.ts). A Comet (a son's career is one) no longer
+  counts for its difficulty, since Sim plays it. Until then the Sim chip is grey with the
+  difficulties still to go; a career saved with Sim on can still switch it off. Comet keeps Sim on
+  by itself; the advanced practice level and the closing tour keep their own Sim, since they teach
+  it; the dev deck has it open (a card shows it shut). The rule lives on the device, not in the
+  engine, so careers and the harness play exactly as before.
+- **What's new for round 35**: play with friends, the class's league, reunion night, fair play, the
+  Sim unlock, free throws and aging shooting, the 50-40-90 Club, the shorter tutorial, the
+  achievement categories (776) and the shop prices.
+- **Sim needs an All-Star career at each difficulty** (owner: "for sim to unlock, lets go with allstar
+  as the requirement"): a career counts toward opening Sim only if it made an NBA All-Star team
+  (`starBy` in the totals, `simReady`), so three quick early retirements no longer open it. The Grand
+  Tour achievement keeps its own rule (any finished career at each difficulty).
