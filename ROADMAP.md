@@ -41,7 +41,10 @@ The order the owner set:
   shooter games. smth like nba 2k"); it plays **only the biggest moments** (the last quarter of a
   final or an elimination game) with the clock sped up so a quarter takes **3 to 5 minutes**, and a
   **Skip** is there mid-game.
-- **Round 40**: **languages**: Korean, Chinese, Japanese, Spanish and French. The last round with a
+- **Round 40**: **languages**: Korean, Chinese, Japanese, Spanish and French: everything a player
+  sees (the screens, the manual, the tutorial, the events, the storylines, the logs, the
+  achievements; about 78,000 words), the dev deck staying English (owner: "no need for translation
+  in dev deck. it will only be accessible to me anyways"). The last round with a
   significant system; after it, only small balance changes and bug fixes (owner: "so let's keep up
   the spark").
 - **Publishing**: rounds 38, 39 and 40 go out together (owner: "when doing round 38, dont do the
