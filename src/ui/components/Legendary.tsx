@@ -9,13 +9,14 @@ import { kitFor, styleLeague } from '../art/Player';
 import { seasonLabel } from '../format';
 import { badge, ink } from '../art/color';
 import { Card } from './bits';
+import { t } from '../../i18n';
 
 export function LegendarySeasons({ g }: { g: GameState }) {
   const list = legendarySeasons(g);
   if (list.length === 0) return null;
   const p = g.player;
   return (
-    <Card title="Legendary seasons" kicker={`${list.length} season${list.length === 1 ? '' : 's'} for the ages`}>
+    <Card title={t('Legendary seasons')} fold="Legendary seasons" kicker={list.length === 1 ? t('1 season for the ages') : t('{n} seasons for the ages', { n: list.length })}>
       <div className="legend-grid">
         {list.map((x) => {
           const h = x.season;
@@ -26,7 +27,7 @@ export function LegendarySeasons({ g }: { g: GameState }) {
                   mid red passed neither white nor black as it was) */}
               <div className="legend-band" style={badge(h.teamColor)}>
                 <span className="num">{seasonLabel(h.year)}</span>
-                <span>Age {h.age}</span>
+                <span>{t('Age {age}', { age: h.age })}</span>
               </div>
               <div className="legend-body">
                 <div className="legend-art">
@@ -34,7 +35,7 @@ export function LegendarySeasons({ g }: { g: GameState }) {
                 </div>
                 <div className="legend-text">
                   <div className="legend-name">{x.name}</div>
-                  <div className="small">{x.line}</div>
+                  <div className="small">{t(x.line)}</div>
                   <div className="legend-team small muted">
                     {h.teamName} · {LEVELS[h.level].short} · {h.w}-{h.l}
                   </div>

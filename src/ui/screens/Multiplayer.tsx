@@ -48,13 +48,16 @@ import {
 } from '../multiplayer';
 import { cleanUsername, isRude, username } from '../names';
 import { UsernameBox } from '../components/Username';
+import { t, tx } from '../../i18n';
 
 /** The career index as the page shows it: a whole number. */
 const idx = (r: CareerRecord): number => Math.round(mpScore(r));
 const ago = (iso: string) => {
   const m = Math.max(0, Math.round((Date.now() - Date.parse(iso)) / 60000));
-  return m < 1 ? 'just now' : m < 60 ? `${m} min ago` : m < 1440 ? `${Math.round(m / 60)} h ago` : `${Math.round(m / 1440)} d ago`;
+  return m < 1 ? t('just now') : m < 60 ? t('{n} min ago', { n: m }) : m < 1440 ? t('{n} h ago', { n: Math.round(m / 60) }) : t('{n} d ago', { n: Math.round(m / 1440) });
 };
+/** Two names (or stats) joined. */
+const both = (xs: string[]): string => (xs.length === 2 ? t('{a} and {b}', { a: xs[0], b: xs[1] }) : xs.join(' and '));
 
 /** The multiplayer this page has: null while it looks, false when there is none here. */
 function useMp(): Multiplayer | null | false {
@@ -77,11 +80,11 @@ export function MultiplayerCard() {
     <div className="card oath-card" role="group" aria-label="Play with friends">
       <Icon name="versus" size={48} />
       <div className="stack" style={{ gap: 6 }}>
-        <div className="sec-title">Play with friends?</div>
-        <p className="small muted">Challenge a friend to beat your career from the same start, or start a draft class together and follow each other’s seasons. Regular guy, nobody has to be on at the same time.</p>
+        <div className="sec-title">{t('Play with friends?')}</div>
+        <p className="small muted">{t('Challenge a friend to beat your career from the same start, or start a draft class together and follow each other’s seasons. Regular guy, nobody has to be on at the same time.')}</p>
         <div className="row" style={{ gap: 8 }}>
           <button className="btn small ghost" data-tour="multi" onClick={() => (sfx('page'), setPage('multi'))}>
-            Play with friends
+            {t('Play with friends')}
           </button>
         </div>
       </div>
@@ -114,12 +117,12 @@ function ShareCode({ link }: { link: MpLink }) {
   const pick = () => {
     field.current?.focus();
     field.current?.select();
-    setSaid('Selected: copy it with your keyboard.');
+    setSaid(tx('Selected: copy it with your keyboard.'));
   };
   const copy = () => {
     try {
       if (!navigator.clipboard) return pick();
-      navigator.clipboard.writeText(url).then(() => (setSaid('Link copied.'), sfx('sent')), pick);
+      navigator.clipboard.writeText(url).then(() => (setSaid(tx('Link copied.')), sfx('sent')), pick);
     } catch {
       pick();
     }
@@ -127,17 +130,17 @@ function ShareCode({ link }: { link: MpLink }) {
   return (
     <div className="mp-share stack">
       <div className="row" style={{ gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-        <span className="mp-code" aria-label={`Code ${link.code.split('').join(' ')}`}>
+        <span className="mp-code" aria-label={t('Code {code}', { code: link.code.split('').join(' ') })}>
           {link.code}
         </span>
         <button className="btn with-icon" onClick={copy}>
           <Icon name="share" size={20} />
-          Copy the link
+          {t('Copy the link')}
         </button>
       </div>
-      <input ref={field} readOnly value={url} aria-label="Link to send" onFocus={(e) => e.currentTarget.select()} />
+      <input ref={field} readOnly value={url} aria-label={t('Link to send')} onFocus={(e) => e.currentTarget.select()} />
       <small className="muted" aria-live="polite">
-        {said || 'Send the code or the link. A friend opens Play with friends and types the code, or just opens the link.'}
+        {said ? t(said) : t('Send the code or the link. A friend opens Play with friends and types the code, or just opens the link.')}
       </small>
     </div>
   );
@@ -147,7 +150,7 @@ function ShareCode({ link }: { link: MpLink }) {
 function Line({ rec }: { rec: CareerRecord }) {
   return (
     <span className="mp-line">
-      <b>{idx(rec)}</b> index · peak {Math.round(rec.peak)} · {rec.titles} {rec.titles === 1 ? 'title' : 'titles'} · {rec.allStars} All-Star · {rec.mvps} MVP
+      <b>{idx(rec)}</b> {t('index')} · {t('peak {n}', { n: Math.round(rec.peak) })} · {rec.titles === 1 ? t('1 title') : t('{n} titles', { n: rec.titles })} · {rec.allStars} All-Star · {rec.mvps} MVP
     </span>
   );
 }
@@ -155,7 +158,7 @@ function Line({ rec }: { rec: CareerRecord }) {
 const prospectText = (c: Challenge): string => {
   const i = c.prospect.input;
   const arch = ARCHETYPES[i.pos]?.[i.archetype]?.name ?? '';
-  return `${i.name}, #${i.number} · ${NAMES.pos[i.pos]} · ${arch} · focus ${i.focus.map((k) => NAMES.attr[k]).join(' and ')}`;
+  return `${i.name}, #${i.number} · ${NAMES.pos[i.pos]} · ${arch} · ${t('focus {list}', { list: both(i.focus.map((k) => NAMES.attr[k])) })}`;
 };
 
 /** Round 35 (owner: "try to make a chat below the leaderboard so that the users can communicate"):
@@ -189,20 +192,20 @@ function MpChat({ mp, room, code, compact }: { mp: Multiplayer; room: Room; code
       sfx('sent');
       if (recordMp('chat')) achievementsNow();
       void pull();
-    } else setErr(r === 'busy' ? 'One line every few seconds.' : r === 'missing' ? 'Only the people in it can talk here.' : MP_FAIL[r]);
+    } else setErr(r === 'busy' ? tx('One line every few seconds.') : r === 'missing' ? tx('Only the people in it can talk here.') : MP_FAIL[r]);
   };
   if (lines === null)
-    return <p className="small muted keep">{room === 'class' ? 'The class chat is for its members.' : 'The chat is for those who set or took this challenge.'}</p>;
+    return <p className="small muted keep">{room === 'class' ? t('The class chat is for its members.') : t('The chat is for those who set or took this challenge.')}</p>;
   return (
     <div className={`mp-chat stack${compact ? ' compact' : ''}`}>
-      <div className="kicker">{room === 'class' ? 'Class chat' : 'Challenge chat'}</div>
-      <ol className="mp-chat-lines" ref={box} aria-live="polite" aria-label="Chat">
+      <div className="kicker">{room === 'class' ? t('Class chat') : t('Challenge chat')}</div>
+      <ol className="mp-chat-lines" ref={box} aria-live="polite" aria-label={t('Chat')}>
         {lines === undefined ? (
-          <li className="muted">Loading…</li>
+          <li className="muted">{t('Loading…')}</li>
         ) : lines === 'error' ? (
-          <li className="muted">{MP_FAIL.error}</li>
+          <li className="muted">{t(MP_FAIL.error)}</li>
         ) : lines.length === 0 ? (
-          <li className="muted">No one has said anything yet.</li>
+          <li className="muted">{t('No one has said anything yet.')}</li>
         ) : (
           lines.map((l) =>
             // round 35: class news, in the game's voice
@@ -212,19 +215,19 @@ function MpChat({ mp, room, code, compact }: { mp: Multiplayer; room: Room; code
               </li>
             ) : (
               <li key={l.id} className={l.mine ? 'mine' : undefined}>
-                <b>{l.mine ? 'You' : l.name}</b> <span>{l.body}</span> <small className="muted">{ago(l.at)}</small>
+                <b>{l.mine ? t('You') : l.name}</b> <span>{l.body}</span> <small className="muted">{ago(l.at)}</small>
               </li>
             ),
           )
         )}
       </ol>
       <div className="row mp-chat-say" style={{ gap: 6 }}>
-        <input aria-label="Say something" maxLength={CHAT_MAX} value={text} placeholder={username() ? `Say something as ${username()}` : 'Say something'} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && void say()} />
+        <input aria-label={t('Say something')} maxLength={CHAT_MAX} value={text} placeholder={username() ? t('Say something as {name}', { name: username() }) : t('Say something')} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && void say()} />
         <button className="btn small" disabled={!text.trim() || sending} onClick={() => void say()}>
-          Send
+          {t('Send')}
         </button>
       </div>
-      {err && <small style={{ color: 'var(--bad)' }}>{err}</small>}
+      {err && <small style={{ color: 'var(--bad)' }}>{t(err)}</small>}
     </div>
   );
 }
@@ -242,13 +245,13 @@ function ChallengeView({ mp, code, back }: { mp: Multiplayer; code: string; back
       live = false;
     };
   }, [mp, code]);
-  if (c === undefined) return <p className="muted">Looking up {code}…</p>;
+  if (c === undefined) return <p className="muted">{t('Looking up {code}…', { code })}</p>;
   if (c === null || c === 'error')
     return (
       <section className="card stack">
-        <p>{c === null ? MP_FAIL.missing : MP_FAIL.error}</p>
+        <p>{t(c === null ? MP_FAIL.missing : MP_FAIL.error)}</p>
         <button className="btn ghost" onClick={back}>
-          Back
+          {t('Back')}
         </button>
       </section>
     );
@@ -257,22 +260,22 @@ function ChallengeView({ mp, code, back }: { mp: Multiplayer; code: string; back
   return (
     <section className="stack">
       <section className="card stack mp-challenge">
-        <div className="kicker">{c.mine ? 'Your challenge' : `${c.name}’s challenge`} · {ago(c.at)}</div>
+        <div className="kicker">{c.mine ? t('Your challenge') : t('{name}’s challenge', { name: c.name })} · {ago(c.at)}</div>
         <div className="sec-title">{c.prospect.input.name}</div>
         <p className="small">{prospectText(c)}</p>
-        <p className="small muted desc">The same seed and the same start page: the same high school, the same first tryout, the same league around him. What he becomes is up to the choices. A challenge career has no step back.</p>
+        <p className="small muted desc">{t('The same seed and the same start page: the same high school, the same first tryout, the same league around him. What he becomes is up to the choices. A challenge career has no step back.')}</p>
         <div className="tbl-wrap">
           <table>
             <thead>
               <tr>
                 <th className="l">#</th>
-                <th className="l">Who</th>
-                <th>Index</th>
-                <th>Peak</th>
-                <th>Titles</th>
+                <th className="l">{t('Who')}</th>
+                <th>{t('Index')}</th>
+                <th>{t('Peak')}</th>
+                <th>{t('Titles')}</th>
                 <th>All-Star</th>
                 <th>MVP</th>
-                <th className="l">Verdict</th>
+                <th className="l">{t('Verdict')}</th>
               </tr>
             </thead>
             <tbody>
@@ -281,8 +284,8 @@ function ChallengeView({ mp, code, back }: { mp: Multiplayer; code: string; back
                   <td className="l">{i + 1}</td>
                   <td className="l">
                     {r.name}
-                    {r.maker ? ' (set it)' : ''}
-                    {r.mine ? ' · you' : ''}
+                    {r.maker ? ` (${t('set it')})` : ''}
+                    {r.mine ? ` · ${t('you')}` : ''}
                   </td>
                   <td>{idx(r.rec)}</td>
                   <td>{Math.round(r.rec.peak)}</td>
@@ -298,20 +301,20 @@ function ChallengeView({ mp, code, back }: { mp: Multiplayer; code: string; back
         <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
           {playable && (
             <button className="btn" disabled={career} onClick={() => (sfx('versus'), startChallenge(c))}>
-              {c.answers.some((a) => a.mine) ? 'Play it again (your best counts)' : 'Play this prospect'}
+              {c.answers.some((a) => a.mine) ? t('Play it again (your best counts)') : t('Play this prospect')}
             </button>
           )}
           <button className="btn ghost" onClick={back}>
-            Back
+            {t('Back')}
           </button>
         </div>
-        {playable && career && <p className="small muted keep">Finish or leave the career you are playing first (New career in Settings), then come back.</p>}
+        {playable && career && <p className="small muted keep">{t('Finish or leave the career you are playing first (New career in Settings), then come back.')}</p>}
       </section>
       <section className="card stack">
         <MpChat mp={mp} room="challenge" code={c.code} />
       </section>
       <section className="card stack">
-        <div className="sec-title">Send it on</div>
+        <div className="sec-title">{t('Send it on')}</div>
         <ShareCode link={{ kind: 'challenge', code: c.code }} />
       </section>
     </section>
@@ -334,29 +337,29 @@ function Challenges({ mp, open, setOpen }: { mp: Multiplayer; open: string | nul
   return (
     <section className="stack">
       <section className="card stack">
-        <div className="sec-title">Got a code?</div>
-        <CodeEntry label="Open the challenge" onOpen={setOpen} />
-        <p className="small muted desc">To make one: finish a Regular guy career, then press Challenge a friend on its last page.</p>
+        <div className="sec-title">{t('Got a code?')}</div>
+        <CodeEntry label={t('Open the challenge')} onOpen={setOpen} />
+        <p className="small muted desc">{t('To make one: finish a Regular guy career, then press Challenge a friend on its last page.')}</p>
       </section>
       <section className="card stack">
         <div className="sec-title with-icon">
           <Icon name="live" size={24} />
-          Quick match
+          {t('Quick match')}
         </div>
-        <p className="small muted desc">Other players’ challenges from the last 30 days, the least answered first.</p>
+        <p className="small muted desc">{t('Other players’ challenges from the last 30 days, the least answered first.')}</p>
         {quick === null ? (
-          <p className="muted">Loading…</p>
+          <p className="muted">{t('Loading…')}</p>
         ) : quick === 'error' ? (
-          <p className="muted">{MP_FAIL.error}</p>
+          <p className="muted">{t(MP_FAIL.error)}</p>
         ) : quick.length === 0 ? (
-          <p className="muted">No open challenges right now. Make the first one.</p>
+          <p className="muted">{t('No open challenges right now. Make the first one.')}</p>
         ) : (
           <ul className="mp-list">
             {quick.map((q) => (
               <li key={q.code}>
                 <button className="mp-row" onClick={() => setOpen(q.code)}>
                   <span>
-                    <b>{q.rec.name}</b> <small className="muted">by {q.name} · {ago(q.at)} · {q.answers} {q.answers === 1 ? 'answer' : 'answers'}</small>
+                    <b>{q.rec.name}</b> <small className="muted">{t('by {name}', { name: q.name })} · {ago(q.at)} · {q.answers === 1 ? t('1 answer') : t('{n} answers', { n: q.answers })}</small>
                   </span>
                   <Line rec={q.rec} />
                 </button>
@@ -367,7 +370,7 @@ function Challenges({ mp, open, setOpen }: { mp: Multiplayer; open: string | nul
       </section>
       {mine && mine !== 'error' && mine.length > 0 && (
         <section className="card stack">
-          <div className="sec-title">Yours</div>
+          <div className="sec-title">{t('Yours')}</div>
           <ul className="mp-list">
             {mine.map((c) => {
               const best = [...c.answers].sort((a, b) => mpScore(b.rec) - mpScore(a.rec))[0];
@@ -375,9 +378,9 @@ function Challenges({ mp, open, setOpen }: { mp: Multiplayer; open: string | nul
                 <li key={c.code}>
                   <button className="mp-row" onClick={() => setOpen(c.code)}>
                     <span>
-                      <b>{c.rec.name}</b> <small className="muted">{c.mine ? 'you set it' : `${c.name}’s`} · {c.code} · {c.answers.length} {c.answers.length === 1 ? 'answer' : 'answers'}</small>
+                      <b>{c.rec.name}</b> <small className="muted">{c.mine ? t('you set it') : t('{name}’s', { name: c.name })} · {c.code} · {c.answers.length === 1 ? t('1 answer') : t('{n} answers', { n: c.answers.length })}</small>
                     </span>
-                    <small>{best ? `Best answer: ${best.name}, ${idx(best.rec)} against ${idx(c.rec)}` : 'No answers yet'}</small>
+                    <small>{best ? t('Best answer: {name}, {score} against {theirs}', { name: best.name, score: idx(best.rec), theirs: idx(c.rec) }) : t('No answers yet')}</small>
                   </button>
                 </li>
               );
@@ -423,13 +426,13 @@ function ClassView({ mp, code, back }: { mp: Multiplayer; code: string; back: ()
     if (k && k !== 'error' && k.members.some((m) => m.mine && m.reacts?.some((r) => r.e === 'crown')) && recordMp('crowned', k.code)) achievementsNow();
   }, [k, table]);
   const years = useMemo(() => (k && k !== 'error' ? classYears(k) : []), [k]);
-  if (k === undefined) return <p className="muted">Looking up {code}…</p>;
+  if (k === undefined) return <p className="muted">{t('Looking up {code}…', { code })}</p>;
   if (k === null || k === 'error')
     return (
       <section className="card stack">
-        <p>{k === null ? MP_FAIL.missing : MP_FAIL.error}</p>
+        <p>{t(k === null ? MP_FAIL.missing : MP_FAIL.error)}</p>
         <button className="btn ghost" onClick={back}>
-          Back
+          {t('Back')}
         </button>
       </section>
     );
@@ -441,83 +444,83 @@ function ClassView({ mp, code, back }: { mp: Multiplayer; code: string; back: ()
     <section className="stack">
       <section className="card stack">
         <div className="kicker">
-          Draft class · {k.members.length} of {CLASS_MAX} · started {ago(k.at)}
+          {t('Draft class · {n} of {max} · started {when}', { n: k.members.length, max: CLASS_MAX, when: ago(k.at) })}
         </div>
         <div className="sec-title">{k.name}</div>
-        <p className="small muted desc">Up to twelve friends, each his college’s first option, all projected in the first round of the same NBA draft: every career here starts on draft night, on one seed. Each season posts its line when it ends, and each finished career its card.</p>
+        <p className="small muted desc">{t('Up to twelve friends, each his college’s first option, all projected in the first round of the same NBA draft: every career here starts on draft night, on one seed. Each season posts its line when it ends, and each finished career its card.')}</p>
         <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
           {canJoin && (
             <button className="btn" disabled={career} onClick={() => (sfx('roll'), setDraft({ code: k.code, name: k.name }))}>
-              {me ? 'Start your career in it' : 'Join with a new career'}
+              {me ? t('Start your career in it') : t('Join with a new career')}
             </button>
           )}
           <button className="btn ghost" onClick={back}>
-            Back
+            {t('Back')}
           </button>
         </div>
-        {canJoin && career && <p className="small muted keep">Finish or leave the career you are playing first (New career in Settings), then come back.</p>}
-        {me && me.seasons.length > 0 && !me.rec && <p className="small muted keep">Your career in this class carries on from Continue on the start page.</p>}
+        {canJoin && career && <p className="small muted keep">{t('Finish or leave the career you are playing first (New career in Settings), then come back.')}</p>}
+        {me && me.seasons.length > 0 && !me.rec && <p className="small muted keep">{t('Your career in this class carries on from Continue on the start page.')}</p>}
       </section>
       <ReunionNight k={k} />
       <section className="card stack">
         <div className="sec-title with-icon">
           <Icon name="podium" size={24} />
-          Standings
+          {t('Standings')}
         </div>
-        <p className="small muted desc">By the best rating so far, then the honours. A finished career counts its card. Tap a friend to watch his career season by season. Send one classmate a rivalry; when he sends one back, you are rivals, and your teams’ meetings become rival nights.</p>
-        {rivalErr && <p className="small" style={{ color: 'var(--bad)' }}>{rivalErr}</p>}
+        <p className="small muted desc">{t('By the best rating so far, then the honours. A finished career counts its card. Tap a friend to watch his career season by season. Send one classmate a rivalry; when he sends one back, you are rivals, and your teams’ meetings become rival nights.')}</p>
+        {rivalErr && <p className="small" style={{ color: 'var(--bad)' }}>{t(rivalErr)}</p>}
         <div className="tbl-wrap">
           <table>
             <thead>
               <tr>
                 <th className="l">#</th>
-                <th className="l">Friend</th>
-                <th className="l">Player</th>
-                <th className="l">Now</th>
-                <th>Peak</th>
+                <th className="l">{t('Friend')}</th>
+                <th className="l">{t('Player')}</th>
+                <th className="l">{t('Now')}</th>
+                <th>{t('Peak')}</th>
                 <th>NBA</th>
                 <th>All-Star</th>
                 <th>MVP</th>
-                <th>Titles</th>
-                {me && <th className="l">Rival</th>}
+                <th>{t('Titles')}</th>
+                {me && <th className="l">{t('Rival')}</th>}
               </tr>
             </thead>
             <tbody>
-              {table.map((t, i) => {
-                const last = t.m.seasons[t.m.seasons.length - 1];
-                const picked = me?.rival === t.m.id;
-                const picksMe = !!me && t.m.rival === me.id;
+              {table.map((row, i) => {
+                const last = row.m.seasons[row.m.seasons.length - 1];
+                const picked = me?.rival === row.m.id;
+                const picksMe = !!me && row.m.rival === me.id;
                 return (
-                  <tr key={t.m.id} className={t.m.mine ? 'me' : undefined}>
+                  <tr key={row.m.id} className={row.m.mine ? 'me' : undefined}>
                     <td className="l">{i + 1}</td>
                     <td className="l">
-                      <button className="link-btn" onClick={() => setWatch(t.m.id)} aria-label={`Watch ${t.m.mine ? 'your' : `${t.m.name}’s`} career`}>
-                        {t.m.name}
+                      <button className="link-btn" onClick={() => setWatch(row.m.id)} aria-label={row.m.mine ? t('Watch your career') : t('Watch {name}’s career', { name: row.m.name })}>
+                        {row.m.name}
                       </button>
-                      {t.m.mine ? ' · you' : ''}
+                      {row.m.mine ? ` · ${t('you')}` : ''}
                     </td>
-                    <td className="l">{t.m.rec?.name ?? last?.pn ?? '—'}</td>
-                    <td className="l">{t.m.rec ? `Retired · ${t.m.rec.tier}` : last ? `${LEVEL_SHORT[last.lv] ?? last.lv} · ${last.team} · age ${last.age}` : 'Not started'}</td>
-                    <td>{t.peak || '—'}</td>
-                    <td>{t.nba}</td>
-                    <td>{t.allStars}</td>
-                    <td>{t.mvps}</td>
-                    <td>{t.titles}</td>
+                    <td className="l">{row.m.rec?.name ?? last?.pn ?? '—'}</td>
+                    <td className="l">{row.m.rec ? `${t('Retired')} · ${row.m.rec.tier}` : last ? `${LEVEL_SHORT[last.lv] ?? last.lv} · ${last.team} · ${t('age {n}', { n: last.age })}` : t('Not started')}</td>
+                    <td>{row.peak || '—'}</td>
+                    <td>{row.nba}</td>
+                    <td>{row.allStars}</td>
+                    <td>{row.mvps}</td>
+                    <td>{row.titles}</td>
                     {me && (
                       <td className="l">
-                        {t.m.mine ? null : picked && picksMe ? (
-                          <span className="tag accent">Rivals</span>
+                        {row.m.mine ? null : picked && picksMe ? (
+                          <span className="tag accent">{t('Rivals')}</span>
                         ) : picksMe ? (
-                          <button className="btn small" onClick={() => void pickRival(t.m.id)}>
-                            Accept the rivalry
+                          <button className="btn small" onClick={() => void pickRival(row.m.id)}>
+                            {t('Accept the rivalry')}
                           </button>
                         ) : picked ? (
                           <button className="btn ghost small" onClick={() => void pickRival(null)}>
-                            Sent · take back
+                            {t('Sent · take back')}
                           </button>
                         ) : (
-                          <button className="btn ghost small" onClick={() => void pickRival(t.m.id)}>
-                            Send a rivalry
+                          <button className="btn ghost small" onClick={() => void pickRival(row.m.id)}>
+                            {t('Send a rivalry')}
                           </button>
                         )}
                       </td>
@@ -531,13 +534,13 @@ function ClassView({ mp, code, back }: { mp: Multiplayer; code: string; back: ()
       </section>
       {years.length > 0 && (
         <section className="card stack">
-          <div className="sec-title">Year by year</div>
-          <p className="small muted desc">Each friend’s season, with the best of the class that year marked.</p>
+          <div className="sec-title">{t('Year by year')}</div>
+          <p className="small muted desc">{t('Each friend’s season, with the best of the class that year marked.')}</p>
           <div className="tbl-wrap">
             <table className="mp-years">
               <thead>
                 <tr>
-                  <th className="l">Year</th>
+                  <th className="l">{t('Year')}</th>
                   {k.members.map((m) => (
                     <th key={m.id} className="l">
                       {m.name}
@@ -561,7 +564,7 @@ function ClassView({ mp, code, back }: { mp: Multiplayer; code: string; back: ()
                               {s.ovr} · {s.pts} pts {s.reb} reb {s.ast} ast
                               {s.aw.length ? ` · ${s.aw.slice(0, 2).join(', ')}` : ''}
                             </small>
-                            {y.best === m.id && <small className="mp-best-tag">Best of the class</small>}
+                            {y.best === m.id && <small className="mp-best-tag">{t('Best of the class')}</small>}
                             <ReactCounts m={m} year={y.year} />
                           </span>
                         ) : (
@@ -582,8 +585,8 @@ function ClassView({ mp, code, back }: { mp: Multiplayer; code: string; back: ()
         </section>
       )}
       <section className="card stack">
-        <div className="sec-title">Invite friends</div>
-        {k.members.length < CLASS_MAX ? <ShareCode link={{ kind: 'class', code: k.code }} /> : <p className="small muted keep">The class is full.</p>}
+        <div className="sec-title">{t('Invite friends')}</div>
+        {k.members.length < CLASS_MAX ? <ShareCode link={{ kind: 'class', code: k.code }} /> : <p className="small muted keep">{t('The class is full.')}</p>}
       </section>
     </section>
   );
@@ -611,10 +614,10 @@ function Classes({ mp, open, setOpen, name }: { mp: Multiplayer; open: string | 
         <li key={x.code}>
           <button className="mp-row" onClick={() => setOpen(x.code)}>
             <span>
-              <b>{x.name}</b> <small className="muted">{x.code} · started {ago(x.at)}</small>
+              <b>{x.name}</b> <small className="muted">{x.code} · {t('started {when}', { when: ago(x.at) })}</small>
             </span>
             <small>
-              {x.n} of {CLASS_MAX} players
+              {t('{n} of {max} players', { n: x.n, max: CLASS_MAX })}
             </small>
           </button>
         </li>
@@ -624,33 +627,33 @@ function Classes({ mp, open, setOpen, name }: { mp: Multiplayer; open: string | 
   return (
     <section className="stack">
       <section className="card stack">
-        <div className="sec-title">Start a class</div>
-        <p className="small muted desc">Name it, make your player, and send the code: up to twelve friends, first options from their colleges, start on the same draft night.</p>
+        <div className="sec-title">{t('Start a class')}</div>
+        <p className="small muted desc">{t('Name it, make your player, and send the code: up to twelve friends, first options from their colleges, start on the same draft night.')}</p>
         <div className="row mp-classes-new" style={{ gap: 8 }}>
-          <input aria-label="Name of the class" maxLength={40} value={title} placeholder="Class of the rooftop" onChange={(e) => setTitle(cleanUsername(e.target.value, 40))} />
+          <input aria-label={t('Name of the class')} maxLength={40} value={title} placeholder={t('Class of the rooftop')} onChange={(e) => setTitle(cleanUsername(e.target.value, 40))} />
           <button className="btn" disabled={!title.trim() || isRude(title) || !name || career} onClick={() => (sfx('confirm'), setDraft({ name: title.trim() }))}>
-            Make your player
+            {t('Make your player')}
           </button>
         </div>
-        {career && <p className="small muted keep">Finish or leave the career you are playing first (New career in Settings).</p>}
+        {career && <p className="small muted keep">{t('Finish or leave the career you are playing first (New career in Settings).')}</p>}
       </section>
       <section className="card stack">
-        <div className="sec-title">Got a code?</div>
-        <CodeEntry label="Open the class" onOpen={setOpen} />
+        <div className="sec-title">{t('Got a code?')}</div>
+        <CodeEntry label={t('Open the class')} onOpen={setOpen} />
       </section>
       {mine && mine !== 'error' && mine.length > 0 && (
         <section className="card stack">
-          <div className="sec-title">Yours</div>
+          <div className="sec-title">{t('Yours')}</div>
           {list(mine)}
         </section>
       )}
       <section className="card stack">
         <div className="sec-title with-icon">
           <Icon name="live" size={24} />
-          Quick match
+          {t('Quick match')}
         </div>
-        <p className="small muted desc">Classes from the last two weeks with a seat left.</p>
-        {quick === null ? <p className="muted">Loading…</p> : quick === 'error' ? <p className="muted">{MP_FAIL.error}</p> : quick.length === 0 ? <p className="muted">No open classes right now. Start one.</p> : list(quick)}
+        <p className="small muted desc">{t('Classes from the last two weeks with a seat left.')}</p>
+        {quick === null ? <p className="muted">{t('Loading…')}</p> : quick === 'error' ? <p className="muted">{t(MP_FAIL.error)}</p> : quick.length === 0 ? <p className="muted">{t('No open classes right now. Start one.')}</p> : list(quick)}
       </section>
     </section>
   );
@@ -676,37 +679,37 @@ export function MultiplayerPage() {
       <PageTop trail={['Play with friends']} back={() => (openMp(null), setPage(null))} />
       <section className="stack stage-in">
         <div>
-          <div className="kicker">Multiplayer · Regular guy</div>
+          <div className="kicker">{t('Multiplayer')} · Regular guy</div>
           <h1 className="hub-title with-icon">
             <Icon name="versus" size={40} />
             Play with friends
           </h1>
-          <p className="small muted desc">Two ways to play with friends, and nobody has to be on at the same time.</p>
+          <p className="small muted desc">{t('Two ways to play with friends, and nobody has to be on at the same time.')}</p>
         </div>
         {mp === null ? (
-          <p className="muted">Connecting…</p>
+          <p className="muted">{t('Connecting…')}</p>
         ) : mp === false ? (
           <section className="card stack">
-            <p className="keep">Playing with friends needs the game’s own server, which this page cannot reach. It works on the website and in the itch.io download.</p>
+            <p className="keep">{t('Playing with friends needs the game’s own server, which this page cannot reach. It works on the website and in the itch.io download.')}</p>
             <a className="btn" href={SITE} target="_blank" rel="noreferrer">
-              Open the website
+              {t('Open the website')}
             </a>
           </section>
         ) : (
           <>
             {mp.kind === 'local' && <p className="small muted">Dev deck: a stand-in on this device with house players; nothing reaches the real server.</p>}
             <UsernameBox onSet={setName} />
-            <div className="seg" role="group" aria-label="Kind of game" data-tour="mp-tabs">
+            <div className="seg" role="group" aria-label={t('Kind of game')} data-tour="mp-tabs">
               <button className="with-icon" aria-pressed={tab === 'challenge'} onClick={() => (setTab('challenge'), openMp(null))}>
                 <Icon name="versus" size={20} />
-                Challenge a friend
+                {t('Challenge a friend')}
               </button>
               <button className="with-icon" data-mp-tab="class" aria-pressed={tab === 'class'} onClick={() => (setTab('class'), openMp(null))}>
                 <Icon name="draftclass" size={20} />
-                Draft class
+                {t('Draft class')}
               </button>
             </div>
-            {!name && <p className="small">Pick your username first: it goes beside everything you post.</p>}
+            {!name && <p className="small">{t('Pick your username first: it goes beside everything you post.')}</p>}
             {tab === 'challenge' ? <Challenges mp={mp} open={open} setOpen={setOpen} /> : <Classes mp={mp} open={open} setOpen={setOpen} name={name} />}
           </>
         )}
@@ -743,15 +746,16 @@ function FriendsLine({ g, k }: { g: GameState; k: DraftClass }) {
         <p className="small keep with-icon">
           <Icon name="rival" size={18} />
           <span>
-            Rival: <b>{rival.name}</b> ({pn(rival)}) · {rec.w}–{rec.l} in rival nights{rec.sw + rec.sl > 0 ? ` · ${rec.sw}–${rec.sl} in playoff series` : ''}
+            {t('Rival:')} <b>{rival.name}</b> ({pn(rival)}) · {t('{w}–{l} in rival nights', { w: rec.w, l: rec.l })}
+            {rec.sw + rec.sl > 0 ? ` · ${t('{w}–{l} in playoff series', { w: rec.sw, l: rec.sl })}` : ''}
           </span>
         </p>
       )}
       {asks.map((m) => (
         <p key={m.id} className="small keep">
-          <b>{m.name}</b> sent you a rivalry.{' '}
+          <b>{m.name}</b> {t('sent you a rivalry.')}{' '}
           <button className="btn ghost small" onClick={() => openMp({ kind: 'class', code: k.code })}>
-            Answer it
+            {t('Answer it')}
           </button>
         </p>
       ))}
@@ -759,7 +763,7 @@ function FriendsLine({ g, k }: { g: GameState; k: DraftClass }) {
         <p className="small keep with-icon">
           <Icon name="draftclass" size={18} />
           <span>
-            {team.length > 1 ? 'A Big Three' : 'A duo'} of friends: {team.map((x) => `${x.f.pn} (${x.f.name})`).join(' and ')}
+            {team.length > 1 ? t('A Big Three of friends: {list}', { list: both(team.map((x) => `${x.f.pn} (${x.f.name})`)) }) : t('A duo of friends: {list}', { list: both(team.map((x) => `${x.f.pn} (${x.f.name})`)) })}
           </span>
         </p>
       )}
@@ -809,19 +813,19 @@ export function MpBoard({ g }: { g: GameState }) {
     rows.push({ id: 'set', name: c.name, score: mpScore(c.rec), peak: c.rec.peak, me: false, done: true });
     for (const a of c.answers) if (!a.mine) rows.push({ id: a.id, name: a.name, score: mpScore(a.rec), peak: a.rec.peak, me: false, done: true });
   }
-  if (kind === 'challenge') rows.push({ id: 'me', name: username() || 'You', score: mpScore(now), peak: now.peak, me: true, done: g.step === 'retired' });
+  if (kind === 'challenge') rows.push({ id: 'me', name: username() || t('You'), score: mpScore(now), peak: now.peak, me: true, done: g.step === 'retired' });
   rows.sort((a, b) => b.score - a.score);
   // the class, with this career's seasons as they are on this device
   const klass: DraftClass | null = kind === 'class' && k ? { ...k, members: k.members.map((m) => (m.mine ? { ...m, seasons: g.history.map((h) => seasonLine(h, g.player.name)), rec: g.step === 'retired' ? now : null } : m)) } : null;
   const table = klass ? standings(klass) : [];
   return (
-    <section className="card stack mp-board" aria-label={kind === 'challenge' ? 'Challenge leaderboard' : 'Draft class leaderboard'}>
+    <section className="card stack mp-board" aria-label={kind === 'challenge' ? t('Challenge leaderboard') : t('Draft class leaderboard')}>
       <div className="sec-title with-icon">
         <Icon name={kind === 'challenge' ? 'versus' : 'draftclass'} size={24} />
-        {kind === 'challenge' ? `Challenge ${code}` : (k?.name ?? `Class ${code}`)}
+        {kind === 'challenge' ? t('Challenge {code}', { code }) : (k?.name ?? t('Class {code}', { code }))}
       </div>
       {!mp ? (
-        <p className="small muted keep">The board lives on the game’s server: open the game on the website to see it.</p>
+        <p className="small muted keep">{t('The board lives on the game’s server: open the game on the website to see it.')}</p>
       ) : kind === 'challenge' ? (
         <ol className="mp-board-list">
           {(c ? rows : rows.filter((r) => r.me)).map((r, i) => (
@@ -829,7 +833,7 @@ export function MpBoard({ g }: { g: GameState }) {
               <b>{i + 1}</b>
               <span>
                 {r.name}
-                {r.id === 'set' ? <small> set it</small> : r.me && !r.done ? <small> so far</small> : null}
+                {r.id === 'set' ? <small> {t('set it')}</small> : r.me && !r.done ? <small> {t('so far')}</small> : null}
               </span>
               <span className="num">{Math.round(r.score)}</span>
             </li>
@@ -837,26 +841,28 @@ export function MpBoard({ g }: { g: GameState }) {
         </ol>
       ) : (
         <ol className="mp-board-list">
-          {table.map((t, i) => (
-            <li key={t.m.id} className={t.m.mine ? 'me' : undefined}>
+          {table.map((row, i) => (
+            <li key={row.m.id} className={row.m.mine ? 'me' : undefined}>
               <b>{i + 1}</b>
               <span>
-                {t.m.name}
-                {t.m.mine && !t.m.rec ? <small> so far</small> : null}
+                {row.m.name}
+                {row.m.mine && !row.m.rec ? <small> {t('so far')}</small> : null}
               </span>
               <span className="num">
-                {t.peak || '–'}
-                {t.titles ? <small> · {t.titles}× ring</small> : t.allStars ? <small> · {t.allStars}× AS</small> : null}
+                {row.peak || '–'}
+                {row.titles ? <small> · {t('{n}× ring', { n: row.titles })}</small> : row.allStars ? <small> · {row.allStars}× AS</small> : null}
               </span>
             </li>
           ))}
-          {!k && <li className="muted">Loading the class…</li>}
+          {!k && <li className="muted">{t('Loading the class…')}</li>}
         </ol>
       )}
       {kind === 'class' && k && <FriendsLine g={g} k={k} />}
-      <p className="small muted keep">{kind === 'challenge' ? 'By career index. ' : 'By best rating so far, then honours. '}Careers with friends count here, not on the community’s leaderboards.</p>
+      <p className="small muted keep">
+        {kind === 'challenge' ? t('By career index.') : t('By best rating so far, then honours.')} {t('Careers with friends count here, not on the community’s leaderboards.')}
+      </p>
       <button className="btn ghost small" onClick={() => openMp({ kind, code })}>
-        The whole {kind === 'challenge' ? 'challenge' : 'class'}
+        {kind === 'challenge' ? t('The whole challenge') : t('The whole class')}
       </button>
       {mp && <MpChat mp={mp} room={kind} code={code} compact />}
     </section>
@@ -913,43 +919,47 @@ export function RetirementMp({ g, rec }: { g: GameState; rec: CareerRecord }) {
         <div className="stack" style={{ gap: 6 }}>
           {theirs && target !== null ? (
             <p className="lede">
-              {mine > target ? `You beat ${theirs.name}’s career: ${mine} to ${target}.` : mine === target ? `Dead even with ${theirs.name}: ${mine} each.` : `${theirs.name} still leads: ${target} to your ${mine}.`}
+              {mine > target
+                ? t('You beat {name}’s career: {mine} to {theirs}.', { name: theirs.name, mine, theirs: target })
+                : mine === target
+                  ? t('Dead even with {name}: {mine} each.', { name: theirs.name, mine })
+                  : t('{name} still leads: {theirs} to your {mine}.', { name: theirs.name, theirs: target, mine })}
             </p>
           ) : (
-            <p className="small">Your answer to challenge {answering} is on its way.</p>
+            <p className="small">{t('Your answer to challenge {code} is on its way.', { code: answering })}</p>
           )}
           <button className="btn ghost small" onClick={() => openMp({ kind: 'challenge', code: answering })}>
-            See the challenge
+            {t('See the challenge')}
           </button>
         </div>
       )}
       {g.mp?.klass && (
         <div className="row" style={{ gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-          <span className="small">The card goes to your draft class.</span>
+          <span className="small">{t('The card goes to your draft class.')}</span>
           <button className="btn ghost small" onClick={() => openMp({ kind: 'class', code: g.mp!.klass! })}>
-            See the class
+            {t('See the class')}
           </button>
         </div>
       )}
-      {ranQuick(g) && !answering && <p className="small muted">This career ran with Fast break or Sim, so it can’t be sent as a challenge: a friend answers at full pace, with neither.</p>}
+      {ranQuick(g) && !answering && <p className="small muted">{t('This career ran with Fast break or Sim, so it can’t be sent as a challenge: a friend answers at full pace, with neither.')}</p>}
       {canChallenge(g) && !answering && (
         <div className="stack" style={{ gap: 8 }}>
           {g.mp?.made ? (
             <ShareCode link={{ kind: 'challenge', code: g.mp.made }} />
           ) : (
             <>
-              <p className="small">Challenge a friend: they play this same prospect from the same start, and both cards go side by side.</p>
+              <p className="small">{t('Challenge a friend: they play this same prospect from the same start, and both cards go side by side.')}</p>
               {!name ? (
                 <UsernameBox onSet={setName} />
               ) : (
                 <div className="row" style={{ gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                   <button className="btn" data-tour="mp-challenge" disabled={busy} onClick={() => void make()}>
-                    Challenge a friend
+                    {t('Challenge a friend')}
                   </button>
-                  <small className="muted">as {name}</small>
+                  <small className="muted">{t('as {name}', { name })}</small>
                 </div>
               )}
-              {err && <p className="small" style={{ color: 'var(--bad)' }}>{err}</p>}
+              {err && <p className="small" style={{ color: 'var(--bad)' }}>{t(err)}</p>}
             </>
           )}
         </div>

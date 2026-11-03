@@ -3,6 +3,7 @@
 // voting from the season just played.
 
 import type { GameState } from '../types';
+import { palsOn } from './friends';
 import { mvpLadder, type MvpLadder } from '../awards/awards';
 import { sumLines } from '../sim/statModel';
 import { valuePerGame } from '../sim/statModel';
@@ -39,7 +40,7 @@ export function liveMvpRace(s: GameState): (MvpLadder & { final: boolean }) | nu
     MVP_RACE.top,
     projectedLines(s.nba, s.teamId, season.roleRank),
     // round 35: classmates in the race, at their share of the games so far (career/friendLeague.ts)
-    s.mp?.klass ? friendCandidates(s, s.nba, true) : undefined,
+    palsOn(s) ? friendCandidates(s, s.nba, true) : undefined,
   );
   if (userOvr(s) < MVP_RACE.fromOvr && (ladder.userRank === null || ladder.userRank > MVP_RACE.top)) return null;
   return { ...ladder, final: false };

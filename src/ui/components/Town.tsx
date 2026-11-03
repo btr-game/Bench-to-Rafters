@@ -6,7 +6,7 @@
 // is at the door the moment it opens. Which places stand where: ui/town.ts; the art: art/TownArt.tsx.
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
-import type { GameState } from '../../engine/types';
+import type { GameState, StoryRole } from '../../engine/types';
 import { achievementsNow, useStore } from '../../store';
 import { UI } from '../../content/strings';
 import { tabKey, team as teamOf } from '../selectors';
@@ -17,6 +17,7 @@ import { championships, hallOfFame } from '../../engine/awards/legacy';
 import { sfx } from '../sound';
 import { NBA_ARENAS } from '../arenas';
 import { recordPlace, recordStreet, recordWalk, runOf } from '../achievements';
+import { t } from '../../i18n';
 
 /** How big an art pixel is on screen: the street fills a computer's width up to this, and on a
  * narrow screen keeps the smallest size and pans. */
@@ -36,7 +37,12 @@ const LEGS = {
 };
 
 function Walker({ g, color, frame, facing, scale }: { g: GameState; color: string; frame: keyof typeof LEGS; facing: 'l' | 'r'; scale: number }) {
-  const look = lookOf(g.player.name, '#F1F3F5', g.player.wardrobe?.on);
+  return <Figure name={g.player.name} wear={g.player.wardrobe?.on} color={color} frame={frame} facing={facing} scale={scale} />;
+}
+
+/** Anyone on the street, drawn like him: the look from the name, a shirt and shorts in `color`. */
+function Figure({ name, wear, color, frame, facing, scale }: { name: string; wear?: Parameters<typeof lookOf>[2]; color: string; frame: keyof typeof LEGS; facing: 'l' | 'r'; scale: number }) {
+  const look = lookOf(name, '#F1F3F5', wear);
   const fill: Record<string, string> = { H: look.hair, S: look.skin, L: look.skin, J: color, P: color, N: '#FFFFFF', W: '#F1F3F5' };
   const rows = [...TOP, ...LEGS[frame]];
   return (
@@ -46,6 +52,23 @@ function Walker({ g, color, frame, facing, scale }: { g: GameState; color: strin
       <rect x={2} y={7} width={3} height={1} fill="#000" opacity={0.18} />
     </svg>
   );
+}
+
+/** Round 38: story mode's people on his street. The friend waits by the gym (by the arena once he
+ * plays beside him, sits behind the bench or coaches on it), the parent by the house, the rival by
+ * the arena once they share a team. The one his next chapter is with has a word to say. */
+function storyFolk(g: GameState, home: boolean, talk?: StoryRole): { who: StoryRole; name: string; at: PlaceKind; color: string }[] {
+  const st = g.story;
+  if (!st) return [];
+  const mine = teamOf(g)?.name;
+  const f = st.friend;
+  const near = (f.lv === 'NBA' && f.team === mine) || f.lv === 'OUT' || (f.lv === 'COACH' && !!st.f.friendCoach && f.team === mine);
+  const out: { who: StoryRole; name: string; at: PlaceKind; color: string }[] = [{ who: 'friend', name: st.names.friend, at: near && g.stage === 'NBA' ? 'arena' : 'gym', color: '#2F9E44' }];
+  // the family lives in his hometown: in a city of his own they come by only for their chapter
+  if (home || talk === 'parent') out.push({ who: 'parent', name: st.names.parent, at: 'house', color: '#8B5A2B' });
+  if (talk === 'sibling') out.push({ who: 'sibling', name: st.names.sibling, at: 'house', color: '#7048E8' });
+  if (st.rival && st.rival.lv === 'NBA' && st.rival.team === mine) out.push({ who: 'rival', name: st.names.rival, at: 'arena', color: '#C92A2A' });
+  return out;
 }
 
 /** Bring a card into view and ring it for a moment (the agent's office: the contract). */
@@ -78,6 +101,8 @@ export function Town({ g, fast }: { g: GameState; fast: boolean }) {
   const tm = teamOf(g);
   const banners = useMemo(() => (town.look === 'city' && tm ? championships(g).filter((c) => c.teamName === tm.name).length : 0), [g, town.look, tm]);
   const hof = g.stage === 'RETIRED' && !!hallOfFame(g);
+  const talk = g.pending[0]?.kind === 'story' ? (g.pending[0].data?.who as StoryRole | undefined) : undefined;
+  const folk = storyFolk(g, town.look === 'hometown', talk);
 
   // the street's size follows the box; a narrow screen keeps the smallest size and pans
   const box = useRef<HTMLElement>(null);
@@ -190,25 +215,28 @@ export function Town({ g, fast }: { g: GameState; fast: boolean }) {
   };
 
   return (
-    <nav ref={box} className={`town look-${town.look}`} aria-label="Main: the town" data-tour="town" style={{ height: STREET.h * scale + BAND }}>
+    <nav ref={box} className={`town look-${town.look}`} aria-label={t('Main: the town')} data-tour="town" style={{ height: STREET.h * scale + BAND }}>
       <div className="tw-street" style={{ width: streetW, height: STREET.h * scale + BAND, transform: `translateX(${off}px)`, ...timing }}>
         <div className="tw-art-wrap" style={{ width: streetW, height: STREET.h * scale }}>
           <TownArt town={town} here={here?.id ?? null} pad={pad} banners={banners} hof={hof} />
         </div>
         {slots.map((s, i) => {
-          const t = s.place.tab;
+          const tb = s.place.tab;
           const on = here?.id === s.place.id;
           // a dot on a tab with something new (the agent's office shares the Player tab's)
-          const fresh = !on && t !== tab && seen[t] !== undefined && seen[t] !== tabKey(g, t) && !s.place.spot;
+          const fresh = !on && tb !== tab && seen[tb] !== undefined && seen[tb] !== tabKey(g, tb) && !s.place.spot;
+          // round 40: the place and the tab keep their English names; the sentence around them is translated
+          const place = s.place.id === 'arena' && town.look === 'hometown' ? g.player.highSchool : s.place.name;
+          const key = tb[0].toUpperCase();
           return (
             <button
               key={s.place.id}
               ref={(el) => (buttons.current[i] = el)}
               className={`tw-place${on ? ' here' : ''}`}
               data-place={s.place.id}
-              data-tour={s.place.spot ? `place-${s.place.id}` : `tab-${t}`}
+              data-tour={s.place.spot ? `place-${s.place.id}` : `tab-${tb}`}
               aria-current={on ? 'page' : undefined}
-              title={`${s.place.id === 'arena' && town.look === 'hometown' ? g.player.highSchool : s.place.name}: ${s.place.spot ? 'your contract and money' : `the ${UI.tabs[t]} page`} (${t[0].toUpperCase()})`}
+              title={s.place.spot ? t('{place}: your contract and money ({key})', { place, key }) : t('{place}: the {tab} page ({key})', { place, tab: UI.tabs[tb], key })}
               style={{ left: s.x * scale, width: s.w * scale, height: STREET.h * scale + BAND }}
               onClick={() => go(s.place)}
               onFocus={() => setFocused(s.place.id)}
@@ -216,15 +244,27 @@ export function Town({ g, fast }: { g: GameState; fast: boolean }) {
               onKeyDown={(e) => onKey(e, i)}
             >
               {fresh && (
-                <span className="tw-new" aria-label="new">
+                <span className="tw-new" aria-label={t('new')}>
                   !
                 </span>
               )}
               <span className="tw-sign">
-                <span className="tw-name">{simple ? (s.place.spot ? 'Agent' : UI.tabs[t]) : s.place.name}</span>
-                {!simple && <span className="tw-tab">{s.place.spot ? 'Contract' : UI.tabs[t]}</span>}
+                <span className="tw-name">{simple ? (s.place.spot ? 'Agent' : UI.tabs[tb]) : s.place.name}</span>
+                {!simple && <span className="tw-tab">{s.place.spot ? 'Contract' : UI.tabs[tb]}</span>}
               </span>
             </button>
+          );
+        })}
+        {folk.map((f, i) => {
+          const slot = slots.find((x) => x.place.id === f.at);
+          if (!slot) return null;
+          // beside the door, a step further for a second person at the same place
+          const fx = slot.door + 7 + 6 * folk.slice(0, i).filter((o) => o.at === f.at).length;
+          return (
+            <div key={f.who} className="tw-folk" style={{ left: (fx - 3.5) * scale, top: (STREET.ground - 9) * scale }} aria-hidden="true">
+              {talk === f.who && <span className="tw-say">…</span>}
+              <Figure name={f.name} color={f.color} frame="stand" facing="l" scale={scale} />
+            </div>
           );
         })}
         <div className={`tw-me${walking ? ' walking' : ''}`} style={{ left: (x - 3.5) * scale, top: (STREET.ground - 9) * scale, ...timing }} aria-hidden="true">

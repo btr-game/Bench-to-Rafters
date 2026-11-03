@@ -3099,3 +3099,39 @@ td > .link-btn { min-width: 44px; text-align: left; }
 .grad-plane { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 16px; align-items: center; margin-block: 14px; }
 .grad-plane .pl-art { display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--line); background: linear-gradient(#4FA8EC, #BFE3FF 72%); image-rendering: pixelated; }
 @media (max-width: 640px) { .grad-plane { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---- round 38: story mode (the naming page, the chapter pages, the People card) ---- */
+.story-start { gap: 16px; max-width: 1000px; margin: 0 auto; width: 100%; }
+.story-hero { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 20px; align-items: center; }
+.story-cast { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.story-person { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px; align-items: start; }
+.story-person input { width: 100%; }
+.story-go { gap: 10px; align-items: center; flex-wrap: wrap; }
+.story-page { gap: 14px; }
+/* the backdrop behind the two busts: bands with hard stops (the pixel rule), one look for who it is */
+.story-stage { --sky: #F59F6B; --sky2: #FFC078; --ground: #6B6F78; --rule: #A3A9B1; display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; padding: 18px 40px 0; border-radius: 8px; overflow: hidden; background: linear-gradient(to bottom, var(--sky2) 0 22%, var(--sky) 22% 64%, var(--rule) 64% 67%, var(--ground) 67% 100%); }
+.story-page[data-who="rival"] .story-stage { --sky: #1F2A44; --sky2: #2B3A5C; --ground: #B5803F; --rule: #8A5A22; }
+.story-page[data-who="parent"] .story-stage, .story-page[data-who="sibling"] .story-stage { --sky: #E9D29A; --sky2: #F1E3C8; --ground: #8B5A2B; --rule: #5E3A1C; }
+.story-stage figure { margin: 0; line-height: 0; }
+.story-stage figure:first-child svg { transform: scaleX(-1); }
+.story-title { font-family: var(--f-display); font-size: calc(30px * var(--ts)); text-transform: uppercase; line-height: 1; }
+.story-lines p { margin: 0; font-size: calc(17px * var(--ts)); line-height: 1.55; max-width: 68ch; }
+.people { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.person { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; align-items: start; }
+.person q { quotes: '“' '”'; font-style: italic; }
+.bond-line { display: inline-flex; align-items: center; gap: 8px; }
+.bond { display: inline-flex; gap: 2px; }
+.bond i { width: 8px; height: 8px; background: var(--line); display: block; }
+.bond i.mid { width: 2px; background: var(--muted); }
+.bond i.warm { background: var(--good); }
+.bond i.cold { background: var(--bad); }
+.tw-folk { position: absolute; z-index: 2; pointer-events: none; }
+.tw-say { position: absolute; left: 50%; bottom: 100%; transform: translate(-50%, -4px); background: #FFFFFF; color: #18141C; border: 2px solid #18141C; font: 700 12px/1 var(--f-mono); padding: 2px 5px 4px; white-space: nowrap; }
+
+/* ---- round 40: languages. Korean, Chinese and Japanese read in the system's own faces (the game's
+   fonts have no glyphs for them); Korean keeps words whole at a line break ---- */
+:root:lang(ko) { --f-display: 'Big Shoulders Display', 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', sans-serif; --f-body: 'Archivo', 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif; --f-mono: 'IBM Plex Mono', 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', monospace; }
+:root:lang(ja) { --f-display: 'Big Shoulders Display', 'Hiragino Sans', 'Yu Gothic', 'Meiryo', 'Noto Sans JP', sans-serif; --f-body: 'Archivo', 'Hiragino Sans', 'Yu Gothic', 'Meiryo', 'Noto Sans JP', system-ui, sans-serif; --f-mono: 'IBM Plex Mono', 'Hiragino Sans', 'Yu Gothic', 'Noto Sans JP', monospace; }
+:root:lang(zh) { --f-display: 'Big Shoulders Display', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif; --f-body: 'Archivo', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', system-ui, sans-serif; --f-mono: 'IBM Plex Mono', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', monospace; }
+:root:lang(ko) body { word-break: keep-all; }
+.set-langs { flex-wrap: wrap; }

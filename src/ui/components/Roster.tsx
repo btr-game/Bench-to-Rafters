@@ -19,6 +19,7 @@ import { styleLeague } from '../art/Player';
 import type { League, Team } from '../../engine/types';
 import type { LeagueStory } from '../../engine/world/stories';
 import { NEWS_EFFECT } from '../../engine/career/news';
+import { t } from '../../i18n';
 
 /** A story's banner: the team's crest and the story's mark; a rivalry puts your crest against theirs. */
 function StoryArt({ x, t, me, league }: { x: LeagueStory; t?: Team; me?: Team; league?: string }) {
@@ -58,16 +59,17 @@ export function RecruitCard({ g }: { g: GameState }) {
   const five = startingFive(g);
   const duo = activeDuo(g);
   const slots = (['PG', 'SG', 'SF', 'PF', 'C'] as const).map((slot) => (slot === me.pos ? { slot, mine: true as const } : { slot, mine: false as const, x: five.find((f) => f.slot === slot)?.p }));
+  const signings = STARTERS_RECRUIT.moves - info.moves;
   return (
     <section className="card stack recruit">
       <div className="row">
         <div>
-          <div className="kicker">You are the first option</div>
-          <div className="sec-title">Build the starting five</div>
+          <div className="kicker">{t('You are the first option')}</div>
+          <div className="sec-title">{t('Build the starting five')}</div>
         </div>
         <div className="spacer" />
         <span className="small muted">
-          {Math.max(0, STARTERS_RECRUIT.moves - info.moves)} signing{STARTERS_RECRUIT.moves - info.moves === 1 ? '' : 's'} left
+          {signings === 1 ? t('1 signing left') : t('{n} signings left', { n: Math.max(0, signings) })}
         </span>
       </div>
       <div className="five">
@@ -85,7 +87,7 @@ export function RecruitCard({ g }: { g: GameState }) {
               <b>
                 {r.x.name}
                 {r.x.pos !== r.slot && <span className="muted small"> ({r.x.pos})</span>}
-                {duo?.id === r.x.id && <span className="duo-tag">Duo</span>}
+                {duo?.id === r.x.id && <span className="duo-tag">{t('Duo')}</span>}
               </b>
               <span>{Math.round(r.x.ovr)}</span>
               <span>{fmtMoney(r.x.salary)}</span>
@@ -95,20 +97,20 @@ export function RecruitCard({ g }: { g: GameState }) {
       </div>
       <div className="five-outlook">
         <div>
-          <span className="kicker">Your team now</span>
+          <span className="kicker">{t('Your team now')}</span>
           <b>
-            {ordinal(info.rank)} of 30 · {outlookOf(info.rank)}
+            {t('{rank} of 30', { rank: ordinal(info.rank) })} · {outlookOf(info.rank)}
           </b>
         </div>
         {info.before && (
           <div className={`five-delta${info.strength > info.before.strength ? ' up' : ' down'}`}>
-            <span className="kicker">This summer</span>
+            <span className="kicker">{t('This summer')}</span>
             <b>
               {ordinal(info.before.rank)} → {ordinal(info.rank)}
             </b>
             <span className="small">
-              Team strength {info.before.strength.toFixed(1)} → {info.strength.toFixed(1)} ({info.strength >= info.before.strength ? '+' : ''}
-              {(info.strength - info.before.strength).toFixed(1)}){info.joined.length ? ` · new: ${info.joined.join(', ')}` : ''}
+              {t('Team strength {from} → {to} ({change})', { from: info.before.strength.toFixed(1), to: info.strength.toFixed(1), change: `${info.strength >= info.before.strength ? '+' : ''}${(info.strength - info.before.strength).toFixed(1)}` })}
+              {info.joined.length ? ` · ${t('new: {names}', { names: info.joined.join(', ') })}` : ''}
             </span>
             {outlookOf(info.before.rank) !== outlookOf(info.rank) && (
               <span className="small">
@@ -120,60 +122,60 @@ export function RecruitCard({ g }: { g: GameState }) {
       </div>
       {info.log.length > 0 && (
         <div className="recruit-log">
-          <div className="kicker">This summer's calls</div>
+          <div className="kicker">{t("This summer's calls")}</div>
           {info.log.map((x, i) => (
             <div key={i} className={`recruit-call ${x.ok ? 'yes' : 'no'}`}>
-              <b>{x.ok ? 'Yes' : 'No'}</b> {x.text}
+              <b>{x.ok ? t('Yes') : t('No')}</b> {x.text}
             </div>
           ))}
         </div>
       )}
       <div className={`cap-line${room < 0 ? ' over' : ''}`}>
-        Payroll {fmtMoney(info.payroll)} of a {fmtMoney(info.cap)} cap · {room >= 0 ? `${fmtMoney(room)} room` : `${fmtMoney(-room)} over: incoming salary must be within 125% of outgoing`}
+        {t('Payroll {pay} of a {cap} cap', { pay: fmtMoney(info.payroll), cap: fmtMoney(info.cap) })} · {room >= 0 ? t('{money} room', { money: fmtMoney(room) }) : t('{money} over: incoming salary must be within 125% of outgoing', { money: fmtMoney(-room) })}
       </div>
-      <div className="sec-title small-title">Scouting board</div>
-      {board.length === 0 && <p className="small muted keep">Nobody left on the board this summer.</p>}
+      <div className="sec-title small-title">{t('Scouting board')}</div>
+      {board.length === 0 && <p className="small muted keep">{t('Nobody left on the board this summer.')}</p>}
       <div className="scout-list">
-        {(all ? board : board.slice(0, 3)).map((t) => (
-          <div key={t.p.id} className="scout-row">
+        {(all ? board : board.slice(0, 3)).map((c) => (
+          <div key={c.p.id} className="scout-row">
             <div className="scout-main">
               <b>
-                {t.p.name} <span className="muted">· {t.p.pos}, {t.p.age}</span>
+                {c.p.name} <span className="muted">· {c.p.pos}, {c.p.age}</span>
               </b>
               <span className="small muted">
-                {t.team.name} · OVR {Math.round(t.p.ovr)} · {fmtMoney(t.p.salary)}
+                {c.team.name} · OVR {Math.round(c.p.ovr)} · {fmtMoney(c.p.salary)}
               </span>
-              {t.out[0] && (
+              {c.out[0] && (
                 <span className="small">
-                  Replaces <b>{t.out[0].name}</b> at {t.slot} (OVR {Math.round(t.out[0].ovr)})
-                  {t.out.length > 1 ? `; ${t.out.slice(1).map((o) => o.name).join(' and ')} also go${t.out.length > 2 ? '' : 'es'} for the money` : ''}
+                  {t('Replaces')} <b>{c.out[0].name}</b> {t('at {slot} (OVR {ovr})', { slot: c.slot ?? '', ovr: Math.round(c.out[0].ovr) })}
+                  {c.out.length > 1 ? `; ${c.out.length > 2 ? t('{names} and {last} also go for the money', { names: c.out.slice(1, -1).map((o) => o.name).join(' and '), last: c.out[c.out.length - 1].name }) : t('{name} also goes for the money', { name: c.out[1].name })}` : ''}
                 </span>
               )}
-              {duo && t.out.some((o) => o.id === duo.id) && <span className="small warn-text">Breaks up {duo.nick}</span>}
+              {duo && c.out.some((o) => o.id === duo.id) && <span className="small warn-text">{t('Breaks up {duo}', { duo: duo.nick ?? '' })}</span>}
               <div className="row" style={{ gap: 6 }}>
-                <span className={`interest i-${t.label === 'Interested' ? 'hi' : t.label === 'Open to it' ? 'mid' : 'lo'}`}>{t.label}</span>
-                {!master && <span className={`scout-rec rec-${t.rec.toLowerCase()}`}>Scouts: {t.rec}</span>}
+                <span className={`interest i-${c.label === 'Interested' ? 'hi' : c.label === 'Open to it' ? 'mid' : 'lo'}`}>{c.label}</span>
+                {!master && <span className={`scout-rec rec-${c.rec.toLowerCase()}`}>{t('Scouts: {call}', { call: c.rec })}</span>}
               </div>
-              {!master && <span className="small rec-why prose">{t.why}</span>}
-              {t.lineup && <span className="small warn-text">{t.lineup}</span>}
+              {!master && <span className="small rec-why prose">{c.why}</span>}
+              {c.lineup && <span className="small warn-text">{c.lineup}</span>}
             </div>
-            <button className="btn small" disabled={!t.fits || !!t.lineup || left <= 0} onClick={() => recruit(t.p.id)} title={t.lineup ?? ''}>
-              {t.lineup ? 'No fit' : t.fits ? 'Recruit' : `Need ${fmtMoney(t.short)}`}
+            <button className="btn small" disabled={!c.fits || !!c.lineup || left <= 0} onClick={() => recruit(c.p.id)} title={c.lineup ?? ''}>
+              {c.lineup ? t('No fit') : c.fits ? t('Recruit') : t('Need {money}', { money: fmtMoney(c.short) })}
             </button>
           </div>
         ))}
       </div>
       {board.length > 3 && (
         <button className="link-btn" onClick={() => setAll(!all)}>
-          {all ? 'Show fewer' : `Show all ${board.length}`}
+          {all ? t('Show fewer') : t('Show all {n}', { n: board.length })}
         </button>
       )}
       <div className="row" style={{ gap: 8 }}>
         <button className="btn ghost small" disabled={info.cut >= STARTERS_RECRUIT.maxCut - 1e-9} onClick={cut}>
-          Take a 10% pay cut
+          {t('Take a 10% pay cut')}
         </button>
         <span className="small muted">
-          {info.cut > 0 ? `${Math.round(info.cut * 100)}% cut so far. ` : ''}Frees cap room and makes players likelier to come. A new player takes over his position; the starter there goes the other way.{master ? '' : " The scouts' call is a read, not a promise."}
+          {info.cut > 0 ? `${t('{n}% cut so far.', { n: Math.round(info.cut * 100) })} ` : ''}{t('Frees cap room and makes players likelier to come. A new player takes over his position; the starter there goes the other way.')}{master ? '' : ` ${t("The scouts' call is a read, not a promise.")}`}
         </span>
       </div>
     </section>
@@ -189,34 +191,34 @@ export function DuoCard({ g }: { g: GameState }) {
   const years = g.year - (b.formed ?? g.year);
   return (
     <section className="card stack duo-card">
-      <div className="kicker">{fx.third ? 'Your Big Three' : 'Your duo'}</div>
+      <div className="kicker">{fx.third ? t('Your Big Three') : t('Your duo')}</div>
       <DuoArt g={g} b={b} third={fx.third} size={112} />
       <p className="small prose">
-        You and <b>{b.name}</b> ({b.pos}) · {b.seasons} season{b.seasons === 1 ? '' : 's'} together{years > 0 ? `, a duo for ${years} season${years === 1 ? '' : 's'}` : ', a duo since this summer'}.
+        {t('You and')} <b>{b.name}</b> ({b.pos}) · {b.seasons === 1 ? t('1 season together') : t('{n} seasons together', { n: b.seasons })}, {years > 0 ? (years === 1 ? t('a duo for 1 season') : t('a duo for {n} seasons', { n: years })) : t('a duo since this summer')}.
         {fx.third && (
           <>
             {' '}
-            With <b>{fx.third.name}</b> ({fx.third.pos}) it is a Big Three.
+            {t('With')} <b>{fx.third.name}</b> ({fx.third.pos}) {t('it is a Big Three.')}
           </>
         )}
       </p>
-      <div className="duo-meter" aria-label={`Duo strength ${Math.round(level * 100)}%`}>
+      <div className="duo-meter" aria-label={t('Duo strength {n}%', { n: Math.round(level * 100) })}>
         <span style={{ width: `${Math.round(level * 100)}%` }} />
       </div>
       <p className="small muted">
-        {level >= 1 ? 'At full strength' : 'Still growing'}: team strength +{fx.team.toFixed(1)}, and your shooting and assists are up. {fx.third ? 'If one of the three leaves, it is a duo again.' : 'It ends if either of you leaves.'}
+        {level >= 1 ? t('At full strength') : t('Still growing')}: {t('team strength +{n}, and your shooting and assists are up.', { n: fx.team.toFixed(1) })} {fx.third ? t('If one of the three leaves, it is a duo again.') : t('It ends if either of you leaves.')}
       </p>
     </section>
   );
 }
 
 /** Round 25: what a story about another team means for his team. */
-function forYou(t: Team | undefined, me: Team | undefined): string | null {
-  if (!t || !me || t.id === me.id) return null;
-  const same = t.conf === me.conf;
-  if (t.strength >= me.strength + 1) return same ? 'For you: in your way, a likely playoff opponent' : 'For you: a possible opponent in the final';
-  if (t.strength <= me.strength - 3) return 'For you: games you should win';
-  return same ? 'For you: a team you will fight for seeding' : null;
+function forYou(them: Team | undefined, me: Team | undefined): string | null {
+  if (!them || !me || them.id === me.id) return null;
+  const same = them.conf === me.conf;
+  if (them.strength >= me.strength + 1) return same ? t('For you: in your way, a likely playoff opponent') : t('For you: a possible opponent in the final');
+  if (them.strength <= me.strength - 3) return t('For you: games you should win');
+  return same ? t('For you: a team you will fight for seeding') : null;
 }
 
 /** Round 25: the league's top five by record (strength breaks ties), and where his team stands. */
@@ -245,7 +247,7 @@ function AboutYou({ g }: { g: GameState }) {
   if (now.length === 0) return null;
   return (
     <div className="stack about-you" style={{ gap: 4 }}>
-      <span className="kicker">About you</span>
+      <span className="kicker">{t('About you')}</span>
       {now.map((n) => (
         <div key={n.kind} className="small">
           {n.text}
@@ -284,15 +286,15 @@ export function StoriesCard({ g }: { g: GameState }) {
   return (
     <section className="card stack">
       <button className="row fold-head" aria-expanded={open} onClick={() => setOpen(!open)}>
-        <span className="sec-title">Around the league</span>
+        <span className="sec-title">{t('Around the league')}</span>
         <span className="spacer" />
-        {left > 0 && <span className="small muted">Call it: {left} left</span>}
+        {left > 0 && <span className="small muted">{t('Call it: {n} left', { n: left })}</span>}
         <FoldMark open={open} />
       </button>
       <AboutYou g={g} />
       {open && lg && lg.teams.length >= 6 && (
         <div className="stack" style={{ gap: 4 }}>
-          <span className="kicker">Power ranking</span>
+          <span className="kicker">{t('Power ranking')}</span>
           <PowerRanking lg={lg} myId={g.stage === 'NBA' ? g.teamId : lg.userTeamId} />
         </div>
       )}
@@ -309,45 +311,43 @@ export function StoriesCard({ g }: { g: GameState }) {
       {open && (
       <div className="stories">
         {shown.map(({ x, i }) => {
-          const t = lg?.teams.find((y) => y.id === x.teamId);
+          const tm = lg?.teams.find((y) => y.id === x.teamId);
           const q = callQuestion(x);
           return (
-            <div key={x.kind + x.teamId} className={`story story-${x.kind}${x.mine ? ' story-mine' : ''}`} style={{ ['--team' as string]: t?.color ?? 'var(--line)' }}>
-              <StoryArt x={x} t={t} me={lg?.teams.find((y) => y.id === g.teamId)} league={lg?.level} />
+            <div key={x.kind + x.teamId} className={`story story-${x.kind}${x.mine ? ' story-mine' : ''}`} style={{ ['--team' as string]: tm?.color ?? 'var(--line)' }}>
+              <StoryArt x={x} t={tm} me={lg?.teams.find((y) => y.id === g.teamId)} league={lg?.level} />
               <div className="row" style={{ gap: 6 }}>
                 <span className="story-tag">{STORY_LABEL[x.kind]}</span>
                 <b>{x.title}</b>
               </div>
               <div className={`small${x.result ? '' : ' prose'}`}>{x.result ?? x.text}</div>
-              {!x.mine && forYou(t, lg?.teams.find((y) => y.id === (g.stage === 'NBA' ? g.teamId : lg?.userTeamId))) && <div className="small story-fx">{forYou(t, lg?.teams.find((y) => y.id === (g.stage === 'NBA' ? g.teamId : lg?.userTeamId)))}</div>}
+              {!x.mine && forYou(tm, lg?.teams.find((y) => y.id === (g.stage === 'NBA' ? g.teamId : lg?.userTeamId))) && <div className="small story-fx">{forYou(tm, lg?.teams.find((y) => y.id === (g.stage === 'NBA' ? g.teamId : lg?.userTeamId)))}</div>}
               {x.mine && (
                 <div className="small story-fx">
-                  Team strength {x.mine.regular >= 0 ? '+' : ''}
-                  {x.mine.regular} this season, {x.mine.playoff >= 0 ? '+' : ''}
-                  {x.mine.playoff} in the playoffs
+                  {t('Team strength {regular} this season, {playoff} in the playoffs', { regular: `${x.mine.regular >= 0 ? '+' : ''}${x.mine.regular}`, playoff: `${x.mine.playoff >= 0 ? '+' : ''}${x.mine.playoff}` })}
                 </div>
               )}
               {(x.status || (x.kind === 'rival' && x.vs && x.vs.w + x.vs.l > 0)) && (
                 <div className="small muted">
-                  {x.status ? `${t?.short ?? ''} ${x.status}` : ''}
-                  {x.kind === 'rival' && x.vs && x.vs.w + x.vs.l > 0 ? ` · you are ${x.vs.w}–${x.vs.l} against them` : ''}
+                  {x.status ? `${tm?.short ?? ''} ${x.status}` : ''}
+                  {x.kind === 'rival' && x.vs && x.vs.w + x.vs.l > 0 ? ` · ${t('you are {w}–{l} against them', { w: x.vs.w, l: x.vs.l })}` : ''}
                 </div>
               )}
               {q && x.call === undefined && left > 0 && (
                 <div className="story-call">
                   <span className="small">{q}</span>
                   <button className="btn ghost small" onClick={() => mutate((s) => makeCall(s, i, true))}>
-                    Yes
+                    {t('Yes')}
                   </button>
                   <button className="btn ghost small" onClick={() => mutate((s) => makeCall(s, i, false))}>
-                    No
+                    {t('No')}
                   </button>
                 </div>
               )}
               {q && x.call !== undefined && (
                 <div className={`small story-called${x.called ? ` ${x.called}` : ''}`}>
-                  You called it: {x.call ? 'yes' : 'no'}
-                  {x.called === 'right' ? ' · right (reputation +2)' : x.called === 'wrong' ? ' · wrong' : ''}
+                  {x.call ? t('You called it: yes') : t('You called it: no')}
+                  {x.called === 'right' ? ` · ${t('right (reputation +2)')}` : x.called === 'wrong' ? ` · ${t('wrong')}` : ''}
                 </div>
               )}
             </div>
@@ -357,7 +357,7 @@ export function StoriesCard({ g }: { g: GameState }) {
       )}
       {open && order.length > 4 && (
         <button className="link-btn" onClick={() => setMore(!more)}>
-          {more ? 'Show fewer' : `Show all ${order.length} stories`}
+          {more ? t('Show fewer') : t('Show all {n} stories', { n: order.length })}
         </button>
       )}
     </section>

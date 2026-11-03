@@ -11,17 +11,18 @@ import { DUNKER_TEAMS } from '../../content/legendNumbers';
 import { kitFor, styleLeague } from '../art/Player';
 import { team as teamOf } from '../selectors';
 import { sfx } from '../sound';
+import { t } from '../../i18n';
 
 /** One part of a dunk to pick: its name and difficulty dots; a check mark when chosen. A move he
  * has already landed in this contest is gone (round 24), so its chip is crossed out. */
 function PartChip({ part, on, used, gone = false, onClick }: { part: DunkPart; on: boolean; used: boolean; gone?: boolean; onClick: () => void }) {
   return (
-    <button className={`dunk-chip${on ? ' on' : ''}${used && part.diff > 0 ? ' used' : ''}${gone ? ' gone' : ''}`} aria-pressed={on} disabled={gone} onClick={onClick} title={gone ? 'Already shown in this contest' : undefined}>
+    <button className={`dunk-chip${on ? ' on' : ''}${used && part.diff > 0 ? ' used' : ''}${gone ? ' gone' : ''}`} aria-pressed={on} disabled={gone} onClick={onClick} title={gone ? t('Already shown in this contest') : undefined}>
       <span>
         {on ? '✓ ' : ''}
         {part.name}
       </span>
-      <small>{gone ? 'shown' : part.diff ? '●'.repeat(part.diff) : '–'}</small>
+      <small>{gone ? t('shown') : part.diff ? '●'.repeat(part.diff) : '–'}</small>
     </button>
   );
 }
@@ -32,15 +33,15 @@ function Recipe({ d }: { d: DunkDesign }) {
   return (
     <div className="dunk-recipe">
       <span>
-        <i>Takeoff</i>
+        <i>{t('Takeoff')}</i>
         {name(TAKEOFFS, d.takeoff)}
       </span>
       <span>
-        <i>Moves</i>
-        {d.moves.length ? d.moves.map((m) => name(MOVES, m)).join(' + ') : 'Pick one'}
+        <i>{t('Moves')}</i>
+        {d.moves.length ? d.moves.map((m) => name(MOVES, m)).join(' + ') : t('Pick one')}
       </span>
       <span>
-        <i>Prop</i>
+        <i>{t('Prop')}</i>
         {name(PROPS, d.prop)}
       </span>
     </div>
@@ -82,18 +83,18 @@ function Taps({ taps, sweep, onDone, onTap }: { taps: DunkTap[]; sweep: number; 
 
   const tap = useCallback(() => {
     if (lock.current || finished.current) return;
-    const t = taps[i];
-    const v = tapQuality(pos.current, t);
+    const tp = taps[i];
+    const v = tapQuality(pos.current, tp);
     if (v === null) {
       finished.current = true;
-      setFlash(`Missed the ${t.label.toLowerCase()}!`);
+      setFlash(t('Missed the {part}!', { part: tp.label.toLowerCase() }));
       setTimeout(() => onDone(q, i), 700);
       return;
     }
     const nq = [...q, v];
     setQ(nq);
     onTap?.(nq.length);
-    setFlash(v > 0.8 ? 'Perfect' : v > 0.4 ? 'Good' : 'Just in');
+    setFlash(v > 0.8 ? t('Perfect') : v > 0.4 ? t('Good') : t('Just in'));
     if (i + 1 >= taps.length) {
       finished.current = true;
       setTimeout(() => onDone(nq, null), 500);
@@ -119,7 +120,7 @@ function Taps({ taps, sweep, onDone, onTap }: { taps: DunkTap[]; sweep: number; 
     return () => window.removeEventListener('keydown', k);
   }, [tap]);
 
-  const t = taps[Math.min(i, taps.length - 1)];
+  const cur = taps[Math.min(i, taps.length - 1)];
   return (
     <div className="stack">
       <div className="dunk-steps">
@@ -130,15 +131,15 @@ function Taps({ taps, sweep, onDone, onTap }: { taps: DunkTap[]; sweep: number; 
         ))}
       </div>
       <div className="meter" aria-hidden="true">
-        <div className="meter-zone" style={{ left: `${(t.centre - t.zone / 2) * 100}%`, width: `${t.zone * 100}%` }} />
-        <div className="meter-sweet" style={{ left: `${(t.centre - t.zone * 0.1) * 100}%`, width: `${t.zone * 20}%` }} />
+        <div className="meter-zone" style={{ left: `${(cur.centre - cur.zone / 2) * 100}%`, width: `${cur.zone * 100}%` }} />
+        <div className="meter-sweet" style={{ left: `${(cur.centre - cur.zone * 0.1) * 100}%`, width: `${cur.zone * 20}%` }} />
         <div className="meter-mark" ref={marker} />
       </div>
       <div className="three-flash" aria-live="polite">
-        {flash || t.label}
+        {flash || cur.label}
       </div>
       <button className="btn block shoot-btn" onClick={tap}>
-        {t.label}
+        {cur.label}
       </button>
     </div>
   );
@@ -168,7 +169,8 @@ interface Entry {
 
 const sum = (e: Entry) => e.scores.reduce((a, s) => a + s.total, 0);
 
-function Board({ list, title }: { list: Entry[]; title: string }) {
+/** `you`: the name his own row shows (a career's player, or "You" in the player's language). */
+function Board({ list, title, you }: { list: Entry[]; title: string; you: string }) {
   return (
     <section className="card stack">
       <div className="sec-title">{title}</div>
@@ -176,7 +178,7 @@ function Board({ list, title }: { list: Entry[]; title: string }) {
         <div key={e.d.name} className={`dunk-row${e.d.me ? ' mine' : ''}`}>
           {e.d.me ? <span /> : <LegendBust name={e.d.name} team={DUNKER_TEAMS[e.d.name] ?? ''} kit="road" size={40} />}
           <b>
-            {k + 1}. {e.d.name}
+            {k + 1}. {e.d.me ? you : e.d.name}
           </b>
           <span className="muted small">{e.scores.map((s) => s.total).join(' + ')}</span>
           <b>{sum(e)}</b>
@@ -192,7 +194,9 @@ export function DunkGame() {
   const myTeam = game ? teamOf(game) : null;
   const kit = kitFor(myTeam?.name ?? '', myTeam?.abbr ?? '', myTeam?.color ?? '#1D428A', 'road', styleLeague(game?.stage));
   const [tapsDone, setTapsDone] = useState(0);
+  // his name stays English inside the game (it seeds his look); `you` is what the screen calls him
   const me: Dunker = { name: game ? game.player.name : 'You', skill: 0, me: true };
+  const you = game ? game.player.name : t('You');
   const ath = game ? Math.round(Math.max(40, Math.min(99, game.player.attrs.ATH))) : 85;
   const rng = useMemo(() => contestRng(Math.floor(Math.random() * 2 ** 31)), []);
   const [stage, setStage] = useState<'setup' | 'build' | 'tap' | 'scored' | 'board' | 'done'>('setup');
@@ -257,25 +261,25 @@ export function DunkGame() {
         <div className="rule-tiles">
           <div className="rule-tile">
             <b>2</b>
-            <span>dunks a round</span>
+            <span>{t('dunks a round')}</span>
           </div>
           <div className="rule-tile">
             <b>3</b>
-            <span>attempts a dunk</span>
+            <span>{t('attempts a dunk')}</span>
           </div>
           <div className="rule-tile">
-            <b>Top 2</b>
-            <span>go to the final</span>
+            <b>{t('Top 2')}</b>
+            <span>{t('go to the final')}</span>
           </div>
         </div>
         <section className="card stack">
           <p className="small">
-            Four dunkers, two dunks each. The top two go to the final for two more. Design every dunk: a takeoff, one or two moves and maybe a prop. Each part is one timing tap; miss one and the attempt fails. Three attempts a dunk.
+            {t('Four dunkers, two dunks each. The top two go to the final for two more. Design every dunk: a takeoff, one or two moves and maybe a prop. Each part is one timing tap; miss one and the attempt fails. Three attempts a dunk.')}
           </p>
-          <p className="small">Five judges score 6 to 10 each. 9s and 10s take a hard dunk with clean timing (hit the bright middle of each green), and the greens are narrow. Every move can be shown once a contest, so save some for the final. A takeoff or prop you haven't used yet scores a little extra, and a dunk landed on a later try loses a little.</p>
+          <p className="small">{t("Five judges score 6 to 10 each. 9s and 10s take a hard dunk with clean timing (hit the bright middle of each green), and the greens are narrow. Every move can be shown once a contest, so save some for the final. A takeoff or prop you haven't used yet scores a little extra, and a dunk landed on a later try loses a little.")}</p>
           <p className="small muted">
-            {me.name}'s bounce: Athleticism {ath}
-            {game ? '' : ' (start a career to dunk as your own player)'}. More athleticism means a wider green.
+            {/* Athleticism, the rating, stays English (owner) */}
+            {game ? t("{name}'s bounce: Athleticism {n}. More athleticism means a wider green.", { name: you, n: ath }) : t("{name}'s bounce: Athleticism {n} (start a career to dunk as your own player). More athleticism means a wider green.", { name: you, n: ath })}
           </p>
           <button
             className="btn"
@@ -284,7 +288,7 @@ export function DunkGame() {
               setStage('build');
             }}
           >
-            Meet the field
+            {t('Meet the field')}
           </button>
         </section>
       </section>
@@ -294,16 +298,16 @@ export function DunkGame() {
   // round 15: the rules stay in view while you play
   const header = (
     <div className="dunk-status">
-      <span className="kicker">Dunk contest · {round === 1 ? 'first round' : 'final'}</span>
-      <span className="dunk-pips" aria-label={`Dunk ${Math.min(2, dunkNo)} of 2`}>
-        Dunk
+      <span className="kicker">{round === 1 ? t('Dunk contest · first round') : t('Dunk contest · final')}</span>
+      <span className="dunk-pips" aria-label={t('Dunk {n} of {total}', { n: Math.min(2, dunkNo), total: 2 })}>
+        {t('Dunk')}
         {[1, 2].map((k) => (
           <i key={k} className={k < dunkNo ? 'done' : k === dunkNo ? 'now' : ''} />
         ))}
       </span>
       {(stage === 'build' || stage === 'tap') && (
-        <span className="dunk-pips attempts" aria-label={`Attempt ${attempt} of ${DUNK.attempts}`}>
-          Attempt
+        <span className="dunk-pips attempts" aria-label={t('Attempt {n} of {total}', { n: attempt, total: DUNK.attempts })}>
+          {t('Attempt')}
           {Array.from({ length: DUNK.attempts }, (_, k) => (
             <i key={k} className={k + 1 < attempt ? 'miss' : k + 1 === attempt ? 'now' : ''} />
           ))}
@@ -321,7 +325,7 @@ export function DunkGame() {
         {header}
         {round === 1 && dunkNo === 1 && attempt === 1 && (
           <div className="field-row">
-            <span className="small muted">Up against</span>
+            <span className="small muted">{t('Up against')}</span>
             {field.map((f) => (
               <span key={f.name} className="field-who">
                 <LegendBust name={f.name} team={DUNKER_TEAMS[f.name] ?? ''} kit="road" size={60} />
@@ -331,21 +335,21 @@ export function DunkGame() {
           </div>
         )}
         <DunkStage kit={kit} name={me.name} design={design} phase="idle" />
-        {missed && <p className="small warn">Missed the {missed.toLowerCase()}. Go again, or change the dunk.</p>}
+        {missed && <p className="small warn">{t('Missed the {part}. Go again, or change the dunk.', { part: missed.toLowerCase() })}</p>}
         <section className="card stack">
-          <div className="sec-title">Takeoff</div>
+          <div className="sec-title">{t('Takeoff')}</div>
           <div className="dunk-chips">
-            {TAKEOFFS.map((t) => (
-              <PartChip key={t.id} part={t} on={design.takeoff === t.id} used={used.includes(t.id)} onClick={() => setDesign({ ...design, takeoff: t.id })} />
+            {TAKEOFFS.map((x) => (
+              <PartChip key={x.id} part={x} on={design.takeoff === x.id} used={used.includes(x.id)} onClick={() => setDesign({ ...design, takeoff: x.id })} />
             ))}
           </div>
-          <div className="sec-title">Moves (one or two, each once a contest)</div>
+          <div className="sec-title">{t('Moves (one or two, each once a contest)')}</div>
           <div className="dunk-chips">
             {MOVES.map((m) => (
               <PartChip key={m.id} part={m} on={design.moves.includes(m.id)} used={false} gone={used.includes(m.id)} onClick={() => toggle(m.id)} />
             ))}
           </div>
-          <div className="sec-title">Prop</div>
+          <div className="sec-title">{t('Prop')}</div>
           <div className="dunk-chips">
             {PROPS.map((p) => (
               <PartChip key={p.id} part={p} on={design.prop === p.id} used={used.includes(p.id)} onClick={() => setDesign({ ...design, prop: p.id })} />
@@ -353,15 +357,14 @@ export function DunkGame() {
           </div>
         </section>
         <section className="card stack dunk-preview">
-          <div className="sec-title">Your dunk</div>
+          <div className="sec-title">{t('Your dunk')}</div>
           <Recipe d={design} />
           <span className="small">
-            Difficulty {diff} · {difficultyLabel(diff)} · {dunkTaps(contestRng(1), design, ath).length} taps
-            {fresh ? ` · ${fresh} new for the judges` : ' · the judges have seen all of it'}
+            {t('Difficulty {n} · {label} · {taps} taps', { n: diff, label: difficultyLabel(diff), taps: dunkTaps(contestRng(1), design, ath).length })} · {fresh ? t('{n} new for the judges', { n: fresh }) : t('the judges have seen all of it')}
           </span>
         </section>
         <button className="btn" disabled={!design.moves.length} onClick={go}>
-          {missed ? 'Try again' : 'Go for it'}
+          {missed ? t('Try again') : t('Go for it')}
         </button>
       </section>
     );
@@ -386,11 +389,11 @@ export function DunkGame() {
         {header}
         <section className="card stack">
           <DunkStage kit={kit} name={me.name} design={design} phase="replay" made={last.made} judges={last.made ? last.judges : undefined} />
-          <div className="sec-title">{last.made ? (last.total >= 50 ? 'Fifty! The building erupts' : last.total >= 45 ? 'The crowd is up' : 'The judges have it') : 'Three misses'}</div>
+          <div className="sec-title">{last.made ? (last.total >= 50 ? t('Fifty! The building erupts') : last.total >= 45 ? t('The crowd is up') : t('The judges have it')) : t('Three misses')}</div>
           <Cards s={last} />
         </section>
         <button className="btn" onClick={roundDone ? closeRound : nextDunk}>
-          {roundDone ? 'See how the others did' : 'Next dunk'}
+          {roundDone ? t('See how the others did') : t('Next dunk')}
         </button>
       </section>
     );
@@ -401,8 +404,8 @@ export function DunkGame() {
     const through = list.slice(0, 2).some((e) => e.d.me);
     return (
       <section className="stack">
-        <div className="kicker">Dunk contest · first round</div>
-        <Board list={list} title="First round" />
+        <div className="kicker">{t('Dunk contest · first round')}</div>
+        <Board list={list} title={t('First round')} you={you} />
         <section className="card stack">
           {list
             .filter((e) => !e.d.me)
@@ -420,11 +423,11 @@ export function DunkGame() {
               nextDunk();
             }}
           >
-            On to the final
+            {t('On to the final')}
           </button>
         ) : (
           <button className="btn" onClick={() => setStage('done')}>
-            Out in the first round
+            {t('Out in the first round')}
           </button>
         )}
       </section>
@@ -438,13 +441,13 @@ export function DunkGame() {
   const best = Math.max(...mine.flat().map((s) => s.total));
   return (
     <section className="stack">
-      <div className="kicker">Dunk contest · results</div>
+      <div className="kicker">{t('Dunk contest · results')}</div>
       <section className="card stack">
-        <h2 className="title">{won ? (game ? `${me.name} wins the dunk contest!` : 'You win the dunk contest!') : inFinal ? `${final[0].d.name} takes the trophy` : 'Out in the first round'}</h2>
-        <p className="small">Best dunk: {best}.</p>
+        <h2 className="title">{won ? (game ? t('{name} wins the dunk contest!', { name: me.name }) : t('You win the dunk contest!')) : inFinal ? t('{name} takes the trophy', { name: final[0].d.name }) : t('Out in the first round')}</h2>
+        <p className="small">{t('Best dunk: {n}.', { n: best })}</p>
       </section>
-      {inFinal && <Board list={final} title="Final" />}
-      <Board list={ranked(0)} title="First round" />
+      {inFinal && <Board list={final} title={t('Final')} you={you} />}
+      <Board list={ranked(0)} title={t('First round')} you={you} />
       <MiniBonus result={{ game: 'dunk', best, won }} />
       <button
         className="btn ghost"
@@ -458,7 +461,7 @@ export function DunkGame() {
           setAttempt(1);
         }}
       >
-        Enter again
+        {t('Enter again')}
       </button>
     </section>
   );

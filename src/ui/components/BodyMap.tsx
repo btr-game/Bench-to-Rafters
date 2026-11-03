@@ -14,6 +14,7 @@ import { NAMES } from '../../content/strings';
 import { ht } from '../format';
 import { Card, Extra, Meter } from './bits';
 import { InjuryBadge, SEV_NAME } from '../art/careerArt';
+import { t, tx } from '../../i18n';
 
 const WORST = ['season', 'major', 'minor', 'dtd'] as const;
 
@@ -81,7 +82,7 @@ const SPOT: Record<Exclude<BodyPart, 'whole'>, [number, number]> = {
   ankle: [87, 380],
   foot: [116, 394],
 };
-const PART_NAME: Record<BodyPart, string> = { head: 'Head', neck: 'Neck', shoulder: 'Shoulder', back: 'Back', hand: 'Hand and wrist', groin: 'Hip and groin', hamstring: 'Hamstring', knee: 'Knee', calf: 'Calf and Achilles', ankle: 'Ankle', foot: 'Foot', whole: 'Illness and other' };
+const PART_NAME: Record<BodyPart, string> = { head: tx('Head'), neck: tx('Neck'), shoulder: tx('Shoulder'), back: tx('Back@@body'), hand: tx('Hand and wrist'), groin: tx('Hip and groin'), hamstring: tx('Hamstring'), knee: tx('Knee'), calf: tx('Calf and Achilles'), ankle: tx('Ankle'), foot: tx('Foot'), whole: tx('Illness and other') };
 
 /** Shade for a muscle: pale when untrained, deep orange when it is his most built. */
 const shade = (v: number, top: number) => `color-mix(in srgb, #E8590C ${Math.round(Math.min(1, v / top) * 85)}%, var(--body-base))`;
@@ -96,8 +97,8 @@ const near = (x: number, y: number, pts: [number, number][], r: number) =>
     const [bx, by] = pts[i - 1];
     const dx = ax - bx;
     const dy = ay - by;
-    const t = Math.max(0, Math.min(1, ((x - bx) * dx + (y - by) * dy) / (dx * dx + dy * dy)));
-    return Math.hypot(x - (bx + t * dx), y - (by + t * dy)) <= r;
+    const u = Math.max(0, Math.min(1, ((x - bx) * dx + (y - by) * dy) / (dx * dx + dy * dy)));
+    return Math.hypot(x - (bx + u * dx), y - (by + u * dy)) <= r;
   });
 function inTorso(x: number, y: number): boolean {
   if (y < 64 || y > 208) return false;
@@ -168,7 +169,7 @@ function Figure({ shapes, dx, muscles, top, hover, setHover }: { shapes: Shape[]
 }
 
 /** Time missed, in days under two weeks (a sore ankle is not "0 wk"), else in weeks. */
-const timeOut = (days: number): string => (days < 14 ? `${days} day${days === 1 ? '' : 's'}` : `${Math.round(days / 7)} wk`);
+const timeOut = (days: number): string => (days < 14 ? (days === 1 ? t('1 day') : t('{n} days', { n: days })) : t('{n} wk', { n: Math.round(days / 7) }));
 
 /** The ratings his weight is adding or taking away right now, biggest first. */
 function frameLine(p: GameState['player']): string {
@@ -179,7 +180,7 @@ function frameLine(p: GameState['player']): string {
     .join(' · ');
 }
 
-const wearWord = (w: number): string => (w < 25 ? 'fresh' : w < 50 ? 'some miles' : w < 75 ? 'worn' : 'heavily worn');
+const wearWord = (w: number): string => (w < 25 ? t('fresh') : w < 50 ? t('some miles') : w < 75 ? t('worn') : t('heavily worn'));
 
 /** Round 36 (from the owner's simplification list): his body in one panel on the Player tab, folded
  * until it is opened. Height and where it is heading, weight and what it does, wingspan and wear,
@@ -203,34 +204,34 @@ export function BodyCard({ g }: { g: GameState }) {
   const wear = p.wear ?? 0;
   const does = frameLine(p);
   return (
-    <Card title="Body" kicker={`${ht(p.height)} · ${weightOf(p)} lb · ${buildWord(p)}`} tour="body" startShut>
+    <Card title={t('Body')} fold="Body" kicker={`${ht(p.height)} · ${weightOf(p)} lb · ${buildWord(p)}`} tour="body" startShut>
       <Extra>
         <dl className="facts">
           <div>
-            <dt>Height</dt>
+            <dt>{t('Height')}</dt>
             <dd>
               {ht(p.height)}
-              {first && first.height < p.height && <span className="muted"> · +{p.height - first.height}″ since {first.age}</span>}
-              {p.height < p.heightProj && <span className="muted"> → about {ht(p.heightProj)}</span>}
+              {first && first.height < p.height && <span className="muted"> · {t('{n} since {age}', { n: `+${p.height - first.height}″`, age: first.age })}</span>}
+              {p.height < p.heightProj && <span className="muted"> → {t('about {h}', { h: ht(p.heightProj) })}</span>}
             </dd>
           </div>
           <div>
-            <dt>Weight</dt>
+            <dt>{t('Weight')}</dt>
             <dd>
               {weightOf(p)} lb{' '}
               <span className="muted">
                 · {buildWord(p)}
-                {first?.weight ? ` · ${weightOf(p) - first.weight >= 0 ? '+' : '−'}${Math.abs(weightOf(p) - first.weight)} since ${first.age}` : ''} · best about {Math.round(idealWeight(p.height, p.age) / 5) * 5}
+                {first?.weight ? ` · ${t('{n} since {age}', { n: `${weightOf(p) - first.weight >= 0 ? '+' : '−'}${Math.abs(weightOf(p) - first.weight)}`, age: first.age })}` : ''} · {t('best about {n}', { n: Math.round(idealWeight(p.height, p.age) / 5) * 5 })}
               </span>
             </dd>
           </div>
           <div>
-            <dt>Wingspan</dt>
+            <dt>{t('Wingspan')}</dt>
             <dd>
               {ht(p.wingspan)}
               <span className="muted">
                 {' '}
-                · {Math.abs(p.wingspan - p.height)}″ {p.wingspan >= p.height ? 'over' : 'under'} your height
+                · {p.wingspan >= p.height ? t('{n}″ over your height', { n: Math.abs(p.wingspan - p.height) }) : t('{n}″ under your height', { n: Math.abs(p.wingspan - p.height) })}
               </span>
             </dd>
           </div>
@@ -242,7 +243,7 @@ export function BodyCard({ g }: { g: GameState }) {
           </div>
           {does && (
             <div style={{ gridColumn: '1 / -1' }}>
-              <dt>What your weight does</dt>
+              <dt>{t('What your weight does')}</dt>
               <dd>{does}</dd>
             </div>
           )}
@@ -250,7 +251,7 @@ export function BodyCard({ g }: { g: GameState }) {
         {growth.length > 1 && (
           <div className="bm-growth">
             {growth.map((x, i) => (
-              <div key={x.age} className="bm-age" title={`Age ${x.age}: ${ht(x.height)}${x.weight ? `, ${x.weight} lb` : ''}`}>
+              <div key={x.age} className="bm-age" title={x.weight ? t('Age {age}: {h}, {w} lb', { age: x.age, h: ht(x.height), w: x.weight }) : t('Age {age}: {h}', { age: x.age, h: ht(x.height) })}>
                 <i style={{ height: `${20 + ((x.height - first.height) / Math.max(1, p.height - first.height)) * 50}px` }} className={i > 0 && x.height > growth[i - 1].height ? 'grew' : ''} />
                 <span>{x.age}</span>
               </div>
@@ -265,16 +266,16 @@ export function BodyCard({ g }: { g: GameState }) {
       <Extra>
       <div className="bm">
         <div>
-          <div className="sec-title">Body map</div>
-          <div className="kicker">What training built, and where it hurt. Hover a muscle for its number, a red spot for its injuries.</div>
+          <div className="sec-title">{t('Body map')}</div>
+          <div className="kicker">{t('What training built, and where it hurt. Hover a muscle for its number, a red spot for its injuries.')}</div>
         </div>
         <div className="bm-figure">
-        <svg viewBox="0 0 410 428" className="bm-svg" role="img" aria-label="Body map, front and back">
+        <svg viewBox="0 0 410 428" className="bm-svg" role="img" aria-label={t('Body map, front and back')}>
           <text x={100} y={422} textAnchor="middle" className="bm-cap">
-            Front
+            {t('Front@@view')}
           </text>
           <text x={BACK_X + 100} y={422} textAnchor="middle" className="bm-cap">
-            Back
+            {t('Back@@view')}
           </text>
           <Figure shapes={FRONT} dx={0} muscles={muscles} top={top} hover={hover} setHover={setHover} />
           <Figure shapes={BACK} dx={BACK_X} muscles={muscles} top={top} hover={hover} setHover={setHover} />
@@ -290,7 +291,7 @@ export function BodyCard({ g }: { g: GameState }) {
                   shapeRendering="crispEdges"
                   tabIndex={0}
                   role="button"
-                  aria-label={`${PART_NAME[part]}: ${list.length} injur${list.length === 1 ? 'y' : 'ies'}`}
+                  aria-label={list.length === 1 ? t('{part}: 1 injury', { part: t(PART_NAME[part]) }) : t('{part}: {n} injuries', { part: t(PART_NAME[part]), n: list.length })}
                   onMouseEnter={() => setSpot(part)}
                   onMouseLeave={() => setSpot(null)}
                   onFocus={() => setSpot(part)}
@@ -307,14 +308,14 @@ export function BodyCard({ g }: { g: GameState }) {
         </svg>
         {spot && spot !== 'whole' && byPart.get(spot) && (
           <div className={`bm-tip${SPOT[spot][1] < 120 ? ' below' : ''}${SPOT[spot][0] < 110 ? ' at-left' : SPOT[spot][0] > 300 ? ' at-right' : ''}`} style={{ left: `${(SPOT[spot][0] / 410) * 100}%`, top: `${(SPOT[spot][1] / 428) * 100}%` }} role="tooltip">
-            <b>{PART_NAME[spot]}</b>
+            <b>{t(PART_NAME[spot])}</b>
             {byPart.get(spot)!.map((i, k) => (
               <div key={k} className="bm-tip-row">
                 <InjuryBadge name={i.name} sev={i.key} size={30} />
                 <span>
                   {i.name}
                   <small>
-                    {SEV_NAME[i.key]} · age {i.age} · out {timeOut(i.days)}
+                    {SEV_NAME[i.key]} · {t('age {age}', { age: i.age })} · {t('out {time}', { time: timeOut(i.days) })}
                   </small>
                 </span>
               </div>
@@ -323,7 +324,7 @@ export function BodyCard({ g }: { g: GameState }) {
         )}
         </div>
         <div className="bm-side stack">
-          <div className="sec-title">Most built</div>
+          <div className="sec-title">{t('Most built')}</div>
           {ranked[0].v > 0 ? (
             <ul className="bm-list">
               {ranked.slice(0, 5).map((x) => (
@@ -335,11 +336,11 @@ export function BodyCard({ g }: { g: GameState }) {
               ))}
             </ul>
           ) : (
-            <p className="small muted">Every half of training adds up here from now on.</p>
+            <p className="small muted">{t('Every half of training adds up here from now on.')}</p>
           )}
-          <div className="sec-title">Injuries</div>
+          <div className="sec-title">{t('Injuries')}</div>
           {injuries.length === 0 ? (
-            <p className="small muted keep">{g.history.length ? 'None on record. Knock on wood.' : 'None yet.'}</p>
+            <p className="small muted keep">{g.history.length ? t('None on record. Knock on wood.') : t('None yet.')}</p>
           ) : (
             <ul className="bm-list">
               {[...byPart.entries()].map(([part, list]) => (
@@ -350,9 +351,9 @@ export function BodyCard({ g }: { g: GameState }) {
                     return <InjuryBadge name={w.name} sev={w.key} size={24} />;
                   })()}
                   <span>
-                    {PART_NAME[part]} <span className="muted small">· {list.map((i) => `${i.name}, ${i.age}`).join('; ')}</span>
+                    {t(PART_NAME[part])} <span className="muted small">· {list.map((i) => `${i.name}, ${i.age}`).join('; ')}</span>
                   </span>
-                  <b className="num">{timeOut(list.reduce((t, i) => t + i.days, 0))}</b>
+                  <b className="num">{timeOut(list.reduce((sum, i) => sum + i.days, 0))}</b>
                 </li>
               ))}
             </ul>

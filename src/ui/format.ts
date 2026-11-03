@@ -1,6 +1,25 @@
 import type { StatLine } from '../engine/types';
 export { fmtMoney } from '../engine/economy/salary';
-export { ordinal } from '../engine/career/common';
+import { ordinal as englishOrdinal } from '../engine/career/common';
+import { lang } from '../i18n';
+
+/** "5th", in the player's language (round 40): the slots of translated lines take it as it is. */
+export function ordinal(n: number): string {
+  switch (lang()) {
+    case 'ko':
+      return `${n}위`;
+    case 'ja':
+      return `${n}位`;
+    case 'zh':
+      return `第${n}`;
+    case 'es':
+      return `${n}.º`;
+    case 'fr':
+      return n === 1 ? '1er' : `${n}e`;
+    default:
+      return englishOrdinal(n);
+  }
+}
 
 export const ht = (inches: number): string => `${Math.floor(inches / 12)}′${Math.round(inches % 12)}″`;
 export const seasonLabel = (y: number): string => `${y}–${String(y + 1).slice(2)}`;

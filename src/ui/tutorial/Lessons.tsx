@@ -13,6 +13,7 @@ import { LESSONS, type Lesson, type Where } from './lessons';
 import { STOPS } from './closing';
 import { SkipButton } from '../components/SkipTutorial';
 import { spot } from '../fold';
+import { t } from '../../i18n';
 
 type St = ReturnType<typeof useStore.getState>;
 
@@ -151,7 +152,7 @@ export function Lessons() {
   useEffect(() => {
     if (!cur) return;
     const key = (e: KeyboardEvent) => {
-      const t = e.target as Node;
+      const target = e.target as Node;
       if ((e.target as HTMLElement | null)?.closest?.('[data-lesson-free]')) return;
       if (!cur.lesson.act) {
         e.preventDefault();
@@ -159,7 +160,7 @@ export function Lessons() {
         if ((e.key === 'Enter' || e.key === ' ') && !e.repeat) finish();
         return;
       }
-      if (cur.el.contains(t) || e.key === 'Tab') return;
+      if (cur.el.contains(target) || e.key === 'Tab') return;
       e.preventDefault();
       e.stopImmediatePropagation();
     };
@@ -185,7 +186,9 @@ export function Lessons() {
   const top = Math.max(8, Math.min(vh - tipH - 8, below + tipH < vh - 8 ? below : above > 8 ? above : vh - tipH - 8));
   const list = LESSONS.filter((l) => l.at === cur.lesson.at);
   const n = list.indexOf(cur.lesson) + 1;
-  const part = cur.lesson.at === 'tour' ? 'Closing tour' : cur.lesson.at === 'graduated' ? 'The full game' : `Tutorial · ${LEVEL_NAME[cur.lesson.at]}`;
+  const at = cur.lesson.at;
+  // the level's name stays as the engine has it
+  const kicker = at === 'tour' ? t('Closing tour') : at === 'graduated' ? t('The full game') : t('Tutorial · {level} · {n} of {total}', { level: LEVEL_NAME[at], n, total: list.length });
   return createPortal(
     <div className="lesson-layer" aria-live="polite">
       {/* four shades around the control; with a lesson to read, a fifth over it */}
@@ -197,18 +200,15 @@ export function Lessons() {
       <div className="tour-ring lesson-ring" style={{ left: hole.x, top: hole.y, width: hole.w, height: hole.h }} aria-hidden="true" />
       {/* round 35: the way out, above the shade; in the top-right corner unless the control is there */}
       <SkipButton float style={hole.y < 64 && hole.x + hole.w > vw - 220 ? { left: 12, right: 'auto' } : undefined} />
-      <div className="tour-tip lesson-tip" ref={tip} role="dialog" aria-label="Tutorial" style={{ left, top, width: w }}>
-        <div className="kicker">
-          {part}
-          {cur.lesson.at !== 'tour' && cur.lesson.at !== 'graduated' ? ` · ${n} of ${list.length}` : ''}
-        </div>
-        <p>{cur.lesson.text}</p>
+      <div className="tour-tip lesson-tip" ref={tip} role="dialog" aria-label={t('Tutorial')} style={{ left, top, width: w }}>
+        <div className="kicker">{kicker}</div>
+        <p>{t(cur.lesson.text)}</p>
         <div className="tour-row">
           {cur.lesson.act ? (
-            <span className="small lesson-turn">Your turn: use the highlighted control.</span>
+            <span className="small lesson-turn">{t('Your turn: use the highlighted control.')}</span>
           ) : (
             <button className="btn small" onClick={finish} autoFocus>
-              Got it <kbd className="tour-key">Enter</kbd>
+              {t('Got it')} <kbd className="tour-key">Enter</kbd>
             </button>
           )}
         </div>

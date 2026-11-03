@@ -2,7 +2,8 @@
 // drawn once into a grid of colours and turned into one path per colour (pixel.ts). In the dark
 // theme the town turns to night (app.css, the main land's block): a flat blue shade over it, the
 // windows, lamps and signs lit above the shade, and square halos round the lamps and the dome's
-// searchlights. The places themselves are in ui/mainland.ts.
+// searchlights. The places themselves are in ui/mainland.ts. Round 38: the old neighbourhood, story
+// mode's island to the north: his house and his friend's next door, the driveway hoop between.
 
 import { useMemo, type ReactNode } from 'react';
 import { glyph, inCircle, toPaths } from './pixel';
@@ -25,6 +26,7 @@ export const LC = {
   trunk: '#8B5A2B', leaf: '#2F9E44', leafD: '#1E7A32', plank: '#A0703C', plankD: '#7A5229',
   kiosk: '#2B8A3E', kioskD: '#1F6B2F', plaza: '#D8CFC0', plazaD: '#C4B8A4', bronze: '#B07A3A', bronzeD: '#8A5A22', plinth: '#9AA0A8', plinthD: '#7D838C',
   skin: '#C68642', jerseyA: '#1C7ED6', jerseyB: '#E03131',
+  sideA: '#5C7CFA', sideAD: '#4263EB', sideB: '#FFD43B', sideBD: '#F59F00', drive: '#C9CED6', driveD: '#AEB4BD',
 };
 
 type Grid = string[][];
@@ -39,8 +41,9 @@ const painter = (g: Grid): Paint => (x, y, w, h, c) => {
 /** The coast: the land runs to here on each row, the beach on from it. */
 const coast = (y: number) => 176 + Math.round(3 * Math.sin(y / 6) + 2 * Math.sin(y / 2.7));
 
-/** The island's middle, out in the water. */
+/** The island's middle, out in the water; the old neighbourhood's, to the north. */
 const ISLE: [number, number] = [203, 77];
+const HOOD: [number, number] = [204, 22];
 
 interface Layers {
   day: Paths;
@@ -94,8 +97,8 @@ function drawLand(career: boolean): Layers {
     R(e, y, 3, 1, y % 4 === 0 ? LC.sandD : LC.sand);
   }
   for (let i = 0; i < 90; i++) R((i * 37 + 11) % 172, (i * 23 + 5) % LAND_H, i % 4 ? 2 : 3, 1, i % 2 ? LC.tuft : LC.shade);
-  // moonlight on the water, after dark
-  for (const [x, y] of [[188, 14], [196, 20], [191, 28], [205, 10], [214, 24], [200, 36], [210, 44]]) G(x, y, 4, 1, LC.white);
+  // moonlight on the water, after dark (clear of the two islands)
+  for (const [x, y] of [[205, 44], [215, 47], [210, 56], [218, 52], [188, 1], [214, 1], [184, 58]]) G(x, y, 4, 1, LC.white);
 
   // ---- trees between the places and along the edges ----
   for (const [x, y] of [[44, 4], [63, 4], [99, 3], [131, 4], [60, 92], [27, 95], [86, 95], [110, 95], [142, 95], [171, 95], [171, 62], [3, 50], [172, 12], [172, 30]]) tree(x, y);
@@ -423,6 +426,60 @@ function drawLand(career: boolean): Layers {
   R(ax1 + 16, AVENUE + 3, 1, 3, LC.plankD);
   R(ax1 + 10, AVENUE + 3, 1, 3, LC.plankD);
   for (let k = 0; k < 5; k++) R(188 + k * 2, 59 + k, 1, 1, LC.white);
+
+  // ---- the old neighbourhood: story mode, his house and his friend's, the driveway hoop between ----
+  {
+    const [hx, hy] = HOOD;
+    for (let y = hy - 15; y <= hy + 15; y++) {
+      const hw = Math.round(18 * Math.sqrt(Math.max(0, 1 - ((y - hy) / 15.5) ** 2)));
+      R(hx - hw, y, hw * 2, 1, y % 4 === 1 ? LC.sandD : LC.sand);
+      if (hw > 4) R(hx - hw + 3, y, hw * 2 - 6, 1, (y + hx) % 7 === 0 ? LC.shade : LC.land);
+    }
+    // two houses on one street: his (blue siding) and his friend's next door (yellow)
+    const house = (x0: number, side: string, sideD: string, roof: string, roofD: string) => {
+      for (let k = 0; k < 5; k++) R(x0 + 3 - k, 12 + k, 3 + k * 2, 1, k % 2 ? roofD : roof);
+      R(x0 - 1, 16, 11, 1, roofD);
+      R(x0, 17, 9, 9, side);
+      for (let y = 18; y < 26; y += 2) R(x0, y, 9, 1, sideD);
+      win(x0 + 1, 19, 2, 2);
+      win(x0 + 6, 19, 2, 2);
+      win(x0 + 6, 22, 2, 2, true);
+      R(x0 + 3, 22, 3, 4, LC.door);
+      R(x0 + 3, 22, 3, 1, LC.white);
+      L(x0 + 2, 21, 1, 1, LC.bulb);
+      G(x0 + 1, 20, 3, 3, LC.lit);
+    };
+    house(190, LC.sideA, LC.sideAD, LC.roofH, LC.roofHD);
+    R(196, 11, 2, 3, LC.brick);
+    house(210, LC.sideB, LC.sideBD, LC.slate, LC.ink);
+    // the driveway, its cracks, and the hoop at its head (white board, red square, orange rim)
+    R(200, 18, 9, 9, LC.drive);
+    for (const [x, y] of [[202, 21], [206, 24], [203, 25]]) R(x, y, 2, 1, LC.driveD);
+    R(204, 12, 1, 7, LC.slate);
+    R(201, 7, 7, 5, LC.white);
+    R(201, 7, 7, 1, LC.greyD);
+    R(201, 11, 7, 1, LC.greyD);
+    R(203, 8, 3, 1, LC.red);
+    R(203, 10, 3, 1, LC.red);
+    R(203, 9, 1, 1, LC.red);
+    R(205, 9, 1, 1, LC.red);
+    R(202, 12, 5, 1, LC.orange);
+    for (const x of [202, 204, 206]) R(x, 13, 1, 1, LC.white);
+    for (const x of [203, 205]) R(x, 14, 1, 1, LC.white);
+    R(207, 25, 2, 2, LC.orange);
+    // the mailbox, the sidewalk and the street
+    R(199, 24, 1, 3, LC.trunk);
+    R(198, 23, 2, 1, LC.red);
+    R(190, 27, 29, 1, LC.walk);
+    R(190, 28, 29, 3, LC.road);
+    for (let x = 192; x < 217; x += 5) R(x, 29, 2, 1, LC.dash);
+    lamp(218, 24);
+    tree(199, 32);
+    tree(209, 32);
+    // the jetty the boat ties up at
+    R(203, 34, 3, 6, LC.plank);
+    for (let y = 35; y < 40; y += 2) R(203, y, 3, 1, LC.plankD);
+  }
 
   // ---- the island of mini-games ----
   const [ix, iy] = ISLE;

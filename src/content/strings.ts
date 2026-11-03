@@ -1,6 +1,7 @@
 // All UI text lives here so a Korean version is easy later.
 
 import type { AttrKey, HalfPlan, LevelKey, Pos, RoleKey } from '../engine/types';
+import { tx } from '../i18n';
 
 export const NAMES = {
   attr: {
@@ -59,31 +60,32 @@ export const UI = {
   appName: 'Bench to Rafters',
   tagline: 'From a freshman nobody knows to a jersey in the rafters.',
   tabs: { home: 'Home', season: 'Season', player: 'Player', records: 'Records', extras: 'Extras' },
+  // round 40: the interface's words are marked for the catalog; the screens show them with t()
   create: {
-    steps: ['Difficulty', 'Identity', 'Archetype', 'Focus', 'Confirm'],
+    steps: [tx('Difficulty'), tx('Identity'), tx('Archetype'), tx('Focus'), tx('Confirm')],
     random: 'Random',
-    name: 'Name',
-    number: 'Jersey number',
-    assignedTitle: 'Hometown and high school',
-    assignedText: 'You do not pick these. You find out which town you grew up in and which school or academy you play for when the career starts.',
-    position: 'Position',
-    otherCandidates: 'See other candidates',
-    focusHelp: 'Pick two focus stats. They develop much faster than the rest.',
-    start: 'Start freshman season',
-    next: 'Next',
-    back: 'Back',
-    equalNote: 'Every card totals 320. Talent is hidden: potential, growth curve and durability are rolled when you start.',
+    name: tx('Name'),
+    number: tx('Jersey number'),
+    assignedTitle: tx('Hometown and high school'),
+    assignedText: tx('You do not pick these. You find out which town you grew up in and which school or academy you play for when the career starts.'),
+    position: tx('Position'),
+    otherCandidates: tx('See other candidates'),
+    focusHelp: tx('Pick two focus stats. They develop much faster than the rest.'),
+    start: tx('Start freshman season'),
+    next: tx('Next'),
+    back: tx('Back'),
+    equalNote: tx('Every card totals 320. Talent is hidden: potential, growth curve and durability are rolled when you start.'),
   },
   hub: {
-    playFirst: 'Play first half',
-    playSecond: 'Play second half',
-    toOffseason: 'Go to the offseason',
+    playFirst: tx('Play first half'),
+    playSecond: tx('Play second half'),
+    toOffseason: tx('Go to the offseason'),
     nextSeason: (y: number) => `Start the ${y}–${String(y + 1).slice(2)} season`,
-    todo: 'To do',
-    nothingPending: 'Nothing pending.',
+    todo: tx('To do'),
+    nothingPending: tx('Nothing pending.'),
   },
-  fictional: 'Fictional reactions',
-  newCareer: 'Start a new career',
+  fictional: tx('Fictional reactions'),
+  newCareer: tx('Start a new career'),
 };
 
 export const MILESTONES: { key: string; label: string }[] = [

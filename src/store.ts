@@ -39,6 +39,7 @@ import { NEWS } from './content/whatsNew';
 import { tabNews, type Spot } from './ui/tabNews';
 import { ACH_TIERS, type AchTier } from './engine/achievements';
 import { sfx } from './ui/sound';
+import { tx } from './i18n';
 
 export type Tab = 'home' | 'season' | 'player' | 'records' | 'extras';
 export type Theme = 'auto' | 'light' | 'dark';
@@ -171,6 +172,9 @@ interface Store {
   /** The level whose career is being set up (the create page in level mode). */
   creating: Level | null;
   setCreating: (l: Level | null) => void;
+  /** Round 38: story mode's naming page is up in place of the main land. */
+  naming: boolean;
+  setNaming: (on: boolean) => void;
   /** The exit code: true when it was right, and the full game opens. */
   skipTutorial: (code: string) => boolean;
   /** A level career has ended and its last page was read: the level is passed, back to the road. */
@@ -318,14 +322,14 @@ function remember(g: GameState, label: string): { undo: Store['undo'] } {
 /** "Free agency: Dallas Mavericks", or both plans of a half. */
 function choiceLabel(g: GameState, id: string): string {
   const p = prompt(g);
-  if (p.type !== 'decision') return 'Your choice';
+  if (p.type !== 'decision') return tx('Your choice');
   const names = id.split('+').map((x) => p.decision.choices.find((c) => c.id === x)?.label ?? x);
   return `${p.decision.title}: ${names.join(' + ')}`;
 }
 
 function stepLabel(g: GameState): string {
   const p = prompt(g);
-  return p.type === 'advance' ? p.label : 'The next step';
+  return p.type === 'advance' ? p.label : tx('The next step');
 }
 
 const top = () => {
@@ -450,7 +454,7 @@ export const useStore = create<Store>((set, get) => ({
       if (friends) game.flags.friends = 1;
       fastForward(game);
       // round 33: a level career has a save of its own (ui/saves.ts writeRun), not a slot
-      set({ game, slot: input.level ? null : newSlotId(), creating: null, draft: null, page: null, tab: 'home', transition: null, mini: null, seen: allSeen(game), lookBack: false, ...oathLock(game) });
+      set({ game, slot: input.level ? null : newSlotId(), creating: null, naming: false, draft: null, page: null, tab: 'home', transition: null, mini: null, seen: allSeen(game), lookBack: false, ...oathLock(game) });
     }),
   startChallenge: (c) => {
     const p = cleanProspect(c.prospect);
@@ -509,6 +513,11 @@ export const useStore = create<Store>((set, get) => ({
       top();
     }),
   road: loadRoad(),
+  naming: false,
+  setNaming: (naming) => {
+    set({ naming });
+    top();
+  },
   creating: null,
   setCreating: (creating) =>
     later(() => {
@@ -651,7 +660,7 @@ export const useStore = create<Store>((set, get) => ({
         const games = [...pre, ...next.season.games.slice(before.games), ...cup, ...next.season.postGames.slice(before.post)];
         transition = {
           kind: 'half',
-          label: before.step === 'preseason' ? 'First half' : 'Second half and postseason',
+          label: before.step === 'preseason' ? tx('First half') : tx('Second half and postseason'),
           teamName: t?.name ?? '',
           color: t?.color ?? '#2A2F36',
           games,
@@ -675,28 +684,28 @@ export const useStore = create<Store>((set, get) => ({
     if (!g) return;
     const next = structuredClone(g);
     changeFocus(next, keys);
-    set({ game: next, ...remember(g, 'New focus stats') });
+    set({ game: next, ...remember(g, tx('New focus stats')) });
   },
   recruit: (id) => {
     const g = get().game;
     if (!g) return;
     const next = structuredClone(g);
     recruitPlayer(next, id);
-    set({ game: next, ...remember(g, 'Recruiting a starter') });
+    set({ game: next, ...remember(g, tx('Recruiting a starter')) });
   },
   payCut: () => {
     const g = get().game;
     if (!g) return;
     const next = structuredClone(g);
     takePayCut(next);
-    set({ game: next, ...remember(g, 'Taking a pay cut') });
+    set({ game: next, ...remember(g, tx('Taking a pay cut')) });
   },
   lockerTalk: (who, opt) => {
     const g = get().game;
     if (!g) return null;
     const next = structuredClone(g);
     const text = lockerTalk(next, who, opt);
-    if (text) set({ game: next, ...remember(g, 'A word in the locker room') });
+    if (text) set({ game: next, ...remember(g, tx('A word in the locker room')) });
     return text;
   },
   chase: () => {
@@ -704,14 +713,14 @@ export const useStore = create<Store>((set, get) => ({
     if (!g) return;
     const next = structuredClone(g);
     chaseRecord(next);
-    set({ game: next, ...remember(g, 'Chasing a record') });
+    set({ game: next, ...remember(g, tx('Chasing a record')) });
   },
   askRole: () => {
     const g = get().game;
     if (!g) return;
     const next = structuredClone(g);
     askRole(next);
-    set({ game: next, ...remember(g, 'Asking the coach for a bigger role') });
+    set({ game: next, ...remember(g, tx('Asking the coach for a bigger role')) });
   },
   playChild: () =>
     later(() => {
@@ -732,14 +741,14 @@ export const useStore = create<Store>((set, get) => ({
     if (!g) return;
     const next = structuredClone(g);
     announceFarewell(next);
-    set({ game: next, ...remember(g, 'Announcing a farewell tour') });
+    set({ game: next, ...remember(g, tx('Announcing a farewell tour')) });
   },
   fireCoach: () => {
     const g = get().game;
     if (!g) return null;
     const next = structuredClone(g);
     const text = fireCoach(next);
-    if (text) set({ game: next, ...remember(g, 'Firing the coach') });
+    if (text) set({ game: next, ...remember(g, tx('Firing the coach')) });
     return text;
   },
   labSpend: (k, points) => {
@@ -747,14 +756,14 @@ export const useStore = create<Store>((set, get) => ({
     if (!g) return;
     const next = structuredClone(g);
     spendCredits(next, k, points);
-    set({ game: next, ...remember(g, 'Spending lab credits') });
+    set({ game: next, ...remember(g, tx('Spending lab credits')) });
   },
   changeNumber: (n) => {
     const g = get().game;
     if (!g) return;
     const next = structuredClone(g);
     changeNumber(next, n);
-    set({ game: next, ...remember(g, 'A new jersey number') });
+    set({ game: next, ...remember(g, tx('A new jersey number')) });
   },
   wear: (slot, id) => {
     const g = get().game;
@@ -776,7 +785,7 @@ export const useStore = create<Store>((set, get) => ({
     if (!g) return null;
     const next = structuredClone(g);
     const text = negotiate(next, offerId, ask);
-    if (text) set({ game: next, ...remember(g, 'A contract ask') });
+    if (text) set({ game: next, ...remember(g, tx('A contract ask')) });
     return text;
   },
   staffAct: (id, act) => {
@@ -784,7 +793,7 @@ export const useStore = create<Store>((set, get) => ({
     if (!g) return null;
     const next = structuredClone(g);
     const text = act === 'talk' ? talkStaff(next, id) : act === 'raise' ? (raiseStaff(next, id) ? 'raised' : null) : (letGo(next, id), 'gone');
-    if (text) set({ game: next, ...remember(g, 'A staff move') });
+    if (text) set({ game: next, ...remember(g, tx('A staff move')) });
     return text;
   },
   requestTrade: (aim, to) => {
@@ -792,7 +801,7 @@ export const useStore = create<Store>((set, get) => ({
     if (!g) return;
     const next = structuredClone(g);
     requestTrade(next, aim, to);
-    set({ game: next, ...remember(g, 'A trade request') });
+    set({ game: next, ...remember(g, tx('A trade request')) });
   },
   mutate: (fn) => {
     const g = get().game;
@@ -831,7 +840,7 @@ export const useStore = create<Store>((set, get) => ({
     if (!g) return;
     const next = structuredClone(g);
     changePosition(next, pos);
-    set({ game: next, ...remember(g, 'A new position') });
+    set({ game: next, ...remember(g, tx('A new position')) });
   },
   retire: () =>
     later(() => {

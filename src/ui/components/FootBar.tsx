@@ -9,6 +9,7 @@ import { isDev } from '../../dev/mode';
 import { enterDev } from '../../dev/devSwitch';
 import { Icon } from '../art/Icon';
 import { ShareButton } from './Share';
+import { t } from '../../i18n';
 
 /** The dev deck's door, folded: the password, then the deck. Not shown inside the deck itself. */
 export function DevDoor() {
@@ -19,7 +20,7 @@ export function DevDoor() {
     <details className="card dev-door">
       <summary className="with-icon">
         <Icon name="cards" size={20} />
-        Developer
+        {t('Developer')}
       </summary>
       <form
         className="row"
@@ -32,11 +33,11 @@ export function DevDoor() {
           if (ok) setPw('');
         }}
       >
-        <input type="password" aria-label="Developer password" placeholder="Password" value={pw} onChange={(e) => (setPw(e.target.value), setWrong(false))} autoComplete="off" />
+        <input type="password" aria-label={t('Developer password')} placeholder={t('Password')} value={pw} onChange={(e) => (setPw(e.target.value), setWrong(false))} autoComplete="off" />
         <button className="btn small" disabled={!pw}>
-          Open the dev deck
+          {t('Open the dev deck')}
         </button>
-        {wrong && <span className="small" style={{ color: 'var(--bad)' }}>That is not it.</span>}
+        {wrong && <span className="small" style={{ color: 'var(--bad)' }}>{t('That is not it.')}</span>}
       </form>
     </details>
   );

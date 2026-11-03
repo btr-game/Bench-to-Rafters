@@ -6,6 +6,7 @@ import { fmtMoney } from '../../engine/economy/salary';
 import type { GameState } from '../../engine/types';
 import { useStore } from '../../store';
 import { StaffScene } from '../art/Scene';
+import { t } from '../../i18n';
 
 // His staff (round 25, the owner): the people hired in events, each paid every season for a very
 // small benefit. Stop by once a season, give a raise (more pay, more help), or let him go. Each
@@ -21,7 +22,7 @@ export function StaffPanel({ g }: { g: GameState }) {
   const total = staff.reduce((a, m) => a + staffPay(m), 0);
   return (
     <>
-      <div className="kicker">{fmtMoney(total)} a season on the payroll</div>
+      <div className="kicker">{t('{pay} a season on the payroll', { pay: fmtMoney(total) })}</div>
       <div className="staff-list">
         {staff.map((m) => {
           const d = STAFF[m.role];
@@ -30,11 +31,11 @@ export function StaffPanel({ g }: { g: GameState }) {
             <div key={m.id} className="staff-row">
               <StaffScene name={m.name} role={m.role} place={d.place} title={d.title} />
               <div className="staff-who">
-                <span className="kicker">{d.title} · level {m.level}</span>
+                <span className="kicker">{d.title} · {t('level {n}', { n: m.level })}</span>
                 <b>{m.name}</b>
                 <span className="small">{d.does}</span>
                 <span className="small muted">
-                  {fmtMoney(staffPay(m))} a season · since {m.since} · paid {fmtMoney(m.paid)} so far
+                  {t('{pay} a season · since {year} · paid {paid} so far', { pay: fmtMoney(staffPay(m)), year: m.since, paid: fmtMoney(m.paid) })}
                 </span>
                 {said?.id === m.id && <span className="staff-said">{said.text}</span>}
               </div>
@@ -43,20 +44,20 @@ export function StaffPanel({ g }: { g: GameState }) {
                   const text = act(m.id, 'talk');
                   if (text) setSaid({ id: m.id, text });
                 }}>
-                  {talked ? 'Talked this season' : 'Stop by'}
+                  {talked ? t('Talked this season') : t('Stop by')}
                 </button>
                 {m.level < STAFF_PAY.pay.length && (
                   <button className="btn small ghost" onClick={() => act(m.id, 'raise')}>
-                    Raise to {fmtMoney(staffPay({ role: m.role, level: m.level + 1 }))}
+                    {t('Raise to {pay}', { pay: fmtMoney(staffPay({ role: m.role, level: m.level + 1 })) })}
                   </button>
                 )}
                 {sure === m.id ? (
                   <button className="btn small ghost danger" onClick={() => (act(m.id, 'go'), setSure(null))}>
-                    Let him go
+                    {t('Let him go')}
                   </button>
                 ) : (
                   <button className="btn small ghost" onClick={() => setSure(m.id)}>
-                    Let go
+                    {t('Let go')}
                   </button>
                 )}
               </div>

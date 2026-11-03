@@ -20,25 +20,32 @@ import { FinalsCourt } from '../components/FinalsCourt';
 import { sfx } from '../sound';
 import { negotiable, type Ask } from '../../engine/career/negotiate';
 import { talksOpen } from '../../engine/levels';
+import { StoryPage } from '../components/StoryPage';
+import { t, tx } from '../../i18n';
+import { SHOP_ITEMS } from '../../content/shop';
+import { itemParts } from '../../engine/economy/shop';
 
-const TIER: Record<string, string> = { blue: 'Blue blood', power: 'Power program', major: 'Major conference', mid: 'Mid-major' };
+const TIER: Record<string, string> = { blue: tx('Blue blood'), power: tx('Power program'), major: tx('Major conference'), mid: tx('Mid-major') };
+
+/** A choice's risk, in the player's language. */
+export const riskText = (r: 'Low' | 'Medium' | 'High'): string => (r === 'Low' ? t('Low risk') : r === 'Medium' ? t('Medium risk') : t('High risk'));
 
 function OfferCard({ o, onPick }: { o: Offer; onPick: () => void }) {
-  const level = o.level === 'NCAA' && o.tier ? `NCAA · ${TIER[o.tier]}` : LEVELS[o.level].name;
-  const money = o.level === 'NCAA' ? (o.kind === 'walkon' ? 'Walk-on' : 'Scholarship') : `${fmtMoney(o.salary)} × ${o.years} yr`;
+  const level = o.level === 'NCAA' && o.tier ? `NCAA · ${t(TIER[o.tier])}` : LEVELS[o.level].name;
+  const money = o.level === 'NCAA' ? (o.kind === 'walkon' ? t('Walk-on') : t('Scholarship')) : t('{money} × {n} yr', { money: fmtMoney(o.salary), n: o.years });
   return (
     <button className="offer" style={{ ['--team' as string]: o.teamColor }} onClick={onPick}>
       <div className="team">{o.teamName}</div>
       <dl>
-        <dt>Level</dt>
+        <dt>{t('Level')}</dt>
         <dd>{level}</dd>
-        <dt>Role</dt>
+        <dt>{t('Role')}</dt>
         <dd>{NAMES.role[o.role]}</dd>
-        <dt>Deal</dt>
+        <dt>{t('Deal')}</dt>
         <dd>{money}</dd>
-        <dt>Outlook</dt>
+        <dt>{t('Outlook')}</dt>
         <dd>{o.outlook}</dd>
-        <dt>Last year</dt>
+        <dt>{t('Last year')}</dt>
         <dd>{o.lastRecord}</dd>
       </dl>
       {o.note && <div className="muted small">{o.note}</div>}
@@ -50,14 +57,14 @@ function OfferCard({ o, onPick }: { o: Offer; onPick: () => void }) {
 function Talks({ g, o, onSaid }: { g: GameState; o: Offer; onSaid: (text: string | null) => void }) {
   const talk = useStore((s) => s.negotiate);
   if (!talksOpen(g)) return null;
-  if (!negotiable(o)) return o.asked ? <div className="small muted talk-done">Talks are over: sign it or leave it.</div> : null;
+  if (!negotiable(o)) return o.asked ? <div className="small muted talk-done">{t('Talks are over: sign it or leave it.')}</div> : null;
   const ask = (a: Ask) => onSaid(talk(o.id, a));
   return (
     <div className="talks" data-tour="talks">
-      <span className="kicker">Ask for{o.asked ? ' one more thing' : ''}</span>
-      <button className="btn small ghost" onClick={() => ask('money')}>More money</button>
-      <button className="btn small ghost" onClick={() => ask('years')}>One more year</button>
-      <button className="btn small ghost" onClick={() => ask('role')}>A bigger role</button>
+      <span className="kicker">{o.asked ? t('Ask for one more thing') : t('Ask for')}</span>
+      <button className="btn small ghost" onClick={() => ask('money')}>{t('More money')}</button>
+      <button className="btn small ghost" onClick={() => ask('years')}>{t('One more year')}</button>
+      <button className="btn small ghost" onClick={() => ask('role')}>{t('A bigger role')}</button>
     </div>
   );
 }
@@ -72,12 +79,12 @@ function DraftBoard({ g }: { g: GameState }) {
       <table>
         <thead>
           <tr>
-            <th>Pick</th>
-            <th className="l">Team</th>
-            <th className="l">Player</th>
-            <th>Age</th>
+            <th>{t('Pick')}</th>
+            <th className="l">{t('Team')}</th>
+            <th className="l">{t('Player')}</th>
+            <th>{t('Age')}</th>
             <th>OVR</th>
-            <th className="l">From</th>
+            <th className="l">{t('From')}</th>
           </tr>
         </thead>
         <tbody>
@@ -124,8 +131,8 @@ function AgeTag({ plan }: { plan: string }) {
   const edge = ageEdge(plan as HalfPlan, age);
   if (!edge) return null;
   return (
-    <span className="plan-tag age" title={edge === 'young' ? 'Young legs: this plan does more for you, and is easier on the body, up to 23' : 'A veteran’s plan: it does more for you from 30'}>
-      {edge === 'young' ? 'Young legs' : 'Veteran'}
+    <span className="plan-tag age" title={edge === 'young' ? t('Young legs: this plan does more for you, and is easier on the body, up to 23') : t('A veteran’s plan: it does more for you from 30')}>
+      {edge === 'young' ? t('Young legs') : t('Veteran')}
     </span>
   );
 }
@@ -138,18 +145,18 @@ function PlanPicker({ d }: { d: Decision }) {
   if (enabled.length === 1 || d.data?.single) {
     return (
       <div className="stack">
-        <div className="sec-title">{d.title}</div>
-        <p className="muted small prose">{d.text}</p>
+        <div className="sec-title">{t(d.title)}</div>
+        <p className="muted small prose">{t(d.text)}</p>
         <div className={`plans${d.data?.single ? ' plan-groups' : ''}`}>
           {enabled.map((c) => (
             <button key={c.id} className="choice plan-card" style={planTint(c.id)} onClick={() => choose(c.id)}>
               <span className="label with-icon">
                 <Icon name={choiceIcon(c.id)} size={26} />
-                {c.label}
+                {t(c.label)}
                 <AgeTag plan={c.id} />
-                {c.risk && <span className={`risk risk-${c.risk.toLowerCase()}`}>{c.risk} risk</span>}
+                {c.risk && <span className={`risk risk-${c.risk.toLowerCase()}`}>{riskText(c.risk)}</span>}
               </span>
-              <small>{c.detail}</small>
+              <small>{c.detail && t(c.detail)}</small>
             </button>
           ))}
         </div>
@@ -158,11 +165,11 @@ function PlanPicker({ d }: { d: Decision }) {
   }
   // the first pick is the main plan; a third tap replaces the side plan
   const toggle = (id: string) => setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : p.length >= 2 ? [p[0], id] : [...p, id]));
-  const name = (id: string) => d.choices.find((c) => c.id === id)?.label ?? id;
+  const name = (id: string) => t(d.choices.find((c) => c.id === id)?.label ?? id);
   return (
     <div className="stack">
-      <div className="sec-title">{d.title}</div>
-      <p className="muted small prose">{d.text}</p>
+      <div className="sec-title">{t(d.title)}</div>
+      <p className="muted small prose">{t(d.text)}</p>
       <div className="plans">
         {d.choices.map((c) => {
           const on = picked.includes(c.id);
@@ -170,18 +177,18 @@ function PlanPicker({ d }: { d: Decision }) {
             <button key={c.id} className={`choice plan-card${on ? ' selected' : ''}`} style={planTint(c.id)} aria-pressed={on} disabled={c.disabled} onClick={() => toggle(c.id)}>
               <span className="label with-icon">
                 <Icon name={choiceIcon(c.id)} size={26} />
-                {on && <span className={`plan-tag ${picked.indexOf(c.id) === 0 ? 'main' : 'side'}`}>{picked.indexOf(c.id) === 0 ? 'Main' : 'Side'}</span>}
-                {c.label}
+                {on && <span className={`plan-tag ${picked.indexOf(c.id) === 0 ? 'main' : 'side'}`}>{picked.indexOf(c.id) === 0 ? t('Main') : t('Side')}</span>}
+                {t(c.label)}
                 <AgeTag plan={c.id} />
-                {c.risk && <span className={`risk risk-${c.risk.toLowerCase()}`}>{c.risk} risk</span>}
+                {c.risk && <span className={`risk risk-${c.risk.toLowerCase()}`}>{riskText(c.risk)}</span>}
               </span>
-              <small>{c.detail}</small>
+              <small>{c.detail && t(c.detail)}</small>
             </button>
           );
         })}
       </div>
       <button className="btn block" disabled={picked.length === 0} onClick={() => choose(picked.join('+'))}>
-        {picked.length === 0 ? 'Pick one or two plans' : picked.length === 1 ? `Go with ${name(picked[0])}` : `Go with ${name(picked[0])} (main) + ${name(picked[1])} (side)`}
+        {picked.length === 0 ? t('Pick one or two plans') : picked.length === 1 ? t('Go with {plan}', { plan: name(picked[0]) }) : t('Go with {main} (main) + {side} (side)', { main: name(picked[0]), side: name(picked[1]) })}
       </button>
     </div>
   );
@@ -196,7 +203,7 @@ function LiveView({ g, d }: { g: GameState; d: Decision }) {
   const pick = (id: string) => (r.stage === 'clutch' && (id === 'pull' || id === 'drive') ? setTimed(id) : choose(id));
   const lg = g.season ? (g.stage === 'NBA' ? g.nba : g.league) : null;
   const team = lg?.teams.find((t) => t.id === g.teamId) ?? null;
-  const me = team?.short ?? 'You';
+  const me = team?.short ?? t('You');
   // round 35: the call before a rival series comes before any game, like a game's own pick
   const started = r.stage !== 'game' && r.stage !== 'rival';
   const l = r.line;
@@ -217,7 +224,7 @@ function LiveView({ g, d }: { g: GameState; d: Decision }) {
       <div>
         <div className="kicker">
           {r.round}
-          {r.bestOf > 1 ? ` · Game ${r.game} · series ${r.wins}–${r.losses}` : ''}
+          {r.bestOf > 1 ? ` · ${t('Game {n} · series {w}–{l}', { n: r.game, w: r.wins, l: r.losses })}` : ''}
         </div>
         <h2 className="title live-title">{d.title}</h2>
       </div>
@@ -229,7 +236,7 @@ function LiveView({ g, d }: { g: GameState; d: Decision }) {
               <div className="v">{r.us}</div>
             </div>
             <div className="cell">
-              <div className="k">{crunch ? (r.ot ? `OT${r.ot > 1 ? ` ${r.ot}` : ''}` : 'Q4') : r.stage === 'clutch' ? '0:14 Q4' : r.quarter === 1 ? 'Tip-off' : `End Q${r.quarter - 1}`}</div>
+              <div className="k">{crunch ? (r.ot ? `OT${r.ot > 1 ? ` ${r.ot}` : ''}` : 'Q4') : r.stage === 'clutch' ? '0:14 Q4' : r.quarter === 1 ? t('Tip-off') : t('End Q{n}', { n: r.quarter - 1 })}</div>
               <div className={`v${crunch ? ' live-clock' : ' dim'}`}>{crunch ? r.clock : '—'}</div>
             </div>
             <div className="cell">
@@ -242,7 +249,7 @@ function LiveView({ g, d }: { g: GameState; d: Decision }) {
               <table className="quarters">
                 <thead>
                   <tr>
-                    <th className="l">Team</th>
+                    <th className="l">{t('Team')}</th>
                     {r.qs.map((_, i) => (
                       <th key={i}>Q{i + 1}</th>
                     ))}
@@ -280,7 +287,7 @@ function LiveView({ g, d }: { g: GameState; d: Decision }) {
           <FinalsCourt me={g.player.name} number={g.player.number} us={{ name: me, color: team?.color ?? '#1F5FBF', team: team?.name, abbr: team?.abbr }} them={{ name: r.opp, color: opp?.color ?? '#495057', team: opp?.name, abbr: opp?.abbr }} level={g.stage} side={r.side ?? 'off'} last={r.last} home={r.home} wear={g.player.wardrobe?.on} />
           <div className={`fc-ball ${r.side === 'def' ? 'def' : 'off'}`}>
             <Icon name={r.side === 'def' ? 'lockdown' : 'ball'} size={22} />
-            <b>{r.side === 'def' ? 'Their ball: call the defense' : 'Your ball: pick the play'}</b>
+            <b>{r.side === 'def' ? t('Their ball: call the defense') : t('Your ball: pick the play')}</b>
           </div>
           {r.last && <p className={`fc-last ${r.last.good ? 'good' : 'bad'}`}>{r.last.text}</p>}
         </div>
@@ -295,15 +302,15 @@ function LiveView({ g, d }: { g: GameState; d: Decision }) {
       )}
       {timed ? (
         <div className="stack" data-tour="live-meter">
-          <p className="small">Stop the marker in the green. Dead centre and it is nearly automatic; late and it probably rims out.</p>
-          <TimingMeter skill={timed === 'drive' ? g.player.attrs.FIN : g.player.attrs.SHT} label={timed === 'drive' ? 'Finish!' : 'Release!'} onTap={(t) => choose(`${timed}@${t}`)} />
+          <p className="small">{t('Stop the marker in the green. Dead centre and it is nearly automatic; late and it probably rims out.')}</p>
+          <TimingMeter skill={timed === 'drive' ? g.player.attrs.FIN : g.player.attrs.SHT} label={timed === 'drive' ? t('Finish!') : t('Release!')} onTap={(at) => choose(`${timed}@${at}`)} />
         </div>
       ) : (
       <div className="choices">
         {d.choices.map((c, i) => (
           <button key={c.id} className={`choice${i === 0 && r.stage === 'game' ? ' primary' : ''}`} onClick={() => pick(c.id)}>
             <span className="label">
-              {c.label} {c.risk && <span className={`risk risk-${c.risk.toLowerCase()}`}>{c.risk} risk</span>}
+              {c.label} {c.risk && <span className={`risk risk-${c.risk.toLowerCase()}`}>{riskText(c.risk)}</span>}
             </span>
             {c.detail && <small>{c.detail}</small>}
           </button>
@@ -312,6 +319,17 @@ function LiveView({ g, d }: { g: GameState; d: Decision }) {
       )}
     </div>
   );
+}
+
+/** A shop item's effect in the player's language, a part at a time (round 40); the engine's English
+ * if the item is not in the list. */
+function shopDetail(id: string, en?: string): string {
+  const it = SHOP_ITEMS.find((x) => x.id === id);
+  if (!it) return en ?? '';
+  const and = (xs: string[]) => (xs.length === 2 ? t('{a} and {b}', { a: xs[0], b: xs[1] }) : xs.join(', '));
+  return itemParts(it)
+    .map((p) => (p.what ? t(p.k, { what: and(p.what.map((w) => t(w))) }) : t(p.k)))
+    .join(' · ');
 }
 
 export function DecisionView({ g, d }: { g: GameState; d: Decision }) {
@@ -327,6 +345,9 @@ export function DecisionView({ g, d }: { g: GameState; d: Decision }) {
   if (d.kind === 'live') return <LiveView g={g} d={d} />;
 
   if (d.kind === 'plan') return <PlanPicker d={d} />;
+
+  // round 38: a story mode chapter, face to face
+  if (d.kind === 'story') return <StoryPage g={g} d={d} />;
 
   // round 20: the late-career specialist roles, as cards with the player in each role's action
   if (d.kind === 'chaserRole') {
@@ -357,7 +378,7 @@ export function DecisionView({ g, d }: { g: GameState; d: Decision }) {
     return (
       <div className="stack">
         <div>
-          <div className="kicker">Offseason</div>
+          <div className="kicker">{t('Offseason')}</div>
           <h2 className="title" style={{ fontFamily: 'var(--f-display)', fontSize: 28, textTransform: 'uppercase', lineHeight: 1 }}>
             {d.title}
           </h2>
@@ -371,19 +392,19 @@ export function DecisionView({ g, d }: { g: GameState; d: Decision }) {
                 <span className="shop-tile">
                   <Icon name={shopIcon(c.id, name)} shift={shopShift(c.id)} size={40} />
                 </span>
-                <span className="kicker">{c.tags?.[0]}</span>
-                <span className="name">{name}</span>
+                <span className="kicker">{c.tags?.[0] && t(c.tags[0])}</span>
+                <span className="name">{t(name)}</span>
                 <span className="price">{price}</span>
-                <small className="muted">{c.detail}</small>
+                <small className="muted">{shopDetail(c.id, c.detail)}</small>
               </button>
             );
           })}
         </div>
         <button className="choice" data-enter onClick={() => choose('leave')}>
           <span className="label">
-            Leave the shop <kbd className="hide-touch">Enter</kbd>
+            {t('Leave the shop')} <kbd className="hide-touch">Enter</kbd>
           </span>
-          <small>Save the money.</small>
+          <small>{t('Save the money.')}</small>
         </button>
       </div>
     );
@@ -403,7 +424,7 @@ export function DecisionView({ g, d }: { g: GameState; d: Decision }) {
           </h2>
         </div>
       </div>
-      {!master && typeof d.data?.fit === 'string' && <span className="fit-tag">Fits your game · {d.data.fit as string}</span>}
+      {!master && typeof d.data?.fit === 'string' && <span className="fit-tag">{t('Fits your game · {fit}', { fit: d.data.fit as string })}</span>}
       <p>{brief(d.text, simple)}</p>
       {isDraftNight && (
         <>
@@ -432,7 +453,7 @@ export function DecisionView({ g, d }: { g: GameState; d: Decision }) {
             <button key={c.id} className={`choice${extra.length > 1 && i === 0 && d.kind !== 'event' ? ' primary' : ''}`} disabled={c.disabled} onClick={() => choose(c.id)}>
               <span className={`label${d.kind === 'brand' && c.id.includes(':') ? ' with-icon' : ''}`}>
                 {d.kind === 'brand' && c.id.includes(':') && <BrandLogo name={c.id.split(':')[1]} color={(d.data?.colors as Record<string, string> | undefined)?.[c.id.split(':')[1]] ?? '#343A40'} size={30} />}
-                {c.label} {c.risk && <span className={`risk risk-${c.risk.toLowerCase()}`}>{c.risk} risk</span>}
+                {c.label} {c.risk && <span className={`risk risk-${c.risk.toLowerCase()}`}>{riskText(c.risk)}</span>}
               </span>
               {/* a press answer's tone is the point, so simple text keeps it */}
               {c.detail && <small className={d.kind === 'press' ? 'keep' : undefined}>{c.detail}</small>}
@@ -447,26 +468,26 @@ export function DecisionView({ g, d }: { g: GameState; d: Decision }) {
 function kickerFor(d: Decision): string {
   switch (d.kind) {
     case 'event':
-      return 'Turning point';
+      return t('Turning point');
     case 'offers':
-      return 'Decision';
+      return t('Decision');
     case 'declare':
     case 'withdraw':
-      return 'NBA Draft';
+      return t('NBA Draft');
     case 'summer':
-      return 'Offseason';
+      return t('Offseason');
     case 'retirePrompt':
-      return 'Career';
+      return t('Career');
     case 'assign':
-      return 'Midseason';
+      return t('Midseason');
     case 'national':
-      return 'National team';
+      return t('National team');
     case 'press':
-      return 'Media day';
+      return t('Media day');
     case 'brand':
-      return 'Endorsements';
+      return t('Endorsements');
     default:
-      return 'Update';
+      return t('Update');
   }
 }
 

@@ -7,6 +7,7 @@ import { useMemo } from 'react';
 import { PlayerArt, styleLeague } from '../art/Player';
 import { PixelWord } from '../art/PixelText';
 import { Icon } from '../art/Icon';
+import { t } from '../../i18n';
 
 type Pt = [number, number];
 // the side with the ball spreads out, its handler up top; the defense sits between them and the rim
@@ -42,8 +43,8 @@ function ArenaPixels({ paint }: { paint: string }) {
     r(35, 39, 30, 1, '#f8f9fa');
     // the arc, stepped
     for (let x = 6; x <= 94; x++) {
-      const t = (x - 50) / 44;
-      r(x, Math.round(13 + 41 * Math.sqrt(Math.max(0, 1 - t * t))), 1, 1, '#f8f9fa');
+      const u = (x - 50) / 44;
+      r(x, Math.round(13 + 41 * Math.sqrt(Math.max(0, 1 - u * u))), 1, 1, '#f8f9fa');
     }
     // the backboard, the rim and the net
     r(41, 3, 18, 8, '#18141c');
@@ -84,12 +85,12 @@ export function FinalsCourt({ me, number, us, them, level, side, last, home, wea
   const theirSpots = side === 'off' ? DEF : OFF;
   const ball = hand(OFF[0]); // the handler up top has it, whichever side
   const mates = [
-    { key: 'me', name: me, number, label: 'You' },
+    { key: 'me', name: me, number, label: t('You') },
     { key: 'm1', name: `${us.team ?? 'Team'} wing`, number: 7, label: '' },
     { key: 'm2', name: `${us.team ?? 'Team'} big`, number: 33, label: '' },
   ];
   return (
-    <div className="sb-court fc-court" aria-label={`${side === 'off' ? 'Your ball' : 'Their ball'}. ${last ? last.text : 'Crunch time.'}`}>
+    <div className="sb-court fc-court" aria-label={`${side === 'off' ? t('Your ball') : t('Their ball')}. ${last ? last.text : t('Crunch time.')}`}>
       <ArenaPixels paint={home ? us.color : them.color} />
       {mates.map((x, i) => (
         <div key={x.key} className={`sb-player us${x.key === 'me' ? ' act' : ''}`} style={{ left: `${ourSpots[i][0]}%`, top: `${ourSpots[i][1]}%` }}>

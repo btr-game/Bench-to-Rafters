@@ -37,11 +37,52 @@ The order the owner set:
   playable playoff games, the finals action cam, 3-on-3). Owner: "this should be a high level game,
   with great detail and extensive design. we're gonna spend a lot of time building the interactions
   and animations." Discussed with the owner while 38 and 40 are built; built last, before publishing.
-- **Round 40**: **languages**: Korean, Chinese, Japanese, Spanish and French. The last round with a
+  Decided so far: **he is steered directly**, close to an action game ("make this a complete almost
+  shooter games. smth like nba 2k"); it plays **only the biggest moments** (the last quarter of a
+  final or an elimination game) with the clock sped up so a quarter takes **3 to 5 minutes**, and a
+  **Skip** is there mid-game. The owner's answers on the ideas document (3 November): **4 minutes a
+  quarter** (the clock runs three times as fast); **defence too** (steals and blocks are his);
+  **only games that can end a series, from the conference finals on, and only his own team's
+  elimination**; **hardness by difficulty**: his team shoots worse and the other team better as the
+  difficulty goes up; **phones**: "im starting to think phone mode could be scrapped for now. this
+  game's interface was never really meant for phones" (the Floor simulates on a phone); **a high
+  three-quarter view, pseudo 3D**, showing all ten players; his team's own arena with **the court,
+  the crowd and the vibes, no banners**; the camera leans in on a drive or a dunk, **or a short 2 to
+  3 second animation once a play is decided** (the pull-up, the swish); the score bug as proposed;
+  pixel art and stepped animations ("we're gonna put a lot of effort in here"); **free throws** join
+  the ratings that change how it feels.
+  **Order** (owner: "we go up til the engine build and do one mid-round eor checklist, publish round
+  38 and 40. and then we continue round 39. the translation of round 40 shouldn't be fully complete,
+  as components in r39 may need translation"): round 38's story mode, round 40's languages, round
+  39 up to its engine (the seeded possession model and its tests, not yet on screen); then one
+  end-of-round checklist and the publish of 38 and 40; then the rest of 39, its words translated as
+  they are written.
+- **Round 40**: **languages**: Korean, Chinese, Japanese, Spanish and French: everything a player
+  sees (the screens, the manual, the tutorial, the events, the storylines, the logs, the
+  achievements; about 78,000 words), the dev deck staying English (owner: "no need for translation
+  in dev deck. it will only be accessible to me anyways"). Then narrowed (owner: "let's only go with
+  interface"): names, titles, awards, nicknames, the events and other content stay English; the list
+  of what stays English is the Word document "Round 40 - what stays in English". The owner's
+  answers (o keep English, x translate): **translated**: buttons, menus and settings; headings and
+  card titles; plans and their descriptions; messages (confirmations, warnings, empty states,
+  errors, the loading pop-out); the tutorial's lessons and Guide mode; the manual; screen-reader
+  labels; achievement descriptions; legendary seasons' descriptions (their titles stay English);
+  shop items; and **story mode's dialogue and descriptions** (owner: "translate the dialogues and
+  descriptions in story mode"). **Kept English**: leagues, teams, places, people, usernames,
+  nicknames, awards, achievement names, legendary season titles, brands, ending names, mode and
+  challenge names, mini-game names, music track names, the title, positions, stat and rating
+  abbreviations, rating full names, archetype names, the places and tabs of the town and the main
+  land, meters and labels, turning points, the other storylines, the log and news, press
+  conferences and talks, the finale and endings, what's new, the announcer, the dev deck. Story
+  mode's text is written as keyed templates from the start, so its translations drop in. The last round with a
   significant system; after it, only small balance changes and bug fixes (owner: "so let's keep up
   the spark").
-- **Publishing**: rounds 38, 39 and 40 go out together (owner: "when doing round 38, dont do the
-  publishing"); priority is 38 and 40, then 39.
+- **Publishing**: rounds 38 and 40 go out together, with round 39's engine built but not yet on
+  screen (owner, 3 November, above); the rest of round 39 follows. To publish sooner (owner, the
+  same day): this publish translates the interface but not yet the manual or the achievements'
+  descriptions (they follow); the project summary and the dev deck's Catalog are brought up to
+  date after it; the round's content batch (achievements, events, storylines, shop items) moves to
+  the final end-of-round check, once round 39 is done; nothing in the dev deck is ever translated.
 - **Later**: a donation channel.
 - Turned down: careers framed as roguelite runs with meta-unlocks ("no").
 - Still to weigh before any paid release: a fictional league in place of the NBA's teams, colours

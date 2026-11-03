@@ -1,6 +1,7 @@
 // The dev deck's fixtures: real careers, played by the balance harness's smart player until the
 // state a card needs shows up (a decision, a moment, a stage), so every card opens on a true game.
 
+import { STORY_HERO } from '../engine/story/cast';
 import { advance, choose, newGame, prompt, type Prompt } from '../engine/flow';
 import { smartChoice } from '../../scripts/harness';
 import { makeRng } from '../engine/rng';
@@ -25,11 +26,14 @@ export interface PlayOpts {
   quick?: 'sim' | 'comet';
   /** Round 33: a level career of the road map. */
   level?: Level;
+  /** Round 38: a story mode career (the written hero), with these names for his people. */
+  story?: Record<string, string>;
 }
 
 const NAMES = ['Jordan Vale', 'Marcus Reed', 'Theo Grant', 'Andre Lucas', 'Caleb Stone', 'Isaiah Moore'];
 
 function input(seed: number, o: PlayOpts) {
+  if (o.story) return { ...STORY_HERO, focus: [...STORY_HERO.focus], fast: o.fast, story: o.story };
   const pos = o.pos ?? POSITIONS[seed % POSITIONS.length];
   return { name: NAMES[seed % NAMES.length], number: (seed % 54) + 1, pos, archetype: seed % ARCHETYPES[pos].length, focus: pos === 'C' || pos === 'PF' ? (['INT', 'REB'] as const) : (['SHT', 'PLY'] as const), mode: o.mode ?? 'standard', fast: o.fast, comet: o.quick === 'comet', level: o.level };
 }

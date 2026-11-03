@@ -32,8 +32,8 @@ const pct = (m: number, a: number) => (a > 0 ? m / a : 0);
 // the 50-40-90 club, on the same line as the achievement: at least two threes and two free throws tried a game
 const club = ({ line: l }: SeasonRecord) => l.tpa / l.gp >= 2 && l.fta / l.gp >= 2 && pct(l.fgm, l.fga) >= 0.5 && pct(l.tpm, l.tpa) >= 0.4 && pct(l.ftm, l.fta) >= 0.9;
 
-// rarest first: a season shows the first one it matches
-const COMBOS: Combo[] = [
+// rarest first: a season shows the first one it matches (round 40: exported for scripts/i18n.ts)
+export const COMBOS: Combo[] = [
   { id: 'greatest', name: 'The Greatest Season', line: 'MVP, Defensive Player of the Year and the title, all in one year.', need: [['MVP'], ['DPOY'], TITLE] },
   { id: 'perfect', name: 'The Perfect Season', line: 'League MVP and Finals MVP: the best player all year, and when it mattered most.', need: [['MVP'], ['FMVP']] },
   { id: 'twoway', name: 'Two-Way Throne', line: 'MVP and Defensive Player of the Year in the same season.', need: [['MVP'], ['DPOY']] },

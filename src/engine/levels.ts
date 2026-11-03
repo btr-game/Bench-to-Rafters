@@ -50,6 +50,8 @@ const ALLOW: Record<Level, Feature[]> = {
  * (press, the locker room, duos, the farewell tour, the record watch, Love, the ring chase, the
  * national team, Around the league) are in no level: they ask `inLevel` instead. */
 export function allows(s: GameState, f: Feature): boolean {
+  // round 38: story mode's written hero takes the American road to the NBA (no roads abroad)
+  if (f === 'roads' && s.story) return false;
   const l = levelOf(s);
   return !l || ALLOW[l].includes(f);
 }
@@ -118,13 +120,16 @@ export function talksOpen(s: GameState): boolean {
 }
 
 /** The offers a level shows: without the roads abroad, only colleges and NBA teams (then the G
- * League, then anything, so a career is never left with nowhere to play). */
-export function roadOffers(s: GameState, offers: Offer[]): Offer[] {
+ * League, then anything, so a career is never left with nowhere to play). Story mode (round 38,
+ * owner: "exclude overseas offers to the main character ... focus only on the states") never goes
+ * abroad: when no American team calls, a G League deal (`gl`) instead. */
+export function roadOffers(s: GameState, offers: Offer[], gl?: () => Offer): Offer[] {
   if (allows(s, 'roads')) return offers;
   for (const keep of [['NCAA', 'NBA'], ['GL']]) {
     const left = offers.filter((o) => keep.includes(o.level));
     if (left.length > 0) return left;
   }
+  if (s.story) return gl ? [gl()] : [];
   return offers;
 }
 

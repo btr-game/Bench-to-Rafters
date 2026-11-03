@@ -65,6 +65,9 @@ export function smartChoice(s: GameState, d: Decision, r: Rng): string {
     }
     case 'press':
       return 'humble';
+    case 'story':
+      // round 38: story mode's chapters: the warm answer (the first)
+      return ch[0].id;
     case 'brand':
       // a signature line for a big name, the sure deal otherwise
       return ch.find((c) => c.id.startsWith(s.player.rep >= 80 ? 'line:' : 'deal:'))?.id ?? 'later';

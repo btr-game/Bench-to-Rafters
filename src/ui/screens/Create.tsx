@@ -38,13 +38,17 @@ import { FootBar } from '../components/FootBar';
 import { LevelAdds } from '../components/LevelAdds';
 import { PlaceArt } from './RoadMap';
 import { MainLand } from './MainLand';
+import { StoryStart } from './StoryStart';
+import { t, tx } from '../../i18n';
 
 const pick = <T,>(a: readonly T[]): T => a[Math.floor(Math.random() * a.length)];
+/** The two focus stats, joined. */
+const both = (xs: string[]): string => (xs.length === 2 ? t('{a} and {b}', { a: xs[0], b: xs[1] }) : xs.join(' and '));
 const uiRng = makeRng(Math.floor(Math.random() * 2 ** 31));
 
 /** Countries shown as big buttons on the identity page; the rest are in a list. */
 /** The kind of road each country's players take, in a few words. */
-const ROAD: Record<string, string> = { us: 'High school, AAU, college', canada: 'Prep school, then the NCAA', euro: 'Club academy, pro at 16-18', academy: 'Academies and clubs', asia: 'School teams, then college or pro', aus: 'Centre of Excellence' };
+const ROAD: Record<string, string> = { us: tx('High school, AAU, college'), canada: tx('Prep school, then the NCAA'), euro: tx('Club academy, pro at 16-18'), academy: tx('Academies and clubs'), asia: tx('School teams, then college or pro'), aus: tx('Centre of Excellence') };
 const FEATURED = ['USA', 'Canada', 'France', 'Spain', 'Serbia', 'Australia', 'Japan', 'South Korea', 'China', 'Nigeria', 'Brazil', 'Philippines'];
 
 
@@ -58,11 +62,11 @@ function DevGate() {
   const [wrong, setWrong] = useState(false);
   // round 26 (owner: the link was too small to notice): a small card of its own
   return (
-    <section className="card dev-gate" aria-label="Developer">
+    <section className="card dev-gate" aria-label={t('Developer')}>
       <Icon name="cards" size={40} />
       <div className="stack" style={{ gap: 6 }}>
-        <div className="sec-title">Developer</div>
-        <p className="small muted">The dev deck: every function, the catalog, the sounds and the feedback inbox. Needs the password.</p>
+        <div className="sec-title">{t('Developer')}</div>
+        <p className="small muted">{t('The dev deck: every function, the catalog, the sounds and the feedback inbox. Needs the password.')}</p>
         <form
           className="row"
           style={{ gap: 8 }}
@@ -74,11 +78,11 @@ function DevGate() {
             if (ok) setPw('');
           }}
         >
-          <input type="password" aria-label="Developer password" placeholder="Password" value={pw} onChange={(e) => (setPw(e.target.value), setWrong(false))} autoComplete="off" autoFocus={location.hash === '#inbox'} />
+          <input type="password" aria-label={t('Developer password')} placeholder={t('Password')} value={pw} onChange={(e) => (setPw(e.target.value), setWrong(false))} autoComplete="off" autoFocus={location.hash === '#inbox'} />
           <button className="btn small" disabled={!pw}>
-            Open the dev deck
+            {t('Open the dev deck')}
           </button>
-          {wrong && <span className="small" style={{ color: 'var(--bad)' }}>That is not it.</span>}
+          {wrong && <span className="small" style={{ color: 'var(--bad)' }}>{t('That is not it.')}</span>}
         </form>
       </div>
     </section>
@@ -93,7 +97,7 @@ function backName(name: string): string {
 }
 
 /** Round 35: what a draft class's player finds out when his career starts (it opens on draft night). */
-const DRAFT_ASSIGNED = 'You do not pick these. You find out which town you grew up in and which college you led when the career starts.';
+const DRAFT_ASSIGNED = tx('You do not pick these. You find out which town you grew up in and which college you led when the career starts.');
 
 /** The new-career page; with `level`, a career on the road map (round 33): fewer steps, no difficulty. */
 export function Create({ level }: { level?: Level } = {}) {
@@ -189,6 +193,9 @@ export function Create({ level }: { level?: Level } = {}) {
     setCountry((ORIGINS.find((o) => (x -= o.weight) <= 0) ?? ORIGINS[0]).country);
     setStep(steps.indexOf('Confirm'));
   };
+  // round 38: the old neighbourhood opens story mode's naming page in place of the main land
+  const story = useStore((s) => s.naming);
+  const toStory = useStore((s) => s.setNaming);
   // round 37: a venue on the main land starts its difficulty (Rough Road rolls the player at once)
   const startAt = (m: Mode) => {
     setMode(m);
@@ -282,7 +289,7 @@ export function Create({ level }: { level?: Level } = {}) {
           {/* round 27 (owner: "the homepage itself doesn't allow settings. put it in"; the intro "should
               be accessible to players if they want") */}
           <button className="icon-btn" data-tour="intro-btn" onClick={showIntro}>
-            Intro
+            {t('Intro')}
           </button>
           <WhatsNewButton />
           <ShareButton />
@@ -295,14 +302,14 @@ export function Create({ level }: { level?: Level } = {}) {
         <section className="hero level-hero">
           <PlaceArt place={level} size={176} />
           <div className="kicker">
-            Level {copy.n} of 3 · {copy.place}
+            {t('Level {n} of 3', { n: copy.n })} · {copy.place}
           </div>
           <h1>{level === 'beginner' ? 'Beginner' : level === 'intermediate' ? 'Intermediate' : 'Advanced'}</h1>
-          <p className="lede">{copy.lede}</p>
+          <p className="lede">{t(copy.lede)}</p>
           <p className="level-goal with-icon">
             <Icon name="laurel" size={22} />
             <span>
-              <b>The goal:</b> {LEVEL_GOAL} in {ROADMAP[level].nbaSeasons} NBA seasons.
+              <b>{t('The goal:')}</b> {t('{goal} in {n} NBA seasons.', { goal: t(LEVEL_GOAL), n: ROADMAP[level].nbaSeasons })}
             </span>
           </p>
           {level !== 'beginner' && step === 0 && <LevelAdds level={level} />}
@@ -310,22 +317,21 @@ export function Create({ level }: { level?: Level } = {}) {
       ) : land ? null : (
       <section className="hero with-lineup">
         <LineupArt />
-        <div className="kicker">A basketball career game</div>
+        <div className="kicker">{t('A basketball career game')}</div>
         <h1>
           Bench<span>to Rafters</span>
         </h1>
         <p className="lede">
-          Start at 14, in an American high school or a club academy somewhere in the world. Find your road to the NBA through college, Europe or
-          the G League, get drafted, and find out whether your jersey ends up hanging in the rafters.
+          {t('Start at 14, in an American high school or a club academy somewhere in the world. Find your road to the NBA through college, Europe or the G League, get drafted, and find out whether your jersey ends up hanging in the rafters.')}
         </p>
       </section>
       )}
       {!land && (
         <>
-          <div className="stepper" aria-label="Steps">
+          <div className="stepper" aria-label={t('Steps')}>
             {steps.map((s, i) => (
               <span key={s} className={i === step ? 'on' : ''} aria-current={i === step ? 'step' : undefined}>
-                {i + 1}. {s}
+                {i + 1}. {t(s)}
               </span>
             ))}
           </div>
@@ -333,27 +339,30 @@ export function Create({ level }: { level?: Level } = {}) {
         </>
       )}
       {draft && (
-        <section className="card mp-draft row" role="group" aria-label="Draft class">
+        <section className="card mp-draft row" role="group" aria-label={t('Draft class')}>
           <Icon name="draftclass" size={32} />
           <span className="mp-draft-text">
-            <b>Draft class: {draft.name}</b>
-            <small className="muted">{draft.code ? `Code ${draft.code}. ` : 'A new class: its code comes when you start. '}Regular guy, on the class’s seed. The class starts on draft night. Make your player and start.</small>
+            <b>{t('Draft class: {name}', { name: draft.name })}</b>
+            <small className="muted">
+              {draft.code ? t('Code {code}.', { code: draft.code }) : t('A new class: its code comes when you start.')} {t('Regular guy, on the class’s seed. The class starts on draft night. Make your player and start.')}
+            </small>
           </span>
           <button className="btn ghost small" onClick={() => setDraft(null)}>
-            Leave the class
+            {t('Leave the class')}
           </button>
         </section>
       )}
 
-      {land && (
-        <MainLand ch={{ oath, setOath, comet, setComet }} onStart={startAt}>
+      {land && !story && (
+        <MainLand ch={{ oath, setOath, comet, setComet }} onStart={startAt} onStory={() => toStory(true)}>
           <UsernamePrompt />
         </MainLand>
       )}
+      {land && story && <StoryStart onBack={() => toStory(false)} />}
       {/* a draft class plays Regular guy: the difficulties as they were, the other two shut */}
       {cur === 'Difficulty' && draft && (
         <section className="stack">
-          <div className="kicker">Choose how hard the road is</div>
+          <div className="kicker">{t('Choose how hard the road is')}</div>
           <div className="modes">
             {DIFFICULTIES.map((m) => {
               const shut = m !== 'standard';
@@ -363,12 +372,12 @@ export function Create({ level }: { level?: Level } = {}) {
                     <Icon name={shut ? 'lock' : ICON_FOR[m]} size={32} />
                     {MODES[m].name}
                   </span>
-                  <small className={shut ? 'keep' : undefined}>{shut ? 'A draft class plays Regular guy.' : MODES[m].blurb}</small>
+                  <small className={shut ? 'keep' : undefined}>{shut ? t('A draft class plays Regular guy.') : t(MODES[m].blurb)}</small>
                 </button>
               );
             })}
           </div>
-          <p className="muted small">The league is the same at every difficulty. What changes is your potential, how fast you grow and how often you get hurt. Want it quicker? Flip the Fast break switch inside the game, any time.</p>
+          <p className="muted small">{t('The league is the same at every difficulty. What changes is your potential, how fast you grow and how often you get hurt. Want it quicker? Flip the Fast break switch inside the game, any time.')}</p>
         </section>
       )}
 
@@ -381,27 +390,27 @@ export function Create({ level }: { level?: Level } = {}) {
             <span className="id-avatar">
               <span className="id-fig">
                 <LookPreview name={name.trim() || 'Rookie'} number={Number(number) || 0} look={look} jersey={jersey} size={132} />
-                <span className="kicker">Front</span>
+                <span className="kicker">{t('Front')}</span>
               </span>
               <span className="id-fig">
-                <JerseyArt kit={PLAIN[jersey]} number={Number(number) || 0} back={backName(name)} size={118} label={`The back of your jersey: ${backName(name) || 'no name'}, number ${Number(number) || 0}`} />
-                <span className="kicker">Back</span>
+                <JerseyArt kit={PLAIN[jersey]} number={Number(number) || 0} back={backName(name)} size={118} label={backName(name) ? t('The back of your jersey: {name}, number {n}', { name: backName(name), n: Number(number) || 0 }) : t('The back of your jersey: no name, number {n}', { n: Number(number) || 0 })} />
+                <span className="kicker">{t('Back')}</span>
               </span>
             </span>
             <div className="stack id-fields">
-              <div className="sec-title">Who are you?</div>
+              <div className="sec-title">{t('Who are you?')}</div>
               <div className="id-row">
                 <div className="field">
-                  <label htmlFor="f-name">{UI.create.name}</label>
+                  <label htmlFor="f-name">{t(UI.create.name)}</label>
                   <input id="f-name" type="text" maxLength={NAME_MAX} value={name} aria-describedby="f-name-note" onChange={(e) => setName(cleanName(e.target.value))} />
-                  <small id="f-name-note" className={badName ? 'name-note bad' : 'name-note muted'}>{badName || 'Letters A to Z.'}</small>
+                  <small id="f-name-note" className={badName ? 'name-note bad' : 'name-note muted'}>{badName ? t(badName) : t('Letters A to Z.')}</small>
                 </div>
                 <div className="field id-num">
-                  <label htmlFor="f-num">{UI.create.number}</label>
+                  <label htmlFor="f-num">{t(UI.create.number)}</label>
                   <input id="f-num" type="number" min={0} max={99} value={number} onChange={(e) => setNumber(e.target.value)} />
                 </div>
-                <button className="btn ghost small id-dice" onClick={() => setName(cleanName(`${pick(FIRST_NAMES)} ${pick(LAST_NAMES)}`))} title="Pick a random name">
-                  New name
+                <button className="btn ghost small id-dice" onClick={() => setName(cleanName(`${pick(FIRST_NAMES)} ${pick(LAST_NAMES)}`))} title={t('Pick a random name')}>
+                  {t('New name')}
                 </button>
               </div>
             </div>
@@ -410,26 +419,26 @@ export function Create({ level }: { level?: Level } = {}) {
 
           {roads && (
           <div className="card stack nation-card">
-            <div className="sec-title">Where do you start?</div>
+            <div className="sec-title">{t('Where do you start?')}</div>
             {/* round 35: a draft class starts on draft night, so the youth road is behind him */}
-            <p className="small muted">{draft ? 'Where he grew up, and the national team he can play for.' : 'Your country sets your road until college or the pros: the youth system, the showcases, and who calls first.'}</p>
+            <p className="small muted">{draft ? t('Where he grew up, and the national team he can play for.') : t('Your country sets your road until college or the pros: the youth system, the showcases, and who calls first.')}</p>
             <div className="nation-grid">
               <button className={`nation${country === '' ? ' on' : ''}`} aria-pressed={country === ''} onClick={() => setCountry('')}>
-                <b>Surprise me</b>
-                <small>By real-world odds</small>
+                <b>{t('Surprise me')}</b>
+                <small>{t('By real-world odds')}</small>
               </button>
               {FEATURED.map((c) => (
                 <button key={c} className={`nation${country === c ? ' on' : ''}`} aria-pressed={country === c} onClick={() => setCountry(c)}>
                   <FlagArt country={c} size={36} />
                   <b>{c === 'USA' ? 'United States' : c}</b>
-                  <small>{ROAD[ORIGINS.find((o) => o.country === c)?.path ?? 'us']}</small>
+                  <small>{t(ROAD[ORIGINS.find((o) => o.country === c)?.path ?? 'us'])}</small>
                 </button>
               ))}
             </div>
             <div className="field">
-              <label htmlFor="f-country">More countries</label>
+              <label htmlFor="f-country">{t('More countries')}</label>
               <select id="f-country" value={FEATURED.includes(country) ? '' : country} onChange={(e) => setCountry(e.target.value)}>
-                <option value="">Choose…</option>
+                <option value="">{t('Choose…')}</option>
                 {[...ORIGINS]
                   .filter((o) => !FEATURED.includes(o.country))
                   .sort((a, b) => a.country.localeCompare(b.country))
@@ -443,7 +452,7 @@ export function Create({ level }: { level?: Level } = {}) {
             {!draft && <div className="nation-notes">
               <div className="kicker with-flag">
                 {country && <FlagArt country={country} size={30} />}
-                {country ? `Your road from ${country === 'USA' ? 'the United States' : country}` : 'Your road'}
+                {country ? t('Your road from {country}', { country: country === 'USA' ? 'the United States' : country }) : t('Your road')}
               </div>
               {country ? (
                 <ul>
@@ -452,16 +461,16 @@ export function Create({ level }: { level?: Level } = {}) {
                   ))}
                 </ul>
               ) : (
-                <p className="small">Half of all careers start in the United States; the rest begin in academies and clubs around the world.</p>
+                <p className="small">{t('Half of all careers start in the United States; the rest begin in academies and clubs around the world.')}</p>
               )}
             </div>}
           </div>
           )}
 
           <div className="card stack">
-            <div className="sec-title">On the court</div>
+            <div className="sec-title">{t('On the court')}</div>
             <fieldset>
-              <legend>{UI.create.position}</legend>
+              <legend>{t(UI.create.position)}</legend>
               <div className="pos-cards">
                 {POSITIONS.map((p, i) => (
                   <PositionCard
@@ -480,18 +489,18 @@ export function Create({ level }: { level?: Level } = {}) {
                 ))}
               </div>
               <div className="seg">
-                <button className="seg-random" onClick={randomPos} title="Pick a position at random">
-                  Random position
+                <button className="seg-random" onClick={randomPos} title={t('Pick a position at random')}>
+                  {t('Random position')}
                 </button>
               </div>
               <p className="muted small">
-                {NAMES.pos[pos]} · grows to {ht(hMin)}–{ht(hMax)}
-                {rolled.pos && <span className="rolled"> · picked at random</span>}
+                {NAMES.pos[pos]} · {t('grows to {range}', { range: `${ht(hMin)}–${ht(hMax)}` })}
+                {rolled.pos && <span className="rolled"> · {t('picked at random')}</span>}
               </p>
             </fieldset>
             {roads && (
             <fieldset>
-              <legend>Dominant hand</legend>
+              <legend>{t('Dominant hand')}</legend>
               <div className="seg">
                 <button
                   aria-pressed={hand === 'R'}
@@ -500,7 +509,7 @@ export function Create({ level }: { level?: Level } = {}) {
                     setRolled((r) => ({ ...r, hand: false }));
                   }}
                 >
-                  Right
+                  {t('Right')}
                 </button>
                 <button
                   aria-pressed={hand === 'L'}
@@ -509,21 +518,24 @@ export function Create({ level }: { level?: Level } = {}) {
                     setRolled((r) => ({ ...r, hand: false }));
                   }}
                 >
-                  Left
+                  {t('Left')}
                 </button>
-                <button className="seg-random" onClick={randomHand} title="Real-world odds: about one in eight is left-handed">
-                  Random
+                <button className="seg-random" onClick={randomHand} title={t('Real-world odds: about one in eight is left-handed')}>
+                  {t('Random')}
                 </button>
               </div>
               <p className="muted small">
-                {rolled.hand && <span className="rolled">Rolled: {hand === 'L' ? 'left' : 'right'}-handed (about one player in eight is a lefty). </span>}
-                Lefties are rarer, so defenders see them less. Either way, your weak hand starts raw.
+                {rolled.hand && <span className="rolled">{hand === 'L' ? t('Rolled: left-handed (about one player in eight is a lefty).') : t('Rolled: right-handed (about one player in eight is a lefty).')} </span>}
+                {t('Lefties are rarer, so defenders see them less. Either way, your weak hand starts raw.')}
               </p>
             </fieldset>
             )}
             <div className="assigned">
-              <div className="kicker">{draft ? 'Hometown and college' : UI.create.assignedTitle}</div>
-              <div className="small">{draft ? DRAFT_ASSIGNED : UI.create.assignedText}{level === 'beginner' ? ' So are your archetype and your two focus ratings: the ones a ' + NAMES.pos[pos].toLowerCase() + ' like you is best at.' : ''}</div>
+              <div className="kicker">{draft ? t('Hometown and college') : t(UI.create.assignedTitle)}</div>
+              <div className="small">
+                {t(draft ? DRAFT_ASSIGNED : UI.create.assignedText)}
+                {level === 'beginner' ? ` ${t('So are your archetype and your two focus ratings: the ones a {pos} like you is best at.', { pos: NAMES.pos[pos].toLowerCase() })}` : ''}
+              </div>
             </div>
           </div>
         </section>
@@ -533,14 +545,15 @@ export function Create({ level }: { level?: Level } = {}) {
         <section className="stack">
           <div className="row">
             <div className="kicker">
-              {NAMES.pos[pos]} · pick an archetype{rolled.arch && <span className="rolled"> · {ARCHETYPES[pos][arch].name} picked at random</span>}
+              {NAMES.pos[pos]} · {t('pick an archetype')}
+              {rolled.arch && <span className="rolled"> · {t('{arch} picked at random', { arch: ARCHETYPES[pos][arch].name })}</span>}
             </div>
             <div className="spacer" />
             <button className="btn ghost small" onClick={randomArch}>
-              Random
+              {t('Random')}
             </button>
             <button className="btn ghost small" onClick={reroll}>
-              {UI.create.otherCandidates}
+              {t(UI.create.otherCandidates)}
             </button>
           </div>
           <div className="arch-cards">
@@ -575,14 +588,14 @@ export function Create({ level }: { level?: Level } = {}) {
               </button>
             ))}
           </div>
-          <p className="muted small">{UI.create.equalNote}</p>
+          <p className="muted small">{t(UI.create.equalNote)}</p>
         </section>
       )}
 
       {cur === 'Focus' && (
         <section className="card stack">
-          <div className="sec-title">Focus stats</div>
-          <p className="muted small">{UI.create.focusHelp}</p>
+          <div className="sec-title">{t('Focus stats')}</div>
+          <p className="muted small">{t(UI.create.focusHelp)}</p>
           <div className="focus-grid">
             {ATTRS.map((k) => (
               <button key={k} className={`choice${focus.includes(k) ? ' selected' : ''}`} aria-pressed={focus.includes(k)} onClick={() => toggleFocus(k)}>
@@ -591,7 +604,7 @@ export function Create({ level }: { level?: Level } = {}) {
                   <span>{NAMES.attr[k]}</span>
                   <b className="muted">{attrs[k]}</b>
                 </span>
-                <small>{NAMES.attrBlurb[k]}</small>
+                <small>{t(NAMES.attrBlurb[k])}</small>
               </button>
             ))}
           </div>
@@ -602,7 +615,7 @@ export function Create({ level }: { level?: Level } = {}) {
         <section className="card stack">
           <div className="row">
             <div style={{ minWidth: 0 }}>
-              <div className="kicker">{level ? 'High school senior · age 17' : draft ? 'Draft night · a college junior or senior' : 'Freshman · age 14'}</div>
+              <div className="kicker">{level ? t('High school senior · age 17') : draft ? t('Draft night · a college junior or senior') : t('Freshman · age 14')}</div>
               <div className="pc-name">{name || 'Rookie'}</div>
               <div className="muted">
                 #{number} · {NAMES.pos[pos]} · {archetype.name}
@@ -626,20 +639,20 @@ export function Create({ level }: { level?: Level } = {}) {
           )}
           {level ? (
             <p className="muted small">
-              Three high school seasons are behind him: you start on the first day of his senior year. Focus: {(level === 'beginner' ? autoFocus : focus).map((k) => NAMES.attr[k]).join(' and ')}. The goal: {LEVEL_GOAL} in {ROADMAP[level].nbaSeasons} NBA seasons.
+              {t('Three high school seasons are behind him: you start on the first day of his senior year. Focus: {focus}. The goal: {goal} in {n} NBA seasons.', { focus: both((level === 'beginner' ? autoFocus : focus).map((k) => NAMES.attr[k])), goal: t(LEVEL_GOAL), n: ROADMAP[level].nbaSeasons })}
             </p>
           ) : (
           <p className="muted small">
             {rough && (
               <span className="oath-rolled with-icon">
                 <Icon name="oath" size={18} />
-                Rough Road: the road picked all of this for you, his look included. No rerolls.{' '}
+                {t('Rough Road: the road picked all of this for you, his look included. No rerolls.')}{' '}
               </span>
             )}
-            Focus: {focus.map((k) => NAMES.attr[k]).join(' and ')}.{' '}
+            {t('Focus: {focus}.', { focus: both(focus.map((k) => NAMES.attr[k])) })}{' '}
             {draft
-              ? `The class starts on draft night: his college’s first option, done growing (most end up ${ht(hMin + (archetype.height ?? 0))}–${ht(hMax + (archetype.height ?? 0))}), OVR ${DRAFT_NIGHT.ovr[0]} to ${DRAFT_NIGHT.ovr[1]} and projected in the first round. This card is a typical ${archetype.name.toLowerCase()}; his college years shaped it. ${DRAFT_ASSIGNED}`
-              : `Height: still growing, most end up ${ht(hMin + (archetype.height ?? 0))}–${ht(hMax + (archetype.height ?? 0))}, some well outside it. This card is a typical ${archetype.name.toLowerCase()}; your real starting level is set at tryouts. ${UI.create.assignedText}`}
+              ? `${t('The class starts on draft night: his college’s first option, done growing (most end up {range}), OVR {lo} to {hi} and projected in the first round. This card is a typical {arch}; his college years shaped it.', { range: `${ht(hMin + (archetype.height ?? 0))}–${ht(hMax + (archetype.height ?? 0))}`, lo: DRAFT_NIGHT.ovr[0], hi: DRAFT_NIGHT.ovr[1], arch: archetype.name.toLowerCase() })} ${t(DRAFT_ASSIGNED)}`
+              : `${t('Height: still growing, most end up {range}, some well outside it. This card is a typical {arch}; your real starting level is set at tryouts.', { range: `${ht(hMin + (archetype.height ?? 0))}–${ht(hMax + (archetype.height ?? 0))}`, arch: archetype.name.toLowerCase() })} ${t(UI.create.assignedText)}`}
           </p>
           )}
         </section>
@@ -650,34 +663,34 @@ export function Create({ level }: { level?: Level } = {}) {
       <div className="row-end">
         {step === 0 && level && level !== 'beginner' && (
           <button className="btn ghost" onClick={() => setCreating(null)}>
-            Back to the road map
+            {t('Back to the road map')}
           </button>
         )}
         {step > 0 && (
           <button className="btn ghost" onClick={() => setStep(rough && step === last ? 0 : step - 1)}>
-            {UI.create.back}
+            {t(UI.create.back)}
           </button>
         )}
         {step < last ? (
           <button className="btn" data-tour="create-next" disabled={!canNext} onClick={() => (step === 0 && rough ? rollRoad() : setStep(step + 1))}>
-            {UI.create.next}
+            {t(UI.create.next)}
           </button>
         ) : (
           <button className="btn" data-tour="create-start" disabled={seating} onClick={begin}>
-            {seating ? 'Taking your seat…' : UI.create.start}
+            {seating ? t('Taking your seat…') : t(UI.create.start)}
           </button>
         )}
       </div>
       )}
       {/* round 25 (owner): the live strip and the saves sit under the hero and the cards (and under
           Next, so starting a career is no further away), the dev deck's door last */}
-      {seatErr && <p className="small row-end" style={{ color: 'var(--bad)' }}>{seatErr}</p>}
+      {seatErr && <p className="small row-end" style={{ color: 'var(--bad)' }}>{t(seatErr)}</p>}
       {land && (
         <section className="stack start-foot">
           <LiveStrip />
           <DevGate />
           {/* the game uses real teams and legends: it says plainly that it is not official */}
-          <p className="small muted keep fan-note">Bench to Rafters is an unofficial fan game. It is not affiliated with or endorsed by the NBA, its teams or its players.</p>
+          <p className="small muted keep fan-note">{t('Bench to Rafters is an unofficial fan game. It is not affiliated with or endorsed by the NBA, its teams or its players.')}</p>
         </section>
       )}
       {level ? <FootBar where={`level ${level}, create, ${cur.toLowerCase()}`} /> : <WhatsNewPanel />}
@@ -706,14 +719,14 @@ function UsernamePrompt() {
     setHidden(true);
   };
   return (
-    <section className="card oath-card username-prompt" role="group" aria-label="Pick a username" data-tour="username-prompt">
+    <section className="card oath-card username-prompt" role="group" aria-label={t('Pick a username')} data-tour="username-prompt">
       <Icon name="crowd" size={48} />
       <div className="stack" style={{ gap: 6 }}>
-        <div className="sec-title">Pick a username?</div>
-        <UsernameBox onSet={() => setHidden(true)} note="Shown beside your careers on the community boards and to friends, so people know whose player it is. Letters A to Z and numbers; change it any time in Settings." />
+        <div className="sec-title">{t('Pick a username?')}</div>
+        <UsernameBox onSet={() => setHidden(true)} note={t('Shown beside your careers on the community boards and to friends, so people know whose player it is. Letters A to Z and numbers; change it any time in Settings.')} />
         <div className="row" style={{ gap: 8 }}>
           <button className="btn small ghost" onClick={later}>
-            Not now
+            {t('Not now')}
           </button>
         </div>
       </div>

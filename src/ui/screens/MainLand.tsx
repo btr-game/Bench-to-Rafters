@@ -12,7 +12,7 @@ import { useStore } from '../../store';
 import { Icon } from '../art/Icon';
 import { ICON_FOR } from '../art/icons';
 import { MODES, type Mode } from '../../engine/balance';
-import { AVENUE, LAND, LAND_H, LAND_MODE, LAND_W, firstLand, landPlaces, landSide, landState, neighbour, reducedMotion, type LandDir, type LandId, type LandState } from '../mainland';
+import { AVENUE, ISLANDS, LAND, LAND_H, LAND_MODE, LAND_W, firstLand, landPlaces, landSide, landState, neighbour, reducedMotion, type LandDir, type LandId, type LandState } from '../mainland';
 import { LandCrop, LandMap } from '../art/LandArt';
 import { BOAT, CAR, PLANE, PLANE_COLORS, Sprite } from '../art/Sprites';
 import { HAIR_COLORS, SKIN_COLORS } from '../art/Player';
@@ -28,6 +28,8 @@ import { AchievementsCard } from './Achievements';
 import { CommunityCard } from './Community';
 import { MultiplayerCard } from './Multiplayer';
 import { PlaceArt } from './RoadMap';
+import { StoryCard } from './StoryStart';
+import { t } from '../../i18n';
 
 const KEYS: Record<string, LandDir> = { ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down' };
 const DOCK = LAND.find((p) => p.id === 'island')!.stop;
@@ -44,19 +46,19 @@ function ContinueCard() {
   return (
     <section className="card continue-card" data-tour="saves">
       <div style={{ minWidth: 0 }}>
-        <div className="kicker">Your career</div>
+        <div className="kicker">{t('Your career')}</div>
         <b className="resume-name">{live.name}</b>
         <div className="muted small">
           {seasonLabel(live.year)} · {MODES[live.mode as Mode]?.name ?? live.mode}
         </div>
-        {failed && <div className="small" style={{ color: 'var(--bad)' }}>That save could not be read.</div>}
+        {failed && <div className="small" style={{ color: 'var(--bad)' }}>{t('That save could not be read.')}</div>}
       </div>
       <div className="row save-actions">
         <button className="btn" onClick={() => void resume(live.id).then((ok) => !ok && setFailed(true))}>
-          Continue
+          {t('Continue')}
         </button>
         <button className="btn ghost small" onClick={() => setPage('log')}>
-          Open the career log
+          {t('Open the career log')}
         </button>
       </div>
     </section>
@@ -70,11 +72,11 @@ function AirportCard({ onFly }: { onFly: () => void }) {
     <div className="card oath-card levels-card" role="group" aria-label="The road map">
       <PlaceArt place="advanced" size={96} />
       <div className="stack" style={{ gap: 6 }}>
-        <div className="sec-title">Back on the road map?</div>
-        <p className="small muted">The tutorial’s levels and the island: intermediate opens Reality hits hard, advanced Shoot for the stars, the island the mini-games. Short careers at fast break’s pace with one goal, an NBA All-Star team; they count nowhere (no save, career log, achievements or leaderboards).</p>
+        <div className="sec-title">{t('Back on the road map?')}</div>
+        <p className="small muted">{t('The tutorial’s levels and the island: intermediate opens Reality hits hard, advanced Shoot for the stars, the island the mini-games. Short careers at fast break’s pace with one goal, an NBA All-Star team; they count nowhere (no save, career log, achievements or leaderboards).')}</p>
         <div className="row" style={{ gap: 8 }}>
           <button className="btn small ghost" data-tour="levels-card" onClick={onFly}>
-            Fly to the road map
+            {t('Fly to the road map')}
           </button>
         </div>
       </div>
@@ -90,9 +92,9 @@ function NewsCard() {
         <Icon name="news" size={28} />
         What’s new
       </div>
-      <p className="small muted">The latest changes to the game ({NEWS[0].date}). They open by themselves once after each update, and here any time.</p>
+      <p className="small muted">{t('The latest changes to the game ({date}). They open by themselves once after each update, and here any time.', { date: NEWS[0].date })}</p>
       <button className="btn ghost" onClick={() => (sfx('page'), showNews())}>
-        Read what’s new
+        {t('Read what’s new')}
       </button>
     </section>
   );
@@ -104,11 +106,11 @@ function CinemaCard() {
     <section className="card stack">
       <div className="sec-title with-icon">
         <Icon name="camera" size={28} />
-        The intro
+        {t('The intro')}
       </div>
-      <p className="small muted">The opening again: the title over a one-on-one, from a high school gym to the NBA.</p>
+      <p className="small muted">{t('The opening again: the title over a one-on-one, from a high school gym to the NBA.')}</p>
       <button className="btn ghost" onClick={showIntro}>
-        Play the intro
+        {t('Play the intro')}
       </button>
     </section>
   );
@@ -131,37 +133,38 @@ function Venue({ mode, state, ch, onStart, onFly }: { mode: Mode; state: LandSta
       <div className="row ml-venue-title">
         <Icon name={shut ? 'lock' : ICON_FOR[mode]} size={30} />
         <div className="sec-title">{MODES[mode].name}</div>
-        {state === 'next' && <span className="tag good">Recommended</span>}
+        {state === 'next' && <span className="tag good">{t('Recommended')}</span>}
       </div>
       {shut ? (
         <>
           <p className="small keep">{unlockHint(mode === 'reality' ? 'reality' : 'stars')}</p>
           <div className="row-end">
             <button className="btn ghost small" onClick={onFly}>
-              Fly to the road map
+              {t('Fly to the road map')}
             </button>
           </div>
         </>
       ) : (
         <>
-          <p className="small muted">{MODES[mode].blurb}</p>
+          <p className="small muted">{t(MODES[mode].blurb)}</p>
           {/* round 25 (owner): Reality, played the hardest way, asks once and is honoured for it */}
           {mode === 'reality' && (
-            <div className={`card oath-card${oath ? ' on' : ''}`} role="group" aria-label="The Rough Road challenge">
+            <div className={`card oath-card${oath ? ' on' : ''}`} role="group" data-tour="rough-road" aria-label={t('The Rough Road challenge')}>
               <div className="stack" style={{ gap: 6 }}>
                 <div className="sec-title with-icon">
                   <Icon name="oath" size={28} />
-                  Take the rough road?
+                  {t('Take the rough road?')}
                 </div>
                 <p className="small muted">
-                  The road picks your whole player at random, with no reroll: position, archetype, focus stats, country, hand, name, number <b>and his look</b>, so you don&rsquo;t choose how your avatar looks (skin, hair and face are rolled too). Then master mode, with no recommendations anywhere, and no Fast break or Sim mode, locked for the whole career (Simple text is allowed). Take it and the career carries the Rough Road mark on its card, the leaderboards and the career log, with achievements of its own.
+                  {t('The road picks your whole player at random, with no reroll: position, archetype, focus stats, country, hand, name, number')} <b>{t('and his look')}</b>
+                  {t(', so you don’t choose how your avatar looks (skin, hair and face are rolled too). Then master mode, with no recommendations anywhere, and no Fast break or Sim mode, locked for the whole career (Simple text is allowed). Take it and the career carries the Rough Road mark on its card, the leaderboards and the career log, with achievements of its own.')}
                 </p>
                 <div className="row" style={{ gap: 8 }}>
                   <button className={`btn small${oath ? '' : ' ghost'}`} aria-pressed={oath} onClick={() => (oath || sfx('oath'), setOath(true))}>
-                    {oath ? 'Challenge accepted' : 'Accept the challenge'}
+                    {oath ? t('Challenge accepted') : t('Accept the challenge')}
                   </button>
                   <button className="btn small ghost" aria-pressed={!oath} onClick={() => setOath(false)}>
-                    Just Reality
+                    {t('Just Reality')}
                   </button>
                 </div>
               </div>
@@ -169,19 +172,19 @@ function Venue({ mode, state, ch, onStart, onFly }: { mode: Mode; state: LandSta
           )}
           {/* round 30 (owner): Shoot for the stars at hyper speed, about five minutes a career */}
           {mode === 'stars' && (
-            <div className={`card oath-card comet-card${comet ? ' on' : ''}`} role="group" aria-label="The Comet challenge">
+            <div className={`card oath-card comet-card${comet ? ' on' : ''}`} role="group" aria-label={t('The Comet challenge')}>
               <div className="stack" style={{ gap: 6 }}>
                 <div className="sec-title with-icon">
                   <Icon name="comet" size={28} />
-                  Ride the comet? About five minutes a career
+                  {t('Ride the comet? About five minutes a career')}
                 </div>
-                <p className="small muted">Comet is Shoot for the stars at hyper speed: Fast break and Sim stay on for the whole career. The seasons play themselves and the game makes the routine calls and the turning points; you choose where you play, the draft, your brand deals and when to retire, and the biggest nights (draft night, awards, finals, breakthroughs) get a page of their own. The rest waits for you in a list of highlights. The career carries the Comet mark.</p>
+                <p className="small muted">{t('Comet is Shoot for the stars at hyper speed: Fast break and Sim stay on for the whole career. The seasons play themselves and the game makes the routine calls and the turning points; you choose where you play, the draft, your brand deals and when to retire, and the biggest nights (draft night, awards, finals, breakthroughs) get a page of their own. The rest waits for you in a list of highlights. The career carries the Comet mark.')}</p>
                 <div className="row" style={{ gap: 8 }}>
                   <button className={`btn small${comet ? '' : ' ghost'}`} aria-pressed={comet} onClick={() => (comet || sfx('comet'), setComet(true))}>
-                    {comet ? 'Comet away' : 'Ride the comet'}
+                    {comet ? t('Comet away') : t('Ride the comet')}
                   </button>
                   <button className="btn small ghost" aria-pressed={!comet} onClick={() => setComet(false)}>
-                    Just the stars
+                    {t('Just the stars')}
                   </button>
                 </div>
               </div>
@@ -189,10 +192,10 @@ function Venue({ mode, state, ch, onStart, onFly }: { mode: Mode; state: LandSta
           )}
           <div className="row-end">
             <button className="btn" data-tour="create-next" onClick={() => onStart(mode)}>
-              {mode === 'reality' && oath ? 'Roll the rough road' : 'Make your player'}
+              {mode === 'reality' && oath ? t('Roll the rough road') : t('Make your player')}
             </button>
           </div>
-          <p className="small muted">The league is the same at every difficulty. What changes is your potential, how fast you grow and how often you get hurt. Want it quicker? Flip the Fast break switch inside the game, any time.</p>
+          <p className="small muted">{t('The league is the same at every difficulty. What changes is your potential, how fast you grow and how often you get hurt. Want it quicker? Flip the Fast break switch inside the game, any time.')}</p>
         </>
       )}
     </div>
@@ -200,7 +203,7 @@ function Venue({ mode, state, ch, onStart, onFly }: { mode: Mode; state: LandSta
 }
 
 /** What each place's card holds. */
-function PlaceCard({ id, state, ch, onStart, onFly }: { id: LandId; state: LandState; ch: Challenges; onStart: (m: Mode) => void; onFly: () => void }) {
+function PlaceCard({ id, state, ch, onStart, onFly, onStory }: { id: LandId; state: LandState; ch: Challenges; onStart: (m: Mode) => void; onFly: () => void; onStory: () => void }) {
   const mode = LAND_MODE[id];
   if (mode) return <Venue mode={mode} state={state} ch={ch} onStart={onStart} onFly={onFly} />;
   switch (id) {
@@ -220,14 +223,17 @@ function PlaceCard({ id, state, ch, onStart, onFly }: { id: LandId; state: LandS
       return <CommunityCard />;
     case 'museum':
       return <AchievementsCard />;
+    case 'story':
+      return <StoryCard onStory={onStory} />;
     default:
       return <MiniGamesCard />;
   }
 }
 
 /** The main land: the map with its places, the car on the avenue, and the card of the place picked;
- * `children` (the username prompt) sit between the title and the map. */
-export function MainLand({ ch, onStart, children }: { ch: Challenges; onStart: (m: Mode) => void; children?: ReactNode }) {
+ * `children` (the username prompt) sit between the title and the map. `onStory` opens story mode's
+ * naming page (round 38). */
+export function MainLand({ ch, onStart, onStory, children }: { ch: Challenges; onStart: (m: Mode) => void; onStory: () => void; children?: ReactNode }) {
   const road = useStore((s) => s.road);
   const recommend = useStore((s) => s.recommend);
   const setPage = useStore((s) => s.setPage);
@@ -240,19 +246,21 @@ export function MainLand({ ch, onStart, children }: { ch: Challenges; onStart: (
   const pop = useRef<HTMLDivElement>(null);
   const place = places.find((p) => p.id === sel) ?? places[0];
 
-  // the car drives along the avenue a few pixels at a time; the boat takes him across to the island
+  // the car drives along the avenue a few pixels at a time; the boat takes him across to an island
+  // (south to the mini-games, north to the old neighbourhood: `sail` counts its steps, minus north)
   const [carX, setCarX] = useState(() => stopOf(place.id));
   const [facing, setFacing] = useState<1 | -1>(1);
   const [sail, setSail] = useState(0);
-  const goal = place.id === 'island' ? DOCK : place.stop;
+  const isle = ISLANDS[place.id] ?? 0;
+  const goal = isle ? DOCK : place.stop;
   useEffect(() => {
-    if (carX === goal || (sail > 0 && place.id !== 'island')) return;
+    if (carX === goal || (sail !== 0 && !isle)) return;
     setFacing(goal < carX ? -1 : 1);
     if (reducedMotion()) return setCarX(goal);
     const t = setTimeout(() => setCarX((x) => (x < goal ? Math.min(goal, x + 3) : Math.max(goal, x - 3))), 30);
     return () => clearTimeout(t);
-  }, [carX, goal, sail, place.id]);
-  const across = place.id === 'island' && carX === DOCK ? 8 : 0;
+  }, [carX, goal, sail, isle]);
+  const across = isle && carX === DOCK ? 8 * isle : 0;
   useEffect(() => {
     if (sail === across) return;
     if (reducedMotion()) return setSail(across);
@@ -325,17 +333,18 @@ export function MainLand({ ch, onStart, children }: { ch: Challenges; onStart: (
   return (
     <>
       <section className="ml-hero">
-        <div className="kicker">A basketball career game · the main land</div>
+        <div className="kicker">{t('A basketball career game')} · the main land</div>
         <h1 className="ml-title">The main land</h1>
         <p className="small muted road-hint">
-          Click a place on the map<span className="hide-touch">, or move between them with the arrow keys (Enter opens a place, Escape closes its card)</span>.
+          {t('Click a place on the map')}
+          <span className="hide-touch">{t(', or move between them with the arrow keys (Enter opens a place, Escape closes its card)')}</span>.
         </p>
       </section>
       {children}
       <div className="ml-stage" data-tour="mainland">
-        <LandMap career={career} label="The main land: a gym, the cage and the dome for the three difficulties, the airport, the cinema, the park, the library, the newsstand, the statue plaza, the trophy museum, his house while a career is going, and the island of mini-games across the water">
+        <LandMap career={career} label={t('The main land: a gym, the cage and the dome for the three difficulties, the airport, the cinema, the park, the library, the newsstand, the statue plaza, the trophy museum, his house while a career is going, the island of mini-games across the water, and the old neighbourhood to the north, where story mode starts')}>
           <Sprite rows={PLANE} x={plane.x} y={plane.y} colors={PLANE_COLORS} />
-          <Sprite rows={BOAT} x={186 + sail} y={51 + Math.round(sail * 1.1)} colors={sail ? kin : { ...kin, h: '', s: '' }} />
+          <Sprite rows={BOAT} x={186 + Math.abs(sail)} y={51 + Math.round(sail * (sail > 0 ? 1.1 : 1.25))} colors={sail ? kin : { ...kin, h: '', s: '' }} />
           {!sail && <Sprite rows={CAR} x={carX - 4} y={AVENUE - 4} colors={kin} flip={facing < 0} />}
           {!sail && <rect className="ml-night" x={facing > 0 ? carX + 5 : carX - 7} y={AVENUE - 1} width={3} height={1} fill="#FFF3BF" />}
         </LandMap>
@@ -352,7 +361,7 @@ export function MainLand({ ch, onStart, children }: { ch: Challenges; onStart: (
                 data-state={st}
                 data-tour={p.id === 'gym' ? 'mode-regular' : undefined}
                 style={{ left: `${(x / LAND_W) * 100}%`, top: `${(y / LAND_H) * 100}%`, width: `${(w / LAND_W) * 100}%`, height: `${(h / LAND_H) * 100}%` }}
-                aria-label={`${p.name}: ${p.plate}${st === 'locked' ? ', locked' : st === 'next' ? ', recommended' : ''}`}
+                aria-label={st === 'locked' ? t('{place}: {plate}, locked', { place: p.name, plate: p.plate }) : st === 'next' ? t('{place}: {plate}, recommended', { place: p.name, plate: p.plate }) : `${p.name}: ${p.plate}`}
                 aria-pressed={on}
                 onClick={(e) => go(p.id, e.detail === 0)}
               >
@@ -366,7 +375,7 @@ export function MainLand({ ch, onStart, children }: { ch: Challenges; onStart: (
         </div>
         {open && (
           <div className={`road-pop ml-pop ml-${place.row} ${side}`} style={popAt} ref={pop} key={place.id}>
-            <button className="pop-x road-pop-x" aria-label="Close" onClick={close}>
+            <button className="pop-x road-pop-x" aria-label={t('Close')} onClick={close}>
               <PixelX />
             </button>
             <section className="card stack ml-card" aria-label={place.name}>
@@ -374,7 +383,7 @@ export function MainLand({ ch, onStart, children }: { ch: Challenges; onStart: (
                 <LandCrop place={place.id} career={career} size={64} />
                 <div className="kicker">{place.name}</div>
               </div>
-              <PlaceCard id={place.id} state={state} ch={ch} onStart={onStart} onFly={fly} />
+              <PlaceCard id={place.id} state={state} ch={ch} onStart={onStart} onFly={fly} onStory={onStory} />
             </section>
           </div>
         )}

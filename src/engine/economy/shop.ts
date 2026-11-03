@@ -1,5 +1,6 @@
 // Offseason shop: six things a summer, priced for his income (round 31), as many as he can pay for.
 
+import { tx } from '../../i18n';
 import { ATTR_MAX, ATTRS, LONGEVITY, SHOP, VISIT, WEAR } from '../balance';
 import { chance, clamp, pick, weightedIndex } from '../rng';
 import { VISITS } from '../../content/visits';
@@ -39,34 +40,42 @@ function target(s: GameState): number {
 }
 
 const HELPS: Record<string, string> = {
-  SHT: 'your shooting',
-  FIN: 'finishing at the rim',
-  PLY: 'your handle and passing',
-  PER: 'perimeter defense',
-  INT: 'rim protection',
-  REB: 'rebounding',
-  ATH: 'your athleticism',
-  IQ: 'your feel for the game',
+  SHT: tx('your shooting'),
+  FIN: tx('finishing at the rim'),
+  PLY: tx('your handle and passing'),
+  PER: tx('perimeter defense'),
+  INT: tx('rim protection'),
+  REB: tx('rebounding'),
+  ATH: tx('your athleticism'),
+  IQ: tx('your feel for the game'),
 };
+
+/** What an item does, in parts: a phrase each, and for the ratings it helps their names (round 40:
+ * the shop shows them in the player's language, ui/screens/Decision.tsx). */
+export function itemParts(it: ShopItem): { k: string; what?: string[] }[] {
+  const parts: { k: string; what?: string[] }[] = [];
+  const attrs = it.attrs ? ATTRS.filter((k) => it.attrs![k]) : [];
+  if (attrs.length) parts.push({ k: tx('Helps {what}'), what: attrs.map((k) => HELPS[k]) });
+  if (it.focus) parts.push({ k: tx('Sharpens your focus skills') });
+  if (it.range) parts.push({ k: tx('Extends your range') });
+  if (it.offhand) parts.push({ k: tx('Builds your weak hand') });
+  if (it.touch) parts.push({ k: tx('Steadies you at the free-throw line') });
+  if (it.growthMult) parts.push({ k: tx('Speeds up your development') });
+  if (it.injuryMult) parts.push({ k: tx('Keeps your body healthier') });
+  if (it.declineMult) parts.push({ k: tx('Slows down aging') });
+  if (it.morale) parts.push({ k: tx('Lifts your mood') });
+  if (it.rep) parts.push({ k: tx('Raises your profile') });
+  if (it.trust) parts.push({ k: tx('Earns goodwill') });
+  if (it.toIdeal) parts.push({ k: tx('Gets you closer to your best playing weight') });
+  if (it.weight) parts.push({ k: it.weight > 0 ? tx('Puts on weight') : tx('Takes weight off') });
+  return parts;
+}
 
 /** Plain-language effect of an item; no numbers, the player judges the value. */
 function describeItem(it: ShopItem): string {
-  const parts: string[] = [];
-  const attrs = it.attrs ? ATTRS.filter((k) => it.attrs![k]) : [];
-  if (attrs.length) parts.push(`Helps ${attrs.map((k) => HELPS[k]).join(' and ')}`);
-  if (it.focus) parts.push('Sharpens your focus skills');
-  if (it.range) parts.push('Extends your range');
-  if (it.offhand) parts.push('Builds your weak hand');
-  if (it.touch) parts.push('Steadies you at the free-throw line');
-  if (it.growthMult) parts.push('Speeds up your development');
-  if (it.injuryMult) parts.push('Keeps your body healthier');
-  if (it.declineMult) parts.push('Slows down aging');
-  if (it.morale) parts.push('Lifts your mood');
-  if (it.rep) parts.push('Raises your profile');
-  if (it.trust) parts.push('Earns goodwill');
-  if (it.toIdeal) parts.push('Gets you closer to your best playing weight');
-  if (it.weight) parts.push(it.weight > 0 ? 'Puts on weight' : 'Takes weight off');
-  return parts.join(' · ');
+  return itemParts(it)
+    .map((p) => (p.what ? p.k.replace('{what}', p.what.join(' and ')) : p.k))
+    .join(' · ');
 }
 
 /**

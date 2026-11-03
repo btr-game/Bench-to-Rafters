@@ -18,6 +18,7 @@ import type { ChosenLook } from '../content/looks';
 import type { MiniResult } from '../engine/career/miniBonus';
 import { ROAD_GRADES } from '../engine/balance';
 import { fnv1a, isDev } from '../dev/mode';
+import { t, tx } from '../i18n';
 
 /** The mini-games of the island; each needs a C or better once (R33-D). */
 export type RoadMini = 'threes' | 'dunk' | 'street' | 'legends' | 'lab' | 'rhythm' | 'office';
@@ -113,7 +114,7 @@ export const revealCode = (): string => String.fromCharCode(...SHOWN.map((c, i) 
 /** A mini-game run's grade on the island (balance.ts ROAD_GRADES): A to D, or Lockdown's own. */
 export function roadGrade(r: MiniResult): string {
   const G = ROAD_GRADES;
-  const by = (v: number, t: { A: number; B: number; C: number }, won = false) => (won || v >= t.A ? 'A' : v >= t.B ? 'B' : v >= t.C ? 'C' : 'D');
+  const by = (v: number, cut: { A: number; B: number; C: number }, won = false) => (won || v >= cut.A ? 'A' : v >= cut.B ? 'B' : v >= cut.C ? 'C' : 'D');
   switch (r.game) {
     case 'threes':
       return by(r.score, G.threes, r.won);
@@ -140,23 +141,38 @@ export const passGrade = (g?: string): boolean => !!g && RANK.indexOf(g) >= 0 &&
 /** The island's mini-games, in the hub's order. */
 export const ROAD_MINIS: RoadMini[] = ['threes', 'dunk', 'street', 'legends', 'lab', 'rhythm', 'office'];
 
-/** What a C takes in each mini-game, in a few words (the island's hub and the road map). */
+/** What a C takes in each mini-game, in a few words (the island's hub and the road map). Round 40:
+ * each is read when a screen shows it, in the player's language. */
 export const ROAD_NEED: Record<RoadMini, string> = {
-  threes: `${ROAD_GRADES.threes.C} points`,
-  dunk: `a ${ROAD_GRADES.dunk.C}-point dunk`,
-  street: 'lose by 3 or less',
-  legends: 'reach the conference finals',
-  lab: `peak OVR ${ROAD_GRADES.lab.C}`,
-  rhythm: 'half the plays on time',
-  office: 'make the playoffs once',
+  get threes() {
+    return t('{n} points', { n: ROAD_GRADES.threes.C });
+  },
+  get dunk() {
+    return t('a {n}-point dunk', { n: ROAD_GRADES.dunk.C });
+  },
+  get street() {
+    return t('lose by 3 or less');
+  },
+  get legends() {
+    return t('reach the conference finals');
+  },
+  get lab() {
+    return t('peak OVR {n}', { n: ROAD_GRADES.lab.C });
+  },
+  get rhythm() {
+    return t('half the plays on time');
+  },
+  get office() {
+    return t('make the playoffs once');
+  },
 };
 
 /** Round 35: what the road map's other stops open once the full game is: intermediate Reality hits
  * hard, advanced Shoot for the stars, the island the mini-games (Built in a lab is one of them). */
 export type Unlock = 'reality' | 'stars' | 'minis';
 export const UNLOCK_FROM: Record<Unlock, Level | 'island'> = { reality: 'intermediate', stars: 'advanced', minis: 'island' };
-export const UNLOCK_NAME: Record<Unlock, string> = { reality: 'Reality hits hard', stars: 'Shoot for the stars', minis: 'the mini-games' };
-const STOP_NAME: Record<Level | 'island', string> = { beginner: 'beginner', intermediate: 'the intermediate level', advanced: 'the advanced level', island: 'the island' };
+// the modes keep their English names; the mini-games are words (round 40: shown with t())
+export const UNLOCK_NAME: Record<Unlock, string> = { reality: 'Reality hits hard', stars: 'Shoot for the stars', minis: tx('the mini-games') };
 
 /** Whether this device has opened `u` (the dev deck has everything, but for its tutorial cards). */
 export function unlocked(r: Road, u: Unlock): boolean {
@@ -169,7 +185,12 @@ export const modeOpen = (r: Road, m: string): boolean => (m === 'reality' ? unlo
 /** What a stop on the road map opens, if it opens anything. */
 export const unlockOf = (stop: Level | 'island'): Unlock | null => (Object.keys(UNLOCK_FROM) as Unlock[]).find((u) => UNLOCK_FROM[u] === stop) ?? null;
 /** "Clear the intermediate level on the road map to open Reality hits hard." */
-export const unlockHint = (u: Unlock): string => `Clear ${STOP_NAME[UNLOCK_FROM[u]]} on the road map to open ${UNLOCK_NAME[u]}.`;
+export const unlockHint = (u: Unlock): string =>
+  u === 'reality'
+    ? t('Clear the intermediate level on the road map to open {mode}.', { mode: UNLOCK_NAME.reality })
+    : u === 'stars'
+      ? t('Clear the advanced level on the road map to open {mode}.', { mode: UNLOCK_NAME.stars })
+      : t('Clear the island on the road map to open the mini-games.');
 
 /** A career kept nowhere: a level, or a closing-tour stop (no save slot, log, community or achievements). */
 export const offRecord = (g: GameState): boolean => !!(g.flags.level || g.flags.tour);

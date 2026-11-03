@@ -9,6 +9,7 @@ import { ht, fmtMoney } from '../format';
 import { health, ovr, repName, roleName, stageLine, team } from '../selectors';
 import { Meter, TeamChip } from './bits';
 import { weightOf } from '../../engine/player/weight';
+import { t } from '../../i18n';
 
 export function AttrRows({ g, compare }: { g: GameState; compare?: Record<string, number> }) {
   const p = g.player;
@@ -23,7 +24,7 @@ export function AttrRows({ g, compare }: { g: GameState; compare?: Record<string
               <Icon name={ICON_FOR[k]} size={20} />
               {NAMES.attr[k]}
               {p.focus.includes(k) && (
-                <span className="focus-dot" title="Focus stat" aria-label="focus stat">
+                <span className="focus-dot" title={t('Focus stat')} aria-label={t('focus stat')}>
                   {' '}
                   ●
                 </span>
@@ -43,12 +44,12 @@ export function AttrRows({ g, compare }: { g: GameState; compare?: Record<string
 
 export function PlayerCard({ g, compact = false }: { g: GameState; compact?: boolean }) {
   const p = g.player;
-  const t = team(g);
+  const tm = team(g);
   return (
     <section className="card pc">
       <div className="pc-head">
-        <PlayerArt name={p.name} number={p.number} pos={p.pos} color={t?.color} team={t?.name} abbr={t?.abbr} league={styleLeague(g.stage)} kit="road" size={92} wear={p.wardrobe?.on} />
-        <div className="ovr" aria-label={`Overall ${Math.round(ovr(g))}`}>
+        <PlayerArt name={p.name} number={p.number} pos={p.pos} color={tm?.color} team={tm?.name} abbr={tm?.abbr} league={styleLeague(g.stage)} kit="road" size={92} wear={p.wardrobe?.on} />
+        <div className="ovr" aria-label={t('Overall {n}', { n: Math.round(ovr(g)) })}>
           <b>{Math.round(ovr(g))}</b>
           <small>OVR</small>
         </div>
@@ -59,24 +60,24 @@ export function PlayerCard({ g, compact = false }: { g: GameState; compact?: boo
           {heightMismatch(g) ? (
             <span className="height-warn" title={heightMismatch(g)!.text}>
               {' '}
-              SIZE
+              {t('SIZE')}
             </span>
           ) : null}{' '}
           · {p.archetype}
-          {p.anomaly && <span className="anomaly-tag" title="A rare player who breaks the mold"> · {p.anomaly}</span>}
+          {p.anomaly && <span className="anomaly-tag" title={t('A rare player who breaks the mold')}> · {p.anomaly}</span>}
         </div>
         <h2 className="pc-name">{p.name}</h2>
         {p.nickname && <div className="pc-nick">&ldquo;{p.nickname.name}&rdquo;</div>}
-        {t && <TeamChip name={t.name} color={t.color} />}
+        {tm && <TeamChip name={tm.name} color={tm.color} />}
         <div className="muted small">{stageLine(g)}</div>
       </div>
       <dl className="facts">
         <div>
-          <dt>Age</dt>
+          <dt>{t('Age')}</dt>
           <dd>{p.age}</dd>
         </div>
         <div>
-          <dt>Role</dt>
+          <dt>{t('Role')}</dt>
           <dd>{roleName(g)}</dd>
         </div>
         <div>
@@ -84,17 +85,17 @@ export function PlayerCard({ g, compact = false }: { g: GameState; compact?: boo
           <dd>{repName(g)}</dd>
         </div>
         <div>
-          <dt>Health</dt>
+          <dt>{t('Health')}</dt>
           <dd>{health(g)}</dd>
         </div>
         {!compact && (
           <>
             <div>
-              <dt>Scouts</dt>
-              <dd>{p.scoutGrade ? `${p.scoutGrade} (${p.scoutRange![0]}–${p.scoutRange![1]})` : 'Not yet'}</dd>
+              <dt>{t('Scouts')}</dt>
+              <dd>{p.scoutGrade ? `${p.scoutGrade} (${p.scoutRange![0]}–${p.scoutRange![1]})` : t('Not yet')}</dd>
             </div>
             <div>
-              <dt>Bank</dt>
+              <dt>{t('Bank')}</dt>
               <dd>{fmtMoney(p.bank)}</dd>
             </div>
           </>
@@ -102,7 +103,7 @@ export function PlayerCard({ g, compact = false }: { g: GameState; compact?: boo
       </dl>
       {!compact && (
         <div className="stack" style={{ gap: 8 }}>
-          <div className="sec-title">Ratings</div>
+          <div className="sec-title">{t('Ratings')}</div>
           <AttrRows g={g} compare={g.season?.attrsStart} />
         </div>
       )}

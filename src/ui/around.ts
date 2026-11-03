@@ -2,6 +2,7 @@
 // league's stories, the fans' talk) is one "Around you" card. It opens on whatever matters most
 // right now; this file decides that, so the card itself only draws.
 
+import { tx } from '../i18n';
 import type { GameState } from '../engine/types';
 import { liveMvpRace } from '../engine/career/mvpRace';
 import { duoEffect } from '../engine/career/duo';
@@ -9,7 +10,7 @@ import { callsLeft } from '../engine/world/stories';
 
 export type Pane = 'mvp' | 'rival' | 'duo' | 'league' | 'talk';
 
-export const PANE_NAME: Record<Pane, string> = { mvp: 'MVP race', rival: 'Rivalry', duo: 'Duo', league: 'The league', talk: 'The talk' };
+export const PANE_NAME: Record<Pane, string> = { mvp: tx('MVP race'), rival: tx('Rivalry'), duo: tx('Duo'), league: tx('The league'), talk: tx('The talk') };
 
 /** The parts with something to show, the one that matters most first (ties keep this order). */
 export function aroundPanes(g: GameState, lean: boolean): Pane[] {

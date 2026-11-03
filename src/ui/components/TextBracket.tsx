@@ -3,6 +3,7 @@
 // single games (the score). Big fields start at the last 16.
 
 import type { Bracket, League, SeriesResult } from '../../engine/types';
+import { t } from '../../i18n';
 
 /** Rounds in tree order: each pair of matchups feeds the one next to it in the next round. */
 function treeOrder(b: Bracket, from: number): SeriesResult[][] {
@@ -32,7 +33,7 @@ export function TextBracket({ b, league, userTeamId }: { b: Bracket; league: Lea
   const from = Math.max(0, b.rounds.findIndex((r) => r.series.length <= 8));
   const cols = treeOrder(b, from);
   const names = b.rounds.slice(from).map((r) => r.name);
-  const short = (id: string) => league.teams.find((t) => t.id === id)?.short ?? id;
+  const short = (id: string) => league.teams.find((x) => x.id === id)?.short ?? id;
   const seed = (id: string) => b.seeds?.[id];
   const champ = short(b.champion);
   return (
@@ -64,7 +65,7 @@ export function TextBracket({ b, league, userTeamId }: { b: Bracket; league: Lea
           </div>
         ))}
         <div className="tb-col">
-          <div className="tb-head">Champion</div>
+          <div className="tb-head">{t('Champion')}</div>
           <div className="tb-games">
             <div className={`tb-champ${b.champion === userTeamId ? ' mine' : ''}`}>{champ}</div>
           </div>

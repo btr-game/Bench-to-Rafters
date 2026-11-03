@@ -8,12 +8,13 @@ import { createPortal } from 'react-dom';
 import { FlightArt } from '../art/FlightArt';
 import { FLIGHT_FPS, FLIGHT_SECS, flightAt, reducedMotion } from '../mainland';
 import { sfx } from '../sound';
+import { t, tx } from '../../i18n';
 
 const FRAMES = FLIGHT_SECS * FLIGHT_FPS;
 const SAY = {
-  away: ['Leaving the road map', 'Wheels up'],
-  sea: ['Over the sea', 'To the main land'],
-  land: ['Coming in to land', 'The main land'],
+  away: [tx('Leaving the road map'), tx('Wheels up')],
+  sea: [tx('Over the sea'), tx('To the main land')],
+  land: [tx('Coming in to land'), 'The main land'],
 } as const;
 
 export function PlaneFlight({ onDone }: { onDone: () => void }) {
@@ -47,14 +48,14 @@ export function PlaneFlight({ onDone }: { onDone: () => void }) {
   }, []);
   const [kicker, line] = SAY[flightAt(frame / FRAMES).leg];
   return createPortal(
-    <div className="plane-flight" role="dialog" aria-modal="true" aria-label="The flight to the main land">
-      <FlightArt p={frame / FRAMES} tall={tall} label="A plane flies from the road map’s island over the sea to the main land" />
+    <div className="plane-flight" role="dialog" aria-modal="true" aria-label={t('The flight to the main land')}>
+      <FlightArt p={frame / FRAMES} tall={tall} label={t('A plane flies from the road map’s island over the sea to the main land')} />
       <div className="pl-caption" aria-live="polite">
-        <span>{kicker}</span>
-        <b>{line}</b>
+        <span>{t(kicker)}</span>
+        <b>{t(line)}</b>
       </div>
       <button ref={skip} className="btn pl-skip" data-skip onClick={() => done.current()}>
-        {still ? 'Land' : 'Skip'}
+        {still ? t('Land') : t('Skip')}
       </button>
     </div>,
     document.body,

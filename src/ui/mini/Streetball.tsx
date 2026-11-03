@@ -19,6 +19,7 @@ import { TimingMeter } from '../components/TimingMeter';
 import { Icon } from '../art/Icon';
 import { sfx } from '../sound';
 import { PixelWord } from '../art/PixelText';
+import { t } from '../../i18n';
 
 // each crew's colour, in the order of the crews in the engine
 const CREW_COLOR = ['#E8590C', '#1C7ED6', '#7048E8'];
@@ -177,12 +178,12 @@ function Court({ st, spots, ball, shooter, inside, highlight, call, crewColor }:
   const pose = (n: string): Pos => (spots.get(n) === OFF[0] ? 'SG' : off(n) ? 'PF' : 'PG');
   const where = (n: string): Pt => (n === shooter && inside ? LANE : (spots.get(n) ?? OFF[0]));
   return (
-    <div className="sb-court" aria-label={`${crew.court}: you ${st.us}, ${crew.name} ${st.them}`}>
+    <div className="sb-court" aria-label={t('{court}: you {us}, {crew} {them}', { court: crew.court, us: st.us, crew: crew.name, them: st.them })}>
       <CourtPixels />
       {ours.map((x, i) => (
         <div key={x.name} className={`sb-player us${shooter === x.name ? ' act' : ''}`} style={{ left: `${where(x.name)[0]}%`, top: `${where(x.name)[1]}%` }}>
           <PlayerArt name={x.name} number={[1, 7, 23][i]} pos={pose(x.name)} kitData={usKit} size={72} noBall />
-          <span>{x.me ? 'You' : x.name.split(' ').pop()}</span>
+          <span>{x.me ? t('You') : x.name.split(' ').pop()}</span>
         </div>
       ))}
       {crew.players.map((x, i) => (
@@ -241,7 +242,7 @@ function Ticker({ plays, me, upTo }: { plays: Play[]; me: string; upTo: number }
         </div>
       ) : (
         <div className="sb-now">
-          <b>Tip-off: your ball.</b>
+          <b>{t('Tip-off: your ball.')}</b>
         </div>
       )}
       {before.length > 0 && (
@@ -319,14 +320,14 @@ export function StreetballGame() {
     later(STEP_MS * path.length + 250, () => settle(x, play));
   };
 
-  const offense = (m: Move, t?: Timing) => {
+  const offense = (m: Move, timing?: Timing) => {
     if (!st || busy) return;
-    const play = runOffense(st, m, t);
+    const play = runOffense(st, m, timing);
     setTimed(null);
-    if (t) {
+    if (timing) {
       // a timing shot plays out on the action cam, like the last minutes of a final
       setBusy(true);
-      setCam({ key: st.plays.length, play: camPlay(play), note: [t === 'perfect' ? 'Perfect timing' : t === 'good' ? 'Good look' : 'Late', play.highlight].filter(Boolean).join(' · ') });
+      setCam({ key: st.plays.length, play: camPlay(play), note: [timing === 'perfect' ? t('Perfect timing') : timing === 'good' ? t('Good look') : t('Late'), play.highlight].filter(Boolean).join(' · ') });
       later(CAM_MS, () => {
         setCam(null);
         settle(st, play);
@@ -357,26 +358,24 @@ export function StreetballGame() {
     return (
       <section className="stack stage-in sb-intro">
         <div>
-          <div className="kicker">Mini-game · 3-on-3</div>
-          <h1 className="hub-title">King of the court</h1>
+          <div className="kicker">{t('Mini-game · 3-on-3')}</div>
+          <h1 className="hub-title">{t('King of the court')}</h1>
           <p className="prose">
-            One game to {STREET.to} against the crew that holds the court today. Ones and twos (inside the arc 1, outside 2), and make it take it: score and you keep the ball. On offense pick the play; a drive or a pull-up asks for a timing tap and plays out on the action cam (a perfect drive draws the and-one). On defense read the crew. Highlights fire up the crowd, and a full crowd makes your next play better.
+            {t('One game to {n} against the crew that holds the court today. Ones and twos (inside the arc 1, outside 2), and make it take it: score and you keep the ball. On offense pick the play; a drive or a pull-up asks for a timing tap and plays out on the action cam (a perfect drive draws the and-one). On defense read the crew. Highlights fire up the crowd, and a full crowd makes your next play better.', { n: STREET.to })}
           </p>
           <p className="small muted">
-            {game && game.step !== 'retired' ? `${me.name} plays with his own ratings (finishing ${Math.round(me.FIN)}, athleticism ${Math.round(me.ATH)}, shooting ${Math.round(me.SHT)}, playmaking ${Math.round(me.PLY)}).` : 'Free play: you are Ace Walker, a park regular. With a career, your own player takes the court.'}{' '}
-            A good game pays finishing.
+            {game && game.step !== 'retired' ? t('{name} plays with his own ratings (finishing {fin}, athleticism {ath}, shooting {sht}, playmaking {ply}).', { name: me.name, fin: Math.round(me.FIN), ath: Math.round(me.ATH), sht: Math.round(me.SHT), ply: Math.round(me.PLY) }) : t('Free play: you are Ace Walker, a park regular. With a career, your own player takes the court.')}{' '}
+            {t('A good game pays finishing.')}
           </p>
         </div>
         <div className="sb-rung" style={{ borderTopColor: color }}>
-          <small>
-            Today at {crew.court} · first to {STREET.to}
-          </small>
+          <small>{t('Today at {court} · first to {n}', { court: crew.court, n: STREET.to })}</small>
           <b>{crew.name}</b>
-          <span className="small muted">{crew.style === 'shooters' ? 'Shooters: they live at the arc' : crew.style === 'slashers' ? 'Slashers: they attack the rim' : 'Bigs: they post you up'}</span>
+          <span className="small muted">{crew.style === 'shooters' ? t('Shooters: they live at the arc') : crew.style === 'slashers' ? t('Slashers: they attack the rim') : t('Bigs: they post you up')}</span>
           <span className="small">{crew.players.map((p) => p.name).join(' · ')}</span>
         </div>
         <button className="btn sb-go" onClick={start}>
-          Hit the court
+          {t('Hit the court')}
         </button>
       </section>
     );
@@ -387,10 +386,8 @@ export function StreetballGame() {
     <section className="stack stage-in">
       <div className="sb-head">
         <div>
-          <div className="kicker">
-            {crew.court} · first to {STREET.to}
-          </div>
-          <h2 className="sb-title">vs {crew.name}</h2>
+          <div className="kicker">{t('{court} · first to {n}', { court: crew.court, n: STREET.to })}</div>
+          <h2 className="sb-title">{t('vs {crew}', { crew: crew.name })}</h2>
         </div>
         <div className="sb-score">
           <span className="us">{st.us}</span>
@@ -413,27 +410,27 @@ export function StreetballGame() {
           <Ticker plays={st.plays} me={st.me.name} upTo={cam ? st.plays.length - 1 : st.plays.length} />
         </div>
         <div className="stack sb-side">
-          <div className="sb-hype" aria-label={`Crowd ${st.hype} of ${STREET.hypeMax}`}>
-            <span>Crowd</span>
+          <div className="sb-hype" aria-label={t('Crowd {n} of {total}', { n: st.hype, total: STREET.hypeMax })}>
+            <span>{t('Crowd')}</span>
             {Array.from({ length: STREET.hypeMax }, (_, i) => (
               <i key={i} className={i < st.hype ? 'on' : ''} />
             ))}
-            {st.hype >= STREET.hypeMax && <b>On fire: next play is better</b>}
+            {st.hype >= STREET.hypeMax && <b>{t('On fire: next play is better')}</b>}
           </div>
           {done ? (
             <div className="card stack sb-over">
-              <div className="sec-title">{st.us > st.them ? `You beat ${crew.name}, ${st.us}–${st.them}` : `${crew.name} hold the court, ${st.them}–${st.us}`}</div>
-              <p className="small">{reached === 'rout' ? 'Not even close. The park is yours.' : reached === 'win' ? 'A win is a win. They want a rematch.' : reached === 'close' ? 'One more stop and it was yours.' : 'Next time. The park remembers.'}</p>
+              <div className="sec-title">{st.us > st.them ? t('You beat {crew}, {us}–{them}', { crew: crew.name, us: st.us, them: st.them }) : t('{crew} hold the court, {them}–{us}', { crew: crew.name, them: st.them, us: st.us })}</div>
+              <p className="small">{reached === 'rout' ? t('Not even close. The park is yours.') : reached === 'win' ? t('A win is a win. They want a rematch.') : reached === 'close' ? t('One more stop and it was yours.') : t('Next time. The park remembers.')}</p>
               <button className="btn ghost" onClick={() => (setSeed(Math.floor(Math.random() * 2 ** 31)), setSt(null))}>
-                Run it back
+                {t('Run it back')}
               </button>
             </div>
           ) : st.over || busy ? null : st.ourBall ? (
             timed ? (
-              <TimingMeter skill={timed === 'drive' ? me.FIN : me.SHT} label={timed === 'drive' ? 'Finish!' : 'Release!'} onTap={(t) => offense(timed, t)} />
+              <TimingMeter skill={timed === 'drive' ? me.FIN : me.SHT} label={timed === 'drive' ? t('Finish!') : t('Release!')} onTap={(timing) => offense(timed, timing)} />
             ) : (
               <>
-                <div className="sec-title">Your ball: pick the play</div>
+                <div className="sec-title">{t('Your ball: pick the play')}</div>
                 <div className="sb-moves">
                   {MOVES.map((m, i) => (
                     <button key={m.key} className="sb-move" onClick={() => pick(m.key)}>
@@ -448,7 +445,7 @@ export function StreetballGame() {
             )
           ) : (
             <>
-              <div className="sec-title">Their ball: how do you guard it?</div>
+              <div className="sec-title">{t('Their ball: how do you guard it?')}</div>
               <div className="sb-moves">
                 {GUARDS.map((g, i) => (
                   <button key={g.key} className="sb-move def" onClick={() => defense(g.key)}>

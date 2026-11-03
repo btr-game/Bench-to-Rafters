@@ -12,7 +12,7 @@
 // level of the tutorial gets only the title and the thank-you. Leaving a career that isn't over
 // gets no ending at all (owner: "leaving a career that isn't finished doesn't deserve the ending card").
 
-import type { GameState } from '../engine/types';
+import type { GameState, StoryRole } from '../engine/types';
 import { championships, hallOfFame, nbaCareerPoints } from '../engine/awards/legacy';
 import { raftersDetail } from '../engine/awards/details';
 import { legendarySeasons } from '../engine/awards/legendary';
@@ -79,6 +79,12 @@ export function speechOf(g: GameState): string[] {
   else if (mvps) lines.push(`The MVP ${mvps === 1 ? 'trophy is' : 'trophies are'} nice. You are the part I will miss.`);
   else lines.push('We never got the ring. We never stopped chasing it, either.');
   const duo = duoAtEnd(g)?.b;
+  // round 38: in story mode the speech is for his people (his friend, his rival, his family)
+  if (g.story) {
+    lines.push(...storySpeech(g));
+    lines.push(`When you look up and see number ${p.number}, remember the driveway it started on.`);
+    return lines.slice(0, 7);
+  }
   if (g.flags.child) lines.push(`To my family: every time I looked up and saw that little jersey, I played a little harder.`);
   else if (duo) lines.push(`${first(duo.name)}, I would not be up there without you.`);
   else if (g.rivalry) lines.push(`${g.rivalry.name}, you made me better every single night. Don't tell anybody.`);
@@ -142,8 +148,50 @@ export function creditsOf(g: GameState): CreditBlock[] {
   if (g.flags.wed) people.push(`Married · ${g.flags.wed}`);
   if (g.flags.child) people.push(`${g.flags.childGirl ? 'A daughter' : 'A son'} · ${g.flags.child}`);
   if (g.parent) people.push(`Father · ${g.parent.name}`);
+  if (g.story) people.unshift(...storyWith(g));
   if (people.length) out.push({ head: 'With', rows: people });
+  // round 38: story mode ends on where his people are now
+  if (g.story) out.push({ head: 'Where they are now', rows: storyNow(g) });
   return out;
+}
+
+// ---- round 38: story mode's people in the finale (the finale stays English: owner, round 40) ----
+
+const bondOf = (g: GameState, who: StoryRole) => g.story?.bond[who] ?? 0;
+
+/** The speech's lines for his people: the friend first when they are close, the rival, the family. */
+function storySpeech(g: GameState): string[] {
+  const st = g.story!;
+  const F = first(st.names.friend);
+  const R = first(st.names.rival);
+  const P = first(st.names.parent);
+  const out: string[] = [];
+  const f = st.friend;
+  if (bondOf(g, 'friend') >= 2) out.push(f.lv === 'COACH' && st.f.friendCoach ? `${F}, you were on my bench at the end, like you were in the driveway at the start. This is yours too.` : f.track === 'star' ? `${F}, you got there first and waited for me. The best player I ever played against grew up next door.` : `${F}, from the driveway to here. This number is half yours.`);
+  else if (bondOf(g, 'friend') <= -1) out.push(`${F}, I know we lost each other somewhere along the way. I still think about the driveway.`);
+  else out.push(`${F}, thank you for every game to eleven.`);
+  if (st.rival) out.push(st.f.feud ? `${R}... we never did settle it. Maybe one day.` : bondOf(g, 'rival') >= 2 ? `${R}, one step ahead of me my whole life. You made me chase. Thank you for that.` : `${R}, you were always two points ahead. Don't think I didn't notice.`);
+  out.push(st.mem.some((m) => m.id === 'p-ride-promise') && st.mem.some((m) => m.id === 'p-house-house') ? `${P}, I promised in the car I would pay it all back. I hope the porch is a start.` : `${P}, the car rides at five in the morning. I heard every word you didn't say.`);
+  return out;
+}
+
+/** His people for the credits' With block. */
+function storyWith(g: GameState): string[] {
+  const st = g.story!;
+  return [`Best friend · ${st.names.friend}`, ...(st.rival ? [`Rival · ${st.names.rival}`] : []), `Parent · ${st.names.parent}`, `Younger sibling · ${st.names.sibling}`];
+}
+
+/** Where each of them is when it ends. */
+function storyNow(g: GameState): string[] {
+  const st = g.story!;
+  const f = st.friend;
+  const rows: string[] = [];
+  rows.push(`${st.names.friend} · ${f.lv === 'COACH' ? (st.f.friendCoach ? 'an assistant coach, still on your bench' : `coaching at ${f.team || 'a college'}`) : f.lv === 'OUT' ? 'two rows behind the bench, every game' : f.track === 'star' ? 'one of the best of his time, and still your driveway' : 'a pro to the end, and still your friend'}`);
+  if (st.rival) rows.push(`${st.names.rival} · ${st.f.feud ? 'still two points ahead, still not speaking' : bondOf(g, 'rival') >= 2 ? 'in the front row on your night' : 'retired a season before you, one step ahead'}`);
+  rows.push(`${st.names.parent} · ${st.mem.some((m) => m.id === 'p-house-house') ? 'on the porch of the house you bought, the old hoop out front' : 'still in the house with the driveway hoop'}`);
+  rows.push(`${st.names.sibling} · ${bondOf(g, 'sibling') >= 2 ? 'playing college ball, in your number' : 'at every home game you ever played'}`);
+  if (st.f.rafterBall) rows.push('The old driveway ball · in the rafters, beside your number');
+  return rows;
 }
 
 /** The game's own credits: kept to two lines (owner: "make that part extremely short (just

@@ -15,7 +15,7 @@
 //   covered    at the bottom of the page, the last content sits under a bar fixed to the screen's foot
 //   stuck      a full-screen layer that can't scroll, with text or a control past its top or foot (round 32)
 // Usage (the dev server running, `npx vite --port 5179`):
-//   node scripts/visual.cjs <out dir> [--only id,id] [--configs desktop-light,phone-dark] [--url http://localhost:5179/]
+//   node scripts/visual.cjs <out dir> [--only id,id] [--configs desktop-light,phone-dark] [--lang fr] [--url http://localhost:5179/]
 // Then `python3 scripts/visual-diff.py <old out dir> <new out dir>` lists the screens that changed.
 
 const { chromium } = require('playwright');
@@ -31,6 +31,8 @@ const opt = (k) => {
 };
 const URL = opt('--url') ?? 'http://localhost:5179/';
 const ONLY = opt('--only')?.split(',');
+// round 40: the game's language for the run (English unless given)
+const LANG = opt('--lang') ?? 'en';
 const CONFIGS = [
   { name: 'desktop-light', width: 1440, height: 900, scheme: 'light' },
   { name: 'desktop-dark', width: 1440, height: 900, scheme: 'dark' },
@@ -295,10 +297,12 @@ async function runConfig(browser, cfg) {
   let errors = [];
   page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
   page.on('console', (m) => m.type() === 'error' && errors.push(`console: ${m.text().slice(0, 200)}`));
-  await page.addInitScript((text) => {
+  await page.addInitScript(([text, lang]) => {
     try {
       sessionStorage.setItem('btr-dev-on', '1');
       if (text) localStorage.setItem('btr-text', text);
+      // round 40: the language (--lang ko|zh|ja|es|fr); English otherwise, whatever the browser says
+      localStorage.setItem('btr-lang', lang);
     } catch {}
     // the same random draws and the same clock every run, so two runs differ only where the code did
     let seed = 20261031;
@@ -314,7 +318,7 @@ async function runConfig(browser, cfg) {
       }
     }
     window.Date = FixedDate;
-  }, cfg.text ?? null);
+  }, [cfg.text ?? null, LANG]);
   await page.goto(URL);
   await page.waitForFunction(() => window.__deck, null, { timeout: 30000 });
   // no transitions or animations in the shots: what is checked is where things settle

@@ -19,6 +19,7 @@ import { FlightArt } from '../art/FlightArt';
 import { PlaneFlight } from './Plane';
 import { markPlaneSeen, planeDue, reducedMotion } from '../mainland';
 import { isDev } from '../../dev/mode';
+import { t, tx } from '../../i18n';
 
 export function Graduation() {
   const graduate = useStore((s) => s.graduate);
@@ -54,39 +55,39 @@ export function Graduation() {
       </header>
       <section className="hero level-hero">
         <Icon name="cap" size={72} />
-        <div className="kicker">The road map · done</div>
-        <h1>Graduation</h1>
-        <p className="lede">You passed the beginner level: the full game is open, with Regular guy. The road map&rsquo;s other stops open the rest.</p>
+        <div className="kicker">The road map · {t('done')}</div>
+        <h1>{t('Graduation')}</h1>
+        <p className="lede">{t('You passed the beginner level: the full game is open, with Regular guy. The road map’s other stops open the rest.')}</p>
       </section>
-      <div className="diploma" aria-label="Your diploma">
+      <div className="diploma" aria-label={t('Your diploma')}>
         <Roll />
         <div className="scroll-paper diploma-paper">
-          <div className="bucket-title">Diploma</div>
+          <div className="bucket-title">{t('Diploma')}</div>
           <ul className="diploma-list">
             {/* round 35: beginner is the tutorial; each later stop opens a mode */}
             {(
               [
-                ['Beginner · High school', 'the full game, with Regular guy', true],
-                ['Intermediate · College', 'opens Reality hits hard', false],
-                ['Advanced · NBA arena', 'opens Shoot for the stars', false],
-                ['The island', 'opens the mini-games', false],
-                ['The closing tour', 'any time, for the rest', false],
+                ['Beginner · High school', tx('the full game, with Regular guy'), true],
+                ['Intermediate · College', tx('opens Reality hits hard'), false],
+                ['Advanced · NBA arena', tx('opens Shoot for the stars'), false],
+                ['The island', tx('opens the mini-games'), false],
+                [tx('The closing tour'), tx('any time, for the rest'), false],
               ] as const
             ).map(([x, what, on]) => (
               <li key={x}>
                 <Tick on={on} />
                 <span>
-                  {x} <small>· {what}</small>
+                  {t(x)} <small>· {t(what)}</small>
                 </span>
               </li>
             ))}
           </ul>
           <div className="diploma-code">
-            <span>Your exit code</span>
+            <span>{t('Your exit code')}</span>
             <b data-tour="exit-code">{code}</b>
-            <small>On another device, or if this one forgets you: Skip the tutorial, then this code.</small>
+            <small>{t('On another device, or if this one forgets you: Skip the tutorial, then this code.')}</small>
             <button className="btn small ghost" onClick={copy}>
-              {copied ? 'Copied' : 'Copy the code'}
+              {copied ? t('Copied') : t('Copy the code')}
             </button>
           </div>
         </div>
@@ -96,25 +97,25 @@ export function Graduation() {
       <section className="card stack grad-username" data-tour="grad-username">
         <div className="sec-title with-icon">
           <Icon name="crowd" size={28} />
-          Pick a username
+          {t('Pick a username')}
         </div>
-        <UsernameBox note="Shown beside your careers on the community boards and to friends, so people know whose player it is; your players keep their own names. Letters A to Z and numbers. You can change it any time in Settings." />
+        <UsernameBox note={t('Shown beside your careers on the community boards and to friends, so people know whose player it is; your players keep their own names. Letters A to Z and numbers. You can change it any time in Settings.')} />
       </section>
       {/* round 37: the full game is the main land, a flight away */}
       <section className="card grad-plane">
-        <FlightArt p={0} label="The plane on the road map’s island, ready to take off" />
+        <FlightArt p={0} label={t('The plane on the road map’s island, ready to take off')} />
         <div className="stack" style={{ gap: 6 }}>
           <div className="sec-title with-icon">
             <Icon name="jet" size={28} />
             The main land
           </div>
-          <p className="small muted">The full game is a town of its own across the sea: a venue for each difficulty, the library of your careers, the trophy museum, the statue plaza, the park where friends play, and the island of mini-games. The plane is waiting.</p>
+          <p className="small muted">{t('The full game is a town of its own across the sea: a venue for each difficulty, the library of your careers, the trophy museum, the statue plaza, the park where friends play, and the island of mini-games. The plane is waiting.')}</p>
         </div>
       </section>
       <div className="row-end">
         <button className="btn with-icon" data-tour="graduate" disabled={flying} onClick={board}>
           <Icon name="jet" size={22} />
-          Take the plane to the main land
+          {t('Take the plane to the main land')}
         </button>
       </div>
       {flying && <PlaneFlight onDone={land} />}

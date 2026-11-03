@@ -6,6 +6,7 @@ import { ballValue, THREES } from '../../engine/mini/threes';
 import { mix } from '../art/color';
 import { paint, noBall, DRIBBLE, JUMPER } from '../art/sprite';
 import { lookOf } from '../art/Player';
+import { t } from '../../i18n';
 
 // The three-point contest arena (round 17), in pixels: a crowd behind the glass, the hoop and
 // net, a hardwood floor with the arc, five racks round it (the money rack in red, white and
@@ -174,7 +175,7 @@ export function ThreesCourt({ kit, name, accent, rack, balls, moneyRack, onFire,
 
   const mins = Math.max(0, Math.ceil(left));
   return (
-    <svg className={`threes-court${onFire ? ' fire' : ''}`} viewBox={`0 0 ${SW} ${SH}`} shapeRendering="crispEdges" role="img" aria-label={`Three-point contest: ${score} points, ${mins} seconds left`}>
+    <svg className={`threes-court${onFire ? ' fire' : ''}`} viewBox={`0 0 ${SW} ${SH}`} shapeRendering="crispEdges" role="img" aria-label={t('Three-point contest: {score} points, {n} seconds left', { score, n: mins })}>
       {arena.map((p) => (
         <path key={p.fill} d={p.d} fill={p.fill} />
       ))}

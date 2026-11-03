@@ -15,6 +15,7 @@ import { inTutorial } from '../road';
 import { Icon } from '../art/Icon';
 import { PixelX } from '../art/PixelX';
 import { sfx } from '../sound';
+import { t } from '../../i18n';
 
 function SkipPanel({ onClose }: { onClose: () => void }) {
   const skip = useStore((s) => s.skipTutorial);
@@ -38,16 +39,16 @@ function SkipPanel({ onClose }: { onClose: () => void }) {
     };
   }, [onClose]);
   return createPortal(
-    <div className="hall-pop share-pop skip-pop" data-lesson-free role="dialog" aria-modal="true" aria-label="Skip the tutorial" onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <div className="hall-pop share-pop skip-pop" data-lesson-free role="dialog" aria-modal="true" aria-label={t('Skip the tutorial')} onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="share-card">
-        <button className="pop-x" aria-label="Close" onClick={onClose}>
+        <button className="pop-x" aria-label={t('Close')} onClick={onClose}>
           <PixelX />
         </button>
         <div className="share-head">
           <Icon name="door" size={34} />
           <div style={{ minWidth: 0 }}>
-            <div className="sec-title">Skip the tutorial</div>
-            <p className="small muted">Played before? Enter the exit code and the full game opens at once. You get the code when you finish the tutorial.</p>
+            <div className="sec-title">{t('Skip the tutorial')}</div>
+            <p className="small muted">{t('Played before? Enter the exit code and the full game opens at once. You get the code when you finish the tutorial.')}</p>
           </div>
         </div>
         <form
@@ -58,13 +59,13 @@ function SkipPanel({ onClose }: { onClose: () => void }) {
             setWrong(!skip(code));
           }}
         >
-          <input ref={field} type="text" aria-label="Exit code" placeholder="Exit code" value={code} onChange={(e) => (setCode(e.target.value), setWrong(false))} autoComplete="off" autoCapitalize="off" spellCheck={false} />
+          <input ref={field} type="text" aria-label={t('Exit code')} placeholder={t('Exit code')} value={code} onChange={(e) => (setCode(e.target.value), setWrong(false))} autoComplete="off" autoCapitalize="off" spellCheck={false} />
           <button className="btn small" disabled={!code.trim()}>
-            Skip
+            {t('Skip')}
           </button>
         </form>
         <p className="small keep share-said" aria-live="polite" style={wrong ? { color: 'var(--bad)' } : undefined}>
-          {wrong ? 'That is not the code.' : ' '}
+          {wrong ? t('That is not the code.') : ' '}
         </p>
       </div>
     </div>,
@@ -81,9 +82,9 @@ export function SkipButton({ float, style }: { float?: boolean; style?: CSSPrope
   if (!on) return null;
   return (
     <>
-      <button className={`icon-btn share-btn skip-btn${float ? ' skip-float' : ''}`} style={style} data-lesson-free={float || undefined} data-tour={float ? undefined : 'skip-door'} aria-haspopup="dialog" aria-expanded={open} aria-label="Skip the tutorial" onClick={() => (sfx('page'), setOpen(true))}>
+      <button className={`icon-btn share-btn skip-btn${float ? ' skip-float' : ''}`} style={style} data-lesson-free={float || undefined} data-tour={float ? undefined : 'skip-door'} aria-haspopup="dialog" aria-expanded={open} aria-label={t('Skip the tutorial')} onClick={() => (sfx('page'), setOpen(true))}>
         <Icon name="door" size={18} />
-        <span className="share-word">Skip tutorial</span>
+        <span className="share-word">{t('Skip tutorial')}</span>
       </button>
       {open && <SkipPanel onClose={() => setOpen(false)} />}
     </>

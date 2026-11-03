@@ -8,6 +8,7 @@ import { USERNAME_MAX, cleanUsername, isRude, setUsername, username } from '../n
 import { sfx } from '../sound';
 import { recordUsername } from '../achievements';
 import { achievementsNow } from '../../store';
+import { t } from '../../i18n';
 
 export function UsernameBox({ onSet, note, compact }: { onSet?: (name: string) => void; note?: string; compact?: boolean }) {
   const [v, setV] = useState(username());
@@ -28,18 +29,18 @@ export function UsernameBox({ onSet, note, compact }: { onSet?: (name: string) =
   return (
     <div className={`stack username-box${compact ? ' compact' : ''}`} style={{ gap: 6 }}>
       <label className="field">
-        <span className="small muted">Your username</span>
+        <span className="small muted">{t('Your username')}</span>
         <div className="row" style={{ gap: 8 }}>
-          <input maxLength={USERNAME_MAX} value={v} placeholder="Shown beside your careers" aria-invalid={rude} onChange={(e) => setV(cleanUsername(e.target.value))} onKeyDown={(e) => e.key === 'Enter' && save()} />
+          <input maxLength={USERNAME_MAX} value={v} placeholder={t('Shown beside your careers')} aria-invalid={rude} onChange={(e) => setV(cleanUsername(e.target.value))} onKeyDown={(e) => e.key === 'Enter' && save()} />
           <button className="btn" disabled={!v.trim() || rude || same} onClick={save}>
-            {kept && same ? 'Saved' : 'Save'}
+            {kept && same ? t('Saved') : t('Save')}
           </button>
         </div>
       </label>
       {rude ? (
-        <p className="small name-note bad">That username isn’t allowed. Pick another one.</p>
+        <p className="small name-note bad">{t('That username isn’t allowed. Pick another one.')}</p>
       ) : (
-        <p className="small muted desc">{note ?? 'Shown beside your careers on the community boards and to friends, so people know whose player it is; your player keeps his own name. Letters A to Z and numbers. The game keeps no email or login.'}</p>
+        <p className="small muted desc">{note ?? t('Shown beside your careers on the community boards and to friends, so people know whose player it is; your player keeps his own name. Letters A to Z and numbers. The game keeps no email or login.')}</p>
       )}
     </div>
   );

@@ -15,6 +15,7 @@ import { Icon } from '../art/Icon';
 import { EndingArt } from '../art/Endings';
 import { endingsSeen } from '../../engine/achievements36';
 import { ENDINGS, ENDING_IDS, type EndingId, type SceneArt } from '../endings';
+import { t, tx } from '../../i18n';
 
 const tierOf = (k: AchTier) => ACH_TIERS.find((t) => t.key === k)!;
 
@@ -24,12 +25,12 @@ function Toast({ x, dismiss }: { x: { id: string; name: string; tier: AchTier; m
     return () => clearTimeout(t);
   }, [x.id, dismiss]);
   return (
-    <button className={`ach-toast tier-${x.tier}`} style={{ ['--tier' as string]: tierOf(x.tier).color }} onClick={() => dismiss(x.id)} title="Dismiss">
+    <button className={`ach-toast tier-${x.tier}`} style={{ ['--tier' as string]: tierOf(x.tier).color }} onClick={() => dismiss(x.id)} title={t('Dismiss')}>
       <Badge tier={x.tier} size={34} />
       <span>
-        <small>Achievement · {tierOf(x.tier).name}</small>
+        <small>{t('Achievement · {tier}', { tier: tierOf(x.tier).name })}</small>
         <b>{x.name}</b>
-        {x.more ? <small>and {x.more} more: see the achievement book</small> : null}
+        {x.more ? <small>{t('and {n} more: see the achievement book', { n: x.more })}</small> : null}
       </span>
     </button>
   );
@@ -62,11 +63,11 @@ export function AchievementsCard({ g }: { g?: GameState }) {
         Achievements
       </div>
       <p className="small muted">
-        {got} of {ACHIEVEMENTS.length} earned, over every career on this device. The rest are riddles.
+        {t('{got} of {n} earned, over every career on this device. The rest are riddles.', { got, n: ACHIEVEMENTS.length })}
       </p>
-      {g && <div className="kicker">{mine ? `This career: ${mine} earned, at the top of the book` : 'This career: none yet'}</div>}
+      {g && <div className="kicker">{mine ? t('This career: {n} earned, at the top of the book', { n: mine }) : t('This career: none yet')}</div>}
       <button className="btn ghost" data-tour="ach" onClick={() => setPage('achievements')}>
-        Open the achievement book
+        {t('Open the achievement book')}
       </button>
     </section>
   );
@@ -84,16 +85,16 @@ type Got = ReturnType<typeof loadAch>['got'][string];
 
 /** One page of the book: how it was earned, when and by whom, or its name alone as a riddle. */
 function AchCard({ a, g, here }: { a: Ach; g?: Got; here: boolean }) {
-  const t = tierOf(a.tier);
+  const tier = tierOf(a.tier);
   return (
-    <div className={`ach-card${g ? ' got' : ''}${here ? ' this-run' : ''}`} style={{ ['--tier' as string]: t.color }}>
+    <div className={`ach-card${g ? ' got' : ''}${here ? ' this-run' : ''}`} style={{ ['--tier' as string]: tier.color }}>
       <Badge tier={a.tier} locked={!g} size={38} />
       <div>
         <b>{a.name}</b>
-        <small className="achv-tier-name">{t.name}</small>
+        <small className="achv-tier-name">{tier.name}</small>
         {g ? (
           <p className="small">
-            {a.how}{' '}
+            {t(a.how)}{' '}
             <span className="muted">
               {new Date(g.at).toLocaleDateString()}
               {g.who ? ` · ${g.who}` : ''}
@@ -138,15 +139,15 @@ const tileArt = (k: EndingId): SceneArt => ({ color: '#1D428A', number: 23, surn
  * silhouettes"): each ending a tile, its scene once seen on this device, a dark shape and ??? until then. */
 function Endings({ seen }: { seen: EndingId[] }) {
   return (
-    <section className="card stack" aria-label="Endings" data-tour="endings">
+    <section className="card stack" aria-label={t('Endings')} data-tour="endings">
       <div className="sec-title with-icon">
         <Icon name="cards" size={26} />
-        Endings
+        {t('Endings')}
         <small className="num">
-          {seen.length} of {ENDING_IDS.length} endings seen
+          {t('{n} of {total} endings seen', { n: seen.length, total: ENDING_IDS.length })}
         </small>
       </div>
-      <p className="small muted">Every finished career ends on one of twelve endings, the first that fits it. Ones you haven’t seen stay in the dark.</p>
+      <p className="small muted">{t('Every finished career ends on one of twelve endings, the first that fits it. Ones you haven’t seen stay in the dark.')}</p>
       <div className="end-grid">
         {ENDING_IDS.map((k) => {
           const got = seen.includes(k);
@@ -190,21 +191,21 @@ export function AchievementBook() {
   const seen = useMemo(() => endingsSeen(saved.totals), [saved]);
   return (
     <div className="wrap">
-      <PageTop trail={['Achievement book']} back={() => setPage(null)} />
+      <PageTop trail={[t('Achievement book')]} back={() => setPage(null)} />
       <section className="stack stage-in">
         <div>
           <div className="kicker">
-            {total} of {ACHIEVEMENTS.length} earned · kept on this device across careers
+            {t('{got} of {n} earned · kept on this device across careers', { got: total, n: ACHIEVEMENTS.length })}
           </div>
           <h1 className="hub-title with-icon">
             <Badge tier="hof" size={40} />
-            Achievement book
+            {t('Achievement book')}
           </h1>
-          <p className="prose">Every milestone you reach, in any career, stays here for good. Ones you haven’t earned show only their name: work out the riddle.</p>
+          <p className="prose">{t('Every milestone you reach, in any career, stays here for good. Ones you haven’t earned show only their name: work out the riddle.')}</p>
         </div>
         {game && (
-          <section className="card stack ach-mine" aria-label="Earned this career">
-            <div className="sec-title">{mine.length ? `Earned this career: ${mine.length}` : 'Earned this career: none yet'}</div>
+          <section className="card stack ach-mine" aria-label={t('Earned this career')}>
+            <div className="sec-title">{mine.length ? t('Earned this career: {n}', { n: mine.length }) : t('Earned this career: none yet')}</div>
             {mine.length ? (
               <div className="ach-grid">
                 {mine.map((a) => (
@@ -212,7 +213,7 @@ export function AchievementBook() {
                 ))}
               </div>
             ) : (
-              <p className="small muted">What {game.player.name} earns shows up here first, and in gold in the book below.</p>
+              <p className="small muted">{t('What {name} earns shows up here first, and in gold in the book below.', { name: game.player.name })}</p>
             )}
           </section>
         )}
@@ -234,13 +235,13 @@ export function AchievementBook() {
             );
           })}
         </div>
-        <div className="achv-cats" role="group" aria-label="Categories">
+        <div className="achv-cats" role="group" aria-label={t('Categories')}>
           {ALL_CATS.map((c) => {
             const { have, n } = catN(c.key ?? 'all');
             return (
               <button key={c.key ?? 'all'} className="achv-cat" aria-pressed={cat === c.key} onClick={() => setCat(cat === c.key ? null : c.key)}>
                 <Icon name={c.icon} size={22} />
-                <span>{c.name}</span>
+                <span>{c.key === null ? t('All') : t(c.name)}</span>
                 <small className="num">
                   {have}/{n}
                 </small>
@@ -248,28 +249,28 @@ export function AchievementBook() {
             );
           })}
         </div>
-        <p className="small muted">A category names only the area, never what it takes: the riddles stay riddles.</p>
+        <p className="small muted">{t('A category names only the area, never what it takes: the riddles stay riddles.')}</p>
         <div className="seg">
           {(
             [
-              ['all', 'All'],
-              ['got', 'Earned'],
-              ['open', 'Still a riddle'],
+              ['all', tx('All')],
+              ['got', tx('Earned')],
+              ['open', tx('Still a riddle')],
             ] as [Show, string][]
           ).map(([k, l]) => (
             <button key={k} aria-pressed={show === k} onClick={() => setShow(k)}>
-              {l}
+              {t(l)}
             </button>
           ))}
         </div>
         {chapters.map(({ c, items }) => {
           const { have, n } = catN(c.key);
           return (
-            <section key={c.key} className="achv-chapter" aria-label={c.name}>
+            <section key={c.key} className="achv-chapter" aria-label={t(c.name)}>
               {!cat && (
                 <h2 className="sec-title with-icon achv-cat-head">
                   <Icon name={c.icon} size={26} />
-                  {c.name}
+                  {t(c.name)}
                   <small className="num">
                     {have}/{n}
                   </small>
@@ -283,7 +284,7 @@ export function AchievementBook() {
             </section>
           );
         })}
-        {!chapters.length && <p className="small muted keep">{show === 'got' ? 'None earned here yet.' : show === 'open' ? 'Every one here is earned.' : 'None in this tier and category.'}</p>}
+        {!chapters.length && <p className="small muted keep">{show === 'got' ? t('None earned here yet.') : show === 'open' ? t('Every one here is earned.') : t('None in this tier and category.')}</p>}
       </section>
       <FootBar where="achievement book" />
     </div>

@@ -1,6 +1,10 @@
 // The in-season loop: preseason → first half → midseason → second half + postseason.
 
+import { tx } from '../../i18n';
 import { midseasonSwing, startTeamFactors, winningEdge } from './team';
+import { palsOn } from './friends';
+import { storySeason } from '../story/pals';
+import { pushStory } from '../story/chapters';
 
 import { evaluateBreakthrough, updateHighs } from './breakthrough';
 import { markGames } from './marks';
@@ -175,12 +179,17 @@ export function beginSeason(s: GameState): void {
   s.season = season;
   s.step = 'preseason';
   startStories(s, league);
+  // round 38: story mode's friend and rival move on a year (their lines feed meetFriends), and a
+  // chapter that opens a season
+  storySeason(s);
+  pushStory(s, 'start');
   meetFriends(s);
   pushPlanDecision(s, 1);
 }
 
 type PlanText = { id: HalfPlan; label: string; detail: string };
-const PLAN_TEXT: Record<HalfPlan, PlanText> = {
+/** The plans' names and what they do (round 40: the screens show them in the player's language, scripts/i18n.ts lists them). */
+export const PLAN_TEXT: Record<HalfPlan, PlanText> = {
   balanced: { id: 'balanced', label: 'Balanced', detail: 'Steady work, normal risk.' },
   grind: { id: 'grind', label: 'Grind', detail: 'Work harder than anyone. Faster development, much more wear on your body, burnout possible.' },
   recovery: { id: 'recovery', label: 'Recovery', detail: 'Ease off. Slower development, far fewer injuries, heal faster, feel better.' },
@@ -196,7 +205,7 @@ const PLAN_TEXT: Record<HalfPlan, PlanText> = {
 };
 const PLAN_IDS = Object.keys(PLAN_TEXT) as HalfPlan[];
 /** Fast break: five training groups, one a season. */
-const FAST_PLANS: PlanText[] = [
+export const FAST_PLANS: PlanText[] = [
   { id: 'balanced', label: 'General', detail: 'A bit of everything. Every rating grows at a normal pace.' },
   { id: 'strength', label: 'Weight room', detail: 'Strength and explosiveness: finishing, rebounding, athleticism and rim protection. A bit more injury risk.' },
   { id: 'shooting', label: 'Shooting', detail: 'Your jumper, your range and your free throws get the reps; the rest waits.' },
@@ -204,7 +213,7 @@ const FAST_PLANS: PlanText[] = [
   { id: 'playmaking', label: 'IQ', detail: 'Film, reads and passing: playmaking and basketball IQ. Coaches trust you more.' },
 ];
 /** Built in a lab: how hard to work, since the player picks the ratings himself. */
-const LAB_PLANS: PlanText[] = [
+export const LAB_PLANS: PlanText[] = [
   { id: 'balanced', label: 'Steady', detail: 'Normal credits, normal risk.' },
   { id: 'grind', label: 'Grind', detail: 'More credits, much more wear on your body, burnout possible.' },
   { id: 'recovery', label: 'Recovery', detail: 'Fewer credits, far fewer injuries, heal faster, feel better.' },
@@ -224,12 +233,12 @@ export function pushPlanDecision(s: GameState, half: 1 | 2): void {
     const list = style === 'six' ? (injured ? [...SIX_PLANS, 'recovery' as HalfPlan] : SIX_PLANS).map((id) => PLAN_TEXT[id]) : PLAN_IDS.map((id) => PLAN_TEXT[id]);
     pushDecision(s, {
       kind: 'plan',
-      title: 'Season plan',
+      title: tx('Season plan'),
       text: injured
-        ? 'You are injured. Recovery is the only plan available.'
+        ? tx('You are injured. Recovery is the only plan available.')
         : style === 'six'
-          ? 'Pick one plan for the whole season.'
-          : 'Pick one or two plans for the whole season. One plan alone works a little better than its listing; add a second and the first keeps most of its effect while the side plan adds a smaller boost.',
+          ? tx('Pick one plan for the whole season.')
+          : tx('Pick one or two plans for the whole season. One plan alone works a little better than its listing; add a second and the first keeps most of its effect while the side plan adds a smaller boost.'),
       choices: list.map((p) => ({ id: p.id, label: p.label, detail: p.detail, disabled: injured && p.id !== 'recovery' })),
       data: { half, ...(style === 'six' ? { single: true } : {}), season: true },
     });
@@ -242,12 +251,12 @@ export function pushPlanDecision(s: GameState, half: 1 | 2): void {
     const list = injured && !quick.some((p) => p.id === 'recovery') ? [...quick, PLAN_TEXT.recovery] : quick;
     pushDecision(s, {
       kind: 'plan',
-      title: 'Season plan',
+      title: tx('Season plan'),
       text: injured
-        ? 'You are injured. Recovery is the only plan available.'
+        ? tx('You are injured. Recovery is the only plan available.')
         : s.mode === 'lab'
-          ? 'How hard do you work this season? Training pays out lab credits; spend them on any rating.'
-          : 'Pick one plan for the season.',
+          ? tx('How hard do you work this season? Training pays out lab credits; spend them on any rating.')
+          : tx('Pick one plan for the season.'),
       choices: list.map((p) => ({ id: p.id, label: p.label, detail: p.detail, disabled: injured && p.id !== 'recovery' })),
       data: { half, single: true },
     });
@@ -256,8 +265,8 @@ export function pushPlanDecision(s: GameState, half: 1 | 2): void {
   const plans = PLAN_IDS.map((id) => PLAN_TEXT[id]);
   pushDecision(s, {
     kind: 'plan',
-    title: half === 1 ? 'First-half plan' : 'Second-half plan',
-    text: injured ? 'You are injured. Recovery is the only plan available.' : 'Pick one or two plans for the next half. One plan alone works a little better than its listing (focused work); add a second and the first keeps most of its effect while the side plan adds a smaller boost.',
+    title: half === 1 ? tx('First-half plan') : tx('Second-half plan'),
+    text: injured ? tx('You are injured. Recovery is the only plan available.') : tx('Pick one or two plans for the next half. One plan alone works a little better than its listing (focused work); add a second and the first keeps most of its effect while the side plan adds a smaller boost.'),
     choices: plans.map((p) => ({ id: p.id, label: p.label, detail: p.detail, disabled: injured && p.id !== 'recovery' })),
     data: { half },
   });
@@ -334,7 +343,7 @@ function makeHook(s: GameState, league: League, level: LevelKey, acc: HalfAcc, s
     // round 35: classmates in this game (career/friendLeague.ts): their lines, the lift the ones on
     // the other team give it, and a rival series' call (career/rivalSeries.ts)
     const rs = post && s.live?.rival ? rivalSeriesFx(s, post, opp) : null;
-    const fr = level === 'NBA' && s.mp?.klass ? friendGame(s, team, opp, (post ? season.postGames : season.games).length + 1, post, rs ? { id: rs.id, by: rs.cut } : undefined) : null;
+    const fr = level === 'NBA' && palsOn(s) ? friendGame(s, team, opp, (post ? season.postGames : season.games).length + 1, post, rs ? { id: rs.id, by: rs.cut } : undefined) : null;
     const oppStrength = fr ? opp.strength + fr.nudge : opp.strength;
     let hot = 0;
     acc.games++;
@@ -777,7 +786,7 @@ function finishSeason(s: GameState): void {
     allStarTop: levelOf(s) ? ALL_STAR_BAR.level : ALL_STAR_BAR.userTop,
   };
   // round 35: classmates run for the NBA's awards too (career/friendLeague.ts)
-  const cands = buildCandidates(league, userCand, undefined, level === 'NBA' && s.mp?.klass ? friendCandidates(s, league) : undefined);
+  const cands = buildCandidates(league, userCand, undefined, level === 'NBA' && palsOn(s) ? friendCandidates(s, league) : undefined);
   let aw: AwardOutcome;
   if (level === 'NBA') {
     aw = nbaAwards(cands);
