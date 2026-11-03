@@ -46,8 +46,19 @@ The order the owner set:
   achievements; about 78,000 words), the dev deck staying English (owner: "no need for translation
   in dev deck. it will only be accessible to me anyways"). Then narrowed (owner: "let's only go with
   interface"): names, titles, awards, nicknames, the events and other content stay English; the list
-  of what stays English is the Word document "Round 40 - what stays in English", waiting for the
-  owner's OK (about 15,000 to 20,000 words a language). The last round with a
+  of what stays English is the Word document "Round 40 - what stays in English". The owner's
+  answers (o keep English, x translate): **translated**: buttons, menus and settings; headings and
+  card titles; plans and their descriptions; messages (confirmations, warnings, empty states,
+  errors, the loading pop-out); the tutorial's lessons and Guide mode; the manual; screen-reader
+  labels; achievement descriptions; legendary seasons' descriptions (their titles stay English);
+  shop items; and **story mode's dialogue and descriptions** (owner: "translate the dialogues and
+  descriptions in story mode"). **Kept English**: leagues, teams, places, people, usernames,
+  nicknames, awards, achievement names, legendary season titles, brands, ending names, mode and
+  challenge names, mini-game names, music track names, the title, positions, stat and rating
+  abbreviations, rating full names, archetype names, the places and tabs of the town and the main
+  land, meters and labels, turning points, the other storylines, the log and news, press
+  conferences and talks, the finale and endings, what's new, the announcer, the dev deck. Story
+  mode's text is written as keyed templates from the start, so its translations drop in. The last round with a
   significant system; after it, only small balance changes and bug fixes (owner: "so let's keep up
   the spark").
 - **Publishing**: rounds 38, 39 and 40 go out together (owner: "when doing round 38, dont do the
