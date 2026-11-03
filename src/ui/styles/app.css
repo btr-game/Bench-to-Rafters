@@ -2837,7 +2837,7 @@ td > .link-btn { min-width: 44px; text-align: left; }
 .tw-name { font-weight: 800; font-size: calc(12.5px * var(--ts)); }
 .tw-tab { font-size: calc(10.5px * var(--ts)); font-weight: 600; opacity: 0.9; text-transform: uppercase; letter-spacing: 0.05em; }
 .tw-place.here .tw-sign { background: #F2C14E; color: #20242B; border-color: #B8891C; }
-.tw-new { position: absolute; z-index: 2; left: 50%; top: 2px; transform: translateX(-50%); min-width: 18px; height: 18px; display: grid; place-items: center; background: var(--accent); color: #FFFFFF; font-weight: 900; font-size: 13px; border: 2px solid #20242B; animation: twBob 1.2s steps(2) infinite; }
+.tw-new { position: absolute; z-index: 2; left: 50%; top: 2px; transform: translateX(-50%); min-width: 18px; height: 18px; display: grid; place-items: center; background: #FF7A3D; color: #20242B; font-weight: 900; font-size: 13px; border: 2px solid #20242B; animation: twBob 1.2s steps(2) infinite; }
 @keyframes twBob { 50% { transform: translate(-50%, -3px); } }
 .tw-me { position: absolute; z-index: 3; pointer-events: none; transition-property: left; }
 .tw-walker { display: block; image-rendering: pixelated; }
@@ -3033,3 +3033,5 @@ td > .link-btn { min-width: 44px; text-align: left; }
 .end-tile figcaption { font-size: calc(13px * var(--ts)); font-weight: 700; text-align: center; }
 .end-tile:not(.seen) figcaption { color: var(--muted); letter-spacing: 0.2em; }
 @media (max-width: 640px) { .end-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; } }
+/* on a phone the team's tag would sit over a building: the street's own signs say enough */
+@media (max-width: 599px) { .tw-street-name { display: none; } }
