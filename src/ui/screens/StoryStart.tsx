@@ -45,6 +45,7 @@ export function StoryCard({ onStory }: { onStory: () => void }) {
 /** The naming page: the hero, then the four people the player may name. */
 export function StoryStart({ onBack }: { onBack: () => void }) {
   const start = useStore((s) => s.start);
+  const simple = useStore((s) => s.simple);
   const [hero, setHero] = useState(STORY_HERO.name);
   const [names, setNames] = useState<Record<Named, string>>({ friend: '', parent: '', sibling: '', rival: '' });
   const heroBad = nameProblem(hero);
@@ -91,7 +92,7 @@ export function StoryStart({ onBack }: { onBack: () => void }) {
               <label className="sec-title" htmlFor={`story-${k}`}>
                 {storyT(`people.${k}`)}
               </label>
-              <p className="small muted">{storyT(`people.${k}.about`)}</p>
+              {!simple && <p className="small muted">{storyT(`people.${k}.about`)}</p>}
               <input id={`story-${k}`} type="text" maxLength={NAME_MAX} value={names[k]} placeholder={t('Empty: the game names him')} aria-describedby={`story-${k}-note`} onChange={(e) => setNames((n) => ({ ...n, [k]: cleanName(e.target.value) }))} />
               <small id={`story-${k}-note`} className={bad(k) ? 'name-note bad' : 'name-note muted'}>
                 {bad(k) || (names[k].trim() ? t('Meet {name}.', { name: shown(k) }) : t('The game names this one.'))}
