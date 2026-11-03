@@ -264,7 +264,7 @@ export function MainLand({ ch, onStart, children }: { ch: Challenges; onStart: (
   const [flight, setFlight] = useState(-1);
   const fly = () => {
     if (flight >= 0) return;
-    sfx('sent');
+    sfx('takeoff');
     if (reducedMotion()) return setPage('road');
     setFlight(0);
   };

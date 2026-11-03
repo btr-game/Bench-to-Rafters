@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { FlightArt } from '../art/FlightArt';
 import { FLIGHT_FPS, FLIGHT_SECS, flightAt, reducedMotion } from '../mainland';
+import { sfx } from '../sound';
 
 const FRAMES = FLIGHT_SECS * FLIGHT_FPS;
 const SAY = {
@@ -22,6 +23,11 @@ export function PlaneFlight({ onDone }: { onDone: () => void }) {
   const skip = useRef<HTMLButtonElement>(null);
   const done = useRef(onDone);
   done.current = onDone;
+  // the engines on the way out, the wheels and the cabin bell as it comes in
+  useEffect(() => {
+    if (!still && frame === 0) sfx('takeoff');
+    if (!still && frame === FRAMES) sfx('touchdown');
+  }, [frame, still]);
   useEffect(() => {
     if (still) return;
     // the plane rolls to a stop on the main land's runway, then the page is the main land

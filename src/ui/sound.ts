@@ -80,6 +80,8 @@ export const SFX = [
   // round 37: the town
   ['step', 'The town: his footsteps as he walks along the street'],
   ['door', 'The town: the bell over the door as he reaches a place'],
+  ['takeoff', 'The plane: the engines spool up and it lifts off, to the main land or back to the road map'],
+  ['touchdown', 'The plane: the wheels touch the main land’s runway and the cabin bell rings'],
 ] as const;
 type Sfx = (typeof SFX)[number][0];
 
@@ -429,6 +431,19 @@ export function sfx(name: Sfx, always = false): void {
     case 'door': // the bell over a shop door
       tone(N(28), t, 0.08, 'triangle', 0.3);
       tone(N(33), t + 0.07, 0.12, 'triangle', 0.22);
+      break;
+    case 'takeoff': // the engines spool up (a climbing hum and the rush of air), then wheels up
+      for (let i = 0; i < 8; i++) tone(N(-12 + i * 2), t + i * 0.07, 0.09, 'sawtooth', 0.12 + i * 0.015);
+      noise(t + 0.1, 0.65, 0.16);
+      tone(N(19), t + 0.62, 0.1, 'triangle', 0.3);
+      tone(N(24), t + 0.7, 0.16, 'triangle', 0.3);
+      break;
+    case 'touchdown': // two chirps of the tyres on the runway, the engines wind down, the cabin bell
+      noise(t, 0.04, 0.3);
+      noise(t + 0.12, 0.04, 0.24);
+      for (let i = 0; i < 4; i++) tone(N(-3 - i * 3), t + 0.16 + i * 0.08, 0.1, 'sawtooth', 0.12 - i * 0.02);
+      tone(N(28), t + 0.55, 0.3, 'sine', 0.3);
+      tone(N(24), t + 0.75, 0.4, 'sine', 0.26);
       break;
     case 'react': // a pop and a bright note: one reaction on a friend's season
       noise(t, 0.02, 0.2);
