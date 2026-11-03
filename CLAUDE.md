@@ -76,11 +76,18 @@ Other preferences:
 ## Lighter checks (owner, round 35)
 
 Owner: "let's go with lighter checks". During a round: `npx tsc --noEmit -p .` and the test files
-the change touches; the visual check only on the screens a change touches (`--only <ids>`, two
-looks: `--configs desktop-light,phone-dark`); calibration runs of about 150 careers. The full set
+the change touches; the visual check only on the screens a change touches, on the desktop only
+(`--only <ids> --configs desktop-light`); calibration runs of about 150 careers. The full set
 below runs once, at the end of the round: the whole test suite, the visual check on every card in
-all four looks with its diff, class contrast, dev-apart, and the tutorial end to end only when the
-tutorial changed. Balance only when how careers play changed, and the owner may still skip it.
+three looks (`--configs desktop-light,desktop-dark,phone-dark`) with its diff, class contrast,
+dev-apart, and the tutorial end to end only when the tutorial changed.
+
+Phones (owner, round 37: "let's rest on the phone ui ... i just dont want this to take too long,
+but also, i dont want to go back and fix the browser ui because the phone ui doesnt work at the
+end"): no phone polish and no phone checks during a round. The end-of-round check keeps one phone
+look so breakage is caught the round it happens; fix only what makes a phone screen unusable
+(sideways scrolling, content off screen, text over a button, a tap target that cannot be hit),
+with rules inside the phone media queries so the desktop layout never moves. Balance only when how careers play changed, and the owner may still skip it.
 Big rounds may be split across parallel helper agents in worktrees (owner, round 35: "sure").
 
 ## Checks before a commit
