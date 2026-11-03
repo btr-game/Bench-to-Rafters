@@ -2959,3 +2959,8 @@ multiple times."
   as the requirement"): a career counts toward opening Sim only if it made an NBA All-Star team
   (`starBy` in the totals, `simReady`), so three quick early retirements no longer open it. The Grand
   Tour achievement keeps its own rule (any finished career at each difficulty).
+- **Published** (owner: "i think once this is done, we can publish"): the game artifact (version 77),
+  the live database (0004 through the connector; 0005 and 0006 run by the owner in the Supabase SQL
+  Editor, since the connector's confirmation never reached the owner's screen, so the project's
+  migration list shows only 0001 to 0004 while every table, column and function of 0005 and 0006 is
+  in place and checked), and the website (main at the round 35 merge, Netlify deploy ready).
