@@ -6,13 +6,13 @@ import { fmtMoney } from '../../engine/economy/salary';
 import type { GameState } from '../../engine/types';
 import { useStore } from '../../store';
 import { StaffScene } from '../art/Scene';
-import { Card } from './bits';
 
 // His staff (round 25, the owner): the people hired in events, each paid every season for a very
 // small benefit. Stop by once a season, give a raise (more pay, more help), or let him go. Each
-// is drawn at work, in the role's uniform (art/Scene.tsx).
+// is drawn at work, in the role's uniform (art/Scene.tsx). Round 36: a tab of the Player tab's
+// Your life card (YourLife.tsx).
 
-export function StaffCard({ g }: { g: GameState }) {
+export function StaffPanel({ g }: { g: GameState }) {
   const act = useStore((s) => s.staffAct);
   const [said, setSaid] = useState<{ id: number; text: string } | null>(null);
   const [sure, setSure] = useState<number | null>(null);
@@ -20,7 +20,8 @@ export function StaffCard({ g }: { g: GameState }) {
   if (staff.length === 0) return null;
   const total = staff.reduce((a, m) => a + staffPay(m), 0);
   return (
-    <Card title="Staff" kicker={`${staff.length} on the payroll · ${fmtMoney(total)} a season`} tour="staff">
+    <>
+      <div className="kicker">{fmtMoney(total)} a season on the payroll</div>
       <div className="staff-list">
         {staff.map((m) => {
           const d = STAFF[m.role];
@@ -63,6 +64,6 @@ export function StaffCard({ g }: { g: GameState }) {
           );
         })}
       </div>
-    </Card>
+    </>
   );
 }

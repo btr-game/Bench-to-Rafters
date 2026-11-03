@@ -330,9 +330,9 @@ export const CARDS: DevCard[] = [
   { id: 'home-hs', title: 'Home: high school', group: 'Career hub', icon: 'house', blurb: 'The first season, the first plan.', open: () => show(hsStart()) },
   { id: 'home-nba', title: 'Home: an NBA star', group: 'Career hub', icon: 'stars', blurb: 'Third NBA season; Around you opens on what matters now (the MVP race, the duo, the rivalry, the league, the talk).', open: () => show(nbaStar()) },
   { id: 'season', title: 'Season tab', group: 'Career hub', icon: 'calendar', blurb: 'Season and league in one (round 29): team and form, standings beside team strength, the league leaders, his games, award voting, champions, the record book.', open: () => show(nbaStar(), 'season') },
-  { id: 'player', title: 'Player tab', group: 'Career hub', icon: 'person', blurb: 'Ratings, status, contract, profile, scouting, body map.', open: () => show(nbaStar(), 'player') },
+  { id: 'player', title: 'Player tab', group: 'Career hub', icon: 'person', blurb: 'Ratings, status, contract, profile, scouting, and the Body panel (folded until opened; open here): height, weight, the weak hand, free-throw touch, the body map.', open: () => show(nbaStar(), 'player'), press: '[data-tour="body"] .fold-btn' },
   { id: 'roster', title: 'Team roster and fit', group: 'Career hub', icon: 'roster', blurb: 'The five, the bench, the system and the chemistry.', open: () => show(nbaStar(), 'player'), press: '[data-tour="roster"]' },
-  { id: 'bodymap', title: 'Body map with an injury', group: 'Career hub', icon: 'health', blurb: 'The pixel body map, hurt.', open: () => show(at('injured', (s) => !!s.player.injury && s.stage === 'NBA'), 'player') },
+  { id: 'bodymap', title: 'Body map with an injury', group: 'Career hub', icon: 'health', blurb: 'The pixel body map in the Body panel (opened here), hurt.', open: () => show(at('injured', (s) => !!s.player.injury && s.stage === 'NBA'), 'player'), press: '[data-tour="body"] .fold-btn' },
   { id: 'season-post', title: 'Season tab in the playoffs', group: 'Career hub', icon: 'bracket', blurb: 'With a bracket out, it comes first: under the team and form, above the standings.', open: () => show(at('bracket', (s) => s.stage === 'NBA' && s.step === 'summary' && !!s.nba?.bracket), 'season') },
   {
     id: 'folds',
@@ -384,9 +384,9 @@ export const CARDS: DevCard[] = [
   { id: 'strength', title: 'Why it went this way', group: 'Career hub', icon: 'chart', blurb: 'Team strength, factor by factor.', open: () => show(nbaStar(), 'season') },
   { id: 'rival', title: 'Rival', group: 'Career hub', icon: 'rival', blurb: 'Draft class, head to head, MVP race: you and him on one floor, in Around you.', open: () => show(loaded()), press: '[data-pane="rival"]' },
   { id: 'name-card', title: 'Nickname and brand', group: 'Career hub', icon: 'crown', blurb: 'His nickname, its two-colour logo (locked until his first brand deal), the brand deal.', open: () => show(loaded(), 'player') },
-  { id: 'staff', title: 'Staff', group: 'Career hub', icon: 'chef', blurb: 'Each at work in the role’s uniform: a talk once a season for a small edge, a raise, letting go.', open: () => show(loaded(), 'player') },
-  { id: 'wardrobe', title: 'Wardrobe', group: 'Career hub', icon: 'hanger', blurb: 'Accessories on the avatar; swap or take them off.', open: () => show(loaded(), 'player') },
-  { id: 'collection', title: 'Collection and visits', group: 'Career hub', icon: 'car', blurb: 'Everything bought; visit as often as he likes, the first visit each season with a small edge.', open: () => show(loaded(), 'player') },
+  { id: 'staff', title: 'Staff', group: 'Career hub', icon: 'chef', blurb: 'The Staff tab of Your life (round 36: staff, wardrobe and collection in one card): each at work in the role’s uniform, a talk once a season for a small edge, a raise, letting go.', open: () => show(loaded(), 'player'), press: '[data-life="staff"]' },
+  { id: 'wardrobe', title: 'Wardrobe', group: 'Career hub', icon: 'hanger', blurb: 'The Wardrobe tab of Your life: accessories on the avatar; swap or take them off.', open: () => show(loaded(), 'player'), press: '[data-life="wardrobe"]' },
+  { id: 'collection', title: 'Collection and visits', group: 'Career hub', icon: 'car', blurb: 'The Collection tab of Your life: everything bought; visit as often as he likes, the first visit each season with a small edge.', open: () => show(loaded(), 'player'), press: '[data-life="collection"]' },
 
   // decisions
   { id: 'd-plan', title: 'Training plan', group: 'Decisions', icon: 'grind', blurb: 'Plans with colour strips, two at half strength; tags on the plans that suit his age.', open: () => atDecision('plan', { mode: 'standard' }) },
