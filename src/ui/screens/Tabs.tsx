@@ -15,13 +15,11 @@ import { EvolutionArt } from '../art/Evolution';
 import { CareerJournal, CareerTimeline } from '../components/Timeline';
 import { cityCultureOf } from '../../engine/career/cityCulture';
 import { fanCultureOf } from '../../engine/career/fanCulture';
-import { BodyMap } from '../components/BodyMap';
+import { BodyCard } from '../components/BodyMap';
 import { RosterCard } from '../components/TeamRoster';
 import { NameCard } from '../components/NameCard';
-import { WardrobeCard } from '../components/Wardrobe';
-import { StaffCard } from '../components/StaffCard';
+import { LifeCard } from '../components/YourLife';
 import { StrengthCard } from '../components/StrengthCard';
-import { CollectionCard } from '../components/Collection';
 import { FlagArt } from '../art/Flag';
 import { Badge } from '../art/Badge';
 import { MiniGamesCard } from '../mini/MiniGames';
@@ -45,20 +43,10 @@ import { ScoutCard } from '../components/ScoutCard';
 import { fmtMoney, ht, pct, pg, seasonLabel } from '../format';
 import { ordinal } from '../format';
 import { league as leagueOf, ovr, roleName, stageLine, team as teamOf } from '../selectors';
-import { buildWord, idealWeight, weightOf } from '../../engine/player/weight';
-import { touchOf } from '../../engine/player/touch';
+import { weightOf } from '../../engine/player/weight';
 import { polyCells, type Pt } from '../art/pixel';
 import { ChampionStrip, LeaderBars, StandingsBars, VoteBars } from '../components/LeagueVisuals';
 import { leanLevel } from '../road';
-
-/** The ratings his weight is adding or taking away right now, biggest first. */
-function frameLine(p: GameState['player']): string {
-  const f = p.frame ?? {};
-  return ATTRS.filter((k) => Math.abs(f[k] ?? 0) >= 0.25)
-    .sort((a, b) => Math.abs(f[b]!) - Math.abs(f[a]!))
-    .map((k) => `${NAMES.attr[k]} ${f[k]! > 0 ? '+' : '−'}${Math.abs(f[k]!).toFixed(1)}`)
-    .join(' · ');
-}
 
 // ---------- Season ----------
 
@@ -550,8 +538,6 @@ export function PlayerTab({ g }: { g: GameState }) {
           {!lean && (
             <div className="meters">
               <Meter label="Range" value={p.range} tone="ink" />
-              <Meter label="Free-throw touch" value={touchOf(p)} tone="ink" />
-              <Meter label={`${p.hand === 'L' ? 'Right' : 'Left'} hand (weak hand)`} value={p.offhand} tone="ink" />
             </div>
           )}
         </Card>
@@ -620,36 +606,8 @@ export function PlayerTab({ g }: { g: GameState }) {
           )}
           <Extra>
           <Card title="Profile">
+            {/* round 36: height, weight and wingspan went to the Body panel */}
             <dl className="facts">
-              <div>
-                <dt>Height</dt>
-                <dd>
-                  {ht(p.height)}
-                  {p.height < p.heightProj ? <span className="muted"> → about {ht(p.heightProj)}</span> : null}
-                </dd>
-              </div>
-              <div>
-                <dt>Weight</dt>
-                <dd>
-                  {weightOf(p)} lb <span className="muted">· {buildWord(p)} (best about {Math.round(idealWeight(p.height, p.age) / 5) * 5})</span>
-                </dd>
-              </div>
-              <div>
-                <dt>Wingspan</dt>
-                <dd>
-                  {ht(p.wingspan)}
-                  <span className="muted">
-                    {' '}
-                    · {Math.abs(p.wingspan - p.height)}″ {p.wingspan >= p.height ? 'over' : 'under'} your height
-                  </span>
-                </dd>
-              </div>
-              {frameLine(p) && (
-                <div style={{ gridColumn: '1 / -1' }}>
-                  <dt>What your weight does</dt>
-                  <dd>{frameLine(p)}</dd>
-                </div>
-              )}
               <div>
                 <dt>Hometown</dt>
                 <dd>{p.hometown}</dd>
@@ -700,22 +658,19 @@ export function PlayerTab({ g }: { g: GameState }) {
               <p className="muted">Scouts post a potential grade after your sophomore season. Your true potential, growth curve and durability stay hidden.</p>
             </Card>
           )}
-          {/* round 24: up beside the ratings instead of below the long profile column */}
-          <BodyMap g={g} narrow />
           </Extra>
+          {/* round 36: weight, the weak hand, free-throw touch, height and the body map in one panel,
+              folded until opened, up beside the ratings (round 24) */}
+          <BodyCard g={g} />
         </div>
         )}
       </div>
       {/* round 27 (owner: "staff, wardrobe, collection are all stacked in one row ... the sides are
-          completely empty"): their own full-width row, side by side */}
+          completely empty"): their own full-width row; round 36: one card, a tab each */}
       {!lean && (
         <>
           <Extra>
-            <div className="player-extras">
-              <StaffCard g={g} />
-              <WardrobeCard g={g} kit={kit} />
-              <CollectionCard g={g} />
-            </div>
+            <LifeCard g={g} kit={kit} />
           </Extra>
           <Extra>
             <RosterCard g={g} />

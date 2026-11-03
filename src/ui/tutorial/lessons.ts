@@ -94,7 +94,7 @@ export const LESSONS: Lesson[] = [
   A('a-plan', D('d-plan'), 'Plans for each half now: one or two, then again at midseason.', { act: true }),
   A('a-arc', D('d-arc'), 'A storyline: a chapter each summer, and your answer shapes the next.', { act: true }),
   A('a-tab-player', D('tab-player'), 'The Player tab.', { act: true, after: 'a-plan' }),
-  A('a-body', '.bm', 'His body: what training built and where he got hurt (hover a spot). Every body has a best playing weight.', { after: 'a-tab-player' }),
+  A('a-body', D('body'), 'His body: what training built and where he got hurt (hover a spot). Every body has a best playing weight.', { after: 'a-tab-player' }),
   A('a-kits', '.kits', 'Tap a kit to dress him in it.', { after: 'a-tab-player' }),
   A('a-roster', D('roster'), 'His team: the five, the bench, the system, and how well it all fits.', { after: 'a-tab-player' }),
   A('a-staff', D('staff'), 'His staff: a talk once a season adds a small edge; give a raise, or let them go.', { after: 'a-tab-player' }),

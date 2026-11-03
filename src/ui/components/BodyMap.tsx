@@ -1,14 +1,18 @@
 // Round 22: the body map on the Player tab. Front and back views: each muscle group shaded by
 // how much training has built it, and a red mark wherever he has been hurt (a number when it
-// happened more than once). Beside it: how he grew (height and weight by age), wingspan, body
-// wear, the muscles training built most, and every injury by body part.
+// happened more than once). With it: how he grew (height and weight by age), wingspan, body
+// wear, the muscles training built most, and every injury by body part. Round 36: all of it in the
+// Body panel, with his weight's effects, his weak hand and his free-throw touch.
 
 import { useState } from 'react';
 import type { GameState } from '../../engine/types';
 import { MUSCLES, injuryPart, type BodyPart, type Muscle } from '../../engine/player/body';
-import { idealWeight, weightOf } from '../../engine/player/weight';
+import { buildWord, idealWeight, weightOf } from '../../engine/player/weight';
+import { touchOf } from '../../engine/player/touch';
+import { ATTRS } from '../../engine/balance';
+import { NAMES } from '../../content/strings';
 import { ht } from '../format';
-import { Card } from './bits';
+import { Card, Extra, Meter } from './bits';
 import { InjuryBadge, SEV_NAME } from '../art/careerArt';
 
 const WORST = ['season', 'major', 'minor', 'dtd'] as const;
@@ -163,11 +167,25 @@ function Figure({ shapes, dx, muscles, top, hover, setHover }: { shapes: Shape[]
   );
 }
 
-/** `narrow`: stacked (figures above, numbers below) for a side column. */
 /** Time missed, in days under two weeks (a sore ankle is not "0 wk"), else in weeks. */
 const timeOut = (days: number): string => (days < 14 ? `${days} day${days === 1 ? '' : 's'}` : `${Math.round(days / 7)} wk`);
 
-export function BodyMap({ g, narrow = false }: { g: GameState; narrow?: boolean }) {
+/** The ratings his weight is adding or taking away right now, biggest first. */
+function frameLine(p: GameState['player']): string {
+  const f = p.frame ?? {};
+  return ATTRS.filter((k) => Math.abs(f[k] ?? 0) >= 0.25)
+    .sort((a, b) => Math.abs(f[b]!) - Math.abs(f[a]!))
+    .map((k) => `${NAMES.attr[k]} ${f[k]! > 0 ? '+' : '−'}${Math.abs(f[k]!).toFixed(1)}`)
+    .join(' · ');
+}
+
+const wearWord = (w: number): string => (w < 25 ? 'fresh' : w < 50 ? 'some miles' : w < 75 ? 'worn' : 'heavily worn');
+
+/** Round 36 (from the owner's simplification list): his body in one panel on the Player tab, folded
+ * until it is opened. Height and where it is heading, weight and what it does, wingspan and wear,
+ * his weak hand and free-throw touch, then the body map. Fast break keeps the two meters, as they
+ * were on the Ratings card. */
+export function BodyCard({ g }: { g: GameState }) {
   const p = g.player;
   const [hover, setHover] = useState<Muscle | null>(null);
   // round 27 (owner: "show the injuries on it when i hover my mouse on the red spots")
@@ -182,9 +200,74 @@ export function BodyMap({ g, narrow = false }: { g: GameState; narrow?: boolean 
   const rows = g.history.filter((h) => h.height && !/assignment/i.test(h.teamName));
   const growth = [...new Map(rows.map((h) => [h.age, { age: h.age, height: h.height!, weight: h.weight }])).values()];
   const first = growth[0];
+  const wear = p.wear ?? 0;
+  const does = frameLine(p);
   return (
-    <Card title="Body map" kicker="What training built, and where it hurt. Hover a muscle for its number, a red spot for its injuries.">
-      <div className={`bm${narrow ? ' narrow' : ''}`}>
+    <Card title="Body" kicker={`${ht(p.height)} · ${weightOf(p)} lb · ${buildWord(p)}`} tour="body" startShut>
+      <Extra>
+        <dl className="facts">
+          <div>
+            <dt>Height</dt>
+            <dd>
+              {ht(p.height)}
+              {first && first.height < p.height && <span className="muted"> · +{p.height - first.height}″ since {first.age}</span>}
+              {p.height < p.heightProj && <span className="muted"> → about {ht(p.heightProj)}</span>}
+            </dd>
+          </div>
+          <div>
+            <dt>Weight</dt>
+            <dd>
+              {weightOf(p)} lb{' '}
+              <span className="muted">
+                · {buildWord(p)}
+                {first?.weight ? ` · ${weightOf(p) - first.weight >= 0 ? '+' : '−'}${Math.abs(weightOf(p) - first.weight)} since ${first.age}` : ''} · best about {Math.round(idealWeight(p.height, p.age) / 5) * 5}
+              </span>
+            </dd>
+          </div>
+          <div>
+            <dt>Wingspan</dt>
+            <dd>
+              {ht(p.wingspan)}
+              <span className="muted">
+                {' '}
+                · {Math.abs(p.wingspan - p.height)}″ {p.wingspan >= p.height ? 'over' : 'under'} your height
+              </span>
+            </dd>
+          </div>
+          <div>
+            <dt>Body wear</dt>
+            <dd>
+              {Math.round(wear)} / 100 <span className="muted">· {wearWord(wear)}</span>
+            </dd>
+          </div>
+          {does && (
+            <div style={{ gridColumn: '1 / -1' }}>
+              <dt>What your weight does</dt>
+              <dd>{does}</dd>
+            </div>
+          )}
+        </dl>
+        {growth.length > 1 && (
+          <div className="bm-growth">
+            {growth.map((x, i) => (
+              <div key={x.age} className="bm-age" title={`Age ${x.age}: ${ht(x.height)}${x.weight ? `, ${x.weight} lb` : ''}`}>
+                <i style={{ height: `${20 + ((x.height - first.height) / Math.max(1, p.height - first.height)) * 50}px` }} className={i > 0 && x.height > growth[i - 1].height ? 'grew' : ''} />
+                <span>{x.age}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </Extra>
+      <div className="meters">
+        <Meter label="Free-throw touch" value={touchOf(p)} tone="ink" />
+        <Meter label={`${p.hand === 'L' ? 'Right' : 'Left'} hand (weak hand)`} value={p.offhand} tone="ink" />
+      </div>
+      <Extra>
+      <div className="bm">
+        <div>
+          <div className="sec-title">Body map</div>
+          <div className="kicker">What training built, and where it hurt. Hover a muscle for its number, a red spot for its injuries.</div>
+        </div>
         <div className="bm-figure">
         <svg viewBox="0 0 410 428" className="bm-svg" role="img" aria-label="Body map, front and back">
           <text x={100} y={422} textAnchor="middle" className="bm-cap">
@@ -240,43 +323,6 @@ export function BodyMap({ g, narrow = false }: { g: GameState; narrow?: boolean 
         )}
         </div>
         <div className="bm-side stack">
-          <dl className="facts">
-            <div>
-              <dt>Height</dt>
-              <dd>
-                {ht(p.height)}
-                {first && first.height < p.height && <span className="muted"> · +{p.height - first.height}″ since {first.age}</span>}
-              </dd>
-            </div>
-            <div>
-              <dt>Weight</dt>
-              <dd>
-                {weightOf(p)} lb
-                {first?.weight && <span className="muted"> · {weightOf(p) - first.weight >= 0 ? '+' : '−'}{Math.abs(weightOf(p) - first.weight)} since {first.age}</span>}
-                <span className="muted"> · best about {Math.round(idealWeight(p.height, p.age) / 5) * 5}</span>
-              </dd>
-            </div>
-            <div>
-              <dt>Wingspan</dt>
-              <dd>{ht(p.wingspan)}</dd>
-            </div>
-            <div>
-              <dt>Body wear</dt>
-              <dd>
-                {Math.round(p.wear ?? 0)} / 100 <span className="muted">· {(p.wear ?? 0) < 25 ? 'fresh' : (p.wear ?? 0) < 50 ? 'some miles' : (p.wear ?? 0) < 75 ? 'worn' : 'heavily worn'}</span>
-              </dd>
-            </div>
-          </dl>
-          {growth.length > 1 && (
-            <div className="bm-growth">
-              {growth.map((x, i) => (
-                <div key={x.age} className="bm-age" title={`Age ${x.age}: ${ht(x.height)}${x.weight ? `, ${x.weight} lb` : ''}`}>
-                  <i style={{ height: `${20 + ((x.height - first.height) / Math.max(1, p.height - first.height)) * 50}px` }} className={i > 0 && x.height > growth[i - 1].height ? 'grew' : ''} />
-                  <span>{x.age}</span>
-                </div>
-              ))}
-            </div>
-          )}
           <div className="sec-title">Most built</div>
           {ranked[0].v > 0 ? (
             <ul className="bm-list">
@@ -313,6 +359,7 @@ export function BodyMap({ g, narrow = false }: { g: GameState; narrow?: boolean 
           )}
         </div>
       </div>
+      </Extra>
     </Card>
   );
 }

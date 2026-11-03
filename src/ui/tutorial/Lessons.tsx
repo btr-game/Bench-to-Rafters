@@ -12,6 +12,7 @@ import { inTutorial, nextLevel } from '../road';
 import { LESSONS, type Lesson, type Where } from './lessons';
 import { STOPS } from './closing';
 import { SkipButton } from '../components/SkipTutorial';
+import { spot } from '../fold';
 
 type St = ReturnType<typeof useStore.getState>;
 
@@ -107,6 +108,8 @@ export function Lessons() {
       setBox(null);
       return;
     }
+    // round 36: a folded card opens for a look, a tab of a card's tabs shows its own (fold.ts)
+    spot(cur.el);
     {
       const r0 = cur.el.getBoundingClientRect();
       if (r0.top < 0 || r0.top > window.innerHeight * 0.6) window.scrollBy({ top: r0.top - window.innerHeight * 0.25, behavior: 'smooth' });

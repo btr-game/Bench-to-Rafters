@@ -11,6 +11,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { createPortal } from 'react-dom';
 import { useStore } from '../../store';
 import { inTutorial } from '../road';
+import { spot } from '../fold';
 
 interface Step {
   id: string;
@@ -128,7 +129,7 @@ const TOUR: Step[] = [
   T('tab-player', D('tab-player'), 'Player: ratings, status, kits, scouting and your body.'),
   T('kits', '.kits', 'Tap a kit to dress your player in it.'),
   T('scout', '.scout-card', 'Where the scouts think you peak, and your odds.'),
-  T('bodymap', '.bm', 'What training built and where you got hurt. Hover a muscle.'),
+  T('bodymap', D('body'), 'What training built and where you got hurt. Hover a muscle.'),
   T('name-card', D('name-card'), 'Your nickname, and your brand deal. The nickname’s logo is drawn with your first brand deal.'),
   T('staff', D('staff'), 'Your staff: a talk once a season adds a small edge; give a raise, or let them go.'),
   T('wardrobe', D('wardrobe'), 'Your accessories: tap a colour to wear it, or None to take it off.'),
@@ -282,6 +283,8 @@ export function GuideTour() {
       return;
     }
     const at = Date.now();
+    // round 36: a folded card opens for a look, a tab of a card's tabs shows its own (fold.ts)
+    spot(cur.el);
     cur.el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     let raf = 0;
     const tick = () => {
