@@ -67,7 +67,7 @@ Other preferences:
 - The owner is an IB DP student. Documents for people (reports, summaries) are Word files
   unless asked otherwise.
 - Give calculations to at least 6 or 7 significant figures before rounding.
-- The game is played mostly on a computer: desktop layout first, phones still supported.
+- The game is played on a computer: desktop layout first; phones are set aside for now (below).
 - **Four cards at most** in the start page's row of cards (mini-games, career log, achievements,
   community; owner, round 36: "never put more that 4 cards here"). Anything new goes elsewhere (Play
   with friends sits under the difficulties); the grid itself never makes a fifth column.
@@ -79,7 +79,7 @@ Owner: "let's go with lighter checks". During a round: `npx tsc --noEmit -p .` a
 the change touches; the visual check only on the screens a change touches, on the desktop only
 (`--only <ids> --configs desktop-light`); calibration runs of about 150 careers. The full set
 below runs once, at the end of the round: the whole test suite, the visual check on every card in
-three looks (`--configs desktop-light,desktop-dark,phone-dark`) with its diff, class contrast,
+two looks (`--configs desktop-light,desktop-dark`) with its diff, class contrast,
 dev-apart, and the tutorial end to end only when the tutorial changed.
 
 Phones (owner, round 37: "let's rest on the phone ui ... i just dont want this to take too long,
@@ -87,7 +87,12 @@ but also, i dont want to go back and fix the browser ui because the phone ui doe
 end"): no phone polish and no phone checks during a round. The end-of-round check keeps one phone
 look so breakage is caught the round it happens; fix only what makes a phone screen unusable
 (sideways scrolling, content off screen, text over a button, a tap target that cannot be hit),
-with rules inside the phone media queries so the desktop layout never moves. Balance only when how careers play changed, and the owner may still skip it.
+with rules inside the phone media queries so the desktop layout never moves. Then (owner, the round
+39 ideas document: "im starting to think phone mode could be scrapped for now. this game's interface
+was never really meant for phones"): phones are set aside for now. No phone checks at all, the end
+of the round included (its visual check runs `desktop-light,desktop-dark`); the phone rules already
+in the CSS stay as they are, and nothing new is built for phones (the Floor simulates on one).
+Balance only when how careers play changed, and the owner may still skip it.
 Big rounds may be split across parallel helper agents in worktrees (owner, round 35: "sure").
 
 ## Checks before a commit
