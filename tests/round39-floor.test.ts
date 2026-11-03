@@ -17,18 +17,21 @@ function roster(tag: string, base: number, o: { user?: boolean; FT?: number; SHT
     r: { SHT: o.SHT ?? base, FIN: base, PLY: base, PER: base, INT: base + (i >= 3 ? 6 : -4), REB: base + (i >= 3 ? 8 : -8), ATH: base, IQ: base, FT: o.FT ?? base },
   }));
 }
-const setup = (seed: number, mode: FloorSetup['mode'] = 'standard', o: { FT?: number; SHT?: number } = {}): FloorSetup => ({
+const setup = (seed: number, mode: FloorSetup['mode'] = 'standard', o: { FT?: number; SHT?: number; clock?: number } = {}): FloorSetup => ({
   seed,
   mode,
   us: { name: 'Us', short: 'US', color: '#1D428A', players: roster('U', 75, { user: true, ...o }) },
   them: { name: 'Them', short: 'TH', color: '#C8102E', players: roster('T', 75) },
   score: [80, 80],
+  clock: o.clock,
 });
+/** A whole quarter, to hold the numbers against an NBA quarter's. */
+const QUARTER = { clock: FLOOR.quarter };
 
 /** A scripted player: drifts, sprints now and then, shoots with a fixed hold, steals and jumps. */
 function scripted(s: FloorState): FloorInput {
   const k = s.tick;
-  const hold = k % 40 < 10; // presses for ten ticks (1.5 s: a full load), then lets go
+  const hold = k % 60 < 20; // presses for twenty ticks (1.5 s: a full load), then lets go
   return { dx: Math.sin(k / 30), dy: Math.cos(k / 45), sprint: k % 50 < 10, shoot: hold, pass: k % 97 === 0 ? 'auto' : null, steal: k % 61 === 0, block: k % 73 === 0, move: k % 89 === 0 ? 'cross' : null };
 }
 
@@ -48,9 +51,9 @@ describe('round 39: the Floor', () => {
     expect(floorResult(a).line).toEqual(floorResult(b).line);
   });
 
-  it('a quarter takes about four real minutes, the clock running three times as fast', () => {
-    expect(FLOOR.tick * FLOOR.ticksPerSec).toBeCloseTo(3, 6);
-    const live = FLOOR.quarter / FLOOR.tick / FLOOR.ticksPerSec;
+  it('the last six minutes take about four real minutes, the clock running at 1.5 times', () => {
+    expect(FLOOR.tick * FLOOR.ticksPerSec).toBeCloseTo(1.5, 6);
+    const live = FLOOR.from / FLOOR.tick / FLOOR.ticksPerSec;
     expect(live).toBeCloseTo(240, 6);
     const times: number[] = [];
     for (let k = 0; k < 20; k++) {
@@ -72,7 +75,7 @@ describe('round 39: the Floor', () => {
     let tov = 0;
     const n = 60;
     for (let k = 0; k < n; k++) {
-      const s = startFloor(setup(500 + k));
+      const s = startFloor(setup(500 + k, 'standard', QUARTER));
       skipFloor(s);
       if (s.periods) continue;
       const r = floorResult(s);
@@ -97,7 +100,7 @@ describe('round 39: the Floor', () => {
     const avg = (mode: FloorSetup['mode']) => {
       let diff = 0;
       for (let k = 0; k < 120; k++) {
-        const s = startFloor(setup(900 + k, mode));
+        const s = startFloor(setup(900 + k, mode, QUARTER));
         skipFloor(s);
         diff += s.score[0] - s.score[1];
       }
@@ -146,7 +149,7 @@ describe('round 39: the Floor', () => {
     for (let i = 0; i < 1500; i++) stepFloor(s, scripted(s));
     const mid = [...s.score];
     const left = s.clock;
-    expect(left).toBeLessThan(FLOOR.quarter);
+    expect(left).toBeLessThan(FLOOR.from);
     skipFloor(s);
     expect(s.phase).toBe('over');
     expect(s.score[0]).toBeGreaterThanOrEqual(mid[0]);

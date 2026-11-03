@@ -130,7 +130,9 @@ function courtLines(): Line[] {
     // the three-point line: the corners, then the arc round the rim
     const cornerEnd = base + dir * THREE.cornerLen;
     const a0 = Math.acos((THREE.cornerLen - Math.abs(rim - base)) / THREE.arc);
-    const arcPts = side === 0 ? arc(rim, RIM_Y, THREE.arc, -a0, a0, 36) : arc(rim, RIM_Y, THREE.arc, Math.PI - a0, Math.PI + a0, 36);
+    // both arcs run from the far corner (y 3) to the near one (y 47), the way the polyline goes; the
+    // right one the other way round drew a straight line up the court through the key
+    const arcPts = side === 0 ? arc(rim, RIM_Y, THREE.arc, -a0, a0, 36) : arc(rim, RIM_Y, THREE.arc, Math.PI + a0, Math.PI - a0, 36);
     L.push([[base, RIM_Y - THREE.corner], [cornerEnd, RIM_Y - THREE.corner], ...arcPts.filter((_, i) => i > 0 && i < arcPts.length - 1), [cornerEnd, RIM_Y + THREE.corner], [base, RIM_Y + THREE.corner]]);
     // the restricted area under the rim
     L.push(side === 0 ? arc(rim, RIM_Y, 4, -Math.PI / 2, Math.PI / 2, 14) : arc(rim, RIM_Y, 4, Math.PI / 2, (Math.PI * 3) / 2, 14));

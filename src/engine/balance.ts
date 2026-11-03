@@ -1220,29 +1220,35 @@ export const STORY_CH = {
  * seconds unless named real.
  */
 export const FLOOR = {
-  /** Game seconds a tick moves on, and the ticks of real time a second: 0.15 x 20 = 3 game seconds a real one. */
-  tick: 0.15,
+  /** Game seconds a tick moves on, and the ticks of real time a second: 0.075 x 20 = 1.5 game seconds
+   * a real one (owner, after step 1: "the pace of 1.5x is suitable for four minute game"). */
+  tick: 0.075,
   ticksPerSec: 20,
   quarter: 720,
+  /** The Floor takes over with this many game seconds left in the fourth: six minutes, four real ones. */
+  from: 360,
   shotClock: 24,
   offReboundClock: 14,
-  /** Top speed in feet a game second, from athleticism 0 to 100, and sprinting's share more. */
-  speed: [13, 21],
-  sprint: 1.22,
+  /** Top speed in feet a game second, from athleticism 40 to 99, and sprinting's share more (owner,
+   * after step 1: "their movement speed is way too high ... even the shift movement should be
+   * slower than this": 13 to 21 at the tripled clock was 39 to 63 feet a real second). */
+  speed: [8, 14],
+  sprint: 1.3,
   /** Stamina (0 to 1) a game second: sprinting, moving, standing; a timeout gives back. */
   stamina: { sprint: -0.012, move: -0.0025, rest: 0.004, timeout: 0.25 },
   /** A shot's base chance by zone, and how much its rating (from 70) moves it per point. */
-  shot: { rim: 0.67, paint: 0.48, mid: 0.44, three: 0.385, perPoint: { rim: 0.006, paint: 0.0055, mid: 0.005, three: 0.005 }, deep: 26, deepPerFt: 0.04, min: 0.02, max: 0.93 },
+  shot: { rim: 0.7, paint: 0.51, mid: 0.46, three: 0.4, perPoint: { rim: 0.006, paint: 0.0055, mid: 0.005, three: 0.005 }, deep: 26, deepPerFt: 0.04, min: 0.02, max: 0.93 },
   /** A defender closer than `within` feet takes up to `max` off the chance; tired legs up to `tired`. */
   contest: { within: 6, max: 0.17, tired: 0.08 },
-  /** His meter: how long a full load takes (game seconds; 1.5 is half a real second at the tripled clock), the window's half-width at 0 and 100
-   * shooting, what being contested or tired takes off it, and what a perfect or a missed release does
-   * to the chance (scaled between). */
-  meter: { load: 1.5, window: [0.1, 0.26], contested: 0.45, tired: 0.4, best: 1.15, worst: 0.55 },
+  /** His meter: how long a full load takes (game seconds; 1.5 is one real second at the 1.5x clock,
+   * owner: "could be slower actually (one real second?)"), the window's half-width from 40 to 99
+   * shooting (free-throw touch at the line), what being contested or tired takes off it, and what a
+   * perfect or a missed release does to the chance (scaled between). */
+  meter: { load: 1.5, window: [0.08, 0.28], contested: 0.45, tired: 0.4, best: 1.15, worst: 0.55 },
   /** Free throws: the chance from free-throw touch 0 to 100. */
   ft: [0.5, 0.95],
   /** Fouls on a shot: at the rim, on a jumper; bonus from this many team fouls; out at six. */
-  foul: { rim: 0.19, jumper: 0.045, perPoint: 0.0025, bonus: 5, out: 6 },
+  foul: { rim: 0.23, jumper: 0.055, perPoint: 0.0025, bonus: 5, out: 6 },
   block: { base: 0.06, perPoint: 0.0035, reach: 3 },
   steal: { base: 0.18, perPoint: 0.004, reach: 4, foul: 0.22 },
   /** A pass flies at this speed; a defender this close to its line may pick it off. */
@@ -1261,6 +1267,8 @@ export const FLOOR = {
   /** The AI's ball handler thinks again this often (game seconds); a shot is open past `open` feet. */
   think: 0.6,
   open: 6,
+  /** An open jumper waits until the offense has used this much of the shot clock (game seconds). */
+  patience: 9,
   /** Trailing late, the defense fouls on purpose: within this margin, under this many seconds. */
   hack: { margin: [1, 8], secs: 35 },
 } as const;

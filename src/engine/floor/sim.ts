@@ -1,6 +1,7 @@
-// The Floor (round 39): the fourth quarter of the biggest games, played. Ten players on a 94 by 50
-// foot court, a tick every 0.15 game seconds (twenty ticks a real second: the 12-minute quarter in
-// four real minutes, owner: "let's go with 4 minutes, so time is tripled"). He is steered on both
+// The Floor (round 39): the end of the biggest games, played. Ten players on a 94 by 50 foot court, a
+// tick every 0.075 game seconds, twenty a real second: the last six minutes of the fourth in four real
+// minutes (owner, first: "let's go with 4 minutes, so time is tripled"; after playing it: "the pace of
+// 1.5x is suitable for four minute game"). He is steered on both
 // ends (owner: "defence too"); the other nine follow the AI below. Everything random comes from the
 // state's own stream, so the same setup and the same inputs give the same game (the tests replay it),
 // and a state can be kept, paused and picked up. A play's outcome is decided the moment it happens
@@ -197,6 +198,8 @@ const DT = FLOOR.tick;
 const secs = (n: number) => Math.max(1, Math.round(n / DT));
 const lerp = (a: number, b: number, k: number) => a + (b - a) * clamp(k, 0, 1);
 const other = (t: 0 | 1): 0 | 1 => (t === 0 ? 1 : 0);
+/** How far a rating goes from 40 (0) to 99 (1): the Floor's feel spreads over the ratings players have. */
+const ratingK = (v: number) => clamp((v - 40) / 59, 0, 1);
 const zeroBox = (): FloorBox => ({ pts: 0, fgm: 0, fga: 0, tpm: 0, tpa: 0, ftm: 0, fta: 0, reb: 0, ast: 0, stl: 0, blk: 0, tov: 0, pf: 0 });
 
 // ---------------- the start ----------------
@@ -214,7 +217,7 @@ export function startFloor(set: FloorSetup): FloorState {
     rng,
     mode: set.mode,
     tick: 0,
-    clock: set.clock ?? FLOOR.quarter,
+    clock: set.clock ?? FLOOR.from,
     shot: FLOOR.shotClock,
     score: [...set.score] as [number, number],
     teams: [
@@ -283,7 +286,7 @@ function spread(s: FloorState): void {
 function spotOf(s: FloorState, p: FloorPlayer): Spot {
   const [ahead, side] = SPACING[p.pos] ?? [20, 0];
   // a slow drift around the spot, so the offense never stands still (no randomness: it is the clock)
-  const k = s.tick * 0.03 + idx(s, p) * 1.7;
+  const k = s.tick * DT * 0.2 + idx(s, p) * 1.7;
   return clampSpot(attackSpot(p.team, ahead + Math.sin(k) * 2, side + Math.cos(k * 0.8) * 2));
 }
 
@@ -354,9 +357,11 @@ export function shotChance(s: FloorState, p: FloorPlayer, at: Spot): number {
  * contested or tired. */
 export function meterWindow(s: FloorState, p: FloorPlayer): number {
   const M = FLOOR.meter;
+  // at the line, his free-throw touch sets it and nobody is near
+  const line = s.phase === 'ft';
   const foe = nearestFoe(s, p.team, p);
-  const contested = Math.max(0, (FLOOR.contest.within - foe.d) / FLOOR.contest.within);
-  return lerp(M.window[0], M.window[1], p.r.SHT / 100) * (1 - contested * M.contested) * (1 - (1 - p.stamina) * M.tired);
+  const contested = line ? 0 : Math.max(0, (FLOOR.contest.within - foe.d) / FLOOR.contest.within);
+  return lerp(M.window[0], M.window[1], ratingK(line ? p.r.FT : p.r.SHT)) * (1 - contested * M.contested) * (1 - (1 - p.stamina) * M.tired);
 }
 
 /** How a release lands on the meter: 1 dead centre, 0 outside the window. */
@@ -576,7 +581,7 @@ function shootFt(s: FloorState, q: number | null): void {
 // ---------------- moving ----------------
 
 function topSpeed(s: FloorState, p: FloorPlayer, sprint: boolean): number {
-  let v = lerp(FLOOR.speed[0], FLOOR.speed[1], p.r.ATH / 100) * (0.75 + 0.25 * p.stamina);
+  let v = lerp(FLOOR.speed[0], FLOOR.speed[1], ratingK(p.r.ATH)) * (0.75 + 0.25 * p.stamina);
   if (sprint) v *= FLOOR.sprint;
   if (p.slow > 0) v *= 0.35;
   if (s.ball.holder === idx(s, p)) v *= 0.92;
@@ -675,7 +680,9 @@ function aiHandler(s: FloorState, i: number): void {
   const zone = zoneOf(p.team, p);
   const open = nearestFoe(s, p.team, p).d;
   const want = zone === 'three' ? 0.36 : zone === 'rim' ? 0.5 : 0.42;
-  if (s.shot < 3 || (here >= want && open >= FLOOR.open) || (zone === 'rim' && here >= 0.45)) {
+  // an open jumper only once the offense has run a little of the shot clock; a layup any time
+  const settled = FLOOR.shotClock - s.shot >= FLOOR.patience;
+  if (s.shot < 3 || (here >= want && open >= FLOOR.open && settled) || (zone === 'rim' && here >= 0.45)) {
     s.gather = { by: i, t: secs(zone === 'rim' ? 0.5 : 1.1) };
     return;
   }
@@ -825,7 +832,7 @@ function timeout(s: FloorState, team: 0 | 1): void {
 
 // ---------------- a tick ----------------
 
-/** Moves the game on one tick (0.15 game seconds) with what he does (null: the AI plays him too). */
+/** Moves the game on one tick (0.075 game seconds) with what he does (null: the AI plays him too). */
 export function stepFloor(s: FloorState, inp: FloorInput | null): void {
   s.fresh = s.feed.length;
   if (s.phase === 'over') return;

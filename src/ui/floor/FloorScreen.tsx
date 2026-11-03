@@ -30,8 +30,6 @@ interface Props {
   looks: [FloorTeamLook, FloorTeamLook];
   /** The series so far, as the score bug shows it ("3–3"). */
   series?: string;
-  /** Engine ticks a real second: 20 is the four-minute quarter (owner: "time is tripled"). */
-  pace?: number;
   onAgain?: () => void;
   onDone: (r: FloorOutcome) => void;
 }
@@ -124,7 +122,9 @@ function aimPass(s: FloorState, dx: number, dy: number): number | 'auto' {
   return best >= 0 ? best : 'auto';
 }
 
-export function FloorScreen({ setup, arena, looks, series, pace = FLOOR.ticksPerSec, onAgain, onDone }: Props) {
+const PACE = FLOOR.ticksPerSec;
+
+export function FloorScreen({ setup, arena, looks, series, onAgain, onDone }: Props) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const wrap = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(2);
@@ -183,7 +183,7 @@ export function FloorScreen({ setup, arena, looks, series, pace = FLOOR.ticksPer
     let last = performance.now();
     let raf = 0;
     let lastHud = '';
-    const gameSecs = (ms: number) => (ms / 1000) * FLOOR.tick * pace;
+    const gameSecs = (ms: number) => (ms / 1000) * FLOOR.tick * PACE;
 
     const shooting = () => {
       const mine = s.ball.holder === s.user && s.poss === 0;
@@ -335,7 +335,7 @@ export function FloorScreen({ setup, arena, looks, series, pace = FLOOR.ticksPer
         if (Math.abs(vx) > 2.5) face[i] = vx > 0 ? 1 : -1;
         else if (s.ball.holder === i) face[i] = p.team === 0 ? 1 : -1;
         else if (Math.abs(ball.x - at[i].x) > 1.5) face[i] = ball.x > at[i].x ? 1 : -1;
-        stride[i] += speed[i] * dt * FLOOR.tick * pace;
+        stride[i] += speed[i] * dt * FLOOR.tick * PACE;
       });
 
       // on the floor: the shadows, and the ring under him
@@ -379,14 +379,16 @@ export function FloorScreen({ setup, arena, looks, series, pace = FLOOR.ticksPer
       if (me.on) {
         const top = project(cam, at[s.user].x, at[s.user].y);
         const hx = Math.round(top.x);
-        const hy = Math.round(top.y) - FOOT.y - 4;
+        // the arrow over him (owner: "make the arrow ... a bit larger"): eleven pixels wide, outlined,
+        // bobbing a pixel in steps
+        const hy = Math.round(top.y) - FOOT.y - 9 - (Math.floor(now / 300) % 2);
         ctx.fillStyle = '#1B1820';
-        ctx.fillRect(hx - 3, hy - 1, 7, 2);
-        ctx.fillRect(hx - 2, hy + 1, 5, 1);
+        for (let r = 0; r < 7; r++) ctx.fillRect(hx - 5 + r, hy + r, 11 - r * 2, 1);
+        ctx.fillRect(hx - 5, hy - 1, 11, 1);
         ctx.fillStyle = '#FFD23F';
-        ctx.fillRect(hx - 2, hy - 1, 5, 1);
-        ctx.fillRect(hx - 1, hy, 3, 1);
-        ctx.fillRect(hx, hy + 1, 1, 1);
+        for (let r = 0; r < 5; r++) ctx.fillRect(hx - 4 + r, hy + r, 9 - r * 2, 1);
+        ctx.fillStyle = '#FFF3BF';
+        ctx.fillRect(hx - 4, hy, 3, 1);
         const loading = shootFrom !== null && shooting();
         const showFlash = flash && now < flash.until;
         if (loading || showFlash) {
@@ -421,7 +423,7 @@ export function FloorScreen({ setup, arena, looks, series, pace = FLOOR.ticksPer
       const live = !pausedRef.current && s.phase !== 'over';
       if (live) {
         acc += dt;
-        const tl = 1 / pace;
+        const tl = 1 / PACE;
         while (acc >= tl) {
           s.players.forEach((p, i) => {
             prev[i].x = p.x;
@@ -436,7 +438,7 @@ export function FloorScreen({ setup, arena, looks, series, pace = FLOOR.ticksPer
           }
         }
       }
-      render(now, live ? clamp(acc * pace, 0, 1) : 1, dt);
+      render(now, live ? clamp(acc * PACE, 0, 1) : 1, dt);
       const h = hudOf(s);
       const key = JSON.stringify(h);
       if (key !== lastHud) {
@@ -484,7 +486,7 @@ export function FloorScreen({ setup, arena, looks, series, pace = FLOOR.ticksPer
       window.removeEventListener('keyup', up);
       window.removeEventListener('blur', blur);
     };
-  }, [setup, arena, looks, pace]);
+  }, [setup, arena, looks]);
 
   // the words fade on their own
   useEffect(() => {

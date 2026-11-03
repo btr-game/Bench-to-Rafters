@@ -1,6 +1,6 @@
-// The Floor lab (round 39, step 1): the first playable court, a card in the dev deck before the
-// Floor goes into careers. Pick his team and the other one, the difficulty, how good he is, how the
-// quarter starts and the pace, then play the fourth quarter of an elimination game.
+// The Floor lab (round 39): the playable court, a card in the dev deck before the Floor goes into
+// careers. Pick his team and the other one, the difficulty, how good he is and how it starts, then
+// play the last six minutes of an elimination game.
 
 import { useMemo, useState } from 'react';
 import { NBA_TEAMS } from '../content/teams';
@@ -51,15 +51,10 @@ const MODES: [Mode, string][] = [
   ['stars', 'Shoot for the stars'],
 ];
 const STARTS = [
-  { id: 'tied', label: 'Tied after three', score: [78, 78] as [number, number], clock: undefined },
-  { id: 'down', label: 'Down 8 after three', score: [72, 80] as [number, number], clock: undefined },
-  { id: 'up', label: 'Up 6 after three', score: [84, 78] as [number, number], clock: undefined },
-  { id: 'late', label: 'Last two minutes, down 3', score: [95, 98] as [number, number], clock: 120 },
-];
-const PACES: [number, string][] = [
-  [20, '3x (the 4-minute quarter)'],
-  [40 / 3, '2x (6 minutes)'],
-  [10, '1.5x (8 minutes)'],
+  { id: 'tied', label: 'Tied, six minutes left', score: [90, 90] as [number, number], clock: undefined },
+  { id: 'down', label: 'Down 8, six minutes left', score: [84, 92] as [number, number], clock: undefined },
+  { id: 'up', label: 'Up 6, six minutes left', score: [96, 90] as [number, number], clock: undefined },
+  { id: 'late', label: 'Last two minutes, down 3', score: [101, 104] as [number, number], clock: 120 },
 ];
 
 export function FloorLab() {
@@ -69,7 +64,6 @@ export function FloorLab() {
   const [level, setLevel] = useState(82);
   const [teams, setTeams] = useState(76);
   const [start, setStart] = useState('tied');
-  const [pace, setPace] = useState(20);
   // 0 while picking; a game's seed once it tips off
   const [seed, setSeed] = useState(0);
   const tipOff = () => setSeed(1 + Math.floor(Math.random() * 1e9));
@@ -94,7 +88,7 @@ export function FloorLab() {
   if (seed > 0)
     return (
       <main className="cl fl">
-        <FloorScreen key={seed} setup={setup} arena={arena} looks={looks} series="3–3" pace={pace} onAgain={tipOff} onDone={() => setSeed(0)} />
+        <FloorScreen key={seed} setup={setup} arena={arena} looks={looks} series="3–3" onAgain={tipOff} onDone={() => setSeed(0)} />
       </main>
     );
 
@@ -114,7 +108,7 @@ export function FloorLab() {
         <div className="kicker on-dark">Bench to Rafters · dev deck</div>
         <h1>The Floor</h1>
         <p className="on-dark">
-          Round 39, step 1: the first court. The fourth quarter of a game that could end his team’s series, on the high three-quarter view, in his own team’s arena. You play
+          Round 39: the last six minutes of a game that could end his team’s series, at one and a half times the clock (four real minutes), on the high three-quarter view, in his own team’s arena. You play
           number 23 (the ring under his feet). Move with WASD or the arrows; J holds and releases the shot (or steals on defence), K passes (or jumps), L makes a move
           (or switches), Space calls a pick (or help), Esc pauses.
         </p>
@@ -151,8 +145,6 @@ export function FloorLab() {
         {chips<number>([[70, 'Average (70)'], [76, 'Good (76)'], [82, 'Great (82)']], teams, setTeams)}
         <h2>The start</h2>
         {chips(STARTS.map((x) => [x.id, x.label] as [string, string]), start, setStart)}
-        <h2>Pace</h2>
-        {chips(PACES, pace, setPace)}
         <div className="cl-row">
           <button className="btn primary" onClick={tipOff}>
             Tip it off
