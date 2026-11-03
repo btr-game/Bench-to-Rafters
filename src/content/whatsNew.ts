@@ -16,6 +16,17 @@ interface News {
 
 export const NEWS: News[] = [
   {
+    id: '2026-11-03-r36',
+    date: '3 November 2026',
+    items: [
+      { icon: 'jersey', text: 'A finale for a finished career: if a team hangs your jersey, the empty arena at night, your speech, the jersey going up into the rafters, then the credits of the whole career, the title and a thank-you. Under two minutes, with a theme of its own.' },
+      { icon: 'crowd', text: 'A username, apart from your player’s name: it shows beside your careers on the leaderboards, in the hall and on the plaza, and to friends. Pick it after the tutorial or in Settings.' },
+      { icon: 'globe', text: 'Around you: the MVP race, your duo, the rivalry, the league and the fans’ talk in one card on Home, opening on what matters most right now.' },
+      { icon: 'house', text: 'Your life: staff, wardrobe and collection in one card on the Player tab, and the Body panel: height, weight, the free-throw touch, the weak hand and the body map together.' },
+      { icon: 'person', text: 'Player names keep to letters A to Z (accents become plain letters), and swear words aren’t allowed in names or usernames.' },
+    ],
+  },
+  {
     id: '2026-11-02-r35',
     date: '2 November 2026',
     items: [
