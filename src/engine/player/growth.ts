@@ -125,6 +125,17 @@ export function eliteMult(mode: Mode, ovr: number): number {
   return e ? Math.max(e.min, 1 - Math.max(0, ovr - e.from) * e.per) : 1;
 }
 
+/** Round 37 (owner: the peak curve above 70 should fall in a straight line): every summer a rating
+ * pushed past its cap by a turning point, the shop or a mini-game settles back by a share of the
+ * excess, so boosts past the ceiling stop stacking up at the top. The share is the mode's `settle`:
+ * nothing at `from` OVR, rising in a straight line to the full share at `to`. */
+export function settleBack(p: UserPlayer, mode: Mode): void {
+  const settle = MODES[mode].settle;
+  if (!settle) return;
+  const share = settle.share * clamp((ovrOf(p.attrs, p.pos) - settle.from) / (settle.to - settle.from), 0, 1);
+  if (share > 0) for (const k of ATTRS) if (p.attrs[k] > p.caps[k]) p.attrs[k] -= (p.attrs[k] - p.caps[k]) * share;
+}
+
 /** Applies one half-season of growth to the user. Returns the gain per attribute. */
 export function applyHalfGrowth(rng: Rng, p: UserPlayer, ctx: HalfGrowthCtx): Partial<Attrs> {
   const mf = minutesFactor(ctx.minutesShare, ctx.played);

@@ -154,6 +154,12 @@ export const FAST_GROWTH = 1.3;
 // floor.ovr at floor.age, so every career that lasts that long reaches it
 // elite (round 12): above `from` OVR every half's growth shrinks by `per` a point, down to `min`,
 // so a high ceiling is no longer a sure thing: the last steps to the top take real work.
+// settle (round 37, owner: "in regular guy ... i want the upper hand (above 70 ovr) to go linearly
+// down ... aim the more niche factors than the main factors"): ratings that turning points, the shop
+// or mini-games pushed past their caps settle back each summer by a share of the excess, none at
+// `from` OVR and the full `share` at `to`. With the redraw past 99, Regular guy's curve above 70
+// falls in a straight line (1,200 smart careers: 2-point bars within noise of the line; a fixed line
+// instead of the ramp stacks careers on it, and a ramp from 70 piles them at 70-73).
 // round 14: per-mode dials for the systems that sit outside growth. mini scales what a mini-game
 // claim pays into ratings; teamFx scales the team factors around him (chemistry, star gravity,
 // team style, his team's storyline); ringChase scales the odds that a contender has a
@@ -164,8 +170,8 @@ export const FAST_GROWTH = 1.3;
 // starting OVR barely predicts the peak (each point ahead adds about 0.3), so the old 1.2 a point
 // sent a 65 OVR freshman in Shoot for the stars past 99. Fast break and the lab use Regular guy's.
 interface FreshScout { mid: number; slope: number; sd: number }
-export const MODES: Record<Mode, { name: string; blurb: string; potential: SkewDist; growth: number; injury: number; scout: FreshScout; floor?: { age: number; ovr: number; until: number }; elite?: { from: number; per: number; min: number }; mini?: number; teamFx?: number; ringChase?: number; settle?: { share: number; from: number } }> = {
-  standard: { name: 'Regular guy', blurb: 'The full game. Most careers peak in the 60s and 70s; the NBA is common, stardom is earned.', potential: POTENTIAL, growth: 0.97, injury: 1, scout: { mid: 72.9, slope: 0.28, sd: 12.1 }, elite: ELITE_CLIMB, mini: 0.4, teamFx: 0.3, ringChase: 0.1 },
+export const MODES: Record<Mode, { name: string; blurb: string; potential: SkewDist; growth: number; injury: number; scout: FreshScout; floor?: { age: number; ovr: number; until: number }; elite?: { from: number; per: number; min: number }; mini?: number; teamFx?: number; ringChase?: number; settle?: { share: number; from: number; to: number } }> = {
+  standard: { name: 'Regular guy', blurb: 'The full game. Most careers peak in the 60s and 70s; the NBA is common, stardom is earned.', potential: { ...POTENTIAL, redrawOver: 99 }, growth: 0.97, injury: 1, scout: { mid: 72.9, slope: 0.28, sd: 12.1 }, elite: ELITE_CLIMB, mini: 0.4, teamFx: 0.3, ringChase: 0.1, settle: { share: 1, from: 76, to: 98 } },
   // fast break: the regular game at a quick pace (engine/fast.ts). The quick pace means fewer
   // events, one training group a season and no shop, so the head start is set by simulation:
   // mean peak 76.4 against 73.6 for Regular guy (300 smart careers each, round 8).

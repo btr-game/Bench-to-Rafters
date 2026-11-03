@@ -9,7 +9,7 @@ import { pushMilitary } from './nationality';
 import { ATTR_MAX, GROWTH_RATE_AGE, MODES, POSITIONS, WEAR, FA_INTEREST, OVERSEAS_FA, TEAM_FACTORS, OFFSEASON_DAYS, REP, RETIRE, ATTRS, TEAM_OPTION, LONGEVITY, TOUCH } from '../balance';
 import { chance, clamp, int, logistic, range, shuffle } from '../rng';
 import type { Contract, Decision, GameState, Offer, RoleKey } from '../types';
-import { applyAging, growHeight, updateHeightProjection } from '../player/growth';
+import { applyAging, growHeight, settleBack, updateHeightProjection } from '../player/growth';
 import { healDays } from '../player/injury';
 import { updateScouting } from '../player/create';
 import { ovrOf } from '../player/ovr';
@@ -87,12 +87,8 @@ export function beginOffseason(s: GameState): void {
   // round 24: a body kept fresh through a season builds longevity
   if ((p.wear ?? 0) < LONGEVITY.lowWearBelow) p.longevity = (p.longevity ?? 0) + LONGEVITY.lowWear;
   const aging = applyAging(s.rng, p);
-  // round 37 (owner: the peak curve above 70 should fall in a straight line): once he is a star,
-  // a rating pushed past its cap by a turning point, the shop or a mini-game settles back by a share
-  // of the excess every summer, so boosts past the ceiling stop stacking up at the top (the mode's
-  // `settle`); below its line nothing changes
-  const settle = MODES[s.mode ?? 'standard'].settle;
-  if (settle && ovrOf(p.attrs, p.pos) >= settle.from) for (const k of ATTRS) if (p.attrs[k] > p.caps[k]) p.attrs[k] -= (p.attrs[k] - p.caps[k]) * settle.share;
+  // round 37: boosts past his caps settle back as a star (player/growth.ts)
+  settleBack(p, s.mode ?? 'standard');
   // the body recovers a little every summer, and less as he gets older
   p.wear = clamp((p.wear ?? 0) - WEAR.summerRest + Math.max(0, p.age - 25) * WEAR.agePerYear, 0, 100);
   // shoot-for-the-stars mode: never too far behind the path to the floor
