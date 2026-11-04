@@ -2785,7 +2785,8 @@
   "Something went wrong on this screen": "Un problème est survenu sur cet écran",
   "Your career is saved. Go back and carry on; if it happens again, send this line with your feedback:": "Ta carrière est sauvegardée. Reviens et continue ; si cela se reproduit, envoie cette ligne avec ton retour :",
   "Skip this page": "Passer cette page",
-  "Hold Space to speed up the credits": "Maintiens Espace pour accélérer le générique"
+  "Hold Space to speed up the credits": "Maintiens Espace pour accélérer le générique",
+  "A game that can end your season: play its last six minutes yourself on the Floor, or simulate them. WASD moves, J shoots (one tap at the rim lays it in), K passes, L makes a move, Esc pauses.": "Un match qui peut finir ta saison : joue toi-même ses six dernières minutes sur le parquet, ou simule-les. ZQSD/WASD pour bouger, J pour tirer (une touche près du cercle pour le double-pas), K pour passer, L pour un geste, Échap pour la pause."
  },
  "story": {
   "f-driveway.title": "L’allée",

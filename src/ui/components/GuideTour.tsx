@@ -81,6 +81,7 @@ const TOUR: Step[] = [
   T('d-summer', D('d-summer'), tx('Your summer program shapes next season.')),
   T('d-national', D('d-national'), tx('A national team call: medals and fame, at the cost of rest.')),
   T('d-live', D('d-live'), tx('A playable playoff game: a tactic each quarter, or simulate.')),
+  T('live-floor', D('live-floor'), tx('A game that can end your season: play its last six minutes yourself on the Floor, or simulate them. WASD moves, J shoots (one tap at the rim lays it in), K passes, L makes a move, Esc pauses.')),
   T('live-crunch', D('live-crunch'), tx('Crunch time in a final: the last two minutes are yours, trip by trip. Your ball, pick the play; their ball, call the defense. Keys 1 to 5 pick.')),
   T('live-meter', D('live-meter'), tx('The last shot of a close game: stop the meter in the green. A perfect release makes it much likelier to drop.')),
   T('d-press', D('d-press'), tx('A press conference: answer humble, confident or fiery. Each tone does something different.')),

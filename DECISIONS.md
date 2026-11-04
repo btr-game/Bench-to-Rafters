@@ -3421,12 +3421,37 @@ multiple times."
   block it, his athleticism taking up to 60% of both away. Nobody shoots from behind half court.
   Nobody teleports: the inbounder walks to the ball's spot and passes it in, a free-throw shooter
   walks to the line and the others to the lane, a rebound bounces to the man who wins it, the
-  step-back slides and a timeout's players walk back (a dead ball waits up to 2.5 more seconds for
-  them). He is never the inbounder; the pass in comes to him. After the ball changes hands J, K, L
+  step-back slides and a timeout's players walk back (a dead ball waits a little longer for them:
+  1.2 game seconds at most, and the six minutes tip with the inbounder already on the spot). He is never the inbounder; the pass in comes to him. After the ball changes hands J, K, L
   and Space rest for 350 ms, and a key still held from the other end must be pressed again (a steal
   no longer turns into a shot from half court). A bigger ball (a round seven-pixel ball, six far
   away) and a slightly bigger rim; each basket puts its points big over the court ("+2"), and the
   score bug's numbers are bigger and flash when they change.
+
+- **Step 4, presentation**: the court sounds out each play: a swish for a jumper, the iron for a
+  layup, the rim shaking for a dunk, a clank or a brick for a miss, the slap of a block, the
+  whistle, the horn, a net for a made free throw, the meter's own perfect and late notes, and the
+  clock's tick through the last five seconds of a game within three. Three new effects: a sneaker
+  squeak on a beaten defender or a steal, the dribble as the ball comes to him, and the crowd's
+  roar after a three, a dunk, an and-one, his team's block or a lead change in the last minute. The
+  announcer calls his team's big plays with the game's own calls (From downtown, Slam dunk,
+  Rejected, Stolen, And one, Buzzer beater, What a stop in the last ten seconds), one at most every
+  3.5 seconds. A game within six points runs its last minute at real speed, with "Crunch time" and
+  the clutch sound as it starts (the meter keeps to its real second). The pause menu switches the
+  sound effects and the announcer, as Settings does. The lab borrows the engine's position ratings
+  now (one copy, engine/floor/career.ts).
+- **The end credits speed up while Space is held** (owner, after the round 38 and 40 publish: "in
+  the end credit, can you make it speed up when the user presses on (continuous) space?"): four
+  times as fast, back to their pace when it is let go, with a hint at the foot of the roll; the
+  credits now end when the roll does (the timer stays as a fallback), so a faster roll moves on to
+  the title sooner.
+- **The book counts played Floor games apart**: `floor` counts every Floor game, `floorPlayed` the
+  ones he played, and the wins, comebacks, game-winners, late blocks and his best six minutes
+  (`floorPts`) only from those.
+- **Left as it is, for the owner**: the star weighting of the Floor's centring (a lone 93 on a team
+  of 76s is still worth about 2.6 points over six minutes; `ovr + 0.326 × (ovr − 84)²` per player
+  evens a single star but leaves a three-star team about 1.3 points up). The owner did not choose;
+  the plain centring stays.
 
 ## Round 40 (owner requests): languages
 

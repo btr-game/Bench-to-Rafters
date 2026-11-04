@@ -2785,7 +2785,8 @@
   "Something went wrong on this screen": "Algo salió mal en esta pantalla",
   "Your career is saved. Go back and carry on; if it happens again, send this line with your feedback:": "Tu carrera está guardada. Vuelve y sigue; si vuelve a pasar, envía esta línea con tus comentarios:",
   "Skip this page": "Saltar esta página",
-  "Hold Space to speed up the credits": "Mantén Espacio para acelerar los créditos"
+  "Hold Space to speed up the credits": "Mantén Espacio para acelerar los créditos",
+  "A game that can end your season: play its last six minutes yourself on the Floor, or simulate them. WASD moves, J shoots (one tap at the rim lays it in), K passes, L makes a move, Esc pauses.": "Un partido que puede acabar tu temporada: juega tú mismo sus últimos seis minutos en la pista, o simúlalos. WASD mueve, J tira (un toque junto al aro para la bandeja), K pasa, L hace un movimiento, Esc pausa."
  },
  "story": {
   "f-driveway.title": "La entrada de casa",

@@ -90,10 +90,11 @@ The order the owner set:
   stays in English" list (events, storylines, press conferences and talks, the finale and
   endings, achievement names, What's new, the announcer). The manual and the achievements'
   descriptions are translated in that check anyway.
-- **Noted, to build** (owner, 3 November, feedback on the published game: "in the end credit, can you
-  make it speed up when the user presses on (continuous) space?"): the finale's end credits
-  (screens/Finale.tsx, the credits roll from finale.ts's `creditsOf`) run faster while Space is
-  held, back to their own pace when it is let go.
+- **The Floor, kept for later**: the star weighting of its centring (DECISIONS.md, round 39: a
+  lone star counts about 2.6 points more on the Floor than his share; a weighting evens one star
+  but not a three-star team), a recorded announcer (Kept from round 34), the Floor for other
+  big moments (the round 39 plan: Olympic and tournament finals, the 3-on-3), and a phone layout
+  for it if phones come back (it simulates on a phone).
 - **Later**: a donation channel.
 - Turned down: careers framed as roguelite runs with meta-unlocks ("no").
 - Still to weigh before any paid release: a fictional league in place of the NBA's teams, colours

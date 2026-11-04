@@ -2785,7 +2785,8 @@
   "Something went wrong on this screen": "这个画面出了问题",
   "Your career is saved. Go back and carry on; if it happens again, send this line with your feedback:": "你的生涯已保存。返回后继续即可；如果再次出现，请把这一行连同反馈一起发送：",
   "Skip this page": "跳过这一页",
-  "Hold Space to speed up the credits": "按住空格键加快片尾字幕"
+  "Hold Space to speed up the credits": "按住空格键加快片尾字幕",
+  "A game that can end your season: play its last six minutes yourself on the Floor, or simulate them. WASD moves, J shoots (one tap at the rim lays it in), K passes, L makes a move, Esc pauses.": "可能终结赛季的一场比赛：在场上亲自打最后六分钟，或模拟。WASD 移动，J 投篮（篮下轻按一下上篮），K 传球，L 做动作，Esc 暂停。"
  },
  "story": {
   "f-driveway.title": "车道",

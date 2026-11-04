@@ -310,7 +310,7 @@ function LiveView({ g, d }: { g: GameState; d: Decision }) {
           <TimingMeter skill={timed === 'drive' ? g.player.attrs.FIN : g.player.attrs.SHT} label={timed === 'drive' ? t('Finish!') : t('Release!')} onTap={(at) => choose(`${timed}@${at}`)} />
         </div>
       ) : (
-      <div className="choices">
+      <div className="choices" data-tour={r.floorGame ? 'live-floor' : undefined}>
         {d.choices.map((c, i) => (
           <button key={c.id} className={`choice${i === 0 && r.stage === 'game' ? ' primary' : ''}`} onClick={() => pick(c.id)}>
             <span className="label">

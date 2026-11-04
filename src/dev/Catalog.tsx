@@ -5,10 +5,14 @@
 
 import { Fragment, useMemo, useState, type CSSProperties, type ReactNode } from 'react';
 import './catalog.css';
-import { AGE_PLANS, ARCH_CEILING, CRUNCH, DIFFICULTIES, HALF_PLANS, INJURY_SEVERITY, INJURY_TOLL, BASE_INJURY, LEVELS, LEAGUE_STRENGTH, MODES, WEAR } from '../engine/balance';
+import { AGE_PLANS, ARCH_CEILING, CRUNCH, DIFFICULTIES, FLOOR, HALF_PLANS, INJURY_SEVERITY, INJURY_TOLL, BASE_INJURY, LEVELS, LEAGUE_STRENGTH, MODES, WEAR } from '../engine/balance';
 import { DEFENSE, OFFENSE } from '../engine/career/live';
+import { FRAME_POSES, type Frame } from '../ui/floor/sprites';
+import type { Pose } from '../ui/art/sprite';
+import { STORY_CHAPTERS } from '../engine/story/chapters';
+import { StoryPortrait } from '../ui/art/StoryArt';
 import { COACH_LINES } from '../ui/components/CoachTalk';
-import type { AttrKey, GameState, HalfPlan, LevelKey, Pos } from '../engine/types';
+import type { AttrKey, GameState, HalfPlan, LevelKey, Pos, StoryRole } from '../engine/types';
 import { newGame } from '../engine/flow';
 import { INJURY_NAMES } from '../engine/player/injury';
 import { ARCHETYPES } from '../engine/player/archetypes';
@@ -252,6 +256,34 @@ const PERSONA_WHO: Record<Persona, string> = {
   hothead: 'One of the others; about every other half he starts a feud',
 };
 const PATH: Record<string, string> = { us: 'High school, then college', euro: 'Club academy', academy: 'Academy abroad', aus: 'Australian pathway', canada: 'Canadian prep', asia: 'Asian league pathway' };
+
+/** Round 38: story mode's cast, as the Catalog lists their chapters (a sample name each). */
+const STORY_WHO: Record<StoryRole, [string, string]> = {
+  friend: ['His best friend', 'Marcus Bell'],
+  rival: ['His rival', 'Dante Vale'],
+  parent: ['His parent', 'Carol Carter'],
+  sibling: ['His sibling', 'Maya Carter'],
+  agent: ['His agent', 'Ray Holt'],
+  mentor: ['His mentor', 'Coach Ellis'],
+  reporter: ['The reporter', 'Dana Price'],
+};
+
+/** Round 39: what each of the Floor's frames is for. */
+const FRAME_WORDS: Record<Frame, [string, string]> = {
+  stand: ['Standing', 'Off the ball, set, and at the free-throw line.'],
+  guard: ['Guarding', 'In a defensive stance on his man.'],
+  slide: ['Sliding', 'A defender shuffling sideways with his man.'],
+  runA: ['Running (1)', 'The first stride of a run.'],
+  runB: ['Running (2)', 'The second stride of a run.'],
+  dribble: ['Dribbling', 'The ball handler on the move.'],
+  low: ['Low dribble', 'The crossover sweeping the ball low across him.'],
+  back: ['His back', 'The middle of a spin, his back to the camera.'],
+  gather: ['The gather', 'Low with the ball before the shot rises.'],
+  shoot: ['The jumper', 'Up on the release, the ball off his fingertips.'],
+  dunk: ['The dunk', 'At the rim, the ball through it.'],
+  jump: ['Arms up', 'A block, a contest, or his own basket celebrated.'],
+  reach: ['The reach', 'A defender reaching in for the ball.'],
+};
 
 const CATEGORIES: Category[] = [
   {
@@ -1046,6 +1078,90 @@ const CATEGORIES: Category[] = [
       })),
   },
   // ---------- round 37 ----------
+  // round 39: the Floor, the last six minutes of a game that can end his season
+  {
+    key: 'floor',
+    name: 'The Floor',
+    icon: 'clutch',
+    blurb: `The playable last six minutes: the frames its players are drawn in, its shots, its moves and its rules. The clock runs at ${(FLOOR.tick * FLOOR.ticksPerSec).toFixed(1)} times; a game within ${FLOOR.realTime.margin} points plays its last ${FLOOR.realTime.clock} seconds at real speed.`,
+    entries: () => [
+      ...(Object.entries(FRAME_POSES) as [Frame, Pose][]).map(([k, pose]) => ({
+        key: `fr-${k}`,
+        title: FRAME_WORDS[k][0],
+        group: 'Frames',
+        text: FRAME_WORDS[k][1],
+        art: () => <PlayerArt name="Jordan Vale" number={23} frame={pose} noBall size={64} />,
+      })),
+      ...(['rim', 'paint', 'mid', 'three'] as const).map((z) => ({
+        key: `sh-${z}`,
+        title: { rim: 'At the rim', paint: 'In the paint', mid: 'Mid-range', three: 'From three' }[z],
+        group: 'Shots',
+        text: z === 'rim' ? 'One tap of J lays it in or dunks (a dunk for an athletic finisher). A defender close by may strip it or block it.' : 'Held on J, let go in the green: the meter fills in one real second.',
+        art: () => <Icon name={z === 'three' ? 'shoot' : 'ball'} size={44} />,
+        facts: [
+          ['Base chance', pct(FLOOR.shot[z], 0)],
+          ['Per rating point over 70', `+${(FLOOR.shot.perPoint[z] * 100).toFixed(2)}%`],
+        ] as [string, string][],
+      })),
+      {
+        key: 'mv-moves',
+        title: 'Crossover, spin, step-back',
+        group: 'Moves',
+        text: 'L with the ball: across him, a spin when moving up or down, a step-back when moving away from the rim.',
+        art: () => <Icon name="ball" size={44} />,
+        facts: [
+          ['Beats his man', `${pct(FLOOR.move.beat, 0)} at equal ratings, ${(FLOOR.move.perPoint * 100).toFixed(1)}% a point of handling over his defending`],
+          ['Loses the ball', pct(FLOOR.move.lose, 0)],
+        ] as [string, string][],
+      },
+      {
+        key: 'mv-finish',
+        title: 'Strips and blocks at the rim',
+        group: 'Moves',
+        text: 'A defender inside five feet can strip a one-tap layup on the way up or block it; his athleticism takes some of both away.',
+        art: () => <Icon name="lockdown" size={44} />,
+        facts: [
+          ['Strip, right on him', pct(FLOOR.finish.strip, 0)],
+          ['Taken away at 99 athleticism', pct(FLOOR.finish.athletic, 0)],
+          ['Block reach', `${FLOOR.block.reach} ft`],
+        ] as [string, string][],
+      },
+      {
+        key: 'rl-dead',
+        title: 'Dead balls, without teleports',
+        group: 'Rules',
+        text: 'The inbounder walks to the ball and passes it in (never him: the pass comes to him), a free-throw shooter walks to the line, a rebound bounces to the man who wins it. Nobody shoots from behind half court.',
+        art: () => <Icon name="clutch" size={44} />,
+        facts: [
+          ['Longest wait for a walk', `${FLOOR.walk} game seconds`],
+          ['Inbound from within', `${FLOOR.inboundReach} ft`],
+        ] as [string, string][],
+      },
+      {
+        key: 'rl-career',
+        title: 'In a career',
+        group: 'Rules',
+        text: 'Conference finals and Finals games one loss from going home. Both starting fives are centred on their midpoint and split by the strength gap the season sees.',
+        art: () => <Icon name="bracket" size={44} />,
+        facts: [['Rating points per point of strength', String(FLOOR.perStrength)]] as [string, string][],
+      },
+    ],
+  },
+  // round 38: story mode's chapters, one a summer at most
+  {
+    key: 'story',
+    name: 'Story mode chapters',
+    icon: 'book',
+    blurb: `The ${STORY_CHAPTERS.length} chapters of a story mode career, each with the person it is with. Their lines are keyed in content/story.ts, so every language tells them.`,
+    entries: () =>
+      STORY_CHAPTERS.map((ch) => ({
+        key: ch.id,
+        title: ch.title,
+        group: STORY_WHO[ch.who][0],
+        sub: ch.id,
+        art: () => <StoryPortrait role={ch.who} name={STORY_WHO[ch.who][1]} size={56} />,
+      })),
+  },
   {
     key: 'arenas',
     name: 'NBA arenas in the town',

@@ -13,7 +13,8 @@ const bare = (p: Pose): Pose => ({ ...noBall(p), rows: noBall(p).rows.map((r) =>
 /** The row a pose's feet stand on: its shadow's row (one more for the outline). */
 const footOf = (p: Pose): number => p.rows.findIndex((r) => r.includes('o')) + 1;
 
-const SOURCES: Record<Frame, Pose> = {
+/** The pose each frame is drawn from (the dev deck's Catalog shows them). */
+export const FRAME_POSES: Record<Frame, Pose> = {
   stand: TRIPLE,
   guard: LOWDRIBBLE,
   slide: SLIDE,
@@ -28,7 +29,7 @@ const SOURCES: Record<Frame, Pose> = {
   jump: CHEER,
   reach: REACH,
 };
-const POSES = Object.fromEntries(Object.entries(SOURCES).map(([k, p]) => [k, { pose: bare(p), foot: footOf(p) }])) as Record<Frame, { pose: Pose; foot: number }>;
+const POSES = Object.fromEntries(Object.entries(FRAME_POSES).map(([k, p]) => [k, { pose: bare(p), foot: footOf(p) }])) as Record<Frame, { pose: Pose; foot: number }>;
 
 /** Where a sprite stands: the column under his middle. */
 export const MID_X = 16;

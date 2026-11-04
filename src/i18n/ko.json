@@ -2785,7 +2785,8 @@
   "Something went wrong on this screen": "이 화면에서 문제가 생겼습니다",
   "Your career is saved. Go back and carry on; if it happens again, send this line with your feedback:": "커리어는 저장되어 있습니다. 돌아가서 계속하세요. 다시 일어나면 이 줄을 피드백과 함께 보내 주세요:",
   "Skip this page": "이 페이지 건너뛰기",
-  "Hold Space to speed up the credits": "스페이스를 누르고 있으면 크레딧이 빨라집니다"
+  "Hold Space to speed up the credits": "스페이스를 누르고 있으면 크레딧이 빨라집니다",
+  "A game that can end your season: play its last six minutes yourself on the Floor, or simulate them. WASD moves, J shoots (one tap at the rim lays it in), K passes, L makes a move, Esc pauses.": "시즌이 끝날 수도 있는 경기: 마지막 6분을 플로어에서 직접 뛰거나 시뮬레이션하세요. WASD로 이동, J로 슛(림 앞에서는 한 번 눌러 레이업), K로 패스, L로 개인기, Esc로 일시정지."
  },
  "story": {
   "f-driveway.title": "집 앞 골대",
