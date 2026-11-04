@@ -23,9 +23,12 @@ const test36 = (id: string, g: GameState, t: CareerTotals = NO_TOTALS, retired =
 };
 const nbaOf = (g: GameState) => g.history.filter((h) => h.level === 'NBA' && h.line.gp > 0);
 
-// finished careers of the deck's smart player: one whose jersey hangs, one whose does not
+// finished careers of the deck's smart player: one whose jersey hangs, one whose does not (and who
+// never gave a team seven seasons, so only the stays these tests add can hang it: a longer one hangs
+// it as soon as a stay lifts his legacy)
+const longestStay = (s: GameState) => Math.max(0, ...[...new Set(s.history.filter((h) => h.level === 'NBA').map((h) => h.teamId))].map((id) => s.history.filter((h) => h.level === 'NBA' && h.teamId === id).length));
 const hung = play((s) => s.step === 'retired' && raftersTeams(s).length > 0, { mode: 'stars', fast: true, tries: 16 })!;
-const plain = play((s) => s.step === 'retired' && raftersTeams(s).length === 0 && s.nbaGames > 0, { mode: 'standard', fast: true, tries: 16 })!;
+const plain = play((s) => s.step === 'retired' && raftersTeams(s).length === 0 && s.nbaGames > 0 && longestStay(s) < 7, { mode: 'standard', fast: true, tries: 16 })!;
 
 /** Seasons with an NBA team after his last one (`titles` of them won as its first option), so the
  * team hangs his jersey: five with a title, or seven with a legacy of 25. */

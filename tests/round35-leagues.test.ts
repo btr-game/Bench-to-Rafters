@@ -124,7 +124,9 @@ describe('friends in the award races', () => {
     const g = midseason(3513);
     const best = [...g.nba!.teams].filter((t) => t.id !== g.teamId).sort((a, b) => b.w - a.w)[0];
     const quiet = other(g, 5);
-    g.mp = { klass: 'ABCDEF', friends: [friend('m', [line(g.year, best.name, { ovr: 97, pts: 41, reb: 12, ast: 10, gp: 80 })]), friend('q', [line(g.year, quiet.name, { ovr: 70, pts: 3, reb: 1, ast: 1, gp: 60 })])] };
+    // a season past any the league's own players have (round 39: a 37-13-13 season from a generated
+    // star once edged 41-12-10)
+    g.mp = { klass: 'ABCDEF', friends: [friend('m', [line(g.year, best.name, { ovr: 99, pts: 46, reb: 14, ast: 12, gp: 80 })]), friend('q', [line(g.year, quiet.name, { ovr: 70, pts: 3, reb: 1, ast: 1, gp: 60 })])] };
     // the race so far, at his share of the games his team has played
     const so = friendCandidates(g, g.nba!, true);
     expect(so.find((c) => c.id === 'm')!.line.gp).toBe(Math.round((80 / 82) * (best.w + best.l)));

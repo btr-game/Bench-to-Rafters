@@ -9,7 +9,7 @@
 
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { achievementsNow, useStore } from '../../store';
-import { recordRoad } from '../achievements';
+import { recordFlight, recordRoad } from '../achievements';
 import { Icon } from '../art/Icon';
 import { SKIN_COLORS, HAIR_COLORS } from '../art/Player';
 import { LEVEL_IDS, LEVEL_NAME, type Level } from '../../engine/levels';
@@ -521,6 +521,8 @@ export function RoadMap() {
   const fly = () => {
     if (flight >= 0) return;
     sfx('takeoff');
+    // round 39: the book counts the flights back (Wheels Up, Jet Lag)
+    if (recordFlight()) achievementsNow();
     if (reduced()) return setPage(null);
     setFlight(0);
   };

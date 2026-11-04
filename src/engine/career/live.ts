@@ -486,6 +486,11 @@ function floorFinish(s: GameState, a: LiveGameArgs, head: Omit<LiveRequest, 'sta
     if (win && done.marks.winner) F.floorWinner = (F.floorWinner ?? 0) + 1;
     if (win && done.marks.stop) F.floorStop = (F.floorStop ?? 0) + 1;
     F.floorPts = Math.max(F.floorPts ?? 0, done.line.pts);
+    // round 39, end of the round: a deciding game won (a game seven), the one that won the NBA
+    // title, and the year of his last loss on the Floor (a turning point reads it that summer)
+    if (win && head.wins === head.losses) F.floorG7 = (F.floorG7 ?? 0) + 1;
+    if (win && head.wins === head.losses && /^NBA Finals$/i.test(a.round)) F.floorRing = s.year;
+    if (!win) F.floorLost = s.year;
   }
   set(done.us, done.them);
 }

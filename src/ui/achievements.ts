@@ -12,11 +12,13 @@ import { addMiniResult } from '../engine/achievementsMini';
 import type { MpKind } from '../engine/achievements35';
 import { ENDING_IDS } from '../engine/achievements36';
 import { TOWN_MARKS } from '../engine/achievements37';
+import { R39_MARKS } from '../engine/achievements39';
 import type { CareerRecord } from '../engine/career/record';
 import type { MiniResult } from '../engine/career/miniBonus';
 import { UNLOCK_FROM, islandDone, loadRoad, offRecord, type Road, type Unlock } from './road';
 import { shownBy, username } from './names';
 import type { FinaleKind } from './finale';
+import { lang } from '../i18n';
 
 const KEY = 'btr-achv-v1';
 
@@ -90,6 +92,8 @@ export function countCareer(g: GameState, master: boolean): void {
   // round 32: a farewell tour seen through, a son's career played
   if (g.awards.some((a) => a.key === 'FAREWELL')) t.farewells = (t.farewells ?? 0) + 1;
   if (g.flags.gen2) t.sons = (t.sons ?? 0) + 1;
+  // round 40: the language the game was in when it ended
+  if (!t.langs?.includes(lang())) t.langs = [...(t.langs ?? []), lang()];
   saveAch(d);
 }
 
@@ -306,6 +310,15 @@ export function recordWalk(g: GameState, feet: number): boolean {
   saveAch(d);
   const marathon = TOWN_MARKS.mile * TOWN_MARKS.marathon;
   return Math.floor(d.totals.walked / TOWN_MARKS.mile) > Math.floor(before / TOWN_MARKS.mile) || (before < marathon && d.totals.walked >= marathon);
+}
+
+/** Round 39: the flight from the road map's airport back to the main land (screens/RoadMap.tsx).
+ * True when a mark the book reads was reached. */
+export function recordFlight(): boolean {
+  const d = loadAch();
+  d.totals.flights = (d.totals.flights ?? 0) + 1;
+  saveAch(d);
+  return R39_MARKS.flights.includes(d.totals.flights);
 }
 
 /** Round 29: cards locked in the career log right now (the most at once is kept). */

@@ -19,6 +19,7 @@ import { ACHIEVEMENTS_34, R34_TOTALS_ONLY } from './achievements34';
 import { ACHIEVEMENTS_35, R35_TOTALS_ONLY, type MpKind } from './achievements35';
 import { ACHIEVEMENTS_36, R36_TOTALS_ONLY, type FinaleSeen } from './achievements36';
 import { ACHIEVEMENTS_37, R37_TOTALS_ONLY, type TownRun } from './achievements37';
+import { ACHIEVEMENTS_39, R39_TOTALS_ONLY } from './achievements39';
 import { ACHIEVEMENTS_25 } from './achievements25';
 import { ACHIEVEMENTS_MINI, MINI_TOTALS_ONLY, type MiniTotals } from './achievementsMini';
 
@@ -70,6 +71,8 @@ export interface CareerTotals {
   walked?: number; // round 37: feet walked along the street, at his size (recordWalk)
   marks?: string[]; // round 37: the NBA arenas' landmarks seen beside the street (ui/arenas.ts; recordStreet)
   townRun?: TownRun; // round 37: the career walked last: the places gone into and the looks of the street seen
+  langs?: string[]; // round 40: the languages careers were finished in (i18n Lang ids; ui/achievements.ts countCareer)
+  flights?: number; // round 39: flights from the road map's airport back to the main land (recordFlight)
 }
 
 /** Round 29: how many music loops the game has (ui/tracks.ts; a test keeps the two in step). */
@@ -444,10 +447,12 @@ export const ACHIEVEMENTS: Achievement[] = [
   ...ACHIEVEMENTS_36,
   // round 37: the town (walking it, what the career puts on the street), the arenas' landmarks, the career changers, the long career, the higher bar, the round's turning points and shop things (achievements37.ts)
   ...ACHIEVEMENTS_37,
+  // rounds 38 to 40: story mode (its chapters, the bonds, the friend and the rival), the Floor, the languages and the airport's flight, the award races and the playoffs (achievements39.ts)
+  ...ACHIEVEMENTS_39,
 ];
 
 // the ones that only read the totals kept across careers (they can be checked with no career open)
-const TOTALS_ONLY = new Set(['c1', 'c3', 'c5', 'c10', 'c25', 'c50', 'c100', 'allmodes', 'fastdone', 'masterdone', 'titles10', 'mvp10', 'daily1', 'daily7', 'daily30', 'share1', 'lock1', 'lock5', 'mixtape', 'album', 'undo1', 'cmp1', ...MINI_TOTALS_ONLY, ...R32_TOTALS_ONLY, ...R34_TOTALS_ONLY, ...R35_TOTALS_ONLY, ...R36_TOTALS_ONLY, ...R37_TOTALS_ONLY]);
+const TOTALS_ONLY = new Set(['c1', 'c3', 'c5', 'c10', 'c25', 'c50', 'c100', 'allmodes', 'fastdone', 'masterdone', 'titles10', 'mvp10', 'daily1', 'daily7', 'daily30', 'share1', 'lock1', 'lock5', 'mixtape', 'album', 'undo1', 'cmp1', ...MINI_TOTALS_ONLY, ...R32_TOTALS_ONLY, ...R34_TOTALS_ONLY, ...R35_TOTALS_ONLY, ...R36_TOTALS_ONLY, ...R37_TOTALS_ONLY, ...R39_TOTALS_ONLY]);
 
 /** The achievements this career (and the totals) have earned, by id. */
 export function earnedNow(g: GameState | null, t: CareerTotals): string[] {
