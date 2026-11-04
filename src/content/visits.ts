@@ -53,6 +53,8 @@ export const VISITS: Record<string, Visit> = {
   // round 37: the town
   'arena-prints': { verb: 'Walk the hallway of arenas', place: 'home', lines: ['You stop at the one where you scored your career high. The print is a little crooked. You leave it.', 'A guest asks which is your favourite. You point at the next one you have not played in yet.'] },
   'city-bike': { verb: 'Ride across town', place: 'city', lines: ['Past the arena and the bus stops with your face on them. Nobody looks twice at a man your size on a bike. Then everybody does.', 'You ride to the old gym and back before breakfast. The bell on the handlebars still sticks.'] },
+  // rounds 38 to 40: the Floor
+  'winner-photo': { verb: 'Look at the photo', place: 'home', lines: ['The ball is still in the air in the photo. Some mornings you are not sure it goes in.', 'A guest asks what the score was. You tell them to the point, and the seconds left, and who set the screen.'] },
   // round 35: friends
   'gym-key': { verb: 'Run with your friends', place: 'court', lines: ['Ten guys, one ball, nobody calls fouls. You lose the last game to a dentist.', 'Your old coach unlocks the door and stays to watch. He still yells about your footwork.'] },
   'game-night': { verb: 'Host game night', place: 'home', lines: ['You lose four hands in a row to a friend who has never seen you play. He wants to keep it that way.', 'Midnight, pizza boxes, the same argument about the best team ever. Nobody wins it.'] },

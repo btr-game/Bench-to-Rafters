@@ -192,6 +192,10 @@ export const SHOP_ITEMS: ShopItem[] = [
   { id: 'city-bike', name: 'A city bike for getting around town', category: 'Lifestyle', price: 0.9 * K, blurb: 'Gym, arena, home, no traffic. The doorman at the arena keeps a spot for it by the loading dock.', morale: 2, attrs: { ATH: 0.2 } },
   { id: 'knee-brace', name: 'A custom-fitted knee brace', category: 'Gear', price: 1.5 * K, blurb: 'Carbon and foam, cast from your own knee. It clicks on, and you stop thinking about it.', injuryMult: 0.97 },
   { id: 'longevity-clinic', name: 'A summer at a longevity clinic', category: 'Recovery', price: 90 * K, blurb: 'Cold plunges, blood work and sleep studies every August, with the doctor half the league quietly sees.', declineMult: 0.985, injuryMult: 0.98 },
+  // rounds 38 to 40: the Floor (round 39's playable last six minutes of the biggest playoff games)
+  { id: 'closer-coach', name: 'A late-game shooting coach', category: 'Training', price: 5 * K, blurb: 'Five seconds on the clock, every rep, all summer. The shot you take when the building is loud.', touch: 2, attrs: { SHT: 0.3 } },
+  { id: 'late-game-tape', name: 'A season of late-game tape', category: 'Training', price: 3 * K, blurb: 'Every last six minutes in the league this season, cut and tagged: who switches, who fouls, who freezes.', attrs: { IQ: 0.4, PER: 0.2 } },
+  { id: 'winner-photo', name: 'A framed photo of your biggest shot', category: 'Lifestyle', price: 0.6 * K, blurb: 'The ball in the air, the clock at zero, the bench already on its feet. Hung where you see it every morning.', morale: 3, rep: 1 },
   // round 34: simplification (the round's theme: fewer, better things)
   { id: 'career-scrapbook', name: 'A career scrapbook', category: 'Lifestyle', price: 0.3 * K, blurb: 'Every clipping since high school, in one fat binder.', morale: 3, rep: 1 },
   { id: 'one-move-coach', name: 'A one-move coach', category: 'Training', price: 3 * K, blurb: 'One move, a thousand times a day, until it is yours.', attrs: { FIN: 0.5 }, morale: 1 },
