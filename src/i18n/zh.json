@@ -2780,7 +2780,12 @@
   "Free throw: hold J, let go in the green": "罚球：按住 J，在绿色区松开",
   "Enter to go on": "按 Enter 继续",
   "His fouls: {n}": "个人犯规：{n}",
-  "hold to shoot; tap at the rim to lay it in or dunk": "按住投篮；在篮下轻按一下上篮或扣篮"
+  "hold to shoot; tap at the rim to lay it in or dunk": "按住投篮；在篮下轻按一下上篮或扣篮",
+  "The road map: high school, college, the NBA arena, and the island of mini-games across the sea": "Road map：高中、大学、NBA 球馆，以及大海对面的小游戏之岛",
+  "This card could not be drawn. The rest of the career carries on.": "这张卡片无法显示。生涯的其余部分照常进行。",
+  "Something went wrong on this screen": "这个画面出了问题",
+  "Your career is saved. Go back and carry on; if it happens again, send this line with your feedback:": "你的生涯已保存。返回后继续即可；如果再次出现，请把这一行连同反馈一起发送：",
+  "Skip this page": "跳过这一页"
  },
  "story": {
   "f-driveway.title": "车道",

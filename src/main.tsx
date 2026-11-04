@@ -9,6 +9,8 @@ import { TabNews } from './ui/components/TabNews';
 import { AchToasts } from './ui/screens/Achievements';
 import { Loading } from './ui/components/Loading';
 import { Look } from './ui/components/Look';
+import { Safe } from './ui/components/Safe';
+import { useStore } from './store';
 import './ui/styles/app.css';
 import { DECK_LOGO, GAME_LOGO, setFavicon } from './ui/art/favicon';
 import { isDev, onDev } from './dev/mode';
@@ -25,15 +27,27 @@ joinCourt();
 /** The game, or the dev deck in its place (round 28: a page of the game, flipped in place). */
 function Root() {
   const dev = useSyncExternalStore(onDev, isDev);
+  // after round 40: a part that fails to draw keeps to itself (components/Safe.tsx)
+  const game = useStore((s) => s.game);
   return dev ? (
     <DevDeck />
   ) : (
     <>
-      <App />
-      <GuideTour />
-      <Lessons />
-      <TabNews />
-      <AchToasts />
+      <Safe name="game" kind="page" again={game}>
+        <App />
+      </Safe>
+      <Safe name="guide mode" kind="quiet" again={game}>
+        <GuideTour />
+      </Safe>
+      <Safe name="lessons" kind="quiet" again={game}>
+        <Lessons />
+      </Safe>
+      <Safe name="tab news" kind="quiet" again={game}>
+        <TabNews />
+      </Safe>
+      <Safe name="achievement toasts" kind="quiet" again={game}>
+        <AchToasts />
+      </Safe>
     </>
   );
 }

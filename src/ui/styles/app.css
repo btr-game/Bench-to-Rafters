@@ -3213,3 +3213,7 @@ td > .link-btn { min-width: 44px; text-align: left; }
 .floor-cam { position: absolute; left: 50%; top: 8%; width: 72%; transform: translateX(-50%); display: grid; gap: 4px; justify-items: end; }
 .floor-cam .cam { max-width: none; border: 3px solid #000; box-shadow: 5px 5px 0 #000; border-radius: 0; }
 .floor-cam-skip { padding: 2px 8px; background: #101218; color: #c9c4ba; font: 600 12px/1.3 var(--f-mono); }
+/* after round 40: a part of the page that failed to draw (components/Safe.tsx) */
+.safe-note code { display: block; white-space: pre-wrap; overflow-wrap: anywhere; user-select: all; }
+.safe-big { max-width: 720px; margin: 16px auto; }
+.safe-float { position: fixed; z-index: 99; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(720px, calc(100vw - 32px)); margin: 0; box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45); }

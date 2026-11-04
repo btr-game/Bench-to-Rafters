@@ -2780,7 +2780,12 @@
   "Free throw: hold J, let go in the green": "Tiro libre: mantén J y suelta en el verde",
   "Enter to go on": "Enter para seguir",
   "His fouls: {n}": "Sus faltas: {n}",
-  "hold to shoot; tap at the rim to lay it in or dunk": "mantén para tirar; toca junto al aro para la bandeja o el mate"
+  "hold to shoot; tap at the rim to lay it in or dunk": "mantén para tirar; toca junto al aro para la bandeja o el mate",
+  "The road map: high school, college, the NBA arena, and the island of mini-games across the sea": "El Road map: el instituto, la universidad, el pabellón de la NBA y la isla de los minijuegos al otro lado del mar",
+  "This card could not be drawn. The rest of the career carries on.": "No se pudo mostrar esta tarjeta. El resto de la carrera sigue adelante.",
+  "Something went wrong on this screen": "Algo salió mal en esta pantalla",
+  "Your career is saved. Go back and carry on; if it happens again, send this line with your feedback:": "Tu carrera está guardada. Vuelve y sigue; si vuelve a pasar, envía esta línea con tus comentarios:",
+  "Skip this page": "Saltar esta página"
  },
  "story": {
   "f-driveway.title": "La entrada de casa",

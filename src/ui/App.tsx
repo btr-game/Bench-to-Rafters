@@ -35,6 +35,7 @@ import { LEVEL_NAME, levelOf } from '../engine/levels';
 import { RoadMap } from './screens/RoadMap';
 import { LevelEnd } from './screens/LevelEnd';
 import { Town } from './components/Town';
+import { Safe } from './components/Safe';
 import { t } from '../i18n';
 
 
@@ -170,6 +171,13 @@ function ModeBadge({ g }: { g: GameState }) {
 
 /** A tab's page. With fast break on, the cards marked Extra fold away and one button at the
  * bottom brings them back for this visit (round 25). */
+/** Past a page over the game that failed to draw: the interstitial ends, or the story page goes. */
+const skipOver = () => {
+  const st = useStore.getState();
+  if (st.transition) st.endTransition();
+  else st.dismissMoment();
+};
+
 function TabView({ fast, children }: { fast: boolean; children: ReactNode }) {
   const [all, setAll] = useState(false);
   const [folded, setFolded] = useState(0);
@@ -303,17 +311,21 @@ export function App() {
           </div>
         </header>
         {/* round 37: the town, his street of places in place of the row of tabs */}
-        <Town g={game} fast={fast} />
+        <Safe name="town" kind="card" again={game}>
+          <Town g={game} fast={fast} />
+        </Safe>
         {game.flags.daily ? <DailyStrip g={game} /> : null}
         <LookBackBar g={game} />
         {game.flags.tour ? <TourBar /> : null}
         <div className={sideBoard ? 'mp-layout' : undefined}>
           <TabView key={tab} fast={fast}>
-            {tab === 'home' && (retired ? game.flags.level ? <LevelEnd g={game} /> : <Retirement g={game} /> : <Home g={game} />)}
-            {tab === 'season' && <SeasonTab g={game} />}
-            {tab === 'player' && <PlayerTab g={game} />}
-            {tab === 'records' && <RecordsTab g={game} />}
-            {tab === 'extras' && <ExtrasTab g={game} />}
+            <Safe name={`${tab} tab`} kind="tab" again={game}>
+              {tab === 'home' && (retired ? game.flags.level ? <LevelEnd g={game} /> : <Retirement g={game} /> : <Home g={game} />)}
+              {tab === 'season' && <SeasonTab g={game} />}
+              {tab === 'player' && <PlayerTab g={game} />}
+              {tab === 'records' && <RecordsTab g={game} />}
+              {tab === 'extras' && <ExtrasTab g={game} />}
+            </Safe>
           </TabView>
           {/* round 35: a career with friends keeps its board beside every tab (Home has it in its own side column) */}
           {sideBoard && (
@@ -324,7 +336,9 @@ export function App() {
         </div>
         <FootBar where={`${tab} tab, ${MODES[game.mode]?.name ?? game.mode}, age ${game.player.age}`} />
       </div>
-      <Overlays g={game} />
+      <Safe name="page over the game" kind="page" again={game} skip={skipOver} float>
+        <Overlays g={game} />
+      </Safe>
       <TabBar g={game} />
     </>
   );
