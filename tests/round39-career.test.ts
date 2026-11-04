@@ -142,7 +142,9 @@ describe('a game the Floor plays', () => {
       expect(res.them).toBe(want.them);
       expect(res.win).toBe(want.us > want.them);
       expect(s.flags.floor).toBe((pro.flags.floor ?? 0) + 1);
-      expect(s.flags.floorWon ?? 0).toBe((pro.flags.floorWon ?? 0) + (res.win ? 1 : 0));
+      // simulated: counted as a Floor game, not as one he played
+      expect(s.flags.floorPlayed ?? 0).toBe(pro.flags.floorPlayed ?? 0);
+      expect(s.flags.floorWon ?? 0).toBe(pro.flags.floorWon ?? 0);
       expect(res.line.min).toBeGreaterThan(30);
     }
     expect(floored).toBe(12);
@@ -160,6 +162,8 @@ describe('a game the Floor plays', () => {
     expect(res.us).toBe(first!.us + 15);
     expect(res.them).toBe(first!.them + 9);
     expect(res.win).toBe(res.us > res.them);
+    expect(s.flags.floorPlayed).toBe((pro.flags.floorPlayed ?? 0) + 1);
+    expect(s.flags.floorPts).toBe(12);
     if (res.win) {
       expect(s.flags.floorBack).toBe((pro.flags.floorBack ?? 0) + 1);
       expect(s.flags.floorWinner).toBe((pro.flags.floorWinner ?? 0) + 1);

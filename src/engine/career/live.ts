@@ -474,14 +474,19 @@ function floorFinish(s: GameState, a: LiveGameArgs, head: Omit<LiveRequest, 'sta
   lastQ[1] += done.them - before[1];
   for (const k of ['pts', 'reb', 'ast', 'stl', 'blk', 'fgm', 'fga', 'tpm', 'tpa', 'ftm', 'fta', 'tov'] as const) line[k] += done.line[k];
   line.min += 6;
-  // for the achievement book: games on the Floor, wins, a comeback from ten down, his game-winner, his late block
+  // for the achievement book: games on the Floor, and for the ones he played himself the wins, a
+  // comeback from ten down, his game-winner, his late block and his most points in the six minutes
   const F = s.flags;
   const win = done.us > done.them;
   F.floor = (F.floor ?? 0) + 1;
-  if (win) F.floorWon = (F.floorWon ?? 0) + 1;
-  if (win && done.marks.low <= -10) F.floorBack = (F.floorBack ?? 0) + 1;
-  if (win && done.marks.winner) F.floorWinner = (F.floorWinner ?? 0) + 1;
-  if (win && done.marks.stop) F.floorStop = (F.floorStop ?? 0) + 1;
+  if (pick.startsWith('floor@')) {
+    F.floorPlayed = (F.floorPlayed ?? 0) + 1;
+    if (win) F.floorWon = (F.floorWon ?? 0) + 1;
+    if (win && done.marks.low <= -10) F.floorBack = (F.floorBack ?? 0) + 1;
+    if (win && done.marks.winner) F.floorWinner = (F.floorWinner ?? 0) + 1;
+    if (win && done.marks.stop) F.floorStop = (F.floorStop ?? 0) + 1;
+    F.floorPts = Math.max(F.floorPts ?? 0, done.line.pts);
+  }
   set(done.us, done.them);
 }
 
