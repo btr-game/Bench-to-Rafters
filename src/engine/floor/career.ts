@@ -25,7 +25,7 @@ export interface FloorTake {
 
 const POS: Pos[] = ['PG', 'SG', 'SF', 'PF', 'C'];
 /** How each position leans from a player's overall rating. */
-export const LEAN: Record<Pos, Partial<FloorRatings>> = {
+const LEAN: Record<Pos, Partial<FloorRatings>> = {
   PG: { SHT: 3, PLY: 9, PER: 3, INT: -10, REB: -12, ATH: 2, IQ: 3, FIN: -2 },
   SG: { SHT: 6, PLY: 2, PER: 2, INT: -8, REB: -8, ATH: 2 },
   SF: { SHT: 1, PLY: -2, PER: 2, INT: -2, REB: -2, ATH: 3, FIN: 2 },

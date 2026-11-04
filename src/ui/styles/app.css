@@ -2812,6 +2812,8 @@ td > .link-btn { min-width: 44px; text-align: left; }
 .fn-roll { position: absolute; inset: 0; overflow: hidden; }
 .fn-roll-in { position: absolute; left: 0; right: 0; top: 62%; display: grid; justify-items: center; gap: 40px; padding-inline: max(16px, env(safe-area-inset-left, 0px)); text-align: center; animation: fn-roll linear forwards; }
 @keyframes fn-roll { to { transform: translateY(calc(-100% - 62vh)); } }
+.fn-roll-hint { position: absolute; left: 0; right: 0; bottom: max(14px, env(safe-area-inset-bottom, 0px)); margin: 0; text-align: center; font: 600 13px/1 var(--f-mono); letter-spacing: 0.06em; text-transform: uppercase; color: #a8b0bd; }
+.fn-roll-hint.on { color: #ffd23f; }
 .fn-icons { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; max-width: 560px; }
 .fn-block { display: grid; gap: 4px; max-width: 720px; }
 .fn-block h3 { margin: 0 0 6px; font-family: var(--f-display); font-size: calc(15px * var(--ts)); text-transform: uppercase; letter-spacing: 0.16em; color: #ffd43b; }
@@ -3177,6 +3179,7 @@ td > .link-btn { min-width: 44px; text-align: left; }
   100% { transform: translateY(-12px); opacity: 0; }
 }
 .floor-pause { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 10px; background: rgba(8, 9, 12, 0.84); text-align: center; padding: 16px; }
+.floor-pause-row { display: flex; gap: 8px; justify-content: center; }
 .floor-pause h2 { margin: 0 0 6px; font: 900 34px/1 var(--f-display); text-transform: uppercase; color: #f2eee6; }
 .floor-pause .kicker { color: #ffd23f; }
 .floor-final { font: 900 44px/1 var(--f-display); color: #f2eee6; }

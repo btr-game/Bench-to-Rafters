@@ -20,6 +20,8 @@ import type { Look } from '../art/sprite';
 import { ActionCam } from '../art/ActionCam';
 import { ink } from '../art/color';
 import { t } from '../../i18n';
+import { setSfx, sfx, soundSettings } from '../sound';
+import { announce, announcerOn, setAnnouncer } from '../announcer';
 import { Backdrop, CAM_RANGE, VIEW, drawBasket, drawFrontRow, drawShadow, pixel, project, type ArenaLook } from './view';
 import { MID_X, SpriteBook, type Frame } from './sprites';
 
@@ -57,6 +59,8 @@ type KeyName = keyof typeof KEY;
 const GAME_KEYS = new Set<string>(Object.values(KEY).flat());
 
 const PACE = FLOOR.ticksPerSec;
+/** The announcer waits at least this long between calls (ms). */
+const CALL_GAP = 3500;
 /** How long the action keys rest after the ball changes hands (ms). */
 const LOCK_MS = 350;
 /** The close-up's length (ms): the action cam's play, and a beat to see it land. */
@@ -192,6 +196,58 @@ function closeUpOf(s: FloorState, e: FloorEvent, before: [number, number]): { pl
   return { play: { clock: clockText(s.clock), side, pts: e.pts ?? 2, text: `${name(e.by!)} ${verb}`, tag, mine: e.by === me }, winner: side };
 }
 
+/** Step 4: the court's sounds for what just happened, and the announcer's call for his team's big
+ * plays (the calls the rest of the game already makes, ui/announcer.ts). */
+function hear(s: FloorState, e: FloorEvent, before: [number, number]): string | null {
+  const ours = e.team === 0;
+  const lead = (x: [number, number]) => x[e.team] - x[e.team === 0 ? 1 : 0];
+  switch (e.kind) {
+    case 'make': {
+      sfx(e.dunk ? 'slam' : e.zone === 'rim' ? 'rimin' : 'swish');
+      const swing = lead(before) <= 0 && lead(s.score) >= 0;
+      if (e.pts === 3 || e.dunk || e.and || (s.clock <= 60 && swing)) sfx('roar');
+      if (!ours) return null;
+      if (s.clock <= 3 && swing) return 'Buzzer beater!';
+      if (e.and) return 'And one!';
+      if (e.dunk) return 'Slam dunk!';
+      return e.pts === 3 ? 'From downtown!' : null;
+    }
+    case 'miss':
+      sfx(e.zone === 'three' ? 'brick' : 'rim');
+      return null;
+    case 'block':
+      sfx('block');
+      if (!ours) return null;
+      sfx('roar');
+      return s.clock <= 10 ? 'What a stop!' : 'Rejected!';
+    case 'steal':
+      sfx('squeak');
+      return ours ? (s.clock <= 10 ? 'What a stop!' : 'Stolen!') : null;
+    case 'beat':
+      sfx('squeak');
+      return null;
+    case 'foul':
+    case 'turnover':
+    case 'out':
+      sfx('whistle');
+      return null;
+    case 'ft':
+      sfx(e.good ? 'net' : 'rim');
+      return null;
+    case 'timeout':
+    case 'shotclock':
+    case 'overtime':
+    case 'end':
+      sfx('buzzer');
+      return null;
+    default:
+      return null;
+  }
+}
+
+/** The clock's speed now: a close game's last minute runs at real speed (step 4), the rest at 1.5 times. */
+const paceOf = (s: FloorState): number => (s.clock <= FLOOR.realTime.clock && Math.abs(s.score[0] - s.score[1]) <= FLOOR.realTime.margin ? 1 / FLOOR.tick : PACE);
+
 /** A bar of ten pixel squares (his legs). */
 function Legs({ n }: { n: number }) {
   return (
@@ -236,6 +292,9 @@ export function FloorScreen({ setup, arena, looks, series, onAgain, onDone }: Pr
   const [tags, setTags] = useState<Tag[]>([]);
   const [close, setClose] = useState<{ id: number; play: DramaPlay; winner: 'us' | 'them' } | null>(null);
   const [paused, setPaused] = useState(false);
+  // step 4: the sound and the announcer, switched in the pause menu as in Settings
+  const [snd, setSnd] = useState(soundSettings);
+  const [voice, setVoice] = useState(announcerOn);
   const [over, setOver] = useState<FloorOutcome | null>(null);
   const pausedRef = useRef(false);
   const closeRef = useRef(false);
@@ -318,6 +377,10 @@ export function FloorScreen({ setup, arena, looks, series, onAgain, onDone }: Pr
     let raf = 0;
     let lastHud = '';
     let tagId = 0;
+    let lastCall = 0;
+    let prevHolder = s.ball.holder;
+    let lastSec = Math.ceil(s.clock);
+    let real = false;
     const gameSecs = (ms: number) => (ms / 1000) * FLOOR.tick * PACE;
 
     const shooting = () => {
@@ -353,6 +416,8 @@ export function FloorScreen({ setup, arena, looks, series, onAgain, onDone }: Pr
             else {
               inp.load = release;
               flash = { q: releaseQuality(s, s.players[s.user], release), until: performance.now() + 700 };
+              if (flash.q >= 0.95) sfx('perfect');
+              else if (flash.q <= 0) sfx('nope');
               release = null;
             }
           }
@@ -388,6 +453,11 @@ export function FloorScreen({ setup, arena, looks, series, onAgain, onDone }: Pr
     const onEvents = (evs: FloorEvent[], before: [number, number]) => {
       const now = performance.now();
       for (const e of evs) {
+        const call = hear(s, e, before);
+        if (call && now - lastCall > CALL_GAP) {
+          lastCall = now;
+          announce(call);
+        }
         if ((e.kind === 'make' && e.pts) || (e.kind === 'ft' && e.good)) setPop({ pts: e.kind === 'ft' ? 1 : e.pts!, team: e.team, id: now + Math.random() });
         const w = wordFor(s, e);
         if (w) setWord({ text: w, team: e.kind === 'turnover' || e.kind === 'shotclock' ? (e.team === 0 ? 1 : 0) : e.team, id: now + Math.random() });
@@ -689,7 +759,14 @@ export function FloorScreen({ setup, arena, looks, series, onAgain, onDone }: Pr
       const live = !pausedRef.current && !closeRef.current && s.phase !== 'over';
       if (live) {
         acc += dt;
-        const tl = 1 / PACE;
+        // step 4: a close game's last minute at real speed; the shot meter keeps to its real second
+        const pace = paceOf(s);
+        if (pace !== PACE && !real) {
+          real = true;
+          setWord({ text: t('Crunch time'), team: 0, id: now + Math.random() });
+          sfx('clutch');
+        } else if (pace === PACE) real = false;
+        const tl = 1 / pace;
         while (acc >= tl && !closeRef.current) {
           s.players.forEach((p, i) => {
             prev[i].x = p.x;
@@ -699,6 +776,12 @@ export function FloorScreen({ setup, arena, looks, series, onAgain, onDone }: Pr
           stepFloor(s, inputFor());
           s.players.forEach((p, i) => (openFor[i] = p.team === 0 && p.on && isOpen(s, i) ? openFor[i] + 1 : 0));
           onEvents(freshEvents(s), before);
+          // the dribble as the ball comes to him, the clock's last seconds in a close one
+          if (s.ball.holder === s.user && prevHolder !== s.user && s.poss === 0 && s.phase === 'live') sfx('bounce');
+          prevHolder = s.ball.holder;
+          const sec = Math.ceil(s.clock);
+          if (sec !== lastSec && s.clock <= 5 && s.phase === 'live' && Math.abs(s.score[0] - s.score[1]) <= 3) sfx('tick');
+          lastSec = sec;
           acc -= tl;
           if (s.phase === 'over') {
             finish();
@@ -706,7 +789,7 @@ export function FloorScreen({ setup, arena, looks, series, onAgain, onDone }: Pr
           }
         }
       } else acc = 0;
-      render(now, live ? clamp(acc * PACE, 0, 1) : 1, dt);
+      render(now, live ? clamp(acc * paceOf(s), 0, 1) : 1, dt);
       const h = hudOf(s);
       const key = JSON.stringify(h);
       if (key !== lastHud) {
@@ -867,6 +950,29 @@ export function FloorScreen({ setup, arena, looks, series, onAgain, onDone }: Pr
             >
               {t('Call a timeout ({n} left)', { n: hud.timeouts[0] })}
             </button>
+            <div className="floor-pause-row">
+              <button
+                className={`chip${snd.sfx ? ' on' : ''}`}
+                aria-pressed={snd.sfx}
+                onClick={() => {
+                  setSfx(!snd.sfx);
+                  setSnd(soundSettings());
+                }}
+              >
+                {t('Sound effects')}
+              </button>
+              <button
+                className={`chip${voice && snd.sfx ? ' on' : ''}`}
+                aria-pressed={voice && snd.sfx}
+                disabled={!snd.sfx}
+                onClick={() => {
+                  setAnnouncer(!voice);
+                  setVoice(!voice);
+                }}
+              >
+                {t('Announcer')}
+              </button>
+            </div>
             <button
               className="btn"
               onClick={() => {

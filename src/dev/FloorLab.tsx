@@ -8,25 +8,11 @@ import { TEAM_STYLE } from '../content/teamStyle';
 import { FIRST_NAMES, LAST_NAMES } from '../content/names';
 import type { Mode } from '../engine/balance';
 import type { Pos } from '../engine/types';
-import type { FloorPlayerIn, FloorRatings, FloorSetup } from '../engine/floor/sim';
+import type { FloorPlayerIn, FloorSetup } from '../engine/floor/sim';
+import { leanRatings } from '../engine/floor/career';
 import { FloorScreen, type FloorTeamLook } from '../ui/floor/FloorScreen';
 
 const POS: Pos[] = ['PG', 'SG', 'SF', 'PF', 'C', 'PG', 'SF', 'C'];
-/** How each position leans from the team's level. */
-const LEAN: Record<Pos, Partial<FloorRatings>> = {
-  PG: { SHT: 3, PLY: 9, PER: 3, INT: -10, REB: -12, ATH: 2, IQ: 3, FIN: -2 },
-  SG: { SHT: 6, PLY: 2, PER: 2, INT: -8, REB: -8, ATH: 2 },
-  SF: { SHT: 1, PLY: -2, PER: 2, INT: -2, REB: -2, ATH: 3, FIN: 2 },
-  PF: { SHT: -5, PLY: -6, PER: -4, INT: 6, REB: 8, FIN: 4 },
-  C: { SHT: -12, PLY: -10, PER: -8, INT: 10, REB: 12, FIN: 6, ATH: -2 },
-};
-const KEYS: (keyof FloorRatings)[] = ['SHT', 'FIN', 'PLY', 'PER', 'INT', 'REB', 'ATH', 'IQ', 'FT'];
-
-function ratings(level: number, pos: Pos, wobble: number): FloorRatings {
-  const r = {} as FloorRatings;
-  for (const k of KEYS) r[k] = Math.max(25, Math.min(99, Math.round(level + (LEAN[pos][k === 'FT' ? 'SHT' : k] ?? 0) + wobble)));
-  return r;
-}
 
 function roster(tag: string, level: number, seed: number, user?: { name: string; level: number }): FloorPlayerIn[] {
   let h = seed;
@@ -40,7 +26,7 @@ function roster(tag: string, level: number, seed: number, user?: { name: string;
       pos,
       number: me ? 23 : [3, 11, 7, 32, 50, 1, 21, 44][i],
       user: !!me,
-      r: ratings(lvl, pos, me ? 0 : Math.round((rnd() - 0.5) * 8)),
+      r: leanRatings(lvl, pos, me ? 0 : Math.round((rnd() - 0.5) * 8)),
     };
   });
 }
@@ -109,8 +95,8 @@ export function FloorLab() {
         <h1>The Floor</h1>
         <p className="on-dark">
           Round 39: the last six minutes of a game that could end his team’s series, at one and a half times the clock (four real minutes), on the high three-quarter view, in his own team’s arena. You play
-          number 23 (the ring under his feet). Move with WASD or the arrows; J holds and releases the shot (or steals on defence), K passes (or jumps), L makes a move
-          (or switches), Space calls a pick (or help), Esc pauses.
+          number 23 (the ring under his feet). Move with WASD or the arrows; J holds and releases the shot, one tap at the rim lays it in or dunks (or steals on defence), K
+          passes (or jumps), L makes a move (or switches), Space calls a pick (or help), Esc pauses. A close game's last minute runs at real speed.
         </p>
       </header>
       <section className="cl-panel">

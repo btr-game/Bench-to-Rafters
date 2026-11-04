@@ -264,6 +264,9 @@ export function startFloor(set: FloorSetup): FloorState {
   };
   matchUp(s);
   spread(s);
+  // the six minutes tip with the inbounder already on the ball's spot (a placement, not a move)
+  const spot = clampSpot(s.inbound!.at);
+  Object.assign(inbounder(s, poss, spot), spot);
   return s;
 }
 
@@ -969,7 +972,7 @@ export function stepFloor(s: FloorState, inp: FloorInput | null): void {
     const taker = inbounder(s, ib.team, spot);
     // the inbounder walks to the ball's spot, the rest to theirs; he passes it in once he is there
     for (const p of s.players.filter((q) => q.on)) stepToward(s, p, p === taker ? spot : p.team === s.poss ? spotOf(s, p) : aiTarget(s, p), p === taker);
-    if (s.wait > 0 || (dist(taker, spot) > 1 && s.wait > -FLOOR.walk)) return;
+    if (s.wait > 0 || (dist(taker, spot) > FLOOR.inboundReach && s.wait > -FLOOR.walk)) return;
     const ti = idx(s, taker);
     s.ball.holder = ti;
     s.ball.x = taker.x;

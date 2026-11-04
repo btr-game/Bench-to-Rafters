@@ -2784,7 +2784,8 @@
   "This card could not be drawn. The rest of the career carries on.": "Cette carte n’a pas pu s’afficher. Le reste de la carrière continue.",
   "Something went wrong on this screen": "Un problème est survenu sur cet écran",
   "Your career is saved. Go back and carry on; if it happens again, send this line with your feedback:": "Ta carrière est sauvegardée. Reviens et continue ; si cela se reproduit, envoie cette ligne avec ton retour :",
-  "Skip this page": "Passer cette page"
+  "Skip this page": "Passer cette page",
+  "Hold Space to speed up the credits": "Maintiens Espace pour accélérer le générique"
  },
  "story": {
   "f-driveway.title": "L’allée",

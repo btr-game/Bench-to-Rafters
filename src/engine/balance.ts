@@ -1273,8 +1273,13 @@ export const FLOOR = {
    * points per rating point of gap; the career's model moves it 0.1957 per point of strength. */
   perStrength: 0.38,
   /** A dead ball or a free throw waits at most this much longer (game seconds) for its man to walk
-   * to his spot (after round 39's first play: "dont let any players teleport"). */
-  walk: 2.5,
+   * to his spot (after round 39's first play: "dont let any players teleport"), kept short so a
+   * dead ball never drags. */
+  walk: 1.2,
+  /** The inbounder passes it in from this close to the ball's spot (feet). */
+  inboundReach: 4,
+  /** Step 4: a game within `margin` points runs at real speed for its last `clock` game seconds. */
+  realTime: { clock: 60, margin: 6 },
   /** The step-back's slide (feet per game second). */
   dash: 16,
   /** One tap at the rim: a defender inside `within` feet strips him up to `strip` of the time, right

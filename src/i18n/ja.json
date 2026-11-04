@@ -2784,7 +2784,8 @@
   "This card could not be drawn. The rest of the career carries on.": "このカードを表示できませんでした。キャリアのほかの部分はそのまま続きます。",
   "Something went wrong on this screen": "この画面で問題が起きました",
   "Your career is saved. Go back and carry on; if it happens again, send this line with your feedback:": "キャリアは保存されています。戻って続けてください。もう一度起きたら、この行をフィードバックと一緒に送ってください：",
-  "Skip this page": "このページを飛ばす"
+  "Skip this page": "このページを飛ばす",
+  "Hold Space to speed up the credits": "スペースキー長押しでクレジットを早送り"
  },
  "story": {
   "f-driveway.title": "家の前のゴール",
