@@ -14,12 +14,12 @@
 
 import { STORY } from '../balance';
 import { chance, clamp, normal, range } from '../rng';
-import type { FriendLine, GameState, Pos, StoryPal, StoryState } from '../types';
+import type { FriendLine, GameState, StoryPal, StoryState } from '../types';
 import { adjust, note, teamById, userOvr } from '../career/common';
 import { storyRng } from './cast';
 
-export const FRIEND_ID = 'story-friend';
-export const RIVAL_ID = 'story-rival';
+const FRIEND_ID = 'story-friend';
+const RIVAL_ID = 'story-rival';
 
 // the friend and the rival live in the States (owner: "all three main characters should be american,
 // or living in america at least"): never placed in Toronto
@@ -207,5 +207,3 @@ export function hurtFriend(s: GameState, st: StoryState): void {
   if (f.track === 'bust') st.f.bustYears = Math.max(st.f.bustYears ?? 0, 2);
 }
 
-/** Who is who, for the chapters' choice of words. */
-export const isGuard = (pos: Pos): boolean => pos === 'PG' || pos === 'SG';

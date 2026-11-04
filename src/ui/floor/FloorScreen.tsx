@@ -30,7 +30,7 @@ export interface FloorTeamLook {
   which: KitName;
 }
 
-export type FloorOutcome = ReturnType<typeof floorResult>;
+type FloorOutcome = ReturnType<typeof floorResult>;
 
 interface Props {
   setup: FloorSetup;
@@ -529,9 +529,10 @@ export function FloorScreen({ setup, arena, looks, series, onAgain, onDone }: Pr
     };
 
     // after the first play: a bigger ball, easy to follow (owner: "it's hard to see the ball because
-    // it's too small"): a round pixel ball with a dark rim, a seam and a highlight
-    const BALL_NEAR = ['..###..', '.#ooo#.', '#oHooo#', '#sssss#', '#oooSo#', '.#ooo#.', '..###..'];
-    const BALL_FAR = ['.####.', '#oHoo#', '#ssss#', '#ooSo#', '.####.'];
+    // it's too small", then "like 0.75 player head size": nine pixels to a face's twelve): a round
+    // pixel ball with a dark rim, a seam and a highlight
+    const BALL_NEAR = ['...###...', '.##ooo##.', '.#oHooo#.', '#ooHoooo#', '#sssssss#', '#oooooSS#', '.#ooooS#.', '.##ooo##.', '...###...'];
+    const BALL_FAR = ['..####..', '.#oHoo#.', '#oHoooo#', '#ssssss#', '#ooooSo#', '#oooSSo#', '.#oooo#.', '..####..'];
     const BALL_INK: Record<string, string> = { '#': '#1B1820', o: '#E8782A', H: '#FFB26B', S: '#B4531A', s: '#8A3A12' };
     const drawBall = (b: { x: number; y: number; h: number }) => {
       const p = project(cam, b.x, b.y, b.h);

@@ -4,7 +4,7 @@
 // games where one more loss sends his team home.
 
 /** The NBA's conference finals and the Finals. */
-export const floorRound = (round: string): boolean => /^Conference finals$/i.test(round) || /^NBA Finals$/i.test(round);
+const floorRound = (round: string): boolean => /^Conference finals$/i.test(round) || /^NBA Finals$/i.test(round);
 
 /** Whether this game of a series is his team's elimination game (`losses` his team's so far). */
 export function floorDue(round: string, losses: number, bestOf: number): boolean {

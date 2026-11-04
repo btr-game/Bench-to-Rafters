@@ -24,7 +24,7 @@ const APRON = { x0: -9, x1: COURT.w + 9, y0: -5, y1: COURT.h + 4 };
 const depth = (y: number) => CAM.back + (COURT.h - y);
 
 /** A spot on the screen, and the scale there (1 at the near sideline). */
-export interface ScreenPt {
+interface ScreenPt {
   x: number;
   y: number;
   s: number;

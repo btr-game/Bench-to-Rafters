@@ -106,7 +106,7 @@ export function floorSetup(s: GameState, take: FloorTake): FloorSetup {
 }
 
 /** What comes back from the Floor: the final score, his line and the marks. */
-export interface FloorDone {
+interface FloorDone {
   us: number;
   them: number;
   line: FloorBox;

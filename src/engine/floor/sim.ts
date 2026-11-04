@@ -38,7 +38,7 @@ export interface FloorPlayerIn {
   user?: boolean;
 }
 
-export interface FloorTeamIn {
+interface FloorTeamIn {
   name: string;
   short: string;
   color: string;
@@ -77,7 +77,7 @@ export interface FloorBox {
   pf: number;
 }
 
-export interface FloorPlayer extends FloorPlayerIn {
+interface FloorPlayer extends FloorPlayerIn {
   team: 0 | 1;
   x: number;
   y: number;
@@ -354,7 +354,7 @@ function nearestFoe(s: FloorState, team: 0 | 1, at: Spot): { p: FloorPlayer | nu
 const ratingFor = (p: FloorPlayer, zone: Zone) => (zone === 'rim' ? p.r.FIN * 0.8 + p.r.ATH * 0.2 : zone === 'paint' ? (p.r.FIN + p.r.SHT) / 2 : p.r.SHT);
 
 /** The chance a shot from here goes in, before his meter. */
-export function shotChance(s: FloorState, p: FloorPlayer, at: Spot): number {
+function shotChance(s: FloorState, p: FloorPlayer, at: Spot): number {
   const zone = zoneOf(p.team, at);
   const S = FLOOR.shot;
   let c = S[zone] + S.perPoint[zone] * (ratingFor(p, zone) - 70);
