@@ -2730,7 +2730,11 @@
   "Pick one plan for the season.": "今シーズンのプランを1つ選んでください。",
   "First-half plan": "前半のプラン",
   "Second-half plan": "後半のプラン",
-  "Pick one or two plans for the next half. One plan alone works a little better than its listing (focused work); add a second and the first keeps most of its effect while the side plan adds a smaller boost.": "次の半シーズンのプランを1つか2つ選んでください。1つだけなら説明より少しよく効きます（集中練習）。2つ選ぶと、1つ目は効果のほとんどを保ち、2つ目が少し上乗せします。"
+  "Pick one or two plans for the next half. One plan alone works a little better than its listing (focused work); add a second and the first keeps most of its effect while the side plan adds a smaller boost.": "次の半シーズンのプランを1つか2つ選んでください。1つだけなら説明より少しよく効きます（集中練習）。2つ選ぶと、1つ目は効果のほとんどを保ち、2つ目が少し上乗せします。",
+  "This card could not be drawn. The rest of the career carries on.": "このカードを表示できませんでした。キャリアのほかの部分はそのまま続きます。",
+  "Something went wrong on this screen": "この画面で問題が起きました",
+  "Your career is saved. Go back and carry on; if it happens again, send this line with your feedback:": "キャリアは保存されています。戻って続けてください。もう一度起きたら、この行をフィードバックと一緒に送ってください：",
+  "Skip this page": "このページを飛ばす"
  },
  "story": {
   "f-driveway.title": "家の前のゴール",

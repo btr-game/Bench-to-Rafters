@@ -2730,7 +2730,11 @@
   "Pick one plan for the season.": "Elige un plan para la temporada.",
   "First-half plan": "Plan de la primera mitad",
   "Second-half plan": "Plan de la segunda mitad",
-  "Pick one or two plans for the next half. One plan alone works a little better than its listing (focused work); add a second and the first keeps most of its effect while the side plan adds a smaller boost.": "Elige uno o dos planes para la próxima mitad. Un solo plan funciona un poco mejor de lo que indica (trabajo enfocado); si añades un segundo, el primero conserva casi todo su efecto y el segundo suma un empujón menor."
+  "Pick one or two plans for the next half. One plan alone works a little better than its listing (focused work); add a second and the first keeps most of its effect while the side plan adds a smaller boost.": "Elige uno o dos planes para la próxima mitad. Un solo plan funciona un poco mejor de lo que indica (trabajo enfocado); si añades un segundo, el primero conserva casi todo su efecto y el segundo suma un empujón menor.",
+  "This card could not be drawn. The rest of the career carries on.": "No se pudo mostrar esta tarjeta. El resto de la carrera sigue adelante.",
+  "Something went wrong on this screen": "Algo salió mal en esta pantalla",
+  "Your career is saved. Go back and carry on; if it happens again, send this line with your feedback:": "Tu carrera está guardada. Vuelve y sigue; si vuelve a pasar, envía esta línea con tus comentarios:",
+  "Skip this page": "Saltar esta página"
  },
  "story": {
   "f-driveway.title": "La entrada de casa",

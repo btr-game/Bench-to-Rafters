@@ -2730,7 +2730,11 @@
   "Pick one plan for the season.": "为这个赛季选一个计划。",
   "First-half plan": "上半季计划",
   "Second-half plan": "下半季计划",
-  "Pick one or two plans for the next half. One plan alone works a little better than its listing (focused work); add a second and the first keeps most of its effect while the side plan adds a smaller boost.": "为接下来的半个赛季选一到两个计划。只选一个，效果比说明的还好一点（专注训练）；再加一个，第一个保留大部分效果，第二个再小幅加成。"
+  "Pick one or two plans for the next half. One plan alone works a little better than its listing (focused work); add a second and the first keeps most of its effect while the side plan adds a smaller boost.": "为接下来的半个赛季选一到两个计划。只选一个，效果比说明的还好一点（专注训练）；再加一个，第一个保留大部分效果，第二个再小幅加成。",
+  "This card could not be drawn. The rest of the career carries on.": "这张卡片无法显示。生涯的其余部分照常进行。",
+  "Something went wrong on this screen": "这个画面出了问题",
+  "Your career is saved. Go back and carry on; if it happens again, send this line with your feedback:": "你的生涯已保存。返回后继续即可；如果再次出现，请把这一行连同反馈一起发送：",
+  "Skip this page": "跳过这一页"
  },
  "story": {
   "f-driveway.title": "车道",

@@ -3135,3 +3135,8 @@ td > .link-btn { min-width: 44px; text-align: left; }
 :root:lang(zh) { --f-display: 'Big Shoulders Display', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif; --f-body: 'Archivo', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', system-ui, sans-serif; --f-mono: 'IBM Plex Mono', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', monospace; }
 :root:lang(ko) body { word-break: keep-all; }
 .set-langs { flex-wrap: wrap; }
+
+/* after round 40: a part of the page that failed to draw (components/Safe.tsx) */
+.safe-note code { display: block; white-space: pre-wrap; overflow-wrap: anywhere; user-select: all; }
+.safe-big { max-width: 720px; margin: 16px auto; }
+.safe-float { position: fixed; z-index: 99; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(720px, calc(100vw - 32px)); margin: 0; box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45); }
