@@ -2755,7 +2755,6 @@
   "Offence": "Attaque",
   "move": "se déplacer",
   "sprint": "sprinter",
-  "hold to shoot": "maintenir pour tirer",
   "pass (aim with the arrows)": "passe (visez avec les flèches)",
   "crossover, spin, step-back": "crossover, spin, step-back",
   "call a pick": "demander un écran",
@@ -2780,7 +2779,8 @@
   "Momentum": "Dynamique",
   "Free throw: hold J, let go in the green": "Lancer franc : maintenez J, relâchez dans le vert",
   "Enter to go on": "Entrée pour continuer",
-  "His fouls: {n}": "Ses fautes : {n}"
+  "His fouls: {n}": "Ses fautes : {n}",
+  "hold to shoot; tap at the rim to lay it in or dunk": "maintiens pour tirer ; touche près du cercle pour un double-pas ou un dunk"
  },
  "story": {
   "f-driveway.title": "L’allée",

@@ -196,6 +196,13 @@ const toFinal: PlayOpts['pick'] = (_, d) => {
   if (r.stage === 'game') return isFinal(r.round) ? 'play' : d.choices.some((c) => c.id === 'series') ? 'series' : 'sim';
   return r.stage === 'quarter' ? 'steady' : r.stage === 'clutch' ? 'pull@good' : d.choices[0].id;
 };
+/** Round 39: each playoff game simulated one at a time until one can end the season; that one is played. */
+const toFloor: PlayOpts['pick'] = (_, d) => {
+  if (d.kind !== 'live') return undefined;
+  const r = d.data?.req as LiveRequest;
+  if (r.stage === 'game') return r.floorGame ? 'play' : 'sim';
+  return d.choices[0].id;
+};
 /** A career played as Rough Road (round 26): Reality, master mode, nothing simplified. */
 const oath = (g: GameState | null) => {
   if (g) Object.assign(g.flags, { oath: 1, fast: 0, sim: 0 }), (g.mode = 'reality');
@@ -514,6 +521,7 @@ export const CARDS: DevCard[] = [
 
   // big moments
   { id: 'floor-lab', title: 'The Floor', group: 'Big moments', icon: 'clutch', blurb: 'Round 39: the last six minutes of an elimination game, played, four real minutes. The high three-quarter court in his team’s arena (the court, the crowd, the vibes), ten pixel players, the shot meter and the score bug. Pick the teams, the difficulty, how good he is and the start.', open: () => true, page: FloorLab },
+  { id: 'floor-career', title: 'The Floor in a career', group: 'Big moments', icon: 'clutch', blurb: 'Round 39: a star’s playoff game that can end his season. The first 42 minutes go by like any playoff game, then the last six are his on the Floor, in his arena or theirs, both teams in their own kits; the result finishes the game and the series.', open: () => show(at('floor-career', liveAt('floor'), { live: true, pick: toFloor, tries: 20 })) },
   { id: 'cam-lab', title: 'Action cam lab', group: 'Big moments', icon: 'camera', blurb: 'Any play on the finals cam, slowed right down, any two teams.', open: () => true, page: CamLab },
   { id: 'intro', title: 'Intro page', group: 'Start', icon: 'ball', blurb: 'The title over a side-on one-on-one: runs, steals, blocks and jumpers in pixel frames, the venue changing every five seconds. First visit only, or the Intro button on the start page.', open: () => void useStore.setState({ game: null, page: null, mini: null, intro: true }) },
   { id: 'whats-new', title: 'What’s new', group: 'Start', icon: 'news', blurb: 'The latest changes in a panel over part of the start page. It opens by itself once after each update; What’s new beside Intro opens it again.', open: () => void useStore.setState({ game: null, page: null, mini: null, intro: false, finale: null, news: true }) },

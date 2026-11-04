@@ -2755,7 +2755,6 @@
   "Offence": "Ataque",
   "move": "moverse",
   "sprint": "esprintar",
-  "hold to shoot": "mantén para tirar",
   "pass (aim with the arrows)": "pase (apunta con las flechas)",
   "crossover, spin, step-back": "crossover, giro, step-back",
   "call a pick": "pedir un bloqueo",
@@ -2780,7 +2779,8 @@
   "Momentum": "Racha",
   "Free throw: hold J, let go in the green": "Tiro libre: mantén J y suelta en el verde",
   "Enter to go on": "Enter para seguir",
-  "His fouls: {n}": "Sus faltas: {n}"
+  "His fouls: {n}": "Sus faltas: {n}",
+  "hold to shoot; tap at the rim to lay it in or dunk": "mantén para tirar; toca junto al aro para la bandeja o el mate"
  },
  "story": {
   "f-driveway.title": "La entrada de casa",

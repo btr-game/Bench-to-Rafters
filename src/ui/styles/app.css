@@ -3137,6 +3137,8 @@ td > .link-btn { min-width: 44px; text-align: left; }
 .set-langs { flex-wrap: wrap; }
 
 /* Round 39: the Floor. An arena at night whatever the theme, so its colours are its own. */
+/* round 39: the Floor in a career, over the whole page */
+.floor-layer { position: fixed; inset: 0; z-index: 92; overflow: auto; background: #0b0d14; padding: 12px max(16px, env(safe-area-inset-right, 0px)) 12px max(16px, env(safe-area-inset-left, 0px)); }
 .floor { display: grid; gap: 8px; justify-items: center; align-content: start; color: #f2eee6; width: 100%; }
 .fb { display: grid; grid-template-columns: 1fr auto auto 1fr; background: #101218; border: 2px solid #000; box-shadow: 4px 4px 0 #000; width: min(100%, 820px); font-family: var(--f-display); text-transform: uppercase; }
 .fb-team { display: grid; grid-template-columns: auto 1fr; align-items: center; column-gap: 12px; row-gap: 2px; padding: 6px 14px; }
@@ -3146,7 +3148,13 @@ td > .link-btn { min-width: 44px; text-align: left; }
 .fb-team:last-child .fb-meta { order: 3; justify-content: flex-end; }
 .fb-name { font-weight: 900; font-size: 22px; letter-spacing: 0.04em; display: inline-flex; align-items: center; gap: 8px; }
 .fb-team.ball .fb-name::after { content: ''; width: 8px; height: 8px; background: currentColor; }
-.fb-score { font: 700 34px/1 var(--f-mono); justify-self: end; }
+.fb-score { font: 700 44px/1 var(--f-mono); justify-self: end; animation: fb-hit 0.9s steps(4) 1; }
+@keyframes fb-hit { 0% { color: #ffd23f; transform: scale(1.35); } 60% { color: #ffd23f; transform: scale(1.1); } 100% { transform: none; } }
+/* the points a basket brings, big over the court (after round 39's first play) */
+.floor-pts { position: absolute; z-index: 6; left: 0; right: 0; top: 62%; text-align: center; font: 900 clamp(48px, 9vw, 104px)/1 var(--f-mono); color: #f2eee6; text-shadow: 4px 4px 0 #000; animation: floor-pts 1.3s steps(8) forwards; pointer-events: none; }
+.floor-pts.us { color: #7cff9b; }
+@keyframes floor-pts { 0% { transform: translateY(12px) scale(0.6); opacity: 0; } 15% { transform: none; opacity: 1; } 75% { opacity: 1; } 100% { transform: translateY(-24px); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .fb-score, .floor-pts { animation: none; } }
 .fb-meta { grid-column: 1 / -1; display: flex; gap: 10px; align-items: center; font: 600 12px/1.2 var(--f-mono); letter-spacing: 0.04em; }
 .fb-meta b { padding: 1px 5px; background: #000; color: #ffd23f; }
 .fb-tos { display: inline-flex; gap: 3px; }

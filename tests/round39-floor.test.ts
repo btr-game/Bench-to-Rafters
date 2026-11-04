@@ -2,9 +2,9 @@
 // ends, four real minutes long, harder with the difficulty.
 import { describe, expect, it } from 'vitest';
 import { FLOOR } from '../src/engine/balance';
-import { floorResult, freshEvents, meterWindow, openMan, releaseQuality, skipFloor, startFloor, stepFloor, type FloorEventKind, type FloorInput, type FloorPlayerIn, type FloorSetup, type FloorState } from '../src/engine/floor/sim';
+import { floorResult, freshEvents, inRange, meterWindow, openMan, releaseQuality, skipFloor, startFloor, stepFloor, type FloorEventKind, type FloorInput, type FloorPlayerIn, type FloorSetup, type FloorState } from '../src/engine/floor/sim';
 import { floorDue } from '../src/engine/floor/due';
-import { isThree, zoneOf } from '../src/engine/floor/court';
+import { isThree, rimOf, zoneOf } from '../src/engine/floor/court';
 
 const POS = ['PG', 'SG', 'SF', 'PF', 'C'] as const;
 function roster(tag: string, base: number, o: { user?: boolean; FT?: number; SHT?: number } = {}): FloorPlayerIn[] {
@@ -215,5 +215,67 @@ describe('round 39: the Floor', () => {
     const wide = meterWindow(s, u);
     u.r.FT = 40;
     expect(meterWindow(s, u)).toBeLessThan(wide);
+  });
+
+  // after the first play of round 39 (owner: "dont let any players teleport", "dont make the user's
+  // player the inbounder", "dont let the players shoot from behind half court")
+  it('moves nobody faster than a sprint, never makes him the inbounder, never shoots from past half court', () => {
+    const step = FLOOR.speed[1] * FLOOR.sprint * FLOOR.tick * 1.15;
+    let inbounds = 0;
+    for (let seed = 1; seed <= 6; seed++) {
+      const s = startFloor(setup(seed));
+      for (let k = 0; k < 20000 && s.phase !== 'over'; k++) {
+        const was = s.players.map((p) => ({ x: p.x, y: p.y, on: p.on }));
+        const phase = s.phase;
+        const flight = s.ball.flight;
+        stepFloor(s, k % 2 ? scripted(s) : null);
+        s.players.forEach((p, i) => {
+          if (!was[i].on || !p.on) return; // a substitution comes on where the other went off
+          const d = Math.hypot(p.x - was[i].x, p.y - was[i].y);
+          expect(d, `seed ${seed} tick ${s.tick} player ${i} moved ${d} ft`).toBeLessThanOrEqual(Math.max(step, FLOOR.dash * FLOOR.tick * 1.01));
+        });
+        // a dead ball comes alive: the inbound pass is in the air, and not from him
+        if (phase === 'dead' && s.phase === 'live' && s.ball.flight?.kind === 'pass') {
+          inbounds++;
+          expect(s.ball.flight.by).not.toBe(s.user);
+        }
+        const f = s.ball.flight;
+        if (f && f.kind === 'shot' && f !== flight) expect(inRange({ ...f.from, team: s.players[f.by].team })).toBe(true);
+      }
+    }
+    expect(inbounds).toBeGreaterThan(30);
+  });
+
+  it('finishes at the rim on one tap: a shot or a strip, no meter, the athletic stripped less', () => {
+    const strips = (ATH: number) => {
+      let n = 0;
+      let tries = 0;
+      for (let seed = 1; seed <= 400; seed++) {
+        const st = setup(seed);
+        st.us.players[1].r.ATH = ATH;
+        const s = startFloor(st);
+        // wait for his ball in the half court, then put him at the rim with a defender on him
+        for (let k = 0; k < 400 && !(s.phase === 'live' && s.ball.holder === s.user && !s.ball.flight); k++) stepFloor(s, null);
+        if (s.ball.holder !== s.user) continue;
+        const me = s.players[s.user];
+        const rim = rimOf(me.team);
+        Object.assign(me, { x: rim.x + (me.team === 0 ? -2 : 2), y: rim.y });
+        const d = s.players.find((p) => p.team !== me.team && p.on)!;
+        Object.assign(d, { x: me.x + (me.team === 0 ? 1 : -1), y: me.y + 0.5 });
+        const before = s.feed.length;
+        stepFloor(s, { finish: true });
+        tries++;
+        const evs = s.feed.slice(before).map((e) => e.kind);
+        const shot = s.ball.flight?.kind === 'shot' || evs.includes('block');
+        expect(shot || evs.includes('steal')).toBe(true);
+        expect(s.load).toBe(-1);
+        if (evs.includes('steal')) n++;
+      }
+      return n / Math.max(1, tries);
+    };
+    const slow = strips(45);
+    const quick = strips(95);
+    expect(slow).toBeGreaterThan(0.05);
+    expect(quick).toBeLessThan(slow);
   });
 });

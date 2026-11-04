@@ -3393,6 +3393,41 @@ multiple times."
   runway and off the map, then the main land (the header's "Back to the main land" stays). The road
   map's places are found by name now, not by their place in the list. A card in the dev deck.
 
+- **Step 5, into the career**: a game that can end his team's series in the conference finals or the
+  Finals asks nothing for three and a half quarters (they are simulated on the steady call), then
+  hands the last six minutes to the Floor over the whole page. The court is the home team's, each
+  side in its home or road kit; his five are his starting five with him in his own spot, theirs the
+  best at each position, and three off each bench. The result comes back as the game's pick
+  (`floor@` the final score, his line and three marks), so the postseason's replay stays exact; the
+  Floor's game finishes the game, overtime included. "Simulate the last six minutes" (and a phone,
+  and the balance harness) has the engine play them, both sides on the Regular guy shooting. Fast
+  break simulates the postseason as before; sim mode simulates it too but stops before each game
+  the Floor plays (play it or simulate it). The book counts Floor games, wins, a win from ten down,
+  his game-winner and his late block, for achievements at the end of the round. A dev deck card
+  plays a star's career to his first Floor game.
+- **The Floor plays the career's game, not the rosters'**: left alone, the Floor's own AI won 72.0%
+  of even home games against 56.4% for the old live game (an underdog 70 vs 78: 42.6% against
+  20.6%), since it saw only the rosters and his star ratings, not the coach, chemistry and form in
+  the team strengths. Each side now keeps its shape (a star stands out from his teammates) but both
+  starting fives are centred on their midpoint and split by the strength gap the season's model sees
+  (with home court), 0.38 Floor rating points to a point of strength: the Floor moves its six-minute
+  margin about 0.52 points per rating point, the career 0.1957 per strength point. Measured over 500
+  games each: even at home 58.2% (old 56.4%), on the road 50.0% (44.2%), favourite 91.0% (89.8%),
+  underdog 23.4% (20.6%). A lone star still counts a little more on the Floor than his share (a 93 on
+  a team of 76s: +2.6 points); a weighting of `ovr + 0.326 × (ovr − 84)²` per player brings a single
+  star to even (−0.05 ± 0.15) but leaves a three-star team +1.3, so it waits for the owner.
+- **After the first play of steps 2 and 3** (owner): one tap of J at the rim lays it in or dunks it,
+  no meter; a defender within five feet may strip him on the way up (up to 22% right on him) or
+  block it, his athleticism taking up to 60% of both away. Nobody shoots from behind half court.
+  Nobody teleports: the inbounder walks to the ball's spot and passes it in, a free-throw shooter
+  walks to the line and the others to the lane, a rebound bounces to the man who wins it, the
+  step-back slides and a timeout's players walk back (a dead ball waits up to 2.5 more seconds for
+  them). He is never the inbounder; the pass in comes to him. After the ball changes hands J, K, L
+  and Space rest for 350 ms, and a key still held from the other end must be pressed again (a steal
+  no longer turns into a shot from half court). A bigger ball (a round seven-pixel ball, six far
+  away) and a slightly bigger rim; each basket puts its points big over the court ("+2"), and the
+  score bug's numbers are bigger and flash when they change.
+
 ## Round 40 (owner requests): languages
 
 - Korean, Chinese (simplified), Japanese, Spanish and French, the interface only (owner: "let's

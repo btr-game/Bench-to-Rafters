@@ -2755,7 +2755,6 @@
   "Offence": "进攻",
   "move": "移动",
   "sprint": "冲刺",
-  "hold to shoot": "按住投篮",
   "pass (aim with the arrows)": "传球（方向键瞄准）",
   "crossover, spin, step-back": "交叉步、转身、后撤步",
   "call a pick": "叫挡拆",
@@ -2780,7 +2779,8 @@
   "Momentum": "势头",
   "Free throw: hold J, let go in the green": "罚球：按住 J，在绿色区松开",
   "Enter to go on": "按 Enter 继续",
-  "His fouls: {n}": "个人犯规：{n}"
+  "His fouls: {n}": "个人犯规：{n}",
+  "hold to shoot; tap at the rim to lay it in or dunk": "按住投篮；在篮下轻按一下上篮或扣篮"
  },
  "story": {
   "f-driveway.title": "车道",

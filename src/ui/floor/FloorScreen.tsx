@@ -11,7 +11,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { FLOOR } from '../../engine/balance';
-import { RIM_Y } from '../../engine/floor/court';
+import { RIM_Y, zoneOf } from '../../engine/floor/court';
 import { floorResult, freshEvents, isOpen, meterWindow, openMan, ratingK, releaseQuality, skipFloor, startFloor, stepFloor, type FloorEvent, type FloorInput, type FloorSetup, type FloorState } from '../../engine/floor/sim';
 import type { DramaPlay } from '../../engine/story/drama';
 import type { Kit } from '../../content/teamStyle';
@@ -57,6 +57,8 @@ type KeyName = keyof typeof KEY;
 const GAME_KEYS = new Set<string>(Object.values(KEY).flat());
 
 const PACE = FLOOR.ticksPerSec;
+/** How long the action keys rest after the ball changes hands (ms). */
+const LOCK_MS = 350;
 /** The close-up's length (ms): the action cam's play, and a beat to see it land. */
 const CLOSE_MS = 2300;
 /** How long each move's frames last (ms). */
@@ -228,6 +230,9 @@ export function FloorScreen({ setup, arena, looks, series, onAgain, onDone }: Pr
   const [scale, setScale] = useState(2);
   const [hud, setHud] = useState<Hud>(() => hudOf(startFloor(setup)));
   const [word, setWord] = useState<{ text: string; team: 0 | 1; id: number } | null>(null);
+  // after the first play (owner: "it's a bit hard to know if we scored or not. make the number
+  // appear larger"): the points a basket brings, big over the court
+  const [pop, setPop] = useState<{ pts: number; team: 0 | 1; id: number } | null>(null);
   const [tags, setTags] = useState<Tag[]>([]);
   const [close, setClose] = useState<{ id: number; play: DramaPlay; winner: 'us' | 'them' } | null>(null);
   const [paused, setPaused] = useState(false);
@@ -291,8 +296,18 @@ export function FloorScreen({ setup, arena, looks, series, onAgain, onDone }: Pr
     const seeOpen = Math.round(lerp(1.4, 0.2, ratingK(s.players[s.user].r.IQ)) / FLOOR.tick);
     const held = new Set<string>();
     const pressed = new Set<string>();
-    const on = (k: KeyName) => KEY[k].some((c) => held.has(c));
-    const hit = (k: KeyName) => KEY[k].some((c) => pressed.has(c));
+    // after the ball changes hands the action keys rest a moment, and one still held from the other
+    // end must be pressed again (owner: "after a steal, oftentimes i end up shooting the ball right
+    // away from half court")
+    const stale = new Set<string>();
+    let lockUntil = 0;
+    let lastPoss = s.poss;
+    const ACTION = new Set<string>([...KEY.a, ...KEY.b, ...KEY.c, ...KEY.d]);
+    const live = (c: string) => !ACTION.has(c) || (!stale.has(c) && performance.now() >= lockUntil);
+    const on = (k: KeyName) => KEY[k].some((c) => held.has(c) && live(c));
+    const hit = (k: KeyName) => KEY[k].some((c) => pressed.has(c) && live(c));
+    /** He has the ball at the rim: one tap lays it in or dunks it. */
+    const atRim = () => s.ball.holder === s.user && s.poss === 0 && s.phase === 'live' && zoneOf(0, s.players[s.user]) === 'rim';
     // his shot, timed by the screen to the millisecond: when the key went down, and the hold to send
     let shootFrom: number | null = null;
     let release: number | null = null;
@@ -312,12 +327,23 @@ export function FloorScreen({ setup, arena, looks, series, onAgain, onDone }: Pr
     };
 
     const inputFor = (): FloorInput => {
+      if (s.poss !== lastPoss) {
+        lastPoss = s.poss;
+        lockUntil = performance.now() + LOCK_MS;
+        for (const c of held) if (ACTION.has(c)) stale.add(c);
+        shootFrom = null;
+        release = null;
+      }
       const dx = (on('right') ? 1 : 0) - (on('left') ? 1 : 0);
       const dy = (on('down') ? 1 : 0) - (on('up') ? 1 : 0);
       const inp: FloorInput = { dx, dy, sprint: on('sprint') };
       const mine = s.ball.holder === s.user;
       if (s.poss === 0 || s.phase === 'ft') {
-        if (shooting()) {
+        if (hit('a') && atRim() && s.load < 0) {
+          inp.finish = true;
+          shootFrom = null;
+          release = null;
+        } else if (shooting()) {
           if (on('a')) {
             inp.shoot = true;
             if (shootFrom === null) shootFrom = performance.now();
@@ -362,6 +388,7 @@ export function FloorScreen({ setup, arena, looks, series, onAgain, onDone }: Pr
     const onEvents = (evs: FloorEvent[], before: [number, number]) => {
       const now = performance.now();
       for (const e of evs) {
+        if ((e.kind === 'make' && e.pts) || (e.kind === 'ft' && e.good)) setPop({ pts: e.kind === 'ft' ? 1 : e.pts!, team: e.team, id: now + Math.random() });
         const w = wordFor(s, e);
         if (w) setWord({ text: w, team: e.kind === 'turnover' || e.kind === 'shotclock' ? (e.team === 0 ? 1 : 0) : e.team, id: now + Math.random() });
         const tg = tagFor(e);
@@ -431,31 +458,23 @@ export function FloorScreen({ setup, arena, looks, series, onAgain, onDone }: Pr
       return { x: s.ball.x, y: s.ball.y, h: 1 };
     };
 
+    // after the first play: a bigger ball, easy to follow (owner: "it's hard to see the ball because
+    // it's too small"): a round pixel ball with a dark rim, a seam and a highlight
+    const BALL_NEAR = ['..###..', '.#ooo#.', '#oHooo#', '#sssss#', '#oooSo#', '.#ooo#.', '..###..'];
+    const BALL_FAR = ['.####.', '#oHoo#', '#ssss#', '#ooSo#', '.####.'];
+    const BALL_INK: Record<string, string> = { '#': '#1B1820', o: '#E8782A', H: '#FFB26B', S: '#B4531A', s: '#8A3A12' };
     const drawBall = (b: { x: number; y: number; h: number }) => {
       const p = project(cam, b.x, b.y, b.h);
-      const x = Math.round(p.x);
-      const y = Math.round(p.y);
-      const big = p.s >= 0.84;
-      ctx.fillStyle = '#1B1820';
-      if (big) {
-        ctx.fillRect(x - 2, y - 3, 4, 6);
-        ctx.fillRect(x - 3, y - 2, 6, 4);
-      } else {
-        ctx.fillRect(x - 1, y - 2, 3, 5);
-        ctx.fillRect(x - 2, y - 1, 5, 3);
-      }
-      ctx.fillStyle = '#E8782A';
-      if (big) {
-        ctx.fillRect(x - 1, y - 2, 2, 4);
-        ctx.fillRect(x - 2, y - 1, 4, 2);
-        ctx.fillStyle = '#C2571B';
-        ctx.fillRect(x, y, 1, 1);
-        ctx.fillStyle = '#6A3416';
-        ctx.fillRect(x - 1, y - 1, 1, 1);
-      } else {
-        ctx.fillRect(x, y - 1, 1, 3);
-        ctx.fillRect(x - 1, y, 3, 1);
-      }
+      const rows = p.s >= 0.84 ? BALL_NEAR : BALL_FAR;
+      const x0 = Math.round(p.x) - Math.floor(rows[0].length / 2);
+      const y0 = Math.round(p.y) - Math.floor(rows.length / 2);
+      rows.forEach((row, y) =>
+        [...row].forEach((c, x) => {
+          if (c === '.') return;
+          ctx.fillStyle = BALL_INK[c];
+          ctx.fillRect(x0 + x, y0 + y, 1, 1);
+        }),
+      );
     };
 
     /** The frame for a player now, how high he is off the floor (feet), and whether it turns him round. */
@@ -716,15 +735,19 @@ export function FloorScreen({ setup, arena, looks, series, onAgain, onDone }: Pr
       }
       if (pausedRef.current || s.phase === 'over' || !GAME_KEYS.has(e.code)) return;
       e.preventDefault();
+      // a key held over from the other end only counts once it is pressed again
+      if (stale.has(e.code) && e.repeat) return;
+      if (!e.repeat) stale.delete(e.code);
       if (!e.repeat) pressed.add(e.code);
       held.add(e.code);
-      if (e.code === 'KeyJ' && !e.repeat && shooting()) {
+      if (e.code === 'KeyJ' && !e.repeat && shooting() && !atRim() && live(e.code)) {
         shootFrom = performance.now();
         release = null;
       }
     };
     const up = (e: KeyboardEvent) => {
       held.delete(e.code);
+      stale.delete(e.code);
       if (e.code === 'KeyJ' && shootFrom !== null) {
         release = gameSecs(performance.now() - shootFrom);
         shootFrom = null;
@@ -745,19 +768,27 @@ export function FloorScreen({ setup, arena, looks, series, onAgain, onDone }: Pr
     };
   }, [setup, arena, looks]);
 
-  // the words fade on their own
+  // the words fade on their own, and the points
   useEffect(() => {
     if (!word) return;
     const id = window.setTimeout(() => setWord(null), 1100);
     return () => clearTimeout(id);
   }, [word]);
+  useEffect(() => {
+    if (!pop) return;
+    const id = window.setTimeout(() => setPop(null), 1300);
+    return () => clearTimeout(id);
+  }, [pop]);
 
   const side = (i: 0 | 1) => {
     const tm = i === 0 ? setup.us : setup.them;
     return (
       <div className={`fb-team${hud.poss === i ? ' ball' : ''}`} style={{ background: tm.color, color: ink(tm.color) }}>
         <span className="fb-name">{tm.short}</span>
-        <span className="fb-score">{hud.score[i]}</span>
+        {/* a new score flashes (keyed on the number, so each basket plays it once) */}
+        <span key={hud.score[i]} className="fb-score">
+          {hud.score[i]}
+        </span>
         <span className="fb-meta">
           <span className="fb-tos" aria-label={t('{n} timeouts left', { n: hud.timeouts[i] })}>
             {Array.from({ length: FLOOR.timeouts }, (_, k) => (
@@ -795,6 +826,11 @@ export function FloorScreen({ setup, arena, looks, series, onAgain, onDone }: Pr
             {g.text}
           </span>
         ))}
+        {pop && (
+          <div key={pop.id} className={`floor-pts${pop.team === 0 ? ' us' : ''}`} aria-hidden="true">
+            +{pop.pts}
+          </div>
+        )}
         {word && (
           <div key={word.id} className={`floor-word${word.team === 0 ? ' us' : ''}`} aria-live="polite">
             {word.text}
@@ -889,7 +925,7 @@ export function FloorScreen({ setup, arena, looks, series, onAgain, onDone }: Pr
         <div>
           <dt>{t('Offence')}</dt>
           <dd>
-            <kbd>WASD</kbd> {t('move')} · <kbd>Shift</kbd> {t('sprint')} · <kbd>J</kbd> {t('hold to shoot')} · <kbd>K</kbd> {t('pass (aim with the arrows)')} · <kbd>L</kbd> {t('crossover, spin, step-back')} · <kbd>Space</kbd> {t('call a pick')}
+            <kbd>WASD</kbd> {t('move')} · <kbd>Shift</kbd> {t('sprint')} · <kbd>J</kbd> {t('hold to shoot; tap at the rim to lay it in or dunk')} · <kbd>K</kbd> {t('pass (aim with the arrows)')} · <kbd>L</kbd> {t('crossover, spin, step-back')} · <kbd>Space</kbd> {t('call a pick')}
           </dd>
         </div>
         <div>

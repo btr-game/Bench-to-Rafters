@@ -2755,7 +2755,6 @@
   "Offence": "공격",
   "move": "이동",
   "sprint": "전력 질주",
-  "hold to shoot": "누르고 있다 떼면 슛",
   "pass (aim with the arrows)": "패스 (방향키로 조준)",
   "crossover, spin, step-back": "크로스오버, 스핀, 스텝백",
   "call a pick": "스크린 요청",
@@ -2780,7 +2779,8 @@
   "Momentum": "흐름",
   "Free throw: hold J, let go in the green": "자유투: J를 누르고 있다가 초록색에서 떼세요",
   "Enter to go on": "Enter로 계속",
-  "His fouls: {n}": "개인 파울: {n}"
+  "His fouls: {n}": "개인 파울: {n}",
+  "hold to shoot; tap at the rim to lay it in or dunk": "길게 눌러 슛, 림 앞에서는 한 번 눌러 레이업이나 덩크"
  },
  "story": {
   "f-driveway.title": "집 앞 골대",

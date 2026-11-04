@@ -77,8 +77,9 @@ export function smartChoice(s: GameState, d: Decision, r: Rng): string {
       return byId('promote') ?? byId('move') ?? ch[0].id;
     case 'live':
       // round 35: the call before a series against his rival classmate has no 'all'; its first,
-      // guarding him, carries the best odds (RIVAL_SERIES.guard.edge)
-      return byId('all') ?? ch[0].id;
+      // guarding him, carries the best odds (RIVAL_SERIES.guard.edge). Round 39: sim mode's stop for
+      // a game the Floor plays is simulated like the rest; the Floor itself is left to the engine
+      return byId('all') ?? byId('auto') ?? (byId('play') && byId('sim')) ?? ch[0].id;
     case 'national':
       return s.player.age < 32 ? 'accept' : 'decline';
     case 'transfer':

@@ -2755,7 +2755,6 @@
   "Offence": "オフェンス",
   "move": "移動",
   "sprint": "ダッシュ",
-  "hold to shoot": "長押しでシュート",
   "pass (aim with the arrows)": "パス（矢印キーで狙う）",
   "crossover, spin, step-back": "クロスオーバー、スピン、ステップバック",
   "call a pick": "スクリーンを呼ぶ",
@@ -2780,7 +2779,8 @@
   "Momentum": "流れ",
   "Free throw: hold J, let go in the green": "フリースロー：Jを長押しして緑で離す",
   "Enter to go on": "Enterで続ける",
-  "His fouls: {n}": "個人ファウル：{n}"
+  "His fouls: {n}": "個人ファウル：{n}",
+  "hold to shoot; tap at the rim to lay it in or dunk": "長押しでシュート、リング下ではワンタップでレイアップかダンク"
  },
  "story": {
   "f-driveway.title": "家の前のゴール",

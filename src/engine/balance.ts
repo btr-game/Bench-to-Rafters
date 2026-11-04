@@ -1257,7 +1257,7 @@ export const FLOOR = {
   strip: 0.011,
   /** A move (crossover, spin, step-back) beats his man this often from even, slowing him this long. */
   move: { beat: 0.5, perPoint: 0.006, slow: 1.1, lose: 0.05 },
-  rebound: { offense: 0.72, wait: 0.6 },
+  rebound: { offense: 0.72, wait: 0.6, bounce: 30 },
   /** The difficulty: added to his team's and the other team's shooting. */
   mode: { standard: { us: 0, them: 0 }, reality: { us: -0.03, them: 0.025 }, stars: { us: 0.02, them: -0.015 }, fast: { us: 0, them: 0 }, lab: { us: 0, them: 0 } } as Record<Mode, { us: number; them: number }>,
   /** Momentum: what a basket, a stop and a big play add (his team up, theirs down), how fast it fades
@@ -1267,6 +1267,19 @@ export const FLOOR = {
   /** The AI's ball handler thinks again this often (game seconds); a shot is open past `open` feet. */
   think: 0.6,
   open: 6,
+  /** In a career (round 39, step 5): each side's starters are centred on the two teams' midpoint and
+   * split by the career's strength gap (team strengths and home court, as playLiveGame weighs them),
+   * this many Floor rating points to a point of it. The Floor moves its six-minute margin about 0.52
+   * points per rating point of gap; the career's model moves it 0.1957 per point of strength. */
+  perStrength: 0.38,
+  /** A dead ball or a free throw waits at most this much longer (game seconds) for its man to walk
+   * to his spot (after round 39's first play: "dont let any players teleport"). */
+  walk: 2.5,
+  /** The step-back's slide (feet per game second). */
+  dash: 16,
+  /** One tap at the rim: a defender inside `within` feet strips him up to `strip` of the time, right
+   * on him; his athleticism takes up to `athletic` of that (and of a block) away. */
+  finish: { within: 5, strip: 0.22, athletic: 0.6 },
   /** An open jumper waits until the offense has used this much of the shot clock (game seconds). */
   patience: 9,
   /** Trailing late, the defense fouls on purpose: within this margin, under this many seconds. */

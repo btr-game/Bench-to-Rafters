@@ -367,18 +367,20 @@ export function drawBasket(ctx: CanvasRenderingContext2D, camX: number, side: 0 
   line(ctx, g2, g3);
   line(ctx, g3, g0);
   // the rim (seen from above, a flat ring) and the net hanging under its front
-  const ring = Array.from({ length: 20 }, (_, i) => {
-    const an = (i / 20) * Math.PI * 2;
-    return P(rimX + Math.cos(an) * 0.78, RIM_Y + Math.sin(an) * 0.78, 10);
+  // after the first play: a slightly bigger rim (owner), its front half a pixel thicker
+  const R = 1.05;
+  const ring = Array.from({ length: 24 }, (_, i) => {
+    const an = (i / 24) * Math.PI * 2;
+    return P(rimX + Math.cos(an) * R, RIM_Y + Math.sin(an) * R, 10);
   });
   ctx.fillStyle = '#F2F2F2';
-  for (let i = 0; i < 20; i += 2) {
-    const an = (i / 20) * Math.PI * 2;
+  for (let i = 0; i < 24; i += 2) {
+    const an = (i / 24) * Math.PI * 2;
     if (Math.sin(an) < -0.2) continue;
-    line(ctx, P(rimX + Math.cos(an) * 0.78, RIM_Y + Math.sin(an) * 0.78, 10), P(rimX + Math.cos(an) * 0.45, RIM_Y + Math.sin(an) * 0.45, 8.6));
+    line(ctx, P(rimX + Math.cos(an) * R, RIM_Y + Math.sin(an) * R, 10), P(rimX + Math.cos(an) * 0.6, RIM_Y + Math.sin(an) * 0.6, 8.4));
   }
   ctx.fillStyle = '#E8562A';
-  ring.forEach((p, i) => line(ctx, p, ring[(i + 1) % ring.length]));
+  ring.forEach((p, i) => line(ctx, p, ring[(i + 1) % ring.length], Math.sin(((i + 0.5) / 24) * Math.PI * 2) > 0.1 ? 2 : 1));
 }
 
 /** The courtside fans past the near sideline, in front of everything: dark heads and shoulders. */
