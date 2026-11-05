@@ -3573,3 +3573,54 @@ Owner: "can you make the game multiplayer as well?" The owner's picks: online, b
 - **Published** (owner: "you can publish. i checked the korean choices"): rounds 38 and 40 together,
   round 39's engine with them (not yet on screen): the game artifact (version 79) and the website
   (main at 47bff40, Netlify's deploy ready).
+
+## Round 41 (owner requests): the engine's lines in five languages
+
+Owner: "lines the game engine writes, events, storylines, press conferences, the finale. do these. and
+let's publish the final version"; on the random policy's MVP target, "sure".
+
+- **What is translated:** every line the engine writes as a career happens. That covers events (their
+  titles, texts, choices and outcomes), storylines, press conferences, the league's news, the career
+  log, coaches and staff, the season's notes, the finale's speech and endings, and the content they draw
+  from (reactions, origins, visits, team identities). The catalog has 4,484 lines and 35,764 words
+  (`scripts/engineText.ts`); each language has all of them. Still English, by the owner's marks: names
+  of people, teams, places, leagues, awards, modes, mini-games, ratings and meters; achievement names;
+  What's new; the announcer; and a few interface lines written into screen files without t().
+- **How:** the engine still writes English, so its tests, saves, the harness and career codes are as
+  they were, and an English game is unchanged. The page's JSX goes through `src/i18n/jsx-runtime.ts`
+  (vite.config.ts points the game's files at it; the dev deck keeps React's and stays English). Every
+  string a tag draws passes through `te()` (`src/i18n/engine.ts`), which works like this:
+  - a line with no values is found by its name (a 53-bit hash, `hashOf`), so the tables do not carry the
+    English five times over;
+  - a line with values is matched against its template (`src/i18n/engineTpl.json`, numbered `{0}` or
+    named `{name}`), and each value is translated in turn when it is a line or word of its own (won or
+    lost, left or right, a press tone, an interface word); an ordinal value is written in the
+    language (12위, 12位, 第12, 12.º, 12e);
+  - a line glued from known lines (sentences, a title and its line at a colon, items at a dot) goes the
+    longest known run of pieces at a time; a quoted line goes by its words, a lowercased line as the
+    engine wrote it;
+  - a template whose own words are only filler ("{0} with the {1}") fills values but never names a
+    whole line;
+  - t() puts its values through the same translation, so "Preseason: {x}" around an engine line reads
+    in one language.
+  Simple text translates a line before it cuts it to its first sentence.
+- **Translators:** ten helpers, two a language, each line with where it shows and what fills its
+  values, and a checker that a translation keeps its values. French addresses the player as *vous*
+  (the interface does), Spanish as *tú*. Value words were translated as a part of their own, and the
+  helpers put back the values they had dropped once those translated.
+- **Known rough spots:**
+  - an ordinal takes the ranking form in Korean and Japanese (All-NBA "1위 팀");
+  - a value the code builds in English (a possessive "Name's", " 3 times") stays English inside the
+    sentence;
+  - the Japanese interface calls the Floor フロア where the new lines keep "the Floor";
+  - lines a screen cuts and lowercases (a story card's "Coach fired: the coach is fired at midseason.")
+    stay English.
+- **The visual check** takes `--lang`; with it, an `english` finding lists a sentence still in English
+  on the screen (a run of English's small words). Korean before the translations: 270 different
+  sentences on 125 of the 188 screens. Chinese after: 88, almost all of them names, achievement names,
+  What's new or the dev deck's own notes.
+- **Also this round:**
+  - the Floor mini-game's five starter cards keep their places (owner: "the length of the name of the
+    players change and that makes the button move"): five equal columns, New players in its own, the
+    name on its own line with room for two;
+  - the random policy's MVP target is 0.01–0.05 (round 36's higher bar; 0.010 measured).
