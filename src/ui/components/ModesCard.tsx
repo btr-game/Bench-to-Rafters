@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { MODES } from '../../engine/balance';
 import { difficultiesLeft, simOpen } from '../achievements';
 import { t, tx } from '../../i18n';
+import { UnlockButton } from './SkipTutorial';
 
 // Every way to play, one tap away (round 25, the owner: easier access to all the modes, above
 // Around the league instead of in the top bar).
@@ -63,7 +64,7 @@ export function ModesCard({ g }: { g: GameState }) {
   // round 30: a Comet keeps Fast break and Sim on for the whole career
   const locked = g.mode === 'lab' || g.step === 'retired' || !!g.flags.daily || !!g.flags.oath || !!g.flags.comet || !!g.flags.friends;
   const oath = !!g.flags.oath;
-  const simShut = !g.flags.sim && (st.simShut || shut);
+  const simShut = !g.flags.sim && !st.road.master && (st.simShut || shut);
   const on: Record<string, boolean> = { sim: !!g.flags.sim, fast: !!g.flags.fast, simple: st.simple, master: st.master, guide: st.guide && !st.master };
   const notes = NOTE.filter(([k]) => on[k] && !(k === 'fast' && on.sim)).map(([, x]) => t(x));
   // round 30: a Comet says why the two are locked on
@@ -94,6 +95,11 @@ export function ModesCard({ g }: { g: GameState }) {
             <li key={x}>{x}</li>
           ))}
         </ul>
+      )}
+      {simShut && !locked && (
+        <div className="row-end">
+          <UnlockButton />
+        </div>
       )}
     </section>
   );

@@ -1718,6 +1718,7 @@ td .art-team { display: inline-block; vertical-align: middle; margin: -3px 8px -
 .plinth small { font-family: var(--f-mono); font-size: calc(11px * var(--ts)); opacity: 0.85; }
 .statue.gold .plinth { border-color: #8A6410; }
 .inbox-msg p { margin: 0; }
+.inbox-text { white-space: pre-wrap; overflow-wrap: anywhere; }
 .field textarea, .field input { width: 100%; }
 /* round 25: the feedback sender at the foot of every tab, one line until opened */
 .feedback-foot { margin-top: 18px; padding-block: 12px; }

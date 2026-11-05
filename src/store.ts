@@ -30,7 +30,7 @@ import { checkAch, countCareer, earnedIn, recordMp, recordOpened, recordPosted, 
 import { community } from './ui/community';
 import { cleanProspect, multiplayer, pump, readLink, seasonLine, send, type Challenge, type MpLink } from './ui/multiplayer';
 import { deleteSlot, dropRun, importCode, newSlotId, readRun, readSlot, writeRun, writeSlot } from './ui/saves';
-import { bestGrade, exitCode, levelTabs, loadRoad, offRecord, roadGrade, saveRoad, type Road } from './ui/road';
+import { bestGrade, exitCode, inTutorial, levelTabs, loadRoad, masterCode, offRecord, roadGrade, saveRoad, unlockAll, type Road } from './ui/road';
 import { STOPS, stopsLeft } from './ui/tutorial/closing';
 import { levelOf, type Level } from './engine/levels';
 import { isDev } from './dev/mode';
@@ -175,8 +175,10 @@ interface Store {
   /** Round 38: story mode's naming page is up in place of the main land. */
   naming: boolean;
   setNaming: (on: boolean) => void;
-  /** The exit code: true when it was right, and the full game opens. */
+  /** The exit code (or the master code): true when it was right, and the full game opens. */
   skipTutorial: (code: string) => boolean;
+  /** The master code: true when it was right, and everything opens (the tutorial goes with it). */
+  masterUnlock: (code: string) => boolean;
   /** A level career has ended and its last page was read: the level is passed, back to the road. */
   endLevel: () => void;
   /** A mini-game run ended: its grade on the island, kept if it is the best so far. */
@@ -527,14 +529,24 @@ export const useStore = create<Store>((set, get) => ({
       top();
     }),
   skipTutorial: (code) => {
-    if (!exitCode(code)) return false;
+    const all = masterCode(code);
+    if (!all && !exitCode(code)) return false;
     sfx('unlock');
-    const road = { ...get().road, free: 1 as const };
+    const road = all ? unlockAll(get().road) : { ...get().road, free: 1 as const };
     saveRoad(road);
     dropRun();
     const g = get().game;
     set({ road, creating: null, page: null, mini: null, ...(g?.flags.level ? { game: null, tab: 'home' as Tab, transition: null, ...savedSwitches() } : {}) });
     top();
+    return true;
+  },
+  masterUnlock: (code) => {
+    if (!masterCode(code)) return false;
+    if (inTutorial(get().road)) return get().skipTutorial(code);
+    sfx('opened');
+    const road = unlockAll(get().road);
+    saveRoad(road);
+    set({ road, simShut: false });
     return true;
   },
   endLevel: () => {

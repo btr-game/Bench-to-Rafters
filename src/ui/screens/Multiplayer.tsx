@@ -11,6 +11,7 @@ import { NAMES } from '../../content/strings';
 import { achievementsNow, useStore } from '../../store';
 import { unlockHint, unlocked } from '../road';
 import { PageTop } from '../components/PageTop';
+import { UnlockButton } from '../components/SkipTutorial';
 import { DevDoor } from '../components/FootBar';
 import { Icon } from '../art/Icon';
 import { sfx } from '../sound';
@@ -679,7 +680,12 @@ function FloorLive() {
           {t('Play a friend on the Floor')}
         </button>
       ) : (
-        <p className="small muted keep">{unlockHint('minis')}</p>
+        <>
+          <p className="small muted keep">{unlockHint('minis')}</p>
+          <div className="row-end">
+            <UnlockButton />
+          </div>
+        </>
       )}
     </section>
   );

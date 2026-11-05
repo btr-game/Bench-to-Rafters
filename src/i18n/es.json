@@ -4102,7 +4102,11 @@
   "Live: the Floor, head to head": "En directo: la pista, cara a cara",
   "The last six minutes against a friend, both of you at the keys at once: one makes a room, the other types in its code.": "Los últimos seis minutos contra un amigo, los dos a los mandos a la vez: uno crea una sala y el otro escribe su código.",
   "Play a friend on the Floor": "Jugar con un amigo en la pista",
-  "Two ways to play with friends, and nobody has to be on at the same time; and one live, on the Floor.": "Dos maneras de jugar con amigos, y nadie tiene que estar conectado a la vez; y una en directo, en la pista."
+  "Two ways to play with friends, and nobody has to be on at the same time; and one live, on the Floor.": "Dos maneras de jugar con amigos, y nadie tiene que estar conectado a la vez; y una en directo, en la pista.",
+  "Unlock with the master code": "Desbloquear con el código maestro",
+  "Unlock everything": "Desbloquearlo todo",
+  "Have the master code? Enter it and the whole game opens at once: the tutorial, every level, difficulty and mini-game, and Sim mode.": "¿Tienes el código maestro? Introdúcelo y todo el juego se abre al instante: el tutorial, cada nivel, dificultad y minijuego, y el modo Simulación.",
+  "Master code": "Código maestro"
  },
  "story": {
   "f-driveway.title": "La entrada de casa",

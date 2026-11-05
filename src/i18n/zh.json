@@ -4102,7 +4102,11 @@
   "Live: the Floor, head to head": "实时：The Floor 正面对决",
   "The last six minutes against a friend, both of you at the keys at once: one makes a room, the other types in its code.": "和好友同时上手的最后六分钟：一人创建房间，另一人输入代码。",
   "Play a friend on the Floor": "在 The Floor 上和好友对战",
-  "Two ways to play with friends, and nobody has to be on at the same time; and one live, on the Floor.": "和好友一起玩的两种方式，大家都不需要同时在线；还有一种实时的，在 The Floor 上。"
+  "Two ways to play with friends, and nobody has to be on at the same time; and one live, on the Floor.": "和好友一起玩的两种方式，大家都不需要同时在线；还有一种实时的，在 The Floor 上。",
+  "Unlock with the master code": "用主代码解锁",
+  "Unlock everything": "全部解锁",
+  "Have the master code? Enter it and the whole game opens at once: the tutorial, every level, difficulty and mini-game, and Sim mode.": "有主代码吗？输入后整个游戏立即开放：教程、所有等级、难度和小游戏，还有模拟模式。",
+  "Master code": "主代码"
  },
  "story": {
   "f-driveway.title": "车道",

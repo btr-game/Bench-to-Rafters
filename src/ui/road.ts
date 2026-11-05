@@ -28,6 +28,8 @@ export interface Road {
   free?: 1;
   /** Round 35: every mode open (a device that graduated before the round 35 locks). */
   all?: 1;
+  /** The master code: everything open, every stop of the road map and Sim mode with it. */
+  master?: 1;
   /** The version of the road's rules this was saved under (35: the beginner-only tutorial). */
   v?: number;
   /** The levels passed, and whether that career made an All-Star team. */
@@ -101,11 +103,15 @@ export function levelTabs(g: GameState): ('home' | 'season' | 'player')[] | null
 /** The next level on the road, or null once all three are passed. */
 export const nextLevel = (r: Road): Level | null => LEVEL_IDS.find((l) => !r.passed[l]) ?? null;
 
-/** A level can be played once the one before it is passed. */
+/** A level can be played once the one before it is passed (any of them, with the master code). */
 export const levelOpen = (r: Road, l: Level): boolean => {
   const i = LEVEL_IDS.indexOf(l);
-  return i === 0 || !!r.passed[LEVEL_IDS[i - 1]];
+  return i === 0 || !!r.master || !!r.passed[LEVEL_IDS[i - 1]];
 };
+/** The airport and the island open once beginner is passed. */
+export const pastBeginner = (r: Road): boolean => !!r.master || !!r.passed.beginner;
+/** The closing tour opens once all three levels are passed. */
+export const tourOpen = (r: Road): boolean => !!r.master || levelsDone(r);
 
 // FNV-1a of the exit code (dev/mode.ts hashes the deck's password the same way)
 const EXIT = 0xc56a0907;
@@ -114,6 +120,14 @@ const SHOWN = [82, 78, 34, 46, 51, 44, 45];
 
 /** Whether a code is the exit code (spaces and capitals do not matter). */
 export const exitCode = (code: string): boolean => fnv1a(code.trim().toLowerCase()) === EXIT;
+
+// FNV-1a of the master code (owner, after round 41: "if the user enters the master code, they unlock
+// everything without having to complete the tutorial and main game"); never written out anywhere
+const MASTER = 0x6be50753;
+/** Whether a code is the master code (spaces and capitals do not matter). */
+export const masterCode = (code: string): boolean => fnv1a(code.trim().toLowerCase()) === MASTER;
+/** The road with everything open: the full game, every difficulty and mini-game, every stop. */
+export const unlockAll = (r: Road): Road => ({ ...r, free: 1, all: 1, master: 1 });
 
 /** The exit code, as the graduation page shows it. */
 export const revealCode = (): string => String.fromCharCode(...SHOWN.map((c, i) => c ^ (0x35 + 7 * i)));

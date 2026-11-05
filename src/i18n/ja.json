@@ -4102,7 +4102,11 @@
   "Live: the Floor, head to head": "ライブ：フロアで直接対決",
   "The last six minutes against a friend, both of you at the keys at once: one makes a room, the other types in its code.": "友達と同時にキーを握るラスト6分：一人がルームを作り、もう一人がコードを入力します。",
   "Play a friend on the Floor": "フロアで友達と対戦",
-  "Two ways to play with friends, and nobody has to be on at the same time; and one live, on the Floor.": "友達と遊ぶ方法は2つ。同時にオンラインでいる必要はありません。そしてもう一つ、フロアでのリアルタイム対戦があります。"
+  "Two ways to play with friends, and nobody has to be on at the same time; and one live, on the Floor.": "友達と遊ぶ方法は2つ。同時にオンラインでいる必要はありません。そしてもう一つ、フロアでのリアルタイム対戦があります。",
+  "Unlock with the master code": "マスターコードでロック解除",
+  "Unlock everything": "すべてロック解除",
+  "Have the master code? Enter it and the whole game opens at once: the tutorial, every level, difficulty and mini-game, and Sim mode.": "マスターコードをお持ちですか？入力すると、ゲーム全体がすぐに開放されます。チュートリアル、すべてのレベル、難易度、ミニゲーム、そしてシムモードも。",
+  "Master code": "マスターコード"
  },
  "story": {
   "f-driveway.title": "家の前のゴール",

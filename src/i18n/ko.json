@@ -4102,7 +4102,11 @@
   "Live: the Floor, head to head": "실시간: 플로어 맞대결",
   "The last six minutes against a friend, both of you at the keys at once: one makes a room, the other types in its code.": "친구와 함께 키를 잡고 벌이는 마지막 6분: 한 명이 방을 만들고, 다른 한 명이 코드를 입력해요.",
   "Play a friend on the Floor": "플로어에서 친구와 플레이",
-  "Two ways to play with friends, and nobody has to be on at the same time; and one live, on the Floor.": "친구와 플레이하는 두 가지 방법. 동시에 접속할 필요는 없어요. 그리고 플로어에서 하는 실시간 대결이 하나 있어요."
+  "Two ways to play with friends, and nobody has to be on at the same time; and one live, on the Floor.": "친구와 플레이하는 두 가지 방법. 동시에 접속할 필요는 없어요. 그리고 플로어에서 하는 실시간 대결이 하나 있어요.",
+  "Unlock with the master code": "마스터 코드로 잠금 해제",
+  "Unlock everything": "전부 잠금 해제",
+  "Have the master code? Enter it and the whole game opens at once: the tutorial, every level, difficulty and mini-game, and Sim mode.": "마스터 코드가 있나요? 입력하면 게임 전체가 바로 열려요. 튜토리얼, 모든 레벨과 난이도, 미니게임, 시뮬 모드까지요.",
+  "Master code": "마스터 코드"
  },
  "story": {
   "f-driveway.title": "집 앞 골대",

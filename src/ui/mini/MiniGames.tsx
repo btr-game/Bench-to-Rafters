@@ -8,6 +8,7 @@ import { ICON_FOR } from '../art/icons';
 import { ROAD_MINIS, ROAD_NEED, passGrade, unlockHint, unlocked, type RoadMini } from '../road';
 import { useStore } from '../../store';
 import { PageTop } from '../components/PageTop';
+import { UnlockButton } from '../components/SkipTutorial';
 import { MINI_CLAIMS, claimsUsed, miniProgress, type MiniId } from '../../engine/career/miniBonus';
 import { FloorGame } from './FloorGame';
 import { LegendsGame } from './Legends';
@@ -188,11 +189,14 @@ export function MiniGamesCard() {
       {shut ? (
         <>
           <p className="small muted keep">{unlockHint('minis')} {t('Every game once, a C or better in each.')}</p>
-          {!career && (
-            <button className="btn ghost" data-tour="minis-locked" onClick={() => setPage('road')}>
-              {t('Open the road map')}
-            </button>
-          )}
+          <div className="row-end">
+            <UnlockButton />
+            {!career && (
+              <button className="btn ghost small" data-tour="minis-locked" onClick={() => setPage('road')}>
+                {t('Open the road map')}
+              </button>
+            )}
+          </div>
         </>
       ) : daily ? (
         <p className="small muted">{t('Locked during the daily challenge, so a run stays quick. They open again when you go back to your career.')}</p>
