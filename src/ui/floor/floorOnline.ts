@@ -7,7 +7,8 @@ import { createClient } from '@supabase/supabase-js';
 import type { FloorMsg, Wire } from './net';
 
 export function onlineWire(url: string, key: string, code: string): Promise<Wire> {
-  const sb = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
+  // its own storage key, apart from the community's client on the same page
+  const sb = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false, storageKey: 'btr-floor-auth' } });
   const ch = sb.channel(`floor-${code}`, { config: { broadcast: { self: false, ack: false } } });
   const fs = new Set<(m: FloorMsg) => void>();
   ch.on('broadcast', { event: 'm' }, ({ payload }) => fs.forEach((f) => f(payload as FloorMsg)));

@@ -102,6 +102,8 @@ export function FloorFriend() {
   const host = useRef(false);
   const games = useRef(0);
   const meRef = useRef(me);
+  // the friend in the room, and when he was last heard (a third screen with the code waits its turn)
+  const peerAt = useRef<{ id: string; at: number } | null>(null);
   meRef.current = me;
 
   // leaving the page: tell the room, and close the line
@@ -125,10 +127,14 @@ export function FloorFriend() {
   const hear = (m: FloorMsg) => {
     if (m.id === ME) return;
     if (m.k === 'hi' && m.host !== host.current) {
+      const now = Date.now();
+      if (peerAt.current && peerAt.current.id !== m.id && now - peerAt.current.at < 5000) return;
+      peerAt.current = { id: m.id, at: now };
       const pos = POS.includes(m.pos as Pos) ? (m.pos as Pos) : 'SG';
       setPeer((p) => (p && p.id === m.id && p.team === m.team && p.name === m.name && p.pos === pos ? p : { id: m.id, name: m.name, team: m.team, pos }));
       setNote('');
     } else if (m.k === 'bye') {
+      if (peerAt.current?.id === m.id) peerAt.current = null;
       setPeer((p) => (p && p.id === m.id ? null : p));
       setNote(t('Your friend left the room.'));
     } else if (m.k === 'start' && !host.current && m.to === ME && wire.current) {
