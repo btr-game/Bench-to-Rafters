@@ -34,9 +34,8 @@ function Messages({ rows }: { rows: FeedbackRow[] }) {
             {new Date(r.at).toLocaleString()}
             {r.player ? ` · playing ${r.player}` : ''}
           </div>
-          <p className="prose" style={{ whiteSpace: 'pre-wrap' }}>
-            {r.text}
-          </p>
+          {/* not .prose: Simple text hides every .prose, and the message is the point here */}
+          <p className="inbox-text">{r.text}</p>
           {r.contact && <p className="small">Reply to: {r.contact}</p>}
         </article>
       ))}

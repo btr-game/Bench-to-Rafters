@@ -19,6 +19,7 @@ import { HAIR_COLORS, SKIN_COLORS } from '../art/Player';
 import { PixelX } from '../art/PixelX';
 import { listSlots } from '../saves';
 import { unlockHint } from '../road';
+import { UnlockButton } from '../components/SkipTutorial';
 import { seasonLabel } from '../format';
 import { sfx } from '../sound';
 import { NEWS } from '../../content/whatsNew';
@@ -139,6 +140,7 @@ function Venue({ mode, state, ch, onStart, onFly }: { mode: Mode; state: LandSta
         <>
           <p className="small keep">{unlockHint(mode === 'reality' ? 'reality' : 'stars')}</p>
           <div className="row-end">
+            <UnlockButton />
             <button className="btn ghost small" onClick={onFly}>
               {t('Fly to the road map')}
             </button>

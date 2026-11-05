@@ -15,7 +15,8 @@ import { SKIN_COLORS, HAIR_COLORS } from '../art/Player';
 import { LEVEL_IDS, LEVEL_NAME, type Level } from '../../engine/levels';
 import { LEVEL_COPY, LEVEL_GOAL } from '../../content/roadmap';
 import { ROADMAP } from '../../engine/balance';
-import { ROAD_MINIS, ROAD_NEED, UNLOCK_NAME, inTutorial, islandDone, levelOpen, levelsDone, nextLevel, passGrade, unlockOf, unlocked, type Road, type RoadMini } from '../road';
+import { ROAD_MINIS, ROAD_NEED, UNLOCK_NAME, inTutorial, islandDone, levelOpen, levelsDone, nextLevel, passGrade, pastBeginner, tourOpen, unlockOf, unlocked, type Road, type RoadMini } from '../road';
+import { UnlockButton } from '../components/SkipTutorial';
 import { LevelAdds } from '../components/LevelAdds';
 import { Roll, Tick } from '../components/Scroll';
 import { SettingsMenu } from '../components/Settings';
@@ -339,6 +340,9 @@ function LevelStop({ level, road }: { level: Level; road: Road }) {
   const passed = road.passed[level];
   const open = levelOpen(road, level);
   const next = nextLevel(road) === level;
+  // the stop, or the mode it opens, still locked: the master code opens both
+  const u = unlockOf(level);
+  const shut = !open || (!!u && !unlocked(road, u));
   return (
     <section className={`card stack road-stop${next ? ' next' : ''}${open ? '' : ' locked'}`} data-tour={next ? 'road-next' : undefined}>
       <div className="row road-stop-head">
@@ -371,21 +375,24 @@ function LevelStop({ level, road }: { level: Level; road: Road }) {
           <LevelAdds level={level} />
         </>
       )}
-      {open && (
+      {!open && <p className="small muted">{t('Opens after {level}.', { level: LEVEL_NAME[LEVEL_IDS[LEVEL_IDS.indexOf(level) - 1]].toLowerCase() })}</p>}
+      {(open || shut) && (
         <div className="row-end">
-          <button className={`btn${next ? '' : ' ghost small'}`} onClick={() => (sfx('confirm'), setCreating(level))}>
-            {next ? t('Drive to {place}: play {level}', { place: copy.place.toLowerCase(), level: LEVEL_NAME[level].toLowerCase() }) : t('Play it again')}
-          </button>
+          {shut && <UnlockButton />}
+          {open && (
+            <button className={`btn${next ? '' : ' ghost small'}`} onClick={() => (sfx('confirm'), setCreating(level))}>
+              {next ? t('Drive to {place}: play {level}', { place: copy.place.toLowerCase(), level: LEVEL_NAME[level].toLowerCase() }) : t('Play it again')}
+            </button>
+          )}
         </div>
       )}
-      {!open && <p className="small muted">{t('Opens after {level}.', { level: LEVEL_NAME[LEVEL_IDS[LEVEL_IDS.indexOf(level) - 1]].toLowerCase() })}</p>}
     </section>
   );
 }
 
 /** The airport (owner, after round 38): the way back to the main land, once beginner is passed. */
 function AirportStop({ road, onFly }: { road: Road; onFly: () => void }) {
-  const open = !!road.passed.beginner;
+  const open = pastBeginner(road);
   return (
     <section className={`card stack road-stop${open ? '' : ' locked'}`}>
       <div className="row road-stop-head">
@@ -401,20 +408,23 @@ function AirportStop({ road, onFly }: { road: Road; onFly: () => void }) {
         </span>
       </div>
       <p className="small">{open ? t('Fly back to the main land. The road map waits for you here.') : t('Opens after beginner.')}</p>
-      {open && (
-        <div className="row-end">
+      <div className="row-end">
+        {open ? (
           <button className="btn ghost" onClick={onFly}>
             {t('Fly to the main land')}
           </button>
-        </div>
-      )}
+        ) : (
+          <UnlockButton />
+        )}
+      </div>
     </section>
   );
 }
 
 /** The island: the mini-games, by boat, any time after beginner. */
 function IslandStop({ road, onSail }: { road: Road; onSail: () => void }) {
-  const open = !!road.passed.beginner;
+  const open = pastBeginner(road);
+  const shut = !open || !unlocked(road, 'minis');
   const done = MINIS.filter((m) => passGrade(road.minis[m])).length;
   return (
     <section className={`card stack road-stop island${open ? '' : ' locked'}`}>
@@ -442,13 +452,14 @@ function IslandStop({ road, onSail }: { road: Road; onSail: () => void }) {
           ))}
         </ul>
       )}
-      {open && (
-        <div className="row-end">
+      <div className="row-end">
+        {shut && <UnlockButton />}
+        {open && (
           <button className="btn ghost" onClick={onSail}>
             {t('Take the boat to the island')}
           </button>
-        </div>
-      )}
+        )}
+      </div>
     </section>
   );
 }
@@ -456,7 +467,7 @@ function IslandStop({ road, onSail }: { road: Road; onSail: () => void }) {
 /** The last stop: the closing tour, once advanced is passed. */
 function TourStop({ road }: { road: Road }) {
   const start = useStore((s) => s.startClosing);
-  const open = levelsDone(road);
+  const open = tourOpen(road);
   return (
     <section className={`card stack road-stop${open && !road.toured ? ' next' : ''}${open ? '' : ' locked'}`} data-tour={open && !road.toured ? 'tour-stop' : undefined}>
       <div className="row road-stop-head">
@@ -479,11 +490,15 @@ function TourStop({ road }: { road: Road }) {
         ) : null}
       </div>
       <p className={open ? 'small prose' : 'small'}>{open ? t('A star’s career, already under way: the rest of the game, stop by stop. About ten minutes.') : t('Opens after advanced.')}</p>
-      {open && !road.toured && (
+      {(!open || !road.toured) && (
         <div className="row-end">
-          <button className="btn" onClick={() => (sfx('confirm'), start())}>
-            {t('Start the closing tour')}
-          </button>
+          {open ? (
+            <button className="btn" onClick={() => (sfx('confirm'), start())}>
+              {t('Start the closing tour')}
+            </button>
+          ) : (
+            <UnlockButton />
+          )}
         </div>
       )}
     </section>
@@ -503,9 +518,9 @@ const PLACE_NAME: Record<Place, string> = { airport: 'The airport', beginner: 'B
 
 /** Each place's state, for its pin on the map: done, the next thing to do, open, or locked. */
 function placeState(road: Road, id: Place): 'done' | 'next' | 'open' | 'locked' {
-  if (id === 'airport') return road.passed.beginner ? 'open' : 'locked';
-  if (id === 'island') return !road.passed.beginner ? 'locked' : islandDone(road) ? 'done' : levelsDone(road) ? 'next' : 'open';
-  if (id === 'tour') return !levelsDone(road) ? 'locked' : road.toured ? 'done' : islandDone(road) ? 'next' : 'open';
+  if (id === 'airport') return pastBeginner(road) ? 'open' : 'locked';
+  if (id === 'island') return !pastBeginner(road) ? 'locked' : islandDone(road) ? 'done' : levelsDone(road) ? 'next' : 'open';
+  if (id === 'tour') return !tourOpen(road) ? 'locked' : road.toured ? 'done' : islandDone(road) ? 'next' : 'open';
   return road.passed[id] ? 'done' : nextLevel(road) === id ? 'next' : levelOpen(road, id) ? 'open' : 'locked';
 }
 const PIN: Record<ReturnType<typeof placeState>, string> = { done: 'checklist', next: 'arrow', open: 'map', locked: 'lock' };

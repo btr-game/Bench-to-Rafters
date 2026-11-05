@@ -4102,7 +4102,11 @@
   "Live: the Floor, head to head": "En direct : le parquet, en face-à-face",
   "The last six minutes against a friend, both of you at the keys at once: one makes a room, the other types in its code.": "Les six dernières minutes contre un ami, tous les deux aux commandes en même temps : l’un crée un salon, l’autre tape son code.",
   "Play a friend on the Floor": "Jouer contre un ami sur le parquet",
-  "Two ways to play with friends, and nobody has to be on at the same time; and one live, on the Floor.": "Deux façons de jouer entre amis, et personne n’a besoin d’être là en même temps ; et une en direct, sur le parquet."
+  "Two ways to play with friends, and nobody has to be on at the same time; and one live, on the Floor.": "Deux façons de jouer entre amis, et personne n’a besoin d’être là en même temps ; et une en direct, sur le parquet.",
+  "Unlock with the master code": "Déverrouiller avec le code maître",
+  "Unlock everything": "Tout déverrouiller",
+  "Have the master code? Enter it and the whole game opens at once: the tutorial, every level, difficulty and mini-game, and Sim mode.": "Vous avez le code maître ? Entrez-le et tout le jeu s’ouvre aussitôt : le tutoriel, chaque niveau, difficulté et mini-jeu, et le mode Sim.",
+  "Master code": "Code maître"
  },
  "story": {
   "f-driveway.title": "L’allée",

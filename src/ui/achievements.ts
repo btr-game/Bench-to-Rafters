@@ -107,9 +107,9 @@ export function difficultiesLeft(): Mode[] {
   return DIFFICULTIES.filter((m) => !(t.starBy?.[m] ?? 0));
 }
 
-/** Sim mode is open on this device: an All-Star career finished at every difficulty (the dev deck:
- * always). */
-export const simOpen = (): boolean => isDev() || simReady(loadAch().totals);
+/** Sim mode is open on this device: an All-Star career finished at every difficulty (the dev deck
+ * and the master code: always). */
+export const simOpen = (): boolean => isDev() || !!loadRoad().master || simReady(loadAch().totals);
 
 /** A mini-game run just ended (round 27): count it for the arcade achievements. */
 export function recordMini(r: MiniResult): void {

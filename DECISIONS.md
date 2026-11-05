@@ -3624,3 +3624,24 @@ let's publish the final version"; on the random policy's MVP target, "sure".
     players change and that makes the button move"): five equal columns, New players in its own, the
     name on its own line with room for two;
   - the random policy's MVP target is 0.01–0.05 (round 36's higher bar; 0.010 measured).
+
+## After round 41: the master code
+
+Owner: "if the user enters the master code, they unlock everything without having to complete the
+tutorial and main game. add the unlock button to every [locked] component".
+
+- **The code** is kept as its FNV-1a hash only (`MASTER` in `src/ui/road.ts`), like the exit code;
+  it is written out nowhere in the code, the docs or the tests (`tests/master-code.test.ts` checks it
+  when it is given as `MASTER_CODE`).
+- **What it opens:** the road gets `master` (with `free` and `all`): the tutorial is over, every level
+  of the road map plays, the airport, the island and the closing tour open, Reality hits hard, Shoot
+  for the stars and the mini-games open, and so does Sim mode. Nothing is marked passed or earned, so
+  no road map achievement comes with it.
+- **Where it goes in:** an Unlock button beside every lock the device holds: the cage and the dome on
+  the main land, the mini-games card, the Floor online, each road map stop that is locked or opens a
+  locked mode, and the Sim note on the modes card. The Skip tutorial pop-up takes it too. A career's
+  own locks stay (a mini-game a player's ratings have not reached, an offseason tile, the daily
+  challenge's rules): they are how a career plays, not what a device has opened.
+- **Also: the feedback inbox showed only dates** (owner: "bug fix", a screenshot of the dev deck's
+  inbox). The notes were in the database (47, 30, 37 and 4 characters); each was drawn as `.prose`,
+  which Simple text hides everywhere. The message now has its own class (`.inbox-text`).
