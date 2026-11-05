@@ -3452,6 +3452,48 @@ multiple times."
   of 76s is still worth about 2.6 points over six minutes; `ovr + 0.326 × (ovr − 84)²` per player
   evens a single star but leaves a three-star team about 1.3 points up). The owner did not choose;
   the plain centring stays.
+- **Front Office archived, the Floor a mini-game in its place** (owner: "can we get rid of (archive)
+  the front office minigame and replace it with this game?"; a helper agent's work). Front Office
+  is out of the game and kept in git (tag `archive/front-office`, d79f933): its engine and screens,
+  tests, two achievements (Suit and Ring, Dynasty in a Spreadsheet), its loop and its CSS. The
+  front office of a team (events, news, the press, recruiting, the locker room) stays. The Floor
+  (`MiniId` 'floor', `engine/floor/mini.ts`, `ui/mini/FloorGame.tsx`) takes its place in every list,
+  its unlock (basketball IQ 85) and its career bonus. From the start page: both teams from the 30
+  crests, how good both are (Average 70, Good 76, Great 82, generated as the Floor lab's were; the
+  lab now builds them here too) and the starter he steers (the best, unless he picks another). In a
+  career on an NBA team he plays himself on his team against the team he picks (the real rosters,
+  split by the strength gap as a playoff game is); anywhere else in a career he takes his own spot,
+  with his own ratings, on a team at the level picked. Six minutes left from a close score (about
+  90 each, his team up to 4 ahead or behind), on the standard difficulty; a phone has the engine
+  play it, as in a career. The setup's "play the AI" part is a component of its own, so another way
+  to play can stand beside it. The result: the final score with both crests, the grade, his line,
+  Play again (Enter, a new game with the same teams and players) and Back (Escape, the setup), then
+  the career bonus. Its own loop (Six minutes left), a pixel icon (the ball over a three-quarter
+  court), a dev deck card each for the setup, the result, an NBA career and college, and the
+  strengths, grades and start in the Floor's Catalog list.
+- **The Floor's grade** (`FLOOR_MINI`): the margin, plus his line's share (a game score, points
+  plus 0.4 a rebound, 0.7 an assist, a steal or a block, less a turnover, at 0.2 a point, at most 3
+  either way). Any win is a B, an A at 8 or more with the share; a loss is a C at −3 or more (a loss
+  by three on a quiet night: the island's mark), a D below. The bonus is Front Office's by grade: an
+  A a title run's (basketball IQ 3, playmaking 1.5), a B 1 and 0.4, a C 0.4 and 0.1, a D nothing.
+  The harness plays it casually as a seeded draw (A 15%, B 35%, C 30%, D 20%; expected IQ 0.92 and
+  playmaking 0.395 a claim, against Front Office's casual 0.8 and 0.3). Over 150 smart careers with
+  casual mini-games (seeds 1 to 150) before → after: mean peak OVR 72.6617 → 72.6591, NBA 79.3333%
+  → 79.3333%, All-Star 26.6667% → 26.0000%, MVP 2.00000% → 2.00000%, Hall of Fame 10.0000% →
+  10.0000%, titles 29.3333% → 30.6667%.
+- **Old saves**: a career saved with 'office' (the game it unlocked, the bonuses it claimed) reads it
+  as 'floor' when it comes back from a slot, the level run or a code; the island's Front Office grade
+  counts as the Floor's (the better of the two). The book's stored ids for Front Office's two
+  achievements count nowhere (its "N of M earned" counts only the book's own), its arcade runs stay
+  in the number of runs but count for no game of today's, and its loop counts for no album.
+- **Fifteen achievements for the Floor mini-game** (the mini-games category; the career's Floor
+  ones are `flr-*`): Open Floor (bench), Floor Exercise (starter, a win), Hardwood Classic (All-Star,
+  ten wins), Wall to Wall (Hall of Fame, 25), Wipe the Floor (rotation, by 10), Polished Off
+  (All-Star, by 15), Basement to Penthouse (All-Star, a win from 8 down), Floor Show (rotation, 12
+  points), Top Floor (Hall of Fame, 20), Elevator Pitch (rotation, a win at every strength), Dean's
+  List (starter, an A), Straight A's (All-Star, five), Home Floor (starter, a win as himself on his
+  NBA team), Practice Floor (starter, a bonus claimed) and Floor Time (All-Star, five in a career).
+  Arcade Royalty now asks for an A on the Floor.
 
 ## Round 40 (owner requests): languages
 

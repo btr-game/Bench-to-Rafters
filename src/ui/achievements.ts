@@ -51,7 +51,9 @@ export function loadAch(): AchSaved {
     // round 25: the old dev deck page, opened from a file, could write its "everything earned" book
     // into the game's storage; those entries are not the player's and are dropped
     if (d?.got && !isDev()) for (const id of Object.keys(d.got)) if (d.got[id].who === 'Dev deck') delete d.got[id];
-    if (d?.got) return { got: d.got, totals: { ...NO_TOTALS, ...d.totals }, since: d.since };
+    // round 39: Front Office is archived, and its loop with it: a loop no longer in the game counts
+    // for no album (its achievements, earned before, stay in the book's storage and count nowhere)
+    if (d?.got) return { got: d.got, totals: { ...NO_TOTALS, ...d.totals, ...(d.totals?.heard ? { heard: d.totals.heard.filter((id) => id !== 'office') } : {}) }, since: d.since };
   } catch {
     // a blocked or broken store reads as nothing earned yet
   }

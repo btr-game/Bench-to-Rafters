@@ -31,6 +31,7 @@ import { decision, moment, onlyMoment, play, type PlayOpts } from './stage';
 import { isFinal, type LiveRequest } from '../engine/career/live';
 import { CamLab } from './CamLab';
 import { FloorLab } from './FloorLab';
+import { stageFloorEnd } from '../ui/mini/FloorGame';
 import { LEVEL_IDS, type Level } from '../engine/levels';
 import { ROAD_MINIS, type Road } from '../ui/road';
 import type { ChosenLook } from '../content/looks';
@@ -366,7 +367,7 @@ const TUTORIAL: DevCard[] = [
 const MINI: DevCard[] = (
   [
     ['hub', 'Mini-game hub', 'controller', 'Every mini-game, all unlocked.'],
-    ['office', 'Front Office', 'office', 'Coach or GM a franchise.'],
+    ['floor', 'The Floor (mini-game)', 'floor', 'Round 39, in Front Office’s place: the setup. Both teams from the 30 crests, how good they are (Average, Good, Great), the starter you steer (the best, unless you pick); Tip it off plays the last six minutes from a close score.'],
     ['threes', 'Three-point contest', 'range', 'Five racks, a money rack, a timing meter.'],
     ['dunk', 'Dunk contest', 'flame', 'Design dunks; each move once a contest.'],
     ['street', '3-on-3 streetball', 'post', 'One game to 11, action cam on timing shots.'],
@@ -660,6 +661,33 @@ export const CARDS: DevCard[] = [
 
   // mini-games
   ...MINI,
+  { id: 'mini-floor-end', title: 'The Floor (mini-game): the result', group: 'Mini-games', icon: 'floor', blurb: 'Round 39: a game the engine played, as the result page shows it: the final score with both crests, the grade (the margin, and a little for his line), his line, Play again (Enter) and Back (Escape), and the career bonus below.', open: () => (stageFloorEnd(), useStore.setState({ game: null, page: null, mini: 'floor' }), true) },
+  {
+    id: 'mini-floor-career',
+    title: 'The Floor (mini-game) in an NBA career',
+    group: 'Mini-games',
+    icon: 'floor',
+    blurb: 'Round 39: a star on an NBA team plays himself, his ratings on his own team, against the team he picks from his league (the closest in strength to start with). Opens at basketball IQ 85, pays IQ and a little playmaking.',
+    open: () => {
+      const g = nbaStar();
+      if (!g) return false;
+      g.player.attrs.IQ = Math.max(g.player.attrs.IQ, 85);
+      useStore.setState({ game: g, page: null, mini: 'floor' });
+    },
+  },
+  {
+    id: 'mini-floor-college',
+    title: 'The Floor (mini-game) in college',
+    group: 'Mini-games',
+    icon: 'floor',
+    blurb: 'Round 39: a career off the NBA (here college) puts him in his own spot, with his own ratings, on an NBA team at the level picked; the other four starters show but cannot be picked.',
+    open: () => {
+      const g = at('floor-college', (s, p) => s.stage === 'NCAA' && p.type === 'decision' && p.decision.kind === 'plan');
+      if (!g) return false;
+      g.player.attrs.IQ = Math.max(g.player.attrs.IQ, 85);
+      useStore.setState({ game: g, page: null, mini: 'floor' });
+    },
+  },
   {
     id: 'mini-bonus',
     title: 'Mini-games in a career',

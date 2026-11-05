@@ -5,31 +5,11 @@
 import { useMemo, useState } from 'react';
 import { NBA_TEAMS } from '../content/teams';
 import { TEAM_STYLE } from '../content/teamStyle';
-import { FIRST_NAMES, LAST_NAMES } from '../content/names';
 import type { Mode } from '../engine/balance';
-import type { Pos } from '../engine/types';
-import type { FloorPlayerIn, FloorSetup } from '../engine/floor/sim';
+import type { FloorSetup } from '../engine/floor/sim';
 import { leanRatings } from '../engine/floor/career';
+import { floorRoster } from '../engine/floor/mini';
 import { FloorScreen, type FloorTeamLook } from '../ui/floor/FloorScreen';
-
-const POS: Pos[] = ['PG', 'SG', 'SF', 'PF', 'C', 'PG', 'SF', 'C'];
-
-function roster(tag: string, level: number, seed: number, user?: { name: string; level: number }): FloorPlayerIn[] {
-  let h = seed;
-  const rnd = () => ((h = (Math.imul(h, 1103515245) + 12345) >>> 0) / 2 ** 32);
-  return POS.map((pos, i) => {
-    const me = user && i === 1;
-    const lvl = me ? user.level : level - (i >= 5 ? 6 : 0);
-    return {
-      id: `${tag}${i}`,
-      name: me ? user.name : `${FIRST_NAMES[Math.floor(rnd() * FIRST_NAMES.length)]} ${LAST_NAMES[Math.floor(rnd() * LAST_NAMES.length)]}`,
-      pos,
-      number: me ? 23 : [3, 11, 7, 32, 50, 1, 21, 44][i],
-      user: !!me,
-      r: leanRatings(lvl, pos, me ? 0 : Math.round((rnd() - 0.5) * 8)),
-    };
-  });
-}
 
 const MODES: [Mode, string][] = [
   ['standard', 'Regular guy'],
@@ -61,8 +41,8 @@ export function FloorLab() {
     () => ({
       seed,
       mode,
-      us: { name: `${usT.city} ${usT.nick}`, short: usT.abbr, color: usT.color, players: roster('U', teams, seed + 3, { name: 'Jordan Vale', level }) },
-      them: { name: `${themT.city} ${themT.nick}`, short: themT.abbr, color: themT.color, players: roster('T', teams, seed + 11) },
+      us: { name: `${usT.city} ${usT.nick}`, short: usT.abbr, color: usT.color, players: floorRoster('U', teams, seed + 3, { slot: 1, name: 'Jordan Vale', number: 23, r: leanRatings(level, 'SG') }) },
+      them: { name: `${themT.city} ${themT.nick}`, short: themT.abbr, color: themT.color, players: floorRoster('T', teams, seed + 11) },
       score: st.score,
       clock: st.clock,
     }),

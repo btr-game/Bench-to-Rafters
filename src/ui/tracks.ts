@@ -386,17 +386,18 @@ export const TRACKS = {
     ],
     drums: 'khshkhsh',
   },
-  office: {
-    name: 'Front Office',
-    where: 'Front Office: running a franchise',
-    icon: 'office',
-    step: bpm(112),
+  // round 39: the Floor takes Front Office's place among the mini-games (and its loop's)
+  floor: {
+    name: 'Six minutes left',
+    where: 'The Floor (the mini-game)',
+    icon: 'floor',
+    step: bpm(132),
     voices: [
-      { wave: 'pulse25', vol: 0.08, notes: 'A5 - F5 - D5 - E5 F5 | G5 - - F5 D5 - B4 - | C5 - E5 - G5 - B5 - | A5 - G5 - E5 - C#5 -' },
-      { wave: 'triangle', vol: 0.32, notes: 'D3 - F3 - A3 - C4 - | G2 - B2 - D3 - F3 - | C3 - E3 - G3 - B3 - | A2 - C#3 - E3 - G3 -' },
-      { wave: 'pulse12', vol: 0.05, notes: '. . F4+A4+C5 . . . F4+A4+C5 . | . . F4+B4+D5 . . . F4+B4+D5 . | . . E4+G4+B4 . . . E4+G4+B4 . | . . G4+C#5+E5 . . . G4+C#5+E5 .' },
+      { wave: 'pulse25', vol: 0.09, notes: 'E5 . G5 . A5 B5 . A5 | G5 . E5 . D5 E5 - . | E5 . G5 . A5 B5 . D6 | B5 - A5 - G5 - F#5 -' },
+      { wave: 'triangle', vol: 0.34, notes: 'E2 . E3 E2 . E2 E3 . | C2 . C3 C2 . C2 C3 . | D2 . D3 D2 . D2 D3 . | B1 . B2 B1 . B1 B2 .' },
+      { wave: 'pulse12', vol: 0.045, notes: '. E4+G4+B4 . E4+G4+B4 . E4+G4+B4 . E4+G4+B4 | . C4+E4+G4 . C4+E4+G4 . C4+E4+G4 . C4+E4+G4 | . D4+F#4+A4 . D4+F#4+A4 . D4+F#4+A4 . D4+F#4+A4 | . B3+D#4+F#4 . B3+D#4+F#4 . B3+D#4+F#4 . B3+D#4+F#4' },
     ],
-    drums: 'h.shh.sh',
+    drums: 'KhSkKhSh',
   },
   threes: {
     name: 'Rack ’em',

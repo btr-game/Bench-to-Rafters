@@ -4,7 +4,6 @@ import { describe, expect, it } from 'vitest';
 import { FRANCHISE_FIVES } from '../src/content/franchiseFives';
 import { NBA_TEAMS } from '../src/content/teams';
 import { growRookie, newLegends, playNext, playSeason } from '../src/engine/mini/legends';
-import * as F from '../src/engine/mini/frontOffice';
 import { contestRng, simRound, shotResult, zoneWidth } from '../src/engine/mini/threes';
 import { canClaimMini, claimMini, claimsUsed, MINI_CLAIMS, MINI_REWARD_MULT, miniReward, taperAt } from '../src/engine/career/miniBonus';
 import { labBestSpend, labBuy, labPlaySeason, labSpreadSpend, LAB_GAME, newLabGame } from '../src/engine/mini/labGame';
@@ -36,24 +35,6 @@ describe('mini-games', () => {
     expect(st.phase).toBe('over');
     expect(st.champion).toBeTruthy();
     expect(st.rounds.length).toBe(4);
-  });
-
-  it('a front office run drafts, deals and plays seasons, and the scouts never invent a ceiling below the floor', () => {
-    const fo = F.newFrontOffice(7, 'BOS');
-    expect(fo.phase).toBe('draft');
-    for (const c of fo.draft!.cls) {
-      const r = F.prospectReport(c);
-      expect(r.ceiling[1]).toBeGreaterThanOrEqual(r.now[1]);
-    }
-    for (let guard = 0; guard < 100 && fo.phase !== 'over'; guard++) {
-      if (fo.phase === 'draft') F.draftPlayer(fo, fo.draft!.cls.findIndex((c) => !c.takenBy));
-      else if (fo.phase === 'market') F.toTactics(fo);
-      else if (fo.phase === 'tactic') F.playSeason(fo, 'depth');
-      else if (fo.phase === 'results') F.nextSeason(fo);
-    }
-    expect(fo.phase).toBe('over');
-    expect(fo.history.length).toBeGreaterThanOrEqual(3);
-    expect(F.grade(fo).letter).toBeTruthy();
   });
 
   it('three-point contest: simulated scores look like real contests, and a dead-centre stop is a swish', () => {
