@@ -118,6 +118,9 @@
 .cl h1 { font-family: var(--f-display); font-weight: 900; font-size: clamp(36px, 6vw, 60px); line-height: 0.9; text-transform: uppercase; margin: 4px 0 8px; }
 .cl h2 { font-family: var(--f-display); font-weight: 800; font-size: 20px; text-transform: uppercase; letter-spacing: 0.04em; margin: 4px 0 8px; }
 .cl p { margin: 0; color: #c9c4ba; }
+/* a game card set in a deck page (the Floor's room): the game's own ink, not the deck's */
+.cl .floor-friend p { color: var(--ink); }
+.cl .floor-friend p.muted { color: var(--muted); }
 .cl-stage { display: grid; gap: 10px; justify-items: center; }
 .cl-stage .cam { max-width: 860px; }
 .cl-caption { display: flex; gap: 12px; align-items: center; justify-content: space-between; width: 100%; max-width: 860px; flex-wrap: wrap; font-family: var(--f-mono); font-size: 14px; color: #c9c4ba; }
@@ -160,3 +163,5 @@
 /* round 32: the real live numbers, for the maker only */
 .dk-real { display: flex; align-items: center; gap: 8px; margin: 6px 0 0; color: var(--ink); }
 .dk-real b { font-variant-numeric: tabular-nums; }
+/* round 39: the Floor lab is wider than the cam lab, for the court at three times its size */
+.cl.fl { max-width: 1280px; }

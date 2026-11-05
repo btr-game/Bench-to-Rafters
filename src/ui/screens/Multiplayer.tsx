@@ -9,6 +9,7 @@ import type { GameState } from '../../engine/types';
 import { ARCHETYPES } from '../../engine/player/archetypes';
 import { NAMES } from '../../content/strings';
 import { achievementsNow, useStore } from '../../store';
+import { unlockHint, unlocked } from '../road';
 import { PageTop } from '../components/PageTop';
 import { DevDoor } from '../components/FootBar';
 import { Icon } from '../art/Icon';
@@ -661,6 +662,29 @@ function Classes({ mp, open, setOpen, name }: { mp: Multiplayer; open: string | 
 
 // ---------- the page ----------
 
+/** Round 39 (owner: "can you make the game multiplayer as well?"): the one way to play a friend live,
+ * the Floor head to head, lives on the Floor mini-game's page. */
+function FloorLive() {
+  const setMini = useStore((s) => s.setMini);
+  const open = useStore((s) => unlocked(s.road, 'minis'));
+  return (
+    <section className="card stack">
+      <div className="sec-title with-icon">
+        <Icon name="floor" size={28} />
+        {t('Live: the Floor, head to head')}
+      </div>
+      <p className="small muted keep">{t('The last six minutes against a friend, both of you at the keys at once: one makes a room, the other types in its code.')}</p>
+      {open ? (
+        <button className="btn" onClick={() => setMini('floor')}>
+          {t('Play a friend on the Floor')}
+        </button>
+      ) : (
+        <p className="small muted keep">{unlockHint('minis')}</p>
+      )}
+    </section>
+  );
+}
+
 export function MultiplayerPage() {
   const setPage = useStore((s) => s.setPage);
   const mpOpen = useStore((s) => s.mpOpen);
@@ -684,7 +708,7 @@ export function MultiplayerPage() {
             <Icon name="versus" size={40} />
             Play with friends
           </h1>
-          <p className="small muted desc">{t('Two ways to play with friends, and nobody has to be on at the same time.')}</p>
+          <p className="small muted desc">{t('Two ways to play with friends, and nobody has to be on at the same time; and one live, on the Floor.')}</p>
         </div>
         {mp === null ? (
           <p className="muted">{t('Connecting…')}</p>
@@ -713,6 +737,7 @@ export function MultiplayerPage() {
             {tab === 'challenge' ? <Challenges mp={mp} open={open} setOpen={setOpen} /> : <Classes mp={mp} open={open} setOpen={setOpen} name={name} />}
           </>
         )}
+        <FloorLive />
       </section>
       <DevDoor />
     </div>

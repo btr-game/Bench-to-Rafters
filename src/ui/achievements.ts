@@ -12,11 +12,13 @@ import { addMiniResult } from '../engine/achievementsMini';
 import type { MpKind } from '../engine/achievements35';
 import { ENDING_IDS } from '../engine/achievements36';
 import { TOWN_MARKS } from '../engine/achievements37';
+import { R39_MARKS } from '../engine/achievements39';
 import type { CareerRecord } from '../engine/career/record';
 import type { MiniResult } from '../engine/career/miniBonus';
 import { UNLOCK_FROM, islandDone, loadRoad, offRecord, type Road, type Unlock } from './road';
 import { shownBy, username } from './names';
 import type { FinaleKind } from './finale';
+import { lang } from '../i18n';
 
 const KEY = 'btr-achv-v1';
 
@@ -49,7 +51,9 @@ export function loadAch(): AchSaved {
     // round 25: the old dev deck page, opened from a file, could write its "everything earned" book
     // into the game's storage; those entries are not the player's and are dropped
     if (d?.got && !isDev()) for (const id of Object.keys(d.got)) if (d.got[id].who === 'Dev deck') delete d.got[id];
-    if (d?.got) return { got: d.got, totals: { ...NO_TOTALS, ...d.totals }, since: d.since };
+    // round 39: Front Office is archived, and its loop with it: a loop no longer in the game counts
+    // for no album (its achievements, earned before, stay in the book's storage and count nowhere)
+    if (d?.got) return { got: d.got, totals: { ...NO_TOTALS, ...d.totals, ...(d.totals?.heard ? { heard: d.totals.heard.filter((id) => id !== 'office') } : {}) }, since: d.since };
   } catch {
     // a blocked or broken store reads as nothing earned yet
   }
@@ -90,6 +94,8 @@ export function countCareer(g: GameState, master: boolean): void {
   // round 32: a farewell tour seen through, a son's career played
   if (g.awards.some((a) => a.key === 'FAREWELL')) t.farewells = (t.farewells ?? 0) + 1;
   if (g.flags.gen2) t.sons = (t.sons ?? 0) + 1;
+  // round 40: the language the game was in when it ended
+  if (!t.langs?.includes(lang())) t.langs = [...(t.langs ?? []), lang()];
   saveAch(d);
 }
 
@@ -306,6 +312,38 @@ export function recordWalk(g: GameState, feet: number): boolean {
   saveAch(d);
   const marathon = TOWN_MARKS.mile * TOWN_MARKS.marathon;
   return Math.floor(d.totals.walked / TOWN_MARKS.mile) > Math.floor(before / TOWN_MARKS.mile) || (before < marathon && d.totals.walked >= marathon);
+}
+
+/** Round 39: the flight from the road map's airport back to the main land (screens/RoadMap.tsx).
+ * True when a mark the book reads was reached. */
+export function recordFlight(): boolean {
+  const d = loadAch();
+  d.totals.flights = (d.totals.flights ?? 0) + 1;
+  saveAch(d);
+  return R39_MARKS.flights.includes(d.totals.flights);
+}
+
+/** Round 39, online: a game on the Floor against a friend, played to its end (ui/floor/FloorFriend.tsx).
+ * True when the book has something new to read. */
+export function recordFloorFriend(win: boolean, margin: number, pts: number): boolean {
+  const d = loadAch();
+  const was = JSON.stringify(d.totals.floorFriend ?? null);
+  const f = d.totals.floorFriend ?? { games: 0, wins: 0, losses: 0, streak: 0, best: 0, rout: false, close: false, pts: 0 };
+  f.games++;
+  if (win) {
+    f.wins++;
+    f.streak++;
+    f.best = Math.max(f.best, f.streak);
+    if (margin >= R39_MARKS.friendRout) f.rout = true;
+    if (margin <= 2) f.close = true;
+  } else {
+    f.losses++;
+    f.streak = 0;
+  }
+  f.pts = Math.max(f.pts, pts);
+  d.totals.floorFriend = f;
+  saveAch(d);
+  return JSON.stringify(f) !== was;
 }
 
 /** Round 29: cards locked in the career log right now (the most at once is kept). */

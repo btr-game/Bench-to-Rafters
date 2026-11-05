@@ -72,6 +72,7 @@ import { buildCandidates, nbaAwards, simpleAwards, type AwardOutcome } from '../
 import { playoffMvps, postseasonRecap, recordNbaYear } from '../awards/playoffs';
 import { pathOf } from './origin';
 import { NeedLive, gameRequest, nextPick, playLiveGame } from './live';
+import { floorDue } from '../floor/due';
 import { adjust, conferenceRank, milestone, note, ordinal, pushDecision, pushMoment, rankOnRoster, roleWithTrust, teamById, userOvr } from './common';
 import { queueMidseasonEvents } from '../events/resolver';
 import { allStarWeekend, conferenceTournament, hsNationals, mcdonaldsGame, nbaCup, nbaPreseason } from '../sim/tournaments';
@@ -327,10 +328,14 @@ function makeHook(s: GameState, league: League, level: LevelKey, acc: HalfAcc, s
       const key = `${post}|${opp.id}`;
       // round 35: his rival classmate's team in a playoff series: the call for the series first
       if (s.mp?.rival && level === 'NBA') askRivalSeries(s, opp, post, home, series, playoffStrength());
+      // round 39: a game that can end his team's series, from the conference finals on, is the Floor's
+      const floor = level === 'NBA' && !!series && floorDue(post, series.losses, series.bestOf);
       // beginner's one last shot: the first game he plays, then the rest are simulated
       if (s.live.shot) live = !s.flags.levelShot;
+      // sim mode simulates the postseason but stops for each game the Floor plays: play it or not
+      else if (s.live.simAll && s.live.floorAsk && floor) live = nextPick(s, gameRequest(s, post, opp.name, home, series, true, true)) === 'play';
       else if (!s.live.simAll && s.live.simSeries !== key) {
-        const pick = nextPick(s, gameRequest(s, post, opp.name, home || level !== 'NBA', series));
+        const pick = nextPick(s, gameRequest(s, post, opp.name, home || level !== 'NBA', series, floor));
         if (pick === 'play') live = true;
         else if (pick === 'series') s.live.simSeries = key;
         else if (pick === 'all') s.live.simAll = true;
@@ -375,6 +380,7 @@ function makeHook(s: GameState, league: League, level: LevelKey, acc: HalfAcc, s
             my: team.strength + (season.teamBonus ?? 0) + (post ? (season.postBonus ?? 0) : 0) + impact + edgeFor(p.attrs, ovr, minutes / L.gameLen, true) + plan.teamBoost - (level === 'NBA' ? TEAM_FACTORS.playoffGrind : 0) + (rs ? rs.edge : 0),
             opp: oppStrength,
             oppName: opp.name,
+            oppId: opp.id,
             homeAdv: level !== 'NBA' ? 0 : home ? 1 : -1,
             round: post!,
             series,
@@ -511,7 +517,7 @@ const LIVE_LEVELS = new Set<LevelKey>(['HSV', 'NCAA', 'GL', 'EU', 'INT', 'NBA'])
 function startPostseason(s: GameState): void {
   // round 35: a simulated postseason is still replayed when a rival series can come up, so the
   // series' call can be asked (career/rivalSeries.ts)
-  if (!LIVE_LEVELS.has(s.season!.level) || (s.flags.simPostseason && !shotDue(s) && !rivalSeriesPossible(s))) {
+  if (!LIVE_LEVELS.has(s.season!.level) || (s.flags.simPostseason && !shotDue(s) && !rivalSeriesPossible(s) && !floorAsk(s))) {
     finishSeason(s);
     return;
   }
@@ -521,14 +527,18 @@ function startPostseason(s: GameState): void {
   runPostseason(s);
 }
 
+/** Round 39: sim mode (not Comet) asks before each NBA game the Floor plays. */
+const floorAsk = (s: GameState): boolean => !!s.flags.sim && !s.flags.comet && s.season?.level === 'NBA';
+
 /** Replays the postseason with the picks so far; pauses at the next pick or commits. */
 export function runPostseason(s: GameState): void {
   const ps = s.postSnap;
   if (!ps) return;
   const trial = structuredClone(ps.snap);
   // round 35: a simulated postseason replayed only for a rival series plays its games unasked
-  const quiet = !!trial.flags.simPostseason && !shotDue(trial) && !!trial.mp?.rival;
-  trial.live = { picks: ps.picks, i: 0, simAll: quiet, simSeries: null, recent: [], ...(shotDue(trial) ? { shot: true } : {}) };
+  // round 39: so is sim mode's, which stops for each game the Floor plays
+  const quiet = !!trial.flags.simPostseason && !shotDue(trial) && (!!trial.mp?.rival || floorAsk(trial));
+  trial.live = { picks: ps.picks, i: 0, simAll: quiet, simSeries: null, recent: [], ...(shotDue(trial) ? { shot: true } : {}), ...(floorAsk(trial) ? { floorAsk: true } : {}) };
   try {
     finishSeason(trial);
   } catch (e) {

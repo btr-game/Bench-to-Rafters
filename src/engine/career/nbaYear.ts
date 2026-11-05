@@ -32,7 +32,7 @@ export function warmUpNba(s: GameState, years: number): void {
   }
 }
 
-export function playoffTeamIds(s: GameState): Set<string> {
+function playoffTeamIds(s: GameState): Set<string> {
   const set = new Set<string>();
   const b = s.nba!.bracket;
   if (b) for (const sr of b.rounds[0]?.series ?? []) set.add(sr.a).add(sr.b);

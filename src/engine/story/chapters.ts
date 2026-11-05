@@ -42,7 +42,7 @@ const myTeam = (c: Ctx) => (c.s.stage === 'NBA' || c.s.stage === 'NCAA' ? (teamB
 const nba = (c: Ctx) => c.s.stage === 'NBA' && !!myTeam(c);
 
 /** The names and places a story line's slots take. */
-export function storySlots(s: GameState, st: StoryState): StorySlots {
+function storySlots(s: GameState, st: StoryState): StorySlots {
   return {
     F: first(st.names.friend),
     R: first(st.names.rival),

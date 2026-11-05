@@ -9,7 +9,7 @@
 
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { achievementsNow, useStore } from '../../store';
-import { recordRoad } from '../achievements';
+import { recordFlight, recordRoad } from '../achievements';
 import { Icon } from '../art/Icon';
 import { SKIN_COLORS, HAIR_COLORS } from '../art/Player';
 import { LEVEL_IDS, LEVEL_NAME, type Level } from '../../engine/levels';
@@ -24,7 +24,7 @@ import { FootBar } from '../components/FootBar';
 import { sfx } from '../sound';
 import { isDev } from '../../dev/mode';
 import { PixelX } from '../art/PixelX';
-import { BOAT, CAR, Sprite } from '../art/Sprites';
+import { BOAT, CAR, PLANE, PLANE_COLORS, Sprite } from '../art/Sprites';
 import { reducedMotion as reduced } from '../mainland';
 import { t, tx } from '../../i18n';
 
@@ -43,20 +43,23 @@ const C = {
   trunk: '#8B5A2B', leaf: '#2F9E44', leafD: '#1E7A32', court: '#C97B3B', plank: '#A0703C', plankD: '#7A5229',
   tire: '#18141C', glass: '#BFE3FF', hull: '#8B5A2B', sail: '#F8F9FA',
   stage: '#5F3DC4', stageD: '#4527A0', gold: '#FCC419',
+  runway: '#3F434B', runwayD: '#2E3138', apron: '#9AA0A8', apronD: '#7F858E', terminal: '#DDE3EA',
 };
 
 type Px = [number, number, number, number, string];
 
-/** The road: high school, college, the arena, then the dock. */
+/** The road: the airport (owner, after round 38: "add airport on the road map to go back to
+ * mainland"), high school, college, the arena, then the dock. */
 const WAY: [number, number][] = [
-  [22, 84], [58, 84], [58, 41], [106, 41], [106, 63], [146, 63],
+  [6, 38], [6, 84], [58, 84], [58, 41], [106, 41], [106, 63], [146, 63],
 ];
 const ISLAND: [number, number] = [170, 87];
 
-type Place = Level | 'tour' | 'island';
+type Place = 'airport' | Level | 'tour' | 'island';
 /** The places in the road's order: where the car stops for each, the building to click (x, y, w, h
  * on the map), and the side its card pops out on. The island's stop is the dock. */
 const PLACES: { id: Place; stop: [number, number]; box: [number, number, number, number]; side: 'left' | 'right' }[] = [
+  { id: 'airport', stop: [6, 38], box: [2, 4, 52, 34], side: 'right' },
   { id: 'beginner', stop: [30, 84], box: [10, 50, 36, 32], side: 'right' },
   { id: 'intermediate', stop: [77, 41], box: [60, 6, 36, 34], side: 'right' },
   { id: 'advanced', stop: [122, 63], box: [106, 42, 36, 20], side: 'left' },
@@ -108,12 +111,35 @@ function mapPixels(): Px[] {
   R(ix + 10, iy - 10, 3, 2, C.leafD);
   R(ix + 5, iy - 14, 4, 2, C.leaf);
   // trees on the land
-  for (const [x, y] of [[8, 18], [20, 30], [40, 12], [46, 54], [32, 44], [92, 72], [80, 92], [56, 97], [100, 96], [132, 18], [12, 96], [90, 10], [116, 26], [70, 64], [140, 40]]) {
+  for (const [x, y] of [[46, 54], [32, 44], [92, 72], [80, 92], [56, 97], [100, 96], [132, 18], [12, 96], [90, 10], [116, 26], [70, 64], [140, 40]]) {
     R(x, y + 3, 1, 2, C.trunk);
     R(x - 2, y, 5, 3, C.leaf);
     R(x - 1, y - 1, 3, 1, C.leaf);
     R(x - 2, y + 2, 5, 1, C.leafD);
   }
+  // the airport: the runway, the apron where the plane waits, the terminal and the tower
+  R(3, 5, 52, 7, C.runway);
+  R(3, 5, 52, 1, C.runwayD);
+  R(3, 11, 52, 1, C.runwayD);
+  for (let x = 8; x < 50; x += 6) R(x, 8, 3, 1, C.white);
+  for (let y = 6; y < 11; y += 2) R(4, y, 2, 1, C.white), R(52, y, 2, 1, C.white);
+  R(6, 12, 40, 8, C.apron);
+  R(6, 19, 40, 1, C.apronD);
+  R(9, 20, 26, 2, C.domeD);
+  R(9, 22, 26, 10, C.terminal);
+  R(11, 24, 22, 3, C.glass);
+  for (let x = 14; x < 33; x += 4) R(x, 24, 1, 3, C.domeD);
+  R(20, 28, 4, 4, C.door);
+  R(9, 31, 26, 1, C.stoneD);
+  R(40, 17, 3, 15, C.terminal);
+  R(40, 17, 1, 15, C.stoneD);
+  R(38, 13, 7, 4, C.domeD);
+  R(39, 14, 5, 2, C.glass);
+  R(41, 12, 1, 1, C.red);
+  R(49, 14, 1, 6, C.pole);
+  R(50, 14, 3, 1, C.orange);
+  R(50, 15, 2, 1, C.white);
+  R(6, 32, 30, 4, C.apron);
   // the road: four pixels wide, edges and a dashed line
   for (let i = 1; i < WAY.length; i++) {
     const [x1, y1] = WAY[i - 1];
@@ -188,7 +214,7 @@ function mapPixels(): Px[] {
 }
 
 /** One place on the map, cropped from it: the level's school, the college, the arena, the stage, the island. */
-const PLACE_BOX: Record<Place, string> = { beginner: '6 48 44 36', intermediate: '56 4 44 36', advanced: '102 34 44 36', tour: '103 62 44 36', island: '148 66 44 36' };
+const PLACE_BOX: Record<Place, string> = { airport: '6 3 44 36', beginner: '6 48 44 36', intermediate: '56 4 44 36', advanced: '102 34 44 36', tour: '103 62 44 36', island: '148 66 44 36' };
 let MAP_PX: Px[] | null = null;
 const mapPx = () => (MAP_PX ??= mapPixels());
 export function PlaceArt({ place, size = 132 }: { place: Place; size?: number }) {
@@ -217,7 +243,7 @@ const stopAt = (s: [number, number]) => ROUTE.findIndex(([x, y]) => x === s[0] &
 
 /** The pixel map: the places, the road, the car (it drives to the place on screen, a step at a time),
  * and the boat at the dock or sailing to the island. */
-function MapArt({ road, first, goal, sailing, onSailed }: { road: Road; first: number; goal: number; sailing: boolean; onSailed: () => void }) {
+function MapArt({ road, first, goal, sailing, onSailed, flight }: { road: Road; first: number; goal: number; sailing: boolean; onSailed: () => void; flight: number }) {
   const px = mapPx();
   const [step, setStep] = useState(first);
   // the engine starts when the car has somewhere to go as the page opens
@@ -247,19 +273,22 @@ function MapArt({ road, first, goal, sailing, onSailed }: { road: Road; first: n
   const [cx, cy] = ROUTE[step];
   const boatX = 156 + sail * 1.5;
   const boatY = 60 + sail * 2;
+  // the plane waits on the apron; flying, it rolls onto the runway, then climbs off the map
+  const plane = flight < 0 ? { x: 12, y: 12 } : { x: 12 + flight * 4, y: 12 - Math.min(5, flight) - Math.max(0, flight - 5) * 3 };
   return (
-    <svg className="roadmap-art" viewBox={`0 0 ${W} ${H}`} shapeRendering="crispEdges" role="img" aria-label={t('The road map: high school, college, the NBA arena, and the island of mini-games across the sea')}>
+    <svg className="roadmap-art" viewBox={`0 0 ${W} ${H}`} shapeRendering="crispEdges" role="img" aria-label={t('The road map: the airport, high school, college, the NBA arena, and the island of mini-games across the sea')}>
       {px.map(([x, y, w, h, c], i) => (
         <rect key={i} x={x} y={y} width={w} height={h} fill={c} />
       ))}
       <Sprite rows={BOAT} x={Math.round(boatX)} y={Math.round(boatY)} colors={sailing || sail ? kin : { ...kin, h: '', s: '' }} />
+      <Sprite rows={PLANE} x={plane.x} y={plane.y} colors={PLANE_COLORS} />
       {!sailing && <Sprite rows={CAR} x={cx - 4} y={cy - 5} colors={kin} />}
     </svg>
   );
 }
 
 const MINIS = ROAD_MINIS;
-const MINI_ICON: Record<RoadMini, string> = { threes: 'shoot', dunk: 'finish', street: 'flame', legends: 'spotlight', lab: 'lab', rhythm: 'lockdown', office: 'office' };
+const MINI_ICON: Record<RoadMini, string> = { threes: 'shoot', dunk: 'finish', street: 'flame', legends: 'spotlight', lab: 'lab', rhythm: 'lockdown', floor: 'floor' };
 
 /** The bucket list in the map's top-right corner: every goal on the road, ticked as it is done. */
 function BucketList({ road }: { road: Road }) {
@@ -354,6 +383,35 @@ function LevelStop({ level, road }: { level: Level; road: Road }) {
   );
 }
 
+/** The airport (owner, after round 38): the way back to the main land, once beginner is passed. */
+function AirportStop({ road, onFly }: { road: Road; onFly: () => void }) {
+  const open = !!road.passed.beginner;
+  return (
+    <section className={`card stack road-stop${open ? '' : ' locked'}`}>
+      <div className="row road-stop-head">
+        <PlaceArt place="airport" size={88} />
+        <div style={{ minWidth: 0 }}>
+          <div className="kicker">The airport</div>
+          <div className="sec-title">{t('Back to the main land')}</div>
+        </div>
+        <div className="spacer" />
+        <span className="tag with-icon">
+          <Icon name={open ? 'jet' : 'lock'} size={18} />
+          {open ? t('open') : t('Locked')}
+        </span>
+      </div>
+      <p className="small">{open ? t('Fly back to the main land. The road map waits for you here.') : t('Opens after beginner.')}</p>
+      {open && (
+        <div className="row-end">
+          <button className="btn ghost" onClick={onFly}>
+            {t('Fly to the main land')}
+          </button>
+        </div>
+      )}
+    </section>
+  );
+}
+
 /** The island: the mini-games, by boat, any time after beginner. */
 function IslandStop({ road, onSail }: { road: Road; onSail: () => void }) {
   const open = !!road.passed.beginner;
@@ -435,16 +493,17 @@ function TourStop({ road }: { road: Road }) {
 /** Where the road map opens: the next level, else the island or the closing tour still to do. */
 function firstPlace(road: Road): number {
   const next = nextLevel(road);
-  if (next) return LEVEL_IDS.indexOf(next);
+  if (next) return PLACES.findIndex((p) => p.id === next);
   if (!islandDone(road)) return PLACES.findIndex((p) => p.id === 'island');
   if (!road.toured) return PLACES.findIndex((p) => p.id === 'tour');
   return 0;
 }
 
-const PLACE_NAME: Record<Place, string> = { beginner: 'Beginner · High school', intermediate: 'Intermediate · College', advanced: 'Advanced · NBA arena', tour: tx('The closing tour'), island: tx('The island of mini-games') };
+const PLACE_NAME: Record<Place, string> = { airport: 'The airport', beginner: 'Beginner · High school', intermediate: 'Intermediate · College', advanced: 'Advanced · NBA arena', tour: tx('The closing tour'), island: tx('The island of mini-games') };
 
 /** Each place's state, for its pin on the map: done, the next thing to do, open, or locked. */
 function placeState(road: Road, id: Place): 'done' | 'next' | 'open' | 'locked' {
+  if (id === 'airport') return road.passed.beginner ? 'open' : 'locked';
   if (id === 'island') return !road.passed.beginner ? 'locked' : islandDone(road) ? 'done' : levelsDone(road) ? 'next' : 'open';
   if (id === 'tour') return !levelsDone(road) ? 'locked' : road.toured ? 'done' : islandDone(road) ? 'next' : 'open';
   return road.passed[id] ? 'done' : nextLevel(road) === id ? 'next' : levelOpen(road, id) ? 'open' : 'locked';
@@ -457,6 +516,22 @@ export function RoadMap() {
   const setMini = useStore((s) => s.setMini);
   const setPage = useStore((s) => s.setPage);
   const [sailing, setSailing] = useState(false);
+  // the airport: the plane takes off, then the main land
+  const [flight, setFlight] = useState(-1);
+  const fly = () => {
+    if (flight >= 0) return;
+    sfx('takeoff');
+    // round 39: the book counts the flights back (Wheels Up, Jet Lag)
+    if (recordFlight()) achievementsNow();
+    if (reduced()) return setPage(null);
+    setFlight(0);
+  };
+  useEffect(() => {
+    if (flight < 0) return;
+    if (flight >= 12) return setPage(null);
+    const id = setTimeout(() => setFlight((f) => f + 1), 70);
+    return () => clearTimeout(id);
+  }, [flight, setPage]);
   const tut = inTutorial(road);
   const [sel, setSel] = useState(() => firstPlace(road));
   // the map opens clear, the next place's pin hopping; a card pops out when a place is picked
@@ -476,7 +551,7 @@ export function RoadMap() {
     } catch {
       return goal;
     }
-    return stopAt(PLACES[at - 1].stop);
+    return stopAt(PLACES.find((p) => p.id === LEVEL_IDS[at - 1])!.stop);
   });
   const go = (i: number, keys = false) => {
     if (sailing) return;
@@ -541,7 +616,7 @@ export function RoadMap() {
       </section>
       <div className="roadmap">
         <div className="roadmap-stage">
-          <MapArt road={road} first={first} goal={stopAt(place.stop)} sailing={sailing} onSailed={() => setMini('hub')} />
+          <MapArt road={road} first={first} goal={stopAt(place.stop)} sailing={sailing} onSailed={() => setMini('hub')} flight={flight} />
           <div className="road-spots">
             {PLACES.map((p, i) => {
               const st = placeState(road, p.id);
@@ -567,7 +642,7 @@ export function RoadMap() {
               <button className="pop-x road-pop-x" aria-label={t('Close')} onClick={() => setOpen(false)}>
                 <PixelX />
               </button>
-              {place.id === 'island' ? <IslandStop road={road} onSail={() => (sfx('sail'), setSailing(true))} /> : place.id === 'tour' ? <TourStop road={road} /> : <LevelStop level={place.id} road={road} />}
+              {place.id === 'airport' ? <AirportStop road={road} onFly={fly} /> : place.id === 'island' ? <IslandStop road={road} onSail={() => (sfx('sail'), setSailing(true))} /> : place.id === 'tour' ? <TourStop road={road} /> : <LevelStop level={place.id} road={road} />}
             </div>
           )}
         </div>

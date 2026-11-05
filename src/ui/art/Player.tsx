@@ -65,6 +65,9 @@ export function kitFor(teamName: string, abbr: string, color: string, which: Kit
   return leagueKits(league, color, teamName, parent && TEAM_STYLE[parent.abbr])[which];
 }
 
+/** His shoes: in the kit's ink or trim at home, in its colour on the road. */
+export const shoeOf = (k: Kit, which: KitName): string => (which === 'home' ? ('#F2F2F2' === k.base ? k.ink : k.trim) : k.base === '#FFFFFF' ? k.ink : k.base);
+
 export function PlayerArt({ name, number, pos, color = '#2A2F36', team = '', abbr = '', kit = 'home', league, kitData, size = 96, noBall = false, wear, frame, mirror = false }: { name: string; number: number; pos?: Pos; color?: string; team?: string; abbr?: string; kit?: KitName; league?: KitLeague; kitData?: Kit; size?: number; noBall?: boolean; wear?: Wear; frame?: Pose; mirror?: boolean }) {
   // round 24: streetball draws one ball of its own, so its players hold none; round 27: `frame`
   // draws any pose (the intro's running, shooting, blocking and reaching frames), and `mirror`
@@ -72,8 +75,7 @@ export function PlayerArt({ name, number, pos, color = '#2A2F36', team = '', abb
   const pose = useMemo(() => frame ?? (noBall ? withoutBall(poseFor(pos)) : poseFor(pos)), [pos, noBall, frame]);
   const paths = useMemo(() => {
     const k = kitData ?? kitFor(team, abbr, color, kit, league);
-    const shoe = kit === 'home' ? '#F2F2F2' === k.base ? k.ink : k.trim : k.base === '#FFFFFF' ? k.ink : k.base;
-    return toPaths(paint(pose, k, lookOf(name, shoe, wear), number, mirror));
+    return toPaths(paint(pose, k, lookOf(name, shoeOf(k, kit), wear), number, mirror));
   }, [pose, name, number, color, team, abbr, kit, league, kitData, wear, mirror]);
   return (
     <svg xmlns="http://www.w3.org/2000/svg" className="art art-player" data-art="player-sprite" width={(size * pose.w) / pose.h} height={size} viewBox={`0 0 ${pose.w} ${pose.h}`} shapeRendering="crispEdges" role="img" aria-label={`${name}, number ${number}`}>

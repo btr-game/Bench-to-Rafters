@@ -20,6 +20,8 @@ export interface Pose {
   head: Pt; // the face's top-left
   num: Pt | null; // where a two-digit number starts
   rows: string[];
+  /** Seen from behind (round 39, the Floor's spin): the back of his head, no face. */
+  back?: boolean;
 }
 
 export interface Look {
@@ -226,6 +228,46 @@ export const BITE = pose(30, 34, [9, 9], [11, 21], {
   33: '........oooooooooooooooo',
 });
 
+// Round 39, the Floor: a defender's slide and a reach for the ball, and the two guard seen from
+// behind, for the middle of a spin move.
+/** Down in his stance, arms out wide, sliding with his man. */
+export const SLIDE = pose(30, 36, [9, 11], [11, 23], {
+  21: '........SSTJJTssTJJTQQ',
+  22: '.......SSSTJJJTTJJJTQQQ',
+  23: '......SSS.JJJJJJJJjj.QQQ',
+  24: '.....SSS..JJJJJJJJjj..QQQ',
+  25: '....wss...JJJJJJJJjj...qQw',
+  26: '....ss....JJJJJJJJjj....qq',
+  27: '.........RPPPPPPPPPpR',
+  28: '.........RPPPPPPPPPpR',
+  29: '.........RPPPP..PPPpR',
+  30: '........SSS......sss',
+  31: '.......SSS........sss',
+  32: '......WWW..........WWW',
+  33: '....FFFFf..........FFFFf',
+  34: '...ooooooooooooooooooooooo',
+});
+/** Lunging for the ball: weight forward, the near arm jabbing out low. */
+export const REACH = pose(30, 34, [10, 9], [12, 21], {
+  19: '.........SSTJJTssTJJTQQ',
+  20: '.........SSTJJJTTJJJTQQQQ',
+  21: '.........SSJJJJJJJJjj..QQQQ',
+  22: '.........SSJJJJJJJJjj....QQQw',
+  23: '.........SSJJJJJJJJjj......ww',
+  24: '.........wwJJJJJJJJjj',
+  25: '.........ssJJJJJJJJjj',
+  26: '...........RPPPPPPPpR',
+  27: '..........RPPPPPPPpR',
+  28: '.........RPPP...PPpR',
+  29: '........SS.......ss',
+  30: '.......SS.........ss',
+  31: '......WW...........WW',
+  32: '....FFFf...........FFFf',
+  33: '...ooooooooooooooooooooo',
+});
+/** The two guard with his back turned, half way round a spin. */
+export const SPIN_BACK: Pose = { ...DRIBBLE, back: true };
+
 /** Head and shoulders, for portraits. */
 export const BUST = pose(20, 24, [4, 7], [6, 19], {
   17: '...SSTJJTssTJJTSS',
@@ -271,6 +313,8 @@ const FACE_HAIR: Record<Face, [number, string[]]> = {
 };
 
 const GOGGLES = ['.GGGGGGGGGG.', 'GGgEgGGgEgGG', '.GgEgGGgEgG.', '.GGGGGGGGGG.'];
+/** The back of the head, over the face's own square: hair all over, the nape of the neck under it. */
+const BACK = ['.HHHHHHHHHH.', ...Array(7).fill('HHHHHHHHHHHH'), '.HHHHHHHHHH.', '..ssssssss..'];
 
 function stamp(g: string[], x0: number, y0: number, rows: string[]) {
   rows.forEach((row, dy) => {
@@ -293,18 +337,28 @@ export function paint(p: Pose, kit: Kit, look: Look, number: number, mirror = fa
   const [hx, hy] = p.head;
 
   // the head first: hair that sits behind, the face, then hair and gear over it
-  stamp(g, hx, hy, FACE);
   const [hy0, hair] = HAIR[look.style] ?? HAIR.short;
-  stamp(g, hx - 2, hy + hy0, hair);
-  stamp(g, hx - 1, hy + 4, ['s', 's']);
-  stamp(g, hx + 12, hy + 4, ['s', 's']);
-  stamp(g, hx, hy + 4, ['...E....E', '...E....E']); // long hair never covers the eyes
-  if (!['mustache', 'goatee', 'beard', 'bigbeard'].includes(look.face)) stamp(g, hx + 5, hy + 7, ['mm']);
-  const [fy0, fh] = FACE_HAIR[look.face] ?? FACE_HAIR.none;
-  stamp(g, hx, hy + fy0, fh);
-  if (look.gear.includes('unibrow')) stamp(g, hx + 2, hy + 3, ['HHHHHHHH']);
-  if (look.gear.includes('goggles')) stamp(g, hx, hy + 3, GOGGLES);
-  if (look.gear.includes('headband')) stamp(g, hx - 1, hy + 2, ['AAAAAAAAAAAAAA']);
+  if (p.back) {
+    // from behind: his hair (its length too), then the back of the head over the face; a bald
+    // head is skin all round
+    stamp(g, hx - 2, hy + hy0, hair);
+    stamp(g, hx, hy, look.style === 'bald' ? BACK.map((r) => r.replace(/H/g, 'S')) : BACK);
+    stamp(g, hx - 1, hy + 4, ['s', 's']);
+    stamp(g, hx + 12, hy + 4, ['s', 's']);
+    if (look.gear.includes('headband')) stamp(g, hx - 1, hy + 2, ['AAAAAAAAAAAAAA']);
+  } else {
+    stamp(g, hx, hy, FACE);
+    stamp(g, hx - 2, hy + hy0, hair);
+    stamp(g, hx - 1, hy + 4, ['s', 's']);
+    stamp(g, hx + 12, hy + 4, ['s', 's']);
+    stamp(g, hx, hy + 4, ['...E....E', '...E....E']); // long hair never covers the eyes
+    if (!['mustache', 'goatee', 'beard', 'bigbeard'].includes(look.face)) stamp(g, hx + 5, hy + 7, ['mm']);
+    const [fy0, fh] = FACE_HAIR[look.face] ?? FACE_HAIR.none;
+    stamp(g, hx, hy + fy0, fh);
+    if (look.gear.includes('unibrow')) stamp(g, hx + 2, hy + 3, ['HHHHHHHH']);
+    if (look.gear.includes('goggles')) stamp(g, hx, hy + 3, GOGGLES);
+    if (look.gear.includes('headband')) stamp(g, hx - 1, hy + 2, ['AAAAAAAAAAAAAA']);
+  }
 
   // the body over it
   for (let y = 0; y < h; y++) stamp(g, 0, y, [p.rows[y]]);

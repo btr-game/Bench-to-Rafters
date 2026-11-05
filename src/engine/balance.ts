@@ -746,16 +746,40 @@ export const ROADMAP = {
 };
 /**
  * The island's grades (round 33, owner: "for the user to pass the tutorial, they must play each
- * minigame at least once, earning at least a C"; Front Office: "a C = make the playoffs once").
- * The marks follow each game's career-bonus tiers (career/miniBonus.ts): C is the first score that
- * earns a bonus. A three-point score, a dunk contest's best dunk, the lab's peak OVR, a Front Office
- * run's playoff trips; the others grade by how far the run went.
+ * minigame at least once, earning at least a C"). The marks follow each game's career-bonus tiers
+ * (career/miniBonus.ts): C is the first score that earns a bonus. A three-point score, a dunk
+ * contest's best dunk, the lab's peak OVR; the Floor grades itself (FLOOR_MINI), the others by how
+ * far the run went.
  */
 export const ROAD_GRADES = {
   threes: { A: 23, B: 18, C: 13 },
   dunk: { A: 44, B: 40, C: 35 },
   lab: { A: 93, B: 87, C: 80 },
-  office: { B: 2, C: 1 }, // playoff trips; a title is an A
+};
+/**
+ * The Floor as a mini-game (round 39, owner: "can we get rid of (archive) the front office minigame
+ * and replace it with this game?"; engine/floor/mini.ts), in Front Office's place: its unlock and
+ * its career bonus. The last six minutes on the standard difficulty, from a close score: about
+ * `start.base` points each after 42 minutes (a seeded `spread` either way), his team a seeded `gap`
+ * or less ahead or behind. A generated team (the start page) has its five starters at the level
+ * picked (`strength`), its three off the bench `roster.bench` below, each a seeded `roster.wobble`
+ * wide. The grade (C or better passes the island) is the margin, with a little for his own line:
+ * a game score (`line`, a point a point) worth `perLine` a point, at most `cap` either way. A win is
+ * a B, an A at `grade.A` or more with his share; a loss is a C at `grade.C` or more (a loss by three
+ * on a quiet night), a D below. A comeback (`back`) is a win after trailing by that many. The career
+ * bonus by grade is Front Office's, basketball IQ and a little playmaking: an A is a title run's, a
+ * B two or three playoff trips', a C one trip's, a D nothing.
+ */
+export const FLOOR_MINI = {
+  start: { base: 90, spread: 6, gap: 4 },
+  strength: { average: 70, good: 76, great: 82 },
+  roster: { bench: 6, wobble: 8 },
+  line: { pts: 1, reb: 0.4, ast: 0.7, stl: 1, blk: 1, tov: -1 },
+  perLine: 0.2,
+  cap: 3,
+  grade: { A: 8, C: -3 },
+  back: 8,
+  reward: { A: { IQ: 3, PLY: 1.5 }, B: { IQ: 1, PLY: 0.4 }, C: { IQ: 0.4, PLY: 0.1 }, D: {} } as Record<'A' | 'B' | 'C' | 'D', { IQ?: number; PLY?: number }>,
 };
 /**
  * The next generation (round 32, owner: "similar height (... variance, and also like the low-chance
@@ -1220,29 +1244,35 @@ export const STORY_CH = {
  * seconds unless named real.
  */
 export const FLOOR = {
-  /** Game seconds a tick moves on, and the ticks of real time a second: 0.15 x 20 = 3 game seconds a real one. */
-  tick: 0.15,
+  /** Game seconds a tick moves on, and the ticks of real time a second: 0.075 x 20 = 1.5 game seconds
+   * a real one (owner, after step 1: "the pace of 1.5x is suitable for four minute game"). */
+  tick: 0.075,
   ticksPerSec: 20,
   quarter: 720,
+  /** The Floor takes over with this many game seconds left in the fourth: six minutes, four real ones. */
+  from: 360,
   shotClock: 24,
   offReboundClock: 14,
-  /** Top speed in feet a game second, from athleticism 0 to 100, and sprinting's share more. */
-  speed: [13, 21],
-  sprint: 1.22,
+  /** Top speed in feet a game second, from athleticism 40 to 99, and sprinting's share more (owner,
+   * after step 1: "their movement speed is way too high ... even the shift movement should be
+   * slower than this": 13 to 21 at the tripled clock was 39 to 63 feet a real second). */
+  speed: [8, 14],
+  sprint: 1.3,
   /** Stamina (0 to 1) a game second: sprinting, moving, standing; a timeout gives back. */
   stamina: { sprint: -0.012, move: -0.0025, rest: 0.004, timeout: 0.25 },
   /** A shot's base chance by zone, and how much its rating (from 70) moves it per point. */
-  shot: { rim: 0.67, paint: 0.48, mid: 0.44, three: 0.385, perPoint: { rim: 0.006, paint: 0.0055, mid: 0.005, three: 0.005 }, deep: 26, deepPerFt: 0.04, min: 0.02, max: 0.93 },
+  shot: { rim: 0.7, paint: 0.51, mid: 0.46, three: 0.4, perPoint: { rim: 0.006, paint: 0.0055, mid: 0.005, three: 0.005 }, deep: 26, deepPerFt: 0.04, min: 0.02, max: 0.93 },
   /** A defender closer than `within` feet takes up to `max` off the chance; tired legs up to `tired`. */
   contest: { within: 6, max: 0.17, tired: 0.08 },
-  /** His meter: how long a full load takes (game seconds), the window's half-width at 0 and 100
-   * shooting, what being contested or tired takes off it, and what a perfect or a missed release does
-   * to the chance (scaled between). */
-  meter: { load: 0.9, window: [0.1, 0.26], contested: 0.45, tired: 0.4, best: 1.15, worst: 0.55 },
+  /** His meter: how long a full load takes (game seconds; 1.5 is one real second at the 1.5x clock,
+   * owner: "could be slower actually (one real second?)"), the window's half-width from 40 to 99
+   * shooting (free-throw touch at the line), what being contested or tired takes off it, and what a
+   * perfect or a missed release does to the chance (scaled between). */
+  meter: { load: 1.5, window: [0.08, 0.28], contested: 0.45, tired: 0.4, best: 1.15, worst: 0.55 },
   /** Free throws: the chance from free-throw touch 0 to 100. */
   ft: [0.5, 0.95],
   /** Fouls on a shot: at the rim, on a jumper; bonus from this many team fouls; out at six. */
-  foul: { rim: 0.19, jumper: 0.045, perPoint: 0.0025, bonus: 5, out: 6 },
+  foul: { rim: 0.23, jumper: 0.055, perPoint: 0.0025, bonus: 5, out: 6 },
   block: { base: 0.06, perPoint: 0.0035, reach: 3 },
   steal: { base: 0.18, perPoint: 0.004, reach: 4, foul: 0.22 },
   /** A pass flies at this speed; a defender this close to its line may pick it off. */
@@ -1251,7 +1281,7 @@ export const FLOOR = {
   strip: 0.011,
   /** A move (crossover, spin, step-back) beats his man this often from even, slowing him this long. */
   move: { beat: 0.5, perPoint: 0.006, slow: 1.1, lose: 0.05 },
-  rebound: { offense: 0.72, wait: 0.6 },
+  rebound: { offense: 0.72, wait: 0.6, bounce: 30 },
   /** The difficulty: added to his team's and the other team's shooting. */
   mode: { standard: { us: 0, them: 0 }, reality: { us: -0.03, them: 0.025 }, stars: { us: 0.02, them: -0.015 }, fast: { us: 0, them: 0 }, lab: { us: 0, them: 0 } } as Record<Mode, { us: number; them: number }>,
   /** Momentum: what a basket, a stop and a big play add (his team up, theirs down), how fast it fades
@@ -1261,6 +1291,29 @@ export const FLOOR = {
   /** The AI's ball handler thinks again this often (game seconds); a shot is open past `open` feet. */
   think: 0.6,
   open: 6,
+  /** In a career (round 39, step 5): each side's starters are centred on the two teams' midpoint and
+   * split by the career's strength gap (team strengths and home court, as playLiveGame weighs them),
+   * this many Floor rating points to a point of it. The Floor moves its six-minute margin about 0.52
+   * points per rating point of gap; the career's model moves it 0.1957 per point of strength. */
+  perStrength: 0.38,
+  /** A dead ball or a free throw waits at most this much longer (game seconds) for its man to walk
+   * to his spot (after round 39's first play: "dont let any players teleport"), kept short so a
+   * dead ball never drags. */
+  walk: 1.2,
+  /** The inbounder passes it in from this close to the ball's spot (feet). */
+  inboundReach: 4,
+  /** Step 4: a game within `margin` points runs at real speed for its last `clock` game seconds. */
+  realTime: { clock: 60, margin: 6 },
+  /** Round 39, online: game seconds a free throw waits for a human's release before the AI shoots it
+   * (a friend who has walked away must not hold both screens). */
+  ftWait: 10,
+  /** The step-back's slide (feet per game second). */
+  dash: 16,
+  /** One tap at the rim: a defender inside `within` feet strips him up to `strip` of the time, right
+   * on him; his athleticism takes up to `athletic` of that (and of a block) away. */
+  finish: { within: 5, strip: 0.22, athletic: 0.6 },
+  /** An open jumper waits until the offense has used this much of the shot clock (game seconds). */
+  patience: 9,
   /** Trailing late, the defense fouls on purpose: within this margin, under this many seconds. */
   hack: { margin: [1, 8], secs: 35 },
 } as const;

@@ -2,9 +2,9 @@
 // ends, four real minutes long, harder with the difficulty.
 import { describe, expect, it } from 'vitest';
 import { FLOOR } from '../src/engine/balance';
-import { floorResult, freshEvents, releaseQuality, skipFloor, startFloor, stepFloor, type FloorInput, type FloorPlayerIn, type FloorSetup, type FloorState } from '../src/engine/floor/sim';
+import { floorResult, freshEvents, inRange, meterWindow, openMan, releaseQuality, skipFloor, startFloor, stepFloor, type FloorEventKind, type FloorInput, type FloorPlayerIn, type FloorSetup, type FloorState } from '../src/engine/floor/sim';
 import { floorDue } from '../src/engine/floor/due';
-import { isThree, zoneOf } from '../src/engine/floor/court';
+import { isThree, rimOf, zoneOf } from '../src/engine/floor/court';
 
 const POS = ['PG', 'SG', 'SF', 'PF', 'C'] as const;
 function roster(tag: string, base: number, o: { user?: boolean; FT?: number; SHT?: number } = {}): FloorPlayerIn[] {
@@ -17,18 +17,21 @@ function roster(tag: string, base: number, o: { user?: boolean; FT?: number; SHT
     r: { SHT: o.SHT ?? base, FIN: base, PLY: base, PER: base, INT: base + (i >= 3 ? 6 : -4), REB: base + (i >= 3 ? 8 : -8), ATH: base, IQ: base, FT: o.FT ?? base },
   }));
 }
-const setup = (seed: number, mode: FloorSetup['mode'] = 'standard', o: { FT?: number; SHT?: number } = {}): FloorSetup => ({
+const setup = (seed: number, mode: FloorSetup['mode'] = 'standard', o: { FT?: number; SHT?: number; clock?: number } = {}): FloorSetup => ({
   seed,
   mode,
   us: { name: 'Us', short: 'US', color: '#1D428A', players: roster('U', 75, { user: true, ...o }) },
   them: { name: 'Them', short: 'TH', color: '#C8102E', players: roster('T', 75) },
   score: [80, 80],
+  clock: o.clock,
 });
+/** A whole quarter, to hold the numbers against an NBA quarter's. */
+const QUARTER = { clock: FLOOR.quarter };
 
 /** A scripted player: drifts, sprints now and then, shoots with a fixed hold, steals and jumps. */
 function scripted(s: FloorState): FloorInput {
   const k = s.tick;
-  const hold = k % 40 < 6; // presses for six ticks (0.9 s: a full load), then lets go
+  const hold = k % 60 < 20; // presses for twenty ticks (1.5 s: a full load), then lets go
   return { dx: Math.sin(k / 30), dy: Math.cos(k / 45), sprint: k % 50 < 10, shoot: hold, pass: k % 97 === 0 ? 'auto' : null, steal: k % 61 === 0, block: k % 73 === 0, move: k % 89 === 0 ? 'cross' : null };
 }
 
@@ -48,9 +51,9 @@ describe('round 39: the Floor', () => {
     expect(floorResult(a).line).toEqual(floorResult(b).line);
   });
 
-  it('a quarter takes about four real minutes, the clock running three times as fast', () => {
-    expect(FLOOR.tick * FLOOR.ticksPerSec).toBeCloseTo(3, 6);
-    const live = FLOOR.quarter / FLOOR.tick / FLOOR.ticksPerSec;
+  it('the last six minutes take about four real minutes, the clock running at 1.5 times', () => {
+    expect(FLOOR.tick * FLOOR.ticksPerSec).toBeCloseTo(1.5, 6);
+    const live = FLOOR.from / FLOOR.tick / FLOOR.ticksPerSec;
     expect(live).toBeCloseTo(240, 6);
     const times: number[] = [];
     for (let k = 0; k < 20; k++) {
@@ -72,7 +75,7 @@ describe('round 39: the Floor', () => {
     let tov = 0;
     const n = 60;
     for (let k = 0; k < n; k++) {
-      const s = startFloor(setup(500 + k));
+      const s = startFloor(setup(500 + k, 'standard', QUARTER));
       skipFloor(s);
       if (s.periods) continue;
       const r = floorResult(s);
@@ -97,7 +100,7 @@ describe('round 39: the Floor', () => {
     const avg = (mode: FloorSetup['mode']) => {
       let diff = 0;
       for (let k = 0; k < 120; k++) {
-        const s = startFloor(setup(900 + k, mode));
+        const s = startFloor(setup(900 + k, mode, QUARTER));
         skipFloor(s);
         diff += s.score[0] - s.score[1];
       }
@@ -146,7 +149,7 @@ describe('round 39: the Floor', () => {
     for (let i = 0; i < 1500; i++) stepFloor(s, scripted(s));
     const mid = [...s.score];
     const left = s.clock;
-    expect(left).toBeLessThan(FLOOR.quarter);
+    expect(left).toBeLessThan(FLOOR.from);
     skipFloor(s);
     expect(s.phase).toBe('over');
     expect(s.score[0]).toBeGreaterThanOrEqual(mid[0]);
@@ -181,5 +184,98 @@ describe('round 39: the Floor', () => {
     expect(floorDue('NBA Finals', 2, 7)).toBe(false);
     expect(floorDue('Conference semifinals', 3, 7)).toBe(false);
     expect(floorDue('First round', 3, 7)).toBe(false);
+  });
+  it('step 2: his jab, his switch and the help he calls are told, so the screen can show them', () => {
+    const s = startFloor(setup(77));
+    const seen = new Set<FloorEventKind>();
+    for (let i = 0; i < 6000 && s.phase !== 'over'; i++) {
+      const k = s.tick;
+      // on defence he stays on the ball, jabs, switches and calls for help now and then
+      const h = s.ball.holder !== null ? s.players[s.ball.holder] : null;
+      const u = s.players[s.user];
+      const chase = h && s.poss === 1 ? { dx: h.x - u.x, dy: h.y - u.y } : { dx: 0, dy: 0 };
+      stepFloor(s, { ...chase, sprint: true, steal: k % 23 === 0, swap: k % 97 === 0, help: k % 89 === 0 });
+      for (const e of freshEvents(s)) seen.add(e.kind);
+    }
+    expect(seen.has('reach')).toBe(true);
+    expect(seen.has('switch')).toBe(true);
+    expect(seen.has('help')).toBe(true);
+  });
+
+  it('step 2: the open man is a teammate, and at the line his free-throw touch sets the meter', () => {
+    const s = startFloor(setup(5));
+    s.ball.holder = s.user;
+    const to = openMan(s);
+    expect(to).not.toBeNull();
+    expect(s.players[to!].team).toBe(0);
+    expect(to).not.toBe(s.user);
+    s.phase = 'ft';
+    const u = s.players[s.user];
+    u.r.FT = 95;
+    const wide = meterWindow(s, u);
+    u.r.FT = 40;
+    expect(meterWindow(s, u)).toBeLessThan(wide);
+  });
+
+  // after the first play of round 39 (owner: "dont let any players teleport", "dont make the user's
+  // player the inbounder", "dont let the players shoot from behind half court")
+  it('moves nobody faster than a sprint, never makes him the inbounder, never shoots from past half court', () => {
+    const step = FLOOR.speed[1] * FLOOR.sprint * FLOOR.tick * 1.15;
+    let inbounds = 0;
+    for (let seed = 1; seed <= 6; seed++) {
+      const s = startFloor(setup(seed));
+      for (let k = 0; k < 20000 && s.phase !== 'over'; k++) {
+        const was = s.players.map((p) => ({ x: p.x, y: p.y, on: p.on }));
+        const phase = s.phase;
+        const flight = s.ball.flight;
+        stepFloor(s, k % 2 ? scripted(s) : null);
+        s.players.forEach((p, i) => {
+          if (!was[i].on || !p.on) return; // a substitution comes on where the other went off
+          const d = Math.hypot(p.x - was[i].x, p.y - was[i].y);
+          expect(d, `seed ${seed} tick ${s.tick} player ${i} moved ${d} ft`).toBeLessThanOrEqual(Math.max(step, FLOOR.dash * FLOOR.tick * 1.01));
+        });
+        // a dead ball comes alive: the inbound pass is in the air, and not from him
+        if (phase === 'dead' && s.phase === 'live' && s.ball.flight?.kind === 'pass') {
+          inbounds++;
+          expect(s.ball.flight.by).not.toBe(s.user);
+        }
+        const f = s.ball.flight;
+        if (f && f.kind === 'shot' && f !== flight) expect(inRange({ ...f.from, team: s.players[f.by].team })).toBe(true);
+      }
+    }
+    expect(inbounds).toBeGreaterThan(30);
+  });
+
+  it('finishes at the rim on one tap: a shot or a strip, no meter, the athletic stripped less', () => {
+    const strips = (ATH: number) => {
+      let n = 0;
+      let tries = 0;
+      for (let seed = 1; seed <= 400; seed++) {
+        const st = setup(seed);
+        st.us.players[1].r.ATH = ATH;
+        const s = startFloor(st);
+        // wait for his ball in the half court, then put him at the rim with a defender on him
+        for (let k = 0; k < 400 && !(s.phase === 'live' && s.ball.holder === s.user && !s.ball.flight); k++) stepFloor(s, null);
+        if (s.ball.holder !== s.user) continue;
+        const me = s.players[s.user];
+        const rim = rimOf(me.team);
+        Object.assign(me, { x: rim.x + (me.team === 0 ? -2 : 2), y: rim.y });
+        const d = s.players.find((p) => p.team !== me.team && p.on)!;
+        Object.assign(d, { x: me.x + (me.team === 0 ? 1 : -1), y: me.y + 0.5 });
+        const before = s.feed.length;
+        stepFloor(s, { finish: true });
+        tries++;
+        const evs = s.feed.slice(before).map((e) => e.kind);
+        const shot = s.ball.flight?.kind === 'shot' || evs.includes('block');
+        expect(shot || evs.includes('steal')).toBe(true);
+        expect(s.load).toBe(-1);
+        if (evs.includes('steal')) n++;
+      }
+      return n / Math.max(1, tries);
+    };
+    const slow = strips(45);
+    const quick = strips(95);
+    expect(slow).toBeGreaterThan(0.05);
+    expect(quick).toBeLessThan(slow);
   });
 });

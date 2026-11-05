@@ -17,6 +17,7 @@ import { brief, fmtMoney, ordinal } from '../format';
 import { NBA_TEAMS } from '../../content/teams';
 import { TimingMeter } from '../components/TimingMeter';
 import { FinalsCourt } from '../components/FinalsCourt';
+import { FloorStage } from '../floor/FloorStage';
 import { sfx } from '../sound';
 import { negotiable, type Ask } from '../../engine/career/negotiate';
 import { talksOpen } from '../../engine/levels';
@@ -219,8 +220,11 @@ function LiveView({ g, d }: { g: GameState; d: Decision }) {
     if (say) announce(say);
   }, [d.id, crunch, r.last, r.ot]);
   const opp = lg?.teams.find((t) => t.name === r.opp);
+  // round 39: the last six minutes on the Floor, over the page, with the score so far under it
+  const floor = r.stage === 'floor' && !!r.floor;
   return (
     <div className="stack live">
+      {floor && <FloorStage key={d.id} g={g} r={r} />}
       <div>
         <div className="kicker">
           {r.round}
@@ -306,7 +310,7 @@ function LiveView({ g, d }: { g: GameState; d: Decision }) {
           <TimingMeter skill={timed === 'drive' ? g.player.attrs.FIN : g.player.attrs.SHT} label={timed === 'drive' ? t('Finish!') : t('Release!')} onTap={(at) => choose(`${timed}@${at}`)} />
         </div>
       ) : (
-      <div className="choices">
+      <div className="choices" data-tour={r.floorGame ? 'live-floor' : undefined}>
         {d.choices.map((c, i) => (
           <button key={c.id} className={`choice${i === 0 && r.stage === 'game' ? ' primary' : ''}`} onClick={() => pick(c.id)}>
             <span className="label">

@@ -1,4 +1,4 @@
-// Round 13: single-plan boost, team styles, trade aims, story calls, draft advice, fast break stops.
+// Round 13: single-plan boost, team styles, trade aims, story calls, fast break stops.
 
 import { describe, expect, it } from 'vitest';
 import { blendPlans, HALF_PLANS, SOLO_PLAN } from '../src/engine/balance';
@@ -6,7 +6,6 @@ import { newGame, prompt, choose, advance } from '../src/engine/flow';
 import { fastForward } from '../src/engine/fast';
 import { styleFit, styleEffect } from '../src/engine/career/identity';
 import { callQuestion, makeCall, callsLeft } from '../src/engine/world/stories';
-import * as F from '../src/engine/mini/frontOffice';
 import type { GameState } from '../src/engine/types';
 
 const play = (s: GameState, until: (s: GameState) => boolean, max = 4000) => {
@@ -61,13 +60,5 @@ describe('round 13', () => {
       } else if (prompt(s).type === 'decision') choose(s, (prompt(s) as { decision: { choices: { id: string; disabled?: boolean }[] } }).decision.choices.find((c) => !c.disabled)!.id);
     }
     expect(stops).toBeGreaterThan(0);
-  });
-
-  it('front office: three seasons and draft advice from the scouting reports', () => {
-    expect(F.FO.seasons).toBe(3);
-    const fo = F.newFrontOffice(3, 'DET');
-    const recs = F.draftRecs(fo);
-    expect(recs.length).toBe(3);
-    expect(recs[0].score).toBeGreaterThanOrEqual(recs[1].score);
   });
 });

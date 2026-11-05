@@ -30,6 +30,9 @@ import { resetTour } from '../ui/components/GuideTour';
 import { decision, moment, onlyMoment, play, type PlayOpts } from './stage';
 import { isFinal, type LiveRequest } from '../engine/career/live';
 import { CamLab } from './CamLab';
+import { FloorLab } from './FloorLab';
+import { FloorOnline } from './FloorOnline';
+import { stageFloorEnd } from '../ui/mini/FloorGame';
 import { LEVEL_IDS, type Level } from '../engine/levels';
 import { ROAD_MINIS, type Road } from '../ui/road';
 import type { ChosenLook } from '../content/looks';
@@ -195,6 +198,13 @@ const toFinal: PlayOpts['pick'] = (_, d) => {
   if (r.stage === 'game') return isFinal(r.round) ? 'play' : d.choices.some((c) => c.id === 'series') ? 'series' : 'sim';
   return r.stage === 'quarter' ? 'steady' : r.stage === 'clutch' ? 'pull@good' : d.choices[0].id;
 };
+/** Round 39: each playoff game simulated one at a time until one can end the season; that one is played. */
+const toFloor: PlayOpts['pick'] = (_, d) => {
+  if (d.kind !== 'live') return undefined;
+  const r = d.data?.req as LiveRequest;
+  if (r.stage === 'game') return r.floorGame ? 'play' : 'sim';
+  return d.choices[0].id;
+};
 /** A career played as Rough Road (round 26): Reality, master mode, nothing simplified. */
 const oath = (g: GameState | null) => {
   if (g) Object.assign(g.flags, { oath: 1, fast: 0, sim: 0 }), (g.mode = 'reality');
@@ -333,6 +343,7 @@ const ended = (star: boolean) => (s: GameState) => s.step === 'retired' && s.fla
 
 const TUTORIAL: DevCard[] = [
   { id: 'road-map', title: 'The road map', group: 'Tutorial', icon: 'map', blurb: 'Round 35: after graduation (beginner alone is the tutorial), from the main land’s airport (round 37): the pixel map with the car driving on, a pin on every place (the next one hops), the bucket list on a paper scroll. Click a place, or drive with the arrow keys, and its card pops out: here intermediate, with what it adds and the mode it opens.', open: () => onRoad(['beginner'], { free: 1 }, 'page', { page: 'road' }), press: '.road-spot.next' },
+  { id: 'road-airport', title: 'The road map’s airport', group: 'Tutorial', icon: 'jet', blurb: 'After round 38 (owner: “add airport on the road map to go back to mainland”): the first stop on the road, open once beginner is passed. Its card flies the plane off the map and back to the main land.', open: () => onRoad(['beginner'], { free: 1 }, 'page', { page: 'road' }), press: '.road-spot:first-child' },
   { id: 'road-late', title: 'The road map, near its end', group: 'Tutorial', icon: 'map', blurb: 'All three levels passed (one short of the All-Star goal): the island’s card with the grades so far, and the closing tour waiting on its stage.', open: () => onRoad(LEVEL_IDS, { minis: { threes: 'A', dunk: 'C', street: 'C', lab: 'B' }, free: 1 }, 'page', { page: 'road' }), press: '.road-spot.next' },
   { id: 'road-free', title: 'The road map from the main land', group: 'Tutorial', icon: 'map', blurb: 'Once the full game is open, the airport on the main land flies back to the road: every level to play again, kept nowhere.', open: () => onRoad(LEVEL_IDS, { minis: ALL_C, toured: 1, free: 1 }, 'page', { page: 'road' }) },
   { id: 'level-1', title: 'Level 1: Beginner', group: 'Tutorial', icon: 'lvl-HSV', blurb: 'The first page of every device: the school on the map, the goal (an NBA All-Star team), a name, a number, a position and an archetype; the rest is chosen for him.', open: () => onRoad([]) },
@@ -357,7 +368,7 @@ const TUTORIAL: DevCard[] = [
 const MINI: DevCard[] = (
   [
     ['hub', 'Mini-game hub', 'controller', 'Every mini-game, all unlocked.'],
-    ['office', 'Front Office', 'office', 'Coach or GM a franchise.'],
+    ['floor', 'The Floor (mini-game)', 'floor', 'Round 39, in Front Office’s place: the setup. Both teams from the 30 crests, how good they are (Average, Good, Great), the starter you steer (the best, unless you pick); Tip it off plays the last six minutes from a close score.'],
     ['threes', 'Three-point contest', 'range', 'Five racks, a money rack, a timing meter.'],
     ['dunk', 'Dunk contest', 'flame', 'Design dunks; each move once a contest.'],
     ['street', '3-on-3 streetball', 'post', 'One game to 11, action cam on timing shots.'],
@@ -511,6 +522,9 @@ export const CARDS: DevCard[] = [
   { id: 'd-recruit', title: 'Build the starting five', group: 'Decisions', icon: 'superteam', blurb: 'The scouting board and recruiting.', open: () => show(at('recruit', (s) => canRecruit(s))), press: '[data-tour="move-roster"]' },
 
   // big moments
+  { id: 'floor-lab', title: 'The Floor', group: 'Big moments', icon: 'clutch', blurb: 'Round 39: the last six minutes of an elimination game, played, four real minutes. The high three-quarter court in his team’s arena (the court, the crowd, the vibes), ten pixel players, the shot meter and the score bug. Pick the teams, the difficulty, how good he is and the start.', open: () => true, page: FloorLab },
+  { id: 'floor-career', title: 'The Floor in a career', group: 'Big moments', icon: 'clutch', blurb: 'Round 39: a star’s playoff game that can end his season. The first 42 minutes go by like any playoff game, then the last six are his on the Floor, in his arena or theirs, both teams in their own kits; the result finishes the game and the series.', open: () => show(at('floor-career', liveAt('floor'), { live: true, pick: toFloor, tries: 20 })) },
+  { id: 'floor-online', title: 'The Floor: a friend online', group: 'Big moments', icon: 'clutch', blurb: 'Round 39: head to head against a friend, live, by room code. Each picks a team and a position; the host tips off; both screens run the same game from each other’s keys. Here the room joins two tabs of this browser.', open: () => true, page: FloorOnline },
   { id: 'cam-lab', title: 'Action cam lab', group: 'Big moments', icon: 'camera', blurb: 'Any play on the finals cam, slowed right down, any two teams.', open: () => true, page: CamLab },
   { id: 'intro', title: 'Intro page', group: 'Start', icon: 'ball', blurb: 'The title over a side-on one-on-one: runs, steals, blocks and jumpers in pixel frames, the venue changing every five seconds. First visit only, or the Intro button on the start page.', open: () => void useStore.setState({ game: null, page: null, mini: null, intro: true }) },
   { id: 'whats-new', title: 'What’s new', group: 'Start', icon: 'news', blurb: 'The latest changes in a panel over part of the start page. It opens by itself once after each update; What’s new beside Intro opens it again.', open: () => void useStore.setState({ game: null, page: null, mini: null, intro: false, finale: null, news: true }) },
@@ -649,6 +663,33 @@ export const CARDS: DevCard[] = [
 
   // mini-games
   ...MINI,
+  { id: 'mini-floor-end', title: 'The Floor (mini-game): the result', group: 'Mini-games', icon: 'floor', blurb: 'Round 39: a game the engine played, as the result page shows it: the final score with both crests, the grade (the margin, and a little for his line), his line, Play again (Enter) and Back (Escape), and the career bonus below.', open: () => (stageFloorEnd(), useStore.setState({ game: null, page: null, mini: 'floor' }), true) },
+  {
+    id: 'mini-floor-career',
+    title: 'The Floor (mini-game) in an NBA career',
+    group: 'Mini-games',
+    icon: 'floor',
+    blurb: 'Round 39: a star on an NBA team plays himself, his ratings on his own team, against the team he picks from his league (the closest in strength to start with). Opens at basketball IQ 85, pays IQ and a little playmaking.',
+    open: () => {
+      const g = nbaStar();
+      if (!g) return false;
+      g.player.attrs.IQ = Math.max(g.player.attrs.IQ, 85);
+      useStore.setState({ game: g, page: null, mini: 'floor' });
+    },
+  },
+  {
+    id: 'mini-floor-college',
+    title: 'The Floor (mini-game) in college',
+    group: 'Mini-games',
+    icon: 'floor',
+    blurb: 'Round 39: a career off the NBA (here college) puts him in his own spot, with his own ratings, on an NBA team at the level picked; the other four starters show but cannot be picked.',
+    open: () => {
+      const g = at('floor-college', (s, p) => s.stage === 'NCAA' && p.type === 'decision' && p.decision.kind === 'plan');
+      if (!g) return false;
+      g.player.attrs.IQ = Math.max(g.player.attrs.IQ, 85);
+      useStore.setState({ game: g, page: null, mini: 'floor' });
+    },
+  },
   {
     id: 'mini-bonus',
     title: 'Mini-games in a career',

@@ -12,6 +12,7 @@ import { JerseyArt } from '../art/Jersey';
 import { AwardArt } from '../art/Award';
 import { ShareButton } from '../components/Share';
 import { sfx } from '../sound';
+import { t } from '../../i18n';
 import { recordFinale } from '../achievements';
 import { achievementsNow } from '../../store';
 import { ACT_SECS, MAKERS, creditsOf, finaleKind, finaleSeen, markFinaleSeen, raftersTeam, speechOf, timeline, type Act } from '../finale';
@@ -115,8 +116,35 @@ function Speech({ lines, at, top }: { lines: string[]; at: number; top?: boolean
   );
 }
 
-function Roll({ g, secs }: { g: GameState; secs: number }) {
+/** How much faster the credits roll while Space is held (owner, round 39 feedback: "in the end
+ * credit, can you make it speed up when the user presses on (continuous) space?"). */
+const ROLL_FAST = 4;
+
+function Roll({ g, secs, onDone }: { g: GameState; secs: number; onDone: () => void }) {
   const blocks = useMemo(() => creditsOf(g), [g]);
+  const roll = useRef<HTMLDivElement>(null);
+  const [fast, setFast] = useState(false);
+  useEffect(() => {
+    const set = (on: boolean) => {
+      setFast(on);
+      roll.current?.getAnimations?.().forEach((a) => (a.playbackRate = on ? ROLL_FAST : 1));
+    };
+    const down = (e: KeyboardEvent) => {
+      if (e.code !== 'Space') return;
+      e.preventDefault();
+      if (!e.repeat) set(true);
+    };
+    const up = (e: KeyboardEvent) => e.code === 'Space' && set(false);
+    const off = () => set(false);
+    window.addEventListener('keydown', down);
+    window.addEventListener('keyup', up);
+    window.addEventListener('blur', off);
+    return () => {
+      window.removeEventListener('keydown', down);
+      window.removeEventListener('keyup', up);
+      window.removeEventListener('blur', off);
+    };
+  }, []);
   // the honours as icons, once each, at the head of the roll
   const icons = useMemo(() => {
     const seen = new Map<string, string>();
@@ -125,7 +153,8 @@ function Roll({ g, secs }: { g: GameState; secs: number }) {
   }, [g]);
   return (
     <div className="fn-roll" aria-label="Credits">
-      <div className="fn-roll-in" data-roll style={{ animationDuration: `${secs}s` }}>
+      {/* the roll ends its act when it reaches the end, sooner while Space is held */}
+      <div ref={roll} className="fn-roll-in" data-roll style={{ animationDuration: `${secs}s` }} onAnimationEnd={(e) => e.target === e.currentTarget && onDone()}>
         {icons.length > 0 && (
           <div className="fn-icons" aria-hidden="true">
             {icons.map(([key, label]) => (
@@ -150,6 +179,9 @@ function Roll({ g, secs }: { g: GameState; secs: number }) {
           ))}
         </section>
       </div>
+      <p className={`fn-roll-hint${fast ? ' on' : ''}`} aria-hidden="true">
+        {t('Hold Space to speed up the credits')}
+      </p>
     </div>
   );
 }
@@ -202,7 +234,9 @@ export function Finale({ g, from }: { g: GameState; from?: Act }) {
       thanksBtn.current?.focus();
       return;
     }
-    const t = window.setTimeout(() => setI((k) => Math.min(plan.length - 1, k + 1)), secs * 1000);
+    // the credits move on when their roll ends (Space speeds it up); the clock is only a fallback
+    const wait = plan[i]?.act === 'roll' ? secs + 1.5 : secs;
+    const t = window.setTimeout(() => setI((k) => Math.min(plan.length - 1, k + 1)), wait * 1000);
     return () => window.clearTimeout(t);
   }, [i, plan, kind, g, skippable]);
 
@@ -333,7 +367,7 @@ export function Finale({ g, from }: { g: GameState; from?: Act }) {
           )}
         </div>
       )}
-      {act === 'roll' && <Roll g={g} secs={plan[i].secs} />}
+      {act === 'roll' && <Roll g={g} secs={plan[i].secs} onDone={() => setI((k) => (plan[k]?.act === 'roll' ? Math.min(plan.length - 1, k + 1) : k))} />}
       {act === 'title' && (
         <div className="fn-title" aria-label="Bench to Rafters">
           <PixelWord text="BENCH TO" color="#F4F1EA" shade="#1B1820" className="fn-word" />

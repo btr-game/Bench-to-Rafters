@@ -198,7 +198,7 @@ describe('music', () => {
     expect(trackOf(base)).toBe('start');
     expect(trackOf({ ...base, mini: 'rhythm' })).toBeNull();
     expect(trackOf({ ...base, mini: 'daily' })).toBe('hub');
-    const minis = ['office', 'threes', 'dunk', 'lab', 'street', 'legends'].map((m) => trackOf({ ...base, mini: m }));
+    const minis = ['floor', 'threes', 'dunk', 'lab', 'street', 'legends'].map((m) => trackOf({ ...base, mini: m }));
     expect(new Set(minis).size).toBe(6);
     const g = newGame(290032, { name: 'Ana Ruiz', number: 3, pos: 'SG', archetype: 0, focus: ['SHT', 'ATH'], hometown: 'Reno', highSchool: 'Galena High' });
     const at = (stage: GameState['stage'], step: GameState['step']) => trackOf({ ...base, game: { ...g, stage, step } });

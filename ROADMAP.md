@@ -83,6 +83,23 @@ The order the owner set:
   descriptions (they follow); the project summary and the dev deck's Catalog are brought up to
   date after it; the round's content batch (achievements, events, storylines, shop items) moves to
   the final end-of-round check, once round 39 is done; nothing in the dev deck is ever translated.
+- **Reminder for the final end-of-round check** (owner, 3 November: "by the eor final, can you remind
+  me to potentially add more translations?"): ask the owner whether to translate more. Still
+  English then: the lines the engine writes (league news, the log, roles such as Deep bench, the
+  season preview's notes), names of places inside sentences, and everything on the owner's "what
+  stays in English" list (events, storylines, press conferences and talks, the finale and
+  endings, achievement names, What's new, the announcer). The manual and the achievements'
+  descriptions are translated in that check anyway.
+- **The Floor, kept for later**: the star weighting of its centring (DECISIONS.md, round 39: a
+  lone star counts about 2.6 points more on the Floor than his share; a weighting evens one star
+  but not a three-star team), a recorded announcer (Kept from round 34), the Floor for other
+  big moments (the round 39 plan: Olympic and tournament finals, the 3-on-3), and a phone layout
+  for it if phones come back (it simulates on a phone).
+- **The Floor online, kept for later** (round 39): a quick match with a stranger (rooms are by code
+  only), a rematch tally between two friends, watching friends' games, and predicting his own
+  player's steps on his screen to hide the fifth of a second the keys wait; a closer look at the
+  realtime service's monthly allowance if many play (about 160 full games a month on the free plan).
+- **Front Office** is archived in git (tag `archive/front-office`), should it ever come back.
 - **Later**: a donation channel.
 - Turned down: careers framed as roguelite runs with meta-unlocks ("no").
 - Still to weigh before any paid release: a fictional league in place of the NBA's teams, colours

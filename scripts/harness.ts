@@ -2,6 +2,7 @@
 // It drives the game only through flow.ts, exactly like the UI.
 
 import { claimMini, miniProgress, type MiniId, type MiniResult } from '../src/engine/career/miniBonus';
+import type { FloorGrade } from '../src/engine/floor/mini';
 import { endingOf } from '../src/ui/endings';
 import { canSetStyle, setStyle, styleEffect, TEAM_STYLES, type TeamStyle } from '../src/engine/career/identity';
 import { advance, choose, newGame, prompt } from '../src/engine/flow';
@@ -77,8 +78,9 @@ export function smartChoice(s: GameState, d: Decision, r: Rng): string {
       return byId('promote') ?? byId('move') ?? ch[0].id;
     case 'live':
       // round 35: the call before a series against his rival classmate has no 'all'; its first,
-      // guarding him, carries the best odds (RIVAL_SERIES.guard.edge)
-      return byId('all') ?? ch[0].id;
+      // guarding him, carries the best odds (RIVAL_SERIES.guard.edge). Round 39: sim mode's stop for
+      // a game the Floor plays is simulated like the rest; the Floor itself is left to the engine
+      return byId('all') ?? byId('auto') ?? (byId('play') && byId('sim')) ?? ch[0].id;
     case 'national':
       return s.player.age < 32 ? 'accept' : 'decline';
     case 'transfer':
@@ -191,6 +193,21 @@ export interface CareerResult {
  */
 export type MiniPlay = 'none' | 'casual' | 'grinder';
 
+/** Round 39: a casual game of the Floor (the mini-game, in Front Office's place), from a stream of its
+ * own so the career's is left alone: the grade a player at home on the court gets, an A 15% of the
+ * time, a B 35%, a C 30% and a D 20%, with a margin to match. */
+const FLOOR_CASUAL: [FloorGrade, number, number][] = [
+  ['A', 0.15, 9],
+  ['B', 0.5, 4],
+  ['C', 0.8, -2],
+  ['D', 1, -7],
+];
+function floorDraw(s: GameState): MiniResult {
+  const u = next(makeRng((s.seed * 31 + s.year) ^ 0xf100));
+  const [grade, , margin] = FLOOR_CASUAL.find(([, upTo]) => u < upTo)!;
+  return { game: 'floor', grade, margin, pts: 6, low: Math.min(0, margin), strength: 'good' };
+}
+
 function playMinis(s: GameState, how: MiniPlay): void {
   if (how === 'none' || s.stage === 'HS' || s.flags.harnessMini === s.year) return;
   s.flags.harnessMini = s.year;
@@ -199,7 +216,7 @@ function playMinis(s: GameState, how: MiniPlay): void {
     threes: { game: 'threes', score: 27, won: true, own: true },
     dunk: { game: 'dunk', best: 48, won: true },
     legends: { game: 'legends', reached: 'champion' },
-    office: { game: 'office', titles: 1, playoffs: 3, seasons: 3, fired: false },
+    floor: { game: 'floor', grade: 'A', margin: 12, pts: 14, low: 0, strength: 'good' },
     lab: { game: 'lab', peak: 95 },
     street: { game: 'street', reached: 'rout' },
     rhythm: { game: 'rhythm', grade: 'S' },
@@ -208,7 +225,7 @@ function playMinis(s: GameState, how: MiniPlay): void {
     threes: { game: 'threes', score: 23, won: false, own: true },
     dunk: { game: 'dunk', best: 44, won: false },
     legends: { game: 'legends', reached: 'semis' },
-    office: { game: 'office', titles: 0, playoffs: 2, seasons: 3, fired: false },
+    floor: floorDraw(s),
     lab: { game: 'lab', peak: 90 },
     street: { game: 'street', reached: 'win' },
     rhythm: { game: 'rhythm', grade: 'A' },

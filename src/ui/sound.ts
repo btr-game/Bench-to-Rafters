@@ -82,6 +82,10 @@ export const SFX = [
   ['door', 'The town: the bell over the door as he reaches a place'],
   ['takeoff', 'The plane: the engines spool up and it lifts off, to the main land or back to the road map'],
   ['touchdown', 'The plane: the wheels touch the main land’s runway and the cabin bell rings'],
+  // round 39: the Floor
+  ['squeak', 'The Floor: a sneaker squeak on a crossover, a spin, a step-back or a steal'],
+  ['bounce', 'The Floor: the dribble as the ball comes to him'],
+  ['roar', 'The Floor: the crowd on its feet after a big play'],
 ] as const;
 type Sfx = (typeof SFX)[number][0];
 
@@ -444,6 +448,32 @@ export function sfx(name: Sfx, always = false): void {
       for (let i = 0; i < 4; i++) tone(N(-3 - i * 3), t + 0.16 + i * 0.08, 0.1, 'sawtooth', 0.12 - i * 0.02);
       tone(N(28), t + 0.55, 0.3, 'sine', 0.3);
       tone(N(24), t + 0.75, 0.4, 'sine', 0.26);
+      break;
+    // ---- round 39: the Floor ----
+    case 'squeak': // rubber on hardwood: a quick high chirp that bends up and stops
+      [0, 0.045].forEach((d, i) => {
+        const o = ctx!.createOscillator();
+        const g = ctx!.createGain();
+        o.type = 'square';
+        o.frequency.setValueAtTime(N(36 + i * 3), t + d);
+        o.frequency.exponentialRampToValueAtTime(N(43 + i * 3), t + d + 0.05);
+        g.gain.setValueAtTime(0.12, t + d);
+        g.gain.exponentialRampToValueAtTime(0.001, t + d + 0.06);
+        o.connect(g).connect(sfxBus!);
+        o.start(t + d);
+        o.stop(t + d + 0.08);
+      });
+      break;
+    case 'bounce': // two thumps of the ball on the floor
+      tone(N(-10), t, 0.07, 'sine', 0.5);
+      noise(t, 0.03, 0.12);
+      tone(N(-10), t + 0.24, 0.07, 'sine', 0.42);
+      noise(t + 0.24, 0.03, 0.1);
+      break;
+    case 'roar': // the crowd: a long swell of noise under a low tone
+      noise(t, 1.1, 0.22);
+      noise(t + 0.15, 0.9, 0.16);
+      tone(N(-12), t, 0.9, 'triangle', 0.12);
       break;
     case 'react': // a pop and a bright note: one reaction on a friend's season
       noise(t, 0.02, 0.2);

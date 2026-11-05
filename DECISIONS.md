@@ -3320,6 +3320,233 @@ multiple times."
   stars 56.33% (2 warmer, 1.5 colder). A bias found and fixed on the way: under Skip his own
   defender never reached in, so the other team turned it over less.
 
+- **Step 1, the first court** (owner: "let's start with step 1"; a card in the dev deck, the Floor
+  lab, not yet in careers). The court is drawn a pixel at a time on a 400 by 225 canvas scaled up
+  by a whole number (three times on a 1440-wide screen): the camera stands high behind the near
+  sideline and only slides along the court, so each screen row keeps one depth and the floor (the
+  planks banded in three tones, the paint and the centre circle in the team's colours, the apron),
+  the one-pixel lines and the stands are a few sums a pixel; it runs at 60 frames a second. His
+  team's arena, as the owner asked: the court, the crowd and the vibes, no banners. The crowd sits
+  in two tiers at their own depths (they slide at their own pace), with a ribbon board in the
+  team's colours between them, the roof's lights above, flashes in the stands, and courtside
+  heads in front; the crowd bounces with the momentum and the last minutes of a close game. The
+  baskets are seen almost edge-on, the broadcast look: the padded stanchion, the arm, the glass,
+  the rim and the net. The players are the game's own sprites in their kits and looks, drawn a
+  sprite pixel to a canvas pixel: scaled down for depth, the hand-drawn faces and numbers lost
+  columns (a 23 read as 21), so the court's perspective carries the depth instead. Ten players, a
+  ring under him and a marker over him, the ball dribbled, passed and shot in arcs, and the meter
+  beside him (its window in green, his load in yellow, red past it, and the release's colour for a
+  moment after). The score bug: both teams in their colours with the score, timeouts, fouls and
+  the bonus, the quarter and the clock, the series, the shot clock (red from five). Big words over
+  the court after a play, a pause (resume, a timeout, skip to the end, start again) and the final
+  (the score, his line). The keys as the ideas document set them: WASD or the arrows, Shift, J, K
+  (aimed with the arrows), L, Space, T and Esc.
+- **The meter, timed for a person**: a full load is 1.5 game seconds (half a real second at the
+  tripled clock; 0.9 was 0.3 of a real second, too quick to time), and the screen sends the hold it
+  timed to the millisecond (`load` in the input), so a release is not rounded to a 50 ms tick.
+- **Pace** in the lab: 3x (the four-minute quarter, the owner's choice), 2x or 1.5x, to feel how
+  fast everyone moves: at three times the clock, a sprint crosses the court in about two real
+  seconds.
+- The Floor's 36 new words are translated into the five languages as they are written.
+
+- **After the owner's first play** ("their movement speed is way too high ... even the shift movement
+  should be slower than this", "make the arrow ... a bit larger", "the pace of 1.5x is suitable for
+  four minute game", the meter "could be slower actually (one real second?)", and a screenshot of a
+  bug): the right three-point arc ran the wrong way round, so its line jumped straight up the court
+  through the key; fixed. The clock runs at 1.5 times (a tick of 0.075 game seconds, twenty a real
+  second) and the Floor takes over with six minutes left (FLOOR.from), four real minutes; players
+  move 8 to 14 feet a game second by athleticism from 40 to 99 (sprinting 1.3 times), so a sprint
+  is now slower than the old walk; the meter's full load is one real second. Slower defenders left
+  the AI open sooner (33.5 points a quarter), so an open jumper now waits until nine seconds of the
+  shot clock are gone (a layup any time), and the shots and fouls were tuned back: over 1,000
+  twelve-minute quarters a difficulty, 27.75 points a team, 42.3% from the field, 35.5% from three,
+  4.9 free throws and 3.6 turnovers; his team wins 53.2% on Regular guy, 57.8% on Shoot for the
+  stars and 40.6% on Reality hits hard. The arrow over him is eleven pixels wide and bobs.
+- **Step 2, controls and feel** (owner: "let's carry on to steps 2. actually, can you build to 3?"):
+  with the ball, a white ring marks the teammate his pass would find (the one he aims at with the
+  arrows, else the most open man), and a "!" bubble rises over a teammate who has stood open long
+  enough for him to see it: 1.4 game seconds at Basketball IQ 40, 0.2 at 99. On defence a red ring
+  and a red marker show the man he guards. Small tags over a player tell a crossover, a spin, a
+  step-back, a screen, a switch, the help he called and a foul; the engine now tells his jab, his
+  switch and the help (events with no words). At the line his free-throw touch sets the meter's
+  window and nobody contests it, with its own long meter across the foot of the court and a
+  prompt. Under the court his strip: stamina in ten squares, his own fouls (red from five), the
+  momentum bar in both teams' colours, and "On fire" when it is full. His ratings carry further:
+  speed by athleticism and the meter by shooting both spread over 40 to 99.
+- **Step 3, animation and the close-up**: two new hand-drawn poses (a defender's slide, a reach for
+  the ball) and the back of the head for a spin; every pose stands on its own foot row, so a jumper
+  is off the floor and a low stance sits on it. The frames follow the play in steps: running, a
+  defender sliding and shuffling, the dribble, the crossover (the ball swept low across him), the
+  spin (facing, his back, turned round, facing again), the step-back, the gather and the rise as
+  his meter fills, the release, the landing, the dunk, the block, the reach on a jab or a steal, and
+  arms up after his own basket. The close-up (owner: "a short 2~3 second animation plays of the
+  player pulling up, and the ball swishing in") is the action cam from the finals, over the court
+  for 2.3 seconds with the game held: his made threes and dunks, a block by him or on him, and any
+  go-ahead, tying or buzzer basket in the last minute; Enter, Space or Esc moves on. The court fits
+  three times over on a 1440 by 900 screen again (its size now comes from the room the score bug,
+  his strip and the keys leave).
+
+- **The road map's airport** (owner, feedback on the previous round: "add airport on the road map to
+  go back to mainland (opens when beginning level is complete)"): the first stop on the road, top
+  left, a runway, the plane on the apron, the terminal and its tower; a road runs down from it to
+  high school. Its card opens once beginner is passed, and its button flies the plane down the
+  runway and off the map, then the main land (the header's "Back to the main land" stays). The road
+  map's places are found by name now, not by their place in the list. A card in the dev deck.
+
+- **Step 5, into the career**: a game that can end his team's series in the conference finals or the
+  Finals asks nothing for three and a half quarters (they are simulated on the steady call), then
+  hands the last six minutes to the Floor over the whole page. The court is the home team's, each
+  side in its home or road kit; his five are his starting five with him in his own spot, theirs the
+  best at each position, and three off each bench. The result comes back as the game's pick
+  (`floor@` the final score, his line and three marks), so the postseason's replay stays exact; the
+  Floor's game finishes the game, overtime included. "Simulate the last six minutes" (and a phone,
+  and the balance harness) has the engine play them, both sides on the Regular guy shooting. Fast
+  break simulates the postseason as before; sim mode simulates it too but stops before each game
+  the Floor plays (play it or simulate it). The book counts Floor games, wins, a win from ten down,
+  his game-winner and his late block, for achievements at the end of the round. A dev deck card
+  plays a star's career to his first Floor game.
+- **The Floor plays the career's game, not the rosters'**: left alone, the Floor's own AI won 72.0%
+  of even home games against 56.4% for the old live game (an underdog 70 vs 78: 42.6% against
+  20.6%), since it saw only the rosters and his star ratings, not the coach, chemistry and form in
+  the team strengths. Each side now keeps its shape (a star stands out from his teammates) but both
+  starting fives are centred on their midpoint and split by the strength gap the season's model sees
+  (with home court), 0.38 Floor rating points to a point of strength: the Floor moves its six-minute
+  margin about 0.52 points per rating point, the career 0.1957 per strength point. Measured over 500
+  games each: even at home 58.2% (old 56.4%), on the road 50.0% (44.2%), favourite 91.0% (89.8%),
+  underdog 23.4% (20.6%). A lone star still counts a little more on the Floor than his share (a 93 on
+  a team of 76s: +2.6 points); a weighting of `ovr + 0.326 × (ovr − 84)²` per player brings a single
+  star to even (−0.05 ± 0.15) but leaves a three-star team +1.3, so it waits for the owner.
+- **After the first play of steps 2 and 3** (owner): one tap of J at the rim lays it in or dunks it,
+  no meter; a defender within five feet may strip him on the way up (up to 22% right on him) or
+  block it, his athleticism taking up to 60% of both away. Nobody shoots from behind half court.
+  Nobody teleports: the inbounder walks to the ball's spot and passes it in, a free-throw shooter
+  walks to the line and the others to the lane, a rebound bounces to the man who wins it, the
+  step-back slides and a timeout's players walk back (a dead ball waits a little longer for them:
+  1.2 game seconds at most, and the six minutes tip with the inbounder already on the spot). He is never the inbounder; the pass in comes to him. After the ball changes hands J, K, L
+  and Space rest for 350 ms, and a key still held from the other end must be pressed again (a steal
+  no longer turns into a shot from half court). A bigger ball (a round seven-pixel ball, six far
+  away) and a slightly bigger rim; each basket puts its points big over the court ("+2"), and the
+  score bug's numbers are bigger and flash when they change.
+
+- **Step 4, presentation**: the court sounds out each play: a swish for a jumper, the iron for a
+  layup, the rim shaking for a dunk, a clank or a brick for a miss, the slap of a block, the
+  whistle, the horn, a net for a made free throw, the meter's own perfect and late notes, and the
+  clock's tick through the last five seconds of a game within three. Three new effects: a sneaker
+  squeak on a beaten defender or a steal, the dribble as the ball comes to him, and the crowd's
+  roar after a three, a dunk, an and-one, his team's block or a lead change in the last minute. The
+  announcer calls his team's big plays with the game's own calls (From downtown, Slam dunk,
+  Rejected, Stolen, And one, Buzzer beater, What a stop in the last ten seconds), one at most every
+  3.5 seconds. A game within six points runs its last minute at real speed, with "Crunch time" and
+  the clutch sound as it starts (the meter keeps to its real second). The pause menu switches the
+  sound effects and the announcer, as Settings does. The lab borrows the engine's position ratings
+  now (one copy, engine/floor/career.ts).
+- **The end credits speed up while Space is held** (owner, after the round 38 and 40 publish: "in
+  the end credit, can you make it speed up when the user presses on (continuous) space?"): four
+  times as fast, back to their pace when it is let go, with a hint at the foot of the roll; the
+  credits now end when the roll does (the timer stays as a fallback), so a faster roll moves on to
+  the title sooner.
+- **The book counts played Floor games apart**: `floor` counts every Floor game, `floorPlayed` the
+  ones he played, and the wins, comebacks, game-winners, late blocks and his best six minutes
+  (`floorPts`) only from those.
+- **Left as it is, for the owner**: the star weighting of the Floor's centring (a lone 93 on a team
+  of 76s is still worth about 2.6 points over six minutes; `ovr + 0.326 × (ovr − 84)²` per player
+  evens a single star but leaves a three-star team about 1.3 points up). The owner did not choose;
+  the plain centring stays.
+- **Front Office archived, the Floor a mini-game in its place** (owner: "can we get rid of (archive)
+  the front office minigame and replace it with this game?"; a helper agent's work). Front Office
+  is out of the game and kept in git (tag `archive/front-office`, d79f933): its engine and screens,
+  tests, two achievements (Suit and Ring, Dynasty in a Spreadsheet), its loop and its CSS. The
+  front office of a team (events, news, the press, recruiting, the locker room) stays. The Floor
+  (`MiniId` 'floor', `engine/floor/mini.ts`, `ui/mini/FloorGame.tsx`) takes its place in every list,
+  its unlock (basketball IQ 85) and its career bonus. From the start page: both teams from the 30
+  crests, how good both are (Average 70, Good 76, Great 82, generated as the Floor lab's were; the
+  lab now builds them here too) and the starter he steers (the best, unless he picks another). In a
+  career on an NBA team he plays himself on his team against the team he picks (the real rosters,
+  split by the strength gap as a playoff game is); anywhere else in a career he takes his own spot,
+  with his own ratings, on a team at the level picked. Six minutes left from a close score (about
+  90 each, his team up to 4 ahead or behind), on the standard difficulty; a phone has the engine
+  play it, as in a career. The setup's "play the AI" part is a component of its own, so another way
+  to play can stand beside it. The result: the final score with both crests, the grade, his line,
+  Play again (Enter, a new game with the same teams and players) and Back (Escape, the setup), then
+  the career bonus. Its own loop (Six minutes left), a pixel icon (the ball over a three-quarter
+  court), a dev deck card each for the setup, the result, an NBA career and college, and the
+  strengths, grades and start in the Floor's Catalog list.
+- **The Floor's grade** (`FLOOR_MINI`): the margin, plus his line's share (a game score, points
+  plus 0.4 a rebound, 0.7 an assist, a steal or a block, less a turnover, at 0.2 a point, at most 3
+  either way). Any win is a B, an A at 8 or more with the share; a loss is a C at −3 or more (a loss
+  by three on a quiet night: the island's mark), a D below. The bonus is Front Office's by grade: an
+  A a title run's (basketball IQ 3, playmaking 1.5), a B 1 and 0.4, a C 0.4 and 0.1, a D nothing.
+  The harness plays it casually as a seeded draw (A 15%, B 35%, C 30%, D 20%; expected IQ 0.92 and
+  playmaking 0.395 a claim, against Front Office's casual 0.8 and 0.3). Over 150 smart careers with
+  casual mini-games (seeds 1 to 150) before → after: mean peak OVR 72.6617 → 72.6591, NBA 79.3333%
+  → 79.3333%, All-Star 26.6667% → 26.0000%, MVP 2.00000% → 2.00000%, Hall of Fame 10.0000% →
+  10.0000%, titles 29.3333% → 30.6667%.
+- **Old saves**: a career saved with 'office' (the game it unlocked, the bonuses it claimed) reads it
+  as 'floor' when it comes back from a slot, the level run or a code; the island's Front Office grade
+  counts as the Floor's (the better of the two). The book's stored ids for Front Office's two
+  achievements count nowhere (its "N of M earned" counts only the book's own), its arcade runs stay
+  in the number of runs but count for no game of today's, and its loop counts for no album.
+- **Fifteen achievements for the Floor mini-game** (the mini-games category; the career's Floor
+  ones are `flr-*`): Open Floor (bench), Floor Exercise (starter, a win), Hardwood Classic (All-Star,
+  ten wins), Wall to Wall (Hall of Fame, 25), Wipe the Floor (rotation, by 10), Polished Off
+  (All-Star, by 15), Basement to Penthouse (All-Star, a win from 8 down), Floor Show (rotation, 12
+  points), Top Floor (Hall of Fame, 20), Elevator Pitch (rotation, a win at every strength), Dean's
+  List (starter, an A), Straight A's (All-Star, five), Home Floor (starter, a win as himself on his
+  NBA team), Practice Floor (starter, a bonus claimed) and Floor Time (All-Star, five in a career).
+  Arcade Royalty now asks for an A on the Floor.
+
+### The content batch for rounds 38 to 40 (checklist items 5 and 6, a helper)
+
+- **45 achievements** (`achievements39.ts`; the book 870 → 915 before the Floor mini-game's and the
+  online ones): story mode (19: the chapters, the four bonds, a cold one, the friend's road, the
+  rival a season behind, a ring with the friend, the house kept), the Floor in a career (13: played,
+  simulated, wins, the comeback, the winner, the late stop, 10/15/20 points, a game seven, Finals game
+  seven), the languages and the airport (6, kept on the device), and general ones from the award
+  races and the playoffs (7). Tiers from 150 smart careers (the story's over 150 story careers
+  answering at random); the Floor's by judgement (the harness never plays it). New career flags
+  `floorG7`, `floorRing`, `floorLost`; new device totals `langs`, `flights`.
+- **Eight turning points** (`events/round39.ts`, once a career each): the reel of his last six
+  minutes, "the closer", a summer after a Floor loss, a call from home, the hometown paper on the
+  friend, the rival on the preview cover, fan mail in the five languages, a red-eye home. **Three
+  shop things**: a late-game shooting coach, a season of late-game tape, a framed photo of his
+  biggest shot (it can be visited).
+- 150 smart careers before → after: mean peak OVR 72.4468 → 72.6617, NBA 78.6667% → 79.3333%,
+  All-Star 24.0000% → 26.6667%, MVP 2.00000% → 2.00000%, Hall of Fame 8.00000% → 10.0000%, titles
+  24.6667% → 29.3333%; over 450 each, the titles gap was noise (30.4444% → 30.6667%).
+- **The balance test's random-policy MVP target** (3–9%) now fails by a single career in 300
+  (0.010 against a floor of 0.0103); the random policy sits near 1% on both sides of the batch, and
+  the target is older than round 36's higher bar for MVP. Left as it is for the owner to decide.
+
+### The manual and the achievements in every language (round 40, finished)
+
+- The game manual and the achievements' descriptions (1,258 strings a language) went into Korean,
+  Chinese, Japanese, Spanish and French, one helper a language, each keeping its table's terms;
+  then the content batch's and the online play's (92), and the last few. Every table is whole again
+  (4,103 interface strings, stale 0). The terms each chose are in its report (for example the room
+  online: 방, 房间, ルーム, sala, salon, the French "salon" because "salle" is already an arena).
+  Chinese "Sim mode" read half in English (模拟 mode) and is 模拟模式 now. Names stay English where
+  the tables keep them (the tab and place names, the award and ending names, Story mode).
+
+### The Floor against a friend online (round 39, late)
+
+Owner: "can you make the game multiplayer as well?" The owner's picks: online, by room code (each on his own computer); head to head (each controls one player, on opposite teams, the AI plays the other eight); and it goes into round 39's publish ("Hold the publish").
+
+- **The engine** takes a human on each team: `FloorState.two` holds team 1's human (his player, his shot load, his call, whether the AI stands in for him); `user`, `load`, `call` and `auto` stay team 0's, so a game against the AI is exactly what it was (a fingerprint of three scripted games was the same before and after: `ed7e021b`). Everything the AI did around "the user" now asks whether a human plays that player (`humanOf`, `driven`): never the inbounder, gets the inbound and the star's share of passes, blocks only when he jumps, reaches with his own key; the two humans act in turn, each first every other tick. A defense a human plays fouls late only when he does; the AI bench's timeout to stop a run is off when a friend plays team 1 (he calls his own).
+- **A free throw a human leaves waiting** goes to the AI after ten game seconds (`FLOOR.ftWait`), so a friend who walked away cannot hold both screens. Against the AI it changes nothing a player at the keys would notice.
+- **Lockstep.** Both computers run the same seeded game and send only their own keys, one input a tick. A key counts four ticks (a fifth of a second) later on both screens (`DELAY`), sent two ticks at a time (`BATCH`); a screen whose friend's input for the next tick has not come waits for it ("Waiting for ..."). Every 40 ticks the host sends a fingerprint of the game (`floorHash`); a friend whose game came out different (two browsers may round a sine differently) asks for the host's state and goes on from it. Ten seconds with nothing from the other screen, or a "quit", ends the game on the one left ("... left the game").
+- **The friend's screen shows the game turned round** (`mirrorFloor`): his team is team 0 on his screen, on the left of the score bug, attacking the right basket, as against the AI; his keys are turned back before they go into the game. Only the picture is turned: both screens run the same game.
+- **What changes against a friend:** no close-ups (one would stop one screen and the other would wait for it); the menu (Esc) leaves the game running; no skip; the end card says "You won" or "You lost". Both teams are equally good (the dev deck's "Good", 76) and in the standard mode (no difficulty edge either way), the host's arena, home and road kits; the two cannot pick the same team. Each picks his team and the position he plays; without a username the two are "Player 1" and "Player 2".
+- **The room:** six letters and digits (no 0, O, 1, I), made by the host's screen; both say "hi" every second and a half, so either can come first; a third screen with the code waits until the friend has been quiet five seconds. Nothing is stored anywhere.
+- **Where it goes:** on the website and itch.io, a realtime broadcast channel on the game's own service (`floor-<code>`; no table, no database function, nothing to set up); in the dev deck, a channel between two tabs of the browser (nothing goes online); the claude.ai page has neither and points to the website. About ten messages a second each way while a game is on, so about 12,000 a full game: the service's free plan (2 million a month) covers about 160 full games a month.
+- **Checked:** two tabs, both screens 600+ ticks, every fingerprint the same, and a friend's game knocked out of step on purpose put right in one resync (scripts kept in the scratchpad, `net/two.cjs`); in the tests, two lockstep sessions over a slow line in memory (`tests/round39-net.test.ts`) and the engine with two humans (`tests/round39-two.test.ts`). Not checked from here: the real service (this session's network refuses the tunnel to it); the website's community presence already uses the same kind of channel.
+- **Achievements** (ten, filed with the mini-games, counted on the device for games played to their end): Pickup Game, Same Time Next Week (ten games), Floored by a Friend (a loss), Home Court Advantage (a win), Group Chat Champion (five), Landlord of the Floor (twenty), Run It Back (three in a row), Not Even Close (by ten), By a Whisker (by one or two), Showing Off (twenty points).
+- **Where it is:** under Play the AI on the Floor mini-game's page, and a card on Play with friends that opens it (once the mini-games are open); the dev deck's own card joins two tabs.
+
+### Two last fixes before the round 39 publish
+
+- **The Skip tutorial button over a lesson** (round 35's, fixed to the top corner above the shade) had no background of its own, so the shaded Share button under it showed through its words for the whole tutorial. It is solid now (the card colour, in both looks).
+- **The tutorial end to end** clicked the top of the highlighted control, and the Dorm's top sat under the bar fixed to the top of the page, so the click went to the bar and the run stuck on the Player tab's lesson. It now clicks a point the control itself gets (checked with `elementFromPoint`). A player was never stuck: the rest of the building shows and takes the click. The run goes through: the beginner level, the full game open, every lock shut, 33 lessons, no script errors.
+
 ## Round 40 (owner requests): languages
 
 - Korean, Chinese (simplified), Japanese, Spanish and French, the interface only (owner: "let's
@@ -3343,3 +3570,6 @@ multiple times."
   the language (5위, 5位, 第5, 5.º, 5e). One English word with two meanings takes a context in its
   key (`Back@@body`, `Back@@view`), shown without it. The settings' names (Fast break, Sim, Simple
   text, Guide, Master) are translated, each language using one name everywhere.
+- **Published** (owner: "you can publish. i checked the korean choices"): rounds 38 and 40 together,
+  round 39's engine with them (not yet on screen): the game artifact (version 79) and the website
+  (main at 47bff40, Netlify's deploy ready).

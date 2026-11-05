@@ -54,7 +54,11 @@ export function AchToasts() {
  * the book opens on them). */
 export function AchievementsCard({ g }: { g?: GameState }) {
   const setPage = useStore((s) => s.setPage);
-  const [got] = useState(() => Object.keys(loadAch().got).length);
+  // only the achievements the book still has (round 39: Front Office's two, earned before, stay out)
+  const [got] = useState(() => {
+    const have = loadAch().got;
+    return ACHIEVEMENTS.filter((a) => have[a.id]).length;
+  });
   const mine = useMemo(() => (g ? earnedIn(g).length : 0), [g]);
   return (
     <section className="card stack" data-tour={g ? 'run-ach' : undefined}>

@@ -563,6 +563,22 @@ export const ICONS: Record<string, string[]> = {
     'OTTTTTTTTTTTTTtO',
     '.OOOOOOOOOOOOOO.',
   ],
+  // round 39: the Floor (the mini-game in Front Office's place): the ball bouncing on a three-quarter court
+  floor: [
+    '..........OOOO..',
+    '.........ONNONO.',
+    '.........OOOOOO.',
+    '.........ONONNO.',
+    '..........OOOO..',
+    '................',
+    '..OOOOOOOOOOOO..',
+    '..OTTTTWWTTKKO..',
+    '.OTTTTWWWWTTTTO.',
+    '.OTTTWtWWtWTTTO.',
+    'OTTTTTWWWWTTTTTO',
+    'OttttttWWttttttO',
+    'OOOOOOOOOOOOOOOO',
+  ],
   lab: [
     '.....OOOOOO.....',
     '......OWWO......',
@@ -2428,6 +2444,64 @@ export const ICONS: Record<string, string[]> = {
     '.OMMOOOOOOOOMMO.',
     '..OO........OO..',
   ],
+  // ---- rounds 38 to 40: the shop's things for the Floor's last six minutes ----
+  // a late-game shooting coach: the ball, and the shot clock at five
+  clutchcoach: [
+    '.........OOOOOO.',
+    '.........OKKKKO.',
+    '.........OKRRRO.',
+    '.........OKRKKO.',
+    '.........OKRRRO.',
+    '.........OKKKRO.',
+    '..OOOO...OKRRRO.',
+    '.ONNNNO..OKKKKO.',
+    'ONNnNNNO.OOOOOO.',
+    'ONNnNNNO........',
+    'OnnnnnnO........',
+    'ONNnNNNO........',
+    'ONNnNNNO........',
+    '.ONNnNO.........',
+    '..OOOO..........',
+    '................',
+  ],
+  // a season of late-game tape: a video cassette, its label marked in red
+  endtape: [
+    '................',
+    '................',
+    '................',
+    'OOOOOOOOOOOOOOOO',
+    'OKKKKKKKKKKKKKKO',
+    'OKWWWWWWWWWWWWKO',
+    'OKWRRWWRRWWwwWKO',
+    'OKWWWWWWWWWWWWKO',
+    'OKKKKKKKKKKKKKKO',
+    'OKKOOOOKKOOOOKKO',
+    'OKKOWMOKKOMWOKKO',
+    'OKKOOOOKKOOOOKKO',
+    'OKKKKKKKKKKKKKKO',
+    'OOOOOOOOOOOOOOOO',
+    '................',
+    '................',
+  ],
+  // a framed photo of his biggest shot: the ball in the air over the rim, the arena dark behind
+  winnerphoto: [
+    'YYYYYYYYYYYYYYYY',
+    'YyyyyyyyyyyyyyyY',
+    'YyKKKKKKKKKKKKyY',
+    'YyKKKKKKKKKWWKyY',
+    'YyKKKKKKNKKRRKyY',
+    'YyKKKKKKKKKMKKyY',
+    'YyKKKKKNKKKKKKyY',
+    'YyKKKSKKKKKKKKyY',
+    'YyKKKSSKKKKKKKyY',
+    'YyKKKWWKKKKKKKyY',
+    'YyKKKWWKKKKKKKyY',
+    'YyKKKWKWKKKKKKyY',
+    'YyTTTTTTTTTTTTyY',
+    'YyTTTTTTTTTTTTyY',
+    'YyyyyyyyyyyyyyyY',
+    'YYYYYYYYYYYYYYYY',
+  ],
   // ---- round 36: the shop's things for the rafters, the speech and the body ----
   // your first jersey, framed: gold frame, a grey mat, the red jersey with its number 1
   framedjersey: [
@@ -2751,7 +2825,7 @@ export const GUIDE_ICON: Record<string, string> = {
   'Shop and summer': 'bag',
   'Unlocking them': 'lock',
   'Career bonus': 'athletic',
-  'Front Office': 'office',
+  'The Floor': 'floor',
   'Three-point contest': 'shoot',
   'Dunk contest': 'finish',
   'Legends showdown': 'spotlight',
@@ -2815,6 +2889,10 @@ export const SHIFT_COLOR = ['#E03131', '#F76707', '#FCC419', '#2F9E44', '#1C7ED6
 export function shopIcon(id: string, name: string): string {
   const t = `${id} ${name}`.toLowerCase();
   const rules: [RegExp, string][] = [
+    // rounds 38 to 40: the Floor's last six minutes
+    [/closer-coach/, 'clutchcoach'],
+    [/late-game-tape/, 'endtape'],
+    [/winner-photo/, 'winnerphoto'],
     // round 37: the town, its arenas, the knee and the long career
     [/arena-prints/, 'arenaprints'],
     [/city-bike/, 'citybike'],

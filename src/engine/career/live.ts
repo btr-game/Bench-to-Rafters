@@ -7,10 +7,12 @@
 // (a tactic) or a close finish (the last possession). That keeps the state plain JSON and
 // the postseason code unchanged.
 
-import { CLUTCH_TIMING, CRUNCH, GAME_POINTS, HOME_COURT, LEVELS, WIN_SCALE } from '../balance';
+import { CLUTCH_TIMING, CRUNCH, FLOOR, GAME_POINTS, HOME_COURT, LEVELS, WIN_SCALE } from '../balance';
 import { chance, clamp, int, normal } from '../rng';
 import type { GameState, LevelKey, StatLine } from '../types';
 import { addLine, emptyLine, expectedGameScore, gameScore, sampleGame, type Expected } from '../sim/statModel';
+import { floorDue } from '../floor/due';
+import { floorDone, type FloorTake } from '../floor/career';
 
 interface LiveChoice {
   id: string;
@@ -20,7 +22,7 @@ interface LiveChoice {
 }
 
 export interface LiveRequest {
-  stage: 'game' | 'quarter' | 'clutch' | 'crunch' | 'rival'; // round 35: rival, the call before a rival series (career/rivalSeries.ts)
+  stage: 'game' | 'quarter' | 'clutch' | 'crunch' | 'rival' | 'floor'; // round 35: rival, the call before a rival series (career/rivalSeries.ts); round 39: the Floor
   title: string;
   text: string;
   round: string;
@@ -42,6 +44,10 @@ export interface LiveRequest {
   side?: 'off' | 'def';
   last?: { word: string; good: boolean; text: string } | null;
   ot?: number;
+  // round 39: a game his team can lose the series in, from the conference finals on (its last six
+  // minutes are played on the Floor), and the Floor's own start
+  floorGame?: boolean;
+  floor?: FloorTake;
 }
 
 /** Thrown by the replay when it reaches a point that needs a pick. */
@@ -62,6 +68,8 @@ export interface LiveState {
   // round 35: a series against his rival classmate's team, once he has made the call for it
   // (career/rivalSeries.ts): its key (round|team), the call, and the points so far
   rival?: { key: string; round: string; how: 'guard' | 'duel' | 'team'; gp: number; me: number; hisGp: number; him: number };
+  // round 39: sim mode simulates the postseason but stops for each game the Floor plays
+  floorAsk?: boolean;
 }
 
 export interface SeriesCtx {
@@ -218,6 +226,8 @@ export interface LiveGameArgs {
   my: number; // team strength with his impact
   opp: number;
   oppName: string;
+  /** The other team (round 39: the Floor builds it from its roster). */
+  oppId?: string;
   homeAdv: number; // 1 home, -1 away, 0 neutral
   round: string;
   series: SeriesCtx | undefined;
@@ -262,9 +272,18 @@ export function playLiveGame(s: GameState, a: LiveGameArgs): { line: StatLine; u
   };
   // round 33: beginner's one last shot plays the quarters on its own and keeps the finish close
   const shot = !!s.live?.shot;
+  // round 39: a game that can end his team's series, from the conference finals on: the first 42
+  // minutes are simulated, the last six are played on the Floor (engine/floor/)
+  const floorGame = !shot && a.level === 'NBA' && !!a.oppId && !!sr && floorDue(a.round, sr.losses, sr.bestOf);
+  let floored = false;
   for (let q = 1; q <= 4; q++) {
     const where = q === 1 ? 'Tip-off' : q === 3 ? 'Halftime' : `End of the ${q === 2 ? '1st' : '3rd'} quarter`;
-    const tactic = shot ? 'steady' : nextPick(s, {
+    if (floorGame && q === 4) {
+      floored = true;
+      floorFinish(s, a, head, line, qs, us, them, meanQ, sdQ, base, (u, t2) => ((us = u), (them = t2)));
+      break;
+    }
+    const tactic = shot || floorGame ? 'steady' : nextPick(s, {
       ...head,
       stage: 'quarter',
       title: `${a.round}${head.bestOf > 1 ? ` · Game ${head.game}` : ''} · ${q === 1 ? '1st' : q === 2 ? '2nd' : q === 3 ? '3rd' : '4th'} quarter`,
@@ -306,7 +325,9 @@ export function playLiveGame(s: GameState, a: LiveGameArgs): { line: StatLine; u
     if (Math.abs(us - them) > 3) them = us + 1;
     s.flags.levelShot = 1;
   }
-  if (crunched) {
+  if (floored) {
+    // the Floor plays any overtime itself
+  } else if (crunched) {
     const st = { us, them, line, qs, last: null as LiveRequest['last'] };
     crunchDown = us < them;
     crunchTime(s, a, head, st, CRUNCH.possessions, 120, 0);
@@ -413,21 +434,83 @@ export function playLiveGame(s: GameState, a: LiveGameArgs): { line: StatLine; u
   return { line, us, them, win: us > them, lastShot };
 }
 
-/** The pick before each game: play it, simulate it, or simulate more. */
-export function gameRequest(s: GameState, round: string, oppName: string, home: boolean, sr: SeriesCtx | undefined): LiveRequest {
+/**
+ * The Floor's part of a game (round 39): the first six minutes of the fourth simulated like the
+ * quarters before, then the pick that plays the last six on the Floor; its result (the final score,
+ * his line) finishes the game, overtime included.
+ */
+function floorFinish(s: GameState, a: LiveGameArgs, head: Omit<LiveRequest, 'stage' | 'title' | 'text' | 'quarter' | 'us' | 'them' | 'qs' | 'line' | 'choices'>, line: StatLine, qs: [number, number][], us: number, them: number, meanQ: number, sdQ: number, base: number, set: (us: number, them: number) => void): void {
+  const rng = s.rng;
+  const half: Expected = { ...quarterExpected(a.e, TACTICS.steady) };
+  for (const k of ['min', 'fga', 'tpa', 'fta', 'reb', 'ast', 'stl', 'blk', 'tov', 'pts'] as const) half[k] *= 0.5;
+  const ql = sampleGame(rng, half, a.started);
+  addLine(line, ql);
+  const m = normal(rng, meanQ / 2, sdQ * 0.7);
+  const uq = Math.max(Math.round(base / 8 + normal(rng, 0, sdQ * 0.35) + m / 2), ql.pts + int(rng, 1, 5));
+  const tq = Math.max(3, Math.round(uq - m));
+  const before: [number, number] = [us + uq, them + tq];
+  qs.push([uq, tq]);
+  const take: FloorTake = { seed: int(rng, 1, 2_000_000_000), score: before, oppId: a.oppId!, home: a.homeAdv > 0, edge: (a.my - a.opp + a.homeAdv * HOME_COURT) * FLOOR.perStrength };
+  const diff = before[0] - before[1];
+  const pick = nextPick(s, {
+    ...head,
+    stage: 'floor',
+    title: `${a.round}${head.bestOf > 1 ? ` · Game ${head.game}` : ''} · The Floor`,
+    text: `${diff > 0 ? `Up ${diff}` : diff < 0 ? `Down ${-diff}` : 'Tied'}, ${before[0]}–${before[1]}, six minutes left. The season is on the line.`,
+    quarter: 4,
+    us: before[0],
+    them: before[1],
+    qs: qs.map((x) => [...x] as [number, number]),
+    line: { ...line },
+    choices: [
+      { id: 'auto', label: 'Simulate the last six minutes' },
+      { id: 'floor', label: 'Play the last six minutes' },
+    ],
+    floor: take,
+  });
+  const done = floorDone(s, take, pick);
+  const lastQ = qs[qs.length - 1];
+  lastQ[0] += done.us - before[0];
+  lastQ[1] += done.them - before[1];
+  for (const k of ['pts', 'reb', 'ast', 'stl', 'blk', 'fgm', 'fga', 'tpm', 'tpa', 'ftm', 'fta', 'tov'] as const) line[k] += done.line[k];
+  line.min += 6;
+  // for the achievement book: games on the Floor, and for the ones he played himself the wins, a
+  // comeback from ten down, his game-winner, his late block and his most points in the six minutes
+  const F = s.flags;
+  const win = done.us > done.them;
+  F.floor = (F.floor ?? 0) + 1;
+  if (pick.startsWith('floor@')) {
+    F.floorPlayed = (F.floorPlayed ?? 0) + 1;
+    if (win) F.floorWon = (F.floorWon ?? 0) + 1;
+    if (win && done.marks.low <= -10) F.floorBack = (F.floorBack ?? 0) + 1;
+    if (win && done.marks.winner) F.floorWinner = (F.floorWinner ?? 0) + 1;
+    if (win && done.marks.stop) F.floorStop = (F.floorStop ?? 0) + 1;
+    F.floorPts = Math.max(F.floorPts ?? 0, done.line.pts);
+    // round 39, end of the round: a deciding game won (a game seven), the one that won the NBA
+    // title, and the year of his last loss on the Floor (a turning point reads it that summer)
+    if (win && head.wins === head.losses) F.floorG7 = (F.floorG7 ?? 0) + 1;
+    if (win && head.wins === head.losses && /^NBA Finals$/i.test(a.round)) F.floorRing = s.year;
+    if (!win) F.floorLost = s.year;
+  }
+  set(done.us, done.them);
+}
+
+/** The pick before each game: play it, simulate it, or simulate more. `floor`: a game the Floor
+ * plays (round 39); `ask`: sim mode's stop for one, which only asks play or simulate. */
+export function gameRequest(s: GameState, round: string, oppName: string, home: boolean, sr: SeriesCtx | undefined, floor = false, ask = false): LiveRequest {
   const bestOf = sr?.bestOf ?? 1;
   const status = bestOf > 1 ? `Series ${sr!.wins}–${sr!.losses}. ` : '';
   const choices: LiveChoice[] = [
-    { id: 'play', label: 'Play it', detail: 'Call the shots each quarter' },
+    floor ? { id: 'play', label: 'Play the last six minutes', detail: 'The Floor: steer him yourself' } : { id: 'play', label: 'Play it', detail: 'Call the shots each quarter' },
     { id: 'sim', label: 'Simulate this game' },
   ];
-  if (bestOf > 1) choices.push({ id: 'series', label: 'Simulate the rest of this series' });
-  choices.push({ id: 'all', label: 'Simulate the rest of the postseason' });
-  choices.push({ id: 'always', label: 'Always simulate postseasons', detail: 'You can turn playable games back on in Settings' });
+  if (bestOf > 1 && !ask) choices.push({ id: 'series', label: 'Simulate the rest of this series' });
+  if (!ask) choices.push({ id: 'all', label: 'Simulate the rest of the postseason' });
+  if (!ask) choices.push({ id: 'always', label: 'Always simulate postseasons', detail: 'You can turn playable games back on in Settings' });
   return {
     stage: 'game',
     title: `${round}${bestOf > 1 ? ` · Game ${sr!.game}` : ''}`,
-    text: `${status}${home ? 'Home' : 'On the road'} against ${oppName}.`,
+    text: `${status}${home ? 'Home' : 'On the road'} against ${oppName}.${floor ? ' One more loss ends the season: its last six minutes are yours to play.' : ''}`,
     round,
     opp: oppName,
     home,
@@ -442,5 +525,6 @@ export function gameRequest(s: GameState, round: string, oppName: string, home: 
     line: null,
     recent: s.live?.recent.slice(-3) ?? [],
     choices,
+    ...(floor ? { floorGame: true } : {}),
   };
 }
