@@ -8,32 +8,45 @@
 // - A line with values ("{0} signs with {1}") is matched against the templates the catalog found
 //   (engineTpl.json, scripts/engineText.ts): the values are taken from the line on screen, each one
 //   translated in turn when it is a line of its own, and put into the translation.
-// - A paragraph of sentences joined together is tried a sentence at a time.
+// - A paragraph of sentences, or a title and its line joined by a colon, is tried a piece at a time
+//   (the longest known run of pieces first); a quoted line, by the words inside its quotes.
 // Anything else stays as it is: names, numbers, and the interface's words, already translated by t().
 
 import TPL from './engineTpl.json';
 import { hashOf } from './hash';
-import { lang, localOrdinal, tableOf, type Lang } from './index';
+import { lang, localOrdinal, onSlots, tableOf, type Lang } from './index';
 
 interface Pat {
   re: RegExp;
   h: string;
+  /** the template's values by name, in order ('0', '1'… or 'name', 'team' in a plain string) */
+  names: string[];
   /** the template's own words, for a quick look before the pattern */
   head: string;
   key: string;
   lit: number;
+  /** enough of its own to name a whole line: opening words, or a word that is not filler */
+  strong: boolean;
 }
+
+// words too common to name a line on their own ("{0} with the {1}" would match half the game)
+const FILLER = new Set('with the and for his her you your are was has had who all out from into more than that this they them their have will one two our its'.split(' '));
 
 let pats: Pat[] | null = null;
 const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const SLOT = /\{(\w+)\}/;
 
 function patterns(): Pat[] {
   if (pats) return pats;
   pats = (TPL as string[])
     .map((en) => {
-      const parts = en.split(/\{\d+\}/);
+      const bits = en.split(SLOT);
+      const parts = bits.filter((_, i) => i % 2 === 0);
+      const names = bits.filter((_, i) => i % 2 === 1);
       const key = parts.reduce((a, b) => (b.length > a.length ? b : a), '');
-      return { re: new RegExp('^' + parts.map(esc).join('([\\s\\S]*?)') + '$'), h: hashOf(en), head: parts[0], key, lit: parts.join('').length };
+      const own = (parts.join(' ').match(/[A-Za-z’']{3,}/g) ?? []).map((w) => w.toLowerCase());
+      const strong = parts[0].trim().length >= 4 || own.some((w) => !FILLER.has(w));
+      return { re: new RegExp('^' + parts.map(esc).join('([\\s\\S]*?)') + '$'), h: hashOf(en), names, head: parts[0], key, lit: parts.join('').length, strong };
     })
     // the more of its own words a template has, the more surely it is the one
     .sort((a, b) => b.lit - a.lit);
@@ -42,7 +55,7 @@ function patterns(): Pat[] {
 
 type Table = Record<string, string>;
 
-const fill = (tr: string, vals: string[]) => tr.replace(/\{(\d+)\}/g, (m, k: string) => vals[Number(k)] ?? m);
+const fill = (tr: string, vals: Record<string, string>) => tr.replace(/\{(\w+)\}/g, (m, k: string) => vals[k] ?? m);
 
 /** One line: by its name, else by a template; null when neither knows it. A value that is a word of
  * the interface ('Left', 'Right') is found in the interface's table (`ui`). */
@@ -52,6 +65,8 @@ function one(s: string, tb: Table, depth: number, ui?: Table): string | null {
   if (exact !== undefined) return exact;
   if (depth > 2) return null;
   for (const p of patterns()) {
+    // a weak template only fills a value inside another line
+    if (depth === 0 && !p.strong) continue;
     if (p.head && !s.startsWith(p.head)) continue;
     if (!s.includes(p.key)) continue;
     const m = p.re.exec(s);
@@ -59,33 +74,59 @@ function one(s: string, tb: Table, depth: number, ui?: Table): string | null {
     const tr = tb[p.h];
     if (tr === undefined) continue;
     // a value can be a line of its own (a phrase or a word the engine chose), an ordinal, or a name or a number
-    const vals = m.slice(1).map((v) => {
+    const vals: Record<string, string> = {};
+    m.slice(1).forEach((v, i) => {
       const o = v.match(/^(\d+)(?:st|nd|rd|th)$/);
-      if (o) return localOrdinal(Number(o[1])) ?? v;
       const w = v.trim();
-      const tr = /[a-z]{2}/i.test(w) ? one(w, tb, depth + 1, ui) : null;
-      return tr === null ? v : v.replace(w, tr);
+      const t = o ? localOrdinal(Number(o[1])) : /[a-z]{2}/i.test(w) ? one(w, tb, depth + 1, ui) : null;
+      vals[p.names[i]] = t === null ? v : o ? t : v.replace(w, t);
     });
     return fill(tr, vals);
   }
   return null;
 }
 
-const SENTENCE = /(?<=[.!?…”"])\s+(?=[A-Z“"‘(])/;
+/** Where a line the engine glued together comes apart: between sentences, and after a title's colon
+ * or a dot between items ("Trade deadline: the front office goes all in…", "A ring · 3 All-Stars"). */
+const SEAM = /(?<=[.!?…”"])\s+(?=[A-Z“"‘(])|: | · |：/g;
 
-/** A paragraph, a sentence at a time; null when no sentence of it is known. */
-function sentences(s: string, tb: Table, l: Lang, ui: Table): string | null {
-  const parts = s.split(SENTENCE);
-  if (parts.length < 2) return null;
+/** A line glued from lines the engine knows, the longest known run of its pieces at a time; null
+ * when no piece of it is known. */
+function pieces(s: string, tb: Table, l: Lang, ui: Table): string | null {
+  const bits: string[] = [];
+  const seams: string[] = [];
+  let at = 0;
+  for (const m of s.matchAll(SEAM)) {
+    bits.push(s.slice(at, m.index));
+    seams.push(m[0]);
+    at = m.index! + m[0].length;
+  }
+  bits.push(s.slice(at));
+  if (bits.length < 2) return null;
+  const cjk = l === 'zh' || l === 'ja';
+  let out = '';
   let hit = false;
-  const out = parts.map((p) => {
-    const tr = one(p, tb, 0, ui);
-    if (tr === null) return p;
-    hit = true;
-    return tr;
-  });
-  return hit ? out.join(l === 'zh' || l === 'ja' ? '' : ' ') : null;
+  for (let i = 0; i < bits.length; ) {
+    let j = bits.length;
+    let tr: string | null = null;
+    for (; j > i; j--) {
+      if (i === 0 && j === bits.length) continue; // the whole line was tried already
+      let run = bits[i];
+      for (let k = i + 1; k < j; k++) run += seams[k - 1] + bits[k];
+      tr = one(run, tb, 0, ui);
+      if (tr !== null) break;
+    }
+    if (tr !== null) hit = true;
+    else j = i + 1;
+    out += tr ?? bits[i];
+    // the seam after the run: a colon reads as one in the language, and sentences run on in Chinese and Japanese
+    if (j < bits.length) out += cjk ? (seams[j - 1] === ': ' ? '：' : /^\s+$/.test(seams[j - 1]) ? '' : seams[j - 1]) : seams[j - 1];
+    i = j;
+  }
+  return hit ? out : null;
 }
+
+const QUOTE = /^([“"‘'])([\s\S]+)([”"’'])$/;
 
 const cache = new Map<string, string>();
 let cacheLang: Lang = 'en';
@@ -107,12 +148,28 @@ export function te(s: string): string {
     const tail = s.match(/\s*$/)![0];
     const core = s.trim();
     const ui = tableOf(l).ui;
-    const tr = one(core, tb, 0, ui) ?? sentences(core, tb, l, ui);
+    const exact = (x: string) => one(x, tb, 0, ui) ?? pieces(x, tb, l, ui);
+    // a line a screen lowercased ("missed the playoffs"), found as the engine wrote it
+    const whole = (x: string) => {
+      const tr = exact(x);
+      if (tr !== null || !/^[a-z]/.test(x)) return tr;
+      const up = exact(x[0].toUpperCase() + x.slice(1));
+      return up === null ? null : l === 'es' || l === 'fr' ? up[0].toLowerCase() + up.slice(1) : up;
+    };
+    // a quoted line: the words inside the quotes
+    const q = core.match(QUOTE);
+    const tr = whole(core) ?? (q ? (() => {
+      const inner = whole(q[2]);
+      return inner === null ? null : q[1] + inner + q[3];
+    })() : null);
     if (tr !== null) out = lead + tr + tail;
   }
   cache.set(s, out);
   return out;
 }
+
+// an interface sentence's values (t('Preseason: {x}', { x })) are often lines the engine wrote
+onSlots(te);
 
 /** A page element's props with its text in the player's language (for jsx-runtime.ts): the string
  * children of a tag or a fragment. The same props when nothing changes. */

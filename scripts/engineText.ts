@@ -125,8 +125,10 @@ export function catalog(): { lines: Line[]; clash: string[] } {
           en += `{${i}}` + sp.literal.text;
           hint[i] = sp.expression.getText(src).replace(/\s+/g, ' ').slice(0, 80);
         });
-        // a template carries its line only when its own words do (not "{0} {1}" or "{0} points")
-        if (!logic(n) && words(en.replace(/\{\d+\}/g, ' ')) >= 2) add(en, hint, n);
+        // a template carries its line only when its own words do (not "{0} {1}" or "{0} points"): two
+        // words, or ten letters ("Enrolled at {0} in {1} as a {2}, {3}.")
+        const own = en.replace(/\{\d+\}/g, ' ');
+        if (!logic(n) && (words(own) >= 2 || (own.match(/[A-Za-z]/g) ?? []).length >= 10)) add(en, hint, n);
         n.templateSpans.forEach((sp) => {
           // the short words a value is written as ('won' or 'lost', 'left' or 'right'), each a line of its own
           const word = (x: ts.Node): void => {
@@ -156,7 +158,7 @@ const slotsOf = (s: string) => new Set(s.match(/\{\d+\}/g) ?? []);
 
 function main() {
   const { lines, clash } = catalog();
-  const tpl = lines.filter((l) => /\{\d+\}/.test(l.en));
+  const tpl = lines.filter((l) => /\{\w+\}/.test(l.en));
   const nWords = lines.reduce((a, l) => a + l.en.split(/\s+/).length, 0);
   console.log(`engine lines: ${lines.length} (${tpl.length} with values), ${nWords} words`);
   const tplJson = JSON.stringify(tpl.map((l) => l.en).sort());

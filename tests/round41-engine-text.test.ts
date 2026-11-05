@@ -64,6 +64,21 @@ describe('engine lines in the player language', () => {
     expect(te('Nothing here is known. Nor here.')).toBe('Nothing here is known. Nor here.');
   });
 
+  it('fills a plain string\'s named values ({name})', () => {
+    setLang('ko');
+    const named = (TPL as string[]).find((s) => s === 'Nice to see the work paying off for {name}.');
+    expect(named, 'the named template is in engineTpl.json').toBeTruthy();
+    put(named!, '{name}의 노력이 빛을 보네요.');
+    expect(te('Nice to see the work paying off for Caleb Stone.')).toBe('Caleb Stone의 노력이 빛을 보네요.');
+  });
+
+  it('takes a line glued at a colon a piece at a time, and a quoted line by its words', () => {
+    setLang('ko');
+    put('Trade deadline', '트레이드 마감');
+    expect(te('Trade deadline: He pauses it eleven times.')).toBe('트레이드 마감: 그는 영상을 열한 번 멈춰요.');
+    expect(te('“The closer”')).toBe('“클로저”');
+  });
+
   it('passes names, numbers and short strings through', () => {
     setLang('ko');
     for (const s of ['Joe Mazzulla', '41–41', 'PTS', '', '12.5']) expect(te(s)).toBe(s);
@@ -88,6 +103,6 @@ describe('the catalog', () => {
     expect(t.length).toBeGreaterThan(500);
     expect(new Set(t).size).toBe(t.length);
     expect([...t].sort()).toEqual(t);
-    for (const s of t) expect(s).toMatch(/\{0\}/);
+    for (const s of t) expect(s).toMatch(/\{\w+\}/);
   });
 });
