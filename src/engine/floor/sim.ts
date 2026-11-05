@@ -140,6 +140,10 @@ export interface FloorState {
   teams: [{ name: string; short: string; color: string }, { name: string; short: string; color: string }];
   players: FloorPlayer[];
   user: number;
+  /** Round 39, online (owner: "can you make the game multiplayer as well?", head to head): the
+   * other team's human, with his own shot load and call, or null when the AI plays all of them.
+   * `user`, `load`, `call` and `auto` stay team 0's. */
+  two: { user: number; load: number; call: number; auto: boolean } | null;
   ball: { holder: number | null; x: number; y: number; flight: Flight | null };
   poss: 0 | 1;
   phase: 'live' | 'dead' | 'ft' | 'over';
@@ -223,6 +227,7 @@ export function startFloor(set: FloorSetup): FloorState {
   );
   for (const team of [0, 1] as const) while (onCourt({ players } as FloorState, team).length < 5 && benchOf({ players } as FloorState, team).length) benchOf({ players } as FloorState, team)[0].on = true;
   const user = Math.max(0, players.findIndex((p) => p.user && p.team === 0));
+  const two = players.findIndex((p) => p.user && p.team === 1);
   const poss: 0 | 1 = set.ball ?? (next(rng) < 0.5 ? 0 : 1);
   const s: FloorState = {
     rng,
@@ -237,6 +242,7 @@ export function startFloor(set: FloorSetup): FloorState {
     ],
     players,
     user,
+    two: two >= 0 ? { user: two, load: -1, call: -99, auto: false } : null,
     ball: { holder: null, x: 47, y: 25, flight: null },
     poss,
     phase: 'dead',
@@ -278,6 +284,17 @@ function backcourt(team: 0 | 1): Spot {
 export const onCourt = (s: FloorState, team: 0 | 1): FloorPlayer[] => s.players.filter((p) => p.team === team && p.on);
 const benchOf = (s: FloorState, team: 0 | 1): FloorPlayer[] => s.players.filter((p) => p.team === team && !p.on && p.fouls < FLOOR.foul.out);
 const idx = (s: FloorState, p: FloorPlayer) => s.players.indexOf(p);
+/** The human playing for a team, or -1 (team 1 has one only in a game against a friend). */
+const humanOf = (s: FloorState, team: 0 | 1): number => (team === 0 ? s.user : (s.two?.user ?? -1));
+const isHuman = (s: FloorState, i: number): boolean => i === s.user || i === s.two?.user;
+/** A human steers this player this tick (not the AI standing in for him). */
+const driven = (s: FloorState, i: number): boolean => (i === s.user && !s.auto) || (!!s.two && i === s.two.user && !s.two.auto);
+const loadOf = (s: FloorState, team: 0 | 1): number => (team === 0 ? s.load : s.two!.load);
+function setLoad(s: FloorState, team: 0 | 1, v: number): void {
+  if (team === 0) s.load = v;
+  else s.two!.load = v;
+}
+const callOf = (s: FloorState, team: 0 | 1): number => (team === 0 ? s.call : (s.two?.call ?? -99));
 const SLOTS: Pos[] = ['PG', 'SG', 'SF', 'PF', 'C'];
 
 /** Each defender takes the man in his own position (the user keeps the one he switched to). */
@@ -395,15 +412,16 @@ function release(s: FloorState, i: number, q: number | null, dodge = 1): void {
   let chance = shotChance(s, p, at);
   if (q !== null) chance = clamp(chance * lerp(FLOOR.meter.worst, FLOOR.meter.best, q), FLOOR.shot.min, FLOOR.shot.max);
   const foe = nearestFoe(s, p.team, at);
-  // a block: a defender right there at the rim or in the paint (the user only if he jumped)
-  const user = s.players[s.user];
-  const jumper = foe.p && foe.d <= FLOOR.block.reach && (zone === 'rim' || zone === 'paint') && (foe.p !== user || user.air > 0) ? foe.p : null;
-  const userJump = user.team !== p.team && user.air > 0 && dist(user, at) <= FLOOR.block.reach + 1.5 ? user : null;
+  // a block: a defender right there at the rim or in the paint (a human defender only if he jumped)
+  const hi = humanOf(s, other(p.team));
+  const hum = hi >= 0 ? s.players[hi] : null;
+  const jumper = foe.p && foe.d <= FLOOR.block.reach && (zone === 'rim' || zone === 'paint') && (foe.p !== hum || hum.air > 0) ? foe.p : null;
+  const userJump = hum && hum.air > 0 && dist(hum, at) <= FLOOR.block.reach + 1.5 ? hum : null;
   const blocker = userJump ?? jumper;
   if (blocker) {
     const b = FLOOR.block.base + FLOOR.block.perPoint * ((blocker.r.INT + blocker.r.ATH) / 2 - p.r.FIN / 2 - 25);
     if (next(s.rng) < clamp(b * (userJump ? 1.6 : 1) * dodge, 0, 0.5)) {
-      if (blocker === user && s.clock <= 10 && s.score[0] >= s.score[1]) s.marks.stop = true;
+      if (blocker === s.players[s.user] && s.clock <= 10 && s.score[0] >= s.score[1]) s.marks.stop = true;
       p.box.fga++;
       if (three) p.box.tpa++;
       blocker.box.blk++;
@@ -569,10 +587,8 @@ function foul(s: FloorState, by: FloorPlayer, emitIt = true): void {
       sub.x = by.x;
       sub.y = by.y;
     }
+    // a human who fouls out: the quarter plays on without him at the controls (stepFloor's auto)
     emit(s, { kind: 'out', team: by.team, by: idx(s, by), on: sub ? idx(s, sub) : undefined });
-    if (by.user || (s.user === idx(s, by))) {
-      // he fouled out: the quarter plays on without him at the controls
-    }
     matchUp(s);
   }
 }
@@ -597,18 +613,18 @@ function freeThrows(s: FloorState, by: number, n: number): void {
   s.load = -1;
 }
 
-/** Who takes the ball in: the nearest teammate to the spot, never him (owner: "dont make the
+/** Who takes the ball in: the nearest teammate to the spot, never a human (owner: "dont make the
  * user's player the inbounder. it kinda makes the game seem laggy"). */
 function inbounder(s: FloorState, team: 0 | 1, at: Spot): FloorPlayer {
   const on = onCourt(s, team);
-  const pool = on.filter((p) => idx(s, p) !== s.user);
+  const pool = on.filter((p) => !isHuman(s, idx(s, p)));
   return (pool.length ? pool : on).sort((a, b) => dist(a, at) - dist(b, at))[0];
 }
 
 /** Who the inbound goes to: him, on his team; else the best ball handler. */
 function receiver(s: FloorState, taker: FloorPlayer): number | null {
   const mates = onCourt(s, taker.team).filter((p) => p !== taker);
-  const me = mates.find((p) => idx(s, p) === s.user);
+  const me = mates.find((p) => idx(s, p) === humanOf(s, taker.team));
   if (me) return idx(s, me);
   const best = mates.sort((a, b) => b.r.PLY - a.r.PLY)[0];
   return best ? idx(s, best) : null;
@@ -729,8 +745,9 @@ function bestPass(s: FloorState, from: FloorPlayer): { to: number; open: number 
     const lane = Math.min(...onCourt(s, other(from.team)).map((d) => toLine(d, from, q)));
     if (lane < FLOOR.pass.lane) continue;
     let open = nearestFoe(s, q.team, q).d * (0.6 + shotChance(s, q, q));
-    if (j === s.user && s.tick - s.call < secs(1.5)) open += 20;
-    if (j === s.user) open *= 1.25; // the star gets the ball
+    const hum = humanOf(s, from.team);
+    if (j === hum && s.tick - callOf(s, from.team) < secs(1.5)) open += 20;
+    if (j === hum) open *= 1.25; // the star gets the ball
     if (!best || open > best.open) best = { to: j, open };
   }
   return best;
@@ -748,9 +765,9 @@ function aiHandler(s: FloorState, i: number): void {
   if (s.tick < s.think || s.gather) return;
   const p = s.players[i];
   s.think = s.tick + secs(FLOOR.think);
-  // his man reaches in (an AI defender; the user steals with his own key)
+  // his man reaches in (an AI defender; a human steals with his own key)
   const d = s.players.find((_, k) => s.guard[k] === i);
-  if (d && d.on && (s.auto || idx(s, d) !== s.user) && dist(d, p) < FLOOR.steal.reach && next(s.rng) < FLOOR.strip * (d.r.PER / 70) * (1.3 - p.r.PLY / 100)) {
+  if (d && d.on && !driven(s, idx(s, d)) && dist(d, p) < FLOOR.steal.reach && next(s.rng) < FLOOR.strip * (d.r.PER / 70) * (1.3 - p.r.PLY / 100)) {
     const di = idx(s, d);
     d.box.stl++;
     p.box.tov++;
@@ -771,7 +788,7 @@ function aiHandler(s: FloorState, i: number): void {
   }
   // he called for it, off the ball: a pass to him when the lane is clear
   const pass = bestPass(s, p);
-  if (pass && pass.to === s.user && s.tick - s.call < secs(1.5)) return throwPass(s, i, pass.to);
+  if (pass && pass.to === humanOf(s, p.team) && s.tick - callOf(s, p.team) < secs(1.5)) return throwPass(s, i, pass.to);
   // a lane to the rim: drive it
   const rim = rimOf(p.team);
   const lane = Math.min(...onCourt(s, other(p.team)).filter((d) => d.slow <= 0).map((d) => toLine(d, p, rim)));
@@ -781,7 +798,7 @@ function aiHandler(s: FloorState, i: number): void {
   }
   // a pick from the big, now and then
   if (!s.screen && next(s.rng) < 0.18) {
-    const big = onCourt(s, p.team).find((q) => q !== p && (q.pos === 'C' || q.pos === 'PF') && idx(s, q) !== s.user);
+    const big = onCourt(s, p.team).find((q) => q !== p && (q.pos === 'C' || q.pos === 'PF') && idx(s, q) !== humanOf(s, p.team));
     const d = s.players.findIndex((_, k) => s.guard[k] === i);
     if (big && d >= 0) s.screen = { by: idx(s, big), on: d, t: 3 };
   }
@@ -818,40 +835,45 @@ function throwPass(s: FloorState, from: number, to: number): void {
   s.ball.flight = { kind: 'pass', from: { x: p.x, y: p.y }, to: { x: r.x, y: r.y }, t, total: t, by: from, target: to };
 }
 
-// ---------------- him ----------------
+// ---------------- him (and, against a friend, the other team's human) ----------------
 
-function userActs(s: FloorState, inp: FloorInput): void {
-  const u = s.players[s.user];
+function userActs(s: FloorState, inp: FloorInput, T: 0 | 1): void {
+  const ui = humanOf(s, T);
+  const u = s.players[ui];
   if (!u.on) return;
-  const ui = s.user;
+  const O = other(T);
   const mine = s.ball.holder === ui;
-  if (inp.timeout && s.timeouts[0] > 0 && (s.phase === 'dead' || (s.poss === 0 && s.ball.holder !== null && !s.ball.flight))) return timeout(s, 0);
+  if (inp.timeout && s.timeouts[T] > 0 && (s.phase === 'dead' || (s.poss === T && s.ball.holder !== null && !s.ball.flight))) return timeout(s, T);
   if (u.team === s.poss) {
     // the shot: held loads the meter, the release shoots; at the rim one tap finishes (owner: "just
     // one tap for the lay or dunk"); never from behind half court
     if (mine && inp.finish && zoneOf(u.team, u) === 'rim') {
-      s.load = -1;
+      setLoad(s, T, -1);
       return finish(s, ui);
     }
-    if (mine && inp.shoot && inRange(u)) s.load = s.load < 0 ? 0 : s.load + DT;
-    else if (mine && s.load >= 0) {
-      const q = releaseQuality(s, u, inp.load ?? s.load);
-      s.load = -1;
+    const load = loadOf(s, T);
+    if (mine && inp.shoot && inRange(u)) setLoad(s, T, load < 0 ? 0 : load + DT);
+    else if (mine && load >= 0) {
+      const q = releaseQuality(s, u, inp.load ?? load);
+      setLoad(s, T, -1);
       return release(s, ui, q);
-    } else s.load = -1;
+    } else setLoad(s, T, -1);
     if (mine && inp.pass !== undefined && inp.pass !== null) {
       const to = inp.pass === 'auto' ? bestPass(s, u)?.to : inp.pass;
       if (to !== undefined && to !== ui && s.players[to]?.team === u.team && s.players[to].on) return throwPass(s, ui, to);
-    } else if (!mine && inp.pass !== undefined && inp.pass !== null) s.call = s.tick;
+    } else if (!mine && inp.pass !== undefined && inp.pass !== null) {
+      if (T === 0) s.call = s.tick;
+      else s.two!.call = s.tick;
+    }
     if (mine && inp.move) {
       const d = s.players.find((_, k) => s.guard[k] === ui);
       if (d && dist(d, u) < 7) {
         const M = FLOOR.move;
         if (next(s.rng) < clamp(M.beat + M.perPoint * (u.r.PLY - d.r.PER), 0.1, 0.9)) {
           d.slow = M.slow;
-          emit(s, { kind: 'beat', team: 0, by: ui, on: idx(s, d), move: inp.move });
+          emit(s, { kind: 'beat', team: T, by: ui, on: idx(s, d), move: inp.move });
           if (inp.move === 'step') {
-            const rim = rimOf(0);
+            const rim = rimOf(T);
             const k = 4 / (dist(u, rim) || 1);
             u.dash = { to: clampSpot({ x: u.x - (rim.x - u.x) * k, y: u.y - (rim.y - u.y) * k }), t: secs(0.35) };
           }
@@ -866,28 +888,28 @@ function userActs(s: FloorState, inp: FloorInput): void {
       }
     }
     if (inp.pick && !s.screen) {
-      const big = onCourt(s, 0).filter((q) => q !== u).sort((a, b) => (b.pos === 'C' ? 2 : b.pos === 'PF' ? 1 : 0) - (a.pos === 'C' ? 2 : a.pos === 'PF' ? 1 : 0))[0];
+      const big = onCourt(s, T).filter((q) => q !== u).sort((a, b) => (b.pos === 'C' ? 2 : b.pos === 'PF' ? 1 : 0) - (a.pos === 'C' ? 2 : a.pos === 'PF' ? 1 : 0))[0];
       const d = s.players.findIndex((_, k) => s.guard[k] === ui);
       if (big && d >= 0) s.screen = { by: idx(s, big), on: d, t: 3 };
     }
     return;
   }
   // defence
-  s.load = -1;
+  setLoad(s, T, -1);
   const h = s.ball.holder !== null ? s.players[s.ball.holder] : null;
   if (inp.steal && h && !s.ball.flight) {
     // the jab itself, whatever comes of it (the screen shows his reach)
-    emit(s, { kind: 'reach', team: 0, by: ui, on: s.ball.holder! });
+    emit(s, { kind: 'reach', team: T, by: ui, on: s.ball.holder! });
     const S = FLOOR.steal;
     const d = dist(u, h);
     if (d <= S.reach) {
       if (next(s.rng) < clamp(S.base + S.perPoint * (u.r.PER - h.r.PLY), 0.04, 0.6)) {
         u.box.stl++;
         h.box.tov++;
-        emit(s, { kind: 'steal', team: 0, by: ui, on: s.ball.holder! });
-        s.momentum = clamp(s.momentum + FLOOR.momentum.big, -1, 1);
+        emit(s, { kind: 'steal', team: T, by: ui, on: s.ball.holder! });
+        s.momentum = clamp(s.momentum + (T === 0 ? 1 : -1) * FLOOR.momentum.big, -1, 1);
         s.ball.holder = ui;
-        change(s, 0);
+        change(s, T);
         return;
       }
       if (next(s.rng) < S.foul) return commonFoul(s, u, s.ball.holder!);
@@ -896,20 +918,20 @@ function userActs(s: FloorState, inp: FloorInput): void {
   if (inp.block && u.air <= 0) u.air = 0.6;
   if (inp.swap) {
     const now = s.guard[ui];
-    const foes = onCourt(s, 1).map((q) => idx(s, q)).filter((k) => k !== now);
+    const foes = onCourt(s, O).map((q) => idx(s, q)).filter((k) => k !== now);
     const near = foes.sort((a, b) => dist(s.players[a], u) - dist(s.players[b], u))[0];
     if (near !== undefined) {
       const mate = s.guard.findIndex((g, k) => g === near && k !== ui);
       if (mate >= 0) s.guard[mate] = now;
       s.guard[ui] = near;
-      emit(s, { kind: 'switch', team: 0, by: ui, on: near });
+      emit(s, { kind: 'switch', team: T, by: ui, on: near });
     }
   }
   if (inp.help && h) {
-    const mate = onCourt(s, 0).filter((q) => q !== u && s.guard[idx(s, q)] !== s.ball.holder).sort((a, b) => dist(a, h) - dist(b, h))[0];
+    const mate = onCourt(s, T).filter((q) => q !== u && s.guard[idx(s, q)] !== s.ball.holder).sort((a, b) => dist(a, h) - dist(b, h))[0];
     if (mate) {
       s.help = { by: idx(s, mate), t: 2 };
-      emit(s, { kind: 'help', team: 0, by: idx(s, mate), on: s.ball.holder! });
+      emit(s, { kind: 'help', team: T, by: idx(s, mate), on: s.ball.holder! });
     }
   }
 }
@@ -926,14 +948,17 @@ function timeout(s: FloorState, team: 0 | 1): void {
 
 // ---------------- a tick ----------------
 
-/** Moves the game on one tick (0.075 game seconds) with what he does (null: the AI plays him too). */
-export function stepFloor(s: FloorState, inp: FloorInput | null): void {
+/** Moves the game on one tick (0.075 game seconds) with what he does (null: the AI plays him too),
+ * and against a friend what the other team's human does (`inp2`, the same way). */
+export function stepFloor(s: FloorState, inp: FloorInput | null, inp2: FloorInput | null = null): void {
   s.fresh = s.feed.length;
   if (s.phase === 'over') return;
   s.tick++;
   const u = s.players[s.user];
   const auto = inp === null || !u.on;
   s.auto = auto;
+  if (s.two) s.two.auto = inp2 === null || !s.players[s.two.user].on;
+  const inputOf = (team: 0 | 1): FloorInput => (team === 0 ? inp : inp2)!;
   for (const p of s.players) {
     p.slow = Math.max(0, p.slow - DT);
     p.air = Math.max(0, p.air - DT);
@@ -946,12 +971,15 @@ export function stepFloor(s: FloorState, inp: FloorInput | null): void {
     const line = ft.at ?? { x: shooter.x, y: shooter.y };
     for (const p of s.players.filter((q) => q.on)) stepToward(s, p, p === shooter ? line : laneSpot(s, p, shooter));
     if (s.wait > 0 || (dist(shooter, line) > 0.6 && s.wait > -FLOOR.walk)) return;
-    if (ft.by === s.user && !auto) {
-      // his free throw waits for his release
-      if (inp!.shoot) s.load = s.load < 0 ? 0 : s.load + DT;
-      else if (s.load >= 0) {
-        const q = releaseQuality(s, u, inp!.load ?? s.load);
-        s.load = -1;
+    if (driven(s, ft.by) && (s.wait > -FLOOR.ftWait || loadOf(s, shooter.team) >= 0)) {
+      // his free throw waits for his release (for a while: then the AI shoots it, below)
+      const T = shooter.team;
+      const ip = inputOf(T);
+      const load = loadOf(s, T);
+      if (ip.shoot) setLoad(s, T, load < 0 ? 0 : load + DT);
+      else if (load >= 0) {
+        const q = releaseQuality(s, shooter, ip.load ?? load);
+        setLoad(s, T, -1);
         shootFt(s, q);
       }
       return;
@@ -961,8 +989,9 @@ export function stepFloor(s: FloorState, inp: FloorInput | null): void {
   }
   if (s.phase === 'dead') {
     if (!auto && inp!.timeout && s.timeouts[0] > 0) timeout(s, 0);
-    // the other bench stops a run against it
-    else if (s.run.team === 0 && s.run.pts >= 8 && s.timeouts[1] > 0) {
+    else if (s.two && !s.two.auto && inp2!.timeout && s.timeouts[1] > 0) timeout(s, 1);
+    // the other bench stops a run against it (a friend calls his own)
+    else if (!s.two && s.run.team === 0 && s.run.pts >= 8 && s.timeouts[1] > 0) {
       s.run = { team: 0, pts: 0 };
       timeout(s, 1);
     }
@@ -1001,20 +1030,25 @@ export function stepFloor(s: FloorState, inp: FloorInput | null): void {
   if (s.help && s.help.t <= 0) s.help = null;
   s.momentum *= 1 - FLOOR.momentum.fade * DT;
 
-  // the AI defense, trailing late, fouls to stop the clock
+  // the AI defense, trailing late, fouls to stop the clock (a defense a human plays fouls only when he does)
   const trailing = s.score[other(s.poss)] < s.score[s.poss];
   const margin = s.score[s.poss] - s.score[other(s.poss)];
-  if (trailing && s.clock <= FLOOR.hack.secs && margin >= FLOOR.hack.margin[0] && margin <= FLOOR.hack.margin[1] && s.ball.holder !== null && !s.ball.flight && (other(s.poss) === 1 || auto)) {
+  const dh = humanOf(s, other(s.poss));
+  if (trailing && s.clock <= FLOOR.hack.secs && margin >= FLOOR.hack.margin[0] && margin <= FLOOR.hack.margin[1] && s.ball.holder !== null && !s.ball.flight && !(dh >= 0 && driven(s, dh))) {
     const h = s.players[s.ball.holder];
-    const near = onCourt(s, other(s.poss)).filter((q) => q !== u || auto).sort((a, b) => dist(a, h) - dist(b, h))[0];
+    const near = onCourt(s, other(s.poss)).sort((a, b) => dist(a, h) - dist(b, h))[0];
     if (near && dist(near, h) < 3) {
       foul(s, near);
       return freeThrows(s, s.ball.holder, 2);
     }
   }
 
-  // him
-  if (!auto) userActs(s, inp!);
+  // him, and the friend: in turn, each going first every other tick
+  const acts: (0 | 1)[] = [];
+  if (!auto) acts.push(0);
+  if (s.two && !s.two.auto) acts.push(1);
+  if (s.tick % 2) acts.reverse();
+  for (const T of acts) if (s.phase === 'live') userActs(s, inputOf(T), T);
   if (s.phase !== 'live') return;
 
   // everyone moves
@@ -1030,17 +1064,18 @@ export function stepFloor(s: FloorState, inp: FloorInput | null): void {
       if (--p.dash.t <= 0 || d <= v) p.dash = null;
       continue;
     }
-    if (i === s.user && !auto) {
-      const dx = inp!.dx ?? 0;
-      const dy = inp!.dy ?? 0;
+    if (driven(s, i)) {
+      const ip = inputOf(p.team);
+      const dx = ip.dx ?? 0;
+      const dy = ip.dy ?? 0;
       const len = Math.hypot(dx, dy);
-      const slowShot = s.load >= 0 ? 0.3 : 1;
+      const slowShot = loadOf(s, p.team) >= 0 ? 0.3 : 1;
       if (len > 0.01 && p.air <= 0) {
-        const v = topSpeed(s, p, !!inp!.sprint) * slowShot * DT;
+        const v = topSpeed(s, p, !!ip.sprint) * slowShot * DT;
         Object.assign(p, clampSpot({ x: p.x + (dx / len) * v, y: p.y + (dy / len) * v }));
         moved = v / DT;
       }
-      p.stamina = clamp(p.stamina + DT * (inp!.sprint && moved > 0 ? FLOOR.stamina.sprint : moved > 3 ? FLOOR.stamina.move : FLOOR.stamina.rest), 0.2, 1);
+      p.stamina = clamp(p.stamina + DT * (ip.sprint && moved > 0 ? FLOOR.stamina.sprint : moved > 3 ? FLOOR.stamina.move : FLOOR.stamina.rest), 0.2, 1);
       continue;
     }
     moved = stepToward(s, p, aiTarget(s, p));
@@ -1078,7 +1113,7 @@ export function stepFloor(s: FloorState, inp: FloorInput | null): void {
         s.gather = null;
         if (s.ball.holder === by) release(s, by, null);
       }
-    } else if (s.ball.holder !== s.user || auto) {
+    } else if (!driven(s, s.ball.holder)) {
       if (s.drive && toRim(h.team, h) < 4) s.gather = { by: s.ball.holder, t: secs(0.4) };
       else aiHandler(s, s.ball.holder);
     }
@@ -1122,4 +1157,45 @@ export function floorResult(s: FloorState): { us: number; them: number; win: boo
     marks: { ...s.marks },
     box: s.players.map((p) => ({ name: p.name, team: p.team, box: { ...p.box } })),
   };
+}
+
+// ---------------- against a friend (round 39, online) ----------------
+
+/** The game seen from the other end: the teams swapped and the court turned round, so the friend
+ * on team 1 sees himself as team 0 attacking the right basket, as he does against the AI. A copy
+ * for the screen only: the game itself goes on in the state it came from (never step this one). */
+export function mirrorFloor(s: FloorState): FloorState {
+  if (!s.two) return s;
+  const fx = (p: Spot): Spot => ({ x: COURT.w - p.x, y: p.y });
+  const sw = <T,>(a: [T, T]): [T, T] => [a[1], a[0]];
+  const t = (team: 0 | 1): 0 | 1 => other(team);
+  const f = s.ball.flight;
+  return {
+    ...s,
+    score: sw(s.score),
+    teams: sw(s.teams),
+    teamFouls: sw(s.teamFouls),
+    timeouts: sw(s.timeouts),
+    players: s.players.map((p) => ({ ...p, team: t(p.team), ...fx(p), dash: p.dash ? { ...p.dash, to: fx(p.dash.to) } : p.dash })),
+    user: s.two.user,
+    load: s.two.load,
+    call: s.two.call,
+    auto: s.two.auto,
+    two: { user: s.user, load: s.load, call: s.call, auto: s.auto },
+    ball: { ...s.ball, ...fx(s.ball), flight: f ? { ...f, from: fx(f.from), to: fx(f.to) } : null },
+    poss: t(s.poss),
+    inbound: s.inbound ? { team: t(s.inbound.team), at: fx(s.inbound.at) } : null,
+    ft: s.ft ? { ...s.ft, at: s.ft.at ? fx(s.ft.at) : undefined } : null,
+    momentum: -s.momentum,
+    run: { team: t(s.run.team), pts: s.run.pts },
+    feed: s.feed.map((e) => ({ ...e, team: t(e.team) })),
+  };
+}
+
+/** A short fingerprint of where the game stands (both computers compare theirs every so often). */
+export function floorHash(s: FloorState): string {
+  const key = JSON.stringify([s.tick, s.rng, s.score, s.clock, s.shot, s.poss, s.phase, s.ball.holder, s.ball.x, s.ball.y, s.players.map((p) => [p.x, p.y, p.on, p.fouls, p.stamina])]);
+  let h = 2166136261;
+  for (let i = 0; i < key.length; i++) h = Math.imul(h ^ key.charCodeAt(i), 16777619) >>> 0;
+  return h.toString(36);
 }

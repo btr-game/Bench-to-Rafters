@@ -12,7 +12,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { FLOOR } from '../../engine/balance';
 import { RIM_Y, zoneOf } from '../../engine/floor/court';
-import { floorResult, freshEvents, isOpen, meterWindow, openMan, ratingK, releaseQuality, skipFloor, startFloor, stepFloor, type FloorEvent, type FloorInput, type FloorSetup, type FloorState } from '../../engine/floor/sim';
+import { floorHash, floorResult, freshEvents, isOpen, meterWindow, mirrorFloor, openMan, ratingK, releaseQuality, skipFloor, startFloor, stepFloor, type FloorEvent, type FloorInput, type FloorSetup, type FloorState } from '../../engine/floor/sim';
 import type { DramaPlay } from '../../engine/story/drama';
 import type { Kit } from '../../content/teamStyle';
 import { lookOf, shoeOf, type KitName } from '../art/Player';
@@ -24,6 +24,7 @@ import { setSfx, sfx, soundSettings } from '../sound';
 import { announce, announcerOn, setAnnouncer } from '../announcer';
 import { Backdrop, CAM_RANGE, VIEW, drawBasket, drawFrontRow, drawShadow, pixel, project, type ArenaLook } from './view';
 import { MID_X, SpriteBook, type Frame } from './sprites';
+import type { Lockstep } from './net';
 
 export interface FloorTeamLook {
   kit: Kit;
@@ -41,6 +42,11 @@ interface Props {
   series?: string;
   onAgain?: () => void;
   onDone: (r: FloorOutcome) => void;
+  /** Against a friend online (round 39): the game's keys both ways, the friend's name, and what
+   * leaving does. Team 1's friend sees the game turned round, his team on the left of the bug. */
+  net?: { link: Lockstep; friend: string; onLeave: () => void };
+  /** The end card's title for a loss (a career's playoff game: the season is over). */
+  lose?: string;
 }
 
 const KEY = {
@@ -280,11 +286,21 @@ interface Tag {
   us: boolean;
 }
 
-export function FloorScreen({ setup, arena, looks, series, onAgain, onDone }: Props) {
+export function FloorScreen({ setup: given, arena, looks: givenLooks, series, onAgain, onDone, net, lose }: Props) {
+  const link = net?.link ?? null;
+  const flip = link?.side === 1;
+  // what this screen shows: his own team first (the friend's, against a friend on team 1)
+  const setup = flip ? { ...given, us: given.them, them: given.us } : given;
+  const looks: [FloorTeamLook, FloorTeamLook] = flip ? [givenLooks[1], givenLooks[0]] : givenLooks;
   const canvas = useRef<HTMLCanvasElement>(null);
   const wrap = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(2);
-  const [hud, setHud] = useState<Hud>(() => hudOf(startFloor(setup)));
+  const [hud, setHud] = useState<Hud>(() => {
+    const s0 = startFloor(given);
+    return hudOf(flip ? mirrorFloor(s0) : s0);
+  });
+  // against a friend: his keys are late (waiting), or he is gone
+  const [wait, setWait] = useState<'' | 'late' | 'gone'>('');
   const [word, setWord] = useState<{ text: string; team: 0 | 1; id: number } | null>(null);
   // after the first play (owner: "it's a bit hard to know if we scored or not. make the number
   // appear larger"): the points a basket brings, big over the court
@@ -338,10 +354,16 @@ export function FloorScreen({ setup, arena, looks, series, onAgain, onDone }: Pr
     const cv = canvas.current!;
     const ctx = cv.getContext('2d')!;
     ctx.imageSmoothingEnabled = false;
-    const s = startFloor(setup);
+    // the game itself, and the one this screen reads: the same, or (team 1 against a friend) turned round
+    const real = startFloor(given);
+    let s = flip ? mirrorFloor(real) : real;
+    const look = () => {
+      s = flip ? mirrorFloor(real) : real;
+      game.current = s;
+    };
     game.current = s;
     // the dev server lets a test script read the game it is playing
-    if (import.meta.env.DEV) (window as unknown as { __floor?: FloorState }).__floor = s;
+    if (import.meta.env.DEV) (window as unknown as { __floor?: FloorState }).__floor = real;
     const back = new Backdrop(ctx, arena);
     const book = new SpriteBook();
     const lookFor: Look[] = s.players.map((p) => lookOf(p.name, shoeOf(looks[p.team].kit, looks[p.team].which)));
@@ -380,7 +402,7 @@ export function FloorScreen({ setup, arena, looks, series, onAgain, onDone }: Pr
     let lastCall = 0;
     let prevHolder = s.ball.holder;
     let lastSec = Math.ceil(s.clock);
-    let real = false;
+    let crunch = false;
     const gameSecs = (ms: number) => (ms / 1000) * FLOOR.tick * PACE;
 
     const shooting = () => {
@@ -466,7 +488,8 @@ export function FloorScreen({ setup, arena, looks, series, onAgain, onDone }: Pr
         // the frames a play sets off
         if ((e.kind === 'reach' || e.kind === 'steal') && e.by !== undefined) act[e.by] = { kind: 'reach', t0: now };
         if ((e.kind === 'make' || e.kind === 'miss') && e.by !== undefined) act[e.by] = { kind: e.kind === 'make' && e.by === s.user ? 'cheer' : 'land', t0: now };
-        const cu = closeUpOf(s, e, before);
+        // no close-ups against a friend: one would stop this screen and the other would wait for it
+        const cu = link ? null : closeUpOf(s, e, before);
         if (cu && !closeRef.current) {
           closeRef.current = true;
           setClose({ id: now, ...cu });
@@ -477,6 +500,42 @@ export function FloorScreen({ setup, arena, looks, series, onAgain, onDone }: Pr
     const finish = () => {
       setHud(hudOf(s));
       setOver(floorResult(s));
+    };
+    // a key's direction on the court: turned round for team 1 against a friend
+    const toReal = (inp: FloorInput): FloorInput => (flip && inp.dx ? { ...inp, dx: -inp.dx } : inp);
+    let lateSince: number | null = null;
+    let waitShown: '' | 'late' | 'gone' = '';
+    if (link) {
+      link.getState = () => real;
+      link.setState = (ns) => {
+        Object.assign(real, ns);
+        look();
+        s.players.forEach((p, i) => {
+          prev[i].x = p.x;
+          prev[i].y = p.y;
+        });
+      };
+    }
+    /** One tick: the positions before it, the step, and what it set off. */
+    const tick = (a: FloorInput | null, b: FloorInput | null) => {
+      s.players.forEach((p, i) => {
+        prev[i].x = p.x;
+        prev[i].y = p.y;
+      });
+      const before: [number, number] = [...s.score];
+      stepFloor(real, a, b);
+      link?.stepped(real);
+      look();
+      // the dev server keeps the game's fingerprints, so a test can check two screens agree
+      if (import.meta.env.DEV && link && real.tick % 40 === 0) ((window as unknown as { __floorHashes?: Record<number, string> }).__floorHashes ??= {})[real.tick] = floorHash(real);
+      s.players.forEach((p, i) => (openFor[i] = p.team === 0 && p.on && isOpen(s, i) ? openFor[i] + 1 : 0));
+      onEvents(freshEvents(s), before);
+      // the dribble as the ball comes to him, the clock's last seconds in a close one
+      if (s.ball.holder === s.user && prevHolder !== s.user && s.poss === 0 && s.phase === 'live') sfx('bounce');
+      prevHolder = s.ball.holder;
+      const sec = Math.ceil(s.clock);
+      if (sec !== lastSec && s.clock <= 5 && s.phase === 'live' && Math.abs(s.score[0] - s.score[1]) <= 3) sfx('tick');
+      lastSec = sec;
     };
 
     // ---- drawing ----
@@ -752,37 +811,45 @@ export function FloorScreen({ setup, arena, looks, series, onAgain, onDone }: Pr
     const loop = (now: number) => {
       const dt = Math.min(0.1, (now - lastT) / 1000);
       lastT = now;
-      if (skip.current) {
+      if (skip.current && !link) {
         skip.current = false;
-        skipFloor(s);
+        skipFloor(real);
+        look();
         finish();
       }
-      const live = !pausedRef.current && !closeRef.current && s.phase !== 'over';
+      // against a friend the menu leaves the game running (it does not stop for one screen)
+      const live = (link ? true : !pausedRef.current && !closeRef.current) && s.phase !== 'over';
+      if (link) {
+        const gone = link.gone || now - link.heard > 10000;
+        const w = gone ? 'gone' : lateSince !== null && now - lateSince > 700 ? 'late' : '';
+        if (w !== waitShown) {
+          waitShown = w;
+          setWait(w);
+        }
+      }
       if (live) {
         acc += dt;
         // step 4: a close game's last minute at real speed; the shot meter keeps to its real second
         const pace = paceOf(s);
-        if (pace !== PACE && !real) {
-          real = true;
+        if (pace !== PACE && !crunch) {
+          crunch = true;
           setWord({ text: t('Crunch time'), team: 0, id: now + Math.random() });
           sfx('clutch');
-        } else if (pace === PACE) real = false;
+        } else if (pace === PACE) crunch = false;
         const tl = 1 / pace;
         while (acc >= tl && !closeRef.current) {
-          s.players.forEach((p, i) => {
-            prev[i].x = p.x;
-            prev[i].y = p.y;
-          });
-          const before: [number, number] = [...s.score];
-          stepFloor(s, inputFor());
-          s.players.forEach((p, i) => (openFor[i] = p.team === 0 && p.on && isOpen(s, i) ? openFor[i] + 1 : 0));
-          onEvents(freshEvents(s), before);
-          // the dribble as the ball comes to him, the clock's last seconds in a close one
-          if (s.ball.holder === s.user && prevHolder !== s.user && s.poss === 0 && s.phase === 'live') sfx('bounce');
-          prevHolder = s.ball.holder;
-          const sec = Math.ceil(s.clock);
-          if (sec !== lastSec && s.clock <= 5 && s.phase === 'live' && Math.abs(s.score[0] - s.score[1]) <= 3) sfx('tick');
-          lastSec = sec;
+          if (link) {
+            // his keys for the ticks to come, then the tick both screens have the keys for
+            link.fill(real.tick, () => toReal(inputFor()));
+            if (!link.ready(real.tick + 1)) {
+              lateSince ??= now;
+              acc = Math.min(acc, tl * 2);
+              break;
+            }
+            lateSince = null;
+            const [a, b] = link.inputs(real.tick + 1);
+            tick(a, b);
+          } else tick(inputFor(), null);
           acc -= tl;
           if (s.phase === 'over') {
             finish();
@@ -812,7 +879,7 @@ export function FloorScreen({ setup, arena, looks, series, onAgain, onDone }: Pr
         return;
       }
       if (e.code === 'Escape' || e.code === 'KeyP') {
-        if (s.phase === 'over') return;
+        if (s.phase === 'over' || waitShown === 'gone') return;
         e.preventDefault();
         setPaused((p) => !p);
         return;
@@ -846,11 +913,17 @@ export function FloorScreen({ setup, arena, looks, series, onAgain, onDone }: Pr
     window.addEventListener('blur', blur);
     return () => {
       cancelAnimationFrame(raf);
+      if (link) {
+        link.getState = () => null;
+        link.setState = () => {};
+      }
       window.removeEventListener('keydown', down);
       window.removeEventListener('keyup', up);
       window.removeEventListener('blur', blur);
     };
-  }, [setup, arena, looks]);
+    // the setup and the looks are fixed for a game (the props they come from are)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [given, arena, givenLooks, link]);
 
   // the words fade on their own, and the points
   useEffect(() => {
@@ -974,26 +1047,43 @@ export function FloorScreen({ setup, arena, looks, series, onAgain, onDone }: Pr
                 {t('Announcer')}
               </button>
             </div>
-            <button
-              className="btn"
-              onClick={() => {
-                skip.current = true;
-                setPaused(false);
-              }}
-            >
-              {t('Skip to the end')}
-            </button>
-            {onAgain && (
+            {net ? (
+              <button className="btn" onClick={net.onLeave}>
+                {t('Leave the game')}
+              </button>
+            ) : (
+              <button
+                className="btn"
+                onClick={() => {
+                  skip.current = true;
+                  setPaused(false);
+                }}
+              >
+                {t('Skip to the end')}
+              </button>
+            )}
+            {onAgain && !net && (
               <button className="btn" onClick={onAgain}>
                 {t('Start again')}
               </button>
             )}
+            {net && <p className="floor-pause-note">{t('The game goes on while this is open.')}</p>}
+          </div>
+        )}
+        {net && wait === 'late' && !over && <div className="floor-wait">{t('Waiting for {name}…', { name: net.friend })}</div>}
+        {net && wait === 'gone' && !over && (
+          <div className="floor-pause floor-end" role="dialog" aria-label={t('{name} left the game', { name: net.friend })}>
+            <h2>{t('{name} left the game', { name: net.friend })}</h2>
+            <p>{t('Nothing more comes through from the other screen. The game stops here.')}</p>
+            <button className="btn primary" autoFocus onClick={net.onLeave}>
+              {t('Back to the room')}
+            </button>
           </div>
         )}
         {over && (
           <div className="floor-pause floor-end" role="dialog" aria-label={t('Final')}>
             <div className="kicker">{t('Final')}</div>
-            <h2>{over.win ? t('You won') : t('Season over')}</h2>
+            <h2>{over.win ? t('You won') : net ? t('You lost') : (lose ?? t('Season over'))}</h2>
             <div className="floor-final">
               <span>{setup.us.short}</span> {over.us} – {over.them} <span>{setup.them.short}</span>
             </div>

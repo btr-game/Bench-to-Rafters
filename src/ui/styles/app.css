@@ -3201,6 +3201,12 @@ td > .link-btn { min-width: 44px; text-align: left; }
   100% { opacity: 0; margin-top: -6px; }
 }
 .floor-line-tip { position: absolute; left: 50%; bottom: 13%; transform: translateX(-50%); padding: 4px 10px; background: #101218; border: 2px solid #000; color: #f2eee6; font: 700 14px/1.3 var(--f-body, Archivo, sans-serif); white-space: nowrap; pointer-events: none; }
+/* round 39, online: the friend's keys late, the note in the menu (the game goes on behind it) */
+.floor-wait { position: absolute; left: 50%; top: 10%; transform: translateX(-50%); padding: 6px 14px; background: #101218; border: 2px solid #000; color: #ffd23f; font: 800 15px/1.3 var(--f-body, Archivo, sans-serif); white-space: nowrap; pointer-events: none; animation: floor-wait 1s steps(2) infinite; }
+@keyframes floor-wait {
+  50% { color: #f2eee6; }
+}
+.floor-pause-note, .floor-pause p { margin: 0; color: #c9c4ba; font-size: 13px; max-width: 46ch; }
 .floor-me { display: flex; flex-wrap: wrap; gap: 8px 22px; align-items: center; width: min(100%, 1000px); padding: 6px 12px; background: #14161c; border: 2px solid #000; color: #dcd6ca; font: 600 13px/1.3 var(--f-mono); text-transform: uppercase; letter-spacing: 0.03em; }
 .floor-me > b { font-family: var(--f-display); font-size: 18px; color: #f2eee6; letter-spacing: 0.02em; }
 .floor-me-item { display: inline-flex; align-items: center; gap: 8px; }

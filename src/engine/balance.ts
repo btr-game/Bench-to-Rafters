@@ -1280,6 +1280,9 @@ export const FLOOR = {
   inboundReach: 4,
   /** Step 4: a game within `margin` points runs at real speed for its last `clock` game seconds. */
   realTime: { clock: 60, margin: 6 },
+  /** Round 39, online: game seconds a free throw waits for a human's release before the AI shoots it
+   * (a friend who has walked away must not hold both screens). */
+  ftWait: 10,
   /** The step-back's slide (feet per game second). */
   dash: 16,
   /** One tap at the rim: a defender inside `within` feet strips him up to `strip` of the time, right
