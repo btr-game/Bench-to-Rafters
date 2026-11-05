@@ -3645,3 +3645,9 @@ tutorial and main game. add the unlock button to every [locked] component".
 - **Also: the feedback inbox showed only dates** (owner: "bug fix", a screenshot of the dev deck's
   inbox). The notes were in the database (47, 30, 37 and 4 characters); each was drawn as `.prose`,
   which Simple text hides everywhere. The message now has its own class (`.inbox-text`).
+- **Also: the Home tab crashed on a Reality career in the NBA** (owner: "bug fix", "home tab: Cannot
+  read properties of undefined (reading 'includes')"). The half-season results line read its plan's
+  name from `NAMES.plan`, a copy that never got the two newer plans (Speed and agility, Learn from a
+  vet; a cast to `Record<HalfPlan, string>` hid the gap), so `t(undefined)` threw after a half on
+  either. Home and the Catalog now read `PLAN_TEXT`, the plans' own typed list, and the copy is gone.
+  Checked by drawing Home 960 times through four Reality careers' NBA seasons.
