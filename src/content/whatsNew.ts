@@ -16,6 +16,20 @@ interface News {
 
 export const NEWS: News[] = [
   {
+    id: '2026-11-05-r41',
+    date: '5 November 2026',
+    items: [
+      { icon: 'story', text: 'Story mode: a career of its own from the old neighbourhood, across the water north of the main land. Name his best friend, his family and his rival (or let the game), then live twenty-four chapters with them, face to face, from the driveway hoop to the end.' },
+      { icon: 'floor', text: 'The Floor: the last six minutes, played by you. Move, pass, call a pick, drive and shoot on a meter, and defend too. A mini-game on the island, and the biggest playoff games of a career.' },
+      { icon: 'versus', text: 'Live on the Floor: play a friend head to head, both of you at the keys at once. One makes a room, the other types in its code.' },
+      { icon: 'globe', text: 'The game in Korean, Chinese, Japanese, Spanish and French (Settings): the interface and story mode, and now a career’s events, storylines, press conferences, news and finale too.' },
+      { icon: 'unlock', text: 'Every locked place, level and mode has an Unlock button. Enter the master code there and the whole game opens at once, the tutorial included.' },
+      { icon: 'note', text: 'Two secrets hide on the main land: one floats in the water, the other answers an old code typed on the keyboard.' },
+      { icon: 'jet', text: 'The road map has an airport: once beginner is done, fly back to the main land any time.' },
+      { icon: 'fast', text: 'The game opens faster: it loads much less up front, and a language’s words come in only when you pick it. Hold Space to speed up the end credits.' },
+    ],
+  },
+  {
     id: '2026-11-03-r36',
     date: '3 November 2026',
     items: [

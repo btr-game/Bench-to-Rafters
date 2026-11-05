@@ -3651,3 +3651,30 @@ tutorial and main game. add the unlock button to every [locked] component".
   vet; a cast to `Record<HalfPlan, string>` hid the gap), so `t(undefined)` threw after a half on
   either. Home and the Catalog now read `PLAN_TEXT`, the plans' own typed list, and the copy is gone.
   Checked by drawing Home 960 times through four Reality careers' NBA seasons.
+
+## After round 41: a faster opening, two secrets, What's new
+
+- **Opening time** (owner: "bug fix: the game takes too long to open"). Measured on the build with
+  the CPU slowed four times, as a slower laptop: the five language tables were half the game's
+  script (6.37 MB of script, 2.28 MB compressed), read on every visit though a player uses one at
+  most. A table now loads when its language is picked, and before the first screen for a device
+  that picked one before (`startLang`, main.tsx): the website fetches that one table; the tests and
+  scripts register them from disk (`tests/setup-langs.ts`). The script is 2.71 MB (0.92 MB
+  compressed). The intro's button shows after 886 ms (median of five fresh visits) where it took
+  1,274 ms; on a real connection the download, 2.5 times smaller, saves more.
+- **The artifact** was slower still (2,464 ms), its script written into the page: a page's own
+  script is compiled on the main thread as the page is read, a script file while it downloads. It
+  is now published as files, as the website is: the page, its script and stylesheet, and the five
+  tables (0.91 s on the same test). If a host ever has to take the one-file page again, the
+  scratchpad's inline step carries each table as a `<script type="application/json"
+  id="btr-lang-ko">` block, which the loader reads before it fetches.
+- **Two secrets on the main land** (owner: "can we add the masterkey and dev key in as easter eggs
+  somewhere?"): a bottle bobbing in the water east of the dock holds the master code ("A message in
+  a bottle"); the old cheat code typed on the main land (up up down down left right left right B A)
+  brings the developer's note with the dev deck's key. Both codes are kept lightly encoded
+  (ui/eggs.ts), as the exit code is, so the page never spells them out; the tests check that each
+  note's code opens what it says. Anyone who finds the note can open the dev deck; the website's
+  feedback inbox still needs its own inbox key, and the artifact's is readable by its owner only.
+- **What's new** gets the rounds since 3 November: story mode, the Floor and the Floor online, the
+  five languages, the Unlock buttons, the two secrets (hinted, not given), the airport, the faster
+  opening and the end credits' Space.

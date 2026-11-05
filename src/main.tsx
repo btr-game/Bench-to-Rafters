@@ -16,7 +16,7 @@ import { DECK_LOGO, GAME_LOGO, setFavicon } from './ui/art/favicon';
 import { isDev, onDev } from './dev/mode';
 import { DevDeck, devSetup } from './dev/DevDeck';
 import { joinCourt } from './ui/community';
-import { lang, onLang } from './i18n';
+import { lang, onLang, startLang } from './i18n';
 
 setFavicon(isDev() ? DECK_LOGO : GAME_LOGO);
 onDev((on) => setFavicon(on ? DECK_LOGO : GAME_LOGO));
@@ -58,12 +58,15 @@ function Lang({ children }: { children: ReactNode }) {
   return <Fragment key={l}>{children}</Fragment>;
 }
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <Lang>
-      <Root />
-      <Loading />
-      <Look />
-    </Lang>
-  </React.StrictMode>,
+// a device that picked a language draws its first screen in it (its table comes in first)
+void startLang().finally(() =>
+  ReactDOM.createRoot(document.getElementById('root')!).render(
+    <React.StrictMode>
+      <Lang>
+        <Root />
+        <Loading />
+        <Look />
+      </Lang>
+    </React.StrictMode>,
+  ),
 );

@@ -4106,7 +4106,14 @@
   "Unlock with the master code": "マスターコードでロック解除",
   "Unlock everything": "すべてロック解除",
   "Have the master code? Enter it and the whole game opens at once: the tutorial, every level, difficulty and mini-game, and Sim mode.": "マスターコードをお持ちですか？入力すると、ゲーム全体がすぐに開放されます。チュートリアル、すべてのレベル、難易度、ミニゲーム、そしてシムモードも。",
-  "Master code": "マスターコード"
+  "Master code": "マスターコード",
+  "A message in a bottle": "ボトルメール",
+  "A note from the developer": "開発者からのメモ",
+  "It washed up on the main land, in handwriting you don’t know:": "本土に流れ着きました。見覚えのない筆跡です：",
+  "You found the old code. The developer left a key here:": "昔の隠しコマンドを見つけました。開発者がここに鍵を残しています：",
+  "The master code. Enter it on any Unlock button and the whole game opens.": "マスターコードです。どのロック解除ボタンでも入力すれば、ゲーム全体が開放されます。",
+  "It opens the Developer door at the foot of the start page.": "スタートページの一番下にある開発者のドアを開けます。",
+  "A bottle in the water": "水に浮かぶボトル"
  },
  "story": {
   "f-driveway.title": "家の前のゴール",

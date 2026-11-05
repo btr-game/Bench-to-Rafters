@@ -4106,7 +4106,14 @@
   "Unlock with the master code": "Déverrouiller avec le code maître",
   "Unlock everything": "Tout déverrouiller",
   "Have the master code? Enter it and the whole game opens at once: the tutorial, every level, difficulty and mini-game, and Sim mode.": "Vous avez le code maître ? Entrez-le et tout le jeu s’ouvre aussitôt : le tutoriel, chaque niveau, difficulté et mini-jeu, et le mode Sim.",
-  "Master code": "Code maître"
+  "Master code": "Code maître",
+  "A message in a bottle": "Un message dans une bouteille",
+  "A note from the developer": "Un mot du développeur",
+  "It washed up on the main land, in handwriting you don’t know:": "Elle s’est échouée sur le continent, d’une écriture que vous ne connaissez pas :",
+  "You found the old code. The developer left a key here:": "Vous avez trouvé le vieux code. Le développeur a laissé une clé ici :",
+  "The master code. Enter it on any Unlock button and the whole game opens.": "Le code maître. Entrez-le sur n’importe quel bouton Déverrouiller et tout le jeu s’ouvre.",
+  "It opens the Developer door at the foot of the start page.": "Elle ouvre la porte du développeur en bas de la page d’accueil.",
+  "A bottle in the water": "Une bouteille dans l’eau"
  },
  "story": {
   "f-driveway.title": "L’allée",

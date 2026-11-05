@@ -331,7 +331,10 @@ describe('the UI’s part (ui/achievements.ts): the languages and the flights', 
   const fresh = async () => {
     vi.stubGlobal('localStorage', new FakeStorage());
     vi.resetModules();
-    return { ach: await import('../src/ui/achievements'), book: await import('../src/engine/achievements'), i18n: await import('../src/i18n') };
+    const i18n = await import('../src/i18n');
+    // a fresh i18n has no tables yet (the game loads a language when it is picked)
+    i18n.registerLang('ko', (await import('../src/i18n/ko.json')).default as never);
+    return { ach: await import('../src/ui/achievements'), book: await import('../src/engine/achievements'), i18n };
   };
 
   it('keeps the language each career was finished in, once a language', async () => {

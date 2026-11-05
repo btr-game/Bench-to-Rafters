@@ -14,6 +14,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import ts from 'typescript';
 import { tableOf, type Lang } from '../src/i18n';
+// the tables from disk (the game loads one when it is picked)
+import '../tests/setup-langs';
 import { STORY_EN } from '../src/content/story';
 import { FAST_PLANS, LAB_PLANS, PLAN_TEXT } from '../src/engine/career/season';
 import { MODES } from '../src/engine/balance';

@@ -19,6 +19,7 @@ import { HAIR_COLORS, SKIN_COLORS } from '../art/Player';
 import { PixelX } from '../art/PixelX';
 import { listSlots } from '../saves';
 import { unlockHint } from '../road';
+import { BottleSprite, Eggs } from '../components/Eggs';
 import { UnlockButton } from '../components/SkipTutorial';
 import { seasonLabel } from '../format';
 import { sfx } from '../sound';
@@ -346,11 +347,13 @@ export function MainLand({ ch, onStart, onStory, children }: { ch: Challenges; o
       <div className="ml-stage" data-tour="mainland">
         <LandMap career={career} label={t('The main land: a gym, the cage and the dome for the three difficulties, the airport, the cinema, the park, the library, the newsstand, the statue plaza, the trophy museum, his house while a career is going, the island of mini-games across the water, and the old neighbourhood to the north, where story mode starts')}>
           <Sprite rows={PLANE} x={plane.x} y={plane.y} colors={PLANE_COLORS} />
+          <BottleSprite />
           <Sprite rows={BOAT} x={186 + Math.abs(sail)} y={51 + Math.round(sail * (sail > 0 ? 1.1 : 1.25))} colors={sail ? kin : { ...kin, h: '', s: '' }} />
           {!sail && <Sprite rows={CAR} x={carX - 4} y={AVENUE - 4} colors={kin} flip={facing < 0} />}
           {!sail && <rect className="ml-night" x={facing > 0 ? carX + 5 : carX - 7} y={AVENUE - 1} width={3} height={1} fill="#FFF3BF" />}
         </LandMap>
         <div className="ml-spots">
+          <Eggs />
           {places.map((p) => {
             const st = landState(road, p.id, recommend);
             const [x, y, w, h] = p.box;
