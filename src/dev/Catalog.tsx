@@ -51,7 +51,7 @@ import { BEGINNER_EVENTS, LEVEL_IDS, LEVEL_NAME } from '../engine/levels';
 import { DRAFT_NIGHT, FLOOR_MINI, JOIN_FRIEND, ROADMAP, ROAD_GRADES } from '../engine/balance';
 import { FLOOR_STRENGTHS, floorRoster } from '../engine/floor/mini';
 import { ovrOf } from '../engine/player/ovr';
-import { SIX_PLANS } from '../engine/career/season';
+import { PLAN_TEXT, SIX_PLANS } from '../engine/career/season';
 import { LEVEL_COPY } from '../content/roadmap';
 import { ROAD_MINIS, ROAD_NEED, UNLOCK_FROM, UNLOCK_NAME, unlockHint, type Unlock } from '../ui/road';
 import { PlaceArt } from '../ui/screens/RoadMap';
@@ -544,7 +544,7 @@ const CATEGORIES: Category[] = [
         const p = HALF_PLANS[k];
         return {
           key: k,
-          title: NAMES.plan[k] ?? k,
+          title: PLAN_TEXT[k].label,
           sub: k,
           art: () => <Icon name={ICON_FOR[k] ?? k} size={44} />,
           facts: [

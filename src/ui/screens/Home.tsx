@@ -61,6 +61,7 @@ import { Icon } from "../art/Icon";
 import { leagueIcon, levelIcon } from "../art/careerArt";
 import { intLeagueOf } from "../../engine/world/leagues";
 import { breakthroughBar } from "../../engine/career/breakthrough";
+import { PLAN_TEXT } from "../../engine/career/season";
 import { rosterRank, winningEdge } from "../../engine/career/team";
 import { ovrOf } from "../../engine/player/ovr";
 import { perGame } from "../../engine/sim/statModel";
@@ -394,8 +395,8 @@ function PlanOutcomes({ g, half }: { g: GameState; half?: number }) {
           className={`outcome ${o.outcome.split(" ")[0].toLowerCase()}`}
         >
           <div className="kicker">
-            {o.half === 1 ? t("First half") : t("Second half")} · {t(NAMES.plan[o.plan])}
-            {o.plan2 ? ` + ${t(NAMES.plan[o.plan2])}` : ""} · {o.outcome}
+            {o.half === 1 ? t("First half") : t("Second half")} · {t(PLAN_TEXT[o.plan].label)}
+            {o.plan2 ? ` + ${t(PLAN_TEXT[o.plan2].label)}` : ""} · {o.outcome}
           </div>
           <div>{o.text}</div>
         </div>

@@ -1,6 +1,6 @@
 // All UI text lives here so a Korean version is easy later.
 
-import type { AttrKey, HalfPlan, LevelKey, Pos, RoleKey } from '../engine/types';
+import type { AttrKey, LevelKey, Pos, RoleKey } from '../engine/types';
 import { tx } from '../i18n';
 
 export const NAMES = {
@@ -33,18 +33,6 @@ export const NAMES = {
     bench: 'End of bench',
     deep: 'Deep bench',
   } as Record<RoleKey, string>,
-  plan: {
-    balanced: 'Balanced',
-    grind: 'Grind',
-    recovery: 'Recovery',
-    spotlight: 'Spotlight',
-    teamfirst: 'Team first',
-    shooting: 'Shooting lab',
-    strength: 'Weight room',
-    playmaking: 'Film and reads',
-    defense: 'Lockdown',
-    offhand: 'Off-hand work',
-  } as Record<HalfPlan, string>,
   level: {
     HSJV: 'HS JV',
     HSV: 'HS Varsity',
