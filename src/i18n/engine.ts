@@ -13,7 +13,7 @@
 
 import TPL from './engineTpl.json';
 import { hashOf } from './hash';
-import { lang, tableOf, type Lang } from './index';
+import { lang, localOrdinal, tableOf, type Lang } from './index';
 
 interface Pat {
   re: RegExp;
@@ -56,8 +56,14 @@ function one(s: string, tb: Table, depth: number): string | null {
     if (!m) continue;
     const tr = tb[p.h];
     if (tr === undefined) continue;
-    // a value can be a line of its own (a phrase the engine chose), or a name or a number
-    const vals = m.slice(1).map((v) => (/[a-z]{3}/.test(v) ? (one(v, tb, depth + 1) ?? v) : v));
+    // a value can be a line of its own (a phrase or a word the engine chose), an ordinal, or a name or a number
+    const vals = m.slice(1).map((v) => {
+      const o = v.match(/^(\d+)(?:st|nd|rd|th)$/);
+      if (o) return localOrdinal(Number(o[1])) ?? v;
+      const w = v.trim();
+      const tr = /[a-z]{2}/i.test(w) ? one(w, tb, depth + 1) : null;
+      return tr === null ? v : v.replace(w, tr);
+    });
     return fill(tr, vals);
   }
   return null;

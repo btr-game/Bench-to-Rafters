@@ -48,6 +48,16 @@ describe('engine lines in the player language', () => {
     expect(te('The closer fire The closer after a 1–2 season; Watch it once, with the coach takes over.')).toBe('클로저, 1–2 시즌 후 클로저 경질; 코치와 함께 한 번 보기 부임.');
   });
 
+  it('writes an ordinal value in the language, and translates a word value without its spaces', () => {
+    setLang('ko');
+    const ord = (TPL as string[]).find((s) => s === '{0} in the MVP voting');
+    expect(ord, 'the MVP voting template is in engineTpl.json').toBeTruthy();
+    put(ord!, 'MVP 투표 {0}');
+    put('second', '2위');
+    expect(te('12th in the MVP voting')).toBe('MVP 투표 12위');
+    expect(te('second in the MVP voting')).toBe('MVP 투표 2위');
+  });
+
   it('takes a paragraph a sentence at a time, and keeps the sentences it does not know', () => {
     setLang('ko');
     expect(te('He pauses it eleven times. Ten are about your feet.')).toBe('그는 영상을 열한 번 멈춰요. Ten are about your feet.');

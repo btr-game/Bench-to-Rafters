@@ -50,6 +50,11 @@ const nameLike = (s: string) => {
   const w = s.trim().split(/\s+/);
   return w.length <= 6 && !/[.!?:;,]$/.test(s.trim()) && w.every((x) => SMALL.has(x.toLowerCase()) || /^[A-Z0-9“"‘'(]/.test(x));
 };
+/** Words a template's value can be (round 41): the short words written inside a template's values
+ * ('won' or 'lost') are found in the code; these reach a template through a variable. Grammar words
+ * that only agree with English ('is', 'plays') are left out: a translation has no use for them. */
+const VALUE_WORDS = ['humble', 'confident', 'fiery', 'One of', 'Projected to be one of', 'heavy', 'solid', 'ideal', 'lean', 'skinny', 'daughter', 'son'];
+const GRAMMAR = new Set(['is', 'are', 'was', 'were', 'has', 'have', 'go', 'goes', 'play', 'plays', 's', 'es', 'a', 'an', 'the']);
 const LOGIC_CALLS = new Set(['includes', 'startsWith', 'endsWith', 'indexOf', 'test', 'match', 'replace', 'split', 'RegExp', 'error', 'warn', 'log', 'has', 'get', 'set', 'delete', 'flag', 'add']);
 
 /** The English already in the interface's tables (t() and the data lists), by the Korean table. */
@@ -101,11 +106,11 @@ export function catalog(): { lines: Line[]; clash: string[] } {
       if (ts.isPropertyAssignment(p) && p.name === n) return true;
       return false;
     };
-    const add = (en: string, hint: Record<string, string> | undefined, n: ts.Node) => {
+    const add = (en: string, hint: Record<string, string> | undefined, n: ts.Node, ctx?: string) => {
       const h = hashOf(en);
       const was = byH.get(h);
       if (was && was.en !== en) clash.push(`${h}: "${was.en}" / "${en}"`);
-      if (!was) byH.set(h, { h, en, ...(hint ? { hint } : {}), ctx: ctxOf(n), at: `${rel}:${src.getLineAndCharacterOfPosition(n.getStart()).line + 1}` });
+      if (!was) byH.set(h, { h, en, ...(hint ? { hint } : {}), ctx: ctx ?? ctxOf(n), at: `${rel}:${src.getLineAndCharacterOfPosition(n.getStart()).line + 1}` });
     };
     const visit = (n: ts.Node): void => {
       if (ts.isStringLiteral(n) || ts.isNoSubstitutionTemplateLiteral(n)) {
@@ -122,12 +127,27 @@ export function catalog(): { lines: Line[]; clash: string[] } {
         });
         // a template carries its line only when its own words do (not "{0} {1}" or "{0} points")
         if (!logic(n) && words(en.replace(/\{\d+\}/g, ' ')) >= 2) add(en, hint, n);
-        n.templateSpans.forEach((sp) => visit(sp.expression));
+        n.templateSpans.forEach((sp) => {
+          // the short words a value is written as ('won' or 'lost', 'left' or 'right'), each a line of its own
+          const word = (x: ts.Node): void => {
+            if ((ts.isStringLiteral(x) || ts.isNoSubstitutionTemplateLiteral(x)) && !logic(x)) {
+              const w = x.text.trim();
+              // not a locale ('en-US') or an ordinal's ending (the screens write ordinals in the player's language)
+              if (/[A-Za-z]{2}/.test(w) && w.split(/\s+/).length <= 4 && !GRAMMAR.has(w.toLowerCase()) && !/^(st|nd|rd|th|[a-z]{2}-[A-Z]{2})$/.test(w) && !ui.has(w)) add(w, undefined, x, `a value in "${en}"`);
+            } else ts.forEachChild(x, word);
+          };
+          word(sp.expression);
+          visit(sp.expression);
+        });
         return;
       }
       ts.forEachChild(n, visit);
     };
     visit(src);
+  }
+  for (const w of VALUE_WORDS) {
+    const h = hashOf(w);
+    if (!byH.has(h)) byH.set(h, { h, en: w, ctx: 'a word that fills a value in another line', at: 'scripts/engineText.ts VALUE_WORDS' });
   }
   return { lines: [...byH.values()], clash };
 }

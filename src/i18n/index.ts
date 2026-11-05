@@ -94,5 +94,23 @@ export function storyTable(en: Record<string, string>): Record<string, string> {
   return cur === 'en' ? en : { ...en, ...TABLES[cur].story };
 }
 
+/** "5th" in the player's language (round 40, moved here in round 41 for the engine's lines): null in English. */
+export function localOrdinal(n: number): string | null {
+  switch (cur) {
+    case 'ko':
+      return `${n}위`;
+    case 'ja':
+      return `${n}位`;
+    case 'zh':
+      return `第${n}`;
+    case 'es':
+      return `${n}.º`;
+    case 'fr':
+      return n === 1 ? '1er' : `${n}e`;
+    default:
+      return null;
+  }
+}
+
 /** For the tests and the catalog script: a language's tables. */
 export const tableOf = (l: Exclude<Lang, 'en'>): Table => TABLES[l];
