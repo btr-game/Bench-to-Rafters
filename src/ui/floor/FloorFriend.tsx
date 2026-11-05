@@ -6,9 +6,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { NBA_TEAMS } from '../../content/teams';
 import { TEAM_STYLE } from '../../content/teamStyle';
-import { FIRST_NAMES, LAST_NAMES } from '../../content/names';
 import type { Pos } from '../../engine/types';
-import { leanRatings } from '../../engine/floor/career';
+import { floorRoster } from '../../engine/floor/mini';
 import type { FloorPlayerIn, FloorSetup } from '../../engine/floor/sim';
 import { username } from '../names';
 import { recordFloorFriend } from '../achievements';
@@ -19,8 +18,7 @@ import { FloorScreen, type FloorTeamLook } from './FloorScreen';
 import { Lockstep, ME, ROOM_RE, canPlayOnline, cleanRoom, openWire, roomCode, type FloorMsg, type Wire } from './net';
 
 const POS: Pos[] = ['PG', 'SG', 'SF', 'PF', 'C'];
-const BENCH: Pos[] = ['PG', 'SF', 'C'];
-/** Both teams as good as each other (the dev deck's "Good" team). */
+/** Both teams as good as each other (the mini-game's "Good" teams). */
 const LEVEL = 76;
 const PICK = 'btr-floor-friend';
 
@@ -50,22 +48,8 @@ function remember(m: Me): void {
   }
 }
 
-/** A team of eight at the room's level, his player at his position (named after him). */
-function roster(tag: string, seed: number, me: { name: string; pos: Pos }): FloorPlayerIn[] {
-  let h = seed >>> 0;
-  const rnd = () => (h = (Math.imul(h, 1103515245) + 12345) >>> 0) / 2 ** 32;
-  return [...POS, ...BENCH].map((pos, i) => {
-    const his = i < 5 && pos === me.pos;
-    return {
-      id: `${tag}${i}`,
-      name: his ? me.name : `${FIRST_NAMES[Math.floor(rnd() * FIRST_NAMES.length)]} ${LAST_NAMES[Math.floor(rnd() * LAST_NAMES.length)]}`,
-      pos,
-      number: [3, 11, 7, 32, 50, 1, 21, 44][i],
-      user: his,
-      r: leanRatings(LEVEL - (i >= 5 ? 6 : 0), pos, his ? 4 : Math.round((rnd() - 0.5) * 8)),
-    };
-  });
-}
+/** A team of eight at the room's level (the mini-game's builder), his player at his position, named after him. */
+const roster = (tag: string, seed: number, me: { name: string; pos: Pos }): FloorPlayerIn[] => floorRoster(tag, LEVEL, seed, { slot: POS.indexOf(me.pos), name: me.name });
 
 const teamOf = (abbr: string) => NBA_TEAMS.find((x) => x.abbr === abbr) ?? NBA_TEAMS[0];
 const nameOf = (abbr: string) => `${teamOf(abbr).city} ${teamOf(abbr).nick}`;
@@ -216,7 +200,7 @@ export function FloorFriend() {
   if (!canPlayOnline())
     return (
       <section className="card stack floor-friend">
-        <h2>{t('Play a friend online')}</h2>
+        <div className="sec-title">{t('Play a friend online')}</div>
         <p className="prose">{t('Two players, one on each team, live: this copy of the game cannot go online. Play it on the website.')}</p>
         <p className="mono small">{SITE}</p>
       </section>
@@ -226,7 +210,7 @@ export function FloorFriend() {
   return (
     <section className="card stack floor-friend">
       <div>
-        <h2>{t('Play a friend online')}</h2>
+        <div className="sec-title">{t('Play a friend online')}</div>
         <p className="prose small">{t('One of you makes a room and reads out its code; the other types it in. You each play one player, head to head, and the AI plays the other eight. Both teams are equally good.')}</p>
       </div>
       <div className="row floor-friend-pick" style={{ gap: 12, flexWrap: 'wrap' }}>
@@ -242,7 +226,7 @@ export function FloorFriend() {
         </label>
         <div className="row" role="group" aria-label={t('You play')} style={{ gap: 6 }}>
           {POS.map((p) => (
-            <button key={p} className={`chip${me.pos === p ? ' on' : ''}`} aria-pressed={me.pos === p} onClick={() => setMe({ ...me, pos: p })}>
+            <button key={p} className={`pick-chip${me.pos === p ? ' on' : ''}`} aria-pressed={me.pos === p} onClick={() => setMe({ ...me, pos: p })}>
               {p}
             </button>
           ))}
@@ -250,7 +234,7 @@ export function FloorFriend() {
       </div>
       {phase === 'pick' || phase === 'opening' ? (
         <div className="row" style={{ gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-          <button className="btn primary" disabled={phase === 'opening'} onClick={() => void open(roomCode(), true)}>
+          <button className="btn primary" data-tour="floor-friend" disabled={phase === 'opening'} onClick={() => void open(roomCode(), true)}>
             {t('Make a room')}
           </button>
           <div className="row mp-code-entry" style={{ gap: 8 }}>

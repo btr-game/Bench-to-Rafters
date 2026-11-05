@@ -1765,7 +1765,6 @@
   "Classes from the last two weeks with a seat left.": "최근 2주 안에 만들어졌고 자리가 남은 클래스예요.",
   "No open classes right now. Start one.": "지금은 열린 클래스가 없어요. 하나 시작해 보세요.",
   "Multiplayer": "멀티플레이",
-  "Two ways to play with friends, and nobody has to be on at the same time.": "친구와 플레이하는 두 가지 방법. 동시에 접속할 필요는 없어요.",
   "Playing with friends needs the game’s own server, which this page cannot reach. It works on the website and in the itch.io download.": "친구와 플레이하려면 게임 전용 서버가 필요한데, 이 페이지에서는 연결할 수 없어요. 웹사이트와 itch.io 다운로드 버전에서는 돼요.",
   "Open the website": "웹사이트 열기",
   "Kind of game": "게임 종류",
@@ -4096,7 +4095,14 @@
   "Get an A in the Floor mini-game five times.": "The Floor 미니게임에서 A를 다섯 번 받기.",
   "Win a game of the Floor mini-game as yourself, on your own NBA team.": "The Floor 미니게임에서 내 NBA 팀의 나 자신으로 이기기.",
   "Claim a bonus from the Floor mini-game in a career.": "커리어에서 The Floor 미니게임 보너스 받기.",
-  "Claim five bonuses from the Floor mini-game in one career.": "한 커리어에서 The Floor 미니게임 보너스 다섯 번 받기."
+  "Claim five bonuses from the Floor mini-game in one career.": "한 커리어에서 The Floor 미니게임 보너스 다섯 번 받기.",
+  "Play a friend online (the website and itch.io): one makes a room and reads out its six-letter code, the other types it in. You each steer one player, head to head, on two equally good teams; the AI plays the other eight.": "친구와 온라인으로 플레이(웹사이트와 itch.io): 한 명이 방을 만들고 여섯 글자 코드를 알려 주면, 다른 한 명이 그 코드를 입력해요. 각자 선수 한 명씩 맞대결로 조종하고, 두 팀의 전력은 같아요. 나머지 여덟 명은 AI가 맡아요.",
+  "Against a friend your keys count a fifth of a second later on both screens, so the two games stay the same; the menu does not stop the game, and there are no close-ups. Your friend sees the game from his end, attacking right as you do. Also on Play with friends.": "친구와 할 때는 두 화면 모두에서 키 입력이 0.2초 늦게 반영돼서 두 경기가 똑같이 유지돼요. 메뉴를 열어도 경기는 멈추지 않고, 클로즈업도 없어요. 친구는 자기 쪽에서, 여러분처럼 오른쪽으로 공격하는 화면으로 봐요. 친구와 플레이에서도 열 수 있어요.",
+  "Or play a friend online: make a room and read out its code, or type in a friend’s code and join. One player each, head to head, live.": "또는 친구와 온라인으로: 방을 만들어 코드를 알려 주거나, 친구의 코드를 입력해 들어가세요. 각자 선수 한 명, 맞대결, 실시간이에요.",
+  "Live: the Floor, head to head": "실시간: 플로어 맞대결",
+  "The last six minutes against a friend, both of you at the keys at once: one makes a room, the other types in its code.": "친구와 함께 키를 잡고 벌이는 마지막 6분: 한 명이 방을 만들고, 다른 한 명이 코드를 입력해요.",
+  "Play a friend on the Floor": "플로어에서 친구와 플레이",
+  "Two ways to play with friends, and nobody has to be on at the same time; and one live, on the Floor.": "친구와 플레이하는 두 가지 방법. 동시에 접속할 필요는 없어요. 그리고 플로어에서 하는 실시간 대결이 하나 있어요."
  },
  "story": {
   "f-driveway.title": "집 앞 골대",

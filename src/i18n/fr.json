@@ -1765,7 +1765,6 @@
   "Classes from the last two weeks with a seat left.": "Les promos des deux dernières semaines où il reste une place.",
   "No open classes right now. Start one.": "Aucune promo ouverte pour le moment. Lancez-en une.",
   "Multiplayer": "Multijoueur",
-  "Two ways to play with friends, and nobody has to be on at the same time.": "Deux façons de jouer entre amis, et personne n’a besoin d’être là en même temps.",
   "Playing with friends needs the game’s own server, which this page cannot reach. It works on the website and in the itch.io download.": "Jouer entre amis nécessite le serveur du jeu, que cette page ne peut pas joindre. Cela fonctionne sur le site web et dans la version itch.io à télécharger.",
   "Open the website": "Ouvrir le site web",
   "Kind of game": "Type de partie",
@@ -4096,7 +4095,14 @@
   "Get an A in the Floor mini-game five times.": "Obtenir un A dans le mini-jeu The Floor cinq fois.",
   "Win a game of the Floor mini-game as yourself, on your own NBA team.": "Gagner un match du mini-jeu The Floor dans votre propre rôle, avec votre propre équipe NBA.",
   "Claim a bonus from the Floor mini-game in a career.": "Récupérer un bonus du mini-jeu The Floor dans une carrière.",
-  "Claim five bonuses from the Floor mini-game in one career.": "Récupérer cinq bonus du mini-jeu The Floor en une carrière."
+  "Claim five bonuses from the Floor mini-game in one career.": "Récupérer cinq bonus du mini-jeu The Floor en une carrière.",
+  "Play a friend online (the website and itch.io): one makes a room and reads out its six-letter code, the other types it in. You each steer one player, head to head, on two equally good teams; the AI plays the other eight.": "Jouer contre un ami en ligne (le site et itch.io) : l’un crée un salon et donne son code à six caractères, l’autre le tape. Chacun dirige un joueur, en face-à-face, avec deux équipes de même niveau ; l’IA joue les huit autres.",
+  "Against a friend your keys count a fifth of a second later on both screens, so the two games stay the same; the menu does not stop the game, and there are no close-ups. Your friend sees the game from his end, attacking right as you do. Also on Play with friends.": "Contre un ami, vos touches comptent un cinquième de seconde plus tard sur les deux écrans, pour que les deux matchs restent identiques ; le menu n’arrête pas le match, et il n’y a pas de gros plans. Votre ami voit le match de son côté, en attaquant vers la droite comme vous. Aussi depuis Jouer entre amis.",
+  "Or play a friend online: make a room and read out its code, or type in a friend’s code and join. One player each, head to head, live.": "Ou jouez contre un ami en ligne : créez un salon et donnez son code, ou tapez le code d’un ami et rejoignez-le. Un joueur chacun, en face-à-face, en direct.",
+  "Live: the Floor, head to head": "En direct : le parquet, en face-à-face",
+  "The last six minutes against a friend, both of you at the keys at once: one makes a room, the other types in its code.": "Les six dernières minutes contre un ami, tous les deux aux commandes en même temps : l’un crée un salon, l’autre tape son code.",
+  "Play a friend on the Floor": "Jouer contre un ami sur le parquet",
+  "Two ways to play with friends, and nobody has to be on at the same time; and one live, on the Floor.": "Deux façons de jouer entre amis, et personne n’a besoin d’être là en même temps ; et une en direct, sur le parquet."
  },
  "story": {
   "f-driveway.title": "L’allée",

@@ -6,6 +6,7 @@
 // to the hub from the setup, to the setup from the result. A phone has the engine play the six
 // minutes, as a career's Floor does (phones are set aside, owner, round 39).
 
+import { FloorFriend } from '../floor/FloorFriend';
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { FLOOR_MINI } from '../../engine/balance';
@@ -116,7 +117,7 @@ export function FloorGame() {
   if (playing)
     return createPortal(
       <div className="floor-layer" role="dialog" aria-modal="true" aria-label={t('The Floor')}>
-        <FloorScreen key={playing.key} setup={playing.plan.setup} arena={playing.plan.arena} looks={playing.plan.looks} onDone={(r) => finish(playing.plan, r)} />
+        <FloorScreen key={playing.key} setup={playing.plan.setup} arena={playing.plan.arena} looks={playing.plan.looks} lose={t('You lost')} onDone={(r) => finish(playing.plan, r)} />
       </div>,
       document.body,
     );
@@ -137,6 +138,8 @@ function FloorSetupPage({ career, last, onStart }: { career: GameState | null; l
         <p className="prose">{t('A close NBA game with six minutes left in the fourth, four real minutes on the clock. You steer one starter at both ends; the other nine play themselves. Win it, and win it by enough for an A.')}</p>
       </div>
       <FloorVsAi career={career} last={last} onStart={onStart} />
+      {/* round 39 (owner: "can you make the game multiplayer as well?"): head to head with a friend, online by room code */}
+      <FloorFriend />
       <p className="small muted">
         {t('WASD or the arrows move, Shift sprints, J shoots (hold, let go in the green; tap at the rim), K passes, L makes a move, Space calls a pick. On defence J steals, K blocks, L switches. Esc pauses.')}{' '}
         {t('Grade: A for a win by {a} or more, B for a win, C for a loss by {c} or less, D below; your own line adds or takes up to {cap}.', { a: FLOOR_MINI.grade.A, c: -FLOOR_MINI.grade.C, cap: FLOOR_MINI.cap })}

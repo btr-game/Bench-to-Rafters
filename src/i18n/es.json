@@ -1765,7 +1765,6 @@
   "Classes from the last two weeks with a seat left.": "Promociones de las últimas dos semanas con algún sitio libre.",
   "No open classes right now. Start one.": "Ahora mismo no hay promociones abiertas. Empieza una.",
   "Multiplayer": "Multijugador",
-  "Two ways to play with friends, and nobody has to be on at the same time.": "Dos maneras de jugar con amigos, y nadie tiene que estar conectado a la vez.",
   "Playing with friends needs the game’s own server, which this page cannot reach. It works on the website and in the itch.io download.": "Jugar con amigos necesita el servidor propio del juego, al que esta página no llega. Funciona en el sitio web y en la descarga de itch.io.",
   "Open the website": "Abrir el sitio web",
   "Kind of game": "Tipo de partida",
@@ -4096,7 +4095,14 @@
   "Get an A in the Floor mini-game five times.": "Saca una A en el minijuego The Floor cinco veces.",
   "Win a game of the Floor mini-game as yourself, on your own NBA team.": "Gana un partido del minijuego The Floor como tú mismo, con tu propio equipo de la NBA.",
   "Claim a bonus from the Floor mini-game in a career.": "Cobra una bonificación del minijuego The Floor en una carrera.",
-  "Claim five bonuses from the Floor mini-game in one career.": "Cobra cinco bonificaciones del minijuego The Floor en una carrera."
+  "Claim five bonuses from the Floor mini-game in one career.": "Cobra cinco bonificaciones del minijuego The Floor en una carrera.",
+  "Play a friend online (the website and itch.io): one makes a room and reads out its six-letter code, the other types it in. You each steer one player, head to head, on two equally good teams; the AI plays the other eight.": "Juega con un amigo en línea (la web e itch.io): uno crea una sala y le dice su código de seis caracteres, el otro lo escribe. Cada uno controla a un jugador, cara a cara, con dos equipos igual de buenos; la IA juega con los otros ocho.",
+  "Against a friend your keys count a fifth of a second later on both screens, so the two games stay the same; the menu does not stop the game, and there are no close-ups. Your friend sees the game from his end, attacking right as you do. Also on Play with friends.": "Contra un amigo, tus teclas cuentan una quinta parte de segundo más tarde en las dos pantallas, para que los dos partidos sean idénticos; el menú no detiene el partido y no hay primeros planos. Tu amigo ve el partido desde su lado, atacando hacia la derecha como tú. También desde Jugar con amigos.",
+  "Or play a friend online: make a room and read out its code, or type in a friend’s code and join. One player each, head to head, live.": "O juega con un amigo en línea: crea una sala y dile su código, o escribe el código de tu amigo y entra. Un jugador cada uno, cara a cara, en directo.",
+  "Live: the Floor, head to head": "En directo: la pista, cara a cara",
+  "The last six minutes against a friend, both of you at the keys at once: one makes a room, the other types in its code.": "Los últimos seis minutos contra un amigo, los dos a los mandos a la vez: uno crea una sala y el otro escribe su código.",
+  "Play a friend on the Floor": "Jugar con un amigo en la pista",
+  "Two ways to play with friends, and nobody has to be on at the same time; and one live, on the Floor.": "Dos maneras de jugar con amigos, y nadie tiene que estar conectado a la vez; y una en directo, en la pista."
  },
  "story": {
   "f-driveway.title": "La entrada de casa",

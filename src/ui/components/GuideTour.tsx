@@ -39,6 +39,7 @@ const TOUR: Step[] = [
   T('oath', '[data-tour="rough-road"]', tx('With Reality hits hard: Rough Road, the hardest way to play. The road picks your player at random, then master mode with no Fast break or Sim, for the whole career, and a mark of honour for it.')),
   T('minis', D('minis'), tx('Mini-games. They open with the island on the road map; then free from the start page, and in a career each one opens with your ratings and pays a rating bonus.')),
   T('floor-mini', D('floor-mini'), tx('The Floor: pick both teams, how good they are and who you steer, then tip it off (Enter) for the last six minutes. Win by enough for an A.')),
+  T('floor-friend', D('floor-friend'), tx('Or play a friend online: make a room and read out its code, or type in a friend’s code and join. One player each, head to head, live.')),
   T('levels', D('levels-card'), tx('The airport flies back to the road map. Its stops open Reality hits hard, Shoot for the stars and the mini-games, and every level plays again. Level careers count nowhere.')),
   T('log', D('log'), tx('The career log: the cards of your last ten finished careers. Lock up to five to keep them for good.')),
   T('log-saves', '.save-entry', tx('A career in progress: continue it, or copy its code to send the maker with a bug report. Finished careers below open again with Look back.')),

@@ -1765,7 +1765,6 @@
   "Classes from the last two weeks with a seat left.": "ここ2週間の、空きのあるクラス。",
   "No open classes right now. Start one.": "今は空きのあるクラスがありません。始めてみましょう。",
   "Multiplayer": "マルチプレイ",
-  "Two ways to play with friends, and nobody has to be on at the same time.": "友達と遊ぶ方法は2つ。同時にオンラインでいる必要はありません。",
   "Playing with friends needs the game’s own server, which this page cannot reach. It works on the website and in the itch.io download.": "友達と遊ぶにはゲーム専用のサーバーが必要ですが、このページからは接続できません。ウェブサイトとitch.ioのダウンロード版で遊べます。",
   "Open the website": "ウェブサイトを開く",
   "Kind of game": "ゲームの種類",
@@ -4096,7 +4095,14 @@
   "Get an A in the Floor mini-game five times.": "The Floor ミニゲームで A 評価を5回取る。",
   "Win a game of the Floor mini-game as yourself, on your own NBA team.": "The Floor ミニゲームで、自分の NBA チームの自分自身として勝つ。",
   "Claim a bonus from the Floor mini-game in a career.": "キャリアで The Floor ミニゲームのボーナスを受け取る。",
-  "Claim five bonuses from the Floor mini-game in one career.": "1つのキャリアで、The Floor ミニゲームのボーナスを5回受け取る。"
+  "Claim five bonuses from the Floor mini-game in one career.": "1つのキャリアで、The Floor ミニゲームのボーナスを5回受け取る。",
+  "Play a friend online (the website and itch.io): one makes a room and reads out its six-letter code, the other types it in. You each steer one player, head to head, on two equally good teams; the AI plays the other eight.": "友達とオンライン対戦（ウェブサイトと itch.io）：一人がルームを作って6文字のコードを伝え、もう一人がそれを入力します。それぞれ選手を一人ずつ操作して直接対決。両チームの実力は同じで、残りの8人は AI が動かします。",
+  "Against a friend your keys count a fifth of a second later on both screens, so the two games stay the same; the menu does not stop the game, and there are no close-ups. Your friend sees the game from his end, attacking right as you do. Also on Play with friends.": "友達との対戦では、キー入力が両方の画面で0.2秒遅れて反映されるので、2つの試合はぴったり同じに保たれます。メニューを開いても試合は止まらず、クローズアップもありません。友達は自分の側から、あなたと同じく右へ攻める画面で見ます。「友達と遊ぶ」からも入れます。",
+  "Or play a friend online: make a room and read out its code, or type in a friend’s code and join. One player each, head to head, live.": "または友達とオンライン対戦：ルームを作ってコードを伝えるか、友達のコードを入力して参加します。一人一人の選手で直接対決、リアルタイムです。",
+  "Live: the Floor, head to head": "ライブ：フロアで直接対決",
+  "The last six minutes against a friend, both of you at the keys at once: one makes a room, the other types in its code.": "友達と同時にキーを握るラスト6分：一人がルームを作り、もう一人がコードを入力します。",
+  "Play a friend on the Floor": "フロアで友達と対戦",
+  "Two ways to play with friends, and nobody has to be on at the same time; and one live, on the Floor.": "友達と遊ぶ方法は2つ。同時にオンラインでいる必要はありません。そしてもう一つ、フロアでのリアルタイム対戦があります。"
  },
  "story": {
   "f-driveway.title": "家の前のゴール",

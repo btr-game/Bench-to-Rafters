@@ -1765,7 +1765,6 @@
   "Classes from the last two weeks with a seat left.": "最近两周还有空位的选秀届。",
   "No open classes right now. Start one.": "目前没有开放的选秀届。开一届吧。",
   "Multiplayer": "多人游戏",
-  "Two ways to play with friends, and nobody has to be on at the same time.": "和好友一起玩的两种方式，大家都不需要同时在线。",
   "Playing with friends needs the game’s own server, which this page cannot reach. It works on the website and in the itch.io download.": "和好友一起玩需要游戏自己的服务器，但这个页面连不上。在网站和 itch.io 下载版中可以使用。",
   "Open the website": "打开网站",
   "Kind of game": "游戏类型",
@@ -4096,7 +4095,14 @@
   "Get an A in the Floor mini-game five times.": "在 The Floor 小游戏中拿到五次 A。",
   "Win a game of the Floor mini-game as yourself, on your own NBA team.": "在 The Floor 小游戏中以自己的身份、代表自己的 NBA 球队赢一场。",
   "Claim a bonus from the Floor mini-game in a career.": "在生涯中领取一次 The Floor 小游戏的加成。",
-  "Claim five bonuses from the Floor mini-game in one career.": "一段生涯中领取五次 The Floor 小游戏的加成。"
+  "Claim five bonuses from the Floor mini-game in one career.": "一段生涯中领取五次 The Floor 小游戏的加成。",
+  "Play a friend online (the website and itch.io): one makes a room and reads out its six-letter code, the other types it in. You each steer one player, head to head, on two equally good teams; the AI plays the other eight.": "和好友在线对战（网站和 itch.io）：一人创建房间并报出六位房间代码，另一人输入代码。你们各控制一名球员正面对决，两支球队实力相同，其余八名球员由 AI 控制。",
+  "Against a friend your keys count a fifth of a second later on both screens, so the two games stay the same; the menu does not stop the game, and there are no close-ups. Your friend sees the game from his end, attacking right as you do. Also on Play with friends.": "和好友对战时，你的按键在两个屏幕上都会延后五分之一秒生效，这样两边的比赛完全一致；打开菜单不会暂停比赛，也没有特写镜头。好友从他那一端看比赛，和你一样向右进攻。也可以从“与好友同玩”进入。",
+  "Or play a friend online: make a room and read out its code, or type in a friend’s code and join. One player each, head to head, live.": "或者和好友在线对战：创建房间并报出代码，或输入好友的代码加入。一人一名球员，正面对决，实时进行。",
+  "Live: the Floor, head to head": "实时：The Floor 正面对决",
+  "The last six minutes against a friend, both of you at the keys at once: one makes a room, the other types in its code.": "和好友同时上手的最后六分钟：一人创建房间，另一人输入代码。",
+  "Play a friend on the Floor": "在 The Floor 上和好友对战",
+  "Two ways to play with friends, and nobody has to be on at the same time; and one live, on the Floor.": "和好友一起玩的两种方式，大家都不需要同时在线；还有一种实时的，在 The Floor 上。"
  },
  "story": {
   "f-driveway.title": "车道",
