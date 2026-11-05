@@ -44,8 +44,10 @@ type Table = Record<string, string>;
 
 const fill = (tr: string, vals: string[]) => tr.replace(/\{(\d+)\}/g, (m, k: string) => vals[Number(k)] ?? m);
 
-/** One line: by its name, else by a template; null when neither knows it. */
-function one(s: string, tb: Table, depth: number): string | null {
+/** One line: by its name, else by a template; null when neither knows it. A value that is a word of
+ * the interface ('Left', 'Right') is found in the interface's table (`ui`). */
+function one(s: string, tb: Table, depth: number, ui?: Table): string | null {
+  if (ui && depth > 0 && ui[s] !== undefined) return ui[s];
   const exact = tb[hashOf(s)];
   if (exact !== undefined) return exact;
   if (depth > 2) return null;
@@ -61,7 +63,7 @@ function one(s: string, tb: Table, depth: number): string | null {
       const o = v.match(/^(\d+)(?:st|nd|rd|th)$/);
       if (o) return localOrdinal(Number(o[1])) ?? v;
       const w = v.trim();
-      const tr = /[a-z]{2}/i.test(w) ? one(w, tb, depth + 1) : null;
+      const tr = /[a-z]{2}/i.test(w) ? one(w, tb, depth + 1, ui) : null;
       return tr === null ? v : v.replace(w, tr);
     });
     return fill(tr, vals);
@@ -72,12 +74,12 @@ function one(s: string, tb: Table, depth: number): string | null {
 const SENTENCE = /(?<=[.!?…”"])\s+(?=[A-Z“"‘(])/;
 
 /** A paragraph, a sentence at a time; null when no sentence of it is known. */
-function sentences(s: string, tb: Table, l: Lang): string | null {
+function sentences(s: string, tb: Table, l: Lang, ui: Table): string | null {
   const parts = s.split(SENTENCE);
   if (parts.length < 2) return null;
   let hit = false;
   const out = parts.map((p) => {
-    const tr = one(p, tb, 0);
+    const tr = one(p, tb, 0, ui);
     if (tr === null) return p;
     hit = true;
     return tr;
@@ -104,7 +106,8 @@ export function te(s: string): string {
     const lead = s.match(/^\s*/)![0];
     const tail = s.match(/\s*$/)![0];
     const core = s.trim();
-    const tr = one(core, tb, 0) ?? sentences(core, tb, l);
+    const ui = tableOf(l).ui;
+    const tr = one(core, tb, 0, ui) ?? sentences(core, tb, l, ui);
     if (tr !== null) out = lead + tr + tail;
   }
   cache.set(s, out);
