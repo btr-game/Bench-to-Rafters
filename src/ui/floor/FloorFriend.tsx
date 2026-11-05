@@ -86,7 +86,9 @@ type Phase = 'pick' | 'opening' | 'host' | 'guest' | 'play';
 
 export function FloorFriend() {
   const [me, setMe] = useState<Me>(remembered);
-  const name = username() || t('You');
+  const [hosting, setHosting] = useState(false);
+  // his name on the other screen: his username, else which seat he has
+  const name = username() || (hosting ? t('Player 1') : t('Player 2'));
   const [phase, setPhase] = useState<Phase>('pick');
   const [code, setCode] = useState('');
   const [typed, setTyped] = useState('');
@@ -145,6 +147,7 @@ export function FloorFriend() {
     }
     wire.current = w;
     host.current = asHost;
+    setHosting(asHost);
     setCode(c);
     w.listen(hear);
     setPhase(asHost ? 'host' : 'guest');

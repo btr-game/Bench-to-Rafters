@@ -3201,6 +3201,8 @@ td > .link-btn { min-width: 44px; text-align: left; }
   100% { opacity: 0; margin-top: -6px; }
 }
 .floor-line-tip { position: absolute; left: 50%; bottom: 13%; transform: translateX(-50%); padding: 4px 10px; background: #101218; border: 2px solid #000; color: #f2eee6; font: 700 14px/1.3 var(--f-body, Archivo, sans-serif); white-space: nowrap; pointer-events: none; }
+/* round 39, online: the room card keeps the page's ink on any background (the dev deck's is dark) */
+.floor-friend { color: var(--ink); }
 /* round 39, online: the friend's keys late, the note in the menu (the game goes on behind it) */
 .floor-wait { position: absolute; left: 50%; top: 10%; transform: translateX(-50%); padding: 6px 14px; background: #101218; border: 2px solid #000; color: #ffd23f; font: 800 15px/1.3 var(--f-body, Archivo, sans-serif); white-space: nowrap; pointer-events: none; animation: floor-wait 1s steps(2) infinite; }
 @keyframes floor-wait {

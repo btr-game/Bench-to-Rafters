@@ -506,6 +506,7 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
     let lateSince: number | null = null;
     let waitShown: '' | 'late' | 'gone' = '';
     if (link) {
+      if (import.meta.env.DEV) (window as unknown as { __floorNet?: Lockstep }).__floorNet = link;
       link.getState = () => real;
       link.setState = (ns) => {
         Object.assign(real, ns);

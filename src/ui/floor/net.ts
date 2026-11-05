@@ -95,7 +95,7 @@ export class Lockstep {
   private outFrom = DELAY + 1;
   private ownHash = new Map<number, string>();
   private hostHash = new Map<number, string>();
-  private asked = 0;
+  private asked = -Infinity;
   private stop: () => void;
   /** When the friend was last heard from (ms, performance.now). */
   heard = performance.now();
