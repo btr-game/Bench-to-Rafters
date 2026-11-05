@@ -95,6 +95,11 @@ The order the owner set:
   but not a three-star team), a recorded announcer (Kept from round 34), the Floor for other
   big moments (the round 39 plan: Olympic and tournament finals, the 3-on-3), and a phone layout
   for it if phones come back (it simulates on a phone).
+- **The Floor online, kept for later** (round 39): a quick match with a stranger (rooms are by code
+  only), a rematch tally between two friends, watching friends' games, and predicting his own
+  player's steps on his screen to hide the fifth of a second the keys wait; a closer look at the
+  realtime service's monthly allowance if many play (about 160 full games a month on the free plan).
+- **Front Office** is archived in git (tag `archive/front-office`), should it ever come back.
 - **Later**: a donation channel.
 - Turned down: careers framed as roguelite runs with meta-unlocks ("no").
 - Still to weigh before any paid release: a fictional league in place of the NBA's teams, colours

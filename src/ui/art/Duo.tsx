@@ -5,6 +5,7 @@ import type { GameState } from '../../engine/types';
 import type { Bond } from '../../engine/career/duo';
 import { team as teamOf } from '../selectors';
 import { PlayerArt, styleLeague } from './Player';
+import { ink } from './color';
 
 // Round 28 (owner: "for visuals of the duo and big three, make them the cute version"): the cute
 // pixel players, the partners turned to face him.
@@ -14,7 +15,7 @@ export function DuoArt({ g, b, third, size = 150 }: { g: GameState; b: Bond; thi
   const league = styleLeague(g.stage);
   const each = third ? Math.round(size * 0.82) : Math.round(size * 0.9);
   return (
-    <figure className="duo-art" style={{ ['--team' as string]: t?.color ?? '#7048E8' }} aria-label={`${p.name} and ${b.name}: ${b.nick}`}>
+    <figure className="duo-art" style={{ ['--team' as string]: t?.color ?? '#7048E8', ['--team-ink' as string]: ink(t?.color ?? '#7048E8') }} aria-label={`${p.name} and ${b.name}: ${b.nick}`}>
       <div className="duo-pair">
         <div className="duo-one">
           <PlayerArt name={p.name} number={p.number} pos={p.pos} color={t?.color} team={t?.name} abbr={t?.abbr} league={league} size={each} wear={p.wardrobe?.on} />

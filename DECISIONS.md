@@ -3495,6 +3495,53 @@ multiple times."
   NBA team), Practice Floor (starter, a bonus claimed) and Floor Time (All-Star, five in a career).
   Arcade Royalty now asks for an A on the Floor.
 
+### The content batch for rounds 38 to 40 (checklist items 5 and 6, a helper)
+
+- **45 achievements** (`achievements39.ts`; the book 870 → 915 before the Floor mini-game's and the
+  online ones): story mode (19: the chapters, the four bonds, a cold one, the friend's road, the
+  rival a season behind, a ring with the friend, the house kept), the Floor in a career (13: played,
+  simulated, wins, the comeback, the winner, the late stop, 10/15/20 points, a game seven, Finals game
+  seven), the languages and the airport (6, kept on the device), and general ones from the award
+  races and the playoffs (7). Tiers from 150 smart careers (the story's over 150 story careers
+  answering at random); the Floor's by judgement (the harness never plays it). New career flags
+  `floorG7`, `floorRing`, `floorLost`; new device totals `langs`, `flights`.
+- **Eight turning points** (`events/round39.ts`, once a career each): the reel of his last six
+  minutes, "the closer", a summer after a Floor loss, a call from home, the hometown paper on the
+  friend, the rival on the preview cover, fan mail in the five languages, a red-eye home. **Three
+  shop things**: a late-game shooting coach, a season of late-game tape, a framed photo of his
+  biggest shot (it can be visited).
+- 150 smart careers before → after: mean peak OVR 72.4468 → 72.6617, NBA 78.6667% → 79.3333%,
+  All-Star 24.0000% → 26.6667%, MVP 2.00000% → 2.00000%, Hall of Fame 8.00000% → 10.0000%, titles
+  24.6667% → 29.3333%; over 450 each, the titles gap was noise (30.4444% → 30.6667%).
+- **The balance test's random-policy MVP target** (3–9%) now fails by a single career in 300
+  (0.010 against a floor of 0.0103); the random policy sits near 1% on both sides of the batch, and
+  the target is older than round 36's higher bar for MVP. Left as it is for the owner to decide.
+
+### The manual and the achievements in every language (round 40, finished)
+
+- The game manual and the achievements' descriptions (1,258 strings a language) went into Korean,
+  Chinese, Japanese, Spanish and French, one helper a language, each keeping its table's terms;
+  then the content batch's and the online play's (92), and the last few. Every table is whole again
+  (4,103 interface strings, stale 0). The terms each chose are in its report (for example the room
+  online: 방, 房间, ルーム, sala, salon, the French "salon" because "salle" is already an arena).
+  Chinese "Sim mode" read half in English (模拟 mode) and is 模拟模式 now. Names stay English where
+  the tables keep them (the tab and place names, the award and ending names, Story mode).
+
+### The Floor against a friend online (round 39, late)
+
+Owner: "can you make the game multiplayer as well?" The owner's picks: online, by room code (each on his own computer); head to head (each controls one player, on opposite teams, the AI plays the other eight); and it goes into round 39's publish ("Hold the publish").
+
+- **The engine** takes a human on each team: `FloorState.two` holds team 1's human (his player, his shot load, his call, whether the AI stands in for him); `user`, `load`, `call` and `auto` stay team 0's, so a game against the AI is exactly what it was (a fingerprint of three scripted games was the same before and after: `ed7e021b`). Everything the AI did around "the user" now asks whether a human plays that player (`humanOf`, `driven`): never the inbounder, gets the inbound and the star's share of passes, blocks only when he jumps, reaches with his own key; the two humans act in turn, each first every other tick. A defense a human plays fouls late only when he does; the AI bench's timeout to stop a run is off when a friend plays team 1 (he calls his own).
+- **A free throw a human leaves waiting** goes to the AI after ten game seconds (`FLOOR.ftWait`), so a friend who walked away cannot hold both screens. Against the AI it changes nothing a player at the keys would notice.
+- **Lockstep.** Both computers run the same seeded game and send only their own keys, one input a tick. A key counts four ticks (a fifth of a second) later on both screens (`DELAY`), sent two ticks at a time (`BATCH`); a screen whose friend's input for the next tick has not come waits for it ("Waiting for ..."). Every 40 ticks the host sends a fingerprint of the game (`floorHash`); a friend whose game came out different (two browsers may round a sine differently) asks for the host's state and goes on from it. Ten seconds with nothing from the other screen, or a "quit", ends the game on the one left ("... left the game").
+- **The friend's screen shows the game turned round** (`mirrorFloor`): his team is team 0 on his screen, on the left of the score bug, attacking the right basket, as against the AI; his keys are turned back before they go into the game. Only the picture is turned: both screens run the same game.
+- **What changes against a friend:** no close-ups (one would stop one screen and the other would wait for it); the menu (Esc) leaves the game running; no skip; the end card says "You won" or "You lost". Both teams are equally good (the dev deck's "Good", 76) and in the standard mode (no difficulty edge either way), the host's arena, home and road kits; the two cannot pick the same team. Each picks his team and the position he plays; without a username the two are "Player 1" and "Player 2".
+- **The room:** six letters and digits (no 0, O, 1, I), made by the host's screen; both say "hi" every second and a half, so either can come first; a third screen with the code waits until the friend has been quiet five seconds. Nothing is stored anywhere.
+- **Where it goes:** on the website and itch.io, a realtime broadcast channel on the game's own service (`floor-<code>`; no table, no database function, nothing to set up); in the dev deck, a channel between two tabs of the browser (nothing goes online); the claude.ai page has neither and points to the website. About ten messages a second each way while a game is on, so about 12,000 a full game: the service's free plan (2 million a month) covers about 160 full games a month.
+- **Checked:** two tabs, both screens 600+ ticks, every fingerprint the same, and a friend's game knocked out of step on purpose put right in one resync (scripts kept in the scratchpad, `net/two.cjs`); in the tests, two lockstep sessions over a slow line in memory (`tests/round39-net.test.ts`) and the engine with two humans (`tests/round39-two.test.ts`). Not checked from here: the real service (this session's network refuses the tunnel to it); the website's community presence already uses the same kind of channel.
+- **Achievements** (ten, filed with the mini-games, counted on the device for games played to their end): Pickup Game, Same Time Next Week (ten games), Floored by a Friend (a loss), Home Court Advantage (a win), Group Chat Champion (five), Landlord of the Floor (twenty), Run It Back (three in a row), Not Even Close (by ten), By a Whisker (by one or two), Showing Off (twenty points).
+- **Where it is:** under Play the AI on the Floor mini-game's page, and a card on Play with friends that opens it (once the mini-games are open); the dev deck's own card joins two tabs.
+
 ## Round 40 (owner requests): languages
 
 - Korean, Chinese (simplified), Japanese, Spanish and French, the interface only (owner: "let's

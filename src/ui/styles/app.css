@@ -1418,7 +1418,7 @@ td .art-team { display: inline-block; vertical-align: middle; margin: -3px 8px -
 .duo-pair { display: flex; align-items: flex-end; justify-content: center; gap: 4px; }
 .duo-one { display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .duo-one span { font-family: var(--f-mono); font-size: calc(12px * var(--ts)); font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; opacity: 0.8; }
-.duo-nick { font-family: var(--f-display); font-weight: 900; font-size: calc(22px * var(--ts)); letter-spacing: 0.02em; text-transform: uppercase; padding: 3px 14px; border-radius: 6px; background: var(--team); color: #fff; box-shadow: 0 2px 0 rgba(0, 0, 0, 0.25); }
+.duo-nick { font-family: var(--f-display); font-weight: 900; font-size: calc(22px * var(--ts)); letter-spacing: 0.02em; text-transform: uppercase; padding: 3px 14px; border-radius: 6px; background: var(--team); color: var(--team-ink, #fff); box-shadow: 0 2px 0 rgba(0, 0, 0, 0.25); }
 .moment .duo-art .duo-one span { color: #fff; }
 
 /* round 22: 3-on-3 streetball */
