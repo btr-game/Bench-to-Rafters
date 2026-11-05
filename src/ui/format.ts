@@ -2,6 +2,7 @@ import type { StatLine } from '../engine/types';
 export { fmtMoney } from '../engine/economy/salary';
 import { ordinal as englishOrdinal } from '../engine/career/common';
 import { lang } from '../i18n';
+import { te } from '../i18n/engine';
 
 /** "5th", in the player's language (round 40): the slots of translated lines take it as it is. */
 export function ordinal(n: number): string {
@@ -30,6 +31,8 @@ export const signed = (x: number, digits = 1): string => `${x >= 0 ? '+' : '−'
 /** Simple text (round 11): the first sentence of a longer text. */
 export function brief(text: string, simple: boolean): string {
   if (!simple || !text) return text;
-  const m = text.match(/^.*?[.!?](\s|$)/);
-  return m ? m[0].trim() : text;
+  // round 41: the whole line in the player's language first, then its first sentence (。！？ in Chinese and Japanese)
+  const tr = te(text);
+  const m = tr.match(/^.*?(?:[.!?](?:\s|$)|[。！？])/);
+  return m ? m[0].trim() : tr;
 }

@@ -426,7 +426,7 @@ export const TARGETS: Record<Policy, Record<string, [number, number]>> = {
     allStar: [0.24, 0.38],
     allNba: [0.15, 0.29],
     allNba1: [0.07, 0.2],
-    mvp: [0.03, 0.09],
+    mvp: [0.01, 0.05], // round 39 (owner: "sure"): round 36's higher MVP bar; 0.010 measured (300 careers)
     title: [0.12, 0.22],
     hof: [0.03, 0.1],
     // round 7: the wider spread sends more weak college seniors into the draft pool

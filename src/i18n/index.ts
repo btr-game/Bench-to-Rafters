@@ -20,7 +20,7 @@ import es from './es.json';
 import fr from './fr.json';
 
 export type Lang = 'en' | 'ko' | 'zh' | 'ja' | 'es' | 'fr';
-type Table = { ui: Record<string, string>; story: Record<string, string> };
+type Table = { ui: Record<string, string>; story: Record<string, string>; eng?: Record<string, string> }; // eng: the engine's lines by hashOf (round 41, engine.ts)
 
 /** Each language by its own name, the way its speakers look for it. */
 export const LANGS: { id: Lang; name: string }[] = [
