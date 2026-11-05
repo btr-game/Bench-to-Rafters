@@ -48,7 +48,7 @@ export type Court = 'classic' | 'hardwood' | 'street';
 /** Round 31: the text size, a multiplier on every font size (tokens.css, --ts). */
 export type TextSize = 'm' | 'l' | 'xl';
 type Page = 'log' | 'achievements' | 'community' | 'road' | 'multi';
-export type Mini = 'hub' | 'office' | 'threes' | 'legends' | 'lab' | 'dunk' | 'street' | 'rhythm' | 'daily';
+export type Mini = 'hub' | 'floor' | 'threes' | 'legends' | 'lab' | 'dunk' | 'street' | 'rhythm' | 'daily';
 
 /** A short interstitial between steps (not part of the saved game). */
 export type Transition =

@@ -1,4 +1,5 @@
 import type { GameState, Pos } from '../engine/types';
+import { floorForOffice } from '../engine/career/miniBonus';
 
 // Save slots (round 25, the owner: ten of them, and a code to export or import a career). Each
 // career in progress has a slot on this device; the index lists them, newest first, and every
@@ -75,6 +76,13 @@ export function listSlots(): SlotMeta[] {
   return readIndex().sort((a, b) => b.at - a.at);
 }
 
+/** A career read back from storage or a code, brought up to date (round 39: Front Office's unlock
+ * and bonuses count as the Floor's). */
+const healed = (g: GameState): GameState => {
+  floorForOffice(g);
+  return g;
+};
+
 // ---------- packing: gzip and base64 where the browser has them, plain JSON otherwise ----------
 
 const toB64 = (bytes: Uint8Array): string => {
@@ -122,7 +130,7 @@ export async function readSlot(id: string): Promise<GameState | null> {
     const raw = localStorage.getItem(DATA(id));
     if (!raw) return null;
     const game = JSON.parse(await unpack(raw)) as GameState;
-    return game?.player && game.step ? game : null;
+    return game?.player && game.step ? healed(game) : null;
   } catch {
     return null;
   }
@@ -157,7 +165,7 @@ export async function readRun(): Promise<GameState | null> {
     const raw = localStorage.getItem(RUN);
     if (!raw) return null;
     const game = JSON.parse(await unpack(raw)) as GameState;
-    return game?.player && game.step && game.flags?.level ? game : null;
+    return game?.player && game.step && game.flags?.level ? healed(game) : null;
   } catch {
     return null;
   }
@@ -186,7 +194,7 @@ export async function importCode(code: string): Promise<GameState | null> {
   if (!text.startsWith(CODE)) return null;
   try {
     const game = JSON.parse(await unpack(text.slice(CODE.length))) as GameState;
-    return game?.player && game.step ? game : null;
+    return game?.player && game.step ? healed(game) : null;
   } catch {
     return null;
   }

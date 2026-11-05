@@ -48,7 +48,9 @@ import { ACHIEVEMENTS } from '../engine/achievements';
 import { ACH_CATS, achCatOf } from '../engine/achievementCats';
 import { CLASS_MAX } from '../ui/multiplayer';
 import { BEGINNER_EVENTS, LEVEL_IDS, LEVEL_NAME } from '../engine/levels';
-import { DRAFT_NIGHT, JOIN_FRIEND, ROADMAP, ROAD_GRADES } from '../engine/balance';
+import { DRAFT_NIGHT, FLOOR_MINI, JOIN_FRIEND, ROADMAP, ROAD_GRADES } from '../engine/balance';
+import { FLOOR_STRENGTHS, floorRoster } from '../engine/floor/mini';
+import { ovrOf } from '../engine/player/ovr';
 import { SIX_PLANS } from '../engine/career/season';
 import { LEVEL_COPY } from '../content/roadmap';
 import { ROAD_MINIS, ROAD_NEED, UNLOCK_FROM, UNLOCK_NAME, unlockHint, type Unlock } from '../ui/road';
@@ -931,7 +933,7 @@ const CATEGORIES: Category[] = [
           key: id,
           title: t.name,
           sub: t.where,
-          group: ['hub', 'office', 'threes', 'dunk', 'lab', 'street', 'legends'].includes(id) ? 'Mini-games' : ['intro', 'thanks', 'start'].includes(id) ? 'Pages' : 'In a career',
+          group: ['hub', 'floor', 'threes', 'dunk', 'lab', 'street', 'legends'].includes(id) ? 'Mini-games' : ['intro', 'thanks', 'start'].includes(id) ? 'Pages' : 'In a career',
           art: () => <Icon name={t.icon} size={44} />,
           facts: [
             ['Tempo', `${Math.round(30 / t.step)} bpm`],
@@ -997,7 +999,7 @@ const CATEGORIES: Category[] = [
     entries: () =>
       ROAD_MINIS.map((m) => {
         const g = GAMES.find((x) => x.id === m);
-        const marks = (ROAD_GRADES as Record<string, Partial<Record<'A' | 'B' | 'C', number>>>)[m];
+        const marks = m === 'floor' ? { A: FLOOR_MINI.grade.A, B: 1, C: FLOOR_MINI.grade.C } : (ROAD_GRADES as Record<string, Partial<Record<'A' | 'B' | 'C', number>>>)[m];
         return {
           key: m,
           title: g?.name ?? m,
@@ -1148,6 +1150,36 @@ const CATEGORIES: Category[] = [
         text: 'Conference finals and Finals games one loss from going home. Both starting fives are centred on their midpoint and split by the strength gap the season sees.',
         art: () => <Icon name="bracket" size={44} />,
         facts: [['Rating points per point of strength', String(FLOOR.perStrength)]] as [string, string][],
+      },
+      // round 39: the mini-game in Front Office's place, its strengths and its grades
+      ...FLOOR_STRENGTHS.map((k) => {
+        const five = floorRoster('U', FLOOR_MINI.strength[k], 7).slice(0, 5);
+        return {
+          key: `mg-${k}`,
+          title: `${k[0].toUpperCase()}${k.slice(1)} teams`,
+          group: 'The mini-game',
+          text: `Both teams generated at ${FLOOR_MINI.strength[k]}: five starters by position a few points either side, three off the bench ${FLOOR_MINI.roster.bench} below. From the start page; a career off the NBA puts him in his own spot.`,
+          art: () => <Icon name="floor" size={44} />,
+          facts: [
+            ['Starters (a sample)', five.map((p) => `${p.pos} ${Math.round(ovrOf(p.r, p.pos))}`).join(', ')],
+            ['Each player', `±${FLOOR_MINI.roster.wobble / 2}`],
+          ] as [string, string][],
+        };
+      }),
+      {
+        key: 'mg-grades',
+        title: 'The grade',
+        group: 'The mini-game',
+        text: `The margin, with his line's share (a game score at ${FLOOR_MINI.perLine} a point, at most ${FLOOR_MINI.cap} either way). A win is a B, an A at ${FLOOR_MINI.grade.A} or more; a loss is a C at ${FLOOR_MINI.grade.C} or more, a D below. C or better passes the island.`,
+        art: () => <Icon name="laurel" size={44} />,
+        facts: (['A', 'B', 'C'] as const).map((g) => [`${g}: IQ / playmaking`, `+${FLOOR_MINI.reward[g].IQ} / +${FLOOR_MINI.reward[g].PLY}`]) as [string, string][],
+      },
+      {
+        key: 'mg-start',
+        title: 'The start',
+        group: 'The mini-game',
+        text: `Six minutes left, about ${FLOOR_MINI.start.base} each (${FLOOR_MINI.start.spread} either way), his team up to ${FLOOR_MINI.start.gap} ahead or behind, on the standard difficulty. In an NBA career: his own team and the real rosters, split by the strength gap.`,
+        art: () => <Icon name="clutch" size={44} />,
       },
     ],
   },
