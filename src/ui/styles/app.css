@@ -3039,6 +3039,13 @@ td > .link-btn { min-width: 44px; text-align: left; }
 .ml-art { display: block; width: 100%; height: auto; border-radius: 10px; border: 1px solid var(--line); image-rendering: pixelated; }
 .ml-spots { position: absolute; left: 0; top: 0; width: 100%; aspect-ratio: 224 / 100; pointer-events: none; z-index: 1; }
 .ml-spot { position: absolute; pointer-events: auto; padding: 0; background: transparent; border: 3px dashed transparent; border-radius: 6px; cursor: pointer; }
+/* after round 41: the main land's secrets (components/Eggs.tsx): the bottle bobs a pixel at a time */
+.ml-egg { position: absolute; pointer-events: auto; padding: 0; background: transparent; border: 0; border-radius: 4px; cursor: pointer; }
+.ml-egg:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+.ml-bottle { animation: ml-bob 1.6s steps(1, end) infinite; }
+@keyframes ml-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(1px); } }
+@media (prefers-reduced-motion: reduce) { .ml-bottle { animation: none; } }
+.egg-code { display: block; font-family: var(--f-mono); font-size: 1.6rem; font-weight: 700; letter-spacing: 0.14em; text-align: center; padding: 10px; border: 3px dashed var(--accent); border-radius: 8px; color: var(--ink); background: var(--surface); user-select: all; overflow-wrap: anywhere; }
 .ml-spot:hover, .ml-spot:focus-visible, .ml-spot.on { border-color: #FFFFFF; box-shadow: 0 0 0 2px rgba(24, 20, 28, 0.75); outline: none; }
 /* the plates: a sign for each place on the avenue's side of it, the name beside its icon */
 .ml-plate { position: absolute; left: 50%; display: inline-flex; align-items: center; gap: 5px; padding: 2px 7px 2px 4px; border: 2px solid #18141C; border-radius: 5px; background: #FFFFFF; color: #18141C; font-family: var(--f-display); font-weight: 800; font-size: calc(13px * var(--ts)); letter-spacing: 0.03em; text-transform: uppercase; line-height: 1.15; white-space: nowrap; box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.35); }

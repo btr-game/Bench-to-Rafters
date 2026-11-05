@@ -33,3 +33,23 @@ describe('the master code', () => {
     expect(all.passed).toEqual({});
   });
 });
+
+describe('the main land secrets', async () => {
+  const { bottleCode, deskKey, konamiStep, KONAMI } = await import('../src/ui/eggs');
+  const { devPassword } = await import('../src/dev/mode');
+
+  it('the bottle holds the master code, the developer note the deck key', () => {
+    expect(masterCode(bottleCode())).toBe(true);
+    expect(devPassword(deskKey())).toBe(true);
+  });
+
+  it('the old cheat code, key by key, and a slip starts over', () => {
+    const run = (keys: string[]) => keys.reduce((s, k) => (s.done ? s : konamiStep(s.at, k)), { at: 0, done: false });
+    expect(run(KONAMI).done).toBe(true);
+    expect(run(KONAMI.map((k) => k.toUpperCase().replace('ARROW', 'Arrow').replace('ArrowUP', 'ArrowUp'))).done).toBe(false);
+    expect(run(['ArrowUp', ...KONAMI]).done).toBe(true);
+    expect(run(KONAMI.slice(0, 9)).done).toBe(false);
+    expect(run([...KONAMI.slice(0, 5), 'x', ...KONAMI]).done).toBe(true);
+    expect(run(KONAMI.map((k) => (k.length === 1 ? k.toUpperCase() : k))).done).toBe(true);
+  });
+});

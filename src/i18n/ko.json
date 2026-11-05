@@ -4106,7 +4106,14 @@
   "Unlock with the master code": "마스터 코드로 잠금 해제",
   "Unlock everything": "전부 잠금 해제",
   "Have the master code? Enter it and the whole game opens at once: the tutorial, every level, difficulty and mini-game, and Sim mode.": "마스터 코드가 있나요? 입력하면 게임 전체가 바로 열려요. 튜토리얼, 모든 레벨과 난이도, 미니게임, 시뮬 모드까지요.",
-  "Master code": "마스터 코드"
+  "Master code": "마스터 코드",
+  "A message in a bottle": "병 속의 편지",
+  "A note from the developer": "개발자가 남긴 쪽지",
+  "It washed up on the main land, in handwriting you don’t know:": "본토 해변에 떠밀려 왔어요. 처음 보는 글씨예요:",
+  "You found the old code. The developer left a key here:": "옛날 코드를 찾았어요. 개발자가 여기 열쇠를 남겨 뒀어요:",
+  "The master code. Enter it on any Unlock button and the whole game opens.": "마스터 코드예요. 아무 잠금 해제 버튼에 입력하면 게임 전체가 열려요.",
+  "It opens the Developer door at the foot of the start page.": "시작 페이지 맨 아래 개발자 문을 열어 줘요.",
+  "A bottle in the water": "물 위에 뜬 병"
  },
  "story": {
   "f-driveway.title": "집 앞 골대",

@@ -4106,7 +4106,14 @@
   "Unlock with the master code": "Desbloquear con el código maestro",
   "Unlock everything": "Desbloquearlo todo",
   "Have the master code? Enter it and the whole game opens at once: the tutorial, every level, difficulty and mini-game, and Sim mode.": "¿Tienes el código maestro? Introdúcelo y todo el juego se abre al instante: el tutorial, cada nivel, dificultad y minijuego, y el modo Simulación.",
-  "Master code": "Código maestro"
+  "Master code": "Código maestro",
+  "A message in a bottle": "Un mensaje en una botella",
+  "A note from the developer": "Una nota del desarrollador",
+  "It washed up on the main land, in handwriting you don’t know:": "Llegó a la orilla del continente, con una letra que no conoces:",
+  "You found the old code. The developer left a key here:": "Encontraste el viejo código. El desarrollador dejó aquí una llave:",
+  "The master code. Enter it on any Unlock button and the whole game opens.": "El código maestro. Introdúcelo en cualquier botón Desbloquear y todo el juego se abre.",
+  "It opens the Developer door at the foot of the start page.": "Abre la puerta del desarrollador al pie de la página de inicio.",
+  "A bottle in the water": "Una botella en el agua"
  },
  "story": {
   "f-driveway.title": "La entrada de casa",

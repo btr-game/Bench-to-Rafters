@@ -26,5 +26,5 @@ function engineText(): Plugin {
 export default defineConfig({
   plugins: [engineText(), react()],
   base: './',
-  test: { include: ['tests/**/*.test.ts'], testTimeout: 300000 },
+  test: { include: ['tests/**/*.test.ts'], setupFiles: ['tests/setup-langs.ts'], testTimeout: 300000 },
 });

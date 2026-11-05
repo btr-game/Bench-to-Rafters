@@ -4106,7 +4106,14 @@
   "Unlock with the master code": "用主代码解锁",
   "Unlock everything": "全部解锁",
   "Have the master code? Enter it and the whole game opens at once: the tutorial, every level, difficulty and mini-game, and Sim mode.": "有主代码吗？输入后整个游戏立即开放：教程、所有等级、难度和小游戏，还有模拟模式。",
-  "Master code": "主代码"
+  "Master code": "主代码",
+  "A message in a bottle": "漂流瓶里的信",
+  "A note from the developer": "开发者的留言",
+  "It washed up on the main land, in handwriting you don’t know:": "它被冲上了大陆，上面是陌生的笔迹：",
+  "You found the old code. The developer left a key here:": "你找到了老秘籍。开发者在这里留了一把钥匙：",
+  "The master code. Enter it on any Unlock button and the whole game opens.": "这是主代码。在任意解锁按钮处输入，整个游戏都会开放。",
+  "It opens the Developer door at the foot of the start page.": "它能打开开始页面底部的开发者之门。",
+  "A bottle in the water": "水里的瓶子"
  },
  "story": {
   "f-driveway.title": "车道",

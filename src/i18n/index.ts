@@ -10,17 +10,21 @@
 // and tabs, ratings and meters, and everything the engine writes as the career happens (events,
 // storylines, the log and news, press conferences, the finale). Story mode's words are translated
 // too, by their own keys (content/story.ts), in each language's `story` table.
-// The tables are bundled (the artifact is one file); `node scripts/i18n.cjs` lists what each
-// language is missing.
+// `node scripts/i18n.cjs` lists what each language is missing.
+// After round 41 (owner: "the game takes too long to open"): the five tables were half of the game's
+// script, read on every visit for a language most players never pick. A language is now loaded when
+// it is picked (and before the first screen, for a device that picked it before): the website fetches
+// that one table; the one-file artifact carries each table as a data block in its page
+// (`<script type="application/json" id="btr-lang-ko">`, which the browser never runs as code).
 
-import ko from './ko.json';
-import zh from './zh.json';
-import ja from './ja.json';
-import es from './es.json';
-import fr from './fr.json';
+import ko from './ko.json?url';
+import zh from './zh.json?url';
+import ja from './ja.json?url';
+import es from './es.json?url';
+import fr from './fr.json?url';
 
 export type Lang = 'en' | 'ko' | 'zh' | 'ja' | 'es' | 'fr';
-type Table = { ui: Record<string, string>; story: Record<string, string>; eng?: Record<string, string> }; // eng: the engine's lines by hashOf (round 41, engine.ts)
+export type Table = { ui: Record<string, string>; story: Record<string, string>; eng?: Record<string, string> }; // eng: the engine's lines by hashOf (round 41, engine.ts)
 
 /** Each language by its own name, the way its speakers look for it. */
 export const LANGS: { id: Lang; name: string }[] = [
@@ -32,7 +36,10 @@ export const LANGS: { id: Lang; name: string }[] = [
   { id: 'fr', name: 'Français' },
 ];
 
-const TABLES: Record<Exclude<Lang, 'en'>, Table> = { ko, zh, ja, es, fr };
+type Other = Exclude<Lang, 'en'>;
+const URLS: Record<Other, string> = { ko, zh, ja, es, fr };
+const TABLES: Partial<Record<Other, Table>> = {};
+const EMPTY: Table = { ui: {}, story: {} };
 const KEY = 'btr-lang';
 const isLang = (x: unknown): x is Lang => LANGS.some((l) => l.id === x);
 
@@ -48,23 +55,67 @@ function first(): Lang {
   return isLang(nav) ? nav : 'en';
 }
 
-let cur: Lang = first();
+// English until the picked language's table is in (every screen reads `cur`, so none sees a gap)
+let cur: Lang = 'en';
 const subs = new Set<() => void>();
-if (typeof document !== 'undefined') document.documentElement.lang = cur;
 
 export const lang = (): Lang => cur;
 
-/** Switch the language; every screen draws again in it. */
-export function setLang(l: Lang): void {
+/** A language's tables, from the page's data block (the artifact) or the server (the website). */
+async function load(l: Other): Promise<Table> {
+  const have = TABLES[l];
+  if (have) return have;
+  const block = typeof document !== 'undefined' ? document.getElementById(`btr-lang-${l}`) : null;
+  const tb = block
+    ? (JSON.parse(block.textContent ?? '') as Table)
+    : await fetch(URLS[l]).then((r) => {
+        if (!r.ok) throw new Error(`${l} table: ${r.status}`);
+        return r.json() as Promise<Table>;
+      });
+  TABLES[l] = tb;
+  return tb;
+}
+
+/** For the tests and the scripts, which read the tables from disk. */
+export function registerLang(l: Other, tb: Table): void {
+  TABLES[l] = tb;
+}
+
+function apply(l: Lang): void {
   if (l === cur) return;
   cur = l;
+  if (typeof document !== 'undefined') document.documentElement.lang = l;
+  subs.forEach((f) => f());
+}
+
+let wantedNow: Lang = 'en';
+/** Switch the language; every screen draws again in it, once its table is in (at once, if it is). */
+export function setLang(l: Lang): Promise<void> {
+  wantedNow = l;
   try {
     localStorage.setItem(KEY, l);
   } catch {
     /* it lasts this visit */
   }
-  if (typeof document !== 'undefined') document.documentElement.lang = l;
-  subs.forEach((f) => f());
+  if (l === 'en' || TABLES[l]) {
+    apply(l);
+    return Promise.resolve();
+  }
+  return load(l).then(
+    () => {
+      // a later pick wins over a table that came in late
+      if (wantedNow === l) apply(l);
+    },
+    () => {
+      /* not reachable now: the game stays in its language and the pick is kept for next time */
+    },
+  );
+}
+
+/** The language this device picked, in before the first screen draws (main.tsx). */
+export function startLang(): Promise<void> {
+  const l = first();
+  return l === 'en' ? Promise.resolve() : setLang(l);
 }
 
 /** For useSyncExternalStore: the root draws again when the language changes. */
@@ -83,7 +134,7 @@ export function t(en: string, v?: Record<string, string | number>): string {
   if (cur === 'en') return fill(plain, v);
   // round 41: a value that is a line the engine wrote shows in the language too (engine.ts)
   const vals = v && slots ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, typeof x === 'string' ? slots!(x) : x])) : v;
-  return fill(TABLES[cur].ui[en] ?? plain, vals);
+  return fill(TABLES[cur]?.ui[en] ?? plain, vals);
 }
 
 let slots: ((s: string) => string) | null = null;
@@ -100,7 +151,7 @@ export const plainOf = (en: string): string => (en.includes('@@') ? en.slice(0, 
 
 /** Story mode's table in the player's language (missing lines in English). */
 export function storyTable(en: Record<string, string>): Record<string, string> {
-  return cur === 'en' ? en : { ...en, ...TABLES[cur].story };
+  return cur === 'en' ? en : { ...en, ...TABLES[cur]?.story };
 }
 
 /** "5th" in the player's language (round 40, moved here in round 41 for the engine's lines): null in English. */
@@ -121,5 +172,5 @@ export function localOrdinal(n: number): string | null {
   }
 }
 
-/** For the tests and the catalog script: a language's tables. */
-export const tableOf = (l: Exclude<Lang, 'en'>): Table => TABLES[l];
+/** A language's tables (empty until it is loaded). */
+export const tableOf = (l: Other): Table => TABLES[l] ?? EMPTY;
