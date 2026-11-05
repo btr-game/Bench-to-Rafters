@@ -365,3 +365,17 @@ link, and quick match). Defaults proposed, for the owner to confirm or change:
   number in sight while the card is folded.
 - **Lessons and folded cards**: a lesson or a Guide mode step whose control sits in a folded card
   waits until the card is opened. Opening the card for the lesson would keep the tutorial's order.
+
+## Kept from round 41
+
+- **The last English in other languages**: a few interface lines are written into screen files
+  without t(): the position cards' blurbs, the coach's game-plan talk (CoachTalk), the finals
+  play-by-play ("… attacks the rim", Overlays), the Rafters card. Routing them through t() with slots
+  would finish them. What's new and achievement names stay English by the owner's marks; they could
+  follow if the owner wants.
+- **Ordinals by use**: an English ordinal inside a translated line takes the ranking form (12위,
+  12位). A line could say which form its value needs (a quarter, a pick, a season), and Korean and
+  Japanese would read better.
+- **Values built in English**: a few values are put together in the code ("Name's", " 3 times",
+  "your handle and passing, your assists"). Building them from the language's own pieces would end
+  the last mixed sentences.

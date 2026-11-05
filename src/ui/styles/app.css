@@ -1440,10 +1440,15 @@ td .art-team { display: inline-block; vertical-align: middle; margin: -3px 8px -
 .fm-crest:hover { border-color: var(--ink); }
 .fm-crest.on { border-color: var(--accent); background: var(--accent-soft); box-shadow: inset 0 0 0 2px var(--accent); }
 .fm-row { display: grid; gap: 8px; }
-.fm-five { display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch; }
-.fm-starter { display: flex; gap: 8px; align-items: baseline; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface-2); color: var(--ink); font: inherit; text-align: left; }
-.fm-starter small { font-family: var(--f-mono); font-size: calc(13px * var(--ts)); color: var(--muted); }
-.fm-starter span { font-family: var(--f-mono); font-weight: 700; }
+/* owner, round 41: the five cards keep their places whatever the names, so New players never moves:
+   five equal columns and the button in its own; the name has a line of its own, with room for two (its title has it all) */
+.fm-five { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)) auto; gap: 8px; align-items: stretch; }
+.fm-five > .btn { align-self: center; }
+.fm-starter { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 8px; align-content: start; min-width: 0; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface-2); color: var(--ink); font: inherit; text-align: left; }
+.fm-starter small { grid-area: 1 / 1; font-family: var(--f-mono); font-size: calc(13px * var(--ts)); color: var(--muted); }
+.fm-starter span { grid-area: 1 / 2; font-family: var(--f-mono); font-weight: 700; }
+/* the name on its own line, room for two kept on every card */
+.fm-starter b { grid-area: 2 / 1 / 3 / 3; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; line-height: 1.2; min-height: 2.4em; }
 .fm-starter:disabled { color: var(--muted); cursor: default; }
 .fm-starter.on { border-color: var(--accent); background: var(--accent); color: var(--accent-ink); }
 .fm-starter.on small { color: var(--accent-ink); }

@@ -1,25 +1,11 @@
 import type { StatLine } from '../engine/types';
 export { fmtMoney } from '../engine/economy/salary';
 import { ordinal as englishOrdinal } from '../engine/career/common';
-import { lang } from '../i18n';
+import { localOrdinal } from '../i18n';
+import { te } from '../i18n/engine';
 
 /** "5th", in the player's language (round 40): the slots of translated lines take it as it is. */
-export function ordinal(n: number): string {
-  switch (lang()) {
-    case 'ko':
-      return `${n}위`;
-    case 'ja':
-      return `${n}位`;
-    case 'zh':
-      return `第${n}`;
-    case 'es':
-      return `${n}.º`;
-    case 'fr':
-      return n === 1 ? '1er' : `${n}e`;
-    default:
-      return englishOrdinal(n);
-  }
-}
+export const ordinal = (n: number): string => localOrdinal(n) ?? englishOrdinal(n);
 
 export const ht = (inches: number): string => `${Math.floor(inches / 12)}′${Math.round(inches % 12)}″`;
 export const seasonLabel = (y: number): string => `${y}–${String(y + 1).slice(2)}`;
@@ -30,6 +16,8 @@ export const signed = (x: number, digits = 1): string => `${x >= 0 ? '+' : '−'
 /** Simple text (round 11): the first sentence of a longer text. */
 export function brief(text: string, simple: boolean): string {
   if (!simple || !text) return text;
-  const m = text.match(/^.*?[.!?](\s|$)/);
-  return m ? m[0].trim() : text;
+  // round 41: the whole line in the player's language first, then its first sentence (。！？ in Chinese and Japanese)
+  const tr = te(text);
+  const m = tr.match(/^.*?(?:[.!?](?:\s|$)|[。！？])/);
+  return m ? m[0].trim() : tr;
 }

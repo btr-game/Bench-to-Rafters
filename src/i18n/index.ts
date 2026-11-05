@@ -20,7 +20,7 @@ import es from './es.json';
 import fr from './fr.json';
 
 export type Lang = 'en' | 'ko' | 'zh' | 'ja' | 'es' | 'fr';
-type Table = { ui: Record<string, string>; story: Record<string, string> };
+type Table = { ui: Record<string, string>; story: Record<string, string>; eng?: Record<string, string> }; // eng: the engine's lines by hashOf (round 41, engine.ts)
 
 /** Each language by its own name, the way its speakers look for it. */
 export const LANGS: { id: Lang; name: string }[] = [
@@ -80,7 +80,16 @@ const fill = (s: string, v?: Record<string, string | number>): string => (v ? s.
  * the button): the English shows without it, and each meaning gets a translation of its own. */
 export function t(en: string, v?: Record<string, string | number>): string {
   const plain = en.includes('@@') ? en.slice(0, en.indexOf('@@')) : en;
-  return fill(cur === 'en' ? plain : (TABLES[cur].ui[en] ?? plain), v);
+  if (cur === 'en') return fill(plain, v);
+  // round 41: a value that is a line the engine wrote shows in the language too (engine.ts)
+  const vals = v && slots ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, typeof x === 'string' ? slots!(x) : x])) : v;
+  return fill(TABLES[cur].ui[en] ?? plain, vals);
+}
+
+let slots: ((s: string) => string) | null = null;
+/** engine.ts hands t() its translator for values (set once, as it loads; no import back from here). */
+export function onSlots(f: (s: string) => string): void {
+  slots = f;
 }
 
 /** Marks English kept in data for the catalog; the screen translates it with `t` when it shows it. */
@@ -92,6 +101,24 @@ export const plainOf = (en: string): string => (en.includes('@@') ? en.slice(0, 
 /** Story mode's table in the player's language (missing lines in English). */
 export function storyTable(en: Record<string, string>): Record<string, string> {
   return cur === 'en' ? en : { ...en, ...TABLES[cur].story };
+}
+
+/** "5th" in the player's language (round 40, moved here in round 41 for the engine's lines): null in English. */
+export function localOrdinal(n: number): string | null {
+  switch (cur) {
+    case 'ko':
+      return `${n}위`;
+    case 'ja':
+      return `${n}位`;
+    case 'zh':
+      return `第${n}`;
+    case 'es':
+      return `${n}.º`;
+    case 'fr':
+      return n === 1 ? '1er' : `${n}e`;
+    default:
+      return null;
+  }
 }
 
 /** For the tests and the catalog script: a language's tables. */

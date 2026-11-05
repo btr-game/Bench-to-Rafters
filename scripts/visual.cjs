@@ -14,6 +14,7 @@
 //   buried     the card to act on starts more than a screen and a bit down the page
 //   covered    at the bottom of the page, the last content sits under a bar fixed to the screen's foot
 //   stuck      a full-screen layer that can't scroll, with text or a control past its top or foot (round 32)
+//   english    with --lang: a sentence still in English on the screen (round 41; names stay English, sentences don't)
 // Usage (the dev server running, `npx vite --port 5179`):
 //   node scripts/visual.cjs <out dir> [--only id,id] [--configs desktop-light,phone-dark] [--lang fr] [--url http://localhost:5179/]
 // Then `python3 scripts/visual-diff.py <old out dir> <new out dir>` lists the screens that changed.
@@ -44,7 +45,7 @@ const CONFIGS = [
 ].filter((c) => (opt('--configs') ? opt('--configs').split(',').includes(c.name) : !c.xl || args.includes('--xl')));
 
 /** Runs in the page: every problem it can find, as plain data. */
-function inspect([phone, W]) {
+function inspect([phone, W, lang]) {
   // the device's width: a phone browser widens its window to fit a page that is too wide
   const found = [];
   const add = (kind, el, detail) => found.length < 400 && found.push({ kind, el: el ? where(el) : '', detail });
@@ -286,6 +287,22 @@ function inspect([phone, W]) {
     });
     if (out) add('stuck', out, `in ${el.tagName.toLowerCase()}.${String(el.className).trim().split(/\s+/).slice(0, 3).join('.')}, overflow ${s.overflowY}`);
   }
+  // round 41: in another language, a sentence still in English (a run of English's small words; names
+  // and stat lines have few of them)
+  if (lang && lang !== 'en') {
+    const SMALL = new Set('the you your and with for his he him a an to of in on is are was it that this at from but not be have has will they them their her she we our who what when'.split(' '));
+    const walk = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    const seen = new Set();
+    for (let n = walk.nextNode(); n; n = walk.nextNode()) {
+      const text = n.nodeValue.trim();
+      const el = n.parentElement;
+      if (!el || seen.has(text) || el.closest('.dk-bar, script, style')) continue;
+      const words = text.toLowerCase().match(/[a-z’']+/g) ?? [];
+      if (words.length < 5 || words.filter((w) => SMALL.has(w)).length < 3 || !shown(el)) continue;
+      seen.add(text);
+      add('english', el, text.slice(0, 90));
+    }
+  }
   return found;
 }
 
@@ -333,7 +350,7 @@ async function runConfig(browser, cfg) {
     await page.waitForTimeout(900);
     await page.evaluate(() => document.querySelector('.dk-bar')?.setAttribute('style', 'display:none'));
     const missed = await page.$('.dk-miss');
-    const found = missed ? [] : await page.evaluate(inspect, [!!cfg.phone, cfg.width]);
+    const found = missed ? [] : await page.evaluate(inspect, [!!cfg.phone, cfg.width, LANG]);
     // at the very bottom of the page, the last of the content clears the bars fixed to the screen's foot
     // (the tab bar and the next-step pill on a phone)
     if (!missed) {
