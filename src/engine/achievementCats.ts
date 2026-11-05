@@ -63,7 +63,7 @@ export const ACH_CAT_RULES: Record<AchCat, (string | RegExp)[]> = {
   // mode's chapters and its people)
   fame: [/^nick/, /^brand/, /^shoe/, /^fine(\d|-)/, /^press/, /^wed/, /^dad/, /^fam-/, /^gen2/, /^kid/, 'logo', 'military', 'love', 'breakup', 'sons3', 'mp-crown', /^nm-/, /^sp-/, 'tp-jv', 'tp-fan', 'tp-street', 'tp-mural', 'tp-gym', 'tp-knee', /^sm-/],
   // the arcade, and the bonuses in a career
-  arcade: [/^mg-/, 'side', 'l-mini10'],
+  arcade: [/^fo-/, /^mg-/, 'side', 'l-mini10'],
   // the difficulties and challenges (round 35: play with friends, the road map's unlocks), and the
   // game's own pages and habits (kept across careers; round 36: the finale; round 37: the town's doors;
   // round 39: a story mode career finished, and the languages careers were finished in)

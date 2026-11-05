@@ -321,6 +321,29 @@ export function recordFlight(): boolean {
   return R39_MARKS.flights.includes(d.totals.flights);
 }
 
+/** Round 39, online: a game on the Floor against a friend, played to its end (ui/floor/FloorFriend.tsx).
+ * True when the book has something new to read. */
+export function recordFloorFriend(win: boolean, margin: number, pts: number): boolean {
+  const d = loadAch();
+  const was = JSON.stringify(d.totals.floorFriend ?? null);
+  const f = d.totals.floorFriend ?? { games: 0, wins: 0, losses: 0, streak: 0, best: 0, rout: false, close: false, pts: 0 };
+  f.games++;
+  if (win) {
+    f.wins++;
+    f.streak++;
+    f.best = Math.max(f.best, f.streak);
+    if (margin >= R39_MARKS.friendRout) f.rout = true;
+    if (margin <= 2) f.close = true;
+  } else {
+    f.losses++;
+    f.streak = 0;
+  }
+  f.pts = Math.max(f.pts, pts);
+  d.totals.floorFriend = f;
+  saveAch(d);
+  return JSON.stringify(f) !== was;
+}
+
 /** Round 29: cards locked in the career log right now (the most at once is kept). */
 export function recordLocks(n: number): void {
   const d = loadAch();

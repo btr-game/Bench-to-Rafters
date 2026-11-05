@@ -11,6 +11,8 @@ import type { Pos } from '../../engine/types';
 import { leanRatings } from '../../engine/floor/career';
 import type { FloorPlayerIn, FloorSetup } from '../../engine/floor/sim';
 import { username } from '../names';
+import { recordFloorFriend } from '../achievements';
+import { achievementsNow } from '../../store';
 import { SITE } from '../multiplayer';
 import { t } from '../../i18n';
 import { FloorScreen, type FloorTeamLook } from './FloorScreen';
@@ -194,7 +196,11 @@ export function FloorFriend() {
           setup={game.setup}
           arena={{ c1: us.c1, c2: us.c2, c3: us.c3 }}
           looks={looks}
-          onDone={(r) => done(t('{us} – {them}, {result}', { us: r.us, them: r.them, result: r.win ? t('you won') : t('you lost') }))}
+          onDone={(r) => {
+            // a game played to its end counts in the book (one left early does not)
+            if (recordFloorFriend(r.win, r.us - r.them, r.line.pts)) achievementsNow();
+            done(t('{us} – {them}, {result}', { us: r.us, them: r.them, result: r.win ? t('you won') : t('you lost') }));
+          }}
           net={{ link: game.link, friend: game.friend, onLeave: () => done(null) }}
         />
       </div>

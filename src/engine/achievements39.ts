@@ -29,6 +29,12 @@ export const LANG_COUNT = 6;
 export const R39_MARKS = {
   flights: [1, 10],
   chapters: [15, 18],
+  /** Round 39, online: games against friends, wins, a win streak (the Floor, head to head). */
+  friendGames: [1, 10],
+  friendWins: [1, 5, 20],
+  friendStreak: 3,
+  friendRout: 10,
+  friendPts: 20,
 };
 
 /** What these checks read (the book's facts, in part). */
@@ -119,6 +125,17 @@ export const ACHIEVEMENTS_39: Ach39[] = [
   A('ln-6', 'Tower of Babel', 'allstar', 'Finish careers with the game in every one of its languages.', (f) => (f.t.langs?.length ?? 0) >= LANG_COUNT),
   A('ap-1', 'Wheels Up', 'bench', 'Take the flight from the road map’s airport back to the main land.', (f) => (f.t.flights ?? 0) >= R39_MARKS.flights[0]),
   A('ap-10', 'Jet Lag', 'rotation', 'Fly back to the main land from the airport ten times.', (f) => (f.t.flights ?? 0) >= R39_MARKS.flights[1]),
+  // ---- the Floor against a friend online (round 39, owner: "can you make the game multiplayer as well?"), kept on this device ----
+  A('fo-1', 'Pickup Game', 'bench', 'Play a game on the Floor against a friend online.', (f) => (f.t.floorFriend?.games ?? 0) >= R39_MARKS.friendGames[0]),
+  A('fo-10', 'Same Time Next Week', 'starter', 'Play ten games on the Floor against friends online.', (f) => (f.t.floorFriend?.games ?? 0) >= R39_MARKS.friendGames[1]),
+  A('fo-lose', 'Floored by a Friend', 'bench', 'Lose a game on the Floor to a friend.', (f) => (f.t.floorFriend?.losses ?? 0) >= 1),
+  A('fo-win', 'Home Court Advantage', 'rotation', 'Beat a friend on the Floor.', (f) => (f.t.floorFriend?.wins ?? 0) >= R39_MARKS.friendWins[0]),
+  A('fo-win5', 'Group Chat Champion', 'starter', 'Beat friends on the Floor five times.', (f) => (f.t.floorFriend?.wins ?? 0) >= R39_MARKS.friendWins[1]),
+  A('fo-win20', 'Landlord of the Floor', 'allstar', 'Beat friends on the Floor twenty times.', (f) => (f.t.floorFriend?.wins ?? 0) >= R39_MARKS.friendWins[2]),
+  A('fo-streak', 'Run It Back', 'allstar', 'Beat friends on the Floor three games in a row.', (f) => (f.t.floorFriend?.best ?? 0) >= R39_MARKS.friendStreak),
+  A('fo-rout', 'Not Even Close', 'starter', 'Beat a friend on the Floor by ten points or more.', (f) => !!f.t.floorFriend?.rout),
+  A('fo-close', 'By a Whisker', 'rotation', 'Beat a friend on the Floor by one or two points.', (f) => !!f.t.floorFriend?.close),
+  A('fo-pts', 'Showing Off', 'allstar', 'Score 20 points in a game on the Floor against a friend.', (f) => (f.t.floorFriend?.pts ?? 0) >= R39_MARKS.friendPts),
   // ---- the award races and the playoffs ----
   A('gn-mvp2', 'Runner-Up Speech', 'allstar', 'Finish second in the MVP voting.', (f) => f.nba.some((h) => rankIn(h, 'MVP') === 2)),
   A('gn-mvp5x5', 'In the Conversation', 'allstar', 'Finish in the top five of the MVP voting five times.', (f) => f.nba.filter((h) => (rankIn(h, 'MVP') ?? 99) <= 5).length >= 5),
@@ -132,4 +149,4 @@ export const ACHIEVEMENTS_39: Ach39[] = [
 ];
 
 /** The ones that only read the totals kept across careers (checked with no career open). */
-export const R39_TOTALS_ONLY = ['ln-1', 'ln-2', 'ln-3', 'ln-6', 'ap-1', 'ap-10'];
+export const R39_TOTALS_ONLY = ['ln-1', 'ln-2', 'ln-3', 'ln-6', 'ap-1', 'ap-10', 'fo-1', 'fo-10', 'fo-lose', 'fo-win', 'fo-win5', 'fo-win20', 'fo-streak', 'fo-rout', 'fo-close', 'fo-pts'];

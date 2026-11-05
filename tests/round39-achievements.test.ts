@@ -59,8 +59,9 @@ describe('the book: rounds 38 to 40', () => {
   it('keeps every id and every name unique across the whole book, and files each one', () => {
     expect(new Set(ACHIEVEMENTS.map((a) => a.id)).size).toBe(ACHIEVEMENTS.length);
     expect(new Set(ACHIEVEMENTS.map((a) => a.name.toLowerCase())).size).toBe(ACHIEVEMENTS.length);
-    expect(ACHIEVEMENTS_39.length).toBe(45);
-    expect(ACHIEVEMENTS.length).toBe(915);
+    expect(ACHIEVEMENTS_39.length).toBe(55);
+    expect(ACHIEVEMENTS.length).toBe(925);
+    expect(achCatOf('fo-win')).toBe('arcade');
     for (const a of ACHIEVEMENTS_39) {
       expect(ACHIEVEMENTS, a.id).toContain(a);
       expect(achCatOf(a.id), a.id).not.toBeNull();
@@ -355,5 +356,18 @@ describe('the UI’s part (ui/achievements.ts): the languages and the flights', 
     expect(told).toBe(R39_MARKS.flights.length);
     const got = book.earnedNow(null, ach.loadAch().totals);
     for (const id of ['ap-1', 'ap-10']) expect(got, id).toContain(id);
+  });
+
+  it('counts the games against friends on the Floor: wins, the streak, the close one and the rout', async () => {
+    const { ach, book } = await fresh();
+    expect(book.earnedNow(null, ach.loadAch().totals)).not.toContain('fo-1');
+    ach.recordFloorFriend(false, -4, 8);
+    for (const m of [2, 5, 11]) ach.recordFloorFriend(true, m, 12);
+    ach.recordFloorFriend(false, -1, 21);
+    const f = ach.loadAch().totals.floorFriend!;
+    expect([f.games, f.wins, f.losses, f.streak, f.best, f.rout, f.close, f.pts]).toEqual([5, 3, 2, 0, 3, true, true, 21]);
+    const got = book.earnedNow(null, ach.loadAch().totals);
+    for (const id of ['fo-1', 'fo-lose', 'fo-win', 'fo-streak', 'fo-rout', 'fo-close', 'fo-pts']) expect(got, id).toContain(id);
+    for (const id of ['fo-10', 'fo-win5', 'fo-win20']) expect(got, id).not.toContain(id);
   });
 });

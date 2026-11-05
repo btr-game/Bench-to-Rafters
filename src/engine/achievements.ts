@@ -73,6 +73,8 @@ export interface CareerTotals {
   townRun?: TownRun; // round 37: the career walked last: the places gone into and the looks of the street seen
   langs?: string[]; // round 40: the languages careers were finished in (i18n Lang ids; ui/achievements.ts countCareer)
   flights?: number; // round 39: flights from the road map's airport back to the main land (recordFlight)
+  /** Round 39, online: the Floor against friends (recordFloorFriend): games, wins, losses, the win streak now and the best, a win by ten, a win by one or two, the most points in one. */
+  floorFriend?: { games: number; wins: number; losses: number; streak: number; best: number; rout: boolean; close: boolean; pts: number };
 }
 
 /** Round 29: how many music loops the game has (ui/tracks.ts; a test keeps the two in step). */
