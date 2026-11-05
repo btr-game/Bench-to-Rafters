@@ -280,13 +280,13 @@ function FloorVsAi({ career, last, onStart }: { career: GameState | null; last: 
         <div className="fm-five" role="group" aria-label={me ? t('You play yourself') : t('Who you steer')}>
           {five.map((p, i) =>
             me && i === me.slot ? (
-              <button key={p.id} className="fm-starter on" aria-pressed="true">
+              <button key={p.id} className="fm-starter on" aria-pressed="true" title={me.name}>
                 <small>{p.pos}</small>
                 <b>{me.name}</b>
                 <span>{Math.round(ovrOf(me.r, p.pos))}</span>
               </button>
             ) : (
-              <button key={p.id} className={`fm-starter${!me && i === steer ? ' on' : ''}`} aria-pressed={!me && i === steer} disabled={!!me} onClick={() => setSlot(i)}>
+              <button key={p.id} className={`fm-starter${!me && i === steer ? ' on' : ''}`} aria-pressed={!me && i === steer} disabled={!!me} title={p.name} onClick={() => setSlot(i)}>
                 <small>{p.pos}</small>
                 <b>{p.name}</b>
                 <span>{Math.round(ovrOf(p.r, p.pos))}</span>
