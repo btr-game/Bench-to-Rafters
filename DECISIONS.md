@@ -3542,6 +3542,11 @@ Owner: "can you make the game multiplayer as well?" The owner's picks: online, b
 - **Achievements** (ten, filed with the mini-games, counted on the device for games played to their end): Pickup Game, Same Time Next Week (ten games), Floored by a Friend (a loss), Home Court Advantage (a win), Group Chat Champion (five), Landlord of the Floor (twenty), Run It Back (three in a row), Not Even Close (by ten), By a Whisker (by one or two), Showing Off (twenty points).
 - **Where it is:** under Play the AI on the Floor mini-game's page, and a card on Play with friends that opens it (once the mini-games are open); the dev deck's own card joins two tabs.
 
+### Two last fixes before the round 39 publish
+
+- **The Skip tutorial button over a lesson** (round 35's, fixed to the top corner above the shade) had no background of its own, so the shaded Share button under it showed through its words for the whole tutorial. It is solid now (the card colour, in both looks).
+- **The tutorial end to end** clicked the top of the highlighted control, and the Dorm's top sat under the bar fixed to the top of the page, so the click went to the bar and the run stuck on the Player tab's lesson. It now clicks a point the control itself gets (checked with `elementFromPoint`). A player was never stuck: the rest of the building shows and takes the click. The run goes through: the beginner level, the full game open, every lock shut, 33 lessons, no script errors.
+
 ## Round 40 (owner requests): languages
 
 - Korean, Chinese (simplified), Japanese, Spanish and French, the interface only (owner: "let's

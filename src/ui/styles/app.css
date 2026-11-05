@@ -2625,7 +2625,7 @@ input[type='range'] { width: 100%; min-height: 32px; accent-color: var(--accent)
 .lesson-tip { z-index: 1202; pointer-events: auto; }
 .lesson-turn { font-weight: 700; color: var(--accent); }
 /* round 35: Skip tutorial over the lesson shade, and its pop-up above the lesson */
-.skip-float { position: fixed; top: calc(10px + env(safe-area-inset-top, 0px)); right: calc(12px + env(safe-area-inset-right, 0px)); z-index: 1203; pointer-events: auto; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35); }
+.skip-float { position: fixed; top: calc(10px + env(safe-area-inset-top, 0px)); right: calc(12px + env(safe-area-inset-right, 0px)); z-index: 1203; pointer-events: auto; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35); background: var(--surface); color: var(--ink); } /* round 39: solid, so the shaded Share under it never shows through */
 .skip-pop { z-index: 1300; }
 /* round 35: a difficulty still locked (its level on the road map opens it) */
 .mode-card.mode-locked { opacity: 0.72; cursor: not-allowed; }

@@ -85,12 +85,15 @@ fs.rmSync(`${OUT}/live.txt`, { force: true });
           const inside = (r, x, y) => x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
           for (const el of document.querySelectorAll('button, a, input, summary, [role="button"]')) {
             const r = el.getBoundingClientRect();
+            if (r.width === 0 || el.disabled || el.hasAttribute('data-enter')) continue;
             const x = r.left + r.width / 2;
-            const y = r.top + Math.min(r.height / 2, 20);
-            if (r.width === 0 || el.disabled || !inside(ring, x, y) || y < 0 || y > innerHeight) continue;
-            if (tipBox && inside(tipBox, x, y)) continue;
-            if (el.hasAttribute('data-enter')) continue;
-            return { x, y };
+            // round 39: a point the control itself gets (its top may sit under the bar fixed to the top)
+            for (const y of [r.top + Math.min(r.height / 2, 20), r.top + r.height / 2, r.bottom - 8]) {
+              if (!inside(ring, x, y) || y < 0 || y > innerHeight) continue;
+              if (tipBox && inside(tipBox, x, y)) continue;
+              const hit = document.elementFromPoint(x, y);
+              if (hit && (el === hit || el.contains(hit))) return { x, y };
+            }
           }
           return null;
         });
