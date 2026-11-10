@@ -20,11 +20,16 @@ const TICK = 1000 / FLOOR.ticksPerSec;
 /** A line between two pages: each message takes `lag` ms and up to `jitter` more, and `loss` of them
  * never arrive. Each end has its own id, as two pages would (a NetGame drops messages carrying its
  * own page's id, so the line rewrites it). */
-function line(o: { lag: number; jitter?: number; loss?: number; seed?: number }) {
+type FastLine = { lag: number; jitter?: number; loss?: number; dies?: number };
+function line(o: { lag: number; jitter?: number; loss?: number; seed?: number; fast?: FastLine }) {
   const r = makeRng(o.seed ?? 99);
-  let q: { at: number; to: 0 | 1; m: FloorMsg }[] = [];
-  const fs: ((m: FloorMsg) => void)[][] = [[], []];
-  const t = { ms: 0, sent: 0 };
+  let q: { at: number; to: 0 | 1; m: FloorMsg; fast?: boolean }[] = [];
+  const fs: ((m: FloorMsg, fast?: boolean) => void)[][] = [[], []];
+  const t = { ms: 0, sent: 0, fastSent: 0 };
+  // the direct line between the two browsers (rtc.ts): quick, but any message on it may be lost or
+  // overtaken, and from `dies` on it carries nothing though it still looks open
+  const F = o.fast;
+  let dropped = false;
   const end = (me: 0 | 1): Wire => ({
     send: (m) => {
       t.sent++;
@@ -37,11 +42,22 @@ function line(o: { lag: number; jitter?: number; loss?: number; seed?: number })
       return () => (fs[me] = fs[me].filter((g) => g !== f));
     },
     close: () => {},
+    fast: F && {
+      ready: () => !dropped,
+      send: (m) => {
+        t.fastSent++;
+        if (t.ms >= (F.dies ?? Infinity) || next(r) < (F.loss ?? 0)) return;
+        q.push({ at: t.ms + F.lag + next(r) * (F.jitter ?? 0), to: (1 - me) as 0 | 1, m: JSON.parse(JSON.stringify({ ...m, id: `peer${me}` })) as FloorMsg, fast: true });
+      },
+      drop: () => {
+        dropped = true;
+      },
+    },
   });
   const pump = () => {
     const due = q.filter((x) => x.at <= t.ms).sort((a, b) => a.at - b.at);
     q = q.filter((x) => x.at > t.ms);
-    for (const x of due) fs[x.to].forEach((f) => f(x.m));
+    for (const x of due) fs[x.to].forEach((f) => f(x.m, x.fast));
   };
   return { a: end(0), b: end(1), pump, t };
 }
@@ -109,7 +125,7 @@ function screen(net: NetGame, make: (s: FloorState) => FloorInput) {
 }
 
 /** Plays a game between two screens over a line; returns what both saw. */
-function match(o: { lag: number; jitter?: number; loss?: number; seed?: number; clock?: number; late?: number }) {
+function match(o: { lag: number; jitter?: number; loss?: number; seed?: number; clock?: number; late?: number; fast?: FastLine }) {
   const L = line(o);
   const set = setup(o.seed ?? 21, o.clock ?? 90);
   const host = new NetGame(L.a, 0, 1, set, () => L.t.ms);
@@ -121,7 +137,10 @@ function match(o: { lag: number; jitter?: number; loss?: number; seed?: number; 
     if (!m.has(n.conf.tick)) m.set(n.conf.tick, floorHash(n.conf));
   };
   let ms = 0;
+  // how far the host's screen runs past the keys both know, on average (ticks), and at the end of the game
+  let depth = 0;
   for (; ms < 600_000 && !(host.over && friend.over); ms++) {
+    depth += host.depth();
     L.t.ms = ms;
     L.pump();
     A.frame(1);
@@ -130,7 +149,7 @@ function match(o: { lag: number; jitter?: number; loss?: number; seed?: number; 
     note(host, hashes[0]);
     note(friend, hashes[1]);
   }
-  return { host, friend, A, B, hashes, ms, sent: L.t.sent };
+  return { host, friend, A, B, hashes, ms, sent: L.t.sent, fastSent: L.t.fastSent, depth: depth / Math.max(1, ms) };
 }
 
 const same = (m: ReturnType<typeof match>) => {
@@ -195,6 +214,39 @@ describe('the Floor online: prediction between two screens', () => {
     expect(same(m)).toBeGreaterThan(200);
     expect(m.host.conf.score).toEqual(m.friend.conf.score);
     expect(m.host.resyncs + m.friend.resyncs).toBe(0);
+  });
+
+  it('with a direct line beside a slow room, the keys take it: the screens guess far less, and agree all the same', () => {
+    const slow = match({ lag: 150, jitter: 60 });
+    // the direct line loses and reorders messages (it neither resends nor orders them)
+    const m = match({ lag: 150, jitter: 60, fast: { lag: 12, jitter: 25, loss: 0.1 } });
+    expect(m.host.over && m.friend.over).toBe(true);
+    expect(same(m)).toBeGreaterThan(500);
+    expect(m.host.conf.score).toEqual(m.friend.conf.score);
+    expect(m.host.resyncs + m.friend.resyncs).toBe(0);
+    expect(m.host.waited + m.friend.waited).toBe(0);
+    expect(m.fastSent).toBeGreaterThan(m.sent);
+    expect(m.A.told).toEqual(m.B.told);
+    // far less to guess than through the room: the room's trip is 150 to 210 ms, the direct one 12 to 37
+    expect(slow.depth).toBeGreaterThan(3);
+    expect(m.depth).toBeLessThan(slow.depth / 2);
+    // and the trip shown is the direct line's
+    expect(m.host.ping).not.toBeNull();
+    expect(m.host.ping!).toBeLessThan(100);
+  });
+
+  it('a direct line that goes quiet mid-game is given up, and the game goes on through the room', () => {
+    const m = match({ lag: 80, jitter: 20, fast: { lag: 10, jitter: 10, dies: 6000 } });
+    expect(m.host.over && m.friend.over).toBe(true);
+    expect(m.host.direct || m.friend.direct).toBe(false);
+    // (through the room the keys come two ticks at a time, so fewer ticks are there to compare)
+    expect(same(m)).toBeGreaterThan(100);
+    // the change of line costs a moment, not a stop: neither screen stands still for a quarter second
+    expect(m.host.waited + m.friend.waited).toBeLessThan(250);
+    expect(m.host.conf.score).toEqual(m.friend.conf.score);
+    expect(m.host.resyncs + m.friend.resyncs).toBe(0);
+    // the trip shown is the room's again
+    expect(m.host.ping!).toBeGreaterThan(100);
   });
 
   it('a screen waits only when the friend goes quiet for longer than it may guess', () => {

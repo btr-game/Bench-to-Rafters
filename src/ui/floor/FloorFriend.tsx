@@ -19,6 +19,7 @@ import { achievementsNow } from '../../store';
 import { SITE } from '../multiplayer';
 import { t } from '../../i18n';
 import { FloorScreen, type FloorTeamLook } from './FloorScreen';
+import { withDirect } from './rtc';
 import { LOBBY, NetGame, ME, ROOM_RE, canPlayOnline, cleanRoom, openWire, roomCode, type FloorMsg, type Wire } from './net';
 
 const POS: Pos[] = ['PG', 'SG', 'SF', 'PF', 'C'];
@@ -146,11 +147,13 @@ export function FloorFriend() {
       setNote(t('The room could not be opened. Check the connection and try again.'));
       return;
     }
-    wire.current = w;
+    // a room joined by code gets a direct line between the two browsers as well; a quick match with
+    // a stranger does not (it would show each his network address: rtc.ts)
+    wire.current = quick.current ? w : withDirect(w, asHost);
     host.current = asHost;
     setHosting(asHost);
     setCode(c);
-    w.listen(hear);
+    wire.current.listen(hear);
     setPhase(asHost ? 'host' : 'guest');
   };
 

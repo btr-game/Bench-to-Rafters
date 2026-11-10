@@ -3765,3 +3765,29 @@ was the cause. What stopped both screens was one of them falling behind the real
   second at once (alone, a stutter still just pauses the game).
 - **The wait limit.** A screen may now run 1.5 seconds past the friend's keys before it waits (0.6
   before), so a short hitch on either line no longer shows.
+
+### A direct line between the two browsers
+
+Owner, after the fix above: "it's better now, but the lag is still significant. try to spend as much
+time and resources on reducing the lag". What was left was the trip itself. Every key went up to the
+realtime service and down to the friend, in order, over one connection: two trips for each key, a late
+message holding up all those behind it, and keys sent two ticks at a time to stay under the service's
+message limit. With that trip at 150 ms each way a screen guessed the friend 4 to 5 ticks ahead (a
+quarter of a second), and each wrong guess showed as his man sliding.
+
+- **The direct line** (`src/ui/floor/rtc.ts`): in a room joined by code the two browsers open a
+  WebRTC data channel to each other (unordered, never resent), found through the room's own line. The
+  keys go down it every tick with the last six ticks again, so a lost or late message costs nothing.
+  Two tabs measured a 4 ms round trip and a guess of 0 to 1 tick, against 345 ms and 4 to 5 ticks for
+  the same room slowed to 150 ms each way.
+- **The room's line stays** for what must arrive (the start, the fingerprint, a resync, leaving) and
+  as the fallback: some networks allow no direct line, and one that goes quiet for 1.2 seconds is given
+  up. At the change each screen sends its last two seconds of keys again at once, so neither stops.
+- **A quick match stays on the room's line.** A direct line shows each player's network address to the
+  other; that is fine between friends who shared a code, not between strangers. (Owner's call if that
+  should change.)
+- **The readout**: the bar under the court says which line the keys take and the round trip in
+  milliseconds ("Direct line · 20 ms", "Server line · 180 ms"), so a slow game can be told from a slow
+  line.
+- Not done: a relay for the networks that allow no direct line (a TURN server needs an account and,
+  past a free allowance, money).

@@ -4199,7 +4199,11 @@
   "East": "Est",
   "West": "Ouest",
   "Their real career numbers": "Leurs vrais chiffres en carrière",
-  "Eight franchises from each conference, one game a round, four wins to the title. Each game is all four quarters in about four minutes.": "Huit franchises par conférence, un match par tour, quatre victoires pour le titre. Chaque match fait les quatre quart-temps en quatre minutes environ."
+  "Eight franchises from each conference, one game a round, four wins to the title. Each game is all four quarters in about four minutes.": "Huit franchises par conférence, un match par tour, quatre victoires pour le titre. Chaque match fait les quatre quart-temps en quatre minutes environ.",
+  "Direct line": "Ligne directe",
+  "Server line": "Ligne par serveur",
+  "Your two computers are talking straight to each other.": "Vos deux ordinateurs se parlent directement.",
+  "Your keys go through the game's server.": "Vos touches passent par le serveur du jeu."
  },
  "story": {
   "f-driveway.title": "L’allée",

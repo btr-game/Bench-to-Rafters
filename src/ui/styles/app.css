@@ -3249,6 +3249,8 @@ td > .link-btn { min-width: 44px; text-align: left; }
 .floor-me > b { font-family: var(--f-display); font-size: 18px; color: #f2eee6; letter-spacing: 0.02em; }
 .floor-me-item { display: inline-flex; align-items: center; gap: 8px; }
 .floor-me-item.warn { color: #ff8a7a; }
+.floor-line { margin-left: auto; color: #b9b2a4; }
+.floor-line.direct { color: #7cff9b; }
 .floor-legs, .floor-mo { display: inline-flex; gap: 2px; }
 .floor-legs i, .floor-mo i { width: 8px; height: 10px; background: #2c3039; }
 .floor-legs i.on { background: #7cff9b; }

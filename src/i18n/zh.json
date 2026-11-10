@@ -4199,7 +4199,11 @@
   "East": "东部",
   "West": "西部",
   "Their real career numbers": "他们真实的生涯数据",
-  "Eight franchises from each conference, one game a round, four wins to the title. Each game is all four quarters in about four minutes.": "每个分区八支球队，每轮一场，四连胜夺冠。每场是完整的四节，约四分钟。"
+  "Eight franchises from each conference, one game a round, four wins to the title. Each game is all four quarters in about four minutes.": "每个分区八支球队，每轮一场，四连胜夺冠。每场是完整的四节，约四分钟。",
+  "Direct line": "直连",
+  "Server line": "服务器连接",
+  "Your two computers are talking straight to each other.": "两台电脑正在直接通信。",
+  "Your keys go through the game's server.": "你的按键通过游戏服务器传送。"
  },
  "story": {
   "f-driveway.title": "车道",

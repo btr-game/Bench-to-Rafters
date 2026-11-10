@@ -4199,7 +4199,11 @@
   "East": "Este",
   "West": "Oeste",
   "Their real career numbers": "Sus números reales de carrera",
-  "Eight franchises from each conference, one game a round, four wins to the title. Each game is all four quarters in about four minutes.": "Ocho franquicias de cada conferencia, un partido por ronda, cuatro victorias para el título. Cada partido son los cuatro cuartos en unos cuatro minutos."
+  "Eight franchises from each conference, one game a round, four wins to the title. Each game is all four quarters in about four minutes.": "Ocho franquicias de cada conferencia, un partido por ronda, cuatro victorias para el título. Cada partido son los cuatro cuartos en unos cuatro minutos.",
+  "Direct line": "Línea directa",
+  "Server line": "Línea por servidor",
+  "Your two computers are talking straight to each other.": "Vuestros dos ordenadores se hablan directamente.",
+  "Your keys go through the game's server.": "Tus teclas pasan por el servidor del juego."
  },
  "story": {
   "f-driveway.title": "La entrada de casa",

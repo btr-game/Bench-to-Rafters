@@ -329,6 +329,8 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
   });
   // against a friend: his keys are late (waiting), or he is gone
   const [wait, setWait] = useState<'' | 'late' | 'gone'>('');
+  // against a friend: which line the keys take and how long the trip there and back is
+  const [line, setLine] = useState<{ direct: boolean; ms: number | null } | null>(null);
   const [word, setWord] = useState<{ text: string; team: 0 | 1; id: number } | null>(null);
   // after the first play (owner: "it's a bit hard to know if we scored or not. make the number
   // appear larger"): the points a basket brings, big over the court
@@ -894,6 +896,7 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
       }
     };
 
+    let lineShown = '';
     const loop = (now: number) => {
       const raw = (now - lastT) / 1000;
       const dt = Math.min(0.1, raw);
@@ -912,6 +915,12 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
         if (w !== waitShown) {
           waitShown = w;
           setWait(w);
+        }
+        const ms = link.ping === null ? null : Math.round(link.ping / 5) * 5;
+        const l = `${link.direct}|${ms}`;
+        if (l !== lineShown) {
+          lineShown = l;
+          setLine({ direct: link.direct, ms });
         }
       }
       if (live) {
@@ -1222,6 +1231,12 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
           {t('Momentum')} <Momentum mo={hud.mo} us={setup.us.color} them={setup.them.color} />
           {hot && <b className="floor-hot">{t('On fire')}</b>}
         </span>
+        {net && line && (
+          <span className={`floor-me-item floor-line${line.direct ? ' direct' : ''}`} title={line.direct ? t('Your two computers are talking straight to each other.') : t('Your keys go through the game\'s server.')}>
+            {line.direct ? t('Direct line') : t('Server line')}
+            {line.ms !== null && ` · ${line.ms} ms`}
+          </span>
+        )}
       </div>
       <dl className="floor-keys">
         <div>
