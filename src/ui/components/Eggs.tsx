@@ -9,12 +9,13 @@ import { Sprite } from '../art/Sprites';
 import { sfx } from '../sound';
 import { t } from '../../i18n';
 import { bottleCode, deskKey, konamiStep } from '../eggs';
+import { LAND_H, LAND_W } from '../mainland';
 
 /** The bottle, 3 by 5: the cork, the neck, the glass with the rolled note inside. */
 const BOTTLE = ['.c.', '.g.', 'ggg', 'gpg', 'ggg'];
 const BOTTLE_COLORS = { c: '#9C6B3C', g: '#7FD1B9', p: '#FFF3BF' };
-/** Where it floats on the main land (map units, 224 by 100): open water east of the dock. */
-const AT = { x: 212, y: 49 };
+/** Where it floats on the main land (map units): open water south-east of the arena's island. */
+const AT = { x: 246, y: 86 };
 
 /** The bottle on the map (inside the map's SVG); it bobs a pixel at a time. */
 export function BottleSprite() {
@@ -89,7 +90,7 @@ export function Eggs() {
     <>
       <button
         className="ml-egg"
-        style={{ left: `${((AT.x - 3) / 224) * 100}%`, top: `${((AT.y - 2) / 100) * 100}%`, width: `${(9 / 224) * 100}%`, height: `${(9 / 100) * 100}%` }}
+        style={{ left: `${((AT.x - 3) / LAND_W) * 100}%`, top: `${((AT.y - 2) / LAND_H) * 100}%`, width: `${(9 / LAND_W) * 100}%`, height: `${(9 / LAND_H) * 100}%` }}
         aria-label={t('A bottle in the water')}
         onClick={() => (sfx('opened'), setOpen('bottle'))}
       />

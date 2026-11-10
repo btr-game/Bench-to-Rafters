@@ -5,23 +5,26 @@
 // difficulty, his house while a career is going, the library (the career log), the trophy museum
 // (the achievement book), the statue plaza (the community), the park (Play with friends), the
 // newsstand (What's new), the cinema (the intro), the airport back to the road map, the island
-// of mini-games across the water, and (round 38) the old neighbourhood on the island to the north,
-// where story mode starts. This file says where each place stands, which are open, how the
-// arrow keys move between them, and the flight that brings him there; the page draws them
-// (screens/MainLand.tsx, art/LandArt.tsx, screens/Plane.tsx).
+// of mini-games across the water, (round 38) the old neighbourhood on the island to the north,
+// where story mode starts, and (round 42) the arena on a third island to the east: the Floor, a
+// game of its own now (the map grew 34 pixels east for it). This file says where each place
+// stands, which are open, how the arrow keys move between them, the boat's crossings, and the
+// flight that brings him there; the page draws them (screens/MainLand.tsx, art/LandArt.tsx,
+// screens/Plane.tsx).
 
 import type { Mode } from '../engine/balance';
 import { modeOpen, unlocked, type Road } from './road';
 
-export type LandId = 'airport' | 'cinema' | 'gym' | 'cage' | 'dome' | 'house' | 'park' | 'library' | 'news' | 'plaza' | 'museum' | 'island' | 'story';
+export type LandId = 'airport' | 'cinema' | 'gym' | 'cage' | 'dome' | 'house' | 'park' | 'library' | 'news' | 'plaza' | 'museum' | 'island' | 'story' | 'floor';
 
 interface LandPlace {
   id: LandId;
-  /** The place to click on the map: x, y, w, h on its 224 by 100 grid. */
+  /** The place to click on the map: x, y, w, h on its grid (LAND_W by LAND_H). */
   box: [number, number, number, number];
   /** Where on the avenue the car stops for it (the islands' stop is the dock). */
   stop: number;
-  /** Which side of the avenue it stands on: its plate hangs on the avenue's side. */
+  /** Which side of the avenue it stands on: its plate hangs on the avenue's side (the arena, level
+   * with the avenue, hangs its plate at its foot, as the row above does). */
   row: 'top' | 'bottom';
   /** The place itself ("The gym"), the word on its plate ("Regular guy") and its icon. */
   name: string;
@@ -29,7 +32,7 @@ interface LandPlace {
   icon: string;
 }
 
-export const LAND_W = 224;
+export const LAND_W = 258;
 export const LAND_H = 100;
 /** The avenue's middle row; the car drives along it. */
 export const AVENUE = 52;
@@ -37,26 +40,58 @@ export const AVENUE = 52;
 export const AVENUE_X: [number, number] = [2, 168];
 
 // in the order Tab reaches them: the row above the avenue, west to east, then the row below, then
-// the two islands across the water
+// the three islands across the water. The cinema and the newsstand are 24 wide (22 before the map
+// grew): on a phone's narrower map every place is still 32 px to tap.
 export const LAND: LandPlace[] = [
   { id: 'airport', box: [2, 2, 40, 44], stop: 17, row: 'top', name: 'The airport', plate: 'Road map', icon: 'jet' },
-  { id: 'cinema', box: [44, 12, 22, 34], stop: 55, row: 'top', name: 'The cinema', plate: 'Intro', icon: 'camera' },
+  { id: 'cinema', box: [43, 12, 24, 34], stop: 55, row: 'top', name: 'The cinema', plate: 'Intro', icon: 'camera' },
   { id: 'gym', box: [68, 8, 30, 38], stop: 83, row: 'top', name: 'The gym', plate: 'Regular guy', icon: 'regular' },
   { id: 'cage', box: [100, 8, 30, 38], stop: 115, row: 'top', name: 'The cage', plate: 'Reality hits hard', icon: 'reality' },
   { id: 'dome', box: [132, 2, 38, 44], stop: 151, row: 'top', name: 'The dome', plate: 'Shoot for the stars', icon: 'stars' },
   { id: 'house', box: [2, 58, 24, 40], stop: 14, row: 'bottom', name: 'His house', plate: 'Continue', icon: 'house' },
   { id: 'park', box: [28, 58, 28, 40], stop: 42, row: 'bottom', name: 'The park', plate: 'Play with friends', icon: 'versus' },
   { id: 'library', box: [58, 58, 28, 40], stop: 72, row: 'bottom', name: 'The library', plate: 'Career log', icon: 'cards' },
-  { id: 'news', box: [88, 58, 22, 40], stop: 99, row: 'bottom', name: 'The newsstand', plate: 'What’s new', icon: 'news' },
+  { id: 'news', box: [87, 58, 24, 40], stop: 99, row: 'bottom', name: 'The newsstand', plate: 'What’s new', icon: 'news' },
   { id: 'plaza', box: [112, 58, 30, 40], stop: 127, row: 'bottom', name: 'The statue plaza', plate: 'Community', icon: 'statue' },
   { id: 'museum', box: [144, 58, 26, 40], stop: 157, row: 'bottom', name: 'The trophy museum', plate: 'Achievements', icon: 'laurel' },
   { id: 'island', box: [184, 62, 38, 30], stop: 166, row: 'bottom', name: 'The island', plate: 'Mini-games', icon: 'controller' },
   { id: 'story', box: [184, 4, 38, 36], stop: 166, row: 'top', name: 'The old neighbourhood', plate: 'Story mode', icon: 'story' },
+  { id: 'floor', box: [222, 33, 34, 35], stop: 166, row: 'top', name: 'The arena', plate: 'The Floor', icon: 'floor' },
 ];
 
-/** The places across the water: the car stops at the dock and the boat takes him over (north to
- * the old neighbourhood, south to the island). */
-export const ISLANDS: Partial<Record<LandId, 1 | -1>> = { island: 1, story: -1 };
+/** The places across the water: the car stops at the dock and the boat takes him over. Each is the
+ * boat's crossing from its mooring, in map pixels east and south: up to the old neighbourhood,
+ * down to the island, straight out to the arena's jetty. */
+export const ISLANDS: Partial<Record<LandId, [number, number]>> = { island: [8, 9], story: [8, -10], floor: [20, 0] };
+/** Where the boat lies at the dock (its sprite's top-left corner). */
+export const MOORING: [number, number] = [186, 51];
+
+/** The boat: the island it is out toward (or coming back from) and how many steps out it is. */
+export interface Boat {
+  isle: LandId | null;
+  k: number;
+}
+
+/** A crossing's length in steps: a pixel at a time along its longer side. */
+const crossing = (id: LandId | null): number => Math.max(...(id ? ISLANDS[id] ?? [0] : [0]).map(Math.abs));
+
+/** The boat at the end of its way: tied up at an island, or (null) at the dock. */
+export const berth = (to: LandId | null): Boat => ({ isle: to, k: crossing(to) });
+
+/** The boat a step on toward an island (null: the dock); the same boat once it is there. It comes
+ * back to the dock before it sets out for another island. */
+export function sailStep(boat: Boat, to: LandId | null): Boat {
+  if (boat.k > 0 && boat.isle !== to) return { isle: boat.isle, k: boat.k - 1 };
+  if (!to || (boat.isle === to && boat.k >= crossing(to))) return boat;
+  return { isle: to, k: boat.k + 1 };
+}
+
+/** Where the boat is drawn (its sprite's top-left corner). */
+export function boatAt({ isle, k }: Boat): [number, number] {
+  const [dx, dy] = (isle && ISLANDS[isle]) || [0, 0];
+  const n = Math.max(1, crossing(isle));
+  return [MOORING[0] + Math.round((dx * k) / n), MOORING[1] + Math.round((dy * k) / n)];
+}
 
 /** The three difficulties, each a venue of its own. */
 export const LAND_MODE: Partial<Record<LandId, Mode>> = { gym: 'standard', cage: 'reality', dome: 'stars' };

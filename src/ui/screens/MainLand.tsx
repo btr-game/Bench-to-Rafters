@@ -12,7 +12,7 @@ import { useStore } from '../../store';
 import { Icon } from '../art/Icon';
 import { ICON_FOR } from '../art/icons';
 import { MODES, type Mode } from '../../engine/balance';
-import { AVENUE, ISLANDS, LAND, LAND_H, LAND_MODE, LAND_W, firstLand, landPlaces, landSide, landState, neighbour, reducedMotion, type LandDir, type LandId, type LandState } from '../mainland';
+import { AVENUE, ISLANDS, berth, boatAt, sailStep, type Boat, LAND, LAND_H, LAND_MODE, LAND_W, firstLand, landPlaces, landSide, landState, neighbour, reducedMotion, type LandDir, type LandId, type LandState } from '../mainland';
 import { LandCrop, LandMap } from '../art/LandArt';
 import { BOAT, CAR, PLANE, PLANE_COLORS, Sprite } from '../art/Sprites';
 import { HAIR_COLORS, SKIN_COLORS } from '../art/Player';
@@ -31,6 +31,7 @@ import { CommunityCard } from './Community';
 import { MultiplayerCard } from './Multiplayer';
 import { PlaceArt } from './RoadMap';
 import { StoryCard } from './StoryStart';
+import { FloorCard } from '../floor/FloorHub';
 import { t } from '../../i18n';
 
 const KEYS: Record<string, LandDir> = { ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down' };
@@ -228,6 +229,8 @@ function PlaceCard({ id, state, ch, onStart, onFly, onStory }: { id: LandId; sta
       return <AchievementsCard />;
     case 'story':
       return <StoryCard onStory={onStory} />;
+    case 'floor':
+      return <FloorCard />;
     default:
       return <MiniGamesCard />;
   }
@@ -250,11 +253,12 @@ export function MainLand({ ch, onStart, onStory, children }: { ch: Challenges; o
   const place = places.find((p) => p.id === sel) ?? places[0];
 
   // the car drives along the avenue a few pixels at a time; the boat takes him across to an island
-  // (south to the mini-games, north to the old neighbourhood: `sail` counts its steps, minus north)
+  // (south to the mini-games, north to the old neighbourhood, east to the arena; mainland.ts has its crossings)
   const [carX, setCarX] = useState(() => stopOf(place.id));
   const [facing, setFacing] = useState<1 | -1>(1);
-  const [sail, setSail] = useState(0);
-  const isle = ISLANDS[place.id] ?? 0;
+  const [boat, setBoat] = useState<Boat>(() => berth(null));
+  const sail = boat.k;
+  const isle = ISLANDS[place.id] ? place.id : null;
   const goal = isle ? DOCK : place.stop;
   useEffect(() => {
     if (carX === goal || (sail !== 0 && !isle)) return;
@@ -263,13 +267,13 @@ export function MainLand({ ch, onStart, onStory, children }: { ch: Challenges; o
     const t = setTimeout(() => setCarX((x) => (x < goal ? Math.min(goal, x + 3) : Math.max(goal, x - 3))), 30);
     return () => clearTimeout(t);
   }, [carX, goal, sail, isle]);
-  const across = isle && carX === DOCK ? 8 * isle : 0;
+  const across = isle && carX === DOCK ? isle : null;
   useEffect(() => {
-    if (sail === across) return;
-    if (reducedMotion()) return setSail(across);
-    const t = setTimeout(() => setSail((k) => k + Math.sign(across - k)), 110);
+    if (sailStep(boat, across) === boat) return;
+    if (reducedMotion()) return setBoat(berth(across));
+    const t = setTimeout(() => setBoat((b) => sailStep(b, across)), 90);
     return () => clearTimeout(t);
-  }, [sail, across]);
+  }, [boat, across]);
 
   // the airport: the plane takes off, then the road map
   const [flight, setFlight] = useState(-1);
@@ -348,7 +352,7 @@ export function MainLand({ ch, onStart, onStory, children }: { ch: Challenges; o
         <LandMap career={career} label={t('The main land: a gym, the cage and the dome for the three difficulties, the airport, the cinema, the park, the library, the newsstand, the statue plaza, the trophy museum, his house while a career is going, the island of mini-games across the water, and the old neighbourhood to the north, where story mode starts')}>
           <Sprite rows={PLANE} x={plane.x} y={plane.y} colors={PLANE_COLORS} />
           <BottleSprite />
-          <Sprite rows={BOAT} x={186 + Math.abs(sail)} y={51 + Math.round(sail * (sail > 0 ? 1.1 : 1.25))} colors={sail ? kin : { ...kin, h: '', s: '' }} />
+          <Sprite rows={BOAT} x={boatAt(boat)[0]} y={boatAt(boat)[1]} colors={sail ? kin : { ...kin, h: '', s: '' }} />
           {!sail && <Sprite rows={CAR} x={carX - 4} y={AVENUE - 4} colors={kin} flip={facing < 0} />}
           {!sail && <rect className="ml-night" x={facing > 0 ? carX + 5 : carX - 7} y={AVENUE - 1} width={3} height={1} fill="#FFF3BF" />}
         </LandMap>

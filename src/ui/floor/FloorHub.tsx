@@ -147,6 +147,25 @@ function BracketView({ b }: { b: Bracket }) {
   );
 }
 
+/** The arena's card on the main land. */
+export function FloorCard() {
+  const setPage = useStore((s) => s.setPage);
+  return (
+    <section className="card stack">
+      <div className="sec-title with-icon">
+        <Icon name="floor" size={28} />
+        {t('The Floor')}
+      </div>
+      <p className="prose small">{t('Five on five, you steer one player. Play as the legends of all 30 teams, run the 16-team playoffs, or take on a friend online.')}</p>
+      <div className="row-end">
+        <button className="btn primary" data-tour="floor-enter" onClick={() => setPage('floor')}>
+          {t('Enter the arena')}
+        </button>
+      </div>
+    </section>
+  );
+}
+
 export function FloorPage() {
   const setPage = useStore((s) => s.setPage);
   const [mode, setMode] = useState<Mode>('quick');

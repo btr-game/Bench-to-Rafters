@@ -1,4 +1,4 @@
-// The main land's art (round 37): a town along one avenue, on a 224 by 100 grid of square pixels,
+// The main land's art (round 37): a town along one avenue, on a 258 by 100 grid (224 wide until round 42) of square pixels,
 // drawn once into a grid of colours and turned into one path per colour (pixel.ts). In the dark
 // theme the town turns to night (app.css, the main land's block): a flat blue shade over it, the
 // windows, lamps and signs lit above the shade, and square halos round the lamps and the dome's
@@ -44,6 +44,7 @@ const coast = (y: number) => 176 + Math.round(3 * Math.sin(y / 6) + 2 * Math.sin
 /** The island's middle, out in the water; the old neighbourhood's, to the north. */
 const ISLE: [number, number] = [203, 77];
 const HOOD: [number, number] = [204, 22];
+const ARENA: [number, number] = [240, 50];
 
 interface Layers {
   day: Paths;
@@ -502,6 +503,35 @@ function drawLand(career: boolean): Layers {
   R(ix + 5, iy + 5, 8, 4, LC.plank);
   R(ix + 5, iy + 4, 8, 1, LC.roof);
   win(ix + 7, iy + 6, 2, 2);
+
+  // ---- the arena's island (round 42): the Floor's own house, a jetty on its west shore ----
+  const [ax, ay] = ARENA;
+  for (let y = ay - 16; y <= ay + 16; y++) {
+    const hw = Math.round(16 * Math.sqrt(Math.max(0, 1 - ((y - ay) / 16.5) ** 2)));
+    R(ax - hw, y, hw * 2, 1, LC.sand);
+    if (hw > 4) R(ax - hw + 3, y, hw * 2 - 6, 1, Math.abs(y - ay) < 13 ? LC.land : LC.sand);
+  }
+  R(ax - 19, ay, 5, 3, LC.plank);
+  R(ax - 19, ay + 1, 5, 1, LC.plankD);
+  // the bowl: a banded drum under a stepped dome, the ball on a mast over it
+  R(ax - 11, ay - 5, 22, 12, '#C9CED8');
+  R(ax - 11, ay - 5, 22, 1, '#EEF1F6');
+  R(ax - 11, ay - 1, 22, 2, '#E0672B');
+  R(ax - 11, ay + 6, 22, 1, '#8E97A8');
+  for (let x = ax - 9; x <= ax + 7; x += 4) win(x, ay + 2, 2, 3);
+  R(ax - 2, ay + 2, 4, 5, '#1B2233');
+  R(ax - 9, ay - 8, 18, 3, '#8E97A8');
+  R(ax - 6, ay - 10, 12, 2, '#A9B1C0');
+  R(ax - 3, ay - 11, 6, 1, '#C9CED8');
+  R(ax, ay - 14, 1, 3, '#1B2233');
+  R(ax - 1, ay - 17, 3, 3, '#E0672B');
+  R(ax, ay - 17, 1, 3, '#7A3310');
+  R(ax - 1, ay - 16, 3, 1, '#7A3310');
+  // a half court painted on the grass, and a hoop
+  R(ax - 9, ay + 9, 18, 5, LC.clay);
+  R(ax - 9, ay + 9, 18, 1, LC.white);
+  R(ax - 9, ay + 13, 18, 1, LC.white);
+  R(ax, ay + 9, 1, 5, LC.white);
 
   return { day: toPaths(day), lit: toPaths(lit), glow: toPaths(glow) };
 }
