@@ -30,9 +30,10 @@ import { floorHash, startFloor, stepFloor, type FloorInput, type FloorSetup, typ
 import type { Spot } from '../../engine/floor/court';
 import { isDev } from '../../dev/mode';
 
-/** Ticks the screen may run past the last tick both players' keys are known for (0.6 seconds):
- * beyond it the friend has gone quiet, and the screen waits. */
-export const AHEAD = 12;
+/** Ticks the screen may run past the last tick both players' keys are known for (a second and a
+ * half): beyond it the friend has gone quiet, and the screen waits. (0.6 seconds until the owner's
+ * "the friend games still have insane lag": a short hitch on either line stopped both screens.) */
+export const AHEAD = 30;
 /** New inputs sent together (ten messages a second), and how many older ones ride along with them,
  * so a message that never arrives leaves no hole. */
 const BATCH = 2;

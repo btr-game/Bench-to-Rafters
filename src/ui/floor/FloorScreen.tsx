@@ -68,6 +68,8 @@ type KeyName = keyof typeof KEY;
 const GAME_KEYS = new Set<string>(Object.values(KEY).flat());
 
 const PACE = FLOOR.ticksPerSec;
+/** Against a friend: the most real time one frame may make up (seconds). */
+const NET_CATCH = 1;
 /** The announcer waits at least this long between calls (ms). */
 const CALL_GAP = 3500;
 /** How long the action keys rest after the ball changes hands (ms). */
@@ -893,7 +895,8 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
     };
 
     const loop = (now: number) => {
-      const dt = Math.min(0.1, (now - lastT) / 1000);
+      const raw = (now - lastT) / 1000;
+      const dt = Math.min(0.1, raw);
       lastT = now;
       if (skip.current && !link) {
         skip.current = false;
@@ -912,7 +915,9 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
         }
       }
       if (live) {
-        acc += dt;
+        // against a friend the game keeps to the real clock: a screen that stuttered makes the time up
+        // at once, so it never drags the other one back (alone, a stutter just pauses the game)
+        acc += link ? Math.min(NET_CATCH, raw) : dt;
         // one pace from the tip to the horn (round 42, owner: "get rid of clutch time (the game speed
         // suddenly drops too much, making the pace slow)")
         const tl = 1 / PACE;
@@ -944,6 +949,29 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
       raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);
+    // Against a friend the game must go on while this tab is out of sight (another tab, a minimised
+    // window): a browser stops drawing a hidden page, and the friend's screen would stand still
+    // waiting for keys that never come. A worker's timer is not slowed down as a page's is, so it
+    // plays the ticks (no keys held) until the page is seen again.
+    let ticker: Worker | null = null;
+    let tickerTimer = 0;
+    if (link) {
+      const unseen = () => {
+        if (!document.hidden || link.over) return;
+        const now = performance.now();
+        acc += Math.min(NET_CATCH, (now - lastT) / 1000);
+        lastT = now;
+        netFrame(now, (1 / PACE) * link.stretch());
+      };
+      try {
+        const url = URL.createObjectURL(new Blob(['setInterval(()=>postMessage(0),50)'], { type: 'text/javascript' }));
+        ticker = new Worker(url);
+        URL.revokeObjectURL(url);
+        ticker.onmessage = unseen;
+      } catch {
+        tickerTimer = window.setInterval(unseen, 250);
+      }
+    }
 
     const down = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement) return;
@@ -990,6 +1018,8 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
     window.addEventListener('blur', blur);
     return () => {
       cancelAnimationFrame(raf);
+      ticker?.terminate();
+      window.clearInterval(tickerTimer);
       window.removeEventListener('keydown', down);
       window.removeEventListener('keyup', up);
       window.removeEventListener('blur', blur);

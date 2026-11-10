@@ -8,7 +8,8 @@ import type { FloorMsg, Wire } from './net';
 
 export function onlineWire(url: string, key: string, code: string): Promise<Wire> {
   // its own storage key, apart from the community's client on the same page
-  const sb = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false, storageKey: 'btr-floor-auth' } });
+  // (the line's heartbeat runs in a worker, so a tab out of sight keeps its place in the room)
+  const sb = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false, storageKey: 'btr-floor-auth' }, realtime: { worker: true } });
   const ch = sb.channel(`floor-${code}`, { config: { broadcast: { self: false, ack: false } } });
   const fs = new Set<(m: FloorMsg) => void>();
   ch.on('broadcast', { event: 'm' }, ({ payload }) => fs.forEach((f) => f(payload as FloorMsg)));
