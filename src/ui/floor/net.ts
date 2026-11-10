@@ -22,6 +22,11 @@
 // different asks for the host's and goes on from it (the engine keeps to arithmetic every browser
 // does alike, court.ts, so this is a net under the net).
 //
+// After round 42 (owner: "it's better now, but the lag is still significant"): in a room joined by code
+// the keys go straight from one browser to the other when a direct line can be made (rtc.ts), a
+// tick at a time, and the room's line carries only what must arrive; `beat` picks the line, and goes
+// back to the room's if the direct one goes quiet.
+//
 // Where it goes: the website's realtime service (floorOnline.ts, the online build only: the website
 // and itch.io); in the dev deck a channel between two tabs of this browser, which touches nothing
 // online; the claude.ai page has neither and points to the website.
@@ -29,6 +34,7 @@
 import { floorHash, startFloor, stepFloor, type FloorInput, type FloorSetup, type FloorState } from '../../engine/floor/sim';
 import type { Spot } from '../../engine/floor/court';
 import { isDev } from '../../dev/mode';
+import type { RtcSignal } from './rtc';
 
 /** Ticks the screen may run past the last tick both players' keys are known for (a second and a
  * half): beyond it the friend has gone quiet, and the screen waits. (0.6 seconds until the owner's
@@ -38,6 +44,11 @@ export const AHEAD = 30;
  * so a message that never arrives leaves no hole. */
 const BATCH = 2;
 const AGAIN = 6;
+/** On the direct line: a ping this often (ms), and the line given up after this long without a word on it. */
+const FAST_PING = 500;
+const FAST_DEAD = 1200;
+/** On the room's line: a ping this often (ms), only to show how long the trip takes. */
+const SLOW_PING = 2000;
 /** How often the host sends the game's fingerprint (ticks: two seconds). */
 const HASH_EVERY = 40;
 /** Inputs kept for a resync (ticks). */
@@ -53,6 +64,10 @@ export type FloorMsg =
   | { k: 'state'; id: string; game: number; s: FloorState }
   | { k: 'quit'; id: string; game: number }
   | { k: 'bye'; id: string }
+  // (after round 42) how long a message takes there and back, and the direct line's own setting up (rtc.ts)
+  | { k: 'ping'; id: string; game: number; n: number }
+  | { k: 'pong'; id: string; game: number; n: number }
+  | { k: 'rtc'; id: string; to: string; d: RtcSignal }
   // round 42, quick match: someone waiting in the lobby, and the room one of two picks for both
   | { k: 'seek'; id: string }
   | { k: 'pair'; id: string; to: string; code: string };
@@ -63,8 +78,12 @@ export const LOBBY = 'MATCH2';
 /** Something that carries messages to everyone else in the room. */
 export interface Wire {
   send(m: FloorMsg): void;
-  listen(f: (m: FloorMsg) => void): () => void;
+  /** `fast` is true for a message that came down the direct line. */
+  listen(f: (m: FloorMsg, fast?: boolean) => void): () => void;
   close(): void;
+  /** The direct line between the two browsers (rtc.ts), where one can be made: quicker, but a message
+   * on it may never arrive. `drop` gives it up for this room. */
+  fast?: { ready(): boolean; send(m: FloorMsg): void; drop(): void };
 }
 
 /** This page's own id in a room (a fresh one each visit). */
@@ -142,6 +161,12 @@ export class NetGame {
   private stop: () => void;
   /** When the friend was last heard from (ms, the clock given). */
   heard: number;
+  /** A message's trip to the friend and back (ms, smoothed), once measured. */
+  ping: number | null = null;
+  /** Since when the keys have gone down the direct line, when they last came up it, the last ping sent. */
+  private fastSince: number | null = null;
+  private fastHeard = 0;
+  private pinged = -Infinity;
   /** The friend left the game. */
   gone = false;
   /** Times the host's game was taken whole (for the screen's small note, and tests). */
@@ -159,10 +184,58 @@ export class NetGame {
     this.conf = startFloor(setup);
     this.now = structuredClone(this.conf);
     this.prev = spots(this.now);
-    this.stop = wire.listen((m) => this.hear(m));
+    this.stop = wire.listen((m, fast) => this.hear(m, !!fast));
   }
 
-  private hear(m: FloorMsg): void {
+  /** The keys are going down the direct line between the two browsers. */
+  get direct(): boolean {
+    return this.fastSince !== null;
+  }
+
+  /** Down the direct line when it is in use, else the room's. */
+  private out(m: FloorMsg): void {
+    if (this.fastSince !== null) this.wire.fast!.send(m);
+    else this.wire.send(m);
+  }
+
+  /** Which line the keys take, kept up to date: the direct one as soon as it opens, the room's again
+   * if it closes or goes quiet; and a ping now and then. */
+  private beat(): void {
+    const at = this.clock();
+    const f = this.wire.fast;
+    if (f?.ready()) {
+      if (this.fastSince === null) {
+        this.fastSince = at;
+        this.fastHeard = at;
+        this.pinged = -Infinity;
+        this.ping = null;
+      } else if (at - this.fastHeard > FAST_DEAD) {
+        f.drop();
+        this.backToRoom();
+      }
+    } else if (this.fastSince !== null) this.backToRoom();
+    if (at - this.pinged >= (this.fastSince !== null ? FAST_PING : SLOW_PING)) {
+      this.pinged = at;
+      this.out({ k: 'ping', id: ME, game: this.game, n: at });
+    }
+  }
+
+  /** The direct line is lost: the keys go through the room again. Whatever was on its way down the
+   * direct line may be gone, so his last two seconds of keys go again at once, and the friend's are
+   * asked for, rather than each screen finding the hole when it has to stop. */
+  private backToRoom(): void {
+    this.fastSince = null;
+    this.ping = null;
+    this.pinged = -Infinity;
+    const from = Math.max(this.conf.tick + 1, this.made - 39);
+    const ins: FloorInput[] = [];
+    for (let t = from; t <= this.made && this.mine.has(t); t++) ins.push(this.mine.get(t)!);
+    if (ins.length) this.wire.send({ k: 'in', id: ME, game: this.game, t: from, ins, d: this.depth() });
+    this.wire.send({ k: 'need', id: ME, game: this.game, t: this.conf.tick + 1 });
+    this.fresh = 0;
+  }
+
+  private hear(m: FloorMsg, fast: boolean): void {
     if (m.id === ME) return;
     if (m.k === 'bye') {
       this.gone = true;
@@ -170,6 +243,14 @@ export class NetGame {
     }
     if (!('game' in m) || m.game !== this.game) return;
     this.heard = this.clock();
+    if (fast) this.fastHeard = this.heard;
+    const back = (r: FloorMsg) => (fast && this.wire.fast ? this.wire.fast.send(r) : this.wire.send(r));
+    if (m.k === 'ping') back({ k: 'pong', id: ME, game: this.game, n: m.n });
+    else if (m.k === 'pong') {
+      // (a pong for the other line's ping is let go: the two trips are not alike)
+      const ms = this.heard - m.n;
+      if (fast === (this.fastSince !== null) && ms >= 0) this.ping = this.ping === null ? ms : this.ping * 0.7 + ms * 0.3;
+    }
     if (m.k === 'quit') this.gone = true;
     if (m.k === 'in') {
       this.theirDepth = m.d;
@@ -181,7 +262,12 @@ export class NetGame {
       // the friend is missing keys of mine (a message that never arrived): they go again, from his tick on
       const ins: FloorInput[] = [];
       for (let t = m.t; t <= this.made && ins.length < 80 && this.mine.has(t); t++) ins.push(this.mine.get(t)!);
-      if (ins.length) this.wire.send({ k: 'in', id: ME, game: this.game, t: m.t, ins, d: this.depth() });
+      // (down both lines when there are two: he is stuck, and one of them may be why)
+      if (ins.length) {
+        const r: FloorMsg = { k: 'in', id: ME, game: this.game, t: m.t, ins, d: this.depth() };
+        this.wire.send(r);
+        if (this.fastSince !== null) this.wire.fast!.send(r);
+      }
     } else if (m.k === 'hash' && this.side === 1) {
       this.hostHash.set(m.t, m.h);
       this.check(m.t);
@@ -214,7 +300,7 @@ export class NetGame {
   private flush(): void {
     if (!this.fresh) return;
     const n = Math.min(this.sent.length, this.fresh + AGAIN);
-    this.wire.send({ k: 'in', id: ME, game: this.game, t: this.made - n + 1, ins: this.sent.slice(-n), d: this.depth() });
+    this.out({ k: 'in', id: ME, game: this.game, t: this.made - n + 1, ins: this.sent.slice(-n), d: this.depth() });
     this.fresh = 0;
     if (this.sent.length > AGAIN + BATCH) this.sent.splice(0, this.sent.length - AGAIN - BATCH);
   }
@@ -242,6 +328,7 @@ export class NetGame {
   step(make: () => FloorInput): boolean {
     // (a game that only looks over on this screen, on a guess, still sends his keys: the real one may go on)
     if (this.conf.phase === 'over') return false;
+    this.beat();
     if (this.depth() >= AHEAD) {
       this.waited++;
       this.flush();
@@ -249,7 +336,9 @@ export class NetGame {
       const at = this.clock();
       if (at - this.needed > 400) {
         this.needed = at;
-        this.wire.send({ k: 'need', id: ME, game: this.game, t: this.conf.tick + 1 });
+        const ask: FloorMsg = { k: 'need', id: ME, game: this.game, t: this.conf.tick + 1 };
+        this.wire.send(ask);
+        if (this.fastSince !== null) this.wire.fast!.send(ask);
       }
       return false;
     }
@@ -258,7 +347,8 @@ export class NetGame {
     this.mine.set(this.made, inp);
     this.sent.push(inp);
     this.fresh++;
-    if (this.fresh >= BATCH) this.flush();
+    // (the direct line has no limit on messages: every tick's keys go at once)
+    if (this.fresh >= (this.fastSince !== null ? 1 : BATCH)) this.flush();
     this.dirty = true;
     return true;
   }
