@@ -10,7 +10,6 @@ import { useStore } from '../../store';
 import { PageTop } from '../components/PageTop';
 import { UnlockButton } from '../components/SkipTutorial';
 import { MINI_CLAIMS, claimsUsed, miniProgress, type MiniId } from '../../engine/career/miniBonus';
-import { FloorGame } from './FloorGame';
 import { LegendsGame } from './Legends';
 import { ThreesGame } from './Threes';
 import { LabGame } from './LabGame';
@@ -21,13 +20,12 @@ import { DailyGame } from './Daily';
 import { t, tx } from '../../i18n';
 
 /** A mini-game's icon (the Catalog's island list uses it too). */
-export const miniIcon = (id: string): string => (id === 'floor' ? 'floor' : id === 'lab' ? 'lab' : id === 'daily' ? 'calendar' : id === 'rhythm' ? 'lockdown' : ICON_FOR[id] ?? '');
+export const miniIcon = (id: string): string => (id === 'lab' ? 'lab' : id === 'daily' ? 'calendar' : id === 'rhythm' ? 'lockdown' : ICON_FOR[id] ?? '');
 
 // round 40: a game's name stays English in every language (owner); its tag and text are marked
 // tx() and shown with t()
 export const GAMES: { id: MiniId | 'daily'; name: string; text: string; tag: string; color: string }[] = [
   { id: 'daily' as const, tag: tx('Every day'), color: '#0B7285', name: 'Daily challenge', text: tx('One prospect a day, the same for everyone. A whole career with fast break and simple text, scored by the legacy he leaves. From the start page, when no career is in progress.') },
-  { id: 'floor' as const, tag: tx('Action'), color: '#1C7ED6', name: 'The Floor', text: tx('The last six minutes of a close NBA game, played on the court: pick both teams, how good they are and which starter you steer (in a career on an NBA team, yourself). Win by enough for an A. Pays basketball IQ and a little playmaking.') },
   { id: 'threes' as const, tag: tx('Timing'), color: '#E8590C', name: 'Three-point contest', text: tx('Five racks, sixty seconds, a money-ball rack of your choice. Stop the meter in the green. Beat seven of the best shooters ever.') },
   { id: 'dunk' as const, tag: tx('Timing'), color: '#C2255C', name: 'Dunk contest', text: tx('Design your dunks (takeoff, moves, props) and land them one timing tap at a time. Five judges, two rounds, three of the best dunkers ever.') },
   { id: 'lab' as const, tag: tx('Building'), color: '#2F9E44', name: 'Built in a lab', text: tx('Design a player and build him over ten seasons: spend each summer\'s credits on ratings, then watch the season play out. Two minutes a run.') },
@@ -158,7 +156,6 @@ export function MiniGames() {
         }
       />
       {mini === 'hub' && <Hub />}
-      {mini === 'floor' && <FloorGame />}
       {mini === 'threes' && <ThreesGame />}
       {mini === 'legends' && <LegendsGame />}
       {mini === 'dunk' && <DunkGame />}

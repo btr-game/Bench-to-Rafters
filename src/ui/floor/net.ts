@@ -3,24 +3,40 @@
 // code, the other types it in; the host's team is team 0, the friend's team 1, and the AI plays the
 // other eight.
 //
-// Lockstep: both computers run the same game (engine/floor/sim.ts is seeded and replays exactly)
-// and send each other only their own keys, one input a tick. A key pressed now counts DELAY ticks
-// later on both screens, so it has time to arrive; a screen whose friend's input for the next tick
-// is late waits for it. Every HASH_EVERY ticks the host sends a fingerprint of the game; a friend
-// whose game came out different (two browsers can round a sine differently) asks for the host's
-// and goes on from it.
+// Both computers run the same game (engine/floor/sim.ts is seeded and replays exactly) and send each
+// other only their own keys, one input a tick. Round 39 waited for them: a key counted four ticks
+// (a fifth of a second) later on both screens so it had time to arrive, and a screen whose friend's
+// keys were late stood still until they came.
+//
+// Round 42 (owner: "multiplayer lags way too much. find a way to fix that"): the screen no longer
+// waits. Each computer keeps two games. `conf` is the game as far as BOTH players' keys are known,
+// and only ever moves on real keys, so the two computers' `conf` are the same game. `now` is what the
+// screen shows: `conf` played on to this instant with his own keys, which count at once, and the
+// friend's as he last held them (a direction, a sprint, a held shot; a tap is never guessed). When
+// the friend's real keys arrive, `conf` moves on and `now` is played again from it: nothing changes
+// on screen unless the guess was wrong, and then only by the few ticks the keys took to cross. What
+// the game says (a basket, a steal, a foul) is told from `conf`, so nothing is ever announced and
+// then taken back. A screen stops only when it is more than AHEAD ticks past the friend's keys (he
+// has gone quiet), and the one that is ahead of the other runs a touch slower until they are level.
+// Every HASH_EVERY ticks the host sends a fingerprint of its `conf`; a friend whose game came out
+// different asks for the host's and goes on from it (the engine keeps to arithmetic every browser
+// does alike, court.ts, so this is a net under the net).
 //
 // Where it goes: the website's realtime service (floorOnline.ts, the online build only: the website
 // and itch.io); in the dev deck a channel between two tabs of this browser, which touches nothing
 // online; the claude.ai page has neither and points to the website.
 
-import { floorHash, type FloorInput, type FloorSetup, type FloorState } from '../../engine/floor/sim';
+import { floorHash, startFloor, stepFloor, type FloorInput, type FloorSetup, type FloorState } from '../../engine/floor/sim';
+import type { Spot } from '../../engine/floor/court';
 import { isDev } from '../../dev/mode';
 
-/** Ticks a key waits before it counts (a fifth of a second at the Floor's pace). */
-export const DELAY = 4;
-/** Inputs sent together. */
+/** Ticks the screen may run past the last tick both players' keys are known for (0.6 seconds):
+ * beyond it the friend has gone quiet, and the screen waits. */
+export const AHEAD = 12;
+/** New inputs sent together (ten messages a second), and how many older ones ride along with them,
+ * so a message that never arrives leaves no hole. */
 const BATCH = 2;
+const AGAIN = 6;
 /** How often the host sends the game's fingerprint (ticks: two seconds). */
 const HASH_EVERY = 40;
 /** Inputs kept for a resync (ticks). */
@@ -29,12 +45,19 @@ const KEEP = 400;
 export type FloorMsg =
   | { k: 'hi'; id: string; host: boolean; name: string; team: string; pos: string }
   | { k: 'start'; id: string; to: string; game: number; setup: FloorSetup }
-  | { k: 'in'; id: string; game: number; t: number; ins: FloorInput[] }
+  | { k: 'in'; id: string; game: number; t: number; ins: FloorInput[]; d: number }
+  | { k: 'need'; id: string; game: number; t: number }
   | { k: 'hash'; id: string; game: number; t: number; h: string }
   | { k: 'sync'; id: string; game: number }
   | { k: 'state'; id: string; game: number; s: FloorState }
   | { k: 'quit'; id: string; game: number }
-  | { k: 'bye'; id: string };
+  | { k: 'bye'; id: string }
+  // round 42, quick match: someone waiting in the lobby, and the room one of two picks for both
+  | { k: 'seek'; id: string }
+  | { k: 'pair'; id: string; to: string; code: string };
+
+/** The room everyone looking for a quick match waits in. */
+export const LOBBY = 'MATCH2';
 
 /** Something that carries messages to everyone else in the room. */
 export interface Wire {
@@ -81,36 +104,60 @@ export async function openWire(code: string): Promise<Wire | null> {
   }
 }
 
-/** One game's keys both ways, for the screen that plays it (FloorScreen with `net`). */
-export class Lockstep {
+/** A friend's keys as they are guessed until they arrive: what he holds stays held; what he taps
+ * (a pass, a move, a steal, a jump, a timeout) and the instant of a release are never made up. */
+const held = (i: FloorInput): FloorInput => ({ dx: i.dx, dy: i.dy, sprint: i.sprint, shoot: i.shoot });
+const spots = (s: FloorState): Spot[] => s.players.map((p) => ({ x: p.x, y: p.y }));
+
+/** One game against a friend, for the screen that plays it (FloorScreen with `net`): the game both
+ * computers agree on, and the one this screen shows. */
+export class NetGame {
   /** Which team this computer plays: 0 for the host, 1 for the friend. */
   readonly side: 0 | 1;
   readonly game: number;
+  /** The game as far as both players' keys are known (the same on both computers). */
+  conf: FloorState;
+  /** The game this screen shows: `conf` played on with his own keys and the friend's last. */
+  now: FloorState;
+  /** Where everyone stood a tick before `now` (the screen draws between the two). */
+  prev: Spot[];
   private wire: Wire;
+  private clock: () => number;
   private mine = new Map<number, FloorInput>();
   private theirs = new Map<number, FloorInput>();
-  /** My inputs exist up to this tick (the first DELAY ticks are empty on both screens). */
-  private made = DELAY;
-  private out: FloorInput[] = [];
-  private outFrom = DELAY + 1;
+  /** His own keys exist up to this tick: the tick the screen is at. */
+  private made = 0;
+  private sent: FloorInput[] = [];
+  private fresh = 0;
+  /** The friend's keys the last time they were known, for the guess. */
+  private last: FloorInput = {};
+  private dirty = false;
+  /** How far the friend's screen runs past his `conf` (he says so with his keys). */
+  private theirDepth = 0;
   private ownHash = new Map<number, string>();
   private hostHash = new Map<number, string>();
   private asked = -Infinity;
+  private needed = -Infinity;
   private stop: () => void;
-  /** When the friend was last heard from (ms, performance.now). */
-  heard = performance.now();
+  /** When the friend was last heard from (ms, the clock given). */
+  heard: number;
   /** The friend left the game. */
   gone = false;
-  /** Set by the screen: the game it plays, for the host to send and the friend to take. */
-  getState: () => FloorState | null = () => null;
-  setState: (s: FloorState) => void = () => {};
-  /** Resyncs taken (for the screen's small note, and tests). */
+  /** Times the host's game was taken whole (for the screen's small note, and tests). */
   resyncs = 0;
+  /** For the tests: ticks played again because a guess was wrong, and ticks the screen had to wait. */
+  replayed = 0;
+  waited = 0;
 
-  constructor(wire: Wire, side: 0 | 1, game: number) {
+  constructor(wire: Wire, side: 0 | 1, game: number, setup: FloorSetup, clock: () => number = () => performance.now()) {
     this.wire = wire;
     this.side = side;
     this.game = game;
+    this.clock = clock;
+    this.heard = clock();
+    this.conf = startFloor(setup);
+    this.now = structuredClone(this.conf);
+    this.prev = spots(this.now);
     this.stop = wire.listen((m) => this.hear(m));
   }
 
@@ -121,21 +168,34 @@ export class Lockstep {
       return;
     }
     if (!('game' in m) || m.game !== this.game) return;
-    this.heard = performance.now();
+    this.heard = this.clock();
     if (m.k === 'quit') this.gone = true;
-    if (m.k === 'in') m.ins.forEach((inp, i) => this.theirs.set(m.t + i, inp));
-    else if (m.k === 'hash' && this.side === 1) {
+    if (m.k === 'in') {
+      this.theirDepth = m.d;
+      m.ins.forEach((inp, i) => {
+        const t = m.t + i;
+        if (t > this.conf.tick && !this.theirs.has(t)) this.theirs.set(t, inp);
+      });
+    } else if (m.k === 'need') {
+      // the friend is missing keys of mine (a message that never arrived): they go again, from his tick on
+      const ins: FloorInput[] = [];
+      for (let t = m.t; t <= this.made && ins.length < 80 && this.mine.has(t); t++) ins.push(this.mine.get(t)!);
+      if (ins.length) this.wire.send({ k: 'in', id: ME, game: this.game, t: m.t, ins, d: this.depth() });
+    } else if (m.k === 'hash' && this.side === 1) {
       this.hostHash.set(m.t, m.h);
       this.check(m.t);
     } else if (m.k === 'sync' && this.side === 0) {
-      const s = this.getState();
       // the feed is only for the screen's words: the last few events are enough
-      if (s) this.wire.send({ k: 'state', id: ME, game: this.game, s: { ...s, feed: s.feed.slice(-12), fresh: Math.max(0, s.fresh - Math.max(0, s.feed.length - 12)) } });
+      const s = this.conf;
+      this.wire.send({ k: 'state', id: ME, game: this.game, s: { ...s, feed: s.feed.slice(-12), fresh: Math.max(0, s.fresh - Math.max(0, s.feed.length - 12)) } });
     } else if (m.k === 'state' && this.side === 1) {
       this.resyncs++;
       this.ownHash.clear();
       this.hostHash.clear();
-      this.setState(m.s);
+      this.conf = m.s;
+      // his screen never goes back: his own keys from before the host's game are let go
+      this.made = Math.max(this.made, this.conf.tick);
+      this.dirty = true;
     }
   }
 
@@ -143,48 +203,110 @@ export class Lockstep {
     const a = this.ownHash.get(t);
     const b = this.hostHash.get(t);
     if (a === undefined || b === undefined || a === b) return;
-    const now = performance.now();
-    if (now - this.asked < 2000) return;
-    this.asked = now;
+    const at = this.clock();
+    if (at - this.asked < 2000) return;
+    this.asked = at;
     this.wire.send({ k: 'sync', id: ME, game: this.game });
   }
 
+  /** Sends his newest keys, with the few before them again. */
   private flush(): void {
-    if (!this.out.length) return;
-    this.wire.send({ k: 'in', id: ME, game: this.game, t: this.outFrom, ins: this.out });
-    this.outFrom += this.out.length;
-    this.out = [];
+    if (!this.fresh) return;
+    const n = Math.min(this.sent.length, this.fresh + AGAIN);
+    this.wire.send({ k: 'in', id: ME, game: this.game, t: this.made - n + 1, ins: this.sent.slice(-n), d: this.depth() });
+    this.fresh = 0;
+    if (this.sent.length > AGAIN + BATCH) this.sent.splice(0, this.sent.length - AGAIN - BATCH);
   }
 
-  /** Makes this computer's input for every tick up to `tick + DELAY` (one call to `make` each), and sends them. */
-  fill(tick: number, make: () => FloorInput): void {
-    while (this.made < tick + DELAY) {
-      this.made++;
-      const inp = make();
-      this.mine.set(this.made, inp);
-      this.out.push(inp);
-      if (this.out.length >= BATCH) this.flush();
+  /** Ticks the screen runs past what both players' keys are known for. */
+  depth(): number {
+    return this.made - this.conf.tick;
+  }
+
+  /** How many ticks this screen is ahead of the friend's (behind, when negative): half the gap
+   * between how far each has to guess. The one ahead runs a little slower, the one behind a little
+   * faster, so neither waits for long. */
+  lead(): number {
+    return (this.depth() - this.theirDepth) / 2;
+  }
+
+  /** The length of this screen's next tick, as a share of the usual one. */
+  stretch(): number {
+    const l = this.lead();
+    return l > 0.5 ? 1 + Math.min(3, l - 0.5) * 0.06 : l < -0.5 ? 1 - Math.min(3, -l - 0.5) * 0.03 : 1;
+  }
+
+  /** A tick is due on this screen: his keys for it are read (`make`, from the game on screen) and
+   * sent, and they count at once. False when the screen is too far past the friend's keys to go on. */
+  step(make: () => FloorInput): boolean {
+    // (a game that only looks over on this screen, on a guess, still sends his keys: the real one may go on)
+    if (this.conf.phase === 'over') return false;
+    if (this.depth() >= AHEAD) {
+      this.waited++;
+      this.flush();
+      // stuck: his keys are late, or a message was lost on the way; ask for them again now and then
+      const at = this.clock();
+      if (at - this.needed > 400) {
+        this.needed = at;
+        this.wire.send({ k: 'need', id: ME, game: this.game, t: this.conf.tick + 1 });
+      }
+      return false;
     }
+    const inp = make();
+    this.made++;
+    this.mine.set(this.made, inp);
+    this.sent.push(inp);
+    this.fresh++;
+    if (this.fresh >= BATCH) this.flush();
+    this.dirty = true;
+    return true;
   }
 
-  /** Both inputs for a tick are here. A screen that has to wait sends what it holds first. */
-  ready(tick: number): boolean {
-    if (tick <= DELAY) return true;
-    const ok = this.mine.has(tick) && this.theirs.has(tick);
-    if (!ok) this.flush();
-    return ok;
+  private pair(mine: FloorInput, theirs: FloorInput): [FloorInput, FloorInput] {
+    return this.side === 0 ? [mine, theirs] : [theirs, mine];
   }
 
-  /** The two teams' inputs for a tick, host's first. */
-  inputs(tick: number): [FloorInput, FloorInput] {
-    if (tick <= DELAY) return [{}, {}];
-    const a = this.mine.get(tick)!;
-    const b = this.theirs.get(tick)!;
-    return this.side === 0 ? [a, b] : [b, a];
+  /**
+   * Brings both games up to date; true when the one on screen changed. `told` is called for every
+   * tick both players' keys are now known for, with that game and the score before the tick: what
+   * happened in it is said from there, once and for good.
+   */
+  settle(told: (conf: FloorState, before: [number, number]) => void): boolean {
+    while (this.conf.tick < this.made && this.conf.phase !== 'over') {
+      const t = this.conf.tick + 1;
+      const theirs = this.theirs.get(t);
+      if (!theirs) break;
+      const before: [number, number] = [...this.conf.score];
+      if (t === this.made) this.prev = spots(this.conf);
+      const [a, b] = this.pair(this.mine.get(t) ?? {}, theirs);
+      stepFloor(this.conf, a, b);
+      this.last = theirs;
+      this.dirty = true;
+      this.stepped();
+      told(this.conf, before);
+    }
+    if (!this.dirty) return false;
+    this.dirty = false;
+    // the game on screen: from there to now, the friend's keys as he last held them
+    const s = structuredClone(this.conf);
+    let guess = held(this.last);
+    while (s.tick < this.made && s.phase !== 'over') {
+      const t = s.tick + 1;
+      const known = this.theirs.get(t);
+      if (known) guess = held(known);
+      if (t === this.made) this.prev = spots(s);
+      const [a, b] = this.pair(this.mine.get(t) ?? {}, known ?? guess);
+      stepFloor(s, a, b);
+      this.replayed++;
+    }
+    this.now = s;
+    return true;
   }
 
-  /** After a tick: the host's fingerprint, the friend's check of it, and the old inputs let go. */
-  stepped(s: FloorState): void {
+  /** After a tick both computers have played: the host's fingerprint, the friend's check of it,
+   * and the old keys let go. */
+  private stepped(): void {
+    const s = this.conf;
     if (s.tick % HASH_EVERY === 0) {
       const h = floorHash(s);
       if (this.side === 0) this.wire.send({ k: 'hash', id: ME, game: this.game, t: s.tick, h });
@@ -196,6 +318,11 @@ export class Lockstep {
     const old = s.tick - KEEP;
     for (const m of [this.mine, this.theirs]) for (const k of m.keys()) if (k < old) m.delete(k);
     for (const m of [this.ownHash, this.hostHash]) for (const k of m.keys()) if (k < s.tick - 4 * HASH_EVERY) m.delete(k);
+  }
+
+  /** The game is over on this screen only once both computers agree it is. */
+  get over(): boolean {
+    return this.conf.phase === 'over';
   }
 
   close(): void {

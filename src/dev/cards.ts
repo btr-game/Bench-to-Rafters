@@ -32,7 +32,6 @@ import { isFinal, type LiveRequest } from '../engine/career/live';
 import { CamLab } from './CamLab';
 import { FloorLab } from './FloorLab';
 import { FloorOnline } from './FloorOnline';
-import { stageFloorEnd } from '../ui/mini/FloorGame';
 import { LEVEL_IDS, type Level } from '../engine/levels';
 import { ROAD_MINIS, type Road } from '../ui/road';
 import type { ChosenLook } from '../content/looks';
@@ -368,7 +367,6 @@ const TUTORIAL: DevCard[] = [
 const MINI: DevCard[] = (
   [
     ['hub', 'Mini-game hub', 'controller', 'Every mini-game, all unlocked.'],
-    ['floor', 'The Floor (mini-game)', 'floor', 'Round 39, in Front Office’s place: the setup. Both teams from the 30 crests, how good they are (Average, Good, Great), the starter you steer (the best, unless you pick); Tip it off plays the last six minutes from a close score.'],
     ['threes', 'Three-point contest', 'range', 'Five racks, a money rack, a timing meter.'],
     ['dunk', 'Dunk contest', 'flame', 'Design dunks; each move once a contest.'],
     ['street', '3-on-3 streetball', 'post', 'One game to 11, action cam on timing shots.'],
@@ -524,6 +522,7 @@ export const CARDS: DevCard[] = [
   // big moments
   { id: 'floor-lab', title: 'The Floor', group: 'Big moments', icon: 'clutch', blurb: 'Round 39: the last six minutes of an elimination game, played, four real minutes. The high three-quarter court in his team’s arena (the court, the crowd, the vibes), ten pixel players, the shot meter and the score bug. Pick the teams, the difficulty, how good he is and the start.', open: () => true, page: FloorLab },
   { id: 'floor-career', title: 'The Floor in a career', group: 'Big moments', icon: 'clutch', blurb: 'Round 39: a star’s playoff game that can end his season. The first 42 minutes go by like any playoff game, then the last six are his on the Floor, in his arena or theirs, both teams in their own kits; the result finishes the game and the series.', open: () => show(at('floor-career', liveAt('floor'), { live: true, pick: toFloor, tries: 20 })) },
+  { id: 'floor-page', title: 'The Floor: its own page', group: 'Big moments', icon: 'floor', blurb: 'Round 42: the Floor as a game of its own, from the arena on the main land. Four ways to play: a quick game (the fourth quarter) as any franchise’s all-time five with each side’s overall set on its own, the 16-team playoffs (a full game in four minutes), a five drafted from all 150 legends, and a friend online.', open: () => (useStore.setState({ game: null, mini: null, page: 'floor' }), true) },
   { id: 'floor-online', title: 'The Floor: a friend online', group: 'Big moments', icon: 'clutch', blurb: 'Round 39: head to head against a friend, live, by room code. Each picks a team and a position; the host tips off; both screens run the same game from each other’s keys. Here the room joins two tabs of this browser.', open: () => true, page: FloorOnline },
   { id: 'cam-lab', title: 'Action cam lab', group: 'Big moments', icon: 'camera', blurb: 'Any play on the finals cam, slowed right down, any two teams.', open: () => true, page: CamLab },
   { id: 'intro', title: 'Intro page', group: 'Start', icon: 'ball', blurb: 'The title over a side-on one-on-one: runs, steals, blocks and jumpers in pixel frames, the venue changing every five seconds. First visit only, or the Intro button on the start page.', open: () => void useStore.setState({ game: null, page: null, mini: null, intro: true }) },
@@ -663,33 +662,6 @@ export const CARDS: DevCard[] = [
 
   // mini-games
   ...MINI,
-  { id: 'mini-floor-end', title: 'The Floor (mini-game): the result', group: 'Mini-games', icon: 'floor', blurb: 'Round 39: a game the engine played, as the result page shows it: the final score with both crests, the grade (the margin, and a little for his line), his line, Play again (Enter) and Back (Escape), and the career bonus below.', open: () => (stageFloorEnd(), useStore.setState({ game: null, page: null, mini: 'floor' }), true) },
-  {
-    id: 'mini-floor-career',
-    title: 'The Floor (mini-game) in an NBA career',
-    group: 'Mini-games',
-    icon: 'floor',
-    blurb: 'Round 39: a star on an NBA team plays himself, his ratings on his own team, against the team he picks from his league (the closest in strength to start with). Opens at basketball IQ 85, pays IQ and a little playmaking.',
-    open: () => {
-      const g = nbaStar();
-      if (!g) return false;
-      g.player.attrs.IQ = Math.max(g.player.attrs.IQ, 85);
-      useStore.setState({ game: g, page: null, mini: 'floor' });
-    },
-  },
-  {
-    id: 'mini-floor-college',
-    title: 'The Floor (mini-game) in college',
-    group: 'Mini-games',
-    icon: 'floor',
-    blurb: 'Round 39: a career off the NBA (here college) puts him in his own spot, with his own ratings, on an NBA team at the level picked; the other four starters show but cannot be picked.',
-    open: () => {
-      const g = at('floor-college', (s, p) => s.stage === 'NCAA' && p.type === 'decision' && p.decision.kind === 'plan');
-      if (!g) return false;
-      g.player.attrs.IQ = Math.max(g.player.attrs.IQ, 85);
-      useStore.setState({ game: g, page: null, mini: 'floor' });
-    },
-  },
   {
     id: 'mini-bonus',
     title: 'Mini-games in a career',

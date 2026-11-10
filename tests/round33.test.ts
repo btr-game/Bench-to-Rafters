@@ -219,8 +219,6 @@ describe('the island', () => {
     expect(roadGrade({ game: 'threes', score: 12, won: false, own: true })).toBe('D');
     expect(roadGrade({ game: 'threes', score: 13, won: false, own: true })).toBe('C');
     expect(roadGrade({ game: 'threes', score: 5, won: true, own: true })).toBe('A');
-    expect(roadGrade({ game: 'floor', grade: 'C', margin: -2, pts: 4, low: -6, strength: 'good' })).toBe('C');
-    expect(roadGrade({ game: 'floor', grade: 'D', margin: -9, pts: 0, low: -9, strength: 'great' })).toBe('D');
     expect(roadGrade({ game: 'legends', reached: 'semis' })).toBe('C');
     expect(roadGrade({ game: 'street', reached: 'close' })).toBe('C');
     expect(roadGrade({ game: 'rhythm', grade: 'S' })).toBe('S');

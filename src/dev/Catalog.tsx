@@ -48,9 +48,8 @@ import { ACHIEVEMENTS } from '../engine/achievements';
 import { ACH_CATS, achCatOf } from '../engine/achievementCats';
 import { CLASS_MAX } from '../ui/multiplayer';
 import { BEGINNER_EVENTS, LEVEL_IDS, LEVEL_NAME } from '../engine/levels';
-import { DRAFT_NIGHT, FLOOR_MINI, JOIN_FRIEND, ROADMAP, ROAD_GRADES } from '../engine/balance';
-import { FLOOR_STRENGTHS, floorRoster } from '../engine/floor/mini';
-import { ovrOf } from '../engine/player/ovr';
+import { DRAFT_NIGHT, JOIN_FRIEND, ROADMAP, ROAD_GRADES } from '../engine/balance';
+import { legendLine, legendRatings, legendStyle } from '../engine/floor/legends';
 import { PLAN_TEXT, SIX_PLANS } from '../engine/career/season';
 import { LEVEL_COPY } from '../content/roadmap';
 import { ROAD_MINIS, ROAD_NEED, UNLOCK_FROM, UNLOCK_NAME, unlockHint, type Unlock } from '../ui/road';
@@ -933,7 +932,7 @@ const CATEGORIES: Category[] = [
           key: id,
           title: t.name,
           sub: t.where,
-          group: ['hub', 'floor', 'threes', 'dunk', 'lab', 'street', 'legends'].includes(id) ? 'Mini-games' : ['intro', 'thanks', 'start'].includes(id) ? 'Pages' : 'In a career',
+          group: ['hub', 'threes', 'dunk', 'lab', 'street', 'legends'].includes(id) ? 'Mini-games' : ['intro', 'thanks', 'start'].includes(id) ? 'Pages' : 'In a career',
           art: () => <Icon name={t.icon} size={44} />,
           facts: [
             ['Tempo', `${Math.round(30 / t.step)} bpm`],
@@ -999,7 +998,7 @@ const CATEGORIES: Category[] = [
     entries: () =>
       ROAD_MINIS.map((m) => {
         const g = GAMES.find((x) => x.id === m);
-        const marks = m === 'floor' ? { A: FLOOR_MINI.grade.A, B: 1, C: FLOOR_MINI.grade.C } : (ROAD_GRADES as Record<string, Partial<Record<'A' | 'B' | 'C', number>>>)[m];
+        const marks = (ROAD_GRADES as Record<string, Partial<Record<'A' | 'B' | 'C', number>>>)[m];
         return {
           key: m,
           title: g?.name ?? m,
@@ -1089,7 +1088,7 @@ const CATEGORIES: Category[] = [
     key: 'floor',
     name: 'The Floor',
     icon: 'clutch',
-    blurb: `The playable last six minutes: the frames its players are drawn in, its shots, its moves and its rules. The clock runs at ${(FLOOR.tick * FLOOR.ticksPerSec).toFixed(1)} times; a game within ${FLOOR.realTime.margin} points plays its last ${FLOOR.realTime.clock} seconds at real speed.`,
+    blurb: `The game on the court: the frames its players are drawn in, its shots, its moves and its rules. Play runs at ${(FLOOR.tick * FLOOR.ticksPerSec).toFixed(1)} times real speed from the tip to the horn; the Floor's own game runs its clock ${FLOOR.rate} times faster again (a twelve-minute quarter in four real minutes).`,
     entries: () => [
       ...(Object.entries(FRAME_POSES) as [Frame, Pose][]).map(([k, pose]) => ({
         key: `fr-${k}`,
@@ -1151,36 +1150,44 @@ const CATEGORIES: Category[] = [
         art: () => <Icon name="bracket" size={44} />,
         facts: [['Rating points per point of strength', String(FLOOR.perStrength)]] as [string, string][],
       },
-      // round 39: the mini-game in Front Office's place, its strengths and its grades
-      ...FLOOR_STRENGTHS.map((k) => {
-        const five = floorRoster('U', FLOOR_MINI.strength[k], 7).slice(0, 5);
-        return {
-          key: `mg-${k}`,
-          title: `${k[0].toUpperCase()}${k.slice(1)} teams`,
-          group: 'The mini-game',
-          text: `Both teams generated at ${FLOOR_MINI.strength[k]}: five starters by position a few points either side, three off the bench ${FLOOR_MINI.roster.bench} below. From the start page; a career off the NBA puts him in his own spot.`,
-          art: () => <Icon name="floor" size={44} />,
-          facts: [
-            ['Starters (a sample)', five.map((p) => `${p.pos} ${Math.round(ovrOf(p.r, p.pos))}`).join(', ')],
-            ['Each player', `±${FLOOR_MINI.roster.wobble / 2}`],
-          ] as [string, string][],
-        };
-      }),
+      // round 42: the Floor's own game, and every franchise's five as it plays them
       {
-        key: 'mg-grades',
-        title: 'The grade',
-        group: 'The mini-game',
-        text: `The margin, with his line's share (a game score at ${FLOOR_MINI.perLine} a point, at most ${FLOOR_MINI.cap} either way). A win is a B, an A at ${FLOOR_MINI.grade.A} or more; a loss is a C at ${FLOOR_MINI.grade.C} or more, a D below. C or better passes the island.`,
-        art: () => <Icon name="laurel" size={44} />,
-        facts: (['A', 'B', 'C'] as const).map((g) => [`${g}: IQ / playmaking`, `+${FLOOR_MINI.reward[g].IQ} / +${FLOOR_MINI.reward[g].PLY}`]) as [string, string][],
-      },
-      {
-        key: 'mg-start',
-        title: 'The start',
-        group: 'The mini-game',
-        text: `Six minutes left, about ${FLOOR_MINI.start.base} each (${FLOOR_MINI.start.spread} either way), his team up to ${FLOOR_MINI.start.gap} ahead or behind, on the standard difficulty. In an NBA career: his own team and the real rosters, split by the strength gap.`,
+        key: 'own-quick',
+        title: 'A quick game',
+        group: 'Its own game',
+        text: `The fourth quarter from a close score: 12:00 on a clock that runs ${FLOOR.rate} times as fast, about four real minutes. Each side is a franchise's all-time five at its real level or at an overall picked for that side alone.`,
         art: () => <Icon name="clutch" size={44} />,
+        facts: [['Clock rate', `x${FLOOR.rate}`]] as [string, string][],
       },
+      {
+        key: 'own-playoffs',
+        title: 'The playoffs',
+        group: 'Its own game',
+        text: `Sixteen franchises, one game a round, four wins to the title. Each game is all four quarters on a clock ${FLOOR.rateFull} times as fast (the same four minutes); the games he is not in are played by the engine.`,
+        art: () => <Icon name="bracket" size={44} />,
+        facts: [['Clock rate', `x${FLOOR.rateFull}`], ['Rounds', '4']] as [string, string][],
+      },
+      {
+        key: 'own-plays',
+        title: 'The plays added in round 42',
+        group: 'Its own game',
+        text: `A fast break after a steal or a defensive rebound (up to ${FLOOR.fastBreak.secs} seconds, everyone at a sprint); the post (a back-down, then a hook, a drop step or the ball back out); a charge now and then; substitutions at a dead ball for legs under ${Math.round(FLOOR.subs.tired * 100)}%; three one-key calls (isolation, give-and-go, double team).`,
+        art: () => <Icon name="floor" size={44} />,
+      },
+      ...Object.entries(FRANCHISE_FIVES).map(([abbr, five]) => ({
+        key: `five-${abbr}`,
+        title: `${abbr}: ${five.map((l) => l.name.split(' ').slice(-1)[0]).join(', ')}`,
+        group: 'The legends, from their real numbers',
+        text: five
+          .map((l) => {
+            const r = legendRatings(l);
+            const st = legendStyle(l);
+            const row = legendLine(l.name);
+            return `${l.name} (${l.pos}, ${l.ovr}): ${row ? `${row[0]} pts, ${row[1]} reb, ${row[2]} ast` : 'no line'}; shooting ${Math.round(r.SHT)}, finishing ${Math.round(r.FIN)}, playmaking ${Math.round(r.PLY)}, rebounding ${Math.round(r.REB)}; shot share x${st.use.toFixed(2)}, threes x${st.three.toFixed(2)}, post x${st.post.toFixed(2)}.`;
+          })
+          .join(' '),
+        art: () => <Icon name="floor" size={44} />,
+      })),
     ],
   },
   // round 38: story mode's chapters, one a summer at most

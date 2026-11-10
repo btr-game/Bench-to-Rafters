@@ -748,8 +748,7 @@ export const ROADMAP = {
  * The island's grades (round 33, owner: "for the user to pass the tutorial, they must play each
  * minigame at least once, earning at least a C"). The marks follow each game's career-bonus tiers
  * (career/miniBonus.ts): C is the first score that earns a bonus. A three-point score, a dunk
- * contest's best dunk, the lab's peak OVR; the Floor grades itself (FLOOR_MINI), the others by how
- * far the run went.
+ * contest's best dunk, the lab's peak OVR; the others by how far the run went.
  */
 export const ROAD_GRADES = {
   threes: { A: 23, B: 18, C: 13 },
@@ -757,29 +756,14 @@ export const ROAD_GRADES = {
   lab: { A: 93, B: 87, C: 80 },
 };
 /**
- * The Floor as a mini-game (round 39, owner: "can we get rid of (archive) the front office minigame
- * and replace it with this game?"; engine/floor/mini.ts), in Front Office's place: its unlock and
- * its career bonus. The last six minutes on the standard difficulty, from a close score: about
- * `start.base` points each after 42 minutes (a seeded `spread` either way), his team a seeded `gap`
- * or less ahead or behind. A generated team (the start page) has its five starters at the level
- * picked (`strength`), its three off the bench `roster.bench` below, each a seeded `roster.wobble`
- * wide. The grade (C or better passes the island) is the margin, with a little for his own line:
- * a game score (`line`, a point a point) worth `perLine` a point, at most `cap` either way. A win is
- * a B, an A at `grade.A` or more with his share; a loss is a C at `grade.C` or more (a loss by three
- * on a quiet night), a D below. A comeback (`back`) is a win after trailing by that many. The career
- * bonus by grade is Front Office's, basketball IQ and a little playmaking: an A is a title run's, a
- * B two or three playoff trips', a C one trip's, a D nothing.
+ * A made-up team for the Floor (engine/floor/mini.ts: the dev deck's lab and the engine's own
+ * measurements): its three off the bench `roster.bench` below its five starters, each a seeded
+ * `roster.wobble` wide. For the achievement book, a comeback (`back`) is a win after trailing by
+ * that many.
  */
 export const FLOOR_MINI = {
-  start: { base: 90, spread: 6, gap: 4 },
-  strength: { average: 70, good: 76, great: 82 },
   roster: { bench: 6, wobble: 8 },
-  line: { pts: 1, reb: 0.4, ast: 0.7, stl: 1, blk: 1, tov: -1 },
-  perLine: 0.2,
-  cap: 3,
-  grade: { A: 8, C: -3 },
   back: 8,
-  reward: { A: { IQ: 3, PLY: 1.5 }, B: { IQ: 1, PLY: 0.4 }, C: { IQ: 0.4, PLY: 0.1 }, D: {} } as Record<'A' | 'B' | 'C' | 'D', { IQ?: number; PLY?: number }>,
 };
 /**
  * The next generation (round 32, owner: "similar height (... variance, and also like the low-chance
@@ -1249,8 +1233,17 @@ export const FLOOR = {
   tick: 0.075,
   ticksPerSec: 20,
   quarter: 720,
-  /** The Floor takes over with this many game seconds left in the fourth: six minutes, four real ones. */
+  /** In a career the Floor takes over with this many game seconds left in the fourth: six minutes, four real ones. */
   from: 360,
+  /** Round 42 (owner: "instead of last six minutes, make it twelve (but same play time, so time goes
+   * by two times faster)"): the Floor's own game runs its clock at twice a career's, a twelve-minute
+   * quarter in the same four real minutes. Only the game clock: the shot clock, the legs and every
+   * move keep their pace. Overtime is five minutes on whichever clock. */
+  rate: 2,
+  overtime: 300,
+  /** Between quarters: the legs a rest gives back (0 to 1), the wait before the ball comes in (game
+   * seconds), and how much of the momentum carries over. A half starts with the timeouts back. */
+  breaks: { quarter: 0.15, half: 0.35, wait: 2.5, momentum: 0.5 },
   shotClock: 24,
   offReboundClock: 14,
   /** Top speed in feet a game second, from athleticism 40 to 99, and sprinting's share more (owner,
@@ -1259,7 +1252,7 @@ export const FLOOR = {
   speed: [8, 14],
   sprint: 1.3,
   /** Stamina (0 to 1) a game second: sprinting, moving, standing; a timeout gives back. */
-  stamina: { sprint: -0.012, move: -0.0025, rest: 0.004, timeout: 0.25 },
+  stamina: { sprint: -0.012, move: -0.0045, rest: 0.004, timeout: 0.25 },
   /** A shot's base chance by zone, and how much its rating (from 70) moves it per point. */
   shot: { rim: 0.7, paint: 0.51, mid: 0.46, three: 0.4, perPoint: { rim: 0.006, paint: 0.0055, mid: 0.005, three: 0.005 }, deep: 26, deepPerFt: 0.04, min: 0.02, max: 0.93 },
   /** A defender closer than `within` feet takes up to `max` off the chance; tired legs up to `tired`. */
@@ -1302,8 +1295,6 @@ export const FLOOR = {
   walk: 1.2,
   /** The inbounder passes it in from this close to the ball's spot (feet). */
   inboundReach: 4,
-  /** Step 4: a game within `margin` points runs at real speed for its last `clock` game seconds. */
-  realTime: { clock: 60, margin: 6 },
   /** Round 39, online: game seconds a free throw waits for a human's release before the AI shoots it
    * (a friend who has walked away must not hold both screens). */
   ftWait: 10,
@@ -1314,6 +1305,52 @@ export const FLOOR = {
   finish: { within: 5, strip: 0.22, athletic: 0.6 },
   /** An open jumper waits until the offense has used this much of the shot clock (game seconds). */
   patience: 9,
-  /** Trailing late, the defense fouls on purpose: within this margin, under this many seconds. */
+  /** Trailing late, the defense fouls on purpose: within this margin, under this many seconds (a
+   * career's clock; twice as many on the Floor's own). */
   hack: { margin: [1, 8], secs: 35 },
+  /** Round 42 (owner: "make the ai players drive in a bit more. i barely see them drive"): the AI's
+   * ball handler takes his man off the dribble. Each time he thinks (every 0.6 seconds), with his
+   * man within `near` feet, more than `far` from the rim and `clock` seconds on the shot clock, he
+   * tries it `base` of the time at 70 finishing and athleticism (`perPoint` a point, between `min`
+   * and `max`; `settle` times as often once the offense has run its patience); the move itself is
+   * the one a player makes (FLOOR.move), his handle and legs against the defender's feet. A
+   * defender a person steers is slowed for `human` of the time an AI one is. Measured over 300 AI
+   * games at 76 (scripts/floorStats.ts), a quarter: drives in the half court with his man on him
+   * 3.418 a team before and 6.187 after (23.66% and 38.69% of possessions), shots at the rim 21.94%
+   * and 36.65%, from mid-range 38.72% and 30.72%, threes 37.47% and 30.81%, points a team 15.645
+   * and 16.642. */
+  attack: { base: 0.018, perPoint: 0.002, min: 0.004, max: 0.09, settle: 1.6, near: 7, far: 9, clock: 5, human: 0.6 },
+  /** Round 42, the Floor's own game: the clock of a game of four quarters, played in the time one
+   * quarter takes (the playoffs: "one full game could honestly be 4 minutes"). */
+  rateFull: 8,
+  /** Round 42, a fast break (owner's pick: "an outlet pass and a run"): after a steal or a
+   * defensive rebound the new offence runs for up to `secs` game seconds, everyone at a sprint, the
+   * new defence starting `react` seconds late (less for a smart player). The man with the ball
+   * throws ahead to a runner `ahead` feet nearer the rim with a clear lane, or pushes it himself
+   * (a big man without a handle, `handle`, looks for his guard first); it is over once `back`
+   * defenders stand between the ball and the rim inside `set` feet of it. A sprint on the break
+   * costs the legs `legs` of a sprint he chooses. */
+  fastBreak: { secs: 5, react: 0.5, ahead: 12, lane: 3, back: 3, set: 30, handle: 62, outlet: 0.8, legs: 0.4 },
+  /** Round 42, the post (owner's pick: "a back-down and a hook"): with his man on him (`on` feet),
+   * between `near` and `far` feet from the rim, a player who posts up (his style: big men, mostly)
+   * does it `urge` of the times he thinks. He backs in for `secs` seconds at `pace` of his speed,
+   * then: the ball back out when a second defender has come (`kick`), a drop step (`drop`, his
+   * finishing and legs against his man's interior defence, as any move), or the hook, a shot `hook`
+   * better than one from there, `perPoint` for each point of his finishing over his man's interior
+   * defence, and blocked `block` as often. */
+  post: { near: 5, far: 15, on: 5.5, urge: 0.3, secs: [0.9, 1.8], pace: 0.3, hook: 0.04, perPoint: 0.003, block: 0.45, drop: 0.35, kick: 0.7 },
+  /** Round 42, a charge (owner: "dont take it too seriously tho"): a shot at the rim on the move
+   * into a defender who has stood still `still` seconds within `within` feet is an offensive foul
+   * this often (at 75 basketball IQ). */
+  charge: { within: 3.5, still: 0.3, chance: 0.3 },
+  /** Round 42, substitutions: at a dead ball a starter whose legs are under `tired` sits for a
+   * rested man off the bench (`fresh`), and comes back once his own are at `back`; in the last
+   * `close` clock seconds (a career's clock) the starters finish. A man on the bench rests `rest`
+   * times as fast as one standing on the floor. */
+  subs: { tired: 0.68, fresh: 0.8, back: 0.93, close: 120, rest: 2.5 },
+  /** Round 42, the calls (owner: "make it simple so that the decision doesnt take long"): one key
+   * each. Isolation clears a side for `iso` seconds (the others stand `clear` feet off the ball);
+   * a give-and-go waits `giveGo` seconds for his cut; a double team holds `double` seconds, strips
+   * `strip` times as often, and an AI ball handler under it passes out `out` of the time. */
+  calls: { iso: 6, clear: 20, giveGo: 3, double: 4, strip: 1.7, out: 0.75 },
 } as const;

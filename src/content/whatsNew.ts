@@ -16,6 +16,19 @@ interface News {
 
 export const NEWS: News[] = [
   {
+    id: '2026-11-10-r42',
+    date: '10 November 2026',
+    items: [
+      { icon: 'floor', text: 'The Floor is a game of its own now, in the arena on its own island east of the main land. A quick game is the fourth quarter: twelve minutes on a clock that runs twice as fast.' },
+      { icon: 'spotlight', text: 'Play as the legends: every franchise’s all-time five, rated from their real career numbers. Jordan takes the shots, Curry the threes, Shaq the post, Stockton the passes.' },
+      { icon: 'bracket', text: 'The playoffs: sixteen franchises, one game a round, each a full four-quarter game in about four minutes. Or draft your own five from all 150 legends.' },
+      { icon: 'regular', text: 'Difficulty your way: your team’s overall and the opponent’s are set separately.' },
+      { icon: 'fast', text: 'On the court: fast breaks, post-ups and hooks, charges, substitutions, and three one-key calls (isolation, give-and-go, double team). The AI drives to the rim far more, and the slow-down in the last minute is gone.' },
+      { icon: 'cards', text: 'A box score at the end: points by quarter, every player’s line, the player of the game.' },
+      { icon: 'versus', text: 'Online is much smoother: your keys count at once, without the old delay. A quick match needs no room code, and the host can start a rematch from the final page.' },
+    ],
+  },
+  {
     id: '2026-11-05-r41',
     date: '5 November 2026',
     items: [

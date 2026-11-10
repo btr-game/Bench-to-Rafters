@@ -16,12 +16,12 @@ import { LEVEL_IDS, levelOf, type Level } from '../engine/levels';
 import type { GameState } from '../engine/types';
 import type { ChosenLook } from '../content/looks';
 import type { MiniResult } from '../engine/career/miniBonus';
-import { FLOOR_MINI, ROAD_GRADES } from '../engine/balance';
+import { ROAD_GRADES } from '../engine/balance';
 import { fnv1a, isDev } from '../dev/mode';
 import { t, tx } from '../i18n';
 
 /** The mini-games of the island; each needs a C or better once (R33-D). */
-export type RoadMini = 'threes' | 'dunk' | 'street' | 'legends' | 'lab' | 'rhythm' | 'floor';
+export type RoadMini = 'threes' | 'dunk' | 'street' | 'legends' | 'lab' | 'rhythm';
 
 export interface Road {
   /** The full game is open on this device: the beginner level passed (round 35), or the exit code. */
@@ -69,11 +69,11 @@ export function loadRoad(): Road {
 
 const ROAD_V = 35;
 
-/** Round 39: Front Office is archived and the Floor takes its place on the island, so a Front Office
- * grade saved before counts as the Floor's (the better of the two, if both are there). */
-export function floorForOffice(minis: Road['minis'] & { office?: string }): Road['minis'] {
-  const { office, ...rest } = minis;
-  return office ? { ...rest, floor: bestGrade(rest.floor, office) } : rest;
+/** Round 42: the Floor is a game of its own and the island has six games, so a grade saved for it
+ * (or for Front Office, which it replaced in round 39) is dropped. */
+export function floorForOffice(minis: Road['minis'] & { office?: string; floor?: string }): Road['minis'] {
+  const { office: _o, floor: _f, ...rest } = minis;
+  return rest;
 }
 
 export function saveRoad({ preview: _, ...r }: Road): void {
@@ -143,8 +143,6 @@ export function roadGrade(r: MiniResult): string {
       return by(r.best, G.dunk, r.won);
     case 'lab':
       return by(r.peak, G.lab);
-    case 'floor':
-      return r.grade;
     case 'legends':
       return { champion: 'A', finals: 'B', semis: 'C', out: 'D' }[r.reached];
     case 'street':
@@ -160,7 +158,7 @@ export const bestGrade = (a: string | undefined, b: string): string => (a && RAN
 /** A grade that passes the island: C or better. */
 export const passGrade = (g?: string): boolean => !!g && RANK.indexOf(g) >= 0 && RANK.indexOf(g) <= RANK.indexOf('C');
 /** The island's mini-games, in the hub's order. */
-export const ROAD_MINIS: RoadMini[] = ['threes', 'dunk', 'street', 'legends', 'lab', 'rhythm', 'floor'];
+export const ROAD_MINIS: RoadMini[] = ['threes', 'dunk', 'street', 'legends', 'lab', 'rhythm'];
 
 /** What a C takes in each mini-game, in a few words (the island's hub and the road map). Round 40:
  * each is read when a screen shows it, in the player's language. */
@@ -182,9 +180,6 @@ export const ROAD_NEED: Record<RoadMini, string> = {
   },
   get rhythm() {
     return t('half the plays on time');
-  },
-  get floor() {
-    return t('lose by {n} or less', { n: -FLOOR_MINI.grade.C });
   },
 };
 

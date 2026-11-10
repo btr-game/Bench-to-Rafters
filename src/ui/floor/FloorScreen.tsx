@@ -11,7 +11,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { FLOOR } from '../../engine/balance';
-import { RIM_Y, zoneOf } from '../../engine/floor/court';
+import { COURT, RIM_Y, zoneOf } from '../../engine/floor/court';
 import { floorHash, floorResult, freshEvents, isOpen, meterWindow, mirrorFloor, openMan, ratingK, releaseQuality, skipFloor, startFloor, stepFloor, type FloorEvent, type FloorInput, type FloorSetup, type FloorState } from '../../engine/floor/sim';
 import type { DramaPlay } from '../../engine/story/drama';
 import type { Kit } from '../../content/teamStyle';
@@ -19,12 +19,13 @@ import { lookOf, shoeOf, type KitName } from '../art/Player';
 import type { Look } from '../art/sprite';
 import { ActionCam } from '../art/ActionCam';
 import { ink } from '../art/color';
-import { t } from '../../i18n';
+import { t, tx } from '../../i18n';
 import { setSfx, sfx, soundSettings } from '../sound';
 import { announce, announcerOn, setAnnouncer } from '../announcer';
 import { Backdrop, CAM_RANGE, VIEW, drawBasket, drawFrontRow, drawShadow, pixel, project, type ArenaLook } from './view';
 import { MID_X, SpriteBook, type Frame } from './sprites';
-import type { Lockstep } from './net';
+import type { NetGame } from './net';
+import { Bench, BoxScore } from './BoxScore';
 
 export interface FloorTeamLook {
   kit: Kit;
@@ -44,7 +45,7 @@ interface Props {
   onDone: (r: FloorOutcome) => void;
   /** Against a friend online (round 39): the game's keys both ways, the friend's name, and what
    * leaving does. Team 1's friend sees the game turned round, his team on the left of the bug. */
-  net?: { link: Lockstep; friend: string; onLeave: () => void };
+  net?: { link: NetGame; friend: string; onLeave: () => void };
   /** The end card's title for a loss (a career's playoff game: the season is over). */
   lose?: string;
 }
@@ -59,6 +60,8 @@ const KEY = {
   b: ['KeyK'],
   c: ['KeyL'],
   d: ['Space'],
+  e: ['KeyU'],
+  f: ['KeyI'],
   timeout: ['KeyT'],
 } as const;
 type KeyName = keyof typeof KEY;
@@ -71,6 +74,10 @@ const CALL_GAP = 3500;
 const LOCK_MS = 350;
 /** The close-up's length (ms): the action cam's play, and a beat to see it land. */
 const CLOSE_MS = 2300;
+/** Against a friend: a correction to where a player stands slides in over about this long (seconds),
+ * and one larger than this many feet is shown at once (he was somewhere else entirely). */
+const SLIDE_S = 0.07;
+const SLIDE_MAX = 10;
 /** How long each move's frames last (ms). */
 const ACT_MS = { cross: 300, spin: 400, step: 300, reach: 260, land: 220, cheer: 650 } as const;
 type Act = keyof typeof ACT_MS;
@@ -80,7 +87,8 @@ const lerp = (a: number, b: number, k: number) => a + (b - a) * k;
 const last = (name: string) => name.split(' ').slice(-1)[0];
 
 const clockText = (c: number) => (c >= 60 ? `${Math.floor(c / 60)}:${String(Math.floor(c % 60)).padStart(2, '0')}` : Math.max(0, c).toFixed(1));
-const periodText = (n: number) => (n === 0 ? t('4th') : n === 1 ? t('OT') : t('OT{n}', { n }));
+const QUARTER_NAME = [tx('1st'), tx('2nd'), tx('3rd'), tx('4th')];
+const periodText = (s: FloorState) => (s.periods === 0 ? t(QUARTER_NAME[Math.min(4, Math.max(1, s.quarter)) - 1]) : s.periods === 1 ? t('OT') : t('OT{n}', { n: s.periods }));
 
 interface Hud {
   score: [number, number];
@@ -102,8 +110,9 @@ const hudOf = (s: FloorState): Hud => {
   return {
     score: [...s.score] as [number, number],
     clock: clockText(s.clock),
-    shot: s.phase === 'live' && s.shot < s.clock ? String(Math.max(0, Math.ceil(s.shot))) : null,
-    period: periodText(s.periods),
+    // the shot clock is off once the quarter has less left than it does (the game clock may run faster: s.rate)
+    shot: s.phase === 'live' && s.shot < s.clock / s.rate ? String(Math.max(0, Math.ceil(s.shot))) : null,
+    period: periodText(s),
     fouls: [...s.teamFouls] as [number, number],
     timeouts: [...s.timeouts] as [number, number],
     poss: s.poss,
@@ -118,7 +127,15 @@ const hudOf = (s: FloorState): Hud => {
 function wordFor(s: FloorState, e: FloorEvent): string | null {
   switch (e.kind) {
     case 'make':
-      return e.and ? t('And one') : e.dunk ? t('Dunk') : `+${e.pts}`;
+      return e.and ? t('And one') : e.dunk ? t('Dunk') : e.hook ? t('Hook shot') : `+${e.pts}`;
+    case 'quarter':
+      return e.q === 2 ? t('Half time') : t('End of the {q}', { q: t(QUARTER_NAME[(e.q ?? 1) - 1]) });
+    case 'break':
+      return t('Fast break');
+    case 'charge':
+      return t('Charge');
+    case 'call':
+      return e.call === 'iso' ? t('Isolation') : e.call === 'give' ? t('Give and go') : t('Double team');
     case 'block':
       return t('Blocked');
     case 'steal':
@@ -146,7 +163,11 @@ function wordFor(s: FloorState, e: FloorEvent): string | null {
 function tagFor(e: FloorEvent): { text: string; at: number } | null {
   switch (e.kind) {
     case 'beat':
-      return { text: e.move === 'spin' ? t('Spun past him') : e.move === 'step' ? t('Step-back') : t('Crossed up'), at: e.on! };
+      return { text: e.move === 'spin' ? t('Spun past him') : e.move === 'step' ? t('Step-back') : e.move === 'drop' ? t('Drop step') : t('Crossed up'), at: e.on! };
+    case 'post':
+      return { text: t('Posting up'), at: e.by! };
+    case 'sub':
+      return { text: t('Coming on'), at: e.by! };
     case 'screen':
       return { text: t('Screen'), at: e.by! };
     case 'switch':
@@ -235,14 +256,22 @@ function hear(s: FloorState, e: FloorEvent, before: [number, number]): string | 
     case 'foul':
     case 'turnover':
     case 'out':
+    case 'sub':
       sfx('whistle');
       return null;
+    case 'charge':
+      sfx('whistle');
+      if (ours) sfx('roar');
+      return ours ? 'He took the charge!' : null;
+    case 'break':
+      return ours ? 'Fast break!' : null;
     case 'ft':
       sfx(e.good ? 'net' : 'rim');
       return null;
     case 'timeout':
     case 'shotclock':
     case 'overtime':
+    case 'quarter':
     case 'end':
       sfx('buzzer');
       return null;
@@ -250,9 +279,6 @@ function hear(s: FloorState, e: FloorEvent, before: [number, number]): string | 
       return null;
   }
 }
-
-/** The clock's speed now: a close game's last minute runs at real speed (step 4), the rest at 1.5 times. */
-const paceOf = (s: FloorState): number => (s.clock <= FLOOR.realTime.clock && Math.abs(s.score[0] - s.score[1]) <= FLOOR.realTime.margin ? 1 / FLOOR.tick : PACE);
 
 /** A bar of ten pixel squares (his legs). */
 function Legs({ n }: { n: number }) {
@@ -317,6 +343,8 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
   const game = useRef<FloorState | null>(null);
   const skip = useRef(false);
   const callTimeout = useRef(false);
+  // a substitution picked in the pause menu, sent with his next keys
+  const askSub = useRef<{ out: number; in: number } | null>(null);
 
   // the biggest whole-number scale the page has room for
   useEffect(() => {
@@ -355,15 +383,16 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
     const ctx = cv.getContext('2d')!;
     ctx.imageSmoothingEnabled = false;
     // the game itself, and the one this screen reads: the same, or (team 1 against a friend) turned round
-    const real = startFloor(given);
+    // (against a friend the link holds it: the game on screen is played again from the one both agree on)
+    let real = link ? link.now : startFloor(given);
     let s = flip ? mirrorFloor(real) : real;
     const look = () => {
       s = flip ? mirrorFloor(real) : real;
       game.current = s;
+      // the dev server lets a test script read the game it is playing
+      if (import.meta.env.DEV) (window as unknown as { __floor?: FloorState }).__floor = real;
     };
-    game.current = s;
-    // the dev server lets a test script read the game it is playing
-    if (import.meta.env.DEV) (window as unknown as { __floor?: FloorState }).__floor = real;
+    look();
     const back = new Backdrop(ctx, arena);
     const book = new SpriteBook();
     const lookFor: Look[] = s.players.map((p) => lookOf(p.name, shoeOf(looks[p.team].kit, looks[p.team].which)));
@@ -402,7 +431,6 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
     let lastCall = 0;
     let prevHolder = s.ball.holder;
     let lastSec = Math.ceil(s.clock);
-    let crunch = false;
     const gameSecs = (ms: number) => (ms / 1000) * FLOOR.tick * PACE;
 
     const shooting = () => {
@@ -446,17 +474,31 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
         } else release = null;
         if (hit('b')) inp.pass = mine ? aimPass(s, dx, dy) : 'auto';
         if (hit('c') && mine) {
-          inp.move = dx * face[s.user] < 0 ? 'step' : dy !== 0 ? 'spin' : 'cross';
+          // in the paint with no direction held it is the hook (round 42)
+          const me = s.players[s.user];
+          const post = dx === 0 && dy === 0 && zoneOf(0, me) === 'paint';
+          inp.move = post ? 'hook' : dx * face[s.user] < 0 ? 'step' : dy !== 0 ? 'spin' : 'cross';
           // the move plays whether it beats his man or not
-          act[s.user] = { kind: inp.move, t0: performance.now() };
+          if (inp.move !== 'hook') act[s.user] = { kind: inp.move, t0: performance.now() };
         }
         if (hit('d')) inp.pick = true;
+        // the calls (round 42): one key each
+        if (hit('e') && mine) inp.call = 'iso';
+        if (hit('f') && mine) {
+          inp.call = 'give';
+          inp.pass = aimPass(s, dx, dy);
+        }
       } else {
         release = null;
         if (hit('a')) inp.steal = true;
         if (hit('b')) inp.block = true;
         if (hit('c')) inp.swap = true;
         if (hit('d')) inp.help = true;
+        if (hit('e')) inp.call = 'double';
+      }
+      if (askSub.current) {
+        inp.sub = askSub.current;
+        askSub.current = null;
       }
       if (hit('timeout') || callTimeout.current) inp.timeout = true;
       callTimeout.current = false;
@@ -472,24 +514,26 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
       window.setTimeout(() => setTags((ts) => ts.filter((x) => x.id !== tag.id)), 900);
     };
 
-    const onEvents = (evs: FloorEvent[], before: [number, number]) => {
+    /** What a tick set off, said and shown: `v` is the game it happened in (the one on screen; against
+     * a friend, the one both computers agree on, so nothing said is ever taken back). */
+    const onEvents = (evs: FloorEvent[], before: [number, number], v: FloorState = s) => {
       const now = performance.now();
       for (const e of evs) {
-        const call = hear(s, e, before);
+        const call = hear(v, e, before);
         if (call && now - lastCall > CALL_GAP) {
           lastCall = now;
           announce(call);
         }
         if ((e.kind === 'make' && e.pts) || (e.kind === 'ft' && e.good)) setPop({ pts: e.kind === 'ft' ? 1 : e.pts!, team: e.team, id: now + Math.random() });
-        const w = wordFor(s, e);
+        const w = wordFor(v, e);
         if (w) setWord({ text: w, team: e.kind === 'turnover' || e.kind === 'shotclock' ? (e.team === 0 ? 1 : 0) : e.team, id: now + Math.random() });
         const tg = tagFor(e);
         if (tg) tagAt(tg.at, tg.text);
         // the frames a play sets off
         if ((e.kind === 'reach' || e.kind === 'steal') && e.by !== undefined) act[e.by] = { kind: 'reach', t0: now };
-        if ((e.kind === 'make' || e.kind === 'miss') && e.by !== undefined) act[e.by] = { kind: e.kind === 'make' && e.by === s.user ? 'cheer' : 'land', t0: now };
+        if ((e.kind === 'make' || e.kind === 'miss') && e.by !== undefined) act[e.by] = { kind: e.kind === 'make' && e.by === v.user ? 'cheer' : 'land', t0: now };
         // no close-ups against a friend: one would stop this screen and the other would wait for it
-        const cu = link ? null : closeUpOf(s, e, before);
+        const cu = link ? null : closeUpOf(v, e, before);
         if (cu && !closeRef.current) {
           closeRef.current = true;
           setClose({ id: now, ...cu });
@@ -505,18 +549,66 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
     const toReal = (inp: FloorInput): FloorInput => (flip && inp.dx ? { ...inp, dx: -inp.dx } : inp);
     let lateSince: number | null = null;
     let waitShown: '' | 'late' | 'gone' = '';
-    if (link) {
-      if (import.meta.env.DEV) (window as unknown as { __floorNet?: Lockstep }).__floorNet = link;
-      link.getState = () => real;
-      link.setState = (ns) => {
-        Object.assign(real, ns);
+    if (link && import.meta.env.DEV) (window as unknown as { __floorNet?: NetGame }).__floorNet = link;
+    // against a friend: how far each player is drawn from where the game now has him. When the
+    // friend's real keys come in and his man turns out to be somewhere else, the picture slides
+    // there over a few frames instead of jumping.
+    const slide = s.players.map(() => ({ x: 0, y: 0 }));
+    /** What every new tick on screen brings, whoever played it. */
+    const afterTick = () => {
+      s.players.forEach((p, i) => (openFor[i] = p.team === 0 && p.on && isOpen(s, i) ? openFor[i] + 1 : 0));
+      // the dribble as the ball comes to him, the clock's last seconds in a close one
+      if (s.ball.holder === s.user && prevHolder !== s.user && s.poss === 0 && s.phase === 'live') sfx('bounce');
+      prevHolder = s.ball.holder;
+      const sec = Math.ceil(s.clock / s.rate);
+      if (sec !== lastSec && s.quarter >= 4 && s.clock <= 5 * s.rate && s.phase === 'live' && Math.abs(s.score[0] - s.score[1]) <= 3) sfx('tick');
+      lastSec = sec;
+    };
+    /** Against a friend: this screen's ticks that are due, then both games brought up to date. */
+    const netFrame = (now: number, tl: number) => {
+      const net = link!;
+      while (acc >= tl && !net.over) {
+        // his keys count at once; the screen waits only when the friend has gone quiet
+        if (!net.step(() => toReal(inputFor()))) {
+          lateSince ??= now;
+          acc = Math.min(acc, tl * 2);
+          break;
+        }
+        lateSince = null;
+        acc -= tl;
+      }
+      const was = real.tick;
+      const old = s.players.map((p) => ({ x: p.x, y: p.y }));
+      const changed = net.settle((c, before) => {
+        const v = flip ? mirrorFloor(c) : c;
+        // the dev server keeps the game's fingerprints, so a test can check two screens agree
+        if (import.meta.env.DEV && c.tick % 40 === 0) ((window as unknown as { __floorHashes?: Record<number, string> }).__floorHashes ??= {})[c.tick] = floorHash(c);
+        onEvents(freshEvents(v), flip ? [before[1], before[0]] : before, v);
+      });
+      if (net.over) {
+        real = net.conf;
         look();
+        finish();
+        return;
+      }
+      if (!changed) return;
+      real = net.now;
+      look();
+      net.prev.forEach((p, i) => {
+        prev[i].x = flip ? COURT.w - p.x : p.x;
+        prev[i].y = p.y;
+      });
+      if (real.tick === was) {
+        // the same tick, played again on the friend's real keys: slide to where it puts everyone
         s.players.forEach((p, i) => {
-          prev[i].x = p.x;
-          prev[i].y = p.y;
+          const dx = slide[i].x + old[i].x - p.x;
+          const dy = slide[i].y + old[i].y - p.y;
+          const far = Math.hypot(dx, dy) > SLIDE_MAX;
+          slide[i].x = far ? 0 : dx;
+          slide[i].y = far ? 0 : dy;
         });
-      };
-    }
+      } else afterTick();
+    };
     /** One tick: the positions before it, the step, and what it set off. */
     const tick = (a: FloorInput | null, b: FloorInput | null) => {
       s.players.forEach((p, i) => {
@@ -525,22 +617,13 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
       });
       const before: [number, number] = [...s.score];
       stepFloor(real, a, b);
-      link?.stepped(real);
       look();
-      // the dev server keeps the game's fingerprints, so a test can check two screens agree
-      if (import.meta.env.DEV && link && real.tick % 40 === 0) ((window as unknown as { __floorHashes?: Record<number, string> }).__floorHashes ??= {})[real.tick] = floorHash(real);
-      s.players.forEach((p, i) => (openFor[i] = p.team === 0 && p.on && isOpen(s, i) ? openFor[i] + 1 : 0));
       onEvents(freshEvents(s), before);
-      // the dribble as the ball comes to him, the clock's last seconds in a close one
-      if (s.ball.holder === s.user && prevHolder !== s.user && s.poss === 0 && s.phase === 'live') sfx('bounce');
-      prevHolder = s.ball.holder;
-      const sec = Math.ceil(s.clock);
-      if (sec !== lastSec && s.clock <= 5 && s.phase === 'live' && Math.abs(s.score[0] - s.score[1]) <= 3) sfx('tick');
-      lastSec = sec;
+      afterTick();
     };
 
     // ---- drawing ----
-    const interp = (i: number, a: number) => ({ x: lerp(prev[i].x, s.players[i].x, a), y: lerp(prev[i].y, s.players[i].y, a) });
+    const interp = (i: number, a: number) => ({ x: lerp(prev[i].x, s.players[i].x, a) + slide[i].x, y: lerp(prev[i].y, s.players[i].y, a) + slide[i].y });
     const actOf = (i: number, now: number) => {
       const x = act[i];
       if (!x) return null;
@@ -819,7 +902,7 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
         finish();
       }
       // against a friend the menu leaves the game running (it does not stop for one screen)
-      const live = (link ? true : !pausedRef.current && !closeRef.current) && s.phase !== 'over';
+      const live = link ? !link.over : !pausedRef.current && !closeRef.current && s.phase !== 'over';
       if (link) {
         const gone = link.gone || now - link.heard > 10000;
         const w = gone ? 'gone' : lateSince !== null && now - lateSince > 700 ? 'late' : '';
@@ -830,35 +913,28 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
       }
       if (live) {
         acc += dt;
-        // step 4: a close game's last minute at real speed; the shot meter keeps to its real second
-        const pace = paceOf(s);
-        if (pace !== PACE && !crunch) {
-          crunch = true;
-          setWord({ text: t('Crunch time'), team: 0, id: now + Math.random() });
-          sfx('clutch');
-        } else if (pace === PACE) crunch = false;
-        const tl = 1 / pace;
-        while (acc >= tl && !closeRef.current) {
-          if (link) {
-            // his keys for the ticks to come, then the tick both screens have the keys for
-            link.fill(real.tick, () => toReal(inputFor()));
-            if (!link.ready(real.tick + 1)) {
-              lateSince ??= now;
-              acc = Math.min(acc, tl * 2);
+        // one pace from the tip to the horn (round 42, owner: "get rid of clutch time (the game speed
+        // suddenly drops too much, making the pace slow)")
+        const tl = 1 / PACE;
+        if (link) {
+          // (the screen that is ahead of the friend's runs a touch slower until they are level)
+          netFrame(now, tl * link.stretch());
+          const fade = Math.exp(-dt / SLIDE_S);
+          for (const o of slide) {
+            o.x *= fade;
+            o.y *= fade;
+          }
+        } else
+          while (acc >= tl && !closeRef.current) {
+            tick(inputFor(), null);
+            acc -= tl;
+            if (s.phase === 'over') {
+              finish();
               break;
             }
-            lateSince = null;
-            const [a, b] = link.inputs(real.tick + 1);
-            tick(a, b);
-          } else tick(inputFor(), null);
-          acc -= tl;
-          if (s.phase === 'over') {
-            finish();
-            break;
           }
-        }
       } else acc = 0;
-      render(now, live ? clamp(acc * paceOf(s), 0, 1) : 1, dt);
+      render(now, live ? clamp(acc * PACE, 0, 1) : 1, dt);
       const h = hudOf(s);
       const key = JSON.stringify(h);
       if (key !== lastHud) {
@@ -914,10 +990,6 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
     window.addEventListener('blur', blur);
     return () => {
       cancelAnimationFrame(raf);
-      if (link) {
-        link.getState = () => null;
-        link.setState = () => {};
-      }
       window.removeEventListener('keydown', down);
       window.removeEventListener('keyup', up);
       window.removeEventListener('blur', blur);
@@ -1048,6 +1120,7 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
                 {t('Announcer')}
               </button>
             </div>
+            {game.current && <Bench s={game.current} onSub={(q) => ((askSub.current = q), setPaused(false))} />}
             {net ? (
               <button className="btn" onClick={net.onLeave}>
                 {t('Leave the game')}
@@ -1093,6 +1166,7 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
                 {me.name}: {over.line.pts} PTS · {over.line.reb} REB · {over.line.ast} AST · {over.line.stl} STL · {over.line.blk} BLK · {over.line.fgm}/{over.line.fga} FG
               </p>
             )}
+            <BoxScore r={over} teams={[setup.us.short, setup.them.short]} />
             <div className="floor-end-row">
               {onAgain && (
                 <button className="btn" onClick={onAgain}>
@@ -1123,13 +1197,13 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
         <div>
           <dt>{t('Offence')}</dt>
           <dd>
-            <kbd>WASD</kbd> {t('move')} · <kbd>Shift</kbd> {t('sprint')} · <kbd>J</kbd> {t('hold to shoot; tap at the rim to lay it in or dunk')} · <kbd>K</kbd> {t('pass (aim with the arrows)')} · <kbd>L</kbd> {t('crossover, spin, step-back')} · <kbd>Space</kbd> {t('call a pick')}
+            <kbd>WASD</kbd> {t('move')} · <kbd>Shift</kbd> {t('sprint')} · <kbd>J</kbd> {t('hold to shoot; tap at the rim to lay it in or dunk')} · <kbd>K</kbd> {t('pass (aim with the arrows)')} · <kbd>L</kbd> {t('crossover, spin, step-back; a hook in the paint')} · <kbd>Space</kbd> {t('call a pick')} · <kbd>U</kbd> {t('isolation')} · <kbd>I</kbd> {t('give and go')}
           </dd>
         </div>
         <div>
           <dt>{t('Defence')}</dt>
           <dd>
-            <kbd>J</kbd> {t('steal')} · <kbd>K</kbd> {t('block or contest')} · <kbd>L</kbd> {t('switch')} · <kbd>Space</kbd> {t('call for help')} · <kbd>T</kbd> {t('timeout')} · <kbd>Esc</kbd> {t('pause')}
+            <kbd>J</kbd> {t('steal')} · <kbd>K</kbd> {t('block or contest')} · <kbd>L</kbd> {t('switch')} · <kbd>Space</kbd> {t('call for help')} · <kbd>U</kbd> {t('double team')} · <kbd>T</kbd> {t('timeout')} · <kbd>Esc</kbd> {t('pause')}
           </dd>
         </div>
       </dl>

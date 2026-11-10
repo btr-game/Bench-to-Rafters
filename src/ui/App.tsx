@@ -21,6 +21,7 @@ import { CareerLog } from './screens/CareerLog';
 import { AchievementBook } from './screens/Achievements';
 import { CommunityPage } from './screens/Community';
 import { MpBoard, MultiplayerPage } from './screens/Multiplayer';
+import { FloorPage } from './floor/FloorHub';
 import { FootBar } from './components/FootBar';
 import { Intro } from './screens/Intro';
 import { Finale } from './screens/Finale';
@@ -287,6 +288,7 @@ export function App() {
   if (page === 'achievements') return <AchievementBook />;
   if (page === 'community') return <CommunityPage />;
   if (page === 'multi') return <MultiplayerPage />;
+  if (page === 'floor' && !game) return <FloorPage />;
   if (mini) return <MiniGames />;
   if (!game) return <Create />;
 

@@ -664,9 +664,9 @@ function Classes({ mp, open, setOpen, name }: { mp: Multiplayer; open: string | 
 // ---------- the page ----------
 
 /** Round 39 (owner: "can you make the game multiplayer as well?"): the one way to play a friend live,
- * the Floor head to head, lives on the Floor mini-game's page. */
+ * the Floor head to head, lives on the Floor's own page (round 42). */
 function FloorLive() {
-  const setMini = useStore((s) => s.setMini);
+  const setPage = useStore((s) => s.setPage);
   const open = useStore((s) => unlocked(s.road, 'minis'));
   return (
     <section className="card stack">
@@ -674,9 +674,9 @@ function FloorLive() {
         <Icon name="floor" size={28} />
         {t('Live: the Floor, head to head')}
       </div>
-      <p className="small muted keep">{t('The last six minutes against a friend, both of you at the keys at once: one makes a room, the other types in its code.')}</p>
+      <p className="small muted keep">{t('The fourth quarter against a friend, both of you at the keys at once: a room code, or a quick match with whoever is waiting.')}</p>
       {open ? (
-        <button className="btn" onClick={() => setMini('floor')}>
+        <button className="btn" onClick={() => setPage('floor')}>
           {t('Play a friend on the Floor')}
         </button>
       ) : (
