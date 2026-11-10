@@ -23,7 +23,8 @@ const setup = (seed: number, mode: FloorSetup['mode'] = 'standard', o: { FT?: nu
   us: { name: 'Us', short: 'US', color: '#1D428A', players: roster('U', 75, { user: true, ...o }) },
   them: { name: 'Them', short: 'TH', color: '#C8102E', players: roster('T', 75) },
   score: [80, 80],
-  clock: o.clock,
+  // a career's six minutes unless a test says otherwise (the engine's own default is a whole quarter)
+  clock: o.clock ?? FLOOR.from,
 });
 /** A whole quarter, to hold the numbers against an NBA quarter's. */
 const QUARTER = { clock: FLOOR.quarter };
@@ -277,5 +278,123 @@ describe('round 39: the Floor', () => {
     const quick = strips(95);
     expect(slow).toBeGreaterThan(0.05);
     expect(quick).toBeLessThan(slow);
+  });
+});
+
+// Round 42 (owner: "instead of last six minutes, make it twelve (but same play time, so time goes by
+// two times faster), allow the users to play all four quarters (or start from half time), and get
+// rid of clutch time ... make the ai players drive in a bit more"; and, for two computers playing the
+// same game online, arithmetic every browser does alike).
+describe('round 42: quarters, the faster clock, the AI off the dribble', () => {
+  const whole = (seed: number, quarter: 1 | 2 | 3 | 4): FloorSetup => ({ ...setup(seed), score: [0, 0], clock: FLOOR.quarter, quarter, rate: FLOOR.rate });
+
+  it('a twelve-minute quarter on the Floor’s own clock takes the real time a career’s six minutes do', () => {
+    expect(FLOOR.rate).toBe(2);
+    expect(FLOOR.quarter / FLOOR.rate).toBe(FLOOR.from);
+    const ticks = (set: FloorSetup) => {
+      const s = startFloor(set);
+      let live = 0;
+      for (let i = 0; i < 400000 && s.phase !== 'over' && !s.periods; i++) {
+        stepFloor(s, null);
+        if (s.phase === 'live') live++;
+      }
+      return live;
+    };
+    // the clock runs for the same number of ticks: 4,800, four real minutes
+    const six = ticks(setup(11));
+    const twelve = ticks(whole(11, 4));
+    expect(Math.abs(six - FLOOR.from / FLOOR.tick)).toBeLessThan(40);
+    expect(Math.abs(twelve - FLOOR.from / FLOOR.tick)).toBeLessThan(40);
+  });
+
+  it('a whole game is four quarters: the horn, a rest, the fouls wiped, the ball by turns, the timeouts back at the half', () => {
+    const s = startFloor(whole(5, 1));
+    expect(s.quarter).toBe(1);
+    const ends: { q: number; tick: number; fouls: [number, number]; poss: 0 | 1; clock: number }[] = [];
+    let before: [number, number] = [0, 0];
+    for (let i = 0; i < 400000 && s.phase !== 'over'; i++) {
+      before = [...s.teamFouls] as [number, number];
+      stepFloor(s, null);
+      for (const e of freshEvents(s)) if (e.kind === 'quarter') ends.push({ q: e.q!, tick: s.tick, fouls: [...s.teamFouls] as [number, number], poss: s.inbound!.team, clock: s.clock });
+    }
+    expect(ends.map((e) => e.q)).toEqual([1, 2, 3]);
+    for (const e of ends) {
+      expect(e.fouls).toEqual([0, 0]);
+      expect(e.clock).toBe(FLOOR.quarter);
+    }
+    // the team that started has it again in the fourth; the other one starts the second and third
+    expect(ends[0].poss).toBe(s.first === 0 ? 1 : 0);
+    expect(ends[1].poss).toBe(s.first === 0 ? 1 : 0);
+    expect(ends[2].poss).toBe(s.first);
+    expect(s.quarter).toBe(4);
+    expect(s.phase).toBe('over');
+    expect(s.score[0]).not.toBe(s.score[1]);
+    void before;
+  });
+
+  it('a game from half time plays two quarters, and one from the fourth plays one', () => {
+    for (const [q, n] of [[3, 1], [4, 0], [2, 2]] as const) {
+      const s = startFloor(whole(9, q));
+      let horns = 0;
+      for (let i = 0; i < 400000 && s.phase !== 'over'; i++) {
+        stepFloor(s, null);
+        horns += freshEvents(s).filter((e) => e.kind === 'quarter').length;
+      }
+      expect(horns).toBe(n);
+    }
+  });
+
+  it('the last seconds belong to the fourth: no late marks and no fouling on purpose before it', () => {
+    const s = startFloor({ ...whole(3, 1), score: [0, 6] });
+    let hacked = 0;
+    for (let i = 0; i < 400000 && s.quarter < 4 && s.phase !== 'over'; i++) {
+      const fouls = s.teamFouls[0] + s.teamFouls[1];
+      const held = s.ball.holder !== null && !s.ball.flight && s.phase === 'live';
+      stepFloor(s, null);
+      // a foul with the ball held and nobody shooting, straight to the line, is the one on purpose
+      if (held && s.phase === 'ft' && s.teamFouls[0] + s.teamFouls[1] === fouls + 1 && !freshEvents(s).some((e) => e.kind === 'reach')) hacked += s.clock <= FLOOR.hack.secs * s.rate ? 1 : 0;
+    }
+    expect(s.marks.winner).toBe(false);
+    expect(s.marks.stop).toBe(false);
+    expect(hacked).toBe(0);
+  });
+
+  it('the AI takes its man off the dribble: men beaten, and the rim taking shots from mid-range', () => {
+    let beats = 0;
+    let rim = 0;
+    let mid = 0;
+    for (let k = 0; k < 30; k++) {
+      const s = startFloor(setup(500 + k));
+      for (let i = 0; i < 40000 && s.phase !== 'over'; i++) {
+        stepFloor(s, null);
+        for (const e of freshEvents(s)) {
+          if (e.kind === 'beat') beats++;
+          if (e.kind === 'make' || e.kind === 'miss' || e.kind === 'block') {
+            if (e.zone === 'rim') rim++;
+            if (e.zone === 'mid') mid++;
+          }
+        }
+      }
+    }
+    // about 3.5 a team a game (FLOOR.attack); none before round 42
+    expect(beats / 30 / 2).toBeGreaterThan(2);
+    expect(beats / 30 / 2).toBeLessThan(6);
+    // the rim takes a good share of what mid-range had (21.94% of shots against 38.72% before)
+    expect(rim / (rim + mid)).toBeGreaterThan(0.4);
+  });
+
+  it('keeps to arithmetic every browser does alike: its own sine, no Math.hypot', async () => {
+    const { sin, cos, hyp } = await import('../src/engine/floor/court');
+    for (let a = -20; a < 60; a += 0.137) {
+      expect(Math.abs(sin(a) - Math.sin(a))).toBeLessThan(1e-6);
+      expect(Math.abs(cos(a) - Math.cos(a))).toBeLessThan(1e-6);
+    }
+    expect(hyp(3, 4)).toBe(5);
+    const fs = await import('node:fs');
+    for (const f of ['sim.ts', 'court.ts']) {
+      const src = fs.readFileSync(new URL(`../src/engine/floor/${f}`, import.meta.url), 'utf8');
+      expect(src.match(/Math\.(sin|cos|tan|atan2?|hypot|pow|exp|log)\(/g) ?? [], f).toEqual([]);
+      expect(src.includes(' ** '), f).toBe(false);
+    }
   });
 });

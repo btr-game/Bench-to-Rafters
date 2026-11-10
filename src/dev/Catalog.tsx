@@ -1089,7 +1089,7 @@ const CATEGORIES: Category[] = [
     key: 'floor',
     name: 'The Floor',
     icon: 'clutch',
-    blurb: `The playable last six minutes: the frames its players are drawn in, its shots, its moves and its rules. The clock runs at ${(FLOOR.tick * FLOOR.ticksPerSec).toFixed(1)} times; a game within ${FLOOR.realTime.margin} points plays its last ${FLOOR.realTime.clock} seconds at real speed.`,
+    blurb: `The game on the court: the frames its players are drawn in, its shots, its moves and its rules. Play runs at ${(FLOOR.tick * FLOOR.ticksPerSec).toFixed(1)} times real speed from the tip to the horn; the Floor's own game runs its clock ${FLOOR.rate} times faster again (a twelve-minute quarter in four real minutes).`,
     entries: () => [
       ...(Object.entries(FRAME_POSES) as [Frame, Pose][]).map(([k, pose]) => ({
         key: `fr-${k}`,

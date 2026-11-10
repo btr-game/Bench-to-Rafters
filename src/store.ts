@@ -47,7 +47,7 @@ export type Theme = 'auto' | 'light' | 'dark';
 export type Court = 'classic' | 'hardwood' | 'street';
 /** Round 31: the text size, a multiplier on every font size (tokens.css, --ts). */
 export type TextSize = 'm' | 'l' | 'xl';
-type Page = 'log' | 'achievements' | 'community' | 'road' | 'multi';
+type Page = 'log' | 'achievements' | 'community' | 'road' | 'multi' | 'floor';
 export type Mini = 'hub' | 'floor' | 'threes' | 'legends' | 'lab' | 'dunk' | 'street' | 'rhythm' | 'daily';
 
 /** A short interstitial between steps (not part of the saved game). */

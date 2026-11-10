@@ -1249,8 +1249,17 @@ export const FLOOR = {
   tick: 0.075,
   ticksPerSec: 20,
   quarter: 720,
-  /** The Floor takes over with this many game seconds left in the fourth: six minutes, four real ones. */
+  /** In a career the Floor takes over with this many game seconds left in the fourth: six minutes, four real ones. */
   from: 360,
+  /** Round 42 (owner: "instead of last six minutes, make it twelve (but same play time, so time goes
+   * by two times faster)"): the Floor's own game runs its clock at twice a career's, a twelve-minute
+   * quarter in the same four real minutes. Only the game clock: the shot clock, the legs and every
+   * move keep their pace. Overtime is five minutes on whichever clock. */
+  rate: 2,
+  overtime: 300,
+  /** Between quarters: the legs a rest gives back (0 to 1), the wait before the ball comes in (game
+   * seconds), and how much of the momentum carries over. A half starts with the timeouts back. */
+  breaks: { quarter: 0.15, half: 0.35, wait: 2.5, momentum: 0.5 },
   shotClock: 24,
   offReboundClock: 14,
   /** Top speed in feet a game second, from athleticism 40 to 99, and sprinting's share more (owner,
@@ -1302,8 +1311,6 @@ export const FLOOR = {
   walk: 1.2,
   /** The inbounder passes it in from this close to the ball's spot (feet). */
   inboundReach: 4,
-  /** Step 4: a game within `margin` points runs at real speed for its last `clock` game seconds. */
-  realTime: { clock: 60, margin: 6 },
   /** Round 39, online: game seconds a free throw waits for a human's release before the AI shoots it
    * (a friend who has walked away must not hold both screens). */
   ftWait: 10,
@@ -1314,6 +1321,19 @@ export const FLOOR = {
   finish: { within: 5, strip: 0.22, athletic: 0.6 },
   /** An open jumper waits until the offense has used this much of the shot clock (game seconds). */
   patience: 9,
-  /** Trailing late, the defense fouls on purpose: within this margin, under this many seconds. */
+  /** Trailing late, the defense fouls on purpose: within this margin, under this many seconds (a
+   * career's clock; twice as many on the Floor's own). */
   hack: { margin: [1, 8], secs: 35 },
+  /** Round 42 (owner: "make the ai players drive in a bit more. i barely see them drive"): the AI's
+   * ball handler takes his man off the dribble. Each time he thinks (every 0.6 seconds), with his
+   * man within `near` feet, more than `far` from the rim and `clock` seconds on the shot clock, he
+   * tries it `base` of the time at 70 finishing and athleticism (`perPoint` a point, between `min`
+   * and `max`; `settle` times as often once the offense has run its patience); the move itself is
+   * the one a player makes (FLOOR.move), his handle and legs against the defender's feet. A
+   * defender a person steers is slowed for `human` of the time an AI one is. Measured over 300 AI
+   * games at 76 (scripts/floorStats.ts), a quarter: drives in the half court with his man on him
+   * 3.418 a team before and 6.187 after (23.66% and 38.69% of possessions), shots at the rim 21.94%
+   * and 36.65%, from mid-range 38.72% and 30.72%, threes 37.47% and 30.81%, points a team 15.645
+   * and 16.642. */
+  attack: { base: 0.018, perPoint: 0.002, min: 0.004, max: 0.09, settle: 1.6, near: 7, far: 9, clock: 5, human: 0.6 },
 } as const;

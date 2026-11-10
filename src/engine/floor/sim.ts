@@ -8,11 +8,16 @@
 // (a shot's make at its release), so the screen can play a short animation of it (owner: "after a
 // play is determined ... a short 2~3 second animation plays"). No words here: events carry kinds and
 // numbers, and the screen writes them in the player's language.
+// Round 42 (owner: "take it out of minigames and develop it into a larger one"): a game can be a whole
+// one, four quarters with their breaks, or start at any of them; the Floor's own game runs its clock
+// at twice a career's (a setup's `rate`: twelve minutes a quarter in the same four real ones); the
+// AI's ball handler takes his man off the dribble; and the engine keeps to arithmetic every browser
+// does alike (court.ts), so two computers play the same game to the last bit.
 
 import { FLOOR, type Mode } from '../balance';
 import { clamp, makeRng, next, type Rng } from '../rng';
 import type { Pos } from '../types';
-import { COURT, SPACING, attackSpot, clampSpot, dist, isThree, rimOf, toLine, toRim, zoneOf, type Spot, type Zone } from './court';
+import { COURT, SPACING, attackSpot, clampSpot, cos, dist, hyp, isThree, rimOf, sin, toLine, toRim, zoneOf, type Spot, type Zone } from './court';
 
 export interface FloorRatings {
   SHT: number;
@@ -52,10 +57,15 @@ export interface FloorSetup {
   /** His team (it attacks the right basket) and the other team. */
   us: FloorTeamIn;
   them: FloorTeamIn;
-  /** The score after three quarters. */
+  /** The score so far (after three quarters, for a game that starts in the fourth). */
   score: [number, number];
-  /** Game seconds left (a whole quarter unless given). */
+  /** Game seconds left in the quarter it starts in (a whole quarter unless given). */
   clock?: number;
+  /** The quarter it starts in (the fourth unless given): 1 is a whole game, 3 from half time. */
+  quarter?: 1 | 2 | 3 | 4;
+  /** Game seconds the clock moves for each second of play (1 unless given: a career's; the Floor's
+   * own game gives FLOOR.rate). */
+  rate?: number;
   timeouts?: [number, number];
   /** Who has the ball first; a coin flip if not given. */
   ball?: 0 | 1;
@@ -92,7 +102,7 @@ interface FloorPlayer extends FloorPlayerIn {
   box: FloorBox;
 }
 
-export type FloorEventKind = 'make' | 'miss' | 'block' | 'steal' | 'turnover' | 'foul' | 'ft' | 'rebound' | 'timeout' | 'shotclock' | 'beat' | 'out' | 'overtime' | 'end' | 'screen' | 'reach' | 'switch' | 'help';
+export type FloorEventKind = 'make' | 'miss' | 'block' | 'steal' | 'turnover' | 'foul' | 'ft' | 'rebound' | 'timeout' | 'shotclock' | 'beat' | 'out' | 'overtime' | 'end' | 'screen' | 'reach' | 'switch' | 'help' | 'quarter';
 
 export interface FloorEvent {
   tick: number;
@@ -109,6 +119,8 @@ export interface FloorEvent {
   /** A made free throw (kind 'ft'), an and-one (kind 'make'). */
   good?: boolean;
   and?: boolean;
+  /** The quarter that just ended (kind 'quarter'; `team` is who leads, 0 when level). */
+  q?: number;
 }
 
 interface Flight {
@@ -133,9 +145,14 @@ export interface FloorState {
   rng: Rng;
   mode: Mode;
   tick: number;
-  /** Game seconds left, and on the shot clock. */
+  /** Game seconds left in the quarter, and on the shot clock. */
   clock: number;
   shot: number;
+  /** The quarter being played (1 to 4; overtimes count in `periods`), who had the ball first, and
+   * how fast the game clock runs (a setup's `rate`). */
+  quarter: number;
+  first: 0 | 1;
+  rate: number;
   score: [number, number];
   teams: [{ name: string; short: string; color: string }, { name: string; short: string; color: string }];
   players: FloorPlayer[];
@@ -233,8 +250,11 @@ export function startFloor(set: FloorSetup): FloorState {
     rng,
     mode: set.mode,
     tick: 0,
-    clock: set.clock ?? FLOOR.from,
+    clock: set.clock ?? FLOOR.quarter,
     shot: FLOOR.shotClock,
+    quarter: set.quarter ?? 4,
+    first: poss,
+    rate: set.rate ?? 1,
     score: [...set.score] as [number, number],
     teams: [
       { name: set.us.name, short: set.us.short, color: set.us.color },
@@ -270,7 +290,7 @@ export function startFloor(set: FloorSetup): FloorState {
   };
   matchUp(s);
   spread(s);
-  // the six minutes tip with the inbounder already on the ball's spot (a placement, not a move)
+  // the game tips with the inbounder already on the ball's spot (a placement, not a move)
   const spot = clampSpot(s.inbound!.at);
   Object.assign(inbounder(s, poss, spot), spot);
   return s;
@@ -306,7 +326,7 @@ function matchUp(s: FloorState): void {
   d.forEach((p, i) => (s.guard[idx(s, p)] = o[i] ? idx(s, o[i]) : -1));
 }
 
-/** Everyone to his spot for the tip of the six minutes. */
+/** Everyone to his spot for the tip. */
 function spread(s: FloorState): void {
   for (const p of onCourt(s, s.poss)) Object.assign(p, spotOf(s, p));
   for (const p of onCourt(s, other(s.poss))) {
@@ -319,7 +339,7 @@ function spotOf(s: FloorState, p: FloorPlayer): Spot {
   const [ahead, side] = SPACING[p.pos] ?? [20, 0];
   // a slow drift around the spot, so the offense never stands still (no randomness: it is the clock)
   const k = s.tick * DT * 0.2 + idx(s, p) * 1.7;
-  return clampSpot(attackSpot(p.team, ahead + Math.sin(k) * 2, side + Math.cos(k * 0.8) * 2));
+  return clampSpot(attackSpot(p.team, ahead + sin(k) * 2, side + cos(k * 0.8) * 2));
 }
 
 /** Between his man and the basket: close on the ball, sagging off it. */
@@ -421,7 +441,7 @@ function release(s: FloorState, i: number, q: number | null, dodge = 1): void {
   if (blocker) {
     const b = FLOOR.block.base + FLOOR.block.perPoint * ((blocker.r.INT + blocker.r.ATH) / 2 - p.r.FIN / 2 - 25);
     if (next(s.rng) < clamp(b * (userJump ? 1.6 : 1) * dodge, 0, 0.5)) {
-      if (blocker === s.players[s.user] && s.clock <= 10 && s.score[0] >= s.score[1]) s.marks.stop = true;
+      if (blocker === s.players[s.user] && lastPeriod(s) && s.clock <= 10 * s.rate && s.score[0] >= s.score[1]) s.marks.stop = true;
       p.box.fga++;
       if (three) p.box.tpa++;
       blocker.box.blk++;
@@ -496,7 +516,7 @@ function land(s: FloorState, f: Flight): void {
       p.box.pts += pts;
       if (f.three) p.box.tpm++;
       if (s.lastPass && s.tick - s.lastPass.tick < secs(4) && s.players[s.lastPass.by].team === p.team && s.lastPass.by !== f.by) s.players[s.lastPass.by].box.ast++;
-      if (f.by === s.user && s.clock <= 5 && s.score[0] <= s.score[1] && s.score[0] + pts > s.score[1]) s.marks.winner = true;
+      if (f.by === s.user && lastPeriod(s) && s.clock <= 5 * s.rate && s.score[0] <= s.score[1] && s.score[0] + pts > s.score[1]) s.marks.winner = true;
       score(s, p.team, pts, !!f.dunk || !!f.three || !!f.and);
       emit(s, { kind: 'make', team: p.team, by: f.by, pts, zone: f.zone, dunk: f.dunk, and: f.and });
     } else emit(s, { kind: 'miss', team: p.team, by: f.by, zone: f.zone });
@@ -507,7 +527,7 @@ function land(s: FloorState, f: Flight): void {
     const out = f.three ? 11 : f.zone === 'rim' ? 4 : 7;
     const a = next(s.rng) * Math.PI - Math.PI / 2;
     const rim = rimOf(p.team);
-    return loose(s, f.by, { x: rim.x + (p.team === 0 ? -1 : 1) * Math.abs(Math.cos(a)) * out, y: rim.y + Math.sin(a) * out });
+    return loose(s, f.by, { x: rim.x + (p.team === 0 ? -1 : 1) * Math.abs(cos(a)) * out, y: rim.y + sin(a) * out });
   }
   rebound(s, f);
 }
@@ -520,7 +540,8 @@ function rebound(s: FloorState, f: Flight): void {
   const w = all.map((p) => {
     const d = dist(p, f.to);
     if (d > 18) return 0;
-    return (p.r.REB / 50) ** 2 * (1 / (1 + d / 3)) * (p.team === shooterTeam ? FLOOR.rebound.offense : 1);
+    const k = p.r.REB / 50;
+    return k * k * (1 / (1 + d / 3)) * (p.team === shooterTeam ? FLOOR.rebound.offense : 1);
   });
   const tot = w.reduce((a, b) => a + b, 0);
   let k = next(s.rng) * tot;
@@ -796,6 +817,27 @@ function aiHandler(s: FloorState, i: number): void {
     s.drive = true;
     return;
   }
+  // no lane: he makes one, off the dribble (round 42), the more often the better he finishes
+  const A = FLOOR.attack;
+  if (!s.drive && d && d.on && d.slow <= 0 && dist(d, p) < A.near && toRim(p.team, p) > A.far && inRange(p) && s.shot > A.clock) {
+    const urge = clamp(A.base + A.perPoint * ((p.r.FIN + p.r.ATH) / 2 - 70), A.min, A.max) * (settled ? A.settle : 1);
+    if (next(s.rng) < urge) {
+      const M = FLOOR.move;
+      const di = idx(s, d);
+      if (next(s.rng) < clamp(M.beat + M.perPoint * ((p.r.PLY + p.r.ATH) / 2 - d.r.PER), 0.15, 0.85)) {
+        d.slow = M.slow * (driven(s, di) ? A.human : 1);
+        emit(s, { kind: 'beat', team: p.team, by: i, on: di, move: next(s.rng) < 0.5 ? 'cross' : 'spin' });
+        s.drive = true;
+      } else if (next(s.rng) < M.lose) {
+        p.box.tov++;
+        d.box.stl++;
+        emit(s, { kind: 'steal', team: d.team, by: di, on: i });
+        s.ball.holder = di;
+        change(s, d.team);
+      }
+      return;
+    }
+  }
   // a pick from the big, now and then
   if (!s.screen && next(s.rng) < 0.18) {
     const big = onCourt(s, p.team).find((q) => q !== p && (q.pos === 'C' || q.pos === 'PF') && idx(s, q) !== humanOf(s, p.team));
@@ -1021,7 +1063,7 @@ export function stepFloor(s: FloorState, inp: FloorInput | null, inp2: FloorInpu
   }
 
   // the clocks
-  s.clock = Math.max(0, s.clock - DT);
+  s.clock = Math.max(0, s.clock - DT * s.rate);
   const inShot = s.ball.flight?.kind === 'shot';
   if (!inShot) s.shot -= DT;
   if (s.screen) s.screen.t -= DT;
@@ -1034,7 +1076,7 @@ export function stepFloor(s: FloorState, inp: FloorInput | null, inp2: FloorInpu
   const trailing = s.score[other(s.poss)] < s.score[s.poss];
   const margin = s.score[s.poss] - s.score[other(s.poss)];
   const dh = humanOf(s, other(s.poss));
-  if (trailing && s.clock <= FLOOR.hack.secs && margin >= FLOOR.hack.margin[0] && margin <= FLOOR.hack.margin[1] && s.ball.holder !== null && !s.ball.flight && !(dh >= 0 && driven(s, dh))) {
+  if (trailing && lastPeriod(s) && s.clock <= FLOOR.hack.secs * s.rate && margin >= FLOOR.hack.margin[0] && margin <= FLOOR.hack.margin[1] && s.ball.holder !== null && !s.ball.flight && !(dh >= 0 && driven(s, dh))) {
     const h = s.players[s.ball.holder];
     const near = onCourt(s, other(s.poss)).sort((a, b) => dist(a, h) - dist(b, h))[0];
     if (near && dist(near, h) < 3) {
@@ -1068,7 +1110,7 @@ export function stepFloor(s: FloorState, inp: FloorInput | null, inp2: FloorInpu
       const ip = inputOf(p.team);
       const dx = ip.dx ?? 0;
       const dy = ip.dy ?? 0;
-      const len = Math.hypot(dx, dy);
+      const len = hyp(dx, dy);
       const slowShot = loadOf(s, p.team) >= 0 ? 0.3 : 1;
       if (len > 0.01 && p.air <= 0) {
         const v = topSpeed(s, p, !!ip.sprint) * slowShot * DT;
@@ -1129,8 +1171,9 @@ export function stepFloor(s: FloorState, inp: FloorInput | null, inp2: FloorInpu
 
   // the end of the quarter (a shot in the air when the horn goes still counts)
   if (s.clock <= 0 && !(s.ball.flight && s.ball.flight.kind === 'shot') && s.phase === 'live') {
+    if (s.quarter < 4) return nextQuarter(s);
     if (s.score[0] === s.score[1]) {
-      s.clock = 300;
+      s.clock = FLOOR.overtime;
       s.periods++;
       emit(s, { kind: 'overtime', team: 0 });
       dead(s, next(s.rng) < 0.5 ? 0 : 1, { x: 47, y: 25 }, 1.5);
@@ -1139,12 +1182,32 @@ export function stepFloor(s: FloorState, inp: FloorInput | null, inp2: FloorInpu
     s.phase = 'over';
     emit(s, { kind: 'end', team: s.score[0] > s.score[1] ? 0 : 1 });
   }
+}
 
+/** The fourth quarter or an overtime: the part of a game its last seconds belong to. */
+const lastPeriod = (s: FloorState): boolean => s.quarter >= 4;
+
+/** The horn between quarters (round 42): a rest for the legs, the team fouls wiped, the ball to the
+ * team whose turn it is (the one that started the game has it again in the fourth, the other one
+ * in the second and third); the half brings the timeouts back. */
+function nextQuarter(s: FloorState): void {
+  const B = FLOOR.breaks;
+  const half = s.quarter === 2;
+  emit(s, { kind: 'quarter', team: s.score[1] > s.score[0] ? 1 : 0, q: s.quarter });
+  s.quarter++;
+  s.clock = FLOOR.quarter;
+  s.teamFouls = [0, 0];
+  if (half) s.timeouts = [Math.max(s.timeouts[0], FLOOR.timeouts), Math.max(s.timeouts[1], FLOOR.timeouts)];
+  for (const p of s.players) p.stamina = Math.min(1, p.stamina + (half ? B.half : B.quarter));
+  s.momentum *= B.momentum;
+  s.run = { team: 0, pts: 0 };
+  const to: 0 | 1 = s.quarter === 4 ? s.first : other(s.first);
+  dead(s, to, { x: 47, y: 0.5 }, B.wait);
 }
 
 /** Skip (owner: "skip available mid-game"): the rest of the game played out from here, him on the AI. */
 export function skipFloor(s: FloorState): void {
-  for (let i = 0; i < 40000 && s.phase !== 'over'; i++) stepFloor(s, null);
+  for (let i = 0; i < 400000 && s.phase !== 'over'; i++) stepFloor(s, null);
 }
 
 /** The game as it ended: the score, the win, and his line. */
@@ -1184,6 +1247,7 @@ export function mirrorFloor(s: FloorState): FloorState {
     two: { user: s.user, load: s.load, call: s.call, auto: s.auto },
     ball: { ...s.ball, ...fx(s.ball), flight: f ? { ...f, from: fx(f.from), to: fx(f.to) } : null },
     poss: t(s.poss),
+    first: t(s.first),
     inbound: s.inbound ? { team: t(s.inbound.team), at: fx(s.inbound.at) } : null,
     ft: s.ft ? { ...s.ft, at: s.ft.at ? fx(s.ft.at) : undefined } : null,
     momentum: -s.momentum,
@@ -1194,7 +1258,7 @@ export function mirrorFloor(s: FloorState): FloorState {
 
 /** A short fingerprint of where the game stands (both computers compare theirs every so often). */
 export function floorHash(s: FloorState): string {
-  const key = JSON.stringify([s.tick, s.rng, s.score, s.clock, s.shot, s.poss, s.phase, s.ball.holder, s.ball.x, s.ball.y, s.players.map((p) => [p.x, p.y, p.on, p.fouls, p.stamina])]);
+  const key = JSON.stringify([s.tick, s.rng, s.score, s.quarter, s.clock, s.shot, s.poss, s.phase, s.ball.holder, s.ball.x, s.ball.y, s.players.map((p) => [p.x, p.y, p.on, p.fouls, p.stamina])]);
   let h = 2166136261;
   for (let i = 0; i < key.length; i++) h = Math.imul(h ^ key.charCodeAt(i), 16777619) >>> 0;
   return h.toString(36);

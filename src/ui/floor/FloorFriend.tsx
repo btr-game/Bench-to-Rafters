@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 import { NBA_TEAMS } from '../../content/teams';
 import { TEAM_STYLE } from '../../content/teamStyle';
 import type { Pos } from '../../engine/types';
+import { FLOOR } from '../../engine/balance';
 import { floorRoster } from '../../engine/floor/mini';
 import type { FloorPlayerIn, FloorSetup } from '../../engine/floor/sim';
 import { username } from '../names';
@@ -15,7 +16,7 @@ import { achievementsNow } from '../../store';
 import { SITE } from '../multiplayer';
 import { t } from '../../i18n';
 import { FloorScreen, type FloorTeamLook } from './FloorScreen';
-import { Lockstep, ME, ROOM_RE, canPlayOnline, cleanRoom, openWire, roomCode, type FloorMsg, type Wire } from './net';
+import { NetGame, ME, ROOM_RE, canPlayOnline, cleanRoom, openWire, roomCode, type FloorMsg, type Wire } from './net';
 
 const POS: Pos[] = ['PG', 'SG', 'SF', 'PF', 'C'];
 /** Both teams as good as each other (the mini-game's "Good" teams). */
@@ -65,6 +66,8 @@ function makeSetup(host: { name: string } & Me, guest: { name: string } & Me, se
     us: { name: nameOf(a.abbr), short: a.abbr, color: a.color, players: roster('H', seed + 3, host) },
     them: { name: nameOf(b.abbr), short: b.abbr, color: b.color, players: roster('G', seed + 11, guest) },
     score: [84 + Math.max(0, close), 84 + Math.max(0, -close)],
+    clock: FLOOR.quarter,
+    rate: FLOOR.rate,
   };
 }
 
@@ -80,7 +83,7 @@ export function FloorFriend() {
   const [typed, setTyped] = useState('');
   const [peer, setPeer] = useState<Peer | null>(null);
   const [note, setNote] = useState('');
-  const [game, setGame] = useState<{ link: Lockstep; setup: FloorSetup; friend: string } | null>(null);
+  const [game, setGame] = useState<{ link: NetGame; setup: FloorSetup; friend: string } | null>(null);
   const [last, setLast] = useState<string | null>(null);
   const wire = useRef<Wire | null>(null);
   const host = useRef(false);
@@ -122,7 +125,7 @@ export function FloorFriend() {
       setPeer((p) => (p && p.id === m.id ? null : p));
       setNote(t('Your friend left the room.'));
     } else if (m.k === 'start' && !host.current && m.to === ME && wire.current) {
-      setGame({ link: new Lockstep(wire.current, 1, m.game), setup: m.setup, friend: nameFromSetup(m.setup, 0) });
+      setGame({ link: new NetGame(wire.current, 1, m.game, m.setup), setup: m.setup, friend: nameFromSetup(m.setup, 0) });
       setPhase('play');
     }
   };
@@ -159,7 +162,7 @@ export function FloorFriend() {
     if (!peer || !wire.current || peer.team === me.team) return;
     const n = ++games.current;
     const setup = makeSetup({ name, ...me }, peer, 1 + Math.floor(Math.random() * 1e9));
-    const link = new Lockstep(wire.current, 0, n);
+    const link = new NetGame(wire.current, 0, n, setup);
     wire.current.send({ k: 'start', id: ME, to: peer.id, game: n, setup });
     setGame({ link, setup, friend: peer.name });
     setPhase('play');

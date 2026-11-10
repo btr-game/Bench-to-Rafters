@@ -13,7 +13,24 @@ export interface Spot {
   y: number;
 }
 
-export const dist = (a: Spot, b: Spot): number => Math.hypot(a.x - b.x, a.y - b.y);
+/** Round 42 (online: "multiplayer lags way too much"): two browsers must play the same game to the
+ * last bit, or one has to take the other's whole game and its players jump. Add, multiply, divide
+ * and square root give the same answer everywhere; Math.hypot, Math.sin and Math.cos are only close
+ * (each browser has its own), so the Floor keeps to these. */
+export const hyp = (dx: number, dy: number): number => Math.sqrt(dx * dx + dy * dy);
+const TAU = 6.283185307179586;
+/** A sine good to about a millionth, from arithmetic alone: the angle folded into a quarter turn,
+ * then a short series. */
+export function sin(a: number): number {
+  let x = a - TAU * Math.floor(a / TAU + 0.5);
+  if (x > TAU / 4) x = TAU / 2 - x;
+  else if (x < -TAU / 4) x = -TAU / 2 - x;
+  const q = x * x;
+  return x * (1 + q * (-1 / 6 + q * (1 / 120 + q * (-1 / 5040 + q * (1 / 362880 + q * (-1 / 39916800))))));
+}
+export const cos = (a: number): number => sin(a + TAU / 4);
+
+export const dist = (a: Spot, b: Spot): number => hyp(a.x - b.x, a.y - b.y);
 export const rimOf = (team: 0 | 1): Spot => ({ x: RIM_X[team], y: RIM_Y });
 /** How far a spot is from the basket a team attacks. */
 export const toRim = (team: 0 | 1, p: Spot): number => dist(p, rimOf(team));
@@ -57,5 +74,5 @@ export function toLine(p: Spot, a: Spot, b: Spot): number {
   const dy = b.y - a.y;
   const len = dx * dx + dy * dy;
   const k = len ? Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / len)) : 0;
-  return Math.hypot(p.x - (a.x + k * dx), p.y - (a.y + k * dy));
+  return hyp(p.x - (a.x + k * dx), p.y - (a.y + k * dy));
 }
