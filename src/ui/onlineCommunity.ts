@@ -1,5 +1,5 @@
 // The community online, for copies of the game outside claude.ai: the website
-// (bench-to-rafters.netlify.app) and the itch.io zip. Owner: "i do want to get community features
+// (btr-game.github.io/Bench-to-Rafters) and the itch.io zip. Owner: "i do want to get community features
 // activated tho." A Supabase database (supabase/migrations) behind the same interface as the other
 // two homes in community.ts. Everyone reads the boards; every write is a database function that
 // checks it. Players are anonymous: this copy keeps a random secret, and the database stores only

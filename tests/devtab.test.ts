@@ -93,7 +93,7 @@ describe('Share the game', () => {
 
   it('shares the website, and every site link carries it', async () => {
     const src = (await import('node:fs')).readFileSync('src/ui/components/Share.tsx', 'utf8');
-    expect(src).toContain("GAME_URL = 'https://bench-to-rafters.netlify.app/'");
+    expect(src).toContain("GAME_URL = 'https://btr-game.github.io/Bench-to-Rafters/'");
     for (const site of ['twitter.com/intent/tweet', 'reddit.com/submit', 'facebook.com/sharer', 'wa.me', 'mailto:']) expect(src).toContain(site);
     expect(src.match(/enc\(GAME_URL\)|\$\{GAME_URL\}/g)?.length).toBeGreaterThanOrEqual(5);
   });

@@ -3749,3 +3749,19 @@ save and resume, no."
   the next step, at the cost of a public server to introduce them.
 - **Balance.** The Floor's career bonus is gone, which changes careers a little. Not re-measured
   this round (the owner asked for everything today); the next balance run will show it.
+
+### After round 42: the friend game still lagged
+
+Owner: "the friend games still have insane lag. try to fix this". The service's logs showed no dropped
+or limited messages, and a tick of the game costs 0.02 ms, so neither the line's limits nor the replay
+was the cause. What stopped both screens was one of them falling behind the real clock:
+
+- **A tab out of sight.** A browser stops drawing a hidden page (another tab, a minimised window), the
+  game's loop ran on that drawing, and the friend's screen then stood still waiting for keys. A worker's
+  timer now plays the ticks while the page is hidden (no keys held), and the line's heartbeat runs in a
+  worker too. This is also what two tabs of one browser do to each other.
+- **A stutter.** One frame could make up at most a tenth of a second, so a screen that hitched fell
+  behind for good and the other was slowed to meet it. Against a friend a frame now makes up to a full
+  second at once (alone, a stutter still just pauses the game).
+- **The wait limit.** A screen may now run 1.5 seconds past the friend's keys before it waits (0.6
+  before), so a short hitch on either line no longer shows.
