@@ -22,18 +22,19 @@ import { Icon } from '../art/Icon';
 import { sfx } from '../sound';
 import { FloorScreen, type FloorTeamLook } from './FloorScreen';
 import { FloorFriend } from './FloorFriend';
+import { LegendTable } from './LegendTable';
 
 type Mode = 'quick' | 'playoffs' | 'draft' | 'online';
 const MODES: { id: Mode; name: string; text: string }[] = [
   { id: 'quick', name: tx('Quick game'), text: tx('The fourth quarter from a close score, as any franchise’s all-time five. About four minutes.') },
-  { id: 'playoffs', name: tx('Playoffs'), text: tx('Sixteen franchises, one game a round, four wins to the title. Each game is all four quarters in about four minutes.') },
+  { id: 'playoffs', name: tx('Playoffs'), text: tx('Eight franchises from each conference, one game a round, four wins to the title. Each game is all four quarters in about four minutes.') },
   { id: 'draft', name: tx('Draft your five'), text: tx('One legend for each position from all 150, then a quick game against a franchise.') },
   { id: 'online', name: tx('Online'), text: tx('Head to head with a friend by room code, or a quick match with whoever is waiting.') },
 ];
 const POS: Pos[] = ['PG', 'SG', 'SF', 'PF', 'C'];
 const ALL = NBA_TEAMS.map((x) => ({ abbr: x.abbr, name: `${x.city} ${x.nick}`, color: x.color }));
 const nameOf = (abbr: string) => ALL.find((x) => x.abbr === abbr)?.name ?? abbr;
-const ROUND_NAME = [tx('First round'), tx('Quarter-finals'), tx('Semi-finals'), tx('The final')];
+const ROUND_NAME = [tx('First round'), tx('Conference semi-finals'), tx('Conference finals'), tx('The Finals')];
 
 /** A row of crests to pick a franchise from. */
 function Crests({ value, onPick, label }: { value: string; onPick: (abbr: string) => void; label: string }) {
@@ -130,8 +131,10 @@ function BracketView({ b }: { b: Bracket }) {
           <div className="fh-round-name">{t(ROUND_NAME[r])}</div>
           {(b.rounds[r] ?? []).map((g, k) => {
             const w = winnerOf(g);
+            const half = (b.rounds[r] ?? []).length / 2;
             return (
               <div key={k} className={`fh-tie${g.a === b.me || g.b === b.me ? ' mine' : ''}`}>
+                {r < 3 && (k === 0 || k === half) && <div className="fh-conf">{k === 0 ? t('East') : t('West')}</div>}
                 {[g.a, g.b].map((a, i) => (
                   <div key={a} className={`fh-team${w === a ? ' won' : w ? ' lost' : ''}`}>
                     <TeamArt name={nameOf(a)} abbr={a} color={ALL.find((x) => x.abbr === a)!.color} league="NBA" size={22} />
@@ -295,6 +298,10 @@ export function FloorPage() {
               <div className="sec-title">{t('Who you steer')}</div>
               <Five five={five} slot={steer} onPick={setSlot} />
             </div>
+            <details className="fh-stats">
+              <summary>{t('Their real career numbers')}</summary>
+              <LegendTable rows={five.map((spot) => ({ team: us, spot }))} />
+            </details>
             <div className="fm-row fh-ovrs">
               <OvrPick label={t('Your team’s overall')} real={fiveOvr(five)} value={myOvr} onChange={setMyOvr} />
               <OvrPick label={mode === 'playoffs' ? t('Every opponent’s overall') : t('Opponent’s overall')} real={mode === 'playoffs' ? 90 : fiveOvr(legendFive(them))} value={oppOvr} onChange={setOppOvr} />

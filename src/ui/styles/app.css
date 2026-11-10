@@ -3212,6 +3212,15 @@ td > .link-btn { min-width: 44px; text-align: left; }
 .fh-team + .fh-team { border-top: 1px solid var(--line); }
 .fh-team.lost { color: var(--muted); }
 .fh-team.won b { color: var(--accent); }
+.fh-conf { padding: 2px 8px; font: 800 calc(11px * var(--ts)) / 1.4 var(--f-mono); text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); border-bottom: 1px solid var(--line); }
+.fh-stats summary { cursor: pointer; font-weight: 700; }
+.lg-scroll { max-width: 100%; overflow-x: auto; }
+.lg-table { border-collapse: collapse; font: 600 calc(12px * var(--ts)) / 1.35 var(--f-mono); white-space: nowrap; }
+.lg-table th, .lg-table td { padding: 3px 7px; border-bottom: 1px solid var(--line); text-align: right; }
+.lg-table thead th { position: sticky; top: 0; background: var(--surface-2); }
+.lg-table tbody th { text-align: left; font-family: var(--f-body, Archivo, sans-serif); font-size: calc(14px * var(--ts)); }
+.lg-table tbody th span { display: block; font: 600 calc(11px * var(--ts)) / 1.3 var(--f-mono); color: var(--muted); }
+.lg-table .lg-gap { border-left: 2px solid var(--line); }
 /* round 42: the box score on the final page, and the bench in the pause menu */
 .floor-pause.floor-end { align-content: start; overflow-y: auto; }
 .floor-box { display: grid; gap: 6px; justify-items: center; width: min(100%, 760px); color: #dcd6ca; }

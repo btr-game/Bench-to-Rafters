@@ -4192,7 +4192,14 @@
   "Win the Floor’s playoffs.": "Gagnez les playoffs de The Floor.",
   "Win the Floor’s playoffs three times.": "Gagnez trois fois les playoffs de The Floor.",
   "Win a game on the Floor with a five you drafted.": "Gagnez un match sur The Floor avec un cinq que vous avez drafté.",
-  "Score 20 points in one game on the Floor.": "Marquez 20 points en un match sur The Floor."
+  "Score 20 points in one game on the Floor.": "Marquez 20 points en un match sur The Floor.",
+  "Conference semi-finals": "Demi-finales de conférence",
+  "Conference finals": "Finales de conférence",
+  "The Finals": "Les Finales",
+  "East": "Est",
+  "West": "Ouest",
+  "Their real career numbers": "Leurs vrais chiffres en carrière",
+  "Eight franchises from each conference, one game a round, four wins to the title. Each game is all four quarters in about four minutes.": "Huit franchises par conférence, un match par tour, quatre victoires pour le titre. Chaque match fait les quatre quart-temps en quatre minutes environ."
  },
  "story": {
   "f-driveway.title": "L’allée",

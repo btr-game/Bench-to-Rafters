@@ -4192,7 +4192,14 @@
   "Win the Floor’s playoffs.": "The Floorのプレーオフで優勝する。",
   "Win the Floor’s playoffs three times.": "The Floorのプレーオフで3回優勝する。",
   "Win a game on the Floor with a five you drafted.": "自分でドラフトした5人でThe Floorの試合に勝つ。",
-  "Score 20 points in one game on the Floor.": "The Floorの1試合で20得点。"
+  "Score 20 points in one game on the Floor.": "The Floorの1試合で20得点。",
+  "Conference semi-finals": "カンファレンス準決勝",
+  "Conference finals": "カンファレンス決勝",
+  "The Finals": "ファイナル",
+  "East": "イースト",
+  "West": "ウェスト",
+  "Their real career numbers": "実際の通算成績",
+  "Eight franchises from each conference, one game a round, four wins to the title. Each game is all four quarters in about four minutes.": "各カンファレンス8球団、各ラウンド1試合、4勝で優勝。1試合は4クォーターすべてを約4分で。"
  },
  "story": {
   "f-driveway.title": "家の前のゴール",

@@ -4,7 +4,7 @@
 // eight times as fast, the same four minutes (owner: "one full game could honestly be 4 minutes.
 // can we change the pace that way only for 10?"). Each side is five legends at their real level or
 // at an overall picked for that side alone (owner: "not average ovr of both teams, but divide into
-// user's and opponent(ai)'s"). The playoffs are sixteen franchises, one game a round.
+// user's and opponent(ai)'s"). The playoffs are sixteen franchises, eight from each conference, one game a round.
 
 import { FLOOR } from '../balance';
 import { int, makeRng, next } from '../rng';
@@ -78,19 +78,30 @@ export interface Bracket {
 
 export const BRACKET_ROUNDS = 4;
 
-/** A new bracket: his franchise and fifteen others drawn from the seed, seeded by their fives (1 plays 16, 2 plays 15, ...). */
-export function newBracket(me: string, seed: number): Bracket {
-  const rng = makeRng(seed);
-  const others = NBA_TEAMS.map((x) => x.abbr).filter((a) => a !== me);
+/** Eight franchises from a conference, seeded by their fives: his among them when it is his conference. */
+function conference(conf: 'East' | 'West', me: string, rng: ReturnType<typeof makeRng>): string[] {
+  const all = NBA_TEAMS.filter((x) => x.conf === conf).map((x) => x.abbr);
+  const others = all.filter((a) => a !== me);
   for (let i = others.length - 1; i > 0; i--) {
     const j = Math.floor(next(rng) * (i + 1));
     [others[i], others[j]] = [others[j], others[i]];
   }
-  const field = [me, ...others.slice(0, 15)].sort((x, y) => fiveOvr(legendFive(y)) - fiveOvr(legendFive(x)) || (x < y ? -1 : 1));
-  // the usual order of a sixteen-team bracket, so 1 and 2 can only meet in the final
-  const order = [0, 15, 7, 8, 3, 12, 4, 11, 1, 14, 6, 9, 2, 13, 5, 10];
+  const mine = all.includes(me);
+  return [...(mine ? [me] : []), ...others.slice(0, mine ? 7 : 8)].sort((x, y) => fiveOvr(legendFive(y)) - fiveOvr(legendFive(x)) || (x < y ? -1 : 1));
+}
+
+/** A new bracket, as the NBA's (owner: "go by west and east conferences in the playoffs like actual
+ * nba"): eight franchises from each conference, his among them, seeded 1 to 8 by their fives (1
+ * plays 8, 4 plays 5, 3 plays 6, 2 plays 7). The East is the first four games, the West the last
+ * four; the two conference champions meet in the Finals. */
+export function newBracket(me: string, seed: number): Bracket {
+  const rng = makeRng(seed);
+  const order = [0, 7, 3, 4, 2, 5, 1, 6];
   const first: BracketGame[] = [];
-  for (let k = 0; k < 16; k += 2) first.push({ a: field[order[k]], b: field[order[k + 1]] });
+  for (const conf of ['East', 'West'] as const) {
+    const field = conference(conf, me, rng);
+    for (let k = 0; k < 8; k += 2) first.push({ a: field[order[k]], b: field[order[k + 1]] });
+  }
   return { seed, me, rounds: [first], out: null, champion: null };
 }
 

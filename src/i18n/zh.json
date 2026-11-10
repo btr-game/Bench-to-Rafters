@@ -4192,7 +4192,14 @@
   "Win the Floor’s playoffs.": "赢得 The Floor 的季后赛。",
   "Win the Floor’s playoffs three times.": "三次赢得 The Floor 的季后赛。",
   "Win a game on the Floor with a five you drafted.": "用你选秀的五人在 The Floor 赢一场比赛。",
-  "Score 20 points in one game on the Floor.": "在 The Floor 单场得到20分。"
+  "Score 20 points in one game on the Floor.": "在 The Floor 单场得到20分。",
+  "Conference semi-finals": "分区半决赛",
+  "Conference finals": "分区决赛",
+  "The Finals": "总决赛",
+  "East": "东部",
+  "West": "西部",
+  "Their real career numbers": "他们真实的生涯数据",
+  "Eight franchises from each conference, one game a round, four wins to the title. Each game is all four quarters in about four minutes.": "每个分区八支球队，每轮一场，四连胜夺冠。每场是完整的四节，约四分钟。"
  },
  "story": {
   "f-driveway.title": "车道",
