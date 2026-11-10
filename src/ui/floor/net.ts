@@ -51,7 +51,13 @@ export type FloorMsg =
   | { k: 'sync'; id: string; game: number }
   | { k: 'state'; id: string; game: number; s: FloorState }
   | { k: 'quit'; id: string; game: number }
-  | { k: 'bye'; id: string };
+  | { k: 'bye'; id: string }
+  // round 42, quick match: someone waiting in the lobby, and the room one of two picks for both
+  | { k: 'seek'; id: string }
+  | { k: 'pair'; id: string; to: string; code: string };
+
+/** The room everyone looking for a quick match waits in. */
+export const LOBBY = 'MATCH2';
 
 /** Something that carries messages to everyone else in the room. */
 export interface Wire {
