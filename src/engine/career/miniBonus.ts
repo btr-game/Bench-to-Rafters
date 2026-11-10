@@ -5,19 +5,20 @@
 // - Three-point contest: shooting (and a little range) by score; the winner gets a little fame.
 //   Shooting as your own player counts in full, as a legend half.
 // - Legends showdown: basketball IQ by how far the team went.
-// - The Floor (round 39, in Front Office's place): basketball IQ and a little playmaking by grade.
 // - 3-on-3 streetball (round 22): finishing and a little athleticism by how far he went.
 // In a lab career the boost is paid as credits, like everything else there.
+// Round 39 archived Front Office (the Floor took its place), and round 42 took the Floor out of the
+// mini-games (owner: "let's take it out of minigames and develop it into a larger one"): it is a game
+// of its own, with no unlock and no career bonus. Six games are left.
 
-import { ATTR_MAX, FLOOR_MINI, modeDial } from '../balance';
+import { ATTR_MAX, modeDial } from '../balance';
 import { clamp } from '../rng';
 import type { AttrKey, GameState } from '../types';
 import { NAMES } from '../../content/strings';
 import { addCredits, isLab } from './lab';
 import { logDecision, userOvr } from './common';
-import type { FloorGrade, FloorStrength } from '../floor/mini';
 
-export type MiniId = 'threes' | 'legends' | 'floor' | 'dunk' | 'lab' | 'street' | 'rhythm';
+export type MiniId = 'threes' | 'legends' | 'dunk' | 'lab' | 'street' | 'rhythm';
 
 export const MINI_CLAIMS = { perSeason: 2, share: [1, 0.5] };
 
@@ -29,8 +30,6 @@ export const MINI_CLAIMS = { perSeason: 2, share: [1, 0.5] };
 const MINI_UNLOCK: Record<MiniId, { key: AttrKey | 'OVR' | 'DEF'; at: number; label: string }> = {
   threes: { key: 'SHT', at: 85, label: 'Shooting' },
   dunk: { key: 'ATH', at: 85, label: 'Athleticism' },
-  // round 39: the Floor opens where Front Office did
-  floor: { key: 'IQ', at: 85, label: 'Basketball IQ' },
   lab: { key: 'OVR', at: 82, label: 'OVR' },
   legends: { key: 'OVR', at: 90, label: 'OVR' },
   street: { key: 'FIN', at: 82, label: 'Finishing' },
@@ -60,24 +59,23 @@ export function syncMiniUnlocks(s: GameState): string[] {
   return fresh;
 }
 
-export const MINI_NAMES: Record<MiniId, string> = { threes: 'Three-point contest', dunk: 'Dunk contest', floor: 'The Floor', lab: 'Built in a lab', legends: 'Legends showdown', street: '3-on-3 streetball', rhythm: 'Lockdown' };
+export const MINI_NAMES: Record<MiniId, string> = { threes: 'Three-point contest', dunk: 'Dunk contest', lab: 'Built in a lab', legends: 'Legends showdown', street: '3-on-3 streetball', rhythm: 'Lockdown' };
 
 /**
- * Round 39: Front Office is archived and the Floor takes its place, so a career saved before reads
- * its 'office' (the game it unlocked, the bonuses it claimed) as 'floor'. Called on every career
- * that comes back from storage or a code.
+ * Round 39 archived Front Office and round 42 took the Floor out of the mini-games, so a career
+ * saved before may still name either ('office', 'floor') among the games it unlocked and the bonuses
+ * it claimed: both are dropped (the ratings a bonus added stay his). Called on every career that
+ * comes back from storage or a code.
  */
-export function floorForOffice(s: GameState): void {
-  const was = (id: string): MiniId => (id === 'office' ? 'floor' : (id as MiniId));
-  if (s.miniOpen) s.miniOpen = [...new Set(s.miniOpen.map(was))];
-  for (const c of s.miniLog ?? []) c.game = was(c.game);
+export function dropGoneMinis(s: GameState): void {
+  const here = (id: string): boolean => Object.keys(MINI_UNLOCK).includes(id);
+  if (s.miniOpen) s.miniOpen = s.miniOpen.filter(here);
+  if (s.miniLog) s.miniLog = s.miniLog.filter((c) => here(c.game));
 }
 
 export type MiniResult =
   | { game: 'threes'; score: number; won: boolean; own: boolean }
   | { game: 'legends'; reached: 'champion' | 'finals' | 'semis' | 'out' }
-  // the margin, his points, the lowest the margin went, and the strength ('team': his own NBA team)
-  | { game: 'floor'; grade: FloorGrade; margin: number; pts: number; low: number; strength: FloorStrength | 'team' }
   | { game: 'dunk'; best: number; won: boolean }
   | { game: 'lab'; peak: number }
   | { game: 'street'; reached: 'rout' | 'win' | 'close' | 'out' }
@@ -113,9 +111,6 @@ export function miniReward(r: MiniResult): { attrs: Partial<Record<AttrKey, numb
       const v = r.reached === 'champion' ? 3 : r.reached === 'finals' ? 2 : r.reached === 'semis' ? 1.2 : 0.5;
       return { attrs: { IQ: v, PLY: v / 2 } };
     }
-    case 'floor':
-      // round 39: Front Office's bonus, by grade
-      return { attrs: { ...FLOOR_MINI.reward[r.grade] } };
     case 'dunk': {
       const v = r.best >= 48 ? 4 : r.best >= 44 ? 3 : r.best >= 40 ? 2 : r.best >= 35 ? 1 : 0;
       return { attrs: v ? { ATH: v, FIN: v / 2 } : {}, rep: r.won ? 5 : 0 };

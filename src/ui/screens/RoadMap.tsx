@@ -289,7 +289,7 @@ function MapArt({ road, first, goal, sailing, onSailed, flight }: { road: Road; 
 }
 
 const MINIS = ROAD_MINIS;
-const MINI_ICON: Record<RoadMini, string> = { threes: 'shoot', dunk: 'finish', street: 'flame', legends: 'spotlight', lab: 'lab', rhythm: 'lockdown', floor: 'floor' };
+const MINI_ICON: Record<RoadMini, string> = { threes: 'shoot', dunk: 'finish', street: 'flame', legends: 'spotlight', lab: 'lab', rhythm: 'lockdown' };
 
 /** The bucket list in the map's top-right corner: every goal on the road, ticked as it is done. */
 function BucketList({ road }: { road: Road }) {

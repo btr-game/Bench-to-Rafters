@@ -3678,3 +3678,74 @@ tutorial and main game. add the unlock button to every [locked] component".
 - **What's new** gets the rounds since 3 November: story mode, the Floor and the Floor online, the
   five languages, the Unlock buttons, the two secrets (hinted, not given), the airport, the faster
   opening and the end credits' Space.
+
+## Round 42: the Floor, a game of its own
+
+Owner: "in the floor minigame, let's take it out of minigames and develop it into a larger one. be
+able to play as legends of each team (see the list of legend showdown and make their stats line up
+with their real stats), make the difficulty a bit more easy to adjust (not average ovr of both
+teams, but divide into user's and opponent(ai)'s.), instead of last six minutes, make it twelve
+(but same play time, so time goes by two times faster), allow the usres to play all four quarters
+(or start from half time), and get rid of clutch time ... make the ai players drive in a bit more
+... multiplayer lags way too much." Then, on the twelve ideas put to him: all of them, with "one
+full game could honestly be 4 minutes. can we change the pace that way only for [the playoffs]? and
+on second thought, let's leave the game with only the fourth quarter for other modes. and for the
+save and resume, no."
+
+- **Out of the mini-games.** The Floor has its own page (store page `floor`, ui/floor/FloorHub.tsx)
+  behind a new place on the main land: the arena, on a third island east of the dock (the map grew
+  from 224 to 258 pixels wide; the boat's crossings are in mainland.ts; the bottle moved south-east
+  of the island). The island of mini-games has six games (the road map's gate with it); the Floor's
+  unlock at basketball IQ 85 and its career bonus are gone, and a saved career or road that had
+  them loads with them dropped. Its achievements stay under their ids, now earned on the Floor's
+  own page (`addFloorGame`); the four that needed a strength, a grade or the career's own team, and
+  the two for a claimed bonus, are removed; three are added (the playoffs once and three times, a
+  win with a drafted five). **The career's own playoff Floor is unchanged in
+  length** (the last six minutes at the career's clock): its texts, achievements and calibration
+  describe six minutes, and the owner's request was about the game he opens himself.
+- **The clock.** A setup carries its clock rate. A quick game is the fourth quarter: 12:00 at
+  `FLOOR.rate` 2, the same four real minutes the six took. A playoff game is four quarters at
+  `FLOOR.rateFull` 8: measured over 200 AI games, 4.478 real minutes and 19.11 points a team (a
+  fourth quarter: 4.452 minutes and 19.02). Only the game clock runs fast: the shot clock, legs
+  and every move take the time they did. Quarter breaks rest the legs, wipe the team fouls and
+  alternate the ball; the last-two-minutes slow-down ("clutch time") is removed everywhere.
+- **Legends from real numbers.** content/legendStats.ts has career regular-season averages for all
+  150 (a helper compiled them from public records through search summaries, the reference sites
+  being blocked here; Chris Paul's and Stephen Curry's rows and a few low three-point volumes are
+  from memory, flagged in its report). engine/floor/legends.ts turns a line into ratings (shooting
+  from threes and free throws, finishing from field-goal percentage and scoring, playmaking from
+  assists, rebounding from rebounds, perimeter defence from steals, interior defence from blocks,
+  free throws from the percentage itself; athleticism is the table's judgement) and into a style
+  the AI plays by (share of shots from scoring, threes from attempts, the post from position and
+  scoring, passing from assists). **The list's 80 to 99 is played as 75 to 89.25**
+  (`floorLevel`): taken as it is, a 99 needs a 99 in everything and no legend keeps his shape. In
+  200 AI fourth quarters, Chicago against Golden State: Jordan 8.77 shots, Rose 7.32, Curry 6.87;
+  threes Curry 2.45, Jordan 1.85, Chamberlain 0.
+- **Each side's overall** is its own: the five at their real level, or a number from 70 to 99 for
+  that side alone, every legend keeping his distance from his team's mean.
+- **The AI off the dribble.** `FLOOR.attack`; over 300 AI games at 76, half-court drives with his
+  man on him went from 3.418 to 6.187 a team a quarter, rim shots from 21.94% to 36.65%.
+- **New plays** (the owner's picks 3, 5, 6, 7, 8; balance.ts has each one's numbers). Per team per
+  fourth quarter over 200 AI games at 76: 2.518 fast breaks for 1.410 points; 1.270 post-ups,
+  1.052 hooks (53.9% made); 0.152 charges ("dont take it too seriously tho"); 3.235 substitutions,
+  the bench playing 3.85% of the minutes (moving costs the legs more than it did: 0.0045 a second
+  where it was 0.0025, or nobody ever tired in four minutes). The calls are one key each and never
+  stop play ("make it simple so that the decision doesnt take long"): U an isolation, I a
+  give-and-go, U on defence a double team. The hook is L in the paint with no direction held.
+- **The playoffs**: sixteen franchises (his and fifteen drawn), seeded by their fives, one game a
+  round; the games he is not in are played by the engine itself. Nothing is saved between visits
+  (owner: no save and resume).
+- **Online.** The fixed 200 ms delay on every key (lockstep) is gone: each screen plays its own
+  keys at once, guesses the friend's from what he last held, and replays the few ticks since when
+  his real keys arrive (ui/floor/net.ts, `NetGame`); events are told only from the game both
+  agree on. In a simulated line (one-way latency and jitter), the old scheme ran at 100.0%, 99.9%,
+  86.8%, 58.2% and 39.7% of full speed at 60, 100, 150, 250 and 400 ms; the new one at full speed
+  at each, the screen waiting only past twelve ticks of lead (370 ticks in a game at 400 ms). The
+  engine's sine, cosine and distance are plain arithmetic now, so two browsers play the same game
+  to the last bit. Two tabs over a delayed channel: 19.85 of 20 ticks a second, no waits, every
+  fingerprint equal. A quick match pairs the first two players waiting in one lobby; the host's
+  Play it again on the final page is the rematch. The real relay's latency cannot be measured from
+  this sandbox; if it still feels slow, a direct connection between the two browsers (WebRTC) is
+  the next step, at the cost of a public server to introduce them.
+- **Balance.** The Floor's career bonus is gone, which changes careers a little. Not re-measured
+  this round (the owner asked for everything today); the next balance run will show it.

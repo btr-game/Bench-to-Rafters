@@ -61,7 +61,8 @@ describe('the book: rounds 38 to 40', () => {
     expect(new Set(ACHIEVEMENTS.map((a) => a.name.toLowerCase())).size).toBe(ACHIEVEMENTS.length);
     expect(ACHIEVEMENTS_39.length).toBe(55);
     // round 39: Front Office's two archived with it, fifteen for the Floor mini-game in its place, ten for the Floor against a friend
-    expect(ACHIEVEMENTS.length).toBe(938);
+    // round 42: the Floor a game of its own: six that needed the mini-game's grade, strength or bonus go, three come (playoffs, a drafted five)
+    expect(ACHIEVEMENTS.length).toBe(935);
     expect(achCatOf('fo-win')).toBe('arcade');
     for (const a of ACHIEVEMENTS_39) {
       expect(ACHIEVEMENTS, a.id).toContain(a);

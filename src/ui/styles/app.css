@@ -1453,20 +1453,7 @@ td .art-team { display: inline-block; vertical-align: middle; margin: -3px 8px -
 .fm-starter.on { border-color: var(--accent); background: var(--accent); color: var(--accent-ink); }
 .fm-starter.on small { color: var(--accent-ink); }
 .fm-go { justify-self: start; font-size: calc(22px * var(--ts)); padding: 12px 28px; }
-.fm-end { border-top: 5px solid var(--accent); }
-.fm-final { display: flex; align-items: center; justify-content: center; gap: 18px; font: 900 calc(64px * var(--ts)) / 1 var(--f-mono); font-variant-numeric: tabular-nums; }
-.fm-final .win { color: var(--accent); }
-.fm-dash { color: var(--muted); }
-.fm-verdict { display: flex; gap: 18px; align-items: center; }
-.fm-verdict > div { display: grid; gap: 4px; min-width: 0; }
-.fm-verdict b { font-family: var(--f-display); font-weight: 800; font-size: calc(26px * var(--ts)); text-transform: uppercase; letter-spacing: 0.02em; }
 /* the grade on a square plate with a hard shadow, the pixel look */
-.fm-grade { display: grid; place-items: center; flex: none; width: 76px; height: 76px; border: 4px solid currentColor; box-shadow: 5px 5px 0 currentColor; font: 900 calc(54px * var(--ts)) / 1 var(--f-display); }
-.fm-grade.g-A { color: var(--good); }
-.fm-grade.g-B { color: var(--accent); }
-.fm-grade.g-C { color: var(--warn); }
-.fm-grade.g-D { color: var(--bad); }
-.fm-line { font-family: var(--f-mono); font-size: calc(16px * var(--ts)); overflow-wrap: anywhere; }
 .sb-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; }
 .sb-title { margin: 0; font-family: var(--f-display); font-size: calc(32px * var(--ts)); text-transform: uppercase; }
 .sb-score { font-family: var(--f-display); font-size: calc(56px * var(--ts)); font-weight: 900; line-height: 1; display: flex; gap: 8px; }

@@ -13,7 +13,8 @@ import type { Pos } from '../../engine/types';
 import { ALL_LEGENDS, fiveOvr, legendFive, legendLine } from '../../engine/floor/legends';
 import { BRACKET_ROUNDS, finishBracket, franchise, legendSetup, myGame, newBracket, playRound, winnerOf, type Bracket, type FloorSide } from '../../engine/floor/game';
 import type { FloorResult, FloorSetup } from '../../engine/floor/sim';
-import { useStore } from '../../store';
+import { achievementsNow, useStore } from '../../store';
+import { recordFloorGame } from '../achievements';
 import { t, tx } from '../../i18n';
 import { PageTop } from '../components/PageTop';
 import { TeamArt } from '../art/Crest';
@@ -69,7 +70,7 @@ function OvrPick({ label, real, value, onChange }: { label: string; real: number
         {label}: <b>{shown}</b> {value === null && <em>{t('(their real level)')}</em>}
       </span>
       <input type="range" min={70} max={99} step={1} value={shown} aria-label={label} onChange={(e) => onChange(Number(e.target.value))} />
-      <button className={`chip${value === null ? ' on' : ''}`} aria-pressed={value === null} onClick={() => onChange(null)}>
+      <button className={`pick-chip${value === null ? ' on' : ''}`} aria-pressed={value === null} onClick={() => onChange(null)}>
         {t('Real ({n})', { n: Math.round(real) })}
       </button>
     </label>
@@ -216,10 +217,15 @@ export function FloorPage() {
         onDone={(r) => {
           setPlan(null);
           setLast(r);
+          let title = false;
           if (mode === 'playoffs' && bracket) {
             const b = playRound(bracket, [r.us, r.them], oppOvr ?? undefined);
+            title = b.champion === b.me;
             setBracket(b.out !== null && !b.champion ? finishBracket(b, oppOvr ?? undefined) : b);
           }
+          // the book (achievements) keeps games played to their end
+          recordFloorGame({ margin: r.us - r.them, pts: r.line.pts, low: Math.min(r.marks.low, r.us - r.them), kind: mode === 'playoffs' ? 'playoff' : mode === 'draft' ? 'draft' : 'quick', title });
+          achievementsNow();
         }}
       />
     );

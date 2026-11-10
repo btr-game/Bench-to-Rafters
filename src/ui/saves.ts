@@ -1,5 +1,5 @@
 import type { GameState, Pos } from '../engine/types';
-import { floorForOffice } from '../engine/career/miniBonus';
+import { dropGoneMinis } from '../engine/career/miniBonus';
 
 // Save slots (round 25, the owner: ten of them, and a code to export or import a career). Each
 // career in progress has a slot on this device; the index lists them, newest first, and every
@@ -76,10 +76,10 @@ export function listSlots(): SlotMeta[] {
   return readIndex().sort((a, b) => b.at - a.at);
 }
 
-/** A career read back from storage or a code, brought up to date (round 39: Front Office's unlock
- * and bonuses count as the Floor's). */
+/** A career read back from storage or a code, brought up to date (round 39 archived Front Office
+ * and round 42 took the Floor out of the mini-games: their unlocks and logged bonuses are dropped). */
 const healed = (g: GameState): GameState => {
-  floorForOffice(g);
+  dropGoneMinis(g);
   return g;
 };
 

@@ -8,7 +8,7 @@ import type { Mode } from '../engine/balance';
 import type { GameState } from '../engine/types';
 import { isDev } from '../dev/mode';
 import { count, nbaTitles } from '../engine/awards/legacy';
-import { addMiniResult } from '../engine/achievementsMini';
+import { addFloorGame, addMiniResult } from '../engine/achievementsMini';
 import type { MpKind } from '../engine/achievements35';
 import { ENDING_IDS } from '../engine/achievements36';
 import { TOWN_MARKS } from '../engine/achievements37';
@@ -321,6 +321,13 @@ export function recordFlight(): boolean {
   d.totals.flights = (d.totals.flights ?? 0) + 1;
   saveAch(d);
   return R39_MARKS.flights.includes(d.totals.flights);
+}
+
+/** Round 42: a game on the Floor's own page, played to its end. */
+export function recordFloorGame(r: Parameters<typeof addFloorGame>[1]): void {
+  const d = loadAch();
+  d.totals.mini = addFloorGame(d.totals.mini, r);
+  saveAch(d);
 }
 
 /** Round 39, online: a game on the Floor against a friend, played to its end (ui/floor/FloorFriend.tsx).
