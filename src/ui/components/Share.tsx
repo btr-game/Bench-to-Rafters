@@ -15,7 +15,7 @@ import { SkipButton } from './SkipTutorial';
 import { t, tx } from '../../i18n';
 
 /** The game's address on the web (Netlify). Change it here if the game moves to a domain of its own. */
-export const GAME_URL = 'https://bench-to-rafters.netlify.app/';
+export const GAME_URL = 'https://btr-game.github.io/Bench-to-Rafters/';
 const TITLE = 'Bench to Rafters';
 const PITCH = tx('A basketball career game: from the bench to the rafters. Free, in your browser.');
 

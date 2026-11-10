@@ -42,11 +42,13 @@ npm run preview    # serves the built copy locally to check it
 The playable site is in `dist/`. It is plain static files (relative paths), so it can be put on
 any static host or opened through a local web server.
 
-## 5. The game's website (Netlify), with the online community
+## 5. The game's website (GitHub Pages), with the online community
 
-The website is **bench-to-rafters.netlify.app**. Netlify builds this repository on every push to
-`main` (`netlify.toml`: `npm run build:itch`, published from `dist-itch`), so an update goes live by
-itself a minute or two after it is pushed. The same build can also go on itch.io as a zip (below).
+The website is **btr-game.github.io/Bench-to-Rafters**. GitHub builds this repository on every push
+to `main` (`.github/workflows/pages.yml`: `npm run build:itch`, published from `dist-itch`), so an
+update goes live by itself a minute or two after it is pushed. It was on Netlify until round 42
+(bench-to-rafters.netlify.app, out of build credits; `netlify.toml` is kept in case it comes back).
+The same build can also go on itch.io as a zip (below).
 
 The online copy keeps its leaderboards, Reality 99 hall, statue plaza, live strip and feedback in
 a free Supabase database. (The claude.ai page uses that page's own shared data instead.)

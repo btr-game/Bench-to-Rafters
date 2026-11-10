@@ -48,7 +48,8 @@ the owner when the work looks close to the end of the round**.
     document (owner, round 26).
 14. **DECISIONS.md** for the round (and ROADMAP.md for ideas kept for later).
 15. **Publish**: the game artifact (no owner email anywhere), then commit and push. A push to `main`
-    also publishes the website (bench-to-rafters.netlify.app; Netlify builds it, `netlify.toml`),
+    also publishes the website (btr-game.github.io/Bench-to-Rafters; GitHub Pages builds it,
+    `.github/workflows/pages.yml`),
     so push only after the checks pass. The dev deck is
     part of the game (round 26): the Developer door at the foot of the start page, password
     `btrdev`, opens it in dev mode, with storage of its own (`src/dev/mode.ts`, `src/dev/storage.ts`).

@@ -239,7 +239,7 @@ export function dropLink(): void {
     // nothing kept
   }
 }
-export const SITE = 'https://bench-to-rafters.netlify.app/';
+export const SITE = 'https://btr-game.github.io/Bench-to-Rafters/';
 export const linkFor = (l: MpLink): string => `${SITE}#${l.kind}-${l.code}`;
 
 // ---------- what a career sends ----------
