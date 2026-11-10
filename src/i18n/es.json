@@ -4192,7 +4192,14 @@
   "Win the Floor’s playoffs.": "Gana los playoffs de The Floor.",
   "Win the Floor’s playoffs three times.": "Gana los playoffs de The Floor tres veces.",
   "Win a game on the Floor with a five you drafted.": "Gana un partido en The Floor con un quinteto que elegiste tú.",
-  "Score 20 points in one game on the Floor.": "Anota 20 puntos en un partido en The Floor."
+  "Score 20 points in one game on the Floor.": "Anota 20 puntos en un partido en The Floor.",
+  "Conference semi-finals": "Semifinales de conferencia",
+  "Conference finals": "Finales de conferencia",
+  "The Finals": "Las Finales",
+  "East": "Este",
+  "West": "Oeste",
+  "Their real career numbers": "Sus números reales de carrera",
+  "Eight franchises from each conference, one game a round, four wins to the title. Each game is all four quarters in about four minutes.": "Ocho franquicias de cada conferencia, un partido por ronda, cuatro victorias para el título. Cada partido son los cuatro cuartos en unos cuatro minutos."
  },
  "story": {
   "f-driveway.title": "La entrada de casa",

@@ -4192,7 +4192,14 @@
   "Win the Floor’s playoffs.": "The Floor 플레이오프 우승.",
   "Win the Floor’s playoffs three times.": "The Floor 플레이오프 3회 우승.",
   "Win a game on the Floor with a five you drafted.": "직접 드래프트한 5인으로 The Floor에서 승리.",
-  "Score 20 points in one game on the Floor.": "The Floor 한 경기에서 20득점."
+  "Score 20 points in one game on the Floor.": "The Floor 한 경기에서 20득점.",
+  "Conference semi-finals": "콘퍼런스 준결승",
+  "Conference finals": "콘퍼런스 결승",
+  "The Finals": "파이널",
+  "East": "동부",
+  "West": "서부",
+  "Their real career numbers": "실제 통산 기록",
+  "Eight franchises from each conference, one game a round, four wins to the title. Each game is all four quarters in about four minutes.": "콘퍼런스마다 8개 구단, 라운드마다 단판, 4승이면 우승. 한 경기는 4쿼터 전체를 약 4분에 치릅니다."
  },
  "story": {
   "f-driveway.title": "집 앞 골대",

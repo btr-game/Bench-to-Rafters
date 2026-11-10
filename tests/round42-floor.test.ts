@@ -173,14 +173,17 @@ describe('round 42: the plays added to the engine', () => {
 });
 
 describe('round 42: the playoffs', () => {
-  it('sixteen franchises, his among them, seeded so the two best can only meet in the final', () => {
+  it('eight franchises from each conference, his among them, seeded 1 against 8', async () => {
+    const { NBA_TEAMS } = await import('../src/content/teams');
+    const conf = (a: string) => NBA_TEAMS.find((x) => x.abbr === a)!.conf;
     const b = newBracket('CHA', 7);
     const field = b.rounds[0].flatMap((g) => [g.a, g.b]);
     expect(new Set(field).size).toBe(16);
     expect(field).toContain('CHA');
-    const byOvr = [...field].sort((x, y) => fiveOvr(legendFive(y)) - fiveOvr(legendFive(x)));
-    const half = (a: string) => (field.indexOf(a) < 8 ? 0 : 1);
-    expect(half(byOvr[0])).not.toBe(half(byOvr[1]));
+    expect(field.slice(0, 8).every((a) => conf(a) === 'East')).toBe(true);
+    expect(field.slice(8).every((a) => conf(a) === 'West')).toBe(true);
+    const east = [...field.slice(0, 8)].sort((x, y) => fiveOvr(legendFive(y)) - fiveOvr(legendFive(x)) || (x < y ? -1 : 1));
+    expect([b.rounds[0][0].a, b.rounds[0][0].b]).toEqual([east[0], east[7]]);
   });
 
   it('four wins is a title; a loss ends his run and the rest is played out', () => {

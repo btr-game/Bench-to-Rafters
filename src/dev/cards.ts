@@ -32,6 +32,7 @@ import { isFinal, type LiveRequest } from '../engine/career/live';
 import { CamLab } from './CamLab';
 import { FloorLab } from './FloorLab';
 import { FloorOnline } from './FloorOnline';
+import { Legends } from './Legends';
 import { LEVEL_IDS, type Level } from '../engine/levels';
 import { ROAD_MINIS, type Road } from '../ui/road';
 import type { ChosenLook } from '../content/looks';
@@ -523,6 +524,7 @@ export const CARDS: DevCard[] = [
   { id: 'floor-lab', title: 'The Floor', group: 'Big moments', icon: 'clutch', blurb: 'Round 39: the last six minutes of an elimination game, played, four real minutes. The high three-quarter court in his team’s arena (the court, the crowd, the vibes), ten pixel players, the shot meter and the score bug. Pick the teams, the difficulty, how good he is and the start.', open: () => true, page: FloorLab },
   { id: 'floor-career', title: 'The Floor in a career', group: 'Big moments', icon: 'clutch', blurb: 'Round 39: a star’s playoff game that can end his season. The first 42 minutes go by like any playoff game, then the last six are his on the Floor, in his arena or theirs, both teams in their own kits; the result finishes the game and the series.', open: () => show(at('floor-career', liveAt('floor'), { live: true, pick: toFloor, tries: 20 })) },
   { id: 'floor-page', title: 'The Floor: its own page', group: 'Big moments', icon: 'floor', blurb: 'Round 42: the Floor as a game of its own, from the arena on the main land. Four ways to play: a quick game (the fourth quarter) as any franchise’s all-time five with each side’s overall set on its own, the 16-team playoffs (a full game in four minutes), a five drafted from all 150 legends, and a friend online.', open: () => (useStore.setState({ game: null, mini: null, page: 'floor' }), true) },
+  { id: 'floor-legends', title: 'The Floor: every legend’s numbers', group: 'Big moments', icon: 'spotlight', blurb: 'Round 42: all 150 legends in one table: real career averages, the ratings the Floor gives them, and how it has them play. Filter by name, team or position.', open: () => true, page: Legends },
   { id: 'floor-online', title: 'The Floor: a friend online', group: 'Big moments', icon: 'clutch', blurb: 'Round 39: head to head against a friend, live, by room code. Each picks a team and a position; the host tips off; both screens run the same game from each other’s keys. Here the room joins two tabs of this browser.', open: () => true, page: FloorOnline },
   { id: 'cam-lab', title: 'Action cam lab', group: 'Big moments', icon: 'camera', blurb: 'Any play on the finals cam, slowed right down, any two teams.', open: () => true, page: CamLab },
   { id: 'intro', title: 'Intro page', group: 'Start', icon: 'ball', blurb: 'The title over a side-on one-on-one: runs, steals, blocks and jumpers in pixel frames, the venue changing every five seconds. First visit only, or the Intro button on the start page.', open: () => void useStore.setState({ game: null, page: null, mini: null, intro: true }) },
