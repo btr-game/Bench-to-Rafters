@@ -7,7 +7,9 @@ import { FLOOR } from '../src/engine/balance';
 import { ovrOf } from '../src/engine/player/ovr';
 import { ALL_LEGENDS, fiveOvr, floorLevel, legendFive, legendRatings, legendStyle, legendTeam } from '../src/engine/floor/legends';
 import { BRACKET_ROUNDS, finishBracket, franchise, legendSetup, myGame, newBracket, playRound, winnerOf } from '../src/engine/floor/game';
-import { floorResult, gameScore, startFloor, stepFloor, type FloorState } from '../src/engine/floor/sim';
+import { floorResult, gameScore, startFloor, stepFloor, type FloorInput, type FloorState } from '../src/engine/floor/sim';
+import { toRim } from '../src/engine/floor/court';
+import { NBA_TEAMS } from '../src/content/teams';
 import { LEGEND_STATS } from '../src/content/legendStats';
 
 const legend = (name: string) => ALL_LEGENDS.find((x) => x.spot.name === name)!.spot;
@@ -203,5 +205,72 @@ describe('round 42: the playoffs', () => {
     expect(c.rounds.every((round) => round.every((g) => winnerOf(g)))).toBe(true);
     // the same seed plays the same bracket
     expect(finishBracket(playRound(newBracket('BOS', 3), [10, 20])).champion).toBe(c.champion);
+  });
+});
+
+describe('after round 42: leaking out, and the big men', () => {
+  // (owner: "the game doesnt punish the users from waiting under the rim and getting easy fastbreaks
+  // while abandoning defense")
+  const games = (leaker: boolean, n: number) => {
+    let them = 0;
+    let wins = 0;
+    let calls = 0;
+    for (let g = 0; g < n; g++) {
+      const set = legendSetup({ seed: 900 + g * 13, us: franchise(NBA_TEAMS[(g * 7) % 30].abbr, 90), them: franchise(NBA_TEAMS[(g * 7 + 11) % 30].abbr, 90), user: 1, length: 'fourth' });
+      set.score = [0, 0];
+      const s = startFloor(set);
+      if (!leaker) s.auto = true;
+      for (let i = 0; i < 200000 && s.phase !== 'over'; i++) {
+        let inp: FloorInput | null = null;
+        if (leaker) {
+          // he never defends: he runs to the rim he attacks, waits there, and lays it in when it comes
+          const u = s.players[s.user];
+          const d = toRim(0, u);
+          inp = s.ball.holder === s.user && d < 5 ? { finish: true } : { dx: d > 4 ? 1 : 0, dy: u.y > 26 ? -1 : u.y < 24 ? 1 : 0, sprint: d > 8 };
+        }
+        stepFloor(s, inp);
+        for (const e of s.feed.slice(s.fresh)) if (e.kind === 'leak') calls++;
+      }
+      them += s.score[1];
+      if (s.score[0] > s.score[1]) wins++;
+    }
+    return { them: them / n, wins, calls };
+  };
+
+  it('a player who waits up the floor instead of defending is told, and his team pays for it', () => {
+    const N = 24;
+    const honest = games(false, N);
+    const leak = games(true, N);
+    expect(honest.calls).toBe(0);
+    expect(leak.calls).toBeGreaterThan(N * 5);
+    // a man short at its own basket, his team gives up far more
+    expect(leak.them).toBeGreaterThan(honest.them * 1.4);
+    // and it wins far less than a team that plays it straight (43 of 60 before the rule, against 25; 7 now)
+    expect(leak.wins).toBeLessThan(honest.wins);
+    expect(leak.wins).toBeLessThanOrEqual(N / 4);
+  });
+
+  it('a big man rebounds and scores inside a little more easily than his numbers alone gave him', () => {
+    // (owner: "i feel like guards have an advantage over bigmen. make their rebounding/scoring just a
+    // little easier"): small edges, on the same scale as the rest
+    expect(FLOOR.rebound.big).toBeGreaterThan(0);
+    expect(FLOOR.rebound.big).toBeLessThanOrEqual(0.4);
+    expect(FLOOR.shot.size).toBeLessThanOrEqual(0.08);
+    expect(FLOOR.shot.strong).toBeLessThanOrEqual(0.4);
+    // over many AI games the power forwards and centres out-rebound everyone else by far
+    const by: Record<string, { reb: number; n: number }> = {};
+    for (let g = 0; g < 16; g++) {
+      const set = legendSetup({ seed: 500 + g * 31, us: franchise(NBA_TEAMS[(g * 7) % 30].abbr, 90), them: franchise(NBA_TEAMS[(g * 7 + 11) % 30].abbr, 90), length: 'full' });
+      const s = startFloor(set);
+      s.auto = true;
+      play(s);
+      s.players.forEach((p, k) => {
+        if (k % (s.players.length / 2) >= 5) return;
+        (by[p.pos] ??= { reb: 0, n: 0 }).reb += p.box.reb;
+        by[p.pos].n++;
+      });
+    }
+    const per = (pos: string) => by[pos].reb / by[pos].n;
+    expect(Math.min(per('PF'), per('C'))).toBeGreaterThan(1.5 * Math.max(per('PG'), per('SG'), per('SF')));
   });
 });

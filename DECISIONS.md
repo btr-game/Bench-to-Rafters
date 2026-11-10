@@ -3791,3 +3791,30 @@ quarter of a second), and each wrong guess showed as his man sliding.
   line.
 - Not done: a relay for the networks that allow no direct line (a TURN server needs an account and,
   past a free allowance, money).
+
+### Two balance changes on the Floor
+
+Owner: "the game doesnt punish the users from waiting under the rim and getting easy fastbreaks while
+abandoning defense. also, i feel like guards have an advantage over bigmen. make their
+rebounding/scoring just a little easier."
+
+- **Leaking out** (`FLOOR.leak`). A player somebody steers who stays past half court while the other
+  team has the ball inside it, for 2.5 game seconds, leaves his team a man short: the other team
+  shoots 18 points of a hundred better and takes 2.2 times its share of the offensive rebounds, and
+  a pass the length of the floor to him is thrown away 75% of the time until it wears off. The screen
+  says "Get back on defence" when it starts. The AI always gets back, so only a human can leak.
+  Measured over 60 fourth quarters with a player who never defends (runs to the rim he attacks and
+  waits): before, his team won 43 (a team played straight by the AI won 25) and gave up 37.983 points;
+  at the first setting (8 points, 1.5 times, 45%) it won 19 and gave up 47.683; the owner asked for
+  more ("make the penalty a bit bigger for leak out (less than 10 of 60)"), and at these it wins 7 and
+  gives up 53.383, its fast-break points down from 4.800 to 1.233.
+- **Big men** (`FLOOR.shot.size`, `.strong`, `FLOOR.rebound.big`, the post's `urge` and `hook`). Inside,
+  a bigger man shoots up to 6 points better over a smaller defender and a contest costs him up to 30%
+  less; a real rebounder's weight on the boards is up to 30% more; the post is used a little more
+  (0.30 to 0.38) and the hook is worth 0.06 instead of 0.04. Over 120 full AI games between legends:
+  power forwards 2.683 to 3.237 points and 2.250 to 2.446 rebounds a game, shooting 53.092% to 57.815%;
+  centres 3.467 to 3.796 points, 55.102% to 58.147% (rebounds 2.517 to 2.454, flat: the two centres
+  meet each other); guards within noise (point guards 8.946 to 9.067 points); a team's points 24.275
+  to 24.996.
+- Seen while measuring, not changed: a player who simply waits under the rim on offence scores a great
+  deal (there is no three-second rule). Kept for the owner to decide.

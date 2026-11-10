@@ -4203,7 +4203,8 @@
   "Direct line": "직접 연결",
   "Server line": "서버 연결",
   "Your two computers are talking straight to each other.": "두 컴퓨터가 서로 직접 통신하고 있습니다.",
-  "Your keys go through the game's server.": "키 입력이 게임 서버를 거쳐 전달됩니다."
+  "Your keys go through the game's server.": "키 입력이 게임 서버를 거쳐 전달됩니다.",
+  "Get back on defence": "수비로 돌아가세요"
  },
  "story": {
   "f-driveway.title": "집 앞 골대",

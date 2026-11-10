@@ -4203,7 +4203,8 @@
   "Direct line": "直接接続",
   "Server line": "サーバー接続",
   "Your two computers are talking straight to each other.": "2台のコンピューターが直接やり取りしています。",
-  "Your keys go through the game's server.": "キー入力はゲームのサーバーを経由します。"
+  "Your keys go through the game's server.": "キー入力はゲームのサーバーを経由します。",
+  "Get back on defence": "ディフェンスに戻れ"
  },
  "story": {
   "f-driveway.title": "家の前のゴール",
