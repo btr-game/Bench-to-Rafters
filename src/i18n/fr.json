@@ -4203,7 +4203,8 @@
   "Direct line": "Ligne directe",
   "Server line": "Ligne par serveur",
   "Your two computers are talking straight to each other.": "Vos deux ordinateurs se parlent directement.",
-  "Your keys go through the game's server.": "Vos touches passent par le serveur du jeu."
+  "Your keys go through the game's server.": "Vos touches passent par le serveur du jeu.",
+  "Get back on defence": "Reviens défendre"
  },
  "story": {
   "f-driveway.title": "L’allée",

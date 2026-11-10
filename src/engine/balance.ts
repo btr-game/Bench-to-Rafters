@@ -1253,8 +1253,12 @@ export const FLOOR = {
   sprint: 1.3,
   /** Stamina (0 to 1) a game second: sprinting, moving, standing; a timeout gives back. */
   stamina: { sprint: -0.012, move: -0.0045, rest: 0.004, timeout: 0.25 },
-  /** A shot's base chance by zone, and how much its rating (from 70) moves it per point. */
-  shot: { rim: 0.7, paint: 0.51, mid: 0.46, three: 0.4, perPoint: { rim: 0.006, paint: 0.0055, mid: 0.005, three: 0.005 }, deep: 26, deepPerFt: 0.04, min: 0.02, max: 0.93 },
+  /** A shot's base chance by zone, and how much its rating (from 70) moves it per point. After round
+   * 42 (owner: "i feel like guards have an advantage over bigmen. make their rebounding/scoring just
+   * a little easier"): at the rim and in the paint a bigger man shoots over a smaller one, up to
+   * `size` when his rebounding and interior defence average `sizeFull` points more than his man's,
+   * and a contest there costs a big man up to `strong` less (those two ratings from 70 to 95). */
+  shot: { rim: 0.7, paint: 0.51, mid: 0.46, three: 0.4, perPoint: { rim: 0.006, paint: 0.0055, mid: 0.005, three: 0.005 }, deep: 26, deepPerFt: 0.04, min: 0.02, max: 0.93, size: 0.06, sizeFull: 25, strong: 0.3 },
   /** A defender closer than `within` feet takes up to `max` off the chance; tired legs up to `tired`. */
   contest: { within: 6, max: 0.17, tired: 0.08 },
   /** His meter: how long a full load takes (game seconds; 1.5 is one real second at the 1.5x clock,
@@ -1274,7 +1278,9 @@ export const FLOOR = {
   strip: 0.011,
   /** A move (crossover, spin, step-back) beats his man this often from even, slowing him this long. */
   move: { beat: 0.5, perPoint: 0.006, slow: 1.1, lose: 0.05 },
-  rebound: { offense: 0.72, wait: 0.6, bounce: 30 },
+  /** A rebound goes to the closest and the best on the boards (the square of rebounding over 50), the
+   * shooting team at `offense` of that; a real rebounder counts up to `big` more (from 70 to 95). */
+  rebound: { offense: 0.72, wait: 0.6, bounce: 30, big: 0.3 },
   /** The difficulty: added to his team's and the other team's shooting. */
   mode: { standard: { us: 0, them: 0 }, reality: { us: -0.03, them: 0.025 }, stars: { us: 0.02, them: -0.015 }, fast: { us: 0, them: 0 }, lab: { us: 0, them: 0 } } as Record<Mode, { us: number; them: number }>,
   /** Momentum: what a basket, a stop and a big play add (his team up, theirs down), how fast it fades
@@ -1338,7 +1344,16 @@ export const FLOOR = {
    * finishing and legs against his man's interior defence, as any move), or the hook, a shot `hook`
    * better than one from there, `perPoint` for each point of his finishing over his man's interior
    * defence, and blocked `block` as often. */
-  post: { near: 5, far: 15, on: 5.5, urge: 0.3, secs: [0.9, 1.8], pace: 0.3, hook: 0.04, perPoint: 0.003, block: 0.45, drop: 0.35, kick: 0.7 },
+  post: { near: 5, far: 15, on: 5.5, urge: 0.38, secs: [0.9, 1.8], pace: 0.3, hook: 0.06, perPoint: 0.003, block: 0.45, drop: 0.35, kick: 0.7 },
+  /** After round 42, leaking out (owner: "the game doesnt punish the users from waiting under the rim
+   * and getting easy fastbreaks while abandoning defense"). A player somebody steers who stays more
+   * than `past` feet from the basket his team defends for `secs` game seconds, with the ball already
+   * inside that line, leaves his team a man short: the other team shoots `shot` better and takes
+   * `board` times its share of the offensive rebounds, and for `lasts` seconds more (it wears off as
+   * fast as it built) a pass of over `long` feet to him is thrown away `wild` of the time. (First 0.08, 1.5 and 0.45: such a
+   * player's team still won 19 of 60; owner: "make the penalty a bit bigger for leak out (less than
+   * 10 of 60)"; at these it wins 7.) */
+  leak: { past: 44, secs: 2.5, lasts: 4, shot: 0.18, board: 2.2, long: 35, wild: 0.75 },
   /** Round 42, a charge (owner: "dont take it too seriously tho"): a shot at the rim on the move
    * into a defender who has stood still `still` seconds within `within` feet is an offensive foul
    * this often (at 75 basketball IQ). */

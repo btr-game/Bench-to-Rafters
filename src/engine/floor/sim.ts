@@ -124,6 +124,8 @@ interface FloorPlayer extends FloorPlayerIn {
   late: number;
   vel: number;
   still: number;
+  /** Ticks he has spent up the floor, away from the basket his team is defending (leaking out). */
+  leak: number;
   sat?: number;
   /** A quick slide he is in the middle of (the step-back), instead of a jump to the spot. */
   dash?: { to: Spot; t: number } | null;
@@ -131,7 +133,7 @@ interface FloorPlayer extends FloorPlayerIn {
   box: FloorBox;
 }
 
-export type FloorEventKind = 'make' | 'miss' | 'block' | 'steal' | 'turnover' | 'foul' | 'ft' | 'rebound' | 'timeout' | 'shotclock' | 'beat' | 'out' | 'overtime' | 'end' | 'screen' | 'reach' | 'switch' | 'help' | 'quarter' | 'break' | 'post' | 'charge' | 'sub' | 'call';
+export type FloorEventKind = 'make' | 'miss' | 'block' | 'steal' | 'turnover' | 'foul' | 'ft' | 'rebound' | 'timeout' | 'shotclock' | 'beat' | 'out' | 'overtime' | 'end' | 'screen' | 'reach' | 'switch' | 'help' | 'quarter' | 'break' | 'post' | 'charge' | 'sub' | 'call' | 'leak';
 
 export interface FloorEvent {
   tick: number;
@@ -294,7 +296,7 @@ export function startFloor(set: FloorSetup): FloorState {
   const players: FloorPlayer[] = [];
   ([set.us, set.them] as const).forEach((tm, team) =>
     tm.players.forEach((p, i) =>
-      players.push({ ...p, team: team as 0 | 1, x: 47, y: 25, stamina: 0.85, fouls: p.fouls ?? 0, slow: 0, air: 0, st: p.style ?? { use: 1, three: 1, drive: 1, post: POSTS[p.pos], pass: 1 }, slot: p.pos, late: 0, vel: 0, still: 0, on: i < 5 && (p.fouls ?? 0) < FLOOR.foul.out, box: zeroBox() }),
+      players.push({ ...p, team: team as 0 | 1, x: 47, y: 25, stamina: 0.85, fouls: p.fouls ?? 0, slow: 0, air: 0, st: p.style ?? { use: 1, three: 1, drive: 1, post: POSTS[p.pos], pass: 1 }, slot: p.pos, late: 0, vel: 0, still: 0, leak: 0, on: i < 5 && (p.fouls ?? 0) < FLOOR.foul.out, box: zeroBox() }),
     ),
   );
   for (const team of [0, 1] as const) while (onCourt({ players } as FloorState, team).length < 5 && benchOf({ players } as FloorState, team).length) benchOf({ players } as FloorState, team)[0].on = true;
@@ -477,6 +479,11 @@ function nearestFoe(s: FloorState, team: 0 | 1, at: Spot): { p: FloorPlayer | nu
   return { p: best, d: bd };
 }
 
+/** A team is a man short at its own basket: one of its players (one somebody steers; the AI always
+ * gets back) has been up the floor, waiting for the ball, while the other team attacks. */
+const leaking = (p: FloorPlayer): boolean => p.leak >= secs(FLOOR.leak.secs);
+const shortHanded = (s: FloorState, team: 0 | 1): boolean => s.players.some((p) => p.on && p.team === team && leaking(p));
+
 const ratingFor = (p: FloorPlayer, zone: Zone) => (zone === 'rim' ? p.r.FIN * 0.8 + p.r.ATH * 0.2 : zone === 'paint' ? (p.r.FIN + p.r.SHT) / 2 : p.r.SHT);
 
 /** The chance a shot from here goes in, before his meter. */
@@ -487,8 +494,14 @@ function shotChance(s: FloorState, p: FloorPlayer, at: Spot): number {
   const d = toRim(p.team, at);
   if (zone === 'three' && d > S.deep) c -= S.deepPerFt * (d - S.deep);
   const foe = nearestFoe(s, p.team, at);
-  c -= Math.max(0, (FLOOR.contest.within - foe.d) / FLOOR.contest.within) * FLOOR.contest.max;
+  // (inside, a big man is bothered less by a hand in his face)
+  const inside = zone === 'rim' || zone === 'paint' ? 1 - S.strong * clamp(((p.r.REB + p.r.INT) / 2 - 70) / 25, 0, 1) : 1;
+  c -= Math.max(0, (FLOOR.contest.within - foe.d) / FLOOR.contest.within) * FLOOR.contest.max * inside;
   c -= (1 - p.stamina) * FLOOR.contest.tired;
+  // inside, a bigger man shoots over a smaller one (rebounding and interior defence stand for size)
+  if ((zone === 'rim' || zone === 'paint') && foe.p && foe.d < FLOOR.contest.within) c += S.size * clamp((p.r.REB + p.r.INT - foe.p.r.REB - foe.p.r.INT) / 2 / S.sizeFull, 0, 1);
+  // five against four: a defender who leaked out left his man alone
+  if (s.poss === p.team && shortHanded(s, other(p.team))) c += FLOOR.leak.shot;
   const mode = FLOOR.mode[s.mode] ?? FLOOR.mode.standard;
   c += p.team === 0 ? mode.us : mode.them;
   if ((p.team === 0 && s.momentum >= FLOOR.momentum.full) || (p.team === 1 && s.momentum <= -FLOOR.momentum.full)) c += FLOOR.momentum.edge;
@@ -645,11 +658,15 @@ function land(s: FloorState, f: Flight): void {
 function rebound(s: FloorState, f: Flight): void {
   const shooterTeam = s.players[f.by].team;
   const all = s.players.filter((p) => p.on);
+  // (a defence a man short gives up more of them)
+  const short = shortHanded(s, other(shooterTeam)) ? FLOOR.leak.board : 1;
   const w = all.map((p) => {
     const d = dist(p, f.to);
     if (d > 18) return 0;
     const k = p.r.REB / 50;
-    return k * k * (1 / (1 + d / 3)) * (p.team === shooterTeam ? FLOOR.rebound.offense : 1);
+    // (a real rebounder is worth a little more than his number alone: `big`, from 70 up)
+    const big = 1 + FLOOR.rebound.big * clamp((p.r.REB - 70) / 25, 0, 1);
+    return k * k * big * (1 / (1 + d / 3)) * (p.team === shooterTeam ? FLOOR.rebound.offense * short : 1);
   });
   const tot = w.reduce((a, b) => a + b, 0);
   let k = next(s.rng) * tot;
@@ -721,7 +738,7 @@ function dead(s: FloorState, team: 0 | 1, at: Spot, wait: number): void {
 function swapIn(s: FloorState, out: FloorPlayer, inn: FloorPlayer, his?: number): void {
   out.on = false;
   inn.on = true;
-  Object.assign(inn, { x: 47 + (inn.team === 0 ? -3 : 3), y: 0.5, slow: 0, air: 0, late: 0, vel: 0, still: 0, dash: null, slot: out.slot, sat: his });
+  Object.assign(inn, { x: 47 + (inn.team === 0 ? -3 : 3), y: 0.5, slow: 0, air: 0, late: 0, vel: 0, still: 0, leak: 0, dash: null, slot: out.slot, sat: his });
   out.sat = undefined;
   emit(s, { kind: 'sub', team: inn.team, by: idx(s, inn), on: idx(s, out) });
 }
@@ -1142,8 +1159,10 @@ function throwPass(s: FloorState, from: number, to: number): void {
   const p = s.players[from];
   const r = s.players[to];
   s.drive = false;
-  // a bad pass: out of bounds
-  if (next(s.rng) < FLOOR.pass.bad * (1 - (p.r.PLY - 40) / 80)) {
+  // a bad pass: out of bounds (far likelier the length of the floor to a man who leaked out and
+  // never saw the rebound come down)
+  const wild = leaking(r) && dist(p, r) > FLOOR.leak.long ? FLOOR.leak.wild : 0;
+  if (next(s.rng) < wild + FLOOR.pass.bad * (1 - (p.r.PLY - 40) / 80)) {
     p.box.tov++;
     emit(s, { kind: 'turnover', team: p.team, by: from });
     return dead(s, other(p.team), { x: r.x, y: r.y < 25 ? 0.5 : COURT.h - 0.5 }, 1);
@@ -1451,6 +1470,14 @@ export function stepFloor(s: FloorState, inp: FloorInput | null, inp2: FloorInpu
       p.stamina = clamp(p.stamina + DT * (ip.sprint && moved > 0 ? FLOOR.stamina.sprint : moved > 3 ? FLOOR.stamina.move : FLOOR.stamina.rest), 0.2, 1);
       p.vel = moved;
       p.still = moved < 1 ? p.still + 1 : 0;
+      // leaking out: the other team has the ball over half court and he is still up the floor, past
+      // the middle of it (it wears off once he is back, or his own team has had the ball a while)
+      const L = FLOOR.leak;
+      const ballAt = s.ball.holder !== null ? s.players[s.ball.holder] : s.ball;
+      const away = s.phase === 'live' && s.poss !== p.team && toRim(s.poss, ballAt) < L.past && toRim(s.poss, p) > L.past;
+      const was = leaking(p);
+      p.leak = away ? Math.min(p.leak + 1, secs(L.secs + L.lasts)) : Math.max(0, p.leak - 1);
+      if (!was && leaking(p)) emit(s, { kind: 'leak', team: p.team, by: i });
       continue;
     }
     // (round 42) on a break everybody runs; a man in the post backs in

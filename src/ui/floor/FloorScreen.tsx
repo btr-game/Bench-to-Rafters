@@ -136,6 +136,8 @@ function wordFor(s: FloorState, e: FloorEvent): string | null {
       return t('Fast break');
     case 'charge':
       return t('Charge');
+    case 'leak':
+      return e.team === 0 ? t('Get back on defence') : null;
     case 'call':
       return e.call === 'iso' ? t('Isolation') : e.call === 'give' ? t('Give and go') : t('Double team');
     case 'block':

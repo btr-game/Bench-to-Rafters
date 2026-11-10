@@ -4203,7 +4203,8 @@
   "Direct line": "直连",
   "Server line": "服务器连接",
   "Your two computers are talking straight to each other.": "两台电脑正在直接通信。",
-  "Your keys go through the game's server.": "你的按键通过游戏服务器传送。"
+  "Your keys go through the game's server.": "你的按键通过游戏服务器传送。",
+  "Get back on defence": "回防"
  },
  "story": {
   "f-driveway.title": "车道",
