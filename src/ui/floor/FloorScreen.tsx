@@ -25,6 +25,7 @@ import { announce, announcerOn, setAnnouncer } from '../announcer';
 import { Backdrop, CAM_RANGE, VIEW, drawBasket, drawFrontRow, drawShadow, pixel, project, type ArenaLook } from './view';
 import { MID_X, SpriteBook, type Frame } from './sprites';
 import type { NetGame } from './net';
+import { Bench, BoxScore } from './BoxScore';
 
 export interface FloorTeamLook {
   kit: Kit;
@@ -59,6 +60,8 @@ const KEY = {
   b: ['KeyK'],
   c: ['KeyL'],
   d: ['Space'],
+  e: ['KeyU'],
+  f: ['KeyI'],
   timeout: ['KeyT'],
 } as const;
 type KeyName = keyof typeof KEY;
@@ -124,7 +127,15 @@ const hudOf = (s: FloorState): Hud => {
 function wordFor(s: FloorState, e: FloorEvent): string | null {
   switch (e.kind) {
     case 'make':
-      return e.and ? t('And one') : e.dunk ? t('Dunk') : `+${e.pts}`;
+      return e.and ? t('And one') : e.dunk ? t('Dunk') : e.hook ? t('Hook shot') : `+${e.pts}`;
+    case 'quarter':
+      return e.q === 2 ? t('Half time') : t('End of the {q}', { q: t(QUARTER_NAME[(e.q ?? 1) - 1]) });
+    case 'break':
+      return t('Fast break');
+    case 'charge':
+      return t('Charge');
+    case 'call':
+      return e.call === 'iso' ? t('Isolation') : e.call === 'give' ? t('Give and go') : t('Double team');
     case 'block':
       return t('Blocked');
     case 'steal':
@@ -152,7 +163,11 @@ function wordFor(s: FloorState, e: FloorEvent): string | null {
 function tagFor(e: FloorEvent): { text: string; at: number } | null {
   switch (e.kind) {
     case 'beat':
-      return { text: e.move === 'spin' ? t('Spun past him') : e.move === 'step' ? t('Step-back') : t('Crossed up'), at: e.on! };
+      return { text: e.move === 'spin' ? t('Spun past him') : e.move === 'step' ? t('Step-back') : e.move === 'drop' ? t('Drop step') : t('Crossed up'), at: e.on! };
+    case 'post':
+      return { text: t('Posting up'), at: e.by! };
+    case 'sub':
+      return { text: t('Coming on'), at: e.by! };
     case 'screen':
       return { text: t('Screen'), at: e.by! };
     case 'switch':
@@ -241,14 +256,22 @@ function hear(s: FloorState, e: FloorEvent, before: [number, number]): string | 
     case 'foul':
     case 'turnover':
     case 'out':
+    case 'sub':
       sfx('whistle');
       return null;
+    case 'charge':
+      sfx('whistle');
+      if (ours) sfx('roar');
+      return ours ? 'He took the charge!' : null;
+    case 'break':
+      return ours ? 'Fast break!' : null;
     case 'ft':
       sfx(e.good ? 'net' : 'rim');
       return null;
     case 'timeout':
     case 'shotclock':
     case 'overtime':
+    case 'quarter':
     case 'end':
       sfx('buzzer');
       return null;
@@ -320,6 +343,8 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
   const game = useRef<FloorState | null>(null);
   const skip = useRef(false);
   const callTimeout = useRef(false);
+  // a substitution picked in the pause menu, sent with his next keys
+  const askSub = useRef<{ out: number; in: number } | null>(null);
 
   // the biggest whole-number scale the page has room for
   useEffect(() => {
@@ -449,17 +474,31 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
         } else release = null;
         if (hit('b')) inp.pass = mine ? aimPass(s, dx, dy) : 'auto';
         if (hit('c') && mine) {
-          inp.move = dx * face[s.user] < 0 ? 'step' : dy !== 0 ? 'spin' : 'cross';
+          // in the paint with no direction held it is the hook (round 42)
+          const me = s.players[s.user];
+          const post = dx === 0 && dy === 0 && zoneOf(0, me) === 'paint';
+          inp.move = post ? 'hook' : dx * face[s.user] < 0 ? 'step' : dy !== 0 ? 'spin' : 'cross';
           // the move plays whether it beats his man or not
-          act[s.user] = { kind: inp.move, t0: performance.now() };
+          if (inp.move !== 'hook') act[s.user] = { kind: inp.move, t0: performance.now() };
         }
         if (hit('d')) inp.pick = true;
+        // the calls (round 42): one key each
+        if (hit('e') && mine) inp.call = 'iso';
+        if (hit('f') && mine) {
+          inp.call = 'give';
+          inp.pass = aimPass(s, dx, dy);
+        }
       } else {
         release = null;
         if (hit('a')) inp.steal = true;
         if (hit('b')) inp.block = true;
         if (hit('c')) inp.swap = true;
         if (hit('d')) inp.help = true;
+        if (hit('e')) inp.call = 'double';
+      }
+      if (askSub.current) {
+        inp.sub = askSub.current;
+        askSub.current = null;
       }
       if (hit('timeout') || callTimeout.current) inp.timeout = true;
       callTimeout.current = false;
@@ -1081,6 +1120,7 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
                 {t('Announcer')}
               </button>
             </div>
+            {game.current && <Bench s={game.current} onSub={(q) => ((askSub.current = q), setPaused(false))} />}
             {net ? (
               <button className="btn" onClick={net.onLeave}>
                 {t('Leave the game')}
@@ -1126,6 +1166,7 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
                 {me.name}: {over.line.pts} PTS · {over.line.reb} REB · {over.line.ast} AST · {over.line.stl} STL · {over.line.blk} BLK · {over.line.fgm}/{over.line.fga} FG
               </p>
             )}
+            <BoxScore r={over} teams={[setup.us.short, setup.them.short]} />
             <div className="floor-end-row">
               {onAgain && (
                 <button className="btn" onClick={onAgain}>
@@ -1156,13 +1197,13 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
         <div>
           <dt>{t('Offence')}</dt>
           <dd>
-            <kbd>WASD</kbd> {t('move')} · <kbd>Shift</kbd> {t('sprint')} · <kbd>J</kbd> {t('hold to shoot; tap at the rim to lay it in or dunk')} · <kbd>K</kbd> {t('pass (aim with the arrows)')} · <kbd>L</kbd> {t('crossover, spin, step-back')} · <kbd>Space</kbd> {t('call a pick')}
+            <kbd>WASD</kbd> {t('move')} · <kbd>Shift</kbd> {t('sprint')} · <kbd>J</kbd> {t('hold to shoot; tap at the rim to lay it in or dunk')} · <kbd>K</kbd> {t('pass (aim with the arrows)')} · <kbd>L</kbd> {t('crossover, spin, step-back; a hook in the paint')} · <kbd>Space</kbd> {t('call a pick')} · <kbd>U</kbd> {t('isolation')} · <kbd>I</kbd> {t('give and go')}
           </dd>
         </div>
         <div>
           <dt>{t('Defence')}</dt>
           <dd>
-            <kbd>J</kbd> {t('steal')} · <kbd>K</kbd> {t('block or contest')} · <kbd>L</kbd> {t('switch')} · <kbd>Space</kbd> {t('call for help')} · <kbd>T</kbd> {t('timeout')} · <kbd>Esc</kbd> {t('pause')}
+            <kbd>J</kbd> {t('steal')} · <kbd>K</kbd> {t('block or contest')} · <kbd>L</kbd> {t('switch')} · <kbd>Space</kbd> {t('call for help')} · <kbd>U</kbd> {t('double team')} · <kbd>T</kbd> {t('timeout')} · <kbd>Esc</kbd> {t('pause')}
           </dd>
         </div>
       </dl>

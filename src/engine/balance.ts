@@ -1268,7 +1268,7 @@ export const FLOOR = {
   speed: [8, 14],
   sprint: 1.3,
   /** Stamina (0 to 1) a game second: sprinting, moving, standing; a timeout gives back. */
-  stamina: { sprint: -0.012, move: -0.0025, rest: 0.004, timeout: 0.25 },
+  stamina: { sprint: -0.012, move: -0.0045, rest: 0.004, timeout: 0.25 },
   /** A shot's base chance by zone, and how much its rating (from 70) moves it per point. */
   shot: { rim: 0.7, paint: 0.51, mid: 0.46, three: 0.4, perPoint: { rim: 0.006, paint: 0.0055, mid: 0.005, three: 0.005 }, deep: 26, deepPerFt: 0.04, min: 0.02, max: 0.93 },
   /** A defender closer than `within` feet takes up to `max` off the chance; tired legs up to `tired`. */
@@ -1336,4 +1336,37 @@ export const FLOOR = {
    * and 36.65%, from mid-range 38.72% and 30.72%, threes 37.47% and 30.81%, points a team 15.645
    * and 16.642. */
   attack: { base: 0.018, perPoint: 0.002, min: 0.004, max: 0.09, settle: 1.6, near: 7, far: 9, clock: 5, human: 0.6 },
+  /** Round 42, the Floor's own game: the clock of a game of four quarters, played in the time one
+   * quarter takes (the playoffs: "one full game could honestly be 4 minutes"). */
+  rateFull: 8,
+  /** Round 42, a fast break (owner's pick: "an outlet pass and a run"): after a steal or a
+   * defensive rebound the new offence runs for up to `secs` game seconds, everyone at a sprint, the
+   * new defence starting `react` seconds late (less for a smart player). The man with the ball
+   * throws ahead to a runner `ahead` feet nearer the rim with a clear lane, or pushes it himself
+   * (a big man without a handle, `handle`, looks for his guard first); it is over once `back`
+   * defenders stand between the ball and the rim inside `set` feet of it. A sprint on the break
+   * costs the legs `legs` of a sprint he chooses. */
+  fastBreak: { secs: 5, react: 0.5, ahead: 12, lane: 3, back: 3, set: 30, handle: 62, outlet: 0.8, legs: 0.4 },
+  /** Round 42, the post (owner's pick: "a back-down and a hook"): with his man on him (`on` feet),
+   * between `near` and `far` feet from the rim, a player who posts up (his style: big men, mostly)
+   * does it `urge` of the times he thinks. He backs in for `secs` seconds at `pace` of his speed,
+   * then: the ball back out when a second defender has come (`kick`), a drop step (`drop`, his
+   * finishing and legs against his man's interior defence, as any move), or the hook, a shot `hook`
+   * better than one from there, `perPoint` for each point of his finishing over his man's interior
+   * defence, and blocked `block` as often. */
+  post: { near: 5, far: 15, on: 5.5, urge: 0.3, secs: [0.9, 1.8], pace: 0.3, hook: 0.04, perPoint: 0.003, block: 0.45, drop: 0.35, kick: 0.7 },
+  /** Round 42, a charge (owner: "dont take it too seriously tho"): a shot at the rim on the move
+   * into a defender who has stood still `still` seconds within `within` feet is an offensive foul
+   * this often (at 75 basketball IQ). */
+  charge: { within: 3.5, still: 0.3, chance: 0.3 },
+  /** Round 42, substitutions: at a dead ball a starter whose legs are under `tired` sits for a
+   * rested man off the bench (`fresh`), and comes back once his own are at `back`; in the last
+   * `close` clock seconds (a career's clock) the starters finish. A man on the bench rests `rest`
+   * times as fast as one standing on the floor. */
+  subs: { tired: 0.68, fresh: 0.8, back: 0.93, close: 120, rest: 2.5 },
+  /** Round 42, the calls (owner: "make it simple so that the decision doesnt take long"): one key
+   * each. Isolation clears a side for `iso` seconds (the others stand `clear` feet off the ball);
+   * a give-and-go waits `giveGo` seconds for his cut; a double team holds `double` seconds, strips
+   * `strip` times as often, and an AI ball handler under it passes out `out` of the time. */
+  calls: { iso: 6, clear: 20, giveGo: 3, double: 4, strip: 1.7, out: 0.75 },
 } as const;

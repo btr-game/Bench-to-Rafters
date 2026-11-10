@@ -268,7 +268,7 @@ describe('round 39: the Floor', () => {
         tries++;
         const evs = s.feed.slice(before).map((e) => e.kind);
         const shot = s.ball.flight?.kind === 'shot' || evs.includes('block');
-        expect(shot || evs.includes('steal')).toBe(true);
+        expect(shot || evs.includes('steal') || evs.includes('charge')).toBe(true);
         expect(s.load).toBe(-1);
         if (evs.includes('steal')) n++;
       }
