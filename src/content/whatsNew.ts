@@ -16,6 +16,16 @@ interface News {
 
 export const NEWS: News[] = [
   {
+    id: '2026-11-11-floor',
+    date: '11 November 2026',
+    items: [
+      { icon: 'versus', text: 'Friend games are far quicker: in a room joined by code your two computers now talk straight to each other. The bar under the court shows the line in use and its delay.' },
+      { icon: 'whistle', text: 'Get back on defence: a player who waits up the floor for an easy basket leaves his team a man short, and it pays for it.' },
+      { icon: 'whistle', text: 'Three seconds: stand in the lane too long while your team has the ball and the other team gets it.' },
+      { icon: 'post', text: 'Big men score inside and rebound a little more easily.' },
+    ],
+  },
+  {
     id: '2026-11-10-r42',
     date: '10 November 2026',
     items: [
