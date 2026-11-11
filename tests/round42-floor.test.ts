@@ -250,6 +250,37 @@ describe('after round 42: leaking out, and the big men', () => {
     expect(leak.wins).toBeLessThanOrEqual(N / 4);
   });
 
+  it('three seconds: a player who stands in the lane on offence loses the ball; the AI is never called', () => {
+    // (owner: "yeah add a three second rule")
+    const run = (camp: boolean) => {
+      const set = legendSetup({ seed: 77, us: franchise('LAL', 90), them: franchise('BOS', 90), user: 1, length: 'fourth' });
+      const s = startFloor(set);
+      if (!camp) s.auto = true;
+      let calls = 0;
+      let tov = 0;
+      for (let i = 0; i < 200000 && s.phase !== 'over'; i++) {
+        const u = s.players[s.user];
+        // on offence he walks under the rim and stays; on defence he goes home
+        const inp: FloorInput | null = !camp ? null : s.poss === 0 ? { dx: toRim(0, u) > 4 ? 1 : 0, dy: u.y > 26 ? -1 : u.y < 24 ? 1 : 0 } : { dx: toRim(1, u) > 12 ? -1 : 0, sprint: true };
+        stepFloor(s, inp);
+        for (const e of s.feed.slice(s.fresh)) {
+          if (e.kind !== 'lane') continue;
+          calls++;
+          expect(e.by).toBe(s.user);
+          expect(s.phase).toBe('dead');
+          expect(s.inbound?.team).toBe(1);
+        }
+        tov = s.players[s.user].box.tov;
+      }
+      return { calls, tov };
+    };
+    expect(run(false).calls).toBe(0);
+    const c = run(true);
+    expect(c.calls).toBeGreaterThan(3);
+    expect(c.tov).toBeGreaterThanOrEqual(c.calls);
+    expect(FLOOR.lane.secs).toBe(3);
+  });
+
   it('a big man rebounds and scores inside a little more easily than his numbers alone gave him', () => {
     // (owner: "i feel like guards have an advantage over bigmen. make their rebounding/scoring just a
     // little easier"): small edges, on the same scale as the rest

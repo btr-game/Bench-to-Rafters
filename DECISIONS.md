@@ -3816,5 +3816,10 @@ rebounding/scoring just a little easier."
   centres 3.467 to 3.796 points, 55.102% to 58.147% (rebounds 2.517 to 2.454, flat: the two centres
   meet each other); guards within noise (point guards 8.946 to 9.067 points); a team's points 24.275
   to 24.996.
-- Seen while measuring, not changed: a player who simply waits under the rim on offence scores a great
-  deal (there is no three-second rule). Kept for the owner to decide.
+- **Three seconds** (`FLOOR.lane`; owner: "yeah add a three second rule"). A player somebody steers
+  who stands in the lane (19 feet out, 8 to each side of the rim) for more than 3 game seconds while
+  his team has the ball loses it: the screen says "Three seconds", the other team takes it in. The
+  count stops while he shoots and starts again when a shot goes up or he steps out; the AI is not
+  called. A player who walks under the rim every possession and stays is called 14.48 times a quarter.
+  (The 30 points a quarter first put down to camping came mostly from leaking out: the same camper who
+  does go back on defence scored 6.867 before the rule.)

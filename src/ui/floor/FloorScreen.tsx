@@ -148,6 +148,8 @@ function wordFor(s: FloorState, e: FloorEvent): string | null {
       return t('Turnover');
     case 'shotclock':
       return t('Shot clock');
+    case 'lane':
+      return t('Three seconds');
     case 'timeout':
       return t('Timeout');
     case 'overtime':
@@ -274,6 +276,7 @@ function hear(s: FloorState, e: FloorEvent, before: [number, number]): string | 
       return null;
     case 'timeout':
     case 'shotclock':
+    case 'lane':
     case 'overtime':
     case 'quarter':
     case 'end':
@@ -532,7 +535,7 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
         }
         if ((e.kind === 'make' && e.pts) || (e.kind === 'ft' && e.good)) setPop({ pts: e.kind === 'ft' ? 1 : e.pts!, team: e.team, id: now + Math.random() });
         const w = wordFor(v, e);
-        if (w) setWord({ text: w, team: e.kind === 'turnover' || e.kind === 'shotclock' ? (e.team === 0 ? 1 : 0) : e.team, id: now + Math.random() });
+        if (w) setWord({ text: w, team: e.kind === 'turnover' || e.kind === 'shotclock' || e.kind === 'lane' ? (e.team === 0 ? 1 : 0) : e.team, id: now + Math.random() });
         const tg = tagFor(e);
         if (tg) tagAt(tg.at, tg.text);
         // the frames a play sets off

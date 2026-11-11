@@ -1354,6 +1354,12 @@ export const FLOOR = {
    * player's team still won 19 of 60; owner: "make the penalty a bit bigger for leak out (less than
    * 10 of 60)"; at these it wins 7.) */
   leak: { past: 44, secs: 2.5, lasts: 4, shot: 0.18, board: 2.2, long: 35, wild: 0.75 },
+  /** After round 42, three seconds (owner: "yeah add a three second rule"; a player who waited under
+   * the rim on offence scored over 30 a quarter). A player somebody steers may not stand in the lane
+   * (`deep` feet out from the baseline, `half` to each side of the rim) for more than `secs` game
+   * seconds while his team has the ball: the other team's ball. The count stops while he shoots and
+   * starts again when a shot goes up or he steps out. The AI is not called for it. */
+  lane: { deep: 19, half: 8, secs: 3 },
   /** Round 42, a charge (owner: "dont take it too seriously tho"): a shot at the rim on the move
    * into a defender who has stood still `still` seconds within `within` feet is an offensive foul
    * this often (at 75 basketball IQ). */

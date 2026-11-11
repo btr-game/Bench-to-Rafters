@@ -126,6 +126,8 @@ interface FloorPlayer extends FloorPlayerIn {
   still: number;
   /** Ticks he has spent up the floor, away from the basket his team is defending (leaking out). */
   leak: number;
+  /** Ticks he has stood in the lane with his team on offence (three seconds). */
+  lane: number;
   sat?: number;
   /** A quick slide he is in the middle of (the step-back), instead of a jump to the spot. */
   dash?: { to: Spot; t: number } | null;
@@ -133,7 +135,7 @@ interface FloorPlayer extends FloorPlayerIn {
   box: FloorBox;
 }
 
-export type FloorEventKind = 'make' | 'miss' | 'block' | 'steal' | 'turnover' | 'foul' | 'ft' | 'rebound' | 'timeout' | 'shotclock' | 'beat' | 'out' | 'overtime' | 'end' | 'screen' | 'reach' | 'switch' | 'help' | 'quarter' | 'break' | 'post' | 'charge' | 'sub' | 'call' | 'leak';
+export type FloorEventKind = 'make' | 'miss' | 'block' | 'steal' | 'turnover' | 'foul' | 'ft' | 'rebound' | 'timeout' | 'shotclock' | 'beat' | 'out' | 'overtime' | 'end' | 'screen' | 'reach' | 'switch' | 'help' | 'quarter' | 'break' | 'post' | 'charge' | 'sub' | 'call' | 'leak' | 'lane';
 
 export interface FloorEvent {
   tick: number;
@@ -296,7 +298,7 @@ export function startFloor(set: FloorSetup): FloorState {
   const players: FloorPlayer[] = [];
   ([set.us, set.them] as const).forEach((tm, team) =>
     tm.players.forEach((p, i) =>
-      players.push({ ...p, team: team as 0 | 1, x: 47, y: 25, stamina: 0.85, fouls: p.fouls ?? 0, slow: 0, air: 0, st: p.style ?? { use: 1, three: 1, drive: 1, post: POSTS[p.pos], pass: 1 }, slot: p.pos, late: 0, vel: 0, still: 0, leak: 0, on: i < 5 && (p.fouls ?? 0) < FLOOR.foul.out, box: zeroBox() }),
+      players.push({ ...p, team: team as 0 | 1, x: 47, y: 25, stamina: 0.85, fouls: p.fouls ?? 0, slow: 0, air: 0, st: p.style ?? { use: 1, three: 1, drive: 1, post: POSTS[p.pos], pass: 1 }, slot: p.pos, late: 0, vel: 0, still: 0, leak: 0, lane: 0, on: i < 5 && (p.fouls ?? 0) < FLOOR.foul.out, box: zeroBox() }),
     ),
   );
   for (const team of [0, 1] as const) while (onCourt({ players } as FloorState, team).length < 5 && benchOf({ players } as FloorState, team).length) benchOf({ players } as FloorState, team)[0].on = true;
@@ -738,7 +740,7 @@ function dead(s: FloorState, team: 0 | 1, at: Spot, wait: number): void {
 function swapIn(s: FloorState, out: FloorPlayer, inn: FloorPlayer, his?: number): void {
   out.on = false;
   inn.on = true;
-  Object.assign(inn, { x: 47 + (inn.team === 0 ? -3 : 3), y: 0.5, slow: 0, air: 0, late: 0, vel: 0, still: 0, leak: 0, dash: null, slot: out.slot, sat: his });
+  Object.assign(inn, { x: 47 + (inn.team === 0 ? -3 : 3), y: 0.5, slow: 0, air: 0, late: 0, vel: 0, still: 0, leak: 0, lane: 0, dash: null, slot: out.slot, sat: his });
   out.sat = undefined;
   emit(s, { kind: 'sub', team: inn.team, by: idx(s, inn), on: idx(s, out) });
 }
@@ -1442,6 +1444,7 @@ export function stepFloor(s: FloorState, inp: FloorInput | null, inp2: FloorInpu
   if (s.phase !== 'live') return;
 
   // everyone moves
+  let camped = -1;
   for (const p of s.players) {
     if (!p.on) continue;
     const i = idx(s, p);
@@ -1478,6 +1481,14 @@ export function stepFloor(s: FloorState, inp: FloorInput | null, inp2: FloorInpu
       const was = leaking(p);
       p.leak = away ? Math.min(p.leak + 1, secs(L.secs + L.lasts)) : Math.max(0, p.leak - 1);
       if (!was && leaking(p)) emit(s, { kind: 'leak', team: p.team, by: i });
+      // three seconds: he may not stand in the lane while his team has the ball; the count stops
+      // while he shoots, and starts again once a shot is up or he steps out
+      const T = FLOOR.lane;
+      const fl = s.ball.flight;
+      const inLane = s.phase === 'live' && s.poss === p.team && (p.team === 0 ? p.x >= COURT.w - T.deep : p.x <= T.deep) && Math.abs(p.y - RIM_Y) <= T.half;
+      const shooting = p.air > 0 || (s.ball.holder === i && (loadOf(s, p.team) >= 0 || s.gather?.by === i));
+      p.lane = !inLane || (fl && fl.kind !== 'pass') ? 0 : shooting ? p.lane : p.lane + 1;
+      if (p.lane > secs(T.secs)) camped = i;
       continue;
     }
     // (round 42) on a break everybody runs; a man in the post backs in
@@ -1556,6 +1567,15 @@ export function stepFloor(s: FloorState, inp: FloorInput | null, inp2: FloorInpu
         change(s, dbl.team);
       }
     }
+  }
+
+  // three seconds in the lane: the other team's ball
+  if (camped >= 0 && s.phase === 'live') {
+    const c = s.players[camped];
+    c.lane = 0;
+    c.box.tov++;
+    emit(s, { kind: 'lane', team: c.team, by: camped });
+    dead(s, other(c.team), { x: c.x, y: c.y < 25 ? 0.5 : COURT.h - 0.5 }, 1);
   }
 
   // the shot clock
