@@ -13,6 +13,9 @@ import type { Pos } from '../../engine/types';
 import { ALL_LEGENDS, fiveOvr, legendFive, legendLine } from '../../engine/floor/legends';
 import { BRACKET_ROUNDS, finishBracket, franchise, legendSetup, myGame, newBracket, playRound, winnerOf, type Bracket, type FloorSide } from '../../engine/floor/game';
 import type { FloorResult, FloorSetup } from '../../engine/floor/sim';
+import { onNbaTeam, ownSetup } from '../../engine/floor/mini';
+import { teamById } from '../../engine/career/common';
+import { ovrOf } from '../../engine/player/ovr';
 import { achievementsNow, useStore } from '../../store';
 import { recordFloorGame } from '../achievements';
 import { t, tx } from '../../i18n';
@@ -24,7 +27,10 @@ import { FloorScreen, type FloorTeamLook } from './FloorScreen';
 import { FloorFriend } from './FloorFriend';
 import { LegendTable } from './LegendTable';
 
-type Mode = 'quick' | 'playoffs' | 'draft' | 'online';
+type Mode = 'career' | 'quick' | 'playoffs' | 'draft' | 'online';
+/** Only from a career's mini-games: his own player (owner, after round 42: "the user should be able
+ * to play the floor with their own character"). */
+const CAREER_MODE: { id: Mode; name: string; text: string } = { id: 'career', name: tx('Your player'), text: tx('The fourth quarter as your own player, with his own ratings. About four minutes.') };
 const MODES: { id: Mode; name: string; text: string }[] = [
   { id: 'quick', name: tx('Quick game'), text: tx('The fourth quarter from a close score, as any franchise’s all-time five. About four minutes.') },
   { id: 'playoffs', name: tx('Playoffs'), text: tx('Eight franchises from each conference, one game a round, four wins to the title. Each game is all four quarters in about four minutes.') },
@@ -174,7 +180,11 @@ export function FloorCard() {
  * mini-games, where the mini-games' page gives it its top bar and its way back. */
 export function FloorPage({ inside = false }: { inside?: boolean }) {
   const setPage = useStore((s) => s.setPage);
-  const [mode, setMode] = useState<Mode>('quick');
+  const g = useStore((s) => s.game);
+  // inside a career's mini-games he can play as himself: on his NBA team, or on a team at his level
+  const career = inside && g && g.step !== 'retired' ? g : null;
+  const myTeam = career && onNbaTeam(career) ? teamById(career.nba, career.teamId)! : null;
+  const [mode, setMode] = useState<Mode>(career ? 'career' : 'quick');
   const [us, setUs] = useState('CHI');
   const [them, setThem] = useState('LAL');
   const [slot, setSlot] = useState<number | null>(null);
@@ -207,6 +217,18 @@ export function FloorPage({ inside = false }: { inside?: boolean }) {
     setLast(null);
     setPlan({ setup: legendSetup({ seed: seed(), us: mine, them: franchise(them, oppOvr ?? undefined), user: steer, length: 'fourth' }), kits: [us, them], key: Date.now() });
   };
+  // his own game: his team's colours are his NBA team's, or the ones picked; the opponent is never his own team
+  const ownUs = myTeam ? myTeam.abbr : us;
+  const ownThem = them === ownUs ? ALL.find((x) => x.abbr !== ownUs)!.abbr : them;
+  const tipOwn = () => {
+    if (!career) return;
+    sfx('opened');
+    setLast(null);
+    const look = (abbr: string) => ({ name: nameOf(abbr), short: abbr, color: ALL.find((x) => x.abbr === abbr)!.color });
+    const opp = myTeam ? career.nba?.teams.find((x) => x.abbr === ownThem) : null;
+    const setup = myTeam && opp ? ownSetup(career, { seed: seed(), oppId: opp.id }) : ownSetup(career, { seed: seed(), us: look(ownUs), them: look(ownThem) });
+    setPlan({ setup, kits: [ownUs, ownThem], key: Date.now() });
+  };
   const tipPlayoff = (b: Bracket) => {
     const g = myGame(b);
     if (!g) return;
@@ -218,7 +240,7 @@ export function FloorPage({ inside = false }: { inside?: boolean }) {
     return (
       <Court
         plan={plan}
-        onAgain={mode === 'playoffs' ? undefined : tip}
+        onAgain={mode === 'playoffs' ? undefined : mode === 'career' ? tipOwn : tip}
         onDone={(r) => {
           setPlan(null);
           setLast(r);
@@ -248,7 +270,7 @@ export function FloorPage({ inside = false }: { inside?: boolean }) {
           </h1>
         </div>
         <div className="fh-modes" role="tablist" aria-label={t('How to play')}>
-          {MODES.map((m) => (
+          {(career ? [CAREER_MODE, ...MODES] : MODES).map((m) => (
             <button key={m.id} role="tab" aria-selected={mode === m.id} className={`fh-mode${mode === m.id ? ' on' : ''}`} onClick={() => (setMode(m.id), setLast(null))}>
               <b>{t(m.name)}</b>
               <span className="prose small">{t(m.text)}</span>
@@ -258,7 +280,39 @@ export function FloorPage({ inside = false }: { inside?: boolean }) {
 
         {mode === 'online' && <FloorFriend />}
 
-        {mode !== 'online' && !(mode === 'playoffs' && bracket) && (
+        {mode === 'career' && career && (
+          <section className="card stack fm-setup">
+            <div className="fm-teams">
+              <div className="fm-side">
+                <div className="sec-title">{t('Your player')}</div>
+                <p className="fh-own">
+                  <b>{career.player.name}</b>{' '}
+                  <span className="small muted keep">
+                    {career.player.pos} · #{career.player.number} · {t('{n} overall', { n: Math.round(ovrOf(career.player.attrs, career.player.pos)) })}
+                  </span>
+                </p>
+                <Picked abbr={ownUs} note={myTeam ? t('Your team, with its real roster') : t('Teammates at your level')} />
+                {!myTeam && <Crests value={us} onPick={pickUs} label={t('Your colours')} />}
+              </div>
+              <div className="fm-vs">{t('vs')}</div>
+              <div className="fm-side">
+                <div className="sec-title">{t('Opponent')}</div>
+                <Picked abbr={ownThem} note={myTeam ? t('Their real roster') : t('A team at your level')} />
+                <Crests value={ownThem} onPick={(a) => a !== ownUs && setThem(a)} label={t('Opponent')} />
+              </div>
+            </div>
+            <button className="btn primary fm-go" data-tour="floor-tip" onClick={tipOwn}>
+              {t('Tip it off')}
+            </button>
+            {last && (
+              <p className="small" role="status">
+                {t('Last game: {line}', { line: t('{us} – {them}, {result}', { us: last.us, them: last.them, result: last.win ? t('you won') : t('you lost') }) })}
+              </p>
+            )}
+          </section>
+        )}
+
+        {mode !== 'online' && mode !== 'career' && !(mode === 'playoffs' && bracket) && (
           <section className="card stack fm-setup">
             <div className="fm-teams">
               <div className="fm-side">

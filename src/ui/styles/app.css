@@ -3266,3 +3266,7 @@ td > .link-btn { min-width: 44px; text-align: left; }
 .safe-note code { display: block; white-space: pre-wrap; overflow-wrap: anywhere; user-select: all; }
 .safe-big { max-width: 720px; margin: 16px auto; }
 .safe-float { position: fixed; z-index: 99; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(720px, calc(100vw - 32px)); margin: 0; box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45); }
+
+/* the Floor from a career's mini-games: his own player's line above his team */
+.fh-own { margin: 0 0 8px; }
+.fh-own > b { font-family: var(--f-display); font-size: 22px; letter-spacing: 0.02em; }

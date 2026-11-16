@@ -23,7 +23,7 @@ export const NEWS: News[] = [
       { icon: 'whistle', text: 'Get back on defence: a player who waits up the floor for an easy basket leaves his team a man short, and it pays for it.' },
       { icon: 'whistle', text: 'Three seconds: stand in the lane too long while your team has the ball and the other team gets it.' },
       { icon: 'post', text: 'Big men score inside and rebound a little more easily.' },
-      { icon: 'floor', text: 'The Floor is among a career’s mini-games now: open it from the Extras tab at any time, at any rating.' },
+      { icon: 'floor', text: 'The Floor is among a career’s mini-games now, and you play it as your own player: on your NBA team with its real roster, or on a team at your level before you get there. Open it from the Extras tab at any time.' },
     ],
   },
   {

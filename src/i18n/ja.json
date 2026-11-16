@@ -4206,7 +4206,14 @@
   "Your keys go through the game's server.": "キー入力はゲームのサーバーを経由します。",
   "Get back on defence": "ディフェンスに戻れ",
   "Three seconds": "3秒バイオレーション",
-  "Always open": "いつでもプレイ可"
+  "Always open": "いつでもプレイ可",
+  "Your player": "自分の選手",
+  "The fourth quarter as your own player, with his own ratings. About four minutes.": "自分の選手とその能力値でプレーする第4クォーター。約4分。",
+  "{n} overall": "総合 {n}",
+  "Your team, with its real roster": "自分のチーム（実際のロスター）",
+  "Teammates at your level": "自分と同じレベルのチームメイト",
+  "Their real roster": "相手の実際のロスター",
+  "A team at your level": "自分と同じレベルのチーム"
  },
  "story": {
   "f-driveway.title": "家の前のゴール",

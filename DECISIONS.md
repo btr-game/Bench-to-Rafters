@@ -3833,3 +3833,12 @@ was reachable only from the main land with no career open. The mini-games hub no
 (`Mini` gains `floor`; `FloorPage` takes `inside` and leaves the top bar to the mini-games page):
 always open, whatever his ratings, with no rating bonus, the same four ways to play as the arena on
 the main land. It is not shown on the tutorial's island, whose gate is the six rated games.
+
+Then (owner: "i mean the user should be able to play the floor with their own character"): from a
+career the Floor's page opens on a fifth way to play, **Your player** (`ownSetup` in
+`engine/floor/mini.ts`): the fourth quarter from a close score as his own player, with his name,
+number, position and ratings. On an NBA team he plays on its real roster against the team he picks,
+the two split by their strengths as a playoff game on the Floor is; anywhere else (high school,
+college, overseas) he takes his spot on a team made up at his own overall, against another like it,
+in colours he picks. Nothing comes back into the career: no bonus, no fatigue, no stats. The four
+legend modes stay beside it.

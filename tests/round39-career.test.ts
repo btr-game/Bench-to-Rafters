@@ -14,6 +14,8 @@ import { floorDue } from '../src/engine/floor/due';
 import { FLOOR } from '../src/engine/balance';
 import type { FloorPlayerIn } from '../src/engine/floor/sim';
 import { fastForward, setSim } from '../src/engine/fast';
+import { onNbaTeam, ownSetup } from '../src/engine/floor/mini';
+import { startFloor, stepFloor } from '../src/engine/floor/sim';
 
 let pro: GameState;
 const copy = (): GameState => structuredClone(pro);
@@ -214,4 +216,50 @@ describe('sim mode', () => {
     if (next) expect(next.floorGame || next.stage === 'floor').toBe(true);
     else expect(s.flags.floor).toBe(before + 1);
   }, 120_000);
+});
+
+describe('after round 42: his own player on the Floor, from a career\'s mini-games', () => {
+  // (owner: "i mean the user should be able to play the floor with their own character")
+  it('on an NBA team: he steers himself on his real roster, the fourth quarter from a close score', () => {
+    const s = copy();
+    expect(onNbaTeam(s)).toBe(true);
+    const opp = oppOf(s);
+    const set = ownSetup(s, { seed: 4242, oppId: opp.id });
+    const me = set.us.players.filter((p) => p.user);
+    expect(me).toHaveLength(1);
+    expect(me[0].name).toBe(s.player.name);
+    expect(me[0].number).toBe(s.player.number);
+    expect(me[0].pos).toBe(s.player.pos);
+    expect(set.them.players.some((p) => p.user)).toBe(false);
+    expect(set.them.short).toBe(opp.short);
+    expect(set.quarter).toBe(4);
+    expect(set.clock).toBe(FLOOR.quarter);
+    expect(set.rate).toBe(FLOOR.rate);
+    expect(Math.abs(set.score[0] - set.score[1])).toBeLessThanOrEqual(3);
+    // the game plays to its end and leaves the career as it was
+    const before = JSON.stringify(s);
+    const f = startFloor(set);
+    f.auto = true;
+    for (let i = 0; i < 200000 && f.phase !== 'over'; i++) stepFloor(f, null);
+    expect(f.phase).toBe('over');
+    expect(JSON.stringify(s)).toBe(before);
+  });
+
+  it('anywhere else: his own ratings, in his spot on a team at his level', () => {
+    const s = newGame(77, { name: 'Jo Park', number: 5, pos: 'PG', archetype: 1, focus: ['SHT', 'PLY'], hometown: 'Busan', highSchool: 'Central High' });
+    expect(onNbaTeam(s)).toBe(false);
+    const look = (short: string) => ({ name: short, short, color: '#123456' });
+    const set = ownSetup(s, { seed: 9, us: look('CHI'), them: look('LAL') });
+    const me = set.us.players.find((p) => p.user)!;
+    expect(me.name).toBe('Jo Park');
+    expect(me.pos).toBe('PG');
+    expect(me.r).toEqual(hisRatings(s));
+    expect(set.us.players).toHaveLength(8);
+    expect(set.them.players).toHaveLength(8);
+    expect(set.quarter).toBe(4);
+    const f = startFloor(set);
+    f.auto = true;
+    for (let i = 0; i < 200000 && f.phase !== 'over'; i++) stepFloor(f, null);
+    expect(f.phase).toBe('over');
+  });
 });
