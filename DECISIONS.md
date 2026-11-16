@@ -3823,3 +3823,13 @@ rebounding/scoring just a little easier."
   called. A player who walks under the rim every possession and stays is called 14.48 times a quarter.
   (The 30 points a quarter first put down to camping came mostly from leaking out: the same camper who
   does go back on defence scored 6.867 before the rule.)
+
+### The Floor among a career's mini-games
+
+Owner: "i feel like i dont see it. also, can you add it to minigames in the career so that the user
+can play it anytime?" Inside a career the Floor only ever opened for the last six minutes of a game
+that could end a conference finals or Finals series, which most careers never reach, and its own page
+was reachable only from the main land with no career open. The mini-games hub now has a Floor card
+(`Mini` gains `floor`; `FloorPage` takes `inside` and leaves the top bar to the mini-games page):
+always open, whatever his ratings, with no rating bonus, the same four ways to play as the arena on
+the main land. It is not shown on the tutorial's island, whose gate is the six rated games.

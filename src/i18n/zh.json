@@ -4205,7 +4205,8 @@
   "Your two computers are talking straight to each other.": "两台电脑正在直接通信。",
   "Your keys go through the game's server.": "你的按键通过游戏服务器传送。",
   "Get back on defence": "回防",
-  "Three seconds": "三秒违例"
+  "Three seconds": "三秒违例",
+  "Always open": "始终开放"
  },
  "story": {
   "f-driveway.title": "车道",

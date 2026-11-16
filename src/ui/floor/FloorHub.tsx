@@ -170,7 +170,9 @@ export function FloorCard() {
   );
 }
 
-export function FloorPage() {
+/** The Floor's own page: from the arena on the main land, or (`inside`) as one of a career's
+ * mini-games, where the mini-games' page gives it its top bar and its way back. */
+export function FloorPage({ inside = false }: { inside?: boolean }) {
   const setPage = useStore((s) => s.setPage);
   const [mode, setMode] = useState<Mode>('quick');
   const [us, setUs] = useState('CHI');
@@ -235,8 +237,8 @@ export function FloorPage() {
 
   const game = bracket ? myGame(bracket) : null;
   return (
-    <div className="wrap">
-      <PageTop trail={[t('The Floor')]} back={() => setPage(null)} />
+    <div className={inside ? undefined : 'wrap'}>
+      {!inside && <PageTop trail={[t('The Floor')]} back={() => setPage(null)} />}
       <section className="stack stage-in fh">
         <div>
           <div className="kicker">{t('Five on five')}</div>
