@@ -4205,7 +4205,8 @@
   "Your two computers are talking straight to each other.": "Vos deux ordinateurs se parlent directement.",
   "Your keys go through the game's server.": "Vos touches passent par le serveur du jeu.",
   "Get back on defence": "Reviens défendre",
-  "Three seconds": "Trois secondes"
+  "Three seconds": "Trois secondes",
+  "Always open": "Toujours ouvert"
  },
  "story": {
   "f-driveway.title": "L’allée",

@@ -11,6 +11,7 @@ import { PageTop } from '../components/PageTop';
 import { UnlockButton } from '../components/SkipTutorial';
 import { MINI_CLAIMS, claimsUsed, miniProgress, type MiniId } from '../../engine/career/miniBonus';
 import { LegendsGame } from './Legends';
+import { FloorPage } from '../floor/FloorHub';
 import { ThreesGame } from './Threes';
 import { LabGame } from './LabGame';
 import { DunkGame } from './Dunk';
@@ -105,6 +106,21 @@ function Hub() {
             </button>
           );
         })}
+        {/* the Floor (owner, after round 42: "can you add it to minigames in the career so that the
+            user can play it anytime?"): its own game, open at any rating, with no rating bonus */}
+        {!island && (
+          <button className="hub-card" style={{ ['--hub' as string]: '#C92A2A' }} onClick={() => setMini('floor')}>
+            <span className="hub-band">
+              <span>{t('Action')}</span>
+              {career && <span className="hub-state open">{t('Always open')}</span>}
+            </span>
+            <b className="hub-name with-icon">
+              <Icon name="floor" size={34} />
+              The Floor
+            </b>
+            <small>{t('Five on five, you steer one player. Play as the legends of all 30 teams, run the 16-team playoffs, or take on a friend online.')}</small>
+          </button>
+        )}
       </div>
       {!island && <p className="muted small">{t('Your career is safe: Back to career is always at the top right.')}</p>}
     </section>
@@ -132,7 +148,7 @@ export function MiniEnd({ children }: { children?: React.ReactNode }) {
   );
 }
 
-const MINI_NAME: Record<string, string> = Object.fromEntries(GAMES.map((x) => [x.id, x.name]));
+const MINI_NAME: Record<string, string> = { ...Object.fromEntries(GAMES.map((x) => [x.id, x.name])), floor: 'The Floor' };
 
 export function MiniGames() {
   const mini = useStore((s) => s.mini);
@@ -163,6 +179,7 @@ export function MiniGames() {
       {mini === 'street' && <StreetballGame />}
       {mini === 'rhythm' && <LockdownGame />}
       {mini === 'daily' && <DailyGame />}
+      {mini === 'floor' && <FloorPage inside />}
       <FootBar where={`mini-games, ${mini === 'hub' || !mini ? 'hub' : MINI_NAME[mini] ?? mini}${hasCareer ? ', with a career' : ''}`} />
     </div>
   );

@@ -4205,7 +4205,8 @@
   "Your two computers are talking straight to each other.": "2台のコンピューターが直接やり取りしています。",
   "Your keys go through the game's server.": "キー入力はゲームのサーバーを経由します。",
   "Get back on defence": "ディフェンスに戻れ",
-  "Three seconds": "3秒バイオレーション"
+  "Three seconds": "3秒バイオレーション",
+  "Always open": "いつでもプレイ可"
  },
  "story": {
   "f-driveway.title": "家の前のゴール",
