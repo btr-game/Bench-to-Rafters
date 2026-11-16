@@ -4206,7 +4206,14 @@
   "Your keys go through the game's server.": "키 입력이 게임 서버를 거쳐 전달됩니다.",
   "Get back on defence": "수비로 돌아가세요",
   "Three seconds": "3초 바이얼레이션",
-  "Always open": "항상 열림"
+  "Always open": "항상 열림",
+  "Your player": "내 선수",
+  "The fourth quarter as your own player, with his own ratings. About four minutes.": "내 선수와 그의 능력치로 뛰는 4쿼터. 약 4분.",
+  "{n} overall": "종합 {n}",
+  "Your team, with its real roster": "실제 로스터의 내 팀",
+  "Teammates at your level": "내 수준의 팀 동료들",
+  "Their real roster": "상대의 실제 로스터",
+  "A team at your level": "내 수준의 팀"
  },
  "story": {
   "f-driveway.title": "집 앞 골대",

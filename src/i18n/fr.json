@@ -4206,7 +4206,14 @@
   "Your keys go through the game's server.": "Vos touches passent par le serveur du jeu.",
   "Get back on defence": "Reviens défendre",
   "Three seconds": "Trois secondes",
-  "Always open": "Toujours ouvert"
+  "Always open": "Toujours ouvert",
+  "Your player": "Votre joueur",
+  "The fourth quarter as your own player, with his own ratings. About four minutes.": "Le quatrième quart-temps avec votre propre joueur et ses notes. Environ quatre minutes.",
+  "{n} overall": "{n} de général",
+  "Your team, with its real roster": "Votre équipe, avec son effectif réel",
+  "Teammates at your level": "Des coéquipiers de votre niveau",
+  "Their real roster": "Leur effectif réel",
+  "A team at your level": "Une équipe de votre niveau"
  },
  "story": {
   "f-driveway.title": "L’allée",

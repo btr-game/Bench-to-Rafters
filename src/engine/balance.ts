@@ -763,6 +763,8 @@ export const ROAD_GRADES = {
  */
 export const FLOOR_MINI = {
   roster: { bench: 6, wobble: 8 },
+  /** His own player's quick game: the score after three quarters, give or take. */
+  start: 80,
   back: 8,
 };
 /**

@@ -4206,7 +4206,14 @@
   "Your keys go through the game's server.": "Tus teclas pasan por el servidor del juego.",
   "Get back on defence": "Vuelve a defender",
   "Three seconds": "Tres segundos",
-  "Always open": "Siempre abierto"
+  "Always open": "Siempre abierto",
+  "Your player": "Tu jugador",
+  "The fourth quarter as your own player, with his own ratings. About four minutes.": "El último cuarto con tu propio jugador y sus valoraciones. Unos cuatro minutos.",
+  "{n} overall": "{n} de media",
+  "Your team, with its real roster": "Tu equipo, con su plantilla real",
+  "Teammates at your level": "Compañeros de tu nivel",
+  "Their real roster": "Su plantilla real",
+  "A team at your level": "Un equipo de tu nivel"
  },
  "story": {
   "f-driveway.title": "La entrada de casa",

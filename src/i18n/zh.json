@@ -4206,7 +4206,14 @@
   "Your keys go through the game's server.": "你的按键通过游戏服务器传送。",
   "Get back on defence": "回防",
   "Three seconds": "三秒违例",
-  "Always open": "始终开放"
+  "Always open": "始终开放",
+  "Your player": "你的球员",
+  "The fourth quarter as your own player, with his own ratings. About four minutes.": "用你自己的球员和他的能力值打第四节。约四分钟。",
+  "{n} overall": "总评 {n}",
+  "Your team, with its real roster": "你的球队，真实阵容",
+  "Teammates at your level": "与你水平相当的队友",
+  "Their real roster": "对手的真实阵容",
+  "A team at your level": "与你水平相当的球队"
  },
  "story": {
   "f-driveway.title": "车道",
