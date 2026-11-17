@@ -8,7 +8,7 @@ import { ovrOf } from '../src/engine/player/ovr';
 import { ALL_LEGENDS, fiveOvr, floorLevel, legendFive, legendRatings, legendStyle, legendTeam } from '../src/engine/floor/legends';
 import { BRACKET_ROUNDS, finishBracket, franchise, legendSetup, myGame, newBracket, playRound, winnerOf } from '../src/engine/floor/game';
 import { floorResult, freshEvents, gameScore, meterLoad, releaseQuality, startFloor, stepFloor, type FloorInput, type FloorState } from '../src/engine/floor/sim';
-import { LEGEND_TRAITS } from '../src/content/legendTraits';
+import { LEGEND_TRAITS, SIGNATURES_ON } from '../src/content/legendTraits';
 import { toRim } from '../src/engine/floor/court';
 import { NBA_TEAMS } from '../src/content/teams';
 import { LEGEND_STATS } from '../src/content/legendStats';
@@ -316,10 +316,10 @@ describe('after round 42: the legends\' signatures, the quicker meter and the ho
     expect(new Set(Object.values(LEGEND_TRAITS).map((x) => x.name)).size).toBe(high.length);
     expect(LEGEND_TRAITS['Damian Lillard'].kind).toBe('deep');
     expect(LEGEND_TRAITS['Stephen Curry'].kind).toBe('quick');
-    // it rides onto the court with him, and not with his bench
+    // it rides onto the court with him, and not with his bench (only once the owner has passed the list)
     const set = legendSetup({ seed: 5, us: franchise('GSW', 90), them: franchise('POR', 90), user: 0, length: 'fourth' });
-    expect(set.us.players.find((p) => p.name === 'Stephen Curry')!.trait).toBe('quick');
-    expect(set.them.players.find((p) => p.name === 'Damian Lillard')!.trait).toBe('deep');
+    expect(set.us.players.find((p) => p.name === 'Stephen Curry')!.trait).toBe(SIGNATURES_ON ? 'quick' : undefined);
+    expect(set.them.players.find((p) => p.name === 'Damian Lillard')!.trait).toBe(SIGNATURES_ON ? 'deep' : undefined);
     expect(set.us.players.slice(5).every((p) => !p.trait)).toBe(true);
   });
 
@@ -328,7 +328,9 @@ describe('after round 42: the legends\' signatures, the quicker meter and the ho
     expect(FLOOR.meter.load / (FLOOR.tick * FLOOR.ticksPerSec)).toBeCloseTo(0.6, 9);
     const s = startFloor(legendSetup({ seed: 5, us: franchise('GSW', 90), them: franchise('POR', 90), user: 0, length: 'fourth' }));
     const curry = s.players.find((p) => p.name === 'Stephen Curry')!;
+    curry.trait = LEGEND_TRAITS['Stephen Curry'].kind;
     const other = s.players.find((p) => p.team === 0 && p !== curry && p.on)!;
+    delete other.trait;
     expect(meterLoad(curry)).toBeCloseTo(FLOOR.meter.load * FLOOR.trait.quick, 9);
     expect(meterLoad(other)).toBe(FLOOR.meter.load);
     // a release that is perfect for him is far too early for anyone else
@@ -370,7 +372,10 @@ describe('after round 42: the legends\' signatures, the quicker meter and the ho
       let tried = 0;
       for (let g = 0; g < 14; g++) {
         const set = legendSetup({ seed: 300 + g * 17, us: franchise('POR', 90), them: franchise('SAC', 90), length: 'full' });
-        if (!traits) for (const p of [...set.us.players, ...set.them.players]) delete p.trait;
+        for (const p of [...set.us.players, ...set.them.players]) {
+          if (traits && LEGEND_TRAITS[p.name]) p.trait = LEGEND_TRAITS[p.name].kind;
+          else delete p.trait;
+        }
         const s = startFloor(set);
         s.auto = true;
         play(s);

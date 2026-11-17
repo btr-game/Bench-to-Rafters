@@ -3875,3 +3875,8 @@ maintain filled bar for more than 3 seconds".
 - **No holding a full meter** (`FLOOR.meter.hold`, 4.5 game seconds): three real seconds past full,
   the shot leaves his hands by itself at whatever the meter then says, which is a miss in all but
   name. The same at the free-throw line.
+
+Then the owner: "confirm the signature moves before getting them through". They had gone out with the
+meter (website and the claude.ai page) an hour before; they are switched off again (`SIGNATURES_ON` in
+`content/legendTraits.ts`: nobody carries one, none is shown, the What's new line is gone) until the
+owner has gone through the list. The meter's 0.6 seconds and the hold limit stay.
