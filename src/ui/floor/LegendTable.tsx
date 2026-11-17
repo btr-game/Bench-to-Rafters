@@ -2,6 +2,7 @@
 // owner: "can i look at each legend's stats?"): on the Floor's page for the five picked, and in
 // the dev deck for all 150.
 
+import { SIGNATURES_ON } from '../../content/legendTraits';
 import { signatureOf } from './traits';
 import type { LegendSpot } from '../../content/franchiseFives';
 import { legendLine, legendRatings, legendStyle } from '../../engine/floor/legends';
@@ -24,7 +25,7 @@ export function LegendTable({ rows, wide = false }: { rows: { team: string; spot
               <th key={i}>{h}</th>
             ))}
             {wide && ['Shots', 'Threes', 'Drive', 'Post', 'Pass'].map((h) => <th key={h}>{h}</th>)}
-            <th className="lg-gap lg-sig">{t('Signature')}</th>
+            {SIGNATURES_ON && <th className="lg-gap lg-sig">{t('Signature')}</th>}
           </tr>
         </thead>
         <tbody>
@@ -45,9 +46,11 @@ export function LegendTable({ rows, wide = false }: { rows: { team: string; spot
                   <td key={i}>{Math.round(v)}</td>
                 ))}
                 {wide && [st.use, st.three, st.drive, st.post, st.pass].map((v, i) => <td key={i}>x{v.toFixed(2)}</td>)}
-                <td className="lg-gap lg-sig" title={signatureOf(spot.name)?.text}>
-                  {signatureOf(spot.name)?.name ?? '–'}
-                </td>
+                {SIGNATURES_ON && (
+                  <td className="lg-gap lg-sig" title={signatureOf(spot.name)?.text}>
+                    {signatureOf(spot.name)?.name ?? '–'}
+                  </td>
+                )}
               </tr>
             );
           })}

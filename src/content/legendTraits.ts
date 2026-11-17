@@ -6,6 +6,11 @@
 
 import type { FloorTrait } from '../engine/floor/sim';
 
+/** Whether the signatures are in the game. Off until the owner has gone through the list ("confirm
+ * the signature moves before getting them through"): nobody carries one onto the court and none is
+ * shown; the list below is the proposal. */
+export const SIGNATURES_ON: boolean = false;
+
 export const LEGEND_TRAITS: Record<string, { kind: FloorTrait; name: string }> = {
   'Michael Jordan': { kind: 'fade', name: 'The fadeaway' },
   'LeBron James': { kind: 'power', name: 'Freight train' },
