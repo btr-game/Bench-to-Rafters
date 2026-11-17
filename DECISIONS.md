@@ -3880,3 +3880,23 @@ Then the owner: "confirm the signature moves before getting them through". They 
 meter (website and the claude.ai page) an hour before; they are switched off again (`SIGNATURES_ON` in
 `content/legendTraits.ts`: nobody carries one, none is shown, the What's new line is gone) until the
 owner has gone through the list. The meter's 0.6 seconds and the hold limit stay.
+
+Then (owner: "i want each legend to have it even more unique", then "for player up to ovr 94, they just
+fall in the general initial categories, but from 95, they actually get their own move"): the 46 legends
+rated 90 to 94 keep the shared kinds; the 28 rated 95 or more each get a kind nobody else has
+(`FloorOwnTrait`, numbers in `FLOOR.sig`), from the list the owner saw: Jordan's mid-range barely
+contested, LeBron unblockable and fouled more at the rim on the break, Kareem's skyhook never blocked
+and 12 points better, a shot set up by Jokic 6 better, Wilt 1.6 times on the boards, Shaq backing down
+1.8 times as fast with a far surer drop step, Bird's last two minutes (5 points and a 1.4 times wider
+green), Giannis faster with the ball, Curry's meter in half the time, Magic's passes on the break never
+picked off and setting up 7 points, Hakeem's Dream Shake, Duncan off the glass from the wings, Russell's
+blocks staying with his team, SGA drawing 1.8 times the fouls, Durant's every jumper half contested,
+Kobe 2.5 points better for each make in a row up to three, the Big O rebounding like a forward with
+safer passes, Luka's three nearly uncontested right after his move beats his man, Dr. J finishing at the
+rim from 7 feet, Embiid's jumper drawing 3 times the fouls, Kawhi's 1.8 times the steals, Wade
+blocking (twice as often against a break), Garnett's defensive boards and harder contests, Malone 7
+points better inside off a pass, West 9 points better in the final minute, Dirk's jumper never blocked,
+Harden's step-back and fouls on threes, Robinson's blocks and speed. Over 90 full AI games, without and
+with the signatures: points a team 24.7056 to 25.1722, field goals 52.374% to 54.394%, threes
+39.250% to 43.849% (7.7 tried a game), free throws tried 11.57 to 11.86, blocks 1.589 to 1.378, steals
+2.289 to 2.356; the 95s score 6.899 to 7.702 a game, the 90s to 94s 5.909 to 5.931.

@@ -315,15 +315,26 @@ describe('after round 42: the legends\' signatures, the quicker meter and the ho
     expect(Object.keys(LEGEND_TRAITS).sort()).toEqual([...high].sort());
     expect(new Set(Object.values(LEGEND_TRAITS).map((x) => x.name)).size).toBe(high.length);
     expect(LEGEND_TRAITS['Damian Lillard'].kind).toBe('deep');
-    expect(LEGEND_TRAITS['Stephen Curry'].kind).toBe('quick');
+    expect(LEGEND_TRAITS['Stephen Curry'].kind).toBe('curry');
+    // (owner: "for player up to ovr 94, they just fall in the general initial categories, but from 95,
+    // they actually get their own move"): a kind nobody else has from 95, a shared one below
+    const SHARED = ['quick', 'deep', 'fade', 'hook', 'power', 'block', 'steal', 'handle', 'stepback', 'pass', 'glass', 'clutch', 'motor'];
+    const kinds = ALL_LEGENDS.filter((x) => x.spot.ovr >= 90).map((x) => ({ ovr: x.spot.ovr, kind: LEGEND_TRAITS[x.spot.name].kind }));
+    for (const k of kinds) {
+      if (k.ovr >= 95) {
+        expect(SHARED).not.toContain(k.kind);
+        expect(kinds.filter((x) => x.kind === k.kind)).toHaveLength(1);
+      } else expect(SHARED).toContain(k.kind);
+    }
+    expect(kinds.filter((k) => k.ovr >= 95)).toHaveLength(28);
     // it rides onto the court with him, and not with his bench (only once the owner has passed the list)
     const set = legendSetup({ seed: 5, us: franchise('GSW', 90), them: franchise('POR', 90), user: 0, length: 'fourth' });
-    expect(set.us.players.find((p) => p.name === 'Stephen Curry')!.trait).toBe(SIGNATURES_ON ? 'quick' : undefined);
+    expect(set.us.players.find((p) => p.name === 'Stephen Curry')!.trait).toBe(SIGNATURES_ON ? 'curry' : undefined);
     expect(set.them.players.find((p) => p.name === 'Damian Lillard')!.trait).toBe(SIGNATURES_ON ? 'deep' : undefined);
     expect(set.us.players.slice(5).every((p) => !p.trait)).toBe(true);
   });
 
-  it('the meter fills in 0.6 real seconds; Curry\'s in far less', () => {
+  it('the meter fills in 0.6 real seconds; Curry\'s in half that', () => {
     // (owner: "lets make the shooting bar fill in 0.6 seconds"): game seconds over the clock's 1.5x
     expect(FLOOR.meter.load / (FLOOR.tick * FLOOR.ticksPerSec)).toBeCloseTo(0.6, 9);
     const s = startFloor(legendSetup({ seed: 5, us: franchise('GSW', 90), them: franchise('POR', 90), user: 0, length: 'fourth' }));
@@ -331,7 +342,7 @@ describe('after round 42: the legends\' signatures, the quicker meter and the ho
     curry.trait = LEGEND_TRAITS['Stephen Curry'].kind;
     const other = s.players.find((p) => p.team === 0 && p !== curry && p.on)!;
     delete other.trait;
-    expect(meterLoad(curry)).toBeCloseTo(FLOOR.meter.load * FLOOR.trait.quick, 9);
+    expect(meterLoad(curry)).toBeCloseTo(FLOOR.meter.load * FLOOR.sig.curry, 9);
     expect(meterLoad(other)).toBe(FLOOR.meter.load);
     // a release that is perfect for him is far too early for anyone else
     expect(releaseQuality(s, curry, meterLoad(curry))).toBeCloseTo(1, 6);
@@ -365,7 +376,7 @@ describe('after round 42: the legends\' signatures, the quicker meter and the ho
     expect(shot).toBeLessThan(limit + 3);
   });
 
-  it('a signature is worth something on the court: Lillard from deep, a rim protector at the rim', () => {
+  it('a signature is worth something on the court: Lillard from deep', () => {
     // the same game with and without the signatures, the AI playing both sides: more threes fall for Portland's guard
     const run = (traits: boolean) => {
       let made = 0;
@@ -386,5 +397,65 @@ describe('after round 42: the legends\' signatures, the quicker meter and the ho
       return made / Math.max(1, tried);
     };
     expect(run(true)).toBeGreaterThan(run(false));
+  });
+});
+
+describe('after round 42: the own signatures of the legends rated 95 or more', () => {
+  const games = (team: string, opp: string, n: number, traits: boolean, look: (s: FloorState) => void) => {
+    for (let g = 0; g < n; g++) {
+      const set = legendSetup({ seed: 700 + g * 13, us: franchise(team, 90), them: franchise(opp, 90), length: 'full' });
+      for (const p of [...set.us.players, ...set.them.players]) {
+        if (traits && LEGEND_TRAITS[p.name]) p.trait = LEGEND_TRAITS[p.name].kind;
+        else delete p.trait;
+      }
+      const s = startFloor(set);
+      s.auto = true;
+      play(s);
+      look(s);
+    }
+  };
+
+  it('Dirk\'s jumper is never blocked; Russell\'s blocks stay with Boston', () => {
+    let blockedDirk = 0;
+    let russellBlocks = 0;
+    let russellKept = 0;
+    games('DAL', 'MIL', 10, true, (s) => {
+      for (const e of s.feed) {
+        if (e.kind !== 'block') continue;
+        const on = s.players[e.on!];
+        if (on.name === 'Dirk Nowitzki' && e.zone !== 'rim') blockedDirk++;
+      }
+    });
+    games('MIL', 'BOS', 10, true, (s) => {
+      const feed = s.feed;
+      feed.forEach((e, k) => {
+        if (e.kind !== 'block') return;
+        const by = s.players[e.by!];
+        if (by.name === 'Bill Russell') {
+          russellBlocks++;
+          // the next thing that happens is not a rebound fight: his team has the ball at once
+          if (!feed.slice(k + 1, k + 3).some((x) => x.kind === 'rebound')) russellKept++;
+        }
+      });
+    });
+    expect(blockedDirk).toBe(0);
+    expect(russellBlocks).toBeGreaterThan(0);
+    expect(russellKept).toBe(russellBlocks);
+  });
+
+  it('together they lift a team a little, not a lot', () => {
+    const run = (traits: boolean) => {
+      let pts = 0;
+      let n = 0;
+      games('LAL', 'BOS', 12, traits, (s) => {
+        pts += s.score[0] + s.score[1];
+        n += 2;
+      });
+      return pts / n;
+    };
+    const off = run(false);
+    const on = run(true);
+    expect(on).toBeGreaterThan(off * 0.95);
+    expect(on).toBeLessThan(off * 1.12);
   });
 });
