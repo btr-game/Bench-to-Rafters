@@ -1280,6 +1280,23 @@ export const FLOOR = {
    * man. passSpeed, passPick: his passes' speed, and how often they are picked off (never thrown
    * away). clutch: added to every shot in the game's last `clutchSecs` seconds. motor: the share of
    * the legs he loses. */
+  /** The signatures of the legends rated 95 or more, one of his own each (content/legendTraits.ts;
+   * owner: "for player up to ovr 94, they just fall in the general initial categories, but from 95,
+   * they actually get their own move"). mjContest, kdContest, lukaContest: the share of a contest that
+   * still counts (Jordan's mid-range, Durant's every jumper, Luka's three within `lukaSecs` of a move
+   * that beat his man). kgContest: what a contest by Garnett is multiplied by. birdShot/birdWindow in
+   * the last `birdSecs`, westShot in the last `westSecs` (game seconds of the last period). duncanShot:
+   * mid-range more than `duncanWing` feet off the middle. kobeStep: per make in a row, up to kobeMax.
+   * feedSecs: how soon after a pass a shot counts as set up by it; jokicPass, magicPass (on the break),
+   * maloneShot (his own, inside). kareemHook: on the hook, which cannot be blocked (nor Dirk's jumper,
+   * nor LeBron at the rim on the break). Blocks: russellBlock (and his blocks stay with his team),
+   * robinsonBlock, wadeBlock (times wadeBreak against a break). Fouls drawn: sgaFoul, embiidFoul (his
+   * jumper), hardenFoul (a three), lebronFoul (at the rim on the break). Boards: wiltGlass, oscarGlass,
+   * kgGlass (defensive). Moves: hardenMove, shaqDrop, hakeemMove (and his man slowed hakeemSlow as
+   * long); shaqPace: his back-down. giannisSpeed (with the ball), robinsonSpeed. curry: his meter's
+   * share of the time. kawhiSteal. oscarPick: how often his passes are picked off. drjRange: the feet
+   * from the rim his shot still counts as one at the rim. */
+  sig: { mjContest: 0.25, kdContest: 0.5, lukaContest: 0.2, lukaSecs: 1.5, kgContest: 1.3, birdShot: 0.05, birdWindow: 1.4, birdSecs: 120, westShot: 0.09, westSecs: 60, duncanShot: 0.06, duncanWing: 8, kobeStep: 0.025, kobeMax: 3, feedSecs: 2, jokicPass: 0.06, magicPass: 0.07, maloneShot: 0.07, kareemHook: 0.12, russellBlock: 1.5, robinsonBlock: 1.4, wadeBlock: 1.4, wadeBreak: 2, sgaFoul: 1.8, embiidFoul: 3, hardenFoul: 2.5, lebronFoul: 1.6, wiltGlass: 1.6, oscarGlass: 1.4, kgGlass: 1.4, hardenMove: 0.18, shaqDrop: 0.3, hakeemMove: 0.2, hakeemSlow: 1.6, shaqPace: 1.8, giannisSpeed: 1.15, robinsonSpeed: 1.1, curry: 0.5, kawhiSteal: 1.8, oscarPick: 0.6, drjRange: 7 },
   trait: { quick: 0.6, deepFt: 5, deep: 0.03, fade: 0.5, stepThree: 0.6, power: 0.5, powerBlock: 0.5, hook: 0.08, hookBlock: 0.4, block: 1.6, steal: 1.5, glass: 1.35, handle: 0.12, stepMove: 0.06, passSpeed: 1.25, passPick: 0.35, clutch: 0.06, clutchSecs: 120, motor: 0.55 },
   /** Free throws: the chance from free-throw touch 0 to 100. */
   ft: [0.5, 0.95],

@@ -19,6 +19,7 @@ export const NEWS: News[] = [
     id: '2026-11-17-meter',
     date: '17 November 2026',
     items: [
+      { icon: 'spotlight', text: 'Signatures on the Floor: every legend rated 90 or more has one, named on his card and beside his name on the court. From 95 each has a move of his own: Kareem’s skyhook cannot be blocked, Russell’s blocks stay with Boston, Kobe heats up, Curry’s meter fills twice as fast, West takes over the last minute.' },
       { icon: 'shoot', text: 'The shot meter fills in 0.6 seconds now, and a full meter cannot be held: after three seconds the shot goes up by itself.' },
     ],
   },

@@ -1,4 +1,5 @@
-// A signature for each of the Floor's best legends (after round 42, owner: "can we give each legend
+// A signature for each of the Floor's best legends (a shared kind for those rated 90 to 94, one of his
+// own for those rated 95 or more, owner: "from 95, they actually get their own move") (after round 42, owner: "can we give each legend
 // in the floor (not all of them, maybe more than 90 ovr) a signature move or unique trait? ex: dame
 // shoots better from deep, curry's fast release(greenbar fills much faster), so on"). Every legend
 // rated 90 or more has one: a name of his own (it stays English, as names do) and one of a dozen
@@ -6,40 +7,40 @@
 
 import type { FloorTrait } from '../engine/floor/sim';
 
-/** Whether the signatures are in the game. Off until the owner has gone through the list ("confirm
- * the signature moves before getting them through"): nobody carries one onto the court and none is
- * shown; the list below is the proposal. */
-export const SIGNATURES_ON: boolean = false;
+/** Whether the signatures are in the game (off, nobody carries one and none is shown). Held back until
+ * the owner had gone through the list ("confirm the signature moves before getting them through");
+ * on once he had: shared kinds to 94, one of his own from 95. */
+export const SIGNATURES_ON: boolean = true;
 
 export const LEGEND_TRAITS: Record<string, { kind: FloorTrait; name: string }> = {
-  'Michael Jordan': { kind: 'fade', name: 'The fadeaway' },
-  'LeBron James': { kind: 'power', name: 'Freight train' },
-  'Kareem Abdul-Jabbar': { kind: 'hook', name: 'The skyhook' },
-  'Nikola Jokic': { kind: 'pass', name: 'Point centre' },
-  'Wilt Chamberlain': { kind: 'glass', name: 'Fifty-five boards' },
-  "Shaquille O'Neal": { kind: 'power', name: 'Diesel drop step' },
-  'Larry Bird': { kind: 'clutch', name: 'Larry Legend' },
-  'Giannis Antetokounmpo': { kind: 'power', name: 'Greek Freak strides' },
-  'Stephen Curry': { kind: 'quick', name: 'Chef Curry' },
-  'Magic Johnson': { kind: 'pass', name: 'Showtime no-look' },
-  'Hakeem Olajuwon': { kind: 'handle', name: 'Dream Shake' },
-  'Tim Duncan': { kind: 'fade', name: 'The bank shot' },
-  'Bill Russell': { kind: 'block', name: 'Rim protector' },
-  'Shai Gilgeous-Alexander': { kind: 'fade', name: 'Mid-range maestro' },
-  'Kevin Durant': { kind: 'fade', name: 'Unguardable jumper' },
-  'Kobe Bryant': { kind: 'clutch', name: 'Mamba mentality' },
-  'Oscar Robertson': { kind: 'pass', name: 'The Big O' },
-  'Luka Doncic': { kind: 'stepback', name: 'Step-back three' },
-  'Julius Erving': { kind: 'power', name: 'Rock the baby' },
-  'Joel Embiid': { kind: 'fade', name: 'The shimmy' },
-  'Kawhi Leonard': { kind: 'steal', name: 'The Klaw' },
-  'Dwyane Wade': { kind: 'block', name: 'Flash chase-down' },
-  'Kevin Garnett': { kind: 'glass', name: 'The Big Ticket' },
-  'Karl Malone': { kind: 'power', name: 'The Mailman delivers' },
-  'Jerry West': { kind: 'clutch', name: 'Mr. Clutch' },
-  'Dirk Nowitzki': { kind: 'fade', name: 'One-legged fade' },
-  'James Harden': { kind: 'stepback', name: 'The step-back' },
-  'David Robinson': { kind: 'block', name: 'The Admiral' },
+  'Michael Jordan': { kind: 'mj', name: 'The fadeaway' },
+  'LeBron James': { kind: 'lebron', name: 'Freight train' },
+  'Kareem Abdul-Jabbar': { kind: 'kareem', name: 'The skyhook' },
+  'Nikola Jokic': { kind: 'jokic', name: 'Point centre' },
+  'Wilt Chamberlain': { kind: 'wilt', name: 'Fifty-five boards' },
+  "Shaquille O'Neal": { kind: 'shaq', name: 'Diesel drop step' },
+  'Larry Bird': { kind: 'bird', name: 'Larry Legend' },
+  'Giannis Antetokounmpo': { kind: 'giannis', name: 'Greek Freak strides' },
+  'Stephen Curry': { kind: 'curry', name: 'Chef Curry' },
+  'Magic Johnson': { kind: 'magic', name: 'Showtime no-look' },
+  'Hakeem Olajuwon': { kind: 'hakeem', name: 'Dream Shake' },
+  'Tim Duncan': { kind: 'duncan', name: 'The bank shot' },
+  'Bill Russell': { kind: 'russell', name: 'Rim protector' },
+  'Shai Gilgeous-Alexander': { kind: 'sga', name: 'Mid-range maestro' },
+  'Kevin Durant': { kind: 'kd', name: 'Unguardable jumper' },
+  'Kobe Bryant': { kind: 'kobe', name: 'Mamba mentality' },
+  'Oscar Robertson': { kind: 'oscar', name: 'The Big O' },
+  'Luka Doncic': { kind: 'luka', name: 'Step-back three' },
+  'Julius Erving': { kind: 'drj', name: 'Rock the baby' },
+  'Joel Embiid': { kind: 'embiid', name: 'The shimmy' },
+  'Kawhi Leonard': { kind: 'kawhi', name: 'The Klaw' },
+  'Dwyane Wade': { kind: 'wade', name: 'Flash chase-down' },
+  'Kevin Garnett': { kind: 'kg', name: 'The Big Ticket' },
+  'Karl Malone': { kind: 'malone', name: 'The Mailman delivers' },
+  'Jerry West': { kind: 'west', name: 'Mr. Clutch' },
+  'Dirk Nowitzki': { kind: 'dirk', name: 'One-legged fade' },
+  'James Harden': { kind: 'harden', name: 'The step-back' },
+  'David Robinson': { kind: 'robinson', name: 'The Admiral' },
   'Bob Pettit': { kind: 'glass', name: 'Second chances' },
   'Tracy McGrady': { kind: 'clutch', name: 'Thirteen in thirty-three' },
   'Elgin Baylor': { kind: 'power', name: 'Hang time' },

@@ -50,8 +50,12 @@ export interface FloorStyle {
 /** A call (round 42): one key each, nothing to choose. */
 export type FloorCall = 'iso' | 'give' | 'double';
 
-/** The kinds of signature a legend can have (FLOOR.trait has what each is worth). */
-export type FloorTrait = 'quick' | 'deep' | 'fade' | 'hook' | 'power' | 'block' | 'steal' | 'handle' | 'stepback' | 'pass' | 'glass' | 'clutch' | 'motor';
+/** The kinds of signature a legend can have (FLOOR.trait has what each is worth): a shared kind for
+ * a legend rated 90 to 94, and one of his own for a legend rated 95 or more (FLOOR.sig). */
+export type FloorTrait = 'quick' | 'deep' | 'fade' | 'hook' | 'power' | 'block' | 'steal' | 'handle' | 'stepback' | 'pass' | 'glass' | 'clutch' | 'motor' | FloorOwnTrait;
+export type FloorOwnTrait =
+  | 'mj' | 'lebron' | 'kareem' | 'jokic' | 'wilt' | 'shaq' | 'bird' | 'giannis' | 'curry' | 'magic' | 'hakeem' | 'duncan' | 'russell' | 'sga'
+  | 'kd' | 'kobe' | 'oscar' | 'luka' | 'drj' | 'embiid' | 'kawhi' | 'wade' | 'kg' | 'malone' | 'west' | 'dirk' | 'harden' | 'robinson';
 
 export interface FloorPlayerIn {
   id: string;
@@ -133,6 +137,9 @@ interface FloorPlayer extends FloorPlayerIn {
   leak: number;
   /** Ticks he has stood in the lane with his team on offence (three seconds). */
   lane: number;
+  /** (signatures) his makes in a row (Kobe), and the tick his last move beat his man (Luka). */
+  hot?: number;
+  shook?: number;
   sat?: number;
   /** A quick slide he is in the middle of (the step-back), instead of a jump to the spot. */
   dash?: { to: Spot; t: number } | null;
@@ -492,9 +499,16 @@ const leaking = (p: FloorPlayer): boolean => p.leak >= secs(FLOOR.leak.secs);
 const shortHanded = (s: FloorState, team: 0 | 1): boolean => s.players.some((p) => p.on && p.team === team && leaking(p));
 
 /** (signatures) quick hands: what his steals, strips and picked-off passes are multiplied by. */
-const hands = (p: FloorPlayer): number => (p.trait === 'steal' ? FLOOR.trait.steal : 1);
+const hands = (p: FloorPlayer): number => (p.trait === 'steal' ? FLOOR.trait.steal : p.trait === 'kawhi' ? FLOOR.sig.kawhiSteal : 1);
 /** (signatures) what a handle or a step-back adds to the chance his move beats his man. */
-const shake = (p: FloorPlayer): number => (p.trait === 'handle' ? FLOOR.trait.handle : p.trait === 'stepback' ? FLOOR.trait.stepMove : 0);
+const shake = (p: FloorPlayer): number => (p.trait === 'handle' ? FLOOR.trait.handle : p.trait === 'stepback' || p.trait === 'luka' ? FLOOR.trait.stepMove : p.trait === 'harden' ? FLOOR.sig.hardenMove : 0);
+/** (signatures) the teammate who passed it to him, if the pass came within `within` game seconds. */
+function fedBy(s: FloorState, p: FloorPlayer, within: number): FloorPlayer | null {
+  const lp = s.lastPass;
+  if (!lp || s.tick - lp.tick > secs(within)) return null;
+  const q = s.players[lp.by];
+  return q.team === p.team && q !== p ? q : null;
+}
 /** (signatures) a motor: what his legs lose is multiplied by this. */
 const legs = (p: FloorPlayer, d: number): number => (d < 0 && p.trait === 'motor' ? d * FLOOR.trait.motor : d);
 
@@ -504,8 +518,11 @@ const ratingFor = (p: FloorPlayer, zone: Zone) => (zone === 'rim' ? p.r.FIN * 0.
 function shotChance(s: FloorState, p: FloorPlayer, at: Spot): number {
   const zone = zoneOf(p.team, at);
   const S = FLOOR.shot;
-  let c = S[zone] + S.perPoint[zone] * (ratingFor(p, zone) - 70);
+  const G = FLOOR.sig;
   const d = toRim(p.team, at);
+  // (Dr. J) he finishes from further out: a shot in the paint near enough counts as one at the rim
+  const base = p.trait === 'drj' && zone === 'paint' && d < G.drjRange ? 'rim' : zone;
+  let c = S[base] + S.perPoint[base] * (ratingFor(p, base) - 70);
   // (signatures) deep range: the long ones cost nothing until further out, and every three a little more
   const X = FLOOR.trait;
   const deep = S.deep + (p.trait === 'deep' ? X.deepFt : 0);
@@ -513,11 +530,28 @@ function shotChance(s: FloorState, p: FloorPlayer, at: Spot): number {
   if (zone === 'three' && p.trait === 'deep') c += X.deep;
   // clutch: the last two minutes of the game
   if (p.trait === 'clutch' && lastPeriod(s) && s.clock <= X.clutchSecs * s.rate) c += X.clutch;
+  // (the 95s, each his own) Bird's last two minutes, West's last one, Duncan off the glass from the
+  // wings, Kobe heating up, and a shot set up by Jokic, by Magic on the break, or caught inside by Malone
+  if (p.trait === 'bird' && lastPeriod(s) && s.clock <= G.birdSecs * s.rate) c += G.birdShot;
+  if (p.trait === 'west' && lastPeriod(s) && s.clock <= G.westSecs * s.rate) c += G.westShot;
+  if (p.trait === 'duncan' && zone === 'mid' && Math.abs(at.y - RIM_Y) > G.duncanWing) c += G.duncanShot;
+  if (p.trait === 'kobe') c += G.kobeStep * Math.min(p.hot ?? 0, G.kobeMax);
+  const fed = fedBy(s, p, G.feedSecs);
+  if (fed?.trait === 'jokic') c += G.jokicPass;
+  if (fed?.trait === 'magic' && s.brk?.team === p.team) c += G.magicPass;
+  if (p.trait === 'malone' && fed && (zone === 'rim' || zone === 'paint')) c += G.maloneShot;
   const foe = nearestFoe(s, p.team, at);
   // (inside, a big man is bothered less by a hand in his face)
   const inside = zone === 'rim' || zone === 'paint' ? 1 - S.strong * clamp(((p.r.REB + p.r.INT) / 2 - 70) / 25, 0, 1) : 1;
   // a tough shot maker's jumper, a step-back three, power at the rim: the contest costs less
-  const tough = (p.trait === 'fade' && zone !== 'rim' ? X.fade : 1) * (p.trait === 'stepback' && zone === 'three' ? X.stepThree : 1) * (p.trait === 'power' && zone === 'rim' ? X.power : 1);
+  const tough =
+    (p.trait === 'fade' && zone !== 'rim' ? X.fade : 1) *
+    (p.trait === 'stepback' && zone === 'three' ? X.stepThree : 1) *
+    (p.trait === 'power' && zone === 'rim' ? X.power : 1) *
+    (p.trait === 'mj' && zone === 'mid' ? G.mjContest : 1) *
+    (p.trait === 'kd' && zone !== 'rim' ? G.kdContest : 1) *
+    (p.trait === 'luka' && zone === 'three' && p.shook !== undefined && s.tick - p.shook <= secs(G.lukaSecs) ? G.lukaContest : 1) *
+    (foe.p?.trait === 'kg' ? G.kgContest : 1);
   c -= Math.max(0, (FLOOR.contest.within - foe.d) / FLOOR.contest.within) * FLOOR.contest.max * inside * tough;
   c -= (1 - p.stamina) * FLOOR.contest.tired;
   // inside, a bigger man shoots over a smaller one (rebounding and interior defence stand for size)
@@ -538,11 +572,12 @@ export function meterWindow(s: FloorState, p: FloorPlayer): number {
   const line = s.phase === 'ft';
   const foe = nearestFoe(s, p.team, p);
   const contested = line ? 0 : Math.max(0, (FLOOR.contest.within - foe.d) / FLOOR.contest.within);
-  return lerp(M.window[0], M.window[1], ratingK(line ? p.r.FT : p.r.SHT)) * (1 - contested * M.contested) * (1 - (1 - p.stamina) * M.tired);
+  const bird = p.trait === 'bird' && lastPeriod(s) && s.clock <= FLOOR.sig.birdSecs * s.rate ? FLOOR.sig.birdWindow : 1;
+  return lerp(M.window[0], M.window[1], ratingK(line ? p.r.FT : p.r.SHT)) * (1 - contested * M.contested) * (1 - (1 - p.stamina) * M.tired) * bird;
 }
 
 /** How long his meter takes to fill (game seconds): a quick release takes far less. */
-export const meterLoad = (p: { trait?: FloorTrait }): number => FLOOR.meter.load * (p.trait === 'quick' ? FLOOR.trait.quick : 1);
+export const meterLoad = (p: { trait?: FloorTrait }): number => FLOOR.meter.load * (p.trait === 'quick' ? FLOOR.trait.quick : p.trait === 'curry' ? FLOOR.sig.curry : 1);
 
 /** How a release lands on the meter: 1 dead centre, 0 outside the window. */
 export function releaseQuality(s: FloorState, p: FloorPlayer, load: number): number {
@@ -561,7 +596,7 @@ function release(s: FloorState, i: number, q: number | null, dodge = 1, hook = f
   const foe = nearestFoe(s, p.team, at);
   // the hook (round 42): his finishing alone, against the interior defence of the man on him
   if (hook && p.trait === 'hook') dodge *= FLOOR.trait.hookBlock;
-  if (hook) chance = clamp(chance + (p.trait === 'hook' ? FLOOR.trait.hook : 0) + FLOOR.shot.perPoint.paint * (p.r.FIN - ratingFor(p, zone)) + FLOOR.post.hook + FLOOR.post.perPoint * (p.r.FIN - (foe.p?.r.INT ?? 60)), FLOOR.shot.min, FLOOR.shot.max);
+  if (hook) chance = clamp(chance + (p.trait === 'hook' ? FLOOR.trait.hook : 0) + (p.trait === 'kareem' ? FLOOR.sig.kareemHook : 0) + FLOOR.shot.perPoint.paint * (p.r.FIN - ratingFor(p, zone)) + FLOOR.post.hook + FLOOR.post.perPoint * (p.r.FIN - (foe.p?.r.INT ?? 60)), FLOOR.shot.min, FLOOR.shot.max);
   // a charge (round 42): on the move into a defender who had set himself between him and the rim
   const C = FLOOR.charge;
   const moving = driven(s, i) ? p.vel > 5 : s.drive;
@@ -571,10 +606,14 @@ function release(s: FloorState, i: number, q: number | null, dodge = 1, hook = f
   const hum = hi >= 0 ? s.players[hi] : null;
   const jumper = foe.p && foe.d <= FLOOR.block.reach && (zone === 'rim' || zone === 'paint') && (foe.p !== hum || hum.air > 0) ? foe.p : null;
   const userJump = hum && hum.air > 0 && dist(hum, at) <= FLOOR.block.reach + 1.5 ? hum : null;
-  const blocker = userJump ?? jumper;
+  // some shots cannot be blocked: Kareem's skyhook, Dirk's jumper, LeBron at the rim on the break
+  const G = FLOOR.sig;
+  const sure = (hook && p.trait === 'kareem') || (p.trait === 'dirk' && zone !== 'rim') || (p.trait === 'lebron' && zone === 'rim' && s.brk?.team === p.team);
+  const blocker = sure ? null : (userJump ?? jumper);
   if (blocker) {
     const b = FLOOR.block.base + FLOOR.block.perPoint * ((blocker.r.INT + blocker.r.ATH) / 2 - p.r.FIN / 2 - 25);
-    const sig = (blocker.trait === 'block' ? FLOOR.trait.block : 1) * (p.trait === 'power' && zone === 'rim' ? FLOOR.trait.powerBlock : 1);
+    const own = blocker.trait === 'russell' ? G.russellBlock : blocker.trait === 'robinson' ? G.robinsonBlock : blocker.trait === 'wade' ? G.wadeBlock * (s.brk?.team === p.team ? G.wadeBreak : 1) : 1;
+    const sig = (blocker.trait === 'block' ? FLOOR.trait.block : 1) * own * (p.trait === 'power' && zone === 'rim' ? FLOOR.trait.powerBlock : 1);
     if (next(s.rng) < clamp(b * (userJump ? 1.6 : 1) * dodge * sig, 0, 0.5)) {
       if (blocker === s.players[s.user] && lastPeriod(s) && s.clock <= 10 * s.rate && s.score[0] >= s.score[1]) s.marks.stop = true;
       p.box.fga++;
@@ -582,14 +621,24 @@ function release(s: FloorState, i: number, q: number | null, dodge = 1, hook = f
       blocker.box.blk++;
       emit(s, { kind: 'block', team: blocker.team, by: idx(s, blocker), on: i, zone });
       s.momentum = clamp(s.momentum + (blocker.team === 0 ? 1 : -1) * FLOOR.momentum.big, -1, 1);
+      // (Russell) his blocks go to his own team: he keeps it
+      if (blocker.trait === 'russell') {
+        s.ball.flight = null;
+        s.ball.holder = idx(s, blocker);
+        change(s, blocker.team);
+        return;
+      }
       loose(s, i, { x: at.x + (p.team === 0 ? -6 : 6), y: at.y + (next(s.rng) - 0.5) * 10 });
       return;
     }
   }
   const made = next(s.rng) < chance;
   // a foul on the shot: at the rim it is about his finishing against the man on him
-  const fr = zone === 'rim' || zone === 'paint' ? FLOOR.foul.rim + FLOOR.foul.perPoint * (p.r.FIN - (foe.p?.r.INT ?? 50)) : FLOOR.foul.jumper;
-  const fouled = foe.p && foe.d < 5 && next(s.rng) < clamp(fr, 0, 0.35) ? foe.p : null;
+  const inside = zone === 'rim' || zone === 'paint';
+  // (signatures) who draws more fouls: SGA anywhere, Embiid on his jumper, Harden on a three, LeBron at the rim on the break
+  const draw = (p.trait === 'sga' ? G.sgaFoul : 1) * (p.trait === 'embiid' && !inside ? G.embiidFoul : 1) * (p.trait === 'harden' && three ? G.hardenFoul : 1) * (p.trait === 'lebron' && zone === 'rim' && s.brk?.team === p.team ? G.lebronFoul : 1);
+  const fr = (inside ? FLOOR.foul.rim + FLOOR.foul.perPoint * (p.r.FIN - (foe.p?.r.INT ?? 50)) : FLOOR.foul.jumper) * draw;
+  const fouled = foe.p && foe.d < 5 && next(s.rng) < clamp(fr, 0, draw > 1 ? 0.45 : 0.35) ? foe.p : null;
   const dunk = zone === 'rim' && p.r.ATH >= 70 && made;
   const d = toRim(p.team, at);
   s.ball.holder = null;
@@ -657,6 +706,7 @@ function land(s: FloorState, f: Flight): void {
     return;
   }
   if (f.kind === 'shot') {
+    if (p.trait === 'kobe') p.hot = f.made ? (p.hot ?? 0) + 1 : 0;
     if (f.made) {
       const pts = f.three ? 3 : 2;
       p.box.fgm++;
@@ -693,7 +743,9 @@ function rebound(s: FloorState, f: Flight): void {
     const k = p.r.REB / 50;
     // (a real rebounder is worth a little more than his number alone: `big`, from 70 up)
     const big = 1 + FLOOR.rebound.big * clamp((p.r.REB - 70) / 25, 0, 1);
-    return k * k * big * (p.trait === 'glass' ? FLOOR.trait.glass : 1) * (1 / (1 + d / 3)) * (p.team === shooterTeam ? FLOOR.rebound.offense * short : 1);
+    const G = FLOOR.sig;
+    const own = p.trait === 'wilt' ? G.wiltGlass : p.trait === 'oscar' ? G.oscarGlass : p.trait === 'kg' && p.team !== shooterTeam ? G.kgGlass : 1;
+    return k * k * big * own * (p.trait === 'glass' ? FLOOR.trait.glass : 1) * (1 / (1 + d / 3)) * (p.team === shooterTeam ? FLOOR.rebound.offense * short : 1);
   });
   const tot = w.reduce((a, b) => a + b, 0);
   let k = next(s.rng) * tot;
@@ -921,7 +973,9 @@ function topSpeed(s: FloorState, p: FloorPlayer, sprint: boolean): number {
   if (sprint) v *= FLOOR.sprint;
   if (p.slow > 0) v *= 0.35;
   if (p.late > 0) v *= 0.5;
-  if (s.ball.holder === idx(s, p)) v *= 0.92;
+  // (Giannis) no slower with the ball, faster; (Robinson) the quickest centre up the floor
+  if (s.ball.holder === idx(s, p)) v *= p.trait === 'giannis' ? FLOOR.sig.giannisSpeed : 0.92;
+  if (p.trait === 'robinson') v *= FLOOR.sig.robinsonSpeed;
   return v;
 }
 
@@ -1056,7 +1110,7 @@ function aiHandler(s: FloorState, i: number): void {
   // an open jumper only once the offense has run a little of the shot clock; a layup any time
   const settled = FLOOR.shotClock - s.shot >= FLOOR.patience / (zone === 'three' ? Math.max(1, st.three) : 1 + 0.3 * Math.max(0, st.use - 1));
   if (inRange(p) && (s.shot < 3 || (!never && here >= want && open >= FLOOR.open - (st.use - 1) && settled) || (zone === 'rim' && here >= 0.45))) {
-    s.gather = { by: i, t: secs(zone === 'rim' ? 0.5 : 1.1 * (p.trait === 'quick' ? FLOOR.trait.quick : 1)) };
+    s.gather = { by: i, t: secs(zone === 'rim' ? 0.5 : 1.1 * (meterLoad(p) / FLOOR.meter.load)) };
     return;
   }
   // a fast break (round 42): the pass ahead to a runner, the outlet to a guard, or he pushes it himself
@@ -1127,6 +1181,7 @@ function aiHandler(s: FloorState, i: number): void {
       const di = idx(s, d);
       if (next(s.rng) < clamp(M.beat + shake(p) + M.perPoint * ((p.r.PLY + p.r.ATH) / 2 - d.r.PER), 0.15, 0.85)) {
         d.slow = M.slow * (driven(s, di) ? A.human : 1);
+        p.shook = s.tick;
         emit(s, { kind: 'beat', team: p.team, by: i, on: di, move: next(s.rng) < 0.5 ? 'cross' : 'spin' });
         s.drive = true;
       } else if (next(s.rng) < M.lose) {
@@ -1161,8 +1216,11 @@ function postMove(s: FloorState, i: number): void {
   }
   if (d && d.on && next(s.rng) < PO.drop * (0.5 + ratingK(p.r.ATH))) {
     const M = FLOOR.move;
-    if (next(s.rng) < clamp(M.beat + shake(p) + M.perPoint * ((p.r.FIN + p.r.ATH) / 2 - d.r.INT), 0.15, 0.85)) {
-      d.slow = M.slow;
+    // (Shaq's drop step, Hakeem's Dream Shake: far likelier, and Hakeem's man stays frozen longer)
+    const G = FLOOR.sig;
+    const own = p.trait === 'shaq' ? G.shaqDrop : p.trait === 'hakeem' ? G.hakeemMove : 0;
+    if (next(s.rng) < clamp(M.beat + shake(p) + own + M.perPoint * ((p.r.FIN + p.r.ATH) / 2 - d.r.INT), 0.15, 0.95)) {
+      d.slow = M.slow * (p.trait === 'hakeem' ? G.hakeemSlow : 1);
       emit(s, { kind: 'beat', team: p.team, by: i, on: idx(s, d), move: 'drop' });
       s.drive = true;
       return;
@@ -1176,7 +1234,7 @@ function backDown(s: FloorState, p: FloorPlayer): number {
   const rim = rimOf(p.team);
   const d = dist(p, rim);
   if (d <= FLOOR.post.near || p.air > 0) return 0;
-  const v = Math.min(topSpeed(s, p, false) * FLOOR.post.pace * DT, d - FLOOR.post.near);
+  const v = Math.min(topSpeed(s, p, false) * FLOOR.post.pace * (p.trait === 'shaq' ? FLOOR.sig.shaqPace : 1) * DT, d - FLOOR.post.near);
   p.x += ((rim.x - p.x) / d) * v;
   p.y += ((rim.y - p.y) / d) * v;
   return v / DT;
@@ -1197,9 +1255,10 @@ function throwPass(s: FloorState, from: number, to: number): void {
   }
   const d = dist(p, r);
   const t = secs(d / (FLOOR.pass.speed * (passer ? FLOOR.trait.passSpeed : 1)));
-  // a defender in the lane may pick it off
+  // a defender in the lane may pick it off (the Big O's passes are safer; Magic's on the break never)
+  const safe = (p.trait === 'oscar' ? FLOOR.sig.oscarPick : 1) * (p.trait === 'magic' && s.brk?.team === p.team ? 0 : 1);
   for (const q of onCourt(s, other(p.team))) {
-    if (toLine(q, p, r) < FLOOR.pass.lane && next(s.rng) < FLOOR.pass.pick * hands(q) * (passer ? FLOOR.trait.passPick : 1) * (q.r.PER / 70) * (1 - p.r.PLY / 200)) {
+    if (toLine(q, p, r) < FLOOR.pass.lane && next(s.rng) < FLOOR.pass.pick * hands(q) * (passer ? FLOOR.trait.passPick : 1) * safe * (q.r.PER / 70) * (1 - p.r.PLY / 200)) {
       const qi = idx(s, q);
       q.box.stl++;
       p.box.tov++;
@@ -1227,7 +1286,7 @@ function userActs(s: FloorState, inp: FloorInput, T: 0 | 1): void {
   if (u.team === s.poss) {
     // the shot: held loads the meter, the release shoots; at the rim one tap finishes (owner: "just
     // one tap for the lay or dunk"); never from behind half court
-    if (mine && inp.finish && zoneOf(u.team, u) === 'rim') {
+    if (mine && inp.finish && (zoneOf(u.team, u) === 'rim' || (u.trait === 'drj' && !isThree(u.team, u) && toRim(u.team, u) < FLOOR.sig.drjRange))) {
       setLoad(s, T, -1);
       return finish(s, ui);
     }
@@ -1273,6 +1332,7 @@ function userActs(s: FloorState, inp: FloorInput, T: 0 | 1): void {
         const M = FLOOR.move;
         if (next(s.rng) < clamp(M.beat + shake(u) + M.perPoint * (u.r.PLY - d.r.PER), 0.1, 0.9)) {
           d.slow = M.slow;
+          u.shook = s.tick;
           emit(s, { kind: 'beat', team: T, by: ui, on: idx(s, d), move: inp.move });
           if (inp.move === 'step') {
             const rim = rimOf(T);
