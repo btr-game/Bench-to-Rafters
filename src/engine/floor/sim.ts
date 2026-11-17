@@ -50,6 +50,9 @@ export interface FloorStyle {
 /** A call (round 42): one key each, nothing to choose. */
 export type FloorCall = 'iso' | 'give' | 'double';
 
+/** The kinds of signature a legend can have (FLOOR.trait has what each is worth). */
+export type FloorTrait = 'quick' | 'deep' | 'fade' | 'hook' | 'power' | 'block' | 'steal' | 'handle' | 'stepback' | 'pass' | 'glass' | 'clutch' | 'motor';
+
 export interface FloorPlayerIn {
   id: string;
   name: string;
@@ -58,6 +61,8 @@ export interface FloorPlayerIn {
   r: FloorRatings;
   /** How he plays; a player like any other at his position without it. */
   style?: FloorStyle;
+  /** A legend's signature (content/legendTraits.ts): one small edge of his own. */
+  trait?: FloorTrait;
   /** Fouls from the first three quarters. */
   fouls?: number;
   user?: boolean;
@@ -486,6 +491,13 @@ function nearestFoe(s: FloorState, team: 0 | 1, at: Spot): { p: FloorPlayer | nu
 const leaking = (p: FloorPlayer): boolean => p.leak >= secs(FLOOR.leak.secs);
 const shortHanded = (s: FloorState, team: 0 | 1): boolean => s.players.some((p) => p.on && p.team === team && leaking(p));
 
+/** (signatures) quick hands: what his steals, strips and picked-off passes are multiplied by. */
+const hands = (p: FloorPlayer): number => (p.trait === 'steal' ? FLOOR.trait.steal : 1);
+/** (signatures) what a handle or a step-back adds to the chance his move beats his man. */
+const shake = (p: FloorPlayer): number => (p.trait === 'handle' ? FLOOR.trait.handle : p.trait === 'stepback' ? FLOOR.trait.stepMove : 0);
+/** (signatures) a motor: what his legs lose is multiplied by this. */
+const legs = (p: FloorPlayer, d: number): number => (d < 0 && p.trait === 'motor' ? d * FLOOR.trait.motor : d);
+
 const ratingFor = (p: FloorPlayer, zone: Zone) => (zone === 'rim' ? p.r.FIN * 0.8 + p.r.ATH * 0.2 : zone === 'paint' ? (p.r.FIN + p.r.SHT) / 2 : p.r.SHT);
 
 /** The chance a shot from here goes in, before his meter. */
@@ -494,11 +506,19 @@ function shotChance(s: FloorState, p: FloorPlayer, at: Spot): number {
   const S = FLOOR.shot;
   let c = S[zone] + S.perPoint[zone] * (ratingFor(p, zone) - 70);
   const d = toRim(p.team, at);
-  if (zone === 'three' && d > S.deep) c -= S.deepPerFt * (d - S.deep);
+  // (signatures) deep range: the long ones cost nothing until further out, and every three a little more
+  const X = FLOOR.trait;
+  const deep = S.deep + (p.trait === 'deep' ? X.deepFt : 0);
+  if (zone === 'three' && d > deep) c -= S.deepPerFt * (d - deep);
+  if (zone === 'three' && p.trait === 'deep') c += X.deep;
+  // clutch: the last two minutes of the game
+  if (p.trait === 'clutch' && lastPeriod(s) && s.clock <= X.clutchSecs * s.rate) c += X.clutch;
   const foe = nearestFoe(s, p.team, at);
   // (inside, a big man is bothered less by a hand in his face)
   const inside = zone === 'rim' || zone === 'paint' ? 1 - S.strong * clamp(((p.r.REB + p.r.INT) / 2 - 70) / 25, 0, 1) : 1;
-  c -= Math.max(0, (FLOOR.contest.within - foe.d) / FLOOR.contest.within) * FLOOR.contest.max * inside;
+  // a tough shot maker's jumper, a step-back three, power at the rim: the contest costs less
+  const tough = (p.trait === 'fade' && zone !== 'rim' ? X.fade : 1) * (p.trait === 'stepback' && zone === 'three' ? X.stepThree : 1) * (p.trait === 'power' && zone === 'rim' ? X.power : 1);
+  c -= Math.max(0, (FLOOR.contest.within - foe.d) / FLOOR.contest.within) * FLOOR.contest.max * inside * tough;
   c -= (1 - p.stamina) * FLOOR.contest.tired;
   // inside, a bigger man shoots over a smaller one (rebounding and interior defence stand for size)
   if ((zone === 'rim' || zone === 'paint') && foe.p && foe.d < FLOOR.contest.within) c += S.size * clamp((p.r.REB + p.r.INT - foe.p.r.REB - foe.p.r.INT) / 2 / S.sizeFull, 0, 1);
@@ -521,9 +541,12 @@ export function meterWindow(s: FloorState, p: FloorPlayer): number {
   return lerp(M.window[0], M.window[1], ratingK(line ? p.r.FT : p.r.SHT)) * (1 - contested * M.contested) * (1 - (1 - p.stamina) * M.tired);
 }
 
+/** How long his meter takes to fill (game seconds): a quick release takes far less. */
+export const meterLoad = (p: { trait?: FloorTrait }): number => FLOOR.meter.load * (p.trait === 'quick' ? FLOOR.trait.quick : 1);
+
 /** How a release lands on the meter: 1 dead centre, 0 outside the window. */
 export function releaseQuality(s: FloorState, p: FloorPlayer, load: number): number {
-  const off = Math.abs(load / FLOOR.meter.load - 1);
+  const off = Math.abs(load / meterLoad(p) - 1);
   return clamp(1 - off / Math.max(0.02, meterWindow(s, p)), 0, 1);
 }
 
@@ -537,7 +560,8 @@ function release(s: FloorState, i: number, q: number | null, dodge = 1, hook = f
   if (q !== null) chance = clamp(chance * lerp(FLOOR.meter.worst, FLOOR.meter.best, q), FLOOR.shot.min, FLOOR.shot.max);
   const foe = nearestFoe(s, p.team, at);
   // the hook (round 42): his finishing alone, against the interior defence of the man on him
-  if (hook) chance = clamp(chance + FLOOR.shot.perPoint.paint * (p.r.FIN - ratingFor(p, zone)) + FLOOR.post.hook + FLOOR.post.perPoint * (p.r.FIN - (foe.p?.r.INT ?? 60)), FLOOR.shot.min, FLOOR.shot.max);
+  if (hook && p.trait === 'hook') dodge *= FLOOR.trait.hookBlock;
+  if (hook) chance = clamp(chance + (p.trait === 'hook' ? FLOOR.trait.hook : 0) + FLOOR.shot.perPoint.paint * (p.r.FIN - ratingFor(p, zone)) + FLOOR.post.hook + FLOOR.post.perPoint * (p.r.FIN - (foe.p?.r.INT ?? 60)), FLOOR.shot.min, FLOOR.shot.max);
   // a charge (round 42): on the move into a defender who had set himself between him and the rim
   const C = FLOOR.charge;
   const moving = driven(s, i) ? p.vel > 5 : s.drive;
@@ -550,7 +574,8 @@ function release(s: FloorState, i: number, q: number | null, dodge = 1, hook = f
   const blocker = userJump ?? jumper;
   if (blocker) {
     const b = FLOOR.block.base + FLOOR.block.perPoint * ((blocker.r.INT + blocker.r.ATH) / 2 - p.r.FIN / 2 - 25);
-    if (next(s.rng) < clamp(b * (userJump ? 1.6 : 1) * dodge, 0, 0.5)) {
+    const sig = (blocker.trait === 'block' ? FLOOR.trait.block : 1) * (p.trait === 'power' && zone === 'rim' ? FLOOR.trait.powerBlock : 1);
+    if (next(s.rng) < clamp(b * (userJump ? 1.6 : 1) * dodge * sig, 0, 0.5)) {
       if (blocker === s.players[s.user] && lastPeriod(s) && s.clock <= 10 * s.rate && s.score[0] >= s.score[1]) s.marks.stop = true;
       p.box.fga++;
       if (three) p.box.tpa++;
@@ -668,7 +693,7 @@ function rebound(s: FloorState, f: Flight): void {
     const k = p.r.REB / 50;
     // (a real rebounder is worth a little more than his number alone: `big`, from 70 up)
     const big = 1 + FLOOR.rebound.big * clamp((p.r.REB - 70) / 25, 0, 1);
-    return k * k * big * (1 / (1 + d / 3)) * (p.team === shooterTeam ? FLOOR.rebound.offense * short : 1);
+    return k * k * big * (p.trait === 'glass' ? FLOOR.trait.glass : 1) * (1 / (1 + d / 3)) * (p.team === shooterTeam ? FLOOR.rebound.offense * short : 1);
   });
   const tot = w.reduce((a, b) => a + b, 0);
   let k = next(s.rng) * tot;
@@ -998,7 +1023,7 @@ function aiHandler(s: FloorState, i: number): void {
   s.think = s.tick + secs(FLOOR.think);
   // his man reaches in (an AI defender; a human steals with his own key)
   const d = s.players.find((_, k) => s.guard[k] === i);
-  if (d && d.on && !driven(s, idx(s, d)) && dist(d, p) < FLOOR.steal.reach && next(s.rng) < FLOOR.strip * (d.r.PER / 70) * (1.3 - p.r.PLY / 100)) {
+  if (d && d.on && !driven(s, idx(s, d)) && dist(d, p) < FLOOR.steal.reach && next(s.rng) < FLOOR.strip * hands(d) * (d.r.PER / 70) * (1.3 - p.r.PLY / 100)) {
     const di = idx(s, d);
     d.box.stl++;
     p.box.tov++;
@@ -1011,7 +1036,7 @@ function aiHandler(s: FloorState, i: number): void {
   const K = FLOOR.calls;
   const dbl = s.help && s.help.double ? s.players[s.help.by] : null;
   const doubled = !!dbl && dbl.on && dist(dbl, p) < FLOOR.steal.reach + 1;
-  if (doubled && next(s.rng) < FLOOR.strip * K.strip * (dbl!.r.PER / 70) * (1.3 - p.r.PLY / 100)) {
+  if (doubled && next(s.rng) < FLOOR.strip * K.strip * hands(dbl!) * (dbl!.r.PER / 70) * (1.3 - p.r.PLY / 100)) {
     const di = idx(s, dbl!);
     dbl!.box.stl++;
     p.box.tov++;
@@ -1031,7 +1056,7 @@ function aiHandler(s: FloorState, i: number): void {
   // an open jumper only once the offense has run a little of the shot clock; a layup any time
   const settled = FLOOR.shotClock - s.shot >= FLOOR.patience / (zone === 'three' ? Math.max(1, st.three) : 1 + 0.3 * Math.max(0, st.use - 1));
   if (inRange(p) && (s.shot < 3 || (!never && here >= want && open >= FLOOR.open - (st.use - 1) && settled) || (zone === 'rim' && here >= 0.45))) {
-    s.gather = { by: i, t: secs(zone === 'rim' ? 0.5 : 1.1) };
+    s.gather = { by: i, t: secs(zone === 'rim' ? 0.5 : 1.1 * (p.trait === 'quick' ? FLOOR.trait.quick : 1)) };
     return;
   }
   // a fast break (round 42): the pass ahead to a runner, the outlet to a guard, or he pushes it himself
@@ -1100,7 +1125,7 @@ function aiHandler(s: FloorState, i: number): void {
     if (next(s.rng) < urge) {
       const M = FLOOR.move;
       const di = idx(s, d);
-      if (next(s.rng) < clamp(M.beat + M.perPoint * ((p.r.PLY + p.r.ATH) / 2 - d.r.PER), 0.15, 0.85)) {
+      if (next(s.rng) < clamp(M.beat + shake(p) + M.perPoint * ((p.r.PLY + p.r.ATH) / 2 - d.r.PER), 0.15, 0.85)) {
         d.slow = M.slow * (driven(s, di) ? A.human : 1);
         emit(s, { kind: 'beat', team: p.team, by: i, on: di, move: next(s.rng) < 0.5 ? 'cross' : 'spin' });
         s.drive = true;
@@ -1136,7 +1161,7 @@ function postMove(s: FloorState, i: number): void {
   }
   if (d && d.on && next(s.rng) < PO.drop * (0.5 + ratingK(p.r.ATH))) {
     const M = FLOOR.move;
-    if (next(s.rng) < clamp(M.beat + M.perPoint * ((p.r.FIN + p.r.ATH) / 2 - d.r.INT), 0.15, 0.85)) {
+    if (next(s.rng) < clamp(M.beat + shake(p) + M.perPoint * ((p.r.FIN + p.r.ATH) / 2 - d.r.INT), 0.15, 0.85)) {
       d.slow = M.slow;
       emit(s, { kind: 'beat', team: p.team, by: i, on: idx(s, d), move: 'drop' });
       s.drive = true;
@@ -1164,16 +1189,17 @@ function throwPass(s: FloorState, from: number, to: number): void {
   // a bad pass: out of bounds (far likelier the length of the floor to a man who leaked out and
   // never saw the rebound come down)
   const wild = leaking(r) && dist(p, r) > FLOOR.leak.long ? FLOOR.leak.wild : 0;
-  if (next(s.rng) < wild + FLOOR.pass.bad * (1 - (p.r.PLY - 40) / 80)) {
+  const passer = p.trait === 'pass';
+  if (next(s.rng) < wild + (passer ? 0 : FLOOR.pass.bad * (1 - (p.r.PLY - 40) / 80))) {
     p.box.tov++;
     emit(s, { kind: 'turnover', team: p.team, by: from });
     return dead(s, other(p.team), { x: r.x, y: r.y < 25 ? 0.5 : COURT.h - 0.5 }, 1);
   }
   const d = dist(p, r);
-  const t = secs(d / FLOOR.pass.speed);
+  const t = secs(d / (FLOOR.pass.speed * (passer ? FLOOR.trait.passSpeed : 1)));
   // a defender in the lane may pick it off
   for (const q of onCourt(s, other(p.team))) {
-    if (toLine(q, p, r) < FLOOR.pass.lane && next(s.rng) < FLOOR.pass.pick * (q.r.PER / 70) * (1 - p.r.PLY / 200)) {
+    if (toLine(q, p, r) < FLOOR.pass.lane && next(s.rng) < FLOOR.pass.pick * hands(q) * (passer ? FLOOR.trait.passPick : 1) * (q.r.PER / 70) * (1 - p.r.PLY / 200)) {
       const qi = idx(s, q);
       q.box.stl++;
       p.box.tov++;
@@ -1206,9 +1232,11 @@ function userActs(s: FloorState, inp: FloorInput, T: 0 | 1): void {
       return finish(s, ui);
     }
     const load = loadOf(s, T);
-    if (mine && inp.shoot && inRange(u)) setLoad(s, T, load < 0 ? 0 : load + DT);
+    // (he may not stand there with a full meter: after `hold` seconds past full the shot goes up as it is)
+    const held = load >= meterLoad(u) + FLOOR.meter.hold;
+    if (mine && inp.shoot && inRange(u) && !held) setLoad(s, T, load < 0 ? 0 : load + DT);
     else if (mine && load >= 0) {
-      const q = releaseQuality(s, u, inp.load ?? load);
+      const q = releaseQuality(s, u, held ? load : (inp.load ?? load));
       setLoad(s, T, -1);
       return release(s, ui, q);
     } else setLoad(s, T, -1);
@@ -1243,7 +1271,7 @@ function userActs(s: FloorState, inp: FloorInput, T: 0 | 1): void {
       const d = s.players.find((_, k) => s.guard[k] === ui);
       if (d && dist(d, u) < 7) {
         const M = FLOOR.move;
-        if (next(s.rng) < clamp(M.beat + M.perPoint * (u.r.PLY - d.r.PER), 0.1, 0.9)) {
+        if (next(s.rng) < clamp(M.beat + shake(u) + M.perPoint * (u.r.PLY - d.r.PER), 0.1, 0.9)) {
           d.slow = M.slow;
           emit(s, { kind: 'beat', team: T, by: ui, on: idx(s, d), move: inp.move });
           if (inp.move === 'step') {
@@ -1277,7 +1305,7 @@ function userActs(s: FloorState, inp: FloorInput, T: 0 | 1): void {
     const S = FLOOR.steal;
     const d = dist(u, h);
     if (d <= S.reach) {
-      if (next(s.rng) < clamp(S.base + S.perPoint * (u.r.PER - h.r.PLY), 0.04, 0.6)) {
+      if (next(s.rng) < clamp((S.base + S.perPoint * (u.r.PER - h.r.PLY)) * hands(u), 0.04, 0.6)) {
         u.box.stl++;
         h.box.tov++;
         emit(s, { kind: 'steal', team: T, by: ui, on: s.ball.holder! });
@@ -1364,9 +1392,10 @@ export function stepFloor(s: FloorState, inp: FloorInput | null, inp2: FloorInpu
       const T = shooter.team;
       const ip = inputOf(T);
       const load = loadOf(s, T);
-      if (ip.shoot) setLoad(s, T, load < 0 ? 0 : load + DT);
+      const held = load >= meterLoad(shooter) + FLOOR.meter.hold;
+      if (ip.shoot && !held) setLoad(s, T, load < 0 ? 0 : load + DT);
       else if (load >= 0) {
-        const q = releaseQuality(s, shooter, ip.load ?? load);
+        const q = releaseQuality(s, shooter, held ? load : (ip.load ?? load));
         setLoad(s, T, -1);
         shootFt(s, q);
       }
@@ -1470,7 +1499,7 @@ export function stepFloor(s: FloorState, inp: FloorInput | null, inp2: FloorInpu
         Object.assign(p, clampSpot({ x: p.x + (dx / len) * v, y: p.y + (dy / len) * v }));
         moved = v / DT;
       }
-      p.stamina = clamp(p.stamina + DT * (ip.sprint && moved > 0 ? FLOOR.stamina.sprint : moved > 3 ? FLOOR.stamina.move : FLOOR.stamina.rest), 0.2, 1);
+      p.stamina = clamp(p.stamina + DT * legs(p, ip.sprint && moved > 0 ? FLOOR.stamina.sprint : moved > 3 ? FLOOR.stamina.move : FLOOR.stamina.rest), 0.2, 1);
       p.vel = moved;
       p.still = moved < 1 ? p.still + 1 : 0;
       // leaking out: the other team has the ball over half court and he is still up the floor, past
@@ -1495,7 +1524,7 @@ export function stepFloor(s: FloorState, inp: FloorInput | null, inp2: FloorInpu
     const posting = !!s.post && s.post.by === i;
     const run = !!s.brk && !posting;
     moved = posting ? backDown(s, p) : stepToward(s, p, aiTarget(s, p), run);
-    p.stamina = clamp(p.stamina + DT * (run && moved > 3 ? FLOOR.stamina.sprint * FLOOR.fastBreak.legs : moved > 3 ? FLOOR.stamina.move : FLOOR.stamina.rest), 0.2, 1);
+    p.stamina = clamp(p.stamina + DT * legs(p, run && moved > 3 ? FLOOR.stamina.sprint * FLOOR.fastBreak.legs : moved > 3 ? FLOOR.stamina.move : FLOOR.stamina.rest), 0.2, 1);
     p.vel = moved;
     p.still = moved < 1 ? p.still + 1 : 0;
   }
@@ -1559,7 +1588,7 @@ export function stepFloor(s: FloorState, inp: FloorInput | null, inp2: FloorInpu
     } else if (s.help && s.help.double && s.tick % secs(FLOOR.think) === 0) {
       // a person with the ball in a double team: the second defender reaches in (round 42)
       const dbl = s.players[s.help.by];
-      if (dbl.on && !driven(s, s.help.by) && dist(dbl, h) < FLOOR.steal.reach && next(s.rng) < FLOOR.strip * FLOOR.calls.strip * (dbl.r.PER / 70) * (1.3 - h.r.PLY / 100)) {
+      if (dbl.on && !driven(s, s.help.by) && dist(dbl, h) < FLOOR.steal.reach && next(s.rng) < FLOOR.strip * FLOOR.calls.strip * hands(dbl) * (dbl.r.PER / 70) * (1.3 - h.r.PLY / 100)) {
         dbl.box.stl++;
         h.box.tov++;
         emit(s, { kind: 'steal', team: dbl.team, by: s.help.by, on: s.ball.holder });

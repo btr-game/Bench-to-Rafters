@@ -4213,7 +4213,21 @@
   "Your team, with its real roster": "你的球队，真实阵容",
   "Teammates at your level": "与你水平相当的队友",
   "Their real roster": "对手的真实阵容",
-  "A team at your level": "与你水平相当的球队"
+  "A team at your level": "与你水平相当的球队",
+  "Signature": "招牌",
+  "Quick release: his shot meter fills much faster.": "快速出手：投篮条填充快得多。",
+  "Deep range: threes from far out cost him nothing, and all his threes fall a little more.": "超远射程：超远三分不受距离惩罚，所有三分命中率略高。",
+  "Tough shot maker: a hand in his face bothers his jumper far less.": "高难度投篮：面对贴防，他的跳投受影响小得多。",
+  "Hook shot: his hook falls more often and is rarely blocked.": "勾手：勾手命中率更高，且很少被盖。",
+  "Power at the rim: he finishes through contact and is seldom blocked there.": "篮下强攻：顶着对抗完成终结，在篮下很少被盖。",
+  "Rim protector: he blocks far more shots.": "护筐者：盖帽多得多。",
+  "Quick hands: more steals, strips and passes picked off.": "快手：抢断、掏球和截传球更多。",
+  "Handle: his moves beat his man more often.": "控球：他的运球动作更常过掉防守人。",
+  "Step-back: his moves work a little more, and a contested three costs him less.": "后撤步：运球动作成功率略高，被防守的三分受影响更小。",
+  "Passer: his passes fly faster and are rarely picked off or thrown away.": "传球手：传球更快，很少被截或传丢。",
+  "On the glass: he comes down with far more rebounds.": "篮板怪：抢下的篮板多得多。",
+  "Clutch: in the last two minutes of a game every shot of his falls more.": "关键先生：比赛最后两分钟，他的每次出手命中率更高。",
+  "Motor: his legs tire far more slowly.": "马达：体力消耗慢得多。"
  },
  "story": {
   "f-driveway.title": "车道",

@@ -3842,3 +3842,36 @@ the two split by their strengths as a playoff game on the Floor is; anywhere els
 college, overseas) he takes his spot on a team made up at his own overall, against another like it,
 in colours he picks. Nothing comes back into the career: no bonus, no fatigue, no stats. The four
 legend modes stay beside it.
+
+### Signatures, a quicker meter, and no holding it
+
+Owner: "can we give each legend in the floor (not all of them, maybe more than 90 ovr) a signature
+move or unique trait? ex: dame shoots better from deep, curry's fast release(greenbar fills much
+faster), so on. also, lets make the shooting bar fill in 0.6 seconds. also, dont allow them to
+maintain filled bar for more than 3 seconds".
+
+- **Signatures** (`src/content/legendTraits.ts`, `FLOOR.trait`). All 74 legends rated 90 or more have
+  one: a name of his own (English, as names are) and one of thirteen kinds, each a small edge in the
+  engine that the AI gets as well as a player who steers him. quick (Curry, King): the meter and the
+  AI's gather take 0.6 of the time. deep (Lillard): no penalty for distance until 5 feet further out,
+  and 3 points of a hundred on every three. fade (Jordan, Durant, Dirk and others): half of a contest
+  on a jumper. stepback (Harden, Doncic): his moves 6 points likelier, 60% of a contest on a three.
+  hook (Kareem, McHale): 8 points on the hook, blocked 0.4 as often. power (Shaq, LeBron, Giannis
+  and others): half a contest at the rim, blocked half as often there. block (Russell, Robinson and
+  others): 1.6 times the blocks. steal (Kawhi, Pippen and others): 1.5 times the steals, strips and
+  picked-off passes. handle (Iverson, Kyrie, Hakeem's Dream Shake and others): moves 12 points
+  likelier. pass (Magic, Jokic, Stockton and others): passes 1.25 times as fast, picked off 0.35 as
+  often, never thrown away. glass (Wilt, Moses, Barkley and others): 1.35 times the weight on the
+  boards. clutch (Bird, Kobe, West, Miller and others): 6 points on every shot in the game's last two
+  minutes. motor (Havlicek, Westbrook): 0.55 of the legs lost.
+  It travels on the player (`FloorPlayerIn.trait`), so it holds in every mode, online included; a
+  bench player and a career's own player have none. Shown on his card where the five is picked (and
+  spelled out for the one steered), in the legends' table, and beside his name under the court.
+  Over 90 full AI games between the real fives, with and without: points a team 24.7056 to 25.4167,
+  field goals 52.374% to 55.065%, threes 39.250% to 48.387% (few are taken, so this one swings),
+  blocks 1.589 to 1.367 a game, steals 2.289 to 2.200, turnovers 3.322 to 3.367.
+- **The meter** fills in 0.6 real seconds (`FLOOR.meter.load` 1.5 to 0.9 game seconds; it had been
+  one second since round 39).
+- **No holding a full meter** (`FLOOR.meter.hold`, 4.5 game seconds): three real seconds past full,
+  the shot leaves his hands by itself at whatever the meter then says, which is a miss in all but
+  name. The same at the free-throw line.

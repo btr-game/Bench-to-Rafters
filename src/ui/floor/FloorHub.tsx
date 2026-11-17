@@ -26,6 +26,7 @@ import { sfx } from '../sound';
 import { FloorScreen, type FloorTeamLook } from './FloorScreen';
 import { FloorFriend } from './FloorFriend';
 import { LegendTable } from './LegendTable';
+import { signatureOf } from './traits';
 
 type Mode = 'career' | 'quick' | 'playoffs' | 'draft' | 'online';
 /** Only from a career's mini-games: his own player (owner, after round 42: "the user should be able
@@ -100,6 +101,11 @@ function Five({ five, slot, onPick }: { five: LegendSpot[]; slot: number; onPick
           <span>{l.ovr}</span>
           <b>{l.name}</b>
           <i className="fh-line">{lineOf(l.name)}</i>
+          {signatureOf(l.name) && (
+            <em className="fh-sig" title={signatureOf(l.name)!.text}>
+              {signatureOf(l.name)!.name}
+            </em>
+          )}
         </button>
       ))}
     </div>
@@ -353,6 +359,11 @@ export function FloorPage({ inside = false }: { inside?: boolean }) {
             <div className="fm-row">
               <div className="sec-title">{t('Who you steer')}</div>
               <Five five={five} slot={steer} onPick={setSlot} />
+              {signatureOf(five[steer].name) && (
+                <p className="small fh-sig-text">
+                  <b>{signatureOf(five[steer].name)!.name}.</b> {signatureOf(five[steer].name)!.text}
+                </p>
+              )}
             </div>
             <details className="fh-stats">
               <summary>{t('Their real career numbers')}</summary>

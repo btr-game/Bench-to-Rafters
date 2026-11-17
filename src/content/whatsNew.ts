@@ -16,6 +16,14 @@ interface News {
 
 export const NEWS: News[] = [
   {
+    id: '2026-11-17-signatures',
+    date: '17 November 2026',
+    items: [
+      { icon: 'spotlight', text: 'Signatures on the Floor: every legend rated 90 or more has one of his own. Curry’s meter fills far faster, Lillard shoots from deeper, Kareem has the skyhook, Russell protects the rim. Each is named on his card and beside his name on the court.' },
+      { icon: 'shoot', text: 'The shot meter fills in 0.6 seconds now, and a full meter cannot be held: after three seconds the shot goes up by itself.' },
+    ],
+  },
+  {
     id: '2026-11-11-floor',
     date: '11 November 2026',
     items: [

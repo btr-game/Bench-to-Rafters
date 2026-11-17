@@ -4213,7 +4213,21 @@
   "Your team, with its real roster": "Votre équipe, avec son effectif réel",
   "Teammates at your level": "Des coéquipiers de votre niveau",
   "Their real roster": "Leur effectif réel",
-  "A team at your level": "Une équipe de votre niveau"
+  "A team at your level": "Une équipe de votre niveau",
+  "Signature": "Signature",
+  "Quick release: his shot meter fills much faster.": "Tir rapide : sa jauge de tir se remplit bien plus vite.",
+  "Deep range: threes from far out cost him nothing, and all his threes fall a little more.": "Longue distance : les tirs à trois points de très loin ne lui coûtent rien, et tous ses trois points rentrent un peu plus.",
+  "Tough shot maker: a hand in his face bothers his jumper far less.": "Tireur sous pression : une main devant le visage gêne bien moins son tir.",
+  "Hook shot: his hook falls more often and is rarely blocked.": "Bras roulé : son bras roulé rentre plus souvent et est rarement contré.",
+  "Power at the rim: he finishes through contact and is seldom blocked there.": "Puissance au cercle : il finit malgré le contact et y est rarement contré.",
+  "Rim protector: he blocks far more shots.": "Protecteur du cercle : il contre bien plus de tirs.",
+  "Quick hands: more steals, strips and passes picked off.": "Mains rapides : plus d’interceptions, de ballons arrachés et de passes coupées.",
+  "Handle: his moves beat his man more often.": "Dribble : ses gestes battent son défenseur plus souvent.",
+  "Step-back: his moves work a little more, and a contested three costs him less.": "Step-back : ses gestes passent un peu plus, et un trois points contesté lui coûte moins.",
+  "Passer: his passes fly faster and are rarely picked off or thrown away.": "Passeur : ses passes vont plus vite et sont rarement coupées ou perdues.",
+  "On the glass: he comes down with far more rebounds.": "Au rebond : il capte bien plus de rebonds.",
+  "Clutch: in the last two minutes of a game every shot of his falls more.": "Décisif : dans les deux dernières minutes d’un match, tous ses tirs rentrent davantage.",
+  "Motor: his legs tire far more slowly.": "Moteur : ses jambes se fatiguent bien plus lentement."
  },
  "story": {
   "f-driveway.title": "L’allée",
