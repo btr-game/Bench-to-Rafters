@@ -4213,7 +4213,21 @@
   "Your team, with its real roster": "自分のチーム（実際のロスター）",
   "Teammates at your level": "自分と同じレベルのチームメイト",
   "Their real roster": "相手の実際のロスター",
-  "A team at your level": "自分と同じレベルのチーム"
+  "A team at your level": "自分と同じレベルのチーム",
+  "Signature": "シグネチャー",
+  "Quick release: his shot meter fills much faster.": "クイックリリース：シュートメーターがずっと速くたまる。",
+  "Deep range: threes from far out cost him nothing, and all his threes fall a little more.": "ディープレンジ：遠い位置からの3ポイントでも不利がなく、すべての3ポイントが少し入りやすい。",
+  "Tough shot maker: a hand in his face bothers his jumper far less.": "タフショットメーカー：顔の前に手があってもジャンプシュートがほとんど乱れない。",
+  "Hook shot: his hook falls more often and is rarely blocked.": "フックシュート：フックが入りやすく、ほとんどブロックされない。",
+  "Power at the rim: he finishes through contact and is seldom blocked there.": "リム際のパワー：接触があっても決めきり、リムではめったにブロックされない。",
+  "Rim protector: he blocks far more shots.": "リムプロテクター：はるかに多くのシュートをブロックする。",
+  "Quick hands: more steals, strips and passes picked off.": "クイックハンド：スティール、ボール奪取、パスカットが増える。",
+  "Handle: his moves beat his man more often.": "ハンドリング：ムーブでマークマンを抜く確率が上がる。",
+  "Step-back: his moves work a little more, and a contested three costs him less.": "ステップバック：ムーブが少し決まりやすく、マークされた3ポイントの不利が小さい。",
+  "Passer: his passes fly faster and are rarely picked off or thrown away.": "パサー：パスが速く、カットされたりミスになったりすることがほとんどない。",
+  "On the glass: he comes down with far more rebounds.": "リバウンドの鬼：はるかに多くのリバウンドを取る。",
+  "Clutch: in the last two minutes of a game every shot of his falls more.": "クラッチ：試合の最後の2分間、すべてのシュートが入りやすくなる。",
+  "Motor: his legs tire far more slowly.": "モーター：脚の疲れがずっと遅い。"
  },
  "story": {
   "f-driveway.title": "家の前のゴール",

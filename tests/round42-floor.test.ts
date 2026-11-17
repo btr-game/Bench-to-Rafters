@@ -7,7 +7,8 @@ import { FLOOR } from '../src/engine/balance';
 import { ovrOf } from '../src/engine/player/ovr';
 import { ALL_LEGENDS, fiveOvr, floorLevel, legendFive, legendRatings, legendStyle, legendTeam } from '../src/engine/floor/legends';
 import { BRACKET_ROUNDS, finishBracket, franchise, legendSetup, myGame, newBracket, playRound, winnerOf } from '../src/engine/floor/game';
-import { floorResult, gameScore, startFloor, stepFloor, type FloorInput, type FloorState } from '../src/engine/floor/sim';
+import { floorResult, freshEvents, gameScore, meterLoad, releaseQuality, startFloor, stepFloor, type FloorInput, type FloorState } from '../src/engine/floor/sim';
+import { LEGEND_TRAITS } from '../src/content/legendTraits';
 import { toRim } from '../src/engine/floor/court';
 import { NBA_TEAMS } from '../src/content/teams';
 import { LEGEND_STATS } from '../src/content/legendStats';
@@ -303,5 +304,82 @@ describe('after round 42: leaking out, and the big men', () => {
     }
     const per = (pos: string) => by[pos].reb / by[pos].n;
     expect(Math.min(per('PF'), per('C'))).toBeGreaterThan(1.5 * Math.max(per('PG'), per('SG'), per('SF')));
+  });
+});
+
+describe('after round 42: the legends\' signatures, the quicker meter and the hold limit', () => {
+  // (owner: "can we give each legend in the floor (not all of them, maybe more than 90 ovr) a
+  // signature move or unique trait? ex: dame shoots better from deep, curry's fast release")
+  it('every legend rated 90 or more has a signature of his own, and nobody below has one', () => {
+    const high = ALL_LEGENDS.filter((x) => x.spot.ovr >= 90).map((x) => x.spot.name);
+    expect(Object.keys(LEGEND_TRAITS).sort()).toEqual([...high].sort());
+    expect(new Set(Object.values(LEGEND_TRAITS).map((x) => x.name)).size).toBe(high.length);
+    expect(LEGEND_TRAITS['Damian Lillard'].kind).toBe('deep');
+    expect(LEGEND_TRAITS['Stephen Curry'].kind).toBe('quick');
+    // it rides onto the court with him, and not with his bench
+    const set = legendSetup({ seed: 5, us: franchise('GSW', 90), them: franchise('POR', 90), user: 0, length: 'fourth' });
+    expect(set.us.players.find((p) => p.name === 'Stephen Curry')!.trait).toBe('quick');
+    expect(set.them.players.find((p) => p.name === 'Damian Lillard')!.trait).toBe('deep');
+    expect(set.us.players.slice(5).every((p) => !p.trait)).toBe(true);
+  });
+
+  it('the meter fills in 0.6 real seconds; Curry\'s in far less', () => {
+    // (owner: "lets make the shooting bar fill in 0.6 seconds"): game seconds over the clock's 1.5x
+    expect(FLOOR.meter.load / (FLOOR.tick * FLOOR.ticksPerSec)).toBeCloseTo(0.6, 9);
+    const s = startFloor(legendSetup({ seed: 5, us: franchise('GSW', 90), them: franchise('POR', 90), user: 0, length: 'fourth' }));
+    const curry = s.players.find((p) => p.name === 'Stephen Curry')!;
+    const other = s.players.find((p) => p.team === 0 && p !== curry && p.on)!;
+    expect(meterLoad(curry)).toBeCloseTo(FLOOR.meter.load * FLOOR.trait.quick, 9);
+    expect(meterLoad(other)).toBe(FLOOR.meter.load);
+    // a release that is perfect for him is far too early for anyone else
+    expect(releaseQuality(s, curry, meterLoad(curry))).toBeCloseTo(1, 6);
+    expect(releaseQuality(s, other, meterLoad(curry))).toBe(0);
+  });
+
+  it('a full meter cannot be held: three real seconds past full, the shot goes up by itself', () => {
+    // (owner: "dont allow them to maintain filled bar for more than 3 seconds")
+    expect(FLOOR.meter.hold / (FLOOR.tick * FLOOR.ticksPerSec)).toBeCloseTo(3, 9);
+    const s = startFloor(legendSetup({ seed: 11, us: franchise('BOS', 90), them: franchise('LAL', 90), user: 1, length: 'fourth' }));
+    const u = s.players[s.user];
+    // hand him the ball in range and hold the shoot key for good
+    let held = 0;
+    let shot = -1;
+    for (let i = 0; i < 4000 && shot < 0; i++) {
+      const mine = s.phase === 'live' && s.ball.holder === s.user && s.poss === 0;
+      if (mine && held === 0) {
+        u.x = 70;
+        u.y = 25;
+      }
+      stepFloor(s, mine ? { shoot: true } : {});
+      if (s.load >= 0) held++;
+      else if (held > 0) {
+        if (freshEvents(s).some((e) => (e.kind === 'make' || e.kind === 'miss' || e.kind === 'block' || e.kind === 'foul') && e.by === s.user) || s.ball.flight?.kind === 'shot') shot = held;
+        else held = 0;
+      }
+    }
+    // it left his hands by itself, at the limit: the fill and three seconds, a tick or two either way
+    const limit = (FLOOR.meter.load + FLOOR.meter.hold) / FLOOR.tick;
+    expect(shot).toBeGreaterThan(limit - 3);
+    expect(shot).toBeLessThan(limit + 3);
+  });
+
+  it('a signature is worth something on the court: Lillard from deep, a rim protector at the rim', () => {
+    // the same game with and without the signatures, the AI playing both sides: more threes fall for Portland's guard
+    const run = (traits: boolean) => {
+      let made = 0;
+      let tried = 0;
+      for (let g = 0; g < 14; g++) {
+        const set = legendSetup({ seed: 300 + g * 17, us: franchise('POR', 90), them: franchise('SAC', 90), length: 'full' });
+        if (!traits) for (const p of [...set.us.players, ...set.them.players]) delete p.trait;
+        const s = startFloor(set);
+        s.auto = true;
+        play(s);
+        const d = s.players.find((p) => p.name === 'Damian Lillard')!;
+        made += d.box.tpm;
+        tried += d.box.tpa;
+      }
+      return made / Math.max(1, tried);
+    };
+    expect(run(true)).toBeGreaterThan(run(false));
   });
 });

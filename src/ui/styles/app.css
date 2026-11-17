@@ -3270,3 +3270,10 @@ td > .link-btn { min-width: 44px; text-align: left; }
 /* the Floor from a career's mini-games: his own player's line above his team */
 .fh-own { margin: 0 0 8px; }
 .fh-own > b { font-family: var(--f-display); font-size: 22px; letter-spacing: 0.02em; }
+
+/* a legend's signature (after round 42): on his card in the five, under it spelled out, in the table, and by his name on the court */
+.fh-sig { display: block; margin-top: 4px; font: 700 11px/1.2 var(--f-mono); font-style: normal; letter-spacing: 0.04em; text-transform: uppercase; color: var(--accent, #b5410f); }
+.fm-starter.on .fh-sig { color: inherit; }
+.fh-sig-text { margin: 8px 0 0; }
+.lg-sig { text-align: left; white-space: nowrap; }
+.floor-sig { color: #ffd23f; }

@@ -4213,7 +4213,21 @@
   "Your team, with its real roster": "실제 로스터의 내 팀",
   "Teammates at your level": "내 수준의 팀 동료들",
   "Their real roster": "상대의 실제 로스터",
-  "A team at your level": "내 수준의 팀"
+  "A team at your level": "내 수준의 팀",
+  "Signature": "시그니처",
+  "Quick release: his shot meter fills much faster.": "빠른 릴리스: 슛 미터가 훨씬 빨리 찹니다.",
+  "Deep range: threes from far out cost him nothing, and all his threes fall a little more.": "딥 레인지: 먼 거리 3점에도 불이익이 없고, 모든 3점이 조금 더 잘 들어갑니다.",
+  "Tough shot maker: a hand in his face bothers his jumper far less.": "터프 샷 메이커: 수비가 붙어도 점프슛이 훨씬 덜 흔들립니다.",
+  "Hook shot: his hook falls more often and is rarely blocked.": "훅슛: 훅슛이 더 잘 들어가고 거의 블록당하지 않습니다.",
+  "Power at the rim: he finishes through contact and is seldom blocked there.": "림 앞의 파워: 몸싸움 속에서도 마무리하고, 림에서 잘 블록당하지 않습니다.",
+  "Rim protector: he blocks far more shots.": "림 프로텍터: 훨씬 더 많은 슛을 블록합니다.",
+  "Quick hands: more steals, strips and passes picked off.": "빠른 손: 스틸, 볼 쳐내기, 패스 가로채기가 늘어납니다.",
+  "Handle: his moves beat his man more often.": "핸들링: 드리블 무브로 수비를 더 자주 제칩니다.",
+  "Step-back: his moves work a little more, and a contested three costs him less.": "스텝백: 무브가 조금 더 잘 통하고, 수비가 붙은 3점의 불이익이 줄어듭니다.",
+  "Passer: his passes fly faster and are rarely picked off or thrown away.": "패서: 패스가 더 빠르고, 거의 가로채이거나 빗나가지 않습니다.",
+  "On the glass: he comes down with far more rebounds.": "리바운드 장악: 훨씬 더 많은 리바운드를 잡습니다.",
+  "Clutch: in the last two minutes of a game every shot of his falls more.": "클러치: 경기 마지막 2분 동안 모든 슛이 더 잘 들어갑니다.",
+  "Motor: his legs tire far more slowly.": "모터: 체력이 훨씬 천천히 떨어집니다."
  },
  "story": {
   "f-driveway.title": "집 앞 골대",

@@ -4213,7 +4213,21 @@
   "Your team, with its real roster": "Tu equipo, con su plantilla real",
   "Teammates at your level": "Compañeros de tu nivel",
   "Their real roster": "Su plantilla real",
-  "A team at your level": "Un equipo de tu nivel"
+  "A team at your level": "Un equipo de tu nivel",
+  "Signature": "Sello",
+  "Quick release: his shot meter fills much faster.": "Tiro rápido: su medidor de tiro se llena mucho antes.",
+  "Deep range: threes from far out cost him nothing, and all his threes fall a little more.": "Rango lejano: los triples desde muy lejos no le penalizan, y todos sus triples entran un poco más.",
+  "Tough shot maker: a hand in his face bothers his jumper far less.": "Tirador bajo presión: una mano en la cara molesta mucho menos a su tiro.",
+  "Hook shot: his hook falls more often and is rarely blocked.": "Gancho: su gancho entra más a menudo y rara vez lo taponan.",
+  "Power at the rim: he finishes through contact and is seldom blocked there.": "Potencia en el aro: finaliza con contacto y rara vez lo taponan ahí.",
+  "Rim protector: he blocks far more shots.": "Protector del aro: tapona muchos más tiros.",
+  "Quick hands: more steals, strips and passes picked off.": "Manos rápidas: más robos, más balones arrancados y más pases interceptados.",
+  "Handle: his moves beat his man more often.": "Manejo: sus movimientos superan a su defensor más a menudo.",
+  "Step-back: his moves work a little more, and a contested three costs him less.": "Paso atrás: sus movimientos funcionan un poco más, y un triple punteado le cuesta menos.",
+  "Passer: his passes fly faster and are rarely picked off or thrown away.": "Pasador: sus pases van más rápido y rara vez se interceptan o se pierden.",
+  "On the glass: he comes down with far more rebounds.": "En el tablero: captura muchos más rebotes.",
+  "Clutch: in the last two minutes of a game every shot of his falls more.": "Decisivo: en los dos últimos minutos de un partido, todos sus tiros entran más.",
+  "Motor: his legs tire far more slowly.": "Motor: sus piernas se cansan mucho más despacio."
  },
  "story": {
   "f-driveway.title": "La entrada de casa",

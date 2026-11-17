@@ -12,7 +12,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { FLOOR } from '../../engine/balance';
 import { COURT, RIM_Y, zoneOf } from '../../engine/floor/court';
-import { floorHash, floorResult, freshEvents, isOpen, meterWindow, mirrorFloor, openMan, ratingK, releaseQuality, skipFloor, startFloor, stepFloor, type FloorEvent, type FloorInput, type FloorSetup, type FloorState } from '../../engine/floor/sim';
+import { floorHash, floorResult, freshEvents, isOpen, meterLoad, meterWindow, mirrorFloor, openMan, ratingK, releaseQuality, skipFloor, startFloor, stepFloor, type FloorEvent, type FloorInput, type FloorSetup, type FloorState } from '../../engine/floor/sim';
 import type { DramaPlay } from '../../engine/story/drama';
 import type { Kit } from '../../content/teamStyle';
 import { lookOf, shoeOf, type KitName } from '../art/Player';
@@ -25,6 +25,7 @@ import { announce, announcerOn, setAnnouncer } from '../announcer';
 import { Backdrop, CAM_RANGE, VIEW, drawBasket, drawFrontRow, drawShadow, pixel, project, type ArenaLook } from './view';
 import { MID_X, SpriteBook, type Frame } from './sprites';
 import type { NetGame } from './net';
+import { signatureOf } from './traits';
 import { Bench, BoxScore } from './BoxScore';
 
 export interface FloorTeamLook {
@@ -643,7 +644,7 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
       }
       return { kind: x.kind, k };
     };
-    const loadShare = (now: number) => (shootFrom !== null && shooting() ? gameSecs(now - shootFrom) / FLOOR.meter.load : -1);
+    const loadShare = (now: number) => (shootFrom !== null && shooting() ? gameSecs(now - shootFrom) / meterLoad(s.players[s.user]) : -1);
 
     const ballAt = (a: number, now: number): { x: number; y: number; h: number } => {
       const tr = now / 1000;
@@ -1076,6 +1077,8 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
     );
   };
   const user = setup.us.players.find((p) => p.user) ?? setup.us.players[0];
+  // a legend's signature, beside his name
+  const sig = user.trait ? signatureOf(user.name) : null;
   const me = over && game.current ? game.current.players[game.current.user] : null;
   const hot = hud.mo >= FLOOR.momentum.full * 10;
 
@@ -1228,6 +1231,11 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
         <b>
           {user.name} #{user.number}
         </b>
+        {sig && (
+          <span className="floor-me-item floor-sig" title={sig.text}>
+            {sig.name}
+          </span>
+        )}
         <span className="floor-me-item">
           {t('Stamina')} <Legs n={hud.legs} />
         </span>

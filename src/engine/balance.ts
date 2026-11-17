@@ -1263,11 +1263,24 @@ export const FLOOR = {
   shot: { rim: 0.7, paint: 0.51, mid: 0.46, three: 0.4, perPoint: { rim: 0.006, paint: 0.0055, mid: 0.005, three: 0.005 }, deep: 26, deepPerFt: 0.04, min: 0.02, max: 0.93, size: 0.06, sizeFull: 25, strong: 0.3 },
   /** A defender closer than `within` feet takes up to `max` off the chance; tired legs up to `tired`. */
   contest: { within: 6, max: 0.17, tired: 0.08 },
-  /** His meter: how long a full load takes (game seconds; 1.5 is one real second at the 1.5x clock,
-   * owner: "could be slower actually (one real second?)"), the window's half-width from 40 to 99
+  /** His meter: how long a full load takes (game seconds; first 1.5, one real second at the 1.5x
+   * clock; then, owner after round 42: "lets make the shooting bar fill in 0.6 seconds", 0.9), how
+   * long past full he may keep holding before the shot goes up by itself (`hold`: 4.5 game seconds,
+   * owner: "dont allow them to maintain filled bar for more than 3 seconds"), the window's half-width from 40 to 99
    * shooting (free-throw touch at the line), what being contested or tired takes off it, and what a
    * perfect or a missed release does to the chance (scaled between). */
-  meter: { load: 1.5, window: [0.08, 0.28], contested: 0.45, tired: 0.4, best: 1.15, worst: 0.55 },
+  meter: { load: 0.9, hold: 4.5, window: [0.08, 0.28], contested: 0.45, tired: 0.4, best: 1.15, worst: 0.55 },
+  /** After round 42, the legends' signatures (content/legendTraits.ts; every legend rated 90 or more
+   * has one of these kinds). quick: his meter (and the AI's gather) takes this share of the time.
+   * deep: no penalty for distance until `deepFt` further out, and `deep` on every three. fade,
+   * stepThree, power: the share of a contest that still counts on his jumper, his three, his shot at
+   * the rim; powerBlock: how often he is blocked there. hook: added to his hook, blocked `hookBlock`
+   * as often. block, steal, glass: what his blocks, his steals and strips and picked-off passes, his
+   * weight on the boards are multiplied by. handle, stepMove: added to the chance his move beats his
+   * man. passSpeed, passPick: his passes' speed, and how often they are picked off (never thrown
+   * away). clutch: added to every shot in the game's last `clutchSecs` seconds. motor: the share of
+   * the legs he loses. */
+  trait: { quick: 0.6, deepFt: 5, deep: 0.03, fade: 0.5, stepThree: 0.6, power: 0.5, powerBlock: 0.5, hook: 0.08, hookBlock: 0.4, block: 1.6, steal: 1.5, glass: 1.35, handle: 0.12, stepMove: 0.06, passSpeed: 1.25, passPick: 0.35, clutch: 0.06, clutchSecs: 120, motor: 0.55 },
   /** Free throws: the chance from free-throw touch 0 to 100. */
   ft: [0.5, 0.95],
   /** Fouls on a shot: at the rim, on a jumper; bonus from this many team fouls; out at six. */
