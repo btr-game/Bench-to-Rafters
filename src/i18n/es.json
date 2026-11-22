@@ -4358,7 +4358,19 @@
   "His threes fall a little more.": "Sus triples entran un poco más.",
   "Inside shots on the break fall more.": "Sus tiros cerca del aro en contraataque entran más.",
   "His moves beat his man more.": "Sus movimientos superan más a su defensor.",
-  "Inside shots fall more, and he is blocked less.": "Sus tiros interiores entran más y le taponan menos."
+  "Inside shots fall more, and he is blocked less.": "Sus tiros interiores entran más y le taponan menos.",
+  "{name} is on fire": "{name} está en racha",
+  "{name} erupts": "{name} estalla",
+  "The crowd erupts": "El público estalla",
+  "Modern": "Moderna",
+  "The nineties": "Los noventa",
+  "The sixties": "Los sesenta",
+  "Today’s rules.": "Las reglas de hoy.",
+  "Hand-checking: tougher at the rim, fewer fouls called, a slower pace.": "Hand-checking: más duro en el aro, menos faltas pitadas, un ritmo más lento.",
+  "No three-point line: every basket is two. A faster pace.": "Sin línea de tres: cada canasta vale dos. Un ritmo más rápido.",
+  "Era": "Época",
+  "Hot spots": "Zonas calientes",
+  "Chemistry: {a} + {b}": "Química: {a} + {b}"
  },
  "story": {
   "f-driveway.title": "La entrada de casa",

@@ -12,6 +12,7 @@ import { FRANCHISE_SIXTH, type LegendSpot } from '../../content/franchiseFives';
 import { NBA_TEAMS } from '../../content/teams';
 import { fiveOvr, fitPlan, floorLevel, legendFive, legendTeam } from './legends';
 import { skipFloor, startFloor, type FloorPlan, type FloorSetup } from './sim';
+import type { FloorEra } from './gimmicks';
 
 /** How long a game is: the fourth quarter from a close score (a quick game), one quarter from 0-0 in about
  * two real minutes (a playoff game; owner, after round 42: "reduce time in playoffs. maybe just leave it as
@@ -47,7 +48,7 @@ export function startScore(seed: number, us: FloorSide, them: FloorSide): [numbe
 }
 
 /** A game between two sides: `user` is the starter he steers (none: the AI plays both, a simulation). */
-export function legendSetup(o: { seed: number; us: FloorSide; them: FloorSide; user?: number; length: FloorLength; plan?: FloorPlan }): FloorSetup {
+export function legendSetup(o: { seed: number; us: FloorSide; them: FloorSide; user?: number; length: FloorLength; plan?: FloorPlan; era?: FloorEra; home?: 0 | 1 }): FloorSetup {
   const full = o.length === 'full';
   const one = o.length === 'playoff';
   return {
@@ -59,6 +60,8 @@ export function legendSetup(o: { seed: number; us: FloorSide; them: FloorSide; u
     clock: FLOOR.quarter,
     quarter: full ? 1 : 4,
     rate: full ? FLOOR.rateFull : one ? FLOOR.ratePlayoff : FLOOR.rate,
+    ...(o.era && o.era !== 'modern' ? { era: o.era } : {}),
+    ...(o.home ? { home: o.home } : {}),
   };
 }
 

@@ -66,6 +66,8 @@ export const CALLS: [string, string][] = [
   ['And one!', 'A basket and the foul'],
   ['From downtown!', 'A three'],
   ['Buzzer beater!', 'A make in the last three seconds'],
+  ['He’s on fire!', 'Three makes in a row on the Floor'],
+  ['Listen to this crowd!', 'The home crowd erupting on a run on the Floor'],
   ['Alley-oop!', 'An alley-oop in 3-on-3'],
   ['Posterized!', 'A poster dunk in 3-on-3'],
   ['Champions!', 'The page of a title'],

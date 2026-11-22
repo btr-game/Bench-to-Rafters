@@ -4358,7 +4358,19 @@
   "His threes fall a little more.": "Ses tirs à trois points rentrent un peu plus.",
   "Inside shots on the break fall more.": "Ses tirs près du panier en contre-attaque rentrent plus.",
   "His moves beat his man more.": "Ses feintes battent plus souvent son défenseur.",
-  "Inside shots fall more, and he is blocked less.": "Ses tirs intérieurs rentrent plus et il est moins contré."
+  "Inside shots fall more, and he is blocked less.": "Ses tirs intérieurs rentrent plus et il est moins contré.",
+  "{name} is on fire": "{name} est en feu",
+  "{name} erupts": "{name} explose",
+  "The crowd erupts": "La foule explose",
+  "Modern": "Moderne",
+  "The nineties": "Les années 90",
+  "The sixties": "Les années 60",
+  "Today’s rules.": "Les règles d’aujourd’hui.",
+  "Hand-checking: tougher at the rim, fewer fouls called, a slower pace.": "Hand-checking : plus dur au cercle, moins de fautes sifflées, un rythme plus lent.",
+  "No three-point line: every basket is two. A faster pace.": "Pas de ligne à trois points : chaque panier vaut deux. Un rythme plus rapide.",
+  "Era": "Époque",
+  "Hot spots": "Zones chaudes",
+  "Chemistry: {a} + {b}": "Complicité : {a} + {b}"
  },
  "story": {
   "f-driveway.title": "L’allée",

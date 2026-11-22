@@ -4358,7 +4358,19 @@
   "His threes fall a little more.": "3점슛이 조금 더 잘 들어간다.",
   "Inside shots on the break fall more.": "속공에서 골밑 슛이 더 잘 들어간다.",
   "His moves beat his man more.": "개인기로 수비수를 더 잘 제친다.",
-  "Inside shots fall more, and he is blocked less.": "골밑 슛이 더 잘 들어가고, 블록을 덜 당한다."
+  "Inside shots fall more, and he is blocked less.": "골밑 슛이 더 잘 들어가고, 블록을 덜 당한다.",
+  "{name} is on fire": "{name} 불붙었다",
+  "{name} erupts": "{name} 폭발",
+  "The crowd erupts": "관중 폭발",
+  "Modern": "현대",
+  "The nineties": "90년대",
+  "The sixties": "60년대",
+  "Today’s rules.": "지금의 규칙.",
+  "Hand-checking: tougher at the rim, fewer fouls called, a slower pace.": "핸드체킹: 골밑이 더 거칠고, 파울이 덜 불리며, 템포가 느립니다.",
+  "No three-point line: every basket is two. A faster pace.": "3점 라인이 없습니다: 모든 득점이 2점입니다. 템포가 더 빠릅니다.",
+  "Era": "시대",
+  "Hot spots": "핫 스팟",
+  "Chemistry: {a} + {b}": "케미: {a} + {b}"
  },
  "story": {
   "f-driveway.title": "집 앞 골대",
