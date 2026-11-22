@@ -19,6 +19,7 @@ import { teamById } from '../../engine/career/common';
 import { ovrOf } from '../../engine/player/ovr';
 import { achievementsNow, useStore } from '../../store';
 import { recordFloorGame } from '../achievements';
+import { floorGameRec } from '../../engine/achievements42';
 import { t, tx } from '../../i18n';
 import { PageTop } from '../components/PageTop';
 import { TeamArt } from '../art/Crest';
@@ -393,13 +394,18 @@ export function FloorPage({ inside = false }: { inside?: boolean }) {
           setPlan(null);
           setLast(r);
           let title = false;
+          // (after round 42) the book's marks: the franchises, the court, the plan, a conference won, a drafted five
+          const played = mode === 'playoffs' && bracket ? myGame(bracket) : null;
+          const opp = played ? (played.home ? played.game.b : played.game.a) : mode === 'career' ? undefined : them;
+          const conf = played && r.win && played.round === BRACKET_ROUNDS - 2 ? NBA_TEAMS.find((x) => x.abbr === us)?.conf : undefined;
           if (mode === 'playoffs' && bracket) {
             const b = playRound(bracket, [r.us, r.them], oppOvr ?? undefined);
             title = b.champion === b.me;
             setBracket(b.out !== null && !b.champion ? finishBracket(b, oppOvr ?? undefined) : b);
           }
           // the book (achievements) keeps games played to their end
-          recordFloorGame({ margin: r.us - r.them, pts: r.line.pts, low: Math.min(r.marks.low, r.us - r.them), kind: mode === 'playoffs' ? 'playoff' : mode === 'draft' ? 'draft' : 'quick', title });
+          const more = floorGameRec(r, { team: mode === 'quick' || mode === 'playoffs' ? us : undefined, opp, court: plan.court, plan: plan.setup.us.plan, conf, drafted: mode === 'draft' ? drafted : undefined });
+          recordFloorGame({ margin: r.us - r.them, pts: r.line.pts, low: Math.min(r.marks.low, r.us - r.them), kind: mode === 'playoffs' ? 'playoff' : mode === 'draft' ? 'draft' : 'quick', title, more });
           achievementsNow();
         }}
       />

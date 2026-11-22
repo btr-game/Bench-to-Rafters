@@ -43,7 +43,7 @@ export const ACH_CAT_RULES: Record<AchCat, (string | RegExp)[]> = {
   // the team's seasons, the playoffs (round 35: a series against his rival classmate), the rings
   // and the cups, crunch time in a final (round 39: the Floor's last six minutes, every exit, a
   // title with the friend from the driveway)
-  titles: [/^w\d+$/, /^w-/, /^ring/, /^p-/, /^r-/, /^clutch/, /^crunch/, 'l60', 'playin', 'sidedoor', 'playoffs', 'round2win', 'conf', 'finals', 'lostfinal', 'threepeat', 'cinderella', 'youngring', 'oldring', 'cup', 'a-rings3teams', 'a-decades', 'a-pick1-ring', 'a-ncaa-nba', 'a-gold-ring', 'a-scoretitle', 'tn-cup3', 'g-2cities', 'k-quiet', 'g-post30', 'c-overseas-ring', /^rs-/, 'fl-ring-pal', 'tw-banners', /^flr-/, 'gn-exits', 'gn-tourist', 'gn-sixthring', 'sm-ring'],
+  titles: [/^w\d+$/, /^w-/, /^ring/, /^p-/, /^r-/, /^clutch/, /^crunch/, 'l60', 'playin', 'sidedoor', 'playoffs', 'round2win', 'conf', 'finals', 'lostfinal', 'threepeat', 'cinderella', 'youngring', 'oldring', 'cup', 'a-rings3teams', 'a-decades', 'a-pick1-ring', 'a-ncaa-nba', 'a-gold-ring', 'a-scoretitle', 'tn-cup3', 'g-2cities', 'k-quiet', 'g-post30', 'c-overseas-ring', /^rs-/, 'fl-ring-pal', 'tw-banners', /^flr-/, 'gn-exits', 'gn-tourist', 'gn-sixthring', 'sm-ring', 'fh-east', 'fh-west'],
   // high school, college, the leagues abroad and the G League, the draft (round 35: draft night),
   // the way in (round 36: the endings of a dream that ended early and of a legend of Europe)
   road: [/^(hs|ncaa|eu|int|gl|d)-/, 'fivestar', 'topclass', 'state', 'college', 'ncaa', 'naismith', 'euro', 'eutitle', 'abroad', 'gleague', 'callup', 'scenic', 'drafted', 'round2', 'round1', 'lottery', 'top3', 'pick1', 'undrafted', 'debut', 'young', 'c-5levels', 'c-prep', 'c-g-league-mvp', 'y-19', 'y-late', 'tn-mcd', 'tn-youth', 'l-transfer', /^dn-/, 'en-dream', 'en-euro', 'tw-looks4'],
@@ -63,7 +63,8 @@ export const ACH_CAT_RULES: Record<AchCat, (string | RegExp)[]> = {
   // mode's chapters and its people)
   fame: [/^nick/, /^brand/, /^shoe/, /^fine(\d|-)/, /^press/, /^wed/, /^dad/, /^fam-/, /^gen2/, /^kid/, 'logo', 'military', 'love', 'breakup', 'sons3', 'mp-crown', /^nm-/, /^sp-/, 'tp-jv', 'tp-fan', 'tp-street', 'tp-mural', 'tp-gym', 'tp-knee', /^sm-/],
   // the arcade, and the bonuses in a career
-  arcade: [/^fo-/, /^mg-/, 'side', 'l-mini10'],
+  // (after round 42: the Floor's own page, fh-, and its friend games, fo-)
+  arcade: [/^fo-/, /^mg-/, /^fh-/, 'side', 'l-mini10'],
   // the difficulties and challenges (round 35: play with friends, the road map's unlocks), and the
   // game's own pages and habits (kept across careers; round 36: the finale; round 37: the town's doors;
   // round 39: a story mode career finished, and the languages careers were finished in)
@@ -71,7 +72,7 @@ export const ACH_CAT_RULES: Record<AchCat, (string | RegExp)[]> = {
   // nights so bad they are hard to have, simple math and the odd shapes of a season or a career
   // (round 36: the credits it rolls; round 37: the miles walked on the street; round 39: the Floor
   // left to the engine, the flights from the airport)
-  odd: [/^b-/, /^n-/, 's-no3', 's-ft70', 's-volume', 's-tov35', 's-garbage', 'c-num0', 'c-num99', 'c-lefty', 'c-lowpeak-ring', 'g-rookie-high', 'g-hs-high', 'mp-made-low', 'ft-bad', 'x-upside', 'x-flash', 'rs-lost3', /^cr-/, 'tw-mile', 'tw-marathon', 'tp-midnight', 'flr-sim', /^ap-/],
+  odd: [/^b-/, /^n-/, 's-no3', 's-ft70', 's-volume', 's-tov35', 's-garbage', 'c-num0', 'c-num99', 'c-lefty', 'c-lowpeak-ring', 'g-rookie-high', 'g-hs-high', 'mp-made-low', 'ft-bad', 'x-upside', 'x-flash', 'rs-lost3', /^cr-/, 'tw-mile', 'tw-marathon', 'tp-midnight', 'flr-sim', /^ap-/, 'fh-big', 'fh-big10'],
 };
 
 const NAMED = new Map<string, AchCat>();

@@ -21,7 +21,7 @@ import { ALL_LEGENDS, legendFive } from '../../engine/floor/legends';
 import { BESTS, PICK_SECONDS, lineUp, picksOf, seriesWinner, toWin, type Best } from '../../engine/floor/friend';
 import type { FloorPlan, FloorSetup } from '../../engine/floor/sim';
 import { username } from '../names';
-import { recordFloorFriend } from '../achievements';
+import { recordFloorFriend, recordFloorSeries } from '../achievements';
 import { achievementsNow } from '../../store';
 import { SITE } from '../multiplayer';
 import { t } from '../../i18n';
@@ -184,6 +184,20 @@ export function FloorFriend() {
     },
     [],
   );
+
+  // (after round 42) a series decided counts in the book once: won, swept, with drafted fives
+  const seriesDone = useRef(false);
+  useEffect(() => {
+    const won = rs ? seriesWinner(rs.best, rs.wins) : null;
+    if (won === null || !rs) {
+      seriesDone.current = false;
+      return;
+    }
+    if (seriesDone.current || !settled.current.size) return;
+    seriesDone.current = true;
+    const side: 0 | 1 = host.current ? 0 : 1;
+    if (recordFloorSeries({ won: won === side, best: rs.best, sweep: rs.wins[1 - won] === 0, draft: rs.mode === 'draft' })) achievementsNow();
+  }, [rs]);
 
   // a quick match tips off by itself once the other player is in the room
   useEffect(() => {
@@ -349,7 +363,7 @@ export function FloorFriend() {
           series={seriesLine(rs, game.link.side, game.friend)}
           onDone={(r) => {
             // a game played to its end counts in the book (one left early does not)
-            if (recordFloorFriend(r.win, r.us - r.them, r.line.pts)) achievementsNow();
+            if (recordFloorFriend(r.win, r.us - r.them, r.line.pts, { draft: rs?.mode === 'draft', friend: game.friend })) achievementsNow();
             done(t('{us} – {them}, {result}', { us: r.us, them: r.them, result: r.win ? t('you won') : t('you lost') }));
           }}
           onAgain={host.current && peer ? again : undefined}
