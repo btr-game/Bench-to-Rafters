@@ -1220,6 +1220,7 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
             <div className="floor-final">
               <span>{setup.us.short}</span> {over.us} – {over.them} <span>{setup.them.short}</span>
             </div>
+            {net && series && <p className="floor-end-series">{t('Series {s}', { s: series })}</p>}
             {me && (
               <p className="floor-line">
                 {me.name}: {over.line.pts} PTS · {over.line.reb} REB · {over.line.ast} AST · {over.line.stl} STL · {over.line.blk} BLK · {over.line.fgm}/{over.line.fga} FG

@@ -31,10 +31,11 @@
 // and itch.io); in the dev deck a channel between two tabs of this browser, which touches nothing
 // online; the claude.ai page has neither and points to the website.
 
-import { floorHash, startFloor, stepFloor, type FloorInput, type FloorSetup, type FloorState } from '../../engine/floor/sim';
+import { floorHash, startFloor, stepFloor, type FloorInput, type FloorPlan, type FloorSetup, type FloorState } from '../../engine/floor/sim';
 import type { Spot } from '../../engine/floor/court';
 import { isDev } from '../../dev/mode';
 import type { RtcSignal } from './rtc';
+import type { RoomState } from './room';
 
 /** Ticks the screen may run past the last tick both players' keys are known for (a second and a
  * half): beyond it the friend has gone quiet, and the screen waits. (0.6 seconds until the owner's
@@ -55,7 +56,8 @@ const HASH_EVERY = 40;
 const KEEP = 400;
 
 export type FloorMsg =
-  | { k: 'hi'; id: string; host: boolean; name: string; team: string; pos: string }
+  // (after round 42) `plan`: his game plan, for the host's setup
+  | { k: 'hi'; id: string; host: boolean; name: string; team: string; pos: string; plan?: FloorPlan }
   | { k: 'start'; id: string; to: string; game: number; setup: FloorSetup }
   | { k: 'in'; id: string; game: number; t: number; ins: FloorInput[]; d: number }
   | { k: 'need'; id: string; game: number; t: number }
@@ -70,7 +72,11 @@ export type FloorMsg =
   | { k: 'rtc'; id: string; to: string; d: RtcSignal }
   // round 42, quick match: someone waiting in the lobby, and the room one of two picks for both
   | { k: 'seek'; id: string }
-  | { k: 'pair'; id: string; to: string; code: string };
+  | { k: 'pair'; id: string; to: string; code: string }
+  // after round 42 (room.ts): the room as the host keeps it (what it plays, the series, the draft's
+  // board, `ms` left on the pick clock), and a pick the friend makes in the draft
+  | { k: 'room'; id: string; room: RoomState; ms: number | null }
+  | { k: 'pick'; id: string; draft: number; at: number; legend: number };
 
 /** The room everyone looking for a quick match waits in. */
 export const LOBBY = 'MATCH2';
