@@ -1254,7 +1254,7 @@ export const FLOOR = {
   speed: [8, 14],
   sprint: 1.3,
   /** Stamina (0 to 1) a game second: sprinting, moving, standing; a timeout gives back. */
-  stamina: { sprint: -0.012, move: -0.0045, rest: 0.004, timeout: 0.25 },
+  stamina: { sprint: -0.0075, move: -0.0028, rest: 0.0055, timeout: 0.3 },
   /** A shot's base chance by zone, and how much its rating (from 70) moves it per point. After round
    * 42 (owner: "i feel like guards have an advantage over bigmen. make their rebounding/scoring just
    * a little easier"): at the rim and in the paint a bigger man shoots over a smaller one, up to
@@ -1310,7 +1310,7 @@ export const FLOOR = {
    * long); shaqPace: his back-down. giannisSpeed (with the ball), robinsonSpeed. curry: his meter's
    * share of the time. kawhiSteal. oscarPick: how often his passes are picked off. drjRange: the feet
    * from the rim his shot still counts as one at the rim. */
-  sig: { mjContest: 0.1, kdContest: 0.35, lukaContest: 0.1, lukaSecs: 1.5, kgContest: 1.45, birdShot: 0.08, birdWindow: 1.6, birdSecs: 120, westShot: 0.13, westSecs: 60, duncanShot: 0.09, duncanWing: 8, kobeStep: 0.035, kobeMax: 3, feedSecs: 2, jokicPass: 0.08, magicPass: 0.09, maloneShot: 0.1, kareemHook: 0.16, russellBlock: 1.8, robinsonBlock: 1.7, wadeBlock: 1.6, wadeBreak: 2, sgaFoul: 2.3, embiidFoul: 3.5, hardenFoul: 3, lebronFoul: 2, wiltGlass: 1.9, oscarGlass: 1.6, kgGlass: 1.6, hardenMove: 0.24, shaqDrop: 0.4, hakeemMove: 0.28, hakeemSlow: 2, shaqPace: 2.2, giannisSpeed: 1.22, robinsonSpeed: 1.15, curry: 0.45, kawhiSteal: 2.2, oscarPick: 0.45, drjRange: 8 },
+  sig: { mjContest: 0.1, kdContest: 0.35, lukaContest: 0.1, lukaSecs: 1.5, kgContest: 1.45, birdShot: 0.08, birdWindow: 1.6, birdSecs: 120, westShot: 0.13, westSecs: 60, duncanShot: 0.09, duncanWing: 8, kobeStep: 0.035, kobeMax: 3, feedSecs: 2, jokicPass: 0.14, magicPass: 0.09, maloneShot: 0.1, kareemHook: 0.16, russellBlock: 1.8, robinsonBlock: 1.7, wadeBlock: 1.6, wadeBreak: 2, sgaFoul: 2.3, embiidFoul: 3.5, hardenFoul: 3, lebronFoul: 2, wiltGlass: 1.9, oscarGlass: 1.6, kgGlass: 1.6, hardenMove: 0.24, shaqDrop: 0.4, hakeemMove: 0.28, hakeemSlow: 2, shaqPace: 2.2, giannisSpeed: 1.22, robinsonSpeed: 1.15, curry: 0.45, kawhiSteal: 2.2, oscarPick: 0.45, drjRange: 8 },
   trait: { quick: 0.6, deepFt: 5, deep: 0.03, fade: 0.5, stepThree: 0.6, power: 0.5, powerBlock: 0.5, hook: 0.08, hookBlock: 0.4, block: 1.6, steal: 1.5, glass: 1.35, handle: 0.12, stepMove: 0.06, passSpeed: 1.25, passPick: 0.35, clutch: 0.06, clutchSecs: 120, motor: 0.55 },
   /** Free throws: the chance from free-throw touch 0 to 100. */
   ft: [0.5, 0.95],
@@ -1377,6 +1377,13 @@ export const FLOOR = {
   rateFull: 8,
   /** A playoff game: one quarter from 0-0 at this clock rate, 12:00 in two real minutes (720 / (1.5 x 4) = 120 s). */
   ratePlayoff: 4,
+  // each franchise's face (after round 42, owner: "give them another buff, especially giving a slight
+  // edge to those who didnt make the 95+ cut"): points added to every skill but his legs and free
+  // throws, more for a face under 95 (Isiah Thomas) than for one already at 95 or more
+  face: { star: 1.5, rest: 3 },
+  // Jokic (owner: "make jokic much stronger ... he's the crack code of the game"): his passing and
+  // reading of the game at the top, his touch and rebounding raised on top of the face's buff
+  jokic: { PLY: 99, IQ: 99, REB: 99, FIN: 5, SHT: 4, INT: 3 },
   /** Round 42, a fast break (owner's pick: "an outlet pass and a run"): after a steal or a
    * defensive rebound the new offence runs for up to `secs` game seconds, everyone at a sprint, the
    * new defence starting `react` seconds late (less for a smart player). The man with the ball

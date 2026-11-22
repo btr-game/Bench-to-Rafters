@@ -8,9 +8,9 @@
 
 import { FLOOR } from '../balance';
 import { int, makeRng, next } from '../rng';
-import type { LegendSpot } from '../../content/franchiseFives';
+import { FRANCHISE_SIXTH, type LegendSpot } from '../../content/franchiseFives';
 import { NBA_TEAMS } from '../../content/teams';
-import { fiveOvr, floorLevel, legendFive, legendTeam } from './legends';
+import { fiveOvr, fitPlan, floorLevel, legendFive, legendTeam } from './legends';
 import { skipFloor, startFloor, type FloorPlan, type FloorSetup } from './sim';
 
 /** How long a game is: the fourth quarter from a close score (a quick game), one quarter from 0-0 in about
@@ -25,12 +25,13 @@ export interface FloorSide {
   color: string;
   five: LegendSpot[];
   ovr?: number;
+  sixth?: LegendSpot; // the franchise's legend off the bench
 }
 
 /** A franchise as a side. */
 export function franchise(abbr: string, ovr?: number): FloorSide {
   const t = NBA_TEAMS.find((x) => x.abbr === abbr) ?? NBA_TEAMS[0];
-  return { name: `${t.city} ${t.nick}`, short: t.abbr, color: t.color, five: legendFive(t.abbr), ovr };
+  return { name: `${t.city} ${t.nick}`, short: t.abbr, color: t.color, five: legendFive(t.abbr), ovr, sixth: FRANCHISE_SIXTH[t.abbr] };
 }
 
 export const sideOvr = (s: FloorSide): number => s.ovr ?? fiveOvr(s.five);
@@ -52,8 +53,8 @@ export function legendSetup(o: { seed: number; us: FloorSide; them: FloorSide; u
   return {
     seed: o.seed,
     mode: 'standard',
-    us: { name: o.us.name, short: o.us.short, color: o.us.color, players: legendTeam('U', o.us.five, { ovr: o.us.ovr, user: o.user, seed: o.seed + 3 }), plan: o.plan },
-    them: { name: o.them.name, short: o.them.short, color: o.them.color, players: legendTeam('T', o.them.five, { ovr: o.them.ovr, seed: o.seed + 11 }) },
+    us: { name: o.us.name, short: o.us.short, color: o.us.color, players: legendTeam('U', o.us.five, { ovr: o.us.ovr, user: o.user, seed: o.seed + 3, sixth: o.us.sixth }), plan: o.plan ?? fitPlan(o.us.short) },
+    them: { name: o.them.name, short: o.them.short, color: o.them.color, players: legendTeam('T', o.them.five, { ovr: o.them.ovr, seed: o.seed + 11, sixth: o.them.sixth }), plan: fitPlan(o.them.short) },
     score: full || one ? [0, 0] : startScore(o.seed, o.us, o.them),
     clock: FLOOR.quarter,
     quarter: full ? 1 : 4,

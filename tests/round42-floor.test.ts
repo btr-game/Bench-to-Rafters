@@ -5,6 +5,7 @@
 import { describe, expect, it } from 'vitest';
 import { FLOOR } from '../src/engine/balance';
 import { ovrOf } from '../src/engine/player/ovr';
+import { isFace } from '../src/content/franchiseFives';
 import { ALL_LEGENDS, fiveOvr, floorLevel, legendFive, legendRatings, legendStyle, legendTeam } from '../src/engine/floor/legends';
 import { BRACKET_ROUNDS, finishBracket, franchise, legendSetup, myGame, newBracket, playRound, winnerOf } from '../src/engine/floor/game';
 import { floorResult, freshEvents, gameScore, meterLoad, releaseQuality, startFloor, stepFloor, type FloorInput, type FloorState } from '../src/engine/floor/sim';
@@ -20,11 +21,13 @@ const play = (s: FloorState) => {
 };
 
 describe('round 42: legends from their real numbers', () => {
-  it('every one of the 150 has a line, and plays at the level of his overall', () => {
-    expect(ALL_LEGENDS).toHaveLength(150);
+  it('every one of the 180 has a line, and plays at the level of his overall', () => {
+    expect(ALL_LEGENDS).toHaveLength(180);
     for (const { spot } of ALL_LEGENDS) {
       expect(LEGEND_STATS[spot.name], spot.name).toBeTruthy();
-      expect(Math.abs(ovrOf(legendRatings(spot), spot.pos) - floorLevel(spot.ovr)), spot.name).toBeLessThan(0.6);
+      // a franchise's face plays above his number (the test below)
+      if (isFace(spot.name)) expect(ovrOf(legendRatings(spot), spot.pos), spot.name).toBeGreaterThan(floorLevel(spot.ovr) - 0.6);
+      else expect(Math.abs(ovrOf(legendRatings(spot), spot.pos) - floorLevel(spot.ovr)), spot.name).toBeLessThan(0.6);
     }
   });
 
@@ -327,11 +330,12 @@ describe('after round 42: the legends\' signatures, the quicker meter and the ho
       } else expect(SHARED).toContain(k.kind);
     }
     expect(kinds.filter((k) => k.ovr >= 95)).toHaveLength(28);
-    // it rides onto the court with him, and not with his bench (only once the owner has passed the list)
+    // it rides onto the court with him, and not with the made-up men on his bench (the sixth man, a legend, keeps his)
     const set = legendSetup({ seed: 5, us: franchise('GSW', 90), them: franchise('POR', 90), user: 0, length: 'fourth' });
     expect(set.us.players.find((p) => p.name === 'Stephen Curry')!.trait).toBe(SIGNATURES_ON ? 'curry' : undefined);
     expect(set.them.players.find((p) => p.name === 'Damian Lillard')!.trait).toBe(SIGNATURES_ON ? 'deep' : undefined);
-    expect(set.us.players.slice(5).every((p) => !p.trait)).toBe(true);
+    expect(set.us.players.slice(6).every((p) => !p.trait)).toBe(true);
+    expect(set.us.players[5].name).toBe('Chris Mullin');
   });
 
   it('the meter fills in 0.6 real seconds; Curry\'s in half that', () => {
@@ -381,7 +385,7 @@ describe('after round 42: the legends\' signatures, the quicker meter and the ho
     const run = (traits: boolean) => {
       let made = 0;
       let tried = 0;
-      for (let g = 0; g < 14; g++) {
+      for (let g = 0; g < 30; g++) {
         const set = legendSetup({ seed: 300 + g * 17, us: franchise('POR', 90), them: franchise('SAC', 90), length: 'full' });
         for (const p of [...set.us.players, ...set.them.players]) {
           if (traits && LEGEND_TRAITS[p.name]) p.trait = LEGEND_TRAITS[p.name].kind;
@@ -486,5 +490,28 @@ describe('after round 42: shorter playoff games, and game plans', () => {
     const k = s.players.findIndex((p) => p.name === 'LeBron James');
     expect(s.players[k].st.pass).toBeGreaterThan(plain.players[k].st.pass);
     expect(Math.abs(s.players[k].st.use - 1)).toBeLessThan(Math.abs(plain.players[k].st.use - 1) + 1e-9);
+  });
+});
+
+describe('after round 42: a sixth man for every team, and the franchise faces', () => {
+  // (owner: "let's just have sixth man in the teams"; "each team has a franchise face player ... give
+  // them another buff, especially giving a slight edge to those who didnt make the 95+ cut")
+  it('every franchise brings a legend off the bench, and its face plays above his number', async () => {
+    const { FRANCHISE_FIVES, FRANCHISE_SIXTH, FRANCHISE_FACE } = await import('../src/content/franchiseFives');
+    for (const abbr of Object.keys(FRANCHISE_FIVES)) {
+      expect(FRANCHISE_SIXTH[abbr]).toBeTruthy();
+      expect(FRANCHISE_FIVES[abbr].map((l) => l.name)).toContain(FRANCHISE_FACE[abbr]);
+      const set = legendSetup({ seed: 3, us: franchise(abbr), them: franchise('BOS'), length: 'fourth' });
+      expect(set.us.players[5].name).toBe(FRANCHISE_SIXTH[abbr].name);
+    }
+    const names = ALL_LEGENDS.map((x) => x.spot.name);
+    expect(new Set(names).size).toBe(names.length);
+    // Isiah (93) is lifted more than a 95+ face; both above a plain 93
+    const isiah = legendRatings(legend('Isiah Thomas'));
+    const plain = legendRatings({ ...legend('Isiah Thomas'), name: 'Nobody' });
+    expect(isiah.PLY - plain.PLY).toBeGreaterThan(2);
+    const jokic = legendRatings(legend('Nikola Jokic'));
+    expect(jokic.PLY).toBe(99);
+    expect(jokic.IQ).toBe(99);
   });
 });

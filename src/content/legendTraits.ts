@@ -87,4 +87,13 @@ export const LEGEND_TRAITS: Record<string, { kind: FloorTrait; name: string }> =
   'Penny Hardaway': { kind: 'pass', name: 'Penny’s dimes' },
   'Pete Maravich': { kind: 'handle', name: 'Pistol Pete' },
   'Tiny Archibald': { kind: 'handle', name: 'Tiny' },
+  // the sixth men rated 90 or more (after round 42, "let's just have sixth man in the teams")
+  'Victor Wembanyama': { kind: 'block', name: 'The Alien' },
+  'Gary Payton': { kind: 'steal', name: 'The Glove' },
+  'Paul Pierce': { kind: 'stepback', name: 'The Truth' },
+  'Hal Greer': { kind: 'fade', name: 'The jump-shot free throw' },
+  'Chris Mullin': { kind: 'deep', name: 'Lefty stroke' },
+  'James Worthy': { kind: 'quick', name: 'Big Game James' },
+  'Kevin Johnson': { kind: 'handle', name: 'KJ first step' },
+  'Yao Ming': { kind: 'hook', name: 'The Great Wall' },
 };

@@ -72,3 +72,51 @@ export const SHOOTERS: { name: string; skill: number; team: string }[] = [
   { name: 'Dale Ellis', skill: 89, team: 'OKC' },
   { name: 'Tyrese Haliburton', skill: 88, team: 'IND' },
 ];
+
+/** A sixth man for a franchise, a legend off the bench who also joins the draft's pool (after round
+ * 42, owner: "add wemby to the game somehow"): Victor Wembanyama, the Spurs' first off the bench, and Cooper Flagg, the Mavericks'; then ("let's just have sixth man in the
+ * teams") one for every franchise, a real sixth man where the team had a famous one. */
+/** Each franchise's face (after round 42, owner: "each team has a franchise face player: golden state:
+ * curry, bulls: jordan, ... often their best player"): played a little above his number on the Floor. */
+export const FRANCHISE_FACE: Record<string, string> = {
+  ATL: 'Dominique Wilkins', BOS: 'Larry Bird', BKN: 'Julius Erving', NYK: 'Patrick Ewing', PHI: 'Allen Iverson',
+  TOR: 'Vince Carter', CHI: 'Michael Jordan', CLE: 'LeBron James', DET: 'Isiah Thomas', IND: 'Reggie Miller',
+  MIL: 'Giannis Antetokounmpo', CHA: 'Kemba Walker', MIA: 'Dwyane Wade', ORL: 'Dwight Howard', WAS: 'Wes Unseld',
+  DEN: 'Nikola Jokic', MIN: 'Kevin Garnett', OKC: 'Shai Gilgeous-Alexander', POR: 'Damian Lillard', UTA: 'Karl Malone',
+  GSW: 'Stephen Curry', LAC: 'Blake Griffin', LAL: 'Kobe Bryant', PHX: 'Steve Nash', SAC: 'Chris Webber',
+  DAL: 'Dirk Nowitzki', HOU: 'Hakeem Olajuwon', MEM: 'Ja Morant', NOP: 'Chris Paul', SAS: 'Tim Duncan',
+};
+export const isFace = (name: string): boolean => Object.values(FRANCHISE_FACE).includes(name);
+
+export const FRANCHISE_SIXTH: Record<string, LegendSpot> = {
+  SAS: L('Victor Wembanyama', 'C', 93, '2024-25', 'defense'),
+  DAL: L('Cooper Flagg', 'SF', 88, '2025-26', 'scorer'),
+  ATL: L('Lou Hudson', 'SF', 88, '1967-77', 'scorer'),
+  BOS: L('Paul Pierce', 'SF', 92, '2002-08', 'scorer'),
+  BKN: L('Derrick Coleman', 'PF', 85, '1991-95', 'inside'),
+  NYK: L('Dave DeBusschere', 'PF', 88, '1969-74', 'defense'),
+  PHI: L('Hal Greer', 'SG', 90, '1963-68', 'scorer'),
+  TOR: L('DeMar DeRozan', 'SG', 87, '2016-18', 'scorer'),
+  CHI: L('Toni Kukoc', 'SF', 84, '1996-98', 'creator'),
+  CLE: L('Mark Price', 'PG', 87, '1989-93', 'shooter'),
+  DET: L('Chauncey Billups', 'PG', 88, '2004-08', 'creator'),
+  IND: L('George McGinnis', 'PF', 88, '1974-75', 'inside'),
+  MIL: L('Khris Middleton', 'SF', 87, '2019-22', 'scorer'),
+  CHA: L('Dell Curry', 'SG', 82, '1992-98', 'shooter'),
+  MIA: L('Tyler Herro', 'SG', 84, '2022-25', 'shooter'),
+  ORL: L('Hedo Turkoglu', 'SF', 83, '2007-09', 'creator'),
+  WAS: L('John Wall', 'PG', 88, '2013-17', 'creator'),
+  DEN: L('Dan Issel', 'C', 88, '1976-85', 'inside'),
+  MIN: L('Naz Reid', 'PF', 80, '2023-25', 'shooter'),
+  OKC: L('Gary Payton', 'PG', 94, '1993-2002', 'defense'),
+  POR: L('Terry Porter', 'PG', 85, '1988-93', 'creator'),
+  UTA: L('Deron Williams', 'PG', 89, '2008-11', 'creator'),
+  GSW: L('Chris Mullin', 'SF', 90, '1989-92', 'shooter'),
+  LAC: L('Lou Williams', 'SG', 84, '2018-20', 'scorer'),
+  LAL: L('James Worthy', 'SF', 90, '1985-90', 'scorer'),
+  PHX: L('Kevin Johnson', 'PG', 90, '1989-94', 'creator'),
+  SAC: L('Mitch Richmond', 'SG', 89, '1991-98', 'scorer'),
+  HOU: L('Yao Ming', 'C', 90, '2006-09', 'inside'),
+  MEM: L('Zach Randolph', 'PF', 86, '2010-13', 'inside'),
+  NOP: L('Baron Davis', 'PG', 86, '2002-05', 'creator'),
+};

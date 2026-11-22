@@ -8,9 +8,9 @@ import { useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { NBA_TEAMS } from '../../content/teams';
 import { TEAM_STYLE } from '../../content/teamStyle';
-import type { LegendSpot } from '../../content/franchiseFives';
+import { isFace, type LegendSpot } from '../../content/franchiseFives';
 import type { Pos } from '../../engine/types';
-import { ALL_LEGENDS, fiveOvr, legendFive, legendLine } from '../../engine/floor/legends';
+import { ALL_LEGENDS, fiveOvr, fitPlan, legendFive, legendLine } from '../../engine/floor/legends';
 import { BRACKET_ROUNDS, finishBracket, type BracketGame, franchise, legendSetup, myGame, newBracket, playRound, winnerOf, type Bracket, type FloorSide } from '../../engine/floor/game';
 import type { FloorResult, FloorSetup } from '../../engine/floor/sim';
 import { onNbaTeam, ownSetup } from '../../engine/floor/mini';
@@ -36,7 +36,7 @@ const CAREER_MODE: { id: Mode; name: string; text: string } = { id: 'career', na
 const MODES: { id: Mode; name: string; text: string }[] = [
   { id: 'quick', name: tx('Quick game'), text: tx('The fourth quarter from a close score, as any franchise’s all-time five. About four minutes.') },
   { id: 'playoffs', name: tx('Playoffs'), text: tx('Eight franchises from each conference, one game a round, four wins to the title. Each game is all four quarters in about four minutes.') },
-  { id: 'draft', name: tx('Draft your five'), text: tx('One legend for each position from all 150, then a quick game against a franchise.') },
+  { id: 'draft', name: tx('Draft your five'), text: tx('Any five legends from all 180, no positions needed, then a quick game against a franchise.') },
   { id: 'online', name: tx('Online'), text: tx('Head to head with a friend by room code, or a quick match with whoever is waiting.') },
 ];
 const POS: Pos[] = ['PG', 'SG', 'SF', 'PF', 'C'];
@@ -93,8 +93,9 @@ function lineOf(name: string): string {
 }
 
 /** The five, to pick who he steers. */
-function Five({ five, slot, onPick }: { five: LegendSpot[]; slot: number; onPick: (i: number) => void }) {
+function Five({ five, slot, onPick, sixth }: { five: LegendSpot[]; slot: number; onPick: (i: number) => void; sixth?: LegendSpot }) {
   return (
+    <>
     <div className="fm-five fh-five" role="group" aria-label={t('Who you steer')}>
       {five.map((l, i) => (
         <button key={l.name} className={`fm-starter${slot === i ? ' on' : ''}`} aria-pressed={slot === i} onClick={() => onPick(i)}>
@@ -107,9 +108,17 @@ function Five({ five, slot, onPick }: { five: LegendSpot[]; slot: number; onPick
               {signatureOf(l.name)!.name}
             </em>
           )}
+          {isFace(l.name) && <em className="fh-face">{t('Face of the franchise')}</em>}
         </button>
       ))}
     </div>
+    {sixth && (
+      <p className="small muted fh-sixth">
+        {t('Sixth man')}: <b>{sixth.name}</b> · {sixth.pos} · {sixth.ovr}
+        {signatureOf(sixth.name) ? ` · ${signatureOf(sixth.name)!.name}` : ''}
+      </p>
+    )}
+    </>
   );
 }
 
@@ -223,17 +232,21 @@ export function FloorPage({ inside = false }: { inside?: boolean }) {
   const [bracket, setBracket] = useState<Bracket | null>(null);
   // the draft: one legend for each position
   const [draft, setDraft] = useState<string[]>(() => POS.map((p) => ALL_LEGENDS.filter((x) => x.spot.pos === p).sort((a, b) => b.spot.ovr - a.spot.ovr)[0].spot.name));
-  const pool = useMemo(() => POS.map((p) => ALL_LEGENDS.filter((x) => x.spot.pos === p).sort((a, b) => b.spot.ovr - a.spot.ovr || (a.spot.name < b.spot.name ? -1 : 1))), []);
+  // (owner: "in draft your five, get rid of position constraints"): any five from one pool, set out
+  // on the floor by their own positions, guards first
+  const pool = useMemo(() => [...ALL_LEGENDS].sort((a, b) => b.spot.ovr - a.spot.ovr || (a.spot.name < b.spot.name ? -1 : 1)), []);
 
-  const drafted: LegendSpot[] = draft.map((n) => ALL_LEGENDS.find((x) => x.spot.name === n)!.spot);
+  const drafted: LegendSpot[] = draft.map((n) => ALL_LEGENDS.find((x) => x.spot.name === n)!.spot).sort((a, b) => POS.indexOf(a.pos) - POS.indexOf(b.pos));
   const five = mode === 'draft' ? drafted : legendFive(us);
   const steer = slot !== null && slot < five.length ? slot : best(five);
-  const mine: FloorSide = mode === 'draft' ? { ...franchise(us, myOvr ?? undefined), name: t('Your five'), five: drafted } : franchise(us, myOvr ?? undefined);
+  const mine: FloorSide = mode === 'draft' ? { ...franchise(us, myOvr ?? undefined), name: t('Your five'), five: drafted, sixth: drafted.some((l) => l.name === franchise(us).sixth?.name) ? undefined : franchise(us).sixth } : franchise(us, myOvr ?? undefined);
 
   const pickUs = (a: string) => {
     if (a === them) setThem(us);
     setUs(a);
     setSlot(null);
+    // a franchise starts from its own best fit (its culture or its five); changed from there as before
+    if (mode !== 'draft') setGamePlan(fitPlan(a));
   };
   const pickThem = (a: string) => {
     if (a === us) setUs(them);
@@ -364,13 +377,13 @@ export function FloorPage({ inside = false }: { inside?: boolean }) {
               <div className="fm-row">
                 <div className="sec-title">{t('Your draft')}</div>
                 <div className="fh-draft">
-                  {POS.map((p, i) => (
-                    <label key={p} className="small">
-                      {p}{' '}
-                      <select value={draft[i]} onChange={(e) => setDraft(draft.map((n, k) => (k === i ? e.target.value : n)))}>
-                        {pool[i].map((x) => (
-                          <option key={x.spot.name} value={x.spot.name}>
-                            {x.spot.name} · {x.spot.ovr} · {x.team}
+                  {draft.map((pick, i) => (
+                    <label key={i} className="small">
+                      {t('Pick {n}', { n: i + 1 })}{' '}
+                      <select value={pick} onChange={(e) => setDraft(draft.map((n, k) => (k === i ? e.target.value : n)))}>
+                        {pool.map((x) => (
+                          <option key={x.spot.name} value={x.spot.name} disabled={x.spot.name !== pick && draft.includes(x.spot.name)}>
+                            {x.spot.name} · {x.spot.pos} · {x.spot.ovr} · {x.team}
                           </option>
                         ))}
                       </select>
@@ -381,7 +394,7 @@ export function FloorPage({ inside = false }: { inside?: boolean }) {
             )}
             <div className="fm-row">
               <div className="sec-title">{t('Who you steer')}</div>
-              <Five five={five} slot={steer} onPick={setSlot} />
+              <Five five={five} slot={steer} onPick={setSlot} sixth={mine.sixth} />
               {signatureOf(five[steer].name) && (
                 <p className="small fh-sig-text">
                   <b>{signatureOf(five[steer].name)!.name}.</b> {signatureOf(five[steer].name)!.text}

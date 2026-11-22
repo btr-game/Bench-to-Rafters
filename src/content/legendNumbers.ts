@@ -35,6 +35,8 @@ export const LEGEND_NUMBERS: Record<string, number> = {
   'Tony Parker': 9, 'George Gervin': 44, 'Manu Ginobili': 20, 'Tim Duncan': 21, 'David Robinson': 50,
   // the contest fields
   'Craig Hodges': 14, 'Kyle Korver': 26, 'Mark Price': 25, 'Dale Ellis': 3, 'Zach LaVine': 8, 'Aaron Gordon': 0, 'Spud Webb': 4, 'Nate Robinson': 2,
+  // the sixth men (after round 42)
+  'Victor Wembanyama': 1, 'Cooper Flagg': 32, 'Lou Hudson': 23, 'Paul Pierce': 34, 'Derrick Coleman': 44, 'Dave DeBusschere': 22, 'Hal Greer': 15, 'DeMar DeRozan': 10, 'Toni Kukoc': 7, 'Chauncey Billups': 1, 'George McGinnis': 30, 'Khris Middleton': 22, 'Dell Curry': 30, 'Tyler Herro': 14, 'Hedo Turkoglu': 15, 'John Wall': 2, 'Dan Issel': 44, 'Naz Reid': 11, 'Gary Payton': 20, 'Terry Porter': 30, 'Deron Williams': 8, 'Chris Mullin': 17, 'Lou Williams': 23, 'James Worthy': 42, 'Kevin Johnson': 7, 'Mitch Richmond': 2, 'Yao Ming': 11, 'Zach Randolph': 50, 'Baron Davis': 1,
 };
 
 /** A few wore a different number for the team they appear for in a contest field. */
