@@ -4490,7 +4490,9 @@
   "Beat the same friend on the Floor 10 times.": "The Floorで同じ友達に10回勝つ。",
   "Take turns picking legends from one pool of all {n}, any position, until each has six: five starters and a sixth man off the bench. {first} first, then two each way. {s} seconds a pick. The two teams play at their own level.": "全{n}人の同じプールから、ポジションを問わず交互にレジェンドを選び、それぞれ6人（先発5人とベンチのシックスマン）になるまで続けます。{first}が先、その後は2人ずつ交互。1回の指名は{s}秒。両チームはそれぞれの実力で戦います。",
   "Your pick ({n} of {all}): {s} s": "あなたの指名（{all}中{n}番目）：{s}秒",
-  "{name} is picking ({n} of {all}): {s} s": "{name}が指名中（{all}中{n}番目）：{s}秒"
+  "{name} is picking ({n} of {all}): {s} s": "{name}が指名中（{all}中{n}番目）：{s}秒",
+  "Sixth man!": "シックスマン登場！",
+  "First off the bench: he comes on a few minutes into each period.": "ベンチの一番手：各ピリオドの数分後に出場します。"
  },
  "story": {
   "f-driveway.title": "家の前のゴール",

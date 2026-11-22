@@ -4490,7 +4490,9 @@
   "Beat the same friend on the Floor 10 times.": "The Floor에서 같은 친구를 10번 이기기.",
   "Take turns picking legends from one pool of all {n}, any position, until each has six: five starters and a sixth man off the bench. {first} first, then two each way. {s} seconds a pick. The two teams play at their own level.": "전체 {n}명의 한 풀에서 포지션 상관없이 번갈아 레전드를 뽑아, 각자 여섯 명(주전 다섯과 벤치의 식스맨)이 될 때까지 계속합니다. {first} 먼저, 그다음 두 명씩 번갈아. 픽당 {s}초. 두 팀은 각자의 수준으로 경기합니다.",
   "Your pick ({n} of {all}): {s} s": "내 픽 ({all}개 중 {n}번째): {s}초",
-  "{name} is picking ({n} of {all}): {s} s": "{name} 픽 중 ({all}개 중 {n}번째): {s}초"
+  "{name} is picking ({n} of {all}): {s} s": "{name} 픽 중 ({all}개 중 {n}번째): {s}초",
+  "Sixth man!": "식스맨 투입!",
+  "First off the bench: he comes on a few minutes into each period.": "벤치에서 가장 먼저: 각 쿼터 몇 분 뒤에 투입됩니다."
  },
  "story": {
   "f-driveway.title": "집 앞 골대",

@@ -4490,7 +4490,9 @@
   "Beat the same friend on the Floor 10 times.": "Battez le même ami 10 fois sur The Floor.",
   "Take turns picking legends from one pool of all {n}, any position, until each has six: five starters and a sixth man off the bench. {first} first, then two each way. {s} seconds a pick. The two teams play at their own level.": "Choisissez à tour de rôle des légendes dans un même vivier des {n}, à n’importe quel poste, jusqu’à en avoir six chacun : cinq titulaires et un sixième homme sur le banc. {first} d’abord, puis deux chacun à tour de rôle. {s} secondes par choix. Les deux équipes jouent à leur propre niveau.",
   "Your pick ({n} of {all}): {s} s": "Votre choix ({n} sur {all}) : {s} s",
-  "{name} is picking ({n} of {all}): {s} s": "{name} choisit ({n} sur {all}) : {s} s"
+  "{name} is picking ({n} of {all}): {s} s": "{name} choisit ({n} sur {all}) : {s} s",
+  "Sixth man!": "Sixième homme !",
+  "First off the bench: he comes on a few minutes into each period.": "Premier à sortir du banc : il entre quelques minutes après le début de chaque période."
  },
  "story": {
   "f-driveway.title": "L’allée",

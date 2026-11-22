@@ -4035,3 +4035,15 @@ legends (each franchise's five and sixth man with their real numbers). Each card
 mode (`openFloor(mode)` in the store); the Floor page's Back goes to the land, and the main land's Floor island
 opens the land. No end-of-round items, by the owner's word; checks: type check, translations, the two main-land
 tests, the visual check on the land's two cards, the Floor page and the start page.
+
+### The sixth man, seen and playing
+
+Owner: "i dont see the sixth man thing. fix". He was a small muted line under the five, and with the slower
+tiring he almost never came on in a one-quarter game. Now:
+
+- **He plays**: a team's sixth man (`sixth` on the player) comes on at the first dead ball once
+  `FLOOR.subs.sixthIn` (150) game-clock seconds of each period are gone, for the most tired starter of his kind
+  (never the person's own man), and stays at least `sixthStint` (180) before that starter goes back
+  (`FloorState.six`, mirrored online). A test: he played in all 12 sampled games for both teams.
+- **He is seen**: a card of his own under the five (dashed edge, his number, line, signature and "first off the
+  bench"), and in the game the big word "Sixth man!" with his name over him when he checks in.

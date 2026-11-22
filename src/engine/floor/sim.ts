@@ -77,6 +77,8 @@ export interface FloorPlayerIn {
   style?: FloorStyle;
   /** A legend's signature (content/legendTraits.ts): one small edge of his own. */
   trait?: FloorTrait;
+  /** The franchise's legend off the bench: he comes on each period (FLOOR.subs.sixthIn). */
+  sixth?: boolean;
   /** Fouls from the first three quarters. */
   fouls?: number;
   user?: boolean;
@@ -302,6 +304,8 @@ export interface FloorState {
   gm?: FloorGimmicks;
   /** Online: game ticks each human has pressed nothing (the AI takes his man over at FLOOR.idleSecs). */
   idle?: [number, number];
+  /** Each team's sixth man: the period he last came on in (-1 never) and the game clock then. */
+  six?: { period: [number, number]; clock: [number, number] };
 }
 
 /** What he does this tick. `shoot` is held (a press loads the meter, the release shoots); the rest
@@ -380,6 +384,7 @@ export function startFloor(set: FloorSetup): FloorState {
     user,
     two: two >= 0 ? { user: two, load: -1, call: -99, auto: false } : null,
     idle: two >= 0 ? [0, 0] : undefined,
+    six: { period: [-1, -1], clock: [0, 0] },
     ball: { holder: null, x: 47, y: 25, flight: null },
     poss,
     phase: 'dead',
@@ -1047,19 +1052,39 @@ function substitutions(s: FloorState): boolean {
     off.add(out);
     any = true;
   }
+  const period = s.quarter + s.periods * 10;
+  const length = s.periods > 0 ? FLOOR.overtime : FLOOR.quarter;
   for (const team of [0, 1] as const) {
     const close = lastPeriod(s) && s.clock <= S.close * s.rate;
+    const six = s.six;
     for (const b of onCourt(s, team)) {
       if (b.sat === undefined) continue;
       const st = s.players[b.sat];
+      // the sixth man plays his stint before the man he came on for goes back
+      const stint = !!six && b.sixth && six.period[team] === period && six.clock[team] - s.clock < S.sixthStint;
       if (st.on || st.fouls >= FLOOR.foul.out) b.sat = undefined;
-      else if (st.stamina >= S.back || close) {
+      else if (close || (st.stamina >= S.back && !stint)) {
         swapIn(s, b, st);
         off.add(b);
         any = true;
       }
     }
     if (close) continue;
+    // the sixth man comes on once a period, a few minutes in, for a starter of his kind (the most tired)
+    const sx = s.players.find((q) => q.team === team && q.sixth);
+    if (six && sx && !sx.on && sx.fouls < FLOOR.foul.out && six.period[team] !== period && length - s.clock >= S.sixthIn && !off.has(sx)) {
+      const kind = (q: FloorPlayer) => (q.slot === sx.pos ? 2 : GROUP[q.slot] === GROUP[sx.pos] ? 1 : 0);
+      const out = onCourt(s, team)
+        .filter((q) => !isHuman(s, idx(s, q)) && q.sat === undefined)
+        .sort((a, b) => kind(b) - kind(a) || a.stamina - b.stamina)[0];
+      if (out) {
+        swapIn(s, out, sx, idx(s, out));
+        six.period[team] = period;
+        six.clock[team] = s.clock;
+        off.add(out);
+        any = true;
+      }
+    }
     for (const p of onCourt(s, team)) {
       if (p.stamina >= S.tired || p.sat !== undefined || isHuman(s, idx(s, p))) continue;
       // a rested man nobody is waiting to come back for: his own position first, then his kind
@@ -2026,6 +2051,7 @@ export function mirrorFloor(s: FloorState): FloorState {
     fast: sw(s.fast),
     run: { team: t(s.run.team), pts: s.run.pts },
     feed: s.feed.map((e) => ({ ...e, team: t(e.team) })),
+    six: s.six ? { period: [s.six.period[1], s.six.period[0]], clock: [s.six.clock[1], s.six.clock[0]] } : undefined,
     idle: s.idle ? [s.idle[1], s.idle[0]] : undefined,
     gm: mirrorGimmicks(s.gm),
   };

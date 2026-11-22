@@ -1467,7 +1467,10 @@ export const FLOOR = {
    * rested man off the bench (`fresh`), and comes back once his own are at `back`; in the last
    * `close` clock seconds (a career's clock) the starters finish. A man on the bench rests `rest`
    * times as fast as one standing on the floor. */
-  subs: { tired: 0.68, fresh: 0.8, back: 0.93, close: 120, rest: 2.5 },
+  // sixthIn, sixthStint (after the sixth men, owner: "i dont see the sixth man thing. fix"): a team's legend
+  // off the bench comes on at the first dead ball once this many game-clock seconds of each period are gone,
+  // for a starter of his kind, and stays at least `sixthStint` game-clock seconds
+  subs: { tired: 0.68, fresh: 0.8, back: 0.93, close: 120, rest: 2.5, sixthIn: 150, sixthStint: 180 },
   /** Round 42, the calls (owner: "make it simple so that the decision doesnt take long"): one key
    * each. Isolation clears a side for `iso` seconds (the others stand `clear` feet off the ball);
    * a give-and-go waits `giveGo` seconds for his cut; a double team holds `double` seconds, strips
