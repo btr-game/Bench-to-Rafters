@@ -90,7 +90,7 @@ interface Ground {
   crack?: string;
   pad: string;
 }
-const GROUND: Record<Exclude<CourtLook, 'arena'>, Ground> = {
+export const GROUND: Record<Exclude<CourtLook, 'arena'>, Ground> = {
   street: { tones: ['#4B4E54', '#46494F', '#515459'], seam: '#3C3F44', paint: '#3F5E86', centre: null, apron: '#414449', apronEdge: '#33363B', line: '#E4E1D6', dark: '#8A867D', side: '#7B776F', grain: 'speckle', crack: '#2E3135', pad: '#5E636B' },
   beach: { tones: ['#E6CF97', '#DEC58A', '#ECD7A4'], seam: '#D2B87C', paint: null, centre: null, apron: '#E0C88F', apronEdge: '#D6BC82', line: '#2E6FB5', dark: '#E3CB92', side: '#DCC389', grain: 'speckle', pad: '#2E6FB5' },
   gym: { tones: ['#B5713C', '#AA6835', '#BC7943'], seam: '#8A4F26', paint: '#7A2630', centre: '#C9962E', apron: '#5B3A21', apronEdge: '#422A18', line: '#EFE4CB', dark: '#1D140D', side: '#24180F', grain: 'planks', pad: '#7A2630' },
@@ -123,12 +123,15 @@ function palette(a: ArenaLook, court: CourtLook) {
   };
 }
 
+/** The planks of a team's arena. */
+export const ARENA_WOOD = ['#D9A46A', '#CF995F', '#DDAD76'];
+
 function arenaPalette(a: ArenaLook) {
   // the paint takes the team's main colour unless it is near black, then its second
   const paint = luma(a.c1) < 0.12 ? a.c2 : a.c1;
   const apron = mix(a.c1, '#000000', 0.45);
   return {
-    wood: ['#D9A46A', '#CF995F', '#DDAD76'].map(word),
+    wood: ARENA_WOOD.map(word),
     seam: word('#B9834E'),
     paint: [word(mix(paint, '#000000', 0.06)), word(mix(paint, '#000000', 0.18))],
     paintSeam: word(mix(paint, '#000000', 0.32)),

@@ -49,7 +49,17 @@ import { ACH_CATS, achCatOf } from '../engine/achievementCats';
 import { CLASS_MAX } from '../ui/multiplayer';
 import { BEGINNER_EVENTS, LEVEL_IDS, LEVEL_NAME } from '../engine/levels';
 import { DRAFT_NIGHT, JOIN_FRIEND, ROADMAP, ROAD_GRADES } from '../engine/balance';
-import { legendLine, legendRatings, legendStyle } from '../engine/floor/legends';
+import { ALL_LEGENDS, fitPlan, legendFive, legendLine, legendRatings, legendStyle } from '../engine/floor/legends';
+import { ERAS, fansOf, hotSpotsOf } from '../engine/floor/gimmicks';
+import { SHAPES } from '../engine/floor/court';
+import type { FloorPlay, FloorShape } from '../engine/floor/sim';
+import { FRANCHISE_FACE, FRANCHISE_SIXTH, type LegendSpot } from '../content/franchiseFives';
+import { LEGEND_TRAITS, legendTrait } from '../content/legendTraits';
+import { LEGEND_PAIRS } from '../content/legendPairs';
+import { TRAIT_TEXT } from '../ui/floor/traits';
+import { PLAY_NAME, PlanCourt, SHAPE_NAME, SPOT_NAME, spotsOf } from '../ui/floor/GamePlan';
+import { ERA_NAME } from '../ui/floor/FloorHub';
+import { ARENA_WOOD, COURTS, GROUND, type CourtLook } from '../ui/floor/view';
 import { PLAN_TEXT, SIX_PLANS } from '../engine/career/season';
 import { LEVEL_COPY } from '../content/roadmap';
 import { ROAD_MINIS, ROAD_NEED, UNLOCK_FROM, UNLOCK_NAME, unlockHint, type Unlock } from '../ui/road';
@@ -1101,7 +1111,7 @@ const CATEGORIES: Category[] = [
         key: `sh-${z}`,
         title: { rim: 'At the rim', paint: 'In the paint', mid: 'Mid-range', three: 'From three' }[z],
         group: 'Shots',
-        text: z === 'rim' ? 'One tap of J lays it in or dunks (a dunk for an athletic finisher). A defender close by may strip it or block it.' : 'Held on J, let go in the green: the meter fills in one real second.',
+        text: z === 'rim' ? 'One tap of J lays it in or dunks (a dunk for an athletic finisher). A defender close by may strip it or block it.' : `Held on J, let go in the green: the meter fills in ${(FLOOR.meter.load / (FLOOR.tick * FLOOR.ticksPerSec)).toFixed(1)} real seconds, and ${(FLOOR.meter.hold / (FLOOR.tick * FLOOR.ticksPerSec)).toFixed(0)} real seconds past full the shot goes by itself.`,
         art: () => <Icon name={z === 'three' ? 'shoot' : 'ball'} size={44} />,
         facts: [
           ['Base chance', pct(FLOOR.shot[z], 0)],
@@ -1155,7 +1165,7 @@ const CATEGORIES: Category[] = [
         key: 'own-quick',
         title: 'A quick game',
         group: 'Its own game',
-        text: `The fourth quarter from a close score: 12:00 on a clock that runs ${FLOOR.rate} times as fast, about four real minutes. Each side is a franchise's all-time five at its real level or at an overall picked for that side alone.`,
+        text: `The fourth quarter from a close score: 12:00 on a clock that runs ${FLOOR.rate} times as fast, about four real minutes. Only the two teams and the man he steers are picked: each side plays its franchise's best fit at its own level, in a random era on a random court. A drafted five's game also has each side's overall picked on its own.`,
         art: () => <Icon name="clutch" size={44} />,
         facts: [['Clock rate', `x${FLOOR.rate}`]] as [string, string][],
       },
@@ -1163,9 +1173,9 @@ const CATEGORIES: Category[] = [
         key: 'own-playoffs',
         title: 'The playoffs',
         group: 'Its own game',
-        text: `Sixteen franchises, one game a round, four wins to the title. Each game is all four quarters on a clock ${FLOOR.rateFull} times as fast (the same four minutes); the games he is not in are played by the engine.`,
+        text: `Sixteen franchises, eight from each conference (the bracket East and West), one game a round, four wins to the title. Each game is one quarter from 0-0 on a clock ${FLOOR.ratePlayoff} times as fast (about two real minutes); the games he is not in are played by the engine.`,
         art: () => <Icon name="bracket" size={44} />,
-        facts: [['Clock rate', `x${FLOOR.rateFull}`], ['Rounds', '4']] as [string, string][],
+        facts: [['Clock rate', `x${FLOOR.ratePlayoff}`], ['Rounds', '4']] as [string, string][],
       },
       {
         key: 'own-plays',
@@ -1189,6 +1199,211 @@ const CATEGORIES: Category[] = [
         art: () => <Icon name="floor" size={44} />,
       })),
     ],
+  },
+  // after round 42: the Floor's legends (faces, sixth men, signatures), its game plans and its gimmicks
+  {
+    key: 'floor-legends',
+    name: 'Floor legends',
+    icon: 'superteam',
+    blurb: `The Floor's 180 legends beyond their numbers: each franchise's face (every skill but legs and free throws +${FLOOR.face.rest} under 95, +${FLOOR.face.star} from 95), its sixth man, and every signature move, by tier.`,
+    entries: () => [
+      ...Object.entries(FRANCHISE_FACE).map(([abbr, name]) => {
+        const l = spotOfLegend(name)!;
+        return {
+          key: `face-${abbr}`,
+          title: name,
+          sub: `${abbr} · ${l.pos} · ${l.ovr}`,
+          group: 'Franchise faces',
+          art: () => <LegendBust name={name} team={abbr} size={64} />,
+          facts: [
+            ['Every skill', `+${l.ovr >= 95 ? FLOOR.face.star : FLOOR.face.rest}`],
+            ['Signature', legendTrait(name)?.name ?? 'none'],
+            ['Hot spots', hotSpotsText(l)],
+            ...(name === 'Nikola Jokic' ? [['On top', `PLY ${FLOOR.jokic.PLY}, IQ ${FLOOR.jokic.IQ}, REB ${FLOOR.jokic.REB}, FIN +${FLOOR.jokic.FIN}, SHT +${FLOOR.jokic.SHT}, INT +${FLOOR.jokic.INT}; shots x${FLOOR.jokic.use}`] as [string, string]] : []),
+          ] as [string, string][],
+        };
+      }),
+      ...Object.entries(FRANCHISE_SIXTH).map(([abbr, l]) => ({
+        key: `sixth-${abbr}`,
+        title: l.name,
+        sub: `${abbr} · ${l.pos} · ${l.ovr} · ${l.peak}`,
+        group: 'Sixth men',
+        art: () => <LegendBust name={l.name} team={abbr} size={64} />,
+        facts: [
+          ['Kind', l.tag],
+          ['Signature', legendTrait(l.name)?.name ?? 'none (under 90)'],
+          ['Hot spots', hotSpotsText(l)],
+          ['Real line', (() => { const r = legendLine(l.name); return r ? `${r[0]} pts, ${r[1]} reb, ${r[2]} ast` : 'none'; })()],
+        ] as [string, string][],
+      })),
+      ...ALL_LEGENDS.filter((x) => legendTrait(x.spot.name) && x.spot.ovr >= 95)
+        .sort((a, b) => b.spot.ovr - a.spot.ovr)
+        .map((x) => sigEntry(x.spot, x.team, 'Signatures: a move of his own, 95 and up')),
+      ...ALL_LEGENDS.filter((x) => legendTrait(x.spot.name) && x.spot.ovr < 95 && FRANCHISE_SIXTH[x.team]?.name !== x.spot.name)
+        .sort((a, b) => b.spot.ovr - a.spot.ovr)
+        .map((x) => sigEntry(x.spot, x.team, 'Signatures: a move of his own, 90 to 94')),
+      ...ALL_LEGENDS.filter((x) => legendTrait(x.spot.name) && FRANCHISE_SIXTH[x.team]?.name === x.spot.name)
+        .sort((a, b) => b.spot.ovr - a.spot.ovr)
+        .map((x) => sigEntry(x.spot, x.team, 'Signatures: sixth men, 90 and up')),
+    ],
+  },
+  {
+    key: 'floor-plans',
+    name: 'Floor game plans',
+    icon: 'checklist',
+    blurb: 'A team\'s plan on the Floor: its shape (where each position stands), its style (how every man\'s tendencies lean) and each franchise\'s best fit, the plan a quick game and the computer always play.',
+    entries: () => [
+      ...(Object.keys(SHAPES) as FloorShape[]).map((k) => ({
+        key: `shape-${k}`,
+        title: SHAPE_NAME[k].name,
+        group: 'Shapes',
+        text: SHAPE_NAME[k].text,
+        art: () => (
+          <div className="gp cat-plan">
+            <PlanCourt at={SHAPES[k]} names={{}} />
+          </div>
+        ),
+        facts: FLOOR_POS.map((pos) => [pos, SPOT_NAME[SHAPES[k][pos]]]) as [string, string][],
+      })),
+      ...(Object.keys(PLAY_NAME) as FloorPlay[]).map((k) => {
+        const m = FLOOR.play[k];
+        return {
+          key: `style-${k}`,
+          title: PLAY_NAME[k].name,
+          group: 'Styles',
+          text: PLAY_NAME[k].text,
+          art: () => <Icon name={STYLE_ICON[k]} size={44} />,
+          facts: [
+            ['Shots', `x${m.use}`],
+            ['Threes', `x${m.three}`],
+            ['Drives', `x${m.drive}`],
+            ['Post-ups', `x${m.post}`],
+            ['Passes', `x${m.pass}`],
+            ['Patience', `x${m.patience}`],
+            ['Isolations', `x${m.iso}`],
+            ['Fast breaks', `x${m.brk}`],
+            ['Contests', `x${m.contest}`],
+          ] as [string, string][],
+        };
+      }),
+      ...NBA_TEAMS.map((t) => {
+        const plan = fitPlan(t.abbr);
+        const five = legendFive(t.abbr);
+        return {
+          key: `fit-${t.abbr}`,
+          title: `${t.city} ${t.nick}`,
+          sub: `${SHAPE_NAME[plan.shape].name} · ${PLAY_NAME[plan.style].name}`,
+          group: 'Best fit for each franchise',
+          art: () => (
+            <div className="gp cat-plan">
+              <PlanCourt at={spotsOf(plan)} names={Object.fromEntries(five.map((l, i) => [FLOOR_POS[i], l.name]))} />
+            </div>
+          ),
+          facts: [
+            ['Shape', SHAPE_NAME[plan.shape].name],
+            ['Style', PLAY_NAME[plan.style].name],
+          ] as [string, string][],
+        };
+      }),
+    ],
+  },
+  {
+    key: 'floor-gimmicks',
+    name: 'Floor gimmicks and courts',
+    icon: 'flame',
+    blurb: 'What the Floor adds on top of the basketball: a man on fire, hot spots, the home crowd, the famous duos, the eras\' rules and the courts it can be played on. Each only moves a chance the engine already rolls, so a friend game stays the same on both screens.',
+    entries: () => {
+      const G = FLOOR.gimmick;
+      return [
+        {
+          key: 'gm-fire',
+          title: 'On fire',
+          group: 'Gimmicks',
+          text: `${G.fireMakes} makes in a row and he is on fire (a pixel flame over him) until he misses ${G.fireMisses} or the other team scores ${G.fireStops} baskets in a row.`,
+          art: () => <Icon name="flame" size={44} />,
+          facts: [['His shots', pts(G.fireShot)]] as [string, string][],
+        },
+        {
+          key: 'gm-spots',
+          title: 'Hot spots',
+          group: 'Gimmicks',
+          text: 'From how he plays: a shooter\'s corner and wing (a volume shooter\'s wing and the top), a big man\'s block and elbow, anyone else\'s elbow and wing; a role player has one. Shown on the setup page for the man he steers.',
+          art: () => <Icon name="shoot" size={44} />,
+          facts: [['His shots there', pts(G.hotSpot)], ['Within', `${G.spotReach} ft`]] as [string, string][],
+        },
+        {
+          key: 'gm-crowd',
+          title: 'The crowd',
+          group: 'Gimmicks',
+          text: `A home run of ${G.crowdRun} points or ${G.crowdScores} baskets in a row brings the crowd to its feet for ${G.crowdSecs} game seconds, once a run: its fans' banner over the court. Scaled by how loud those fans are (the crowds below).`,
+          art: () => <Icon name="crowd" size={44} />,
+          facts: [['Home shots, at most', pts(G.crowdShot)], ['Home hands, at most', `x${G.crowdHands}`]] as [string, string][],
+        },
+        {
+          key: 'gm-duos',
+          title: 'Famous duos',
+          group: 'Gimmicks',
+          text: `Both on the court: a pass between them is picked off ${G.pairPick} times as often, and a shot within ${G.pairSecs} seconds of a pass from the other gains.`,
+          art: () => <Icon name="people" size={44} />,
+          facts: [['That shot', pts(G.pair)], ['Duos', String(LEGEND_PAIRS.length)]] as [string, string][],
+        },
+        ...ERAS.map((k) => {
+          const e = FLOOR.era[k];
+          return {
+            key: `era-${k}`,
+            title: ERA_NAME[k].name,
+            group: 'Eras',
+            text: ERA_NAME[k].text,
+            art: () => <Icon name={ERA_ICON[k]} size={44} />,
+            facts: [
+              ['Threes', e.three ? `worth three, tried x${e.threeUse}` : `none: worth two, tried x${e.threeUse}`],
+              ['Contests inside', `x${e.contest}`],
+              ['Fouls on a shot', `x${e.foul}`],
+              ['Patience', `x${e.patience}`],
+              ['Fast breaks', `x${e.brk}`],
+            ] as [string, string][],
+          };
+        }),
+        ...COURTS.map((c) => ({
+          key: `court-${c.id}`,
+          title: c.name,
+          group: 'Courts',
+          text: c.id === 'arena' ? 'His team\'s own arena, in its colours (here the Bulls\'): the default for a career\'s game.' : `${{ street: 'Speckled asphalt with a blue key', beach: 'Sand with blue lines and no paint', gym: 'Old planks with a maroon key', rooftop: 'Green sport court under the city at night' }[c.id as Exclude<CourtLook, 'arena'>]}: its own pads on the baskets, what stands behind it and who sits courtside.`,
+          art: () => <CourtSwatch id={c.id} />,
+        })),
+        ...LEGEND_PAIRS.map(([a, b]) => {
+          const ta = teamOfLegend(a);
+          const tb = teamOfLegend(b);
+          return {
+            key: `duo-${a}-${b}`,
+            title: `${a.split(' ').slice(-1)[0]} and ${b.split(' ').slice(-1)[0]}`,
+            sub: ta === tb ? ta : `${ta} and ${tb}: only in a drafted five`,
+            group: 'Chemistry duos',
+            art: () => (
+              <>
+                <LegendBust name={a} team={ta} size={56} />
+                <LegendBust name={b} team={tb} size={56} />
+              </>
+            ),
+            lines: [a, b],
+          };
+        }),
+        ...NBA_TEAMS.map((t) => {
+          const f = fansOf(t.abbr);
+          return {
+            key: `crowd-${t.abbr}`,
+            title: f.name || `${t.city} fans`,
+            sub: `${t.abbr} · ${(f.k * 100).toFixed(0)}% of the lift`,
+            group: 'Crowds at home',
+            art: () => <Icon name={`fan${t.abbr}`} size={44} />,
+            facts: [
+              ['Home shots', pts(G.crowdShot * f.k, 2)],
+              ['Home hands', `x${(1 + (G.crowdHands - 1) * f.k).toFixed(3)}`],
+            ] as [string, string][],
+          };
+        }),
+      ];
+    },
   },
   // round 38: story mode's chapters, one a summer at most
   {
@@ -1367,6 +1582,57 @@ const CATEGORIES: Category[] = [
       }),
   },
 ];
+
+// ---------- the Floor's legends, game plans and gimmicks (after round 42) ----------
+
+const FLOOR_POS: Pos[] = ['PG', 'SG', 'SF', 'PF', 'C'];
+const teamOfLegend = (name: string): string => ALL_LEGENDS.find((x) => x.spot.name === name)?.team ?? '';
+const spotOfLegend = (name: string): LegendSpot | undefined => ALL_LEGENDS.find((x) => x.spot.name === name)?.spot;
+const hotSpotsText = (l: LegendSpot): string => hotSpotsOf({ name: l.name, pos: l.pos, r: legendRatings(l), st: legendStyle(l) }).map((k) => SPOT_NAME[k]).join(', ');
+/** Points of a hundred, from a chance. */
+const pts = (x: number, digits = 1) => `${x >= 0 ? '+' : '−'}${Math.abs(x * 100).toFixed(digits)} points`;
+const STYLE_ICON: Record<FloorPlay, string> = { balanced: 'balanced', runGun: 'fast', motion: 'motion', iso: 'spotlight', grind: 'grind', space: 'shoot' };
+const ERA_ICON: Record<(typeof ERAS)[number], string> = { modern: 'ball', nineties: 'record', sixties: 'frame' };
+
+/** A court in pixels, from its own colours: planks or speckled concrete, the paint, the lines. */
+function CourtSwatch({ id }: { id: CourtLook }) {
+  const g = id === 'arena' ? { tones: ARENA_WOOD, paint: '#CE1141', centre: '#CE1141', apron: '#6F0A24', line: '#F6F2EA', grain: 'planks' as const } : GROUND[id];
+  const cells: ReactNode[] = [];
+  for (let x = 0; x < 46; x += 2)
+    for (let y = 0; y < 24; y += g.grain === 'planks' ? 24 : 2)
+      cells.push(<rect key={`${x}-${y}`} x={2 + x} y={2 + y} width="2" height={g.grain === 'planks' ? 24 : 2} fill={g.tones[g.grain === 'planks' ? (x / 2) % g.tones.length : (x * 7 + y * 13) % g.tones.length]} />);
+  const line = (x: number, y: number, w: number, h: number) => <rect key={`l${x}-${y}-${w}-${h}`} x={x} y={y} width={w} height={h} fill={g.line} />;
+  return (
+    <svg width="200" height="112" viewBox="0 0 50 28" shapeRendering="crispEdges" role="img" aria-label={COURTS.find((c) => c.id === id)?.name}>
+      <rect x="0" y="0" width="50" height="28" fill={g.apron} />
+      {cells}
+      {g.paint && <rect x="2" y="10" width="9" height="8" fill={g.paint} />}
+      {g.paint && <rect x="39" y="10" width="9" height="8" fill={g.paint} />}
+      {g.centre && <rect x="23" y="12" width="4" height="4" fill={g.centre} />}
+      {[line(2, 2, 46, 1), line(2, 25, 46, 1), line(2, 2, 1, 24), line(47, 2, 1, 24), line(25, 2, 1, 24)]}
+      {[line(2, 10, 9, 1), line(2, 17, 9, 1), line(10, 10, 1, 8), line(39, 10, 9, 1), line(39, 17, 9, 1), line(39, 10, 1, 8)]}
+      {[line(22, 11, 6, 1), line(22, 16, 6, 1), line(22, 11, 1, 6), line(27, 11, 1, 6)]}
+      {/* the arcs, in steps (none in the sixties' gym would be truer, but the court is the court) */}
+      {[line(2, 4, 4, 1), line(6, 5, 3, 1), line(9, 6, 2, 1), line(11, 7, 1, 2), line(12, 9, 1, 10), line(11, 19, 1, 2), line(9, 21, 2, 1), line(6, 22, 3, 1), line(2, 23, 4, 1)]}
+      {[line(44, 4, 4, 1), line(41, 5, 3, 1), line(39, 6, 2, 1), line(38, 7, 1, 2), line(37, 9, 1, 10), line(38, 19, 1, 2), line(39, 21, 2, 1), line(41, 22, 3, 1), line(44, 23, 4, 1)]}
+    </svg>
+  );
+}
+
+/** A signature's entry: the legend's bust, the move's name, what it does. */
+function sigEntry(l: LegendSpot, team: string, group: string): Entry {
+  const x = legendTrait(l.name)!;
+  const shared = LEGEND_TRAITS[l.name]?.kind;
+  return {
+    key: `sig-${l.name}`,
+    title: x.name,
+    sub: `${l.name} · ${team} · ${l.ovr}`,
+    group,
+    text: TRAIT_TEXT[x.kind],
+    art: () => <LegendBust name={l.name} team={team} size={64} />,
+    facts: [['Kind', x.kind], ...(shared && shared !== x.kind ? [['Shared kind it replaced', shared] as [string, string]] : [])] as [string, string][],
+  };
+}
 
 const WHERE_NAME: Record<Where, string> = { beginner: 'Beginner', intermediate: 'Intermediate', advanced: 'Advanced', tour: 'The closing tour', graduated: 'After graduation' };
 
