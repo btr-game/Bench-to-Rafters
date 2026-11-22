@@ -36,7 +36,7 @@ type Mode = 'career' | 'quick' | 'playoffs' | 'draft' | 'online';
 const CAREER_MODE: { id: Mode; name: string; text: string } = { id: 'career', name: tx('Your player'), text: tx('The fourth quarter as your own player, with his own ratings. About four minutes.') };
 const MODES: { id: Mode; name: string; text: string }[] = [
   { id: 'quick', name: tx('Quick game'), text: tx('The fourth quarter from a close score, as any franchise’s all-time five. About four minutes.') },
-  { id: 'playoffs', name: tx('Playoffs'), text: tx('Eight franchises from each conference, one game a round, four wins to the title. Each game is all four quarters in about four minutes.') },
+  { id: 'playoffs', name: tx('Playoffs'), text: tx('Eight franchises from each conference, one game a round, four wins to the title. Each game is one quarter in about two minutes.') },
   { id: 'draft', name: tx('Draft your five'), text: tx('Any five legends from all 180, no positions needed, then a quick game against a franchise.') },
   { id: 'online', name: tx('Online'), text: tx('Head to head with a friend by room code, or a quick match with whoever is waiting.') },
 ];
@@ -44,7 +44,7 @@ const POS: Pos[] = ['PG', 'SG', 'SF', 'PF', 'C'];
 const ALL = NBA_TEAMS.map((x) => ({ abbr: x.abbr, name: `${x.city} ${x.nick}`, color: x.color }));
 const nameOf = (abbr: string) => ALL.find((x) => x.abbr === abbr)?.name ?? abbr;
 /** The eras' rules (gimmicks.ts, FLOOR.era). */
-const ERA_NAME: Record<FloorEra, { name: string; text: string }> = {
+export const ERA_NAME: Record<FloorEra, { name: string; text: string }> = {
   modern: { name: tx('Modern'), text: tx('Today’s rules.') },
   nineties: { name: tx('The nineties'), text: tx('Hand-checking: tougher at the rim, fewer fouls called, a slower pace.') },
   sixties: { name: tx('The sixties'), text: tx('No three-point line: every basket is two. A faster pace.') },
@@ -405,7 +405,7 @@ export function FloorPage({ inside = false }: { inside?: boolean }) {
         </div>
         <div className="fh-modes" role="tablist" aria-label={t('How to play')}>
           {(career ? [CAREER_MODE, ...MODES] : MODES).map((m) => (
-            <button key={m.id} role="tab" aria-selected={mode === m.id} className={`fh-mode${mode === m.id ? ' on' : ''}`} onClick={() => (setMode(m.id), setLast(null))}>
+            <button key={m.id} role="tab" data-mode={m.id} aria-selected={mode === m.id} className={`fh-mode${mode === m.id ? ' on' : ''}`} onClick={() => (setMode(m.id), setLast(null))}>
               <b>{t(m.name)}</b>
               <span className="prose small">{t(m.text)}</span>
             </button>

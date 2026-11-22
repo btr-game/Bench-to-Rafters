@@ -4193,7 +4193,6 @@
   "East": "동부",
   "West": "서부",
   "Their real career numbers": "실제 통산 기록",
-  "Eight franchises from each conference, one game a round, four wins to the title. Each game is all four quarters in about four minutes.": "콘퍼런스마다 8개 구단, 라운드마다 단판, 4승이면 우승. 한 경기는 4쿼터 전체를 약 4분에 치릅니다.",
   "Direct line": "직접 연결",
   "Server line": "서버 연결",
   "Your two computers are talking straight to each other.": "두 컴퓨터가 서로 직접 통신하고 있습니다.",
@@ -4425,7 +4424,8 @@
   "Franchises, or a superteam draft: ten picks in turn from every legend, twenty seconds a pick.": "프랜차이즈로, 또는 슈퍼팀 드래프트로: 모든 레전드 중에서 번갈아 열 번 지명, 한 번에 20초.",
   "Each sets his own game plan; a game, or a series of three or five. This browser keeps your record against each friend.": "각자 자기 게임 플랜을 정해요. 단판, 또는 3판이나 5판 시리즈. 이 브라우저에 친구별 상대 전적이 남아요.",
   "Friends by code play on a direct line between the two browsers; the bar under the court shows the line and its round trip.": "코드로 만난 친구끼리는 두 브라우저를 직접 잇는 연결로 플레이해요. 코트 아래 바에 연결 방식과 왕복 시간이 나와요.",
-  "The Floor: pick your franchise, the legend you steer and the opponent, then tip it off for the fourth quarter; each team plays its own style. The playoffs, a drafted five and online play are the other three ways in, each with a game plan of your own.": "The Floor: 내 프랜차이즈, 조종할 레전드, 상대를 고른 뒤 4쿼터를 시작하세요. 각 팀은 자기 스타일로 뛰어요. 플레이오프, 드래프트한 5인, 온라인 플레이가 나머지 세 가지 방법이고, 모두 내 게임 플랜으로 뛰어요."
+  "The Floor: pick your franchise, the legend you steer and the opponent, then tip it off for the fourth quarter; each team plays its own style. The playoffs, a drafted five and online play are the other three ways in, each with a game plan of your own.": "The Floor: 내 프랜차이즈, 조종할 레전드, 상대를 고른 뒤 4쿼터를 시작하세요. 각 팀은 자기 스타일로 뛰어요. 플레이오프, 드래프트한 5인, 온라인 플레이가 나머지 세 가지 방법이고, 모두 내 게임 플랜으로 뛰어요.",
+  "Eight franchises from each conference, one game a round, four wins to the title. Each game is one quarter in about two minutes.": "콘퍼런스마다 8개 구단, 라운드마다 단판, 4승이면 우승. 한 경기는 한 쿼터로 약 2분에 치릅니다."
  },
  "story": {
   "f-driveway.title": "집 앞 골대",

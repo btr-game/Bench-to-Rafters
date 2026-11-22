@@ -4193,7 +4193,6 @@
   "East": "イースト",
   "West": "ウェスト",
   "Their real career numbers": "実際の通算成績",
-  "Eight franchises from each conference, one game a round, four wins to the title. Each game is all four quarters in about four minutes.": "各カンファレンス8球団、各ラウンド1試合、4勝で優勝。1試合は4クォーターすべてを約4分で。",
   "Direct line": "直接接続",
   "Server line": "サーバー接続",
   "Your two computers are talking straight to each other.": "2台のコンピューターが直接やり取りしています。",
@@ -4425,7 +4424,8 @@
   "Franchises, or a superteam draft: ten picks in turn from every legend, twenty seconds a pick.": "フランチャイズで、またはスーパーチーム・ドラフトで：全レジェンドから交互に10人指名、1人20秒。",
   "Each sets his own game plan; a game, or a series of three or five. This browser keeps your record against each friend.": "それぞれが自分のゲームプランを決めます。1試合、または3戦か5戦のシリーズ。このブラウザーに友だちごとの対戦成績が残ります。",
   "Friends by code play on a direct line between the two browsers; the bar under the court shows the line and its round trip.": "コードで遊ぶ友だち同士は、2つのブラウザーを直接つなぐ回線で遊びます。コートの下のバーに回線と往復時間が表示されます。",
-  "The Floor: pick your franchise, the legend you steer and the opponent, then tip it off for the fourth quarter; each team plays its own style. The playoffs, a drafted five and online play are the other three ways in, each with a game plan of your own.": "The Floor：自分のフランチャイズ、操作するレジェンド、相手を選んで、第4クォーターのティップオフ。各チームは自分のスタイルで戦います。プレーオフ、ドラフトした5人、オンライン対戦がほかの3つの遊び方で、どれも自分のゲームプランで戦えます。"
+  "The Floor: pick your franchise, the legend you steer and the opponent, then tip it off for the fourth quarter; each team plays its own style. The playoffs, a drafted five and online play are the other three ways in, each with a game plan of your own.": "The Floor：自分のフランチャイズ、操作するレジェンド、相手を選んで、第4クォーターのティップオフ。各チームは自分のスタイルで戦います。プレーオフ、ドラフトした5人、オンライン対戦がほかの3つの遊び方で、どれも自分のゲームプランで戦えます。",
+  "Eight franchises from each conference, one game a round, four wins to the title. Each game is one quarter in about two minutes.": "各カンファレンス8球団、各ラウンド1試合、4勝で優勝。1試合は1クォーターで約2分。"
  },
  "story": {
   "f-driveway.title": "家の前のゴール",

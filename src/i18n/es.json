@@ -4193,7 +4193,6 @@
   "East": "Este",
   "West": "Oeste",
   "Their real career numbers": "Sus números reales de carrera",
-  "Eight franchises from each conference, one game a round, four wins to the title. Each game is all four quarters in about four minutes.": "Ocho franquicias de cada conferencia, un partido por ronda, cuatro victorias para el título. Cada partido son los cuatro cuartos en unos cuatro minutos.",
   "Direct line": "Línea directa",
   "Server line": "Línea por servidor",
   "Your two computers are talking straight to each other.": "Vuestros dos ordenadores se hablan directamente.",
@@ -4425,7 +4424,8 @@
   "Franchises, or a superteam draft: ten picks in turn from every legend, twenty seconds a pick.": "Franquicias, o un draft de superequipo: diez elecciones por turnos entre todas las leyendas, veinte segundos cada una.",
   "Each sets his own game plan; a game, or a series of three or five. This browser keeps your record against each friend.": "Cada uno fija su plan de juego; un partido, o una serie a tres o cinco. Este navegador guarda tu balance contra cada amigo.",
   "Friends by code play on a direct line between the two browsers; the bar under the court shows the line and its round trip.": "Los amigos por código juegan con una línea directa entre los dos navegadores; la barra bajo la pista muestra la línea y su ida y vuelta.",
-  "The Floor: pick your franchise, the legend you steer and the opponent, then tip it off for the fourth quarter; each team plays its own style. The playoffs, a drafted five and online play are the other three ways in, each with a game plan of your own.": "The Floor: elige tu franquicia, la leyenda que manejas y el rival, y salta el balón para el último cuarto; cada equipo juega su propio estilo. Los playoffs, un quinteto elegido y el juego en línea son las otras tres formas de entrar, cada una con un plan de juego propio."
+  "The Floor: pick your franchise, the legend you steer and the opponent, then tip it off for the fourth quarter; each team plays its own style. The playoffs, a drafted five and online play are the other three ways in, each with a game plan of your own.": "The Floor: elige tu franquicia, la leyenda que manejas y el rival, y salta el balón para el último cuarto; cada equipo juega su propio estilo. Los playoffs, un quinteto elegido y el juego en línea son las otras tres formas de entrar, cada una con un plan de juego propio.",
+  "Eight franchises from each conference, one game a round, four wins to the title. Each game is one quarter in about two minutes.": "Ocho franquicias de cada conferencia, un partido por ronda, cuatro victorias para el título. Cada partido es un solo cuarto en unos dos minutos."
  },
  "story": {
   "f-driveway.title": "La entrada de casa",
