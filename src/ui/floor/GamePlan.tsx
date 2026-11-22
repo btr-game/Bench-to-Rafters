@@ -107,7 +107,7 @@ function Court({ at, names }: { at: Record<Pos, FloorSpot>; names: Partial<Recor
               {pos}
             </text>
             {names[pos] && (
-              <text x={x} y={y + (ahead < 4 ? -10 : 17)} textAnchor="middle" className="gp-name">
+              <text x={x} y={y + (ahead < 4 ? -10 : 17)} textAnchor={x < 40 ? 'start' : x > 160 ? 'end' : 'middle'} dx={x < 40 ? -7 : x > 160 ? 7 : 0} className="gp-name">
                 {names[pos]!.split(' ').slice(-1)[0]}
               </text>
             )}
@@ -161,7 +161,9 @@ export function GamePlan({ plan, onChange, names }: { plan: FloorPlan; onChange:
         <div className="gp-spots">
           {POS.map((pos) => (
             <label key={pos} className="small">
-              <b>{pos}</b> {names[pos] ?? ''}
+              <span>
+                <b>{pos}</b> {names[pos] ?? ''}
+              </span>
               <select value={at[pos]} onChange={(e) => move(pos, e.target.value as FloorSpot)}>
                 {(Object.keys(SPOT_NAME) as FloorSpot[]).map((k) => (
                   <option key={k} value={k}>

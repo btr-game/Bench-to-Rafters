@@ -3294,6 +3294,8 @@ td > .link-btn { min-width: 44px; text-align: left; }
 .fh-conf-side > .fh-conf { border: 0; padding: 0 0 2px; font-size: calc(13px * var(--ts)); color: var(--ink); border-bottom: 2px solid var(--line); }
 .fh-conf-side.west > .fh-conf { text-align: right; }
 .fh-rounds { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-.fh-finals { align-content: center; }
 .fh-finals .fh-round-name { text-align: center; }
 .fh-tbd { min-height: 54px; border-style: dashed; background: transparent; }
+.fh-split .fh-round { grid-template-rows: auto 1fr; align-content: stretch; }
+.fh-split .fh-round-name { min-height: 2.6em; }
+.fh-ties { display: grid; gap: 8px; align-content: space-around; }

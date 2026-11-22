@@ -161,7 +161,7 @@ function BracketView({ b }: { b: Bracket }) {
       return (
         <div key={`${east}${r}`} className="fh-round">
           <div className="fh-round-name">{t(ROUND_NAME[r])}</div>
-          {mine.length ? mine.map((g, k) => tie(g, `${r}-${k}`)) : Array.from({ length: half }, (_, k) => <div key={k} className="fh-tie fh-tbd" aria-hidden="true" />)}
+          <div className="fh-ties">{mine.length ? mine.map((g, k) => tie(g, `${r}-${k}`)) : Array.from({ length: half }, (_, k) => <div key={k} className="fh-tie fh-tbd" aria-hidden="true" />)}</div>
         </div>
       );
     });
@@ -174,7 +174,7 @@ function BracketView({ b }: { b: Bracket }) {
       </div>
       <div className="fh-round fh-finals">
         <div className="fh-round-name">{t(ROUND_NAME[BRACKET_ROUNDS - 1])}</div>
-        {finals.length ? finals.map((g, k) => tie(g, `f${k}`)) : <div className="fh-tie fh-tbd" aria-hidden="true" />}
+        <div className="fh-ties">{finals.length ? finals.map((g, k) => tie(g, `f${k}`)) : <div className="fh-tie fh-tbd" aria-hidden="true" />}</div>
       </div>
       <div className="fh-conf-side west">
         <div className="fh-conf">{t('West')}</div>

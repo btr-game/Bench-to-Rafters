@@ -16,6 +16,15 @@ interface News {
 
 export const NEWS: News[] = [
   {
+    id: '2026-11-22-plans',
+    date: '22 November 2026',
+    items: [
+      { icon: 'cards', text: 'Game plans on the Floor: pick your team’s shape (standard, five out, four out one in, twin towers, horns), its style (balanced, run and gun, ball movement, isolation, grit and grind, pace and space), and the spot each player stands in on offence.' },
+      { icon: 'bracket', text: 'The Floor’s playoffs are quicker: each game is one quarter from 0–0, about two minutes. The bracket is split into East and West with the Finals between them.' },
+      { icon: 'spotlight', text: 'Legends rated 95 or more have stronger signatures: they should feel dominant.' },
+    ],
+  },
+  {
     id: '2026-11-17-meter',
     date: '17 November 2026',
     items: [
