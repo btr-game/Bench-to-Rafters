@@ -23,7 +23,7 @@ import { PageTop } from '../components/PageTop';
 import { TeamArt } from '../art/Crest';
 import { Icon } from '../art/Icon';
 import { sfx } from '../sound';
-import { FloorScreen, type FloorTeamLook } from './FloorScreen';
+import { COURTS, FloorScreen, type CourtLook, type FloorTeamLook } from './FloorScreen';
 import { FloorFriend } from './FloorFriend';
 import { LegendTable } from './LegendTable';
 import { signatureOf } from './traits';
@@ -128,6 +128,46 @@ interface Plan {
   setup: FloorSetup;
   kits: [string, string];
   key: number;
+  court?: CourtLook;
+}
+
+// (owner: "more courts can be nice"): the court a game is played on, kept on this device
+const COURT_KEY = 'btr-floor-court';
+function keptCourt(): CourtLook {
+  try {
+    const v = localStorage.getItem(COURT_KEY);
+    if (COURTS.some((c) => c.id === v)) return v as CourtLook;
+  } catch {
+    // nothing kept
+  }
+  return 'arena';
+}
+
+function CourtPick({ value, onChange }: { value: CourtLook; onChange: (c: CourtLook) => void }) {
+  return (
+    <div className="fm-row">
+      <div className="sec-title">{t('Court')}</div>
+      <div className="gp-pick" role="group" aria-label={t('Court')}>
+        {COURTS.map((c) => (
+          <button
+            key={c.id}
+            className={`pick-chip${value === c.id ? ' on' : ''}`}
+            aria-pressed={value === c.id}
+            onClick={() => {
+              try {
+                localStorage.setItem(COURT_KEY, c.id);
+              } catch {
+                // storage blocked: picked again next time
+              }
+              onChange(c.id);
+            }}
+          >
+            {t(c.name)}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function Court({ plan, onDone, onAgain }: { plan: Plan; onDone: (r: FloorResult) => void; onAgain?: () => void }) {
@@ -139,7 +179,7 @@ function Court({ plan, onDone, onAgain }: { plan: Plan; onDone: (r: FloorResult)
   ];
   return createPortal(
     <div className="floor-layer" role="dialog" aria-modal="true" aria-label={t('The Floor')}>
-      <FloorScreen key={plan.key} setup={plan.setup} arena={{ c1: us.c1, c2: us.c2, c3: us.c3 }} looks={looks} onDone={onDone} onAgain={onAgain} lose={t('You lost')} />
+      <FloorScreen key={plan.key} setup={plan.setup} court={plan.court} arena={{ c1: us.c1, c2: us.c2, c3: us.c3 }} looks={looks} onDone={onDone} onAgain={onAgain} lose={t('You lost')} />
     </div>,
     document.body,
   );
@@ -228,6 +268,7 @@ export function FloorPage({ inside = false }: { inside?: boolean }) {
   const [oppOvr, setOppOvr] = useState<number | null>(null);
   const [plan, setPlan] = useState<Plan | null>(null);
   const [gamePlan, setGamePlan] = useState(rememberedPlan);
+  const [court, setCourt] = useState<CourtLook>(keptCourt);
   const [last, setLast] = useState<FloorResult | null>(null);
   const [bracket, setBracket] = useState<Bracket | null>(null);
   // the draft: one legend for each position
@@ -256,7 +297,7 @@ export function FloorPage({ inside = false }: { inside?: boolean }) {
   const tip = () => {
     sfx('opened');
     setLast(null);
-    setPlan({ setup: legendSetup({ seed: seed(), us: mine, them: franchise(them, oppOvr ?? undefined), user: steer, length: 'fourth', plan: gamePlan }), kits: [us, them], key: Date.now() });
+    setPlan({ setup: legendSetup({ seed: seed(), us: mine, them: franchise(them, oppOvr ?? undefined), user: steer, length: 'fourth', plan: gamePlan }), kits: [us, them], key: Date.now(), court });
   };
   // his own game: his team's colours are his NBA team's, or the ones picked; the opponent is never his own team
   const ownUs = myTeam ? myTeam.abbr : us;
@@ -268,13 +309,13 @@ export function FloorPage({ inside = false }: { inside?: boolean }) {
     const look = (abbr: string) => ({ name: nameOf(abbr), short: abbr, color: ALL.find((x) => x.abbr === abbr)!.color });
     const opp = myTeam ? career.nba?.teams.find((x) => x.abbr === ownThem) : null;
     const setup = myTeam && opp ? ownSetup(career, { seed: seed(), oppId: opp.id }) : ownSetup(career, { seed: seed(), us: look(ownUs), them: look(ownThem) });
-    setPlan({ setup: { ...setup, us: { ...setup.us, plan: gamePlan } }, kits: [ownUs, ownThem], key: Date.now() });
+    setPlan({ setup: { ...setup, us: { ...setup.us, plan: gamePlan } }, kits: [ownUs, ownThem], key: Date.now(), court });
   };
   const tipPlayoff = (b: Bracket) => {
     const g = myGame(b);
     if (!g) return;
     const opp = g.home ? g.game.b : g.game.a;
-    setPlan({ setup: legendSetup({ seed: b.seed + b.rounds.length * 7919, us: mine, them: franchise(opp, oppOvr ?? undefined), user: steer, length: 'playoff', plan: gamePlan }), kits: [us, opp], key: Date.now() });
+    setPlan({ setup: legendSetup({ seed: b.seed + b.rounds.length * 7919, us: mine, them: franchise(opp, oppOvr ?? undefined), user: steer, length: 'playoff', plan: gamePlan }), kits: [us, opp], key: Date.now(), court });
   };
 
   if (plan)
@@ -406,6 +447,7 @@ export function FloorPage({ inside = false }: { inside?: boolean }) {
               <LegendTable rows={five.map((spot) => ({ team: us, spot }))} />
             </details>
             <GamePlan plan={gamePlan} onChange={setGamePlan} names={Object.fromEntries(five.map((l, i) => [POS[i], l.name]))} />
+            <CourtPick value={court} onChange={setCourt} />
             <div className="fm-row fh-ovrs">
               <OvrPick label={t('Your team’s overall')} real={fiveOvr(five)} value={myOvr} onChange={setMyOvr} />
               <OvrPick label={mode === 'playoffs' ? t('Every opponent’s overall') : t('Opponent’s overall')} real={mode === 'playoffs' ? 90 : fiveOvr(legendFive(them))} value={oppOvr} onChange={setOppOvr} />
