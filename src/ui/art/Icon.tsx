@@ -5,6 +5,7 @@ import { EVENT_ICONS_A } from './eventIconsA';
 import { EVENT_ICONS_B } from './eventIconsB';
 import { EVENT_ICONS_C } from './eventIconsC';
 import { CAREER_ICONS } from './careerIcons';
+import { FLOOR_ICONS } from './floorIcons';
 import { toPaths } from './pixel';
 
 // The colour families of the palette, base and shade: a `shift` moves every family along this
@@ -16,7 +17,7 @@ const recolour = (ch: string, shift: number) => {
 };
 
 // round 27: an icon of its own for every event, injury, level, league and brand (careerArt.tsx)
-const rowsOf = (name: string): string[] | undefined => ICONS[name] ?? CULTURE_ICONS[name] ?? EVENT_ICONS_A[name] ?? EVENT_ICONS_B[name] ?? EVENT_ICONS_C[name] ?? CAREER_ICONS[name];
+const rowsOf = (name: string): string[] | undefined => ICONS[name] ?? CULTURE_ICONS[name] ?? EVENT_ICONS_A[name] ?? EVENT_ICONS_B[name] ?? EVENT_ICONS_C[name] ?? CAREER_ICONS[name] ?? FLOOR_ICONS[name];
 
 /** A 16x16 pixel icon from the set in icons.ts (or the culture icons), drawn crisp at any size; `shift` recolours it. */
 export function Icon({ name, size = 20, title, shift = 0 }: { name: string; size?: number; title?: string; shift?: number }) {
