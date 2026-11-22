@@ -3280,6 +3280,7 @@ td > .link-btn { min-width: 44px; text-align: left; }
 .fh-sig { display: block; margin-top: 4px; font: 700 11px/1.2 var(--f-mono); font-style: normal; letter-spacing: 0.04em; text-transform: uppercase; color: var(--accent, #b5410f); }
 .fm-starter.on .fh-sig { color: inherit; }
 .fh-sig-text { margin: 8px 0 0; }
+.fh-five .fh-sig, .fh-five .fh-face { grid-column: 1 / -1; }
 .fh-face { display: block; margin-top: 3px; font: 700 10px/1.2 var(--f-mono); font-style: normal; letter-spacing: 0.04em; text-transform: uppercase; color: inherit; opacity: 0.85; }
 .fh-sixth { margin: 8px 0 0; }
 /* the steered legend's hot spots and the team's famous duos (engine/floor/gimmicks.ts) */
