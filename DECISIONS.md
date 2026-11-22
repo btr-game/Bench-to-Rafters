@@ -4024,3 +4024,14 @@ touches the keys -> prevent", "a sixth man for superteam drafts. yes".
   overtime: a test plays such a game to its end.
 - **The superteam draft** is twelve picks in the snake (H F F H H F F H H F F H): each side's first five start,
   his sixth comes off the bench as the sixth man; the board shows six places and the pick count of 12.
+
+### The Floor's land
+
+Owner: "can we add the floor as a separate roadmap, like the tutorial land? no eor session, just visual change
+and very few visual checks". `src/ui/floor/FloorLand.tsx`, built the way the tutorial road map is (same size,
+keys and pop-out cards): five places on one road to a dock (the boat from the main land): the street court
+(quick game), the playoff arena (an East/West banner), the draft room, the versus room (online) and the hall of
+legends (each franchise's five and sixth man with their real numbers). Each card opens the Floor page in its
+mode (`openFloor(mode)` in the store); the Floor page's Back goes to the land, and the main land's Floor island
+opens the land. No end-of-round items, by the owner's word; checks: type check, translations, the two main-land
+tests, the visual check on the land's two cards, the Floor page and the start page.
