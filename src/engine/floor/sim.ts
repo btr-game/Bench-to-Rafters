@@ -1322,7 +1322,7 @@ function userActs(s: FloorState, inp: FloorInput, T: 0 | 1): void {
   if (!u.on) return;
   const O = other(T);
   const mine = s.ball.holder === ui;
-  if (inp.timeout && s.timeouts[T] > 0 && (s.phase === 'dead' || (s.poss === T && s.ball.holder !== null && !s.ball.flight))) return timeout(s, T);
+  if (inp.timeout && canTimeout(s, T)) return timeout(s, T);
   if (u.team === s.poss) {
     // the shot: held loads the meter, the release shoots; at the rim one tap finishes (owner: "just
     // one tap for the lay or dunk"); never from behind half court
@@ -1445,6 +1445,11 @@ function userActs(s: FloorState, inp: FloorInput, T: 0 | 1): void {
     }
   }
 }
+
+/** Whether a team may call a timeout this tick: one left, and a dead ball or the ball in its own
+ * hands (as in the real game: never on defence while the ball is live, nor with it in the air). */
+export const canTimeout = (s: FloorState, team: 0 | 1): boolean =>
+  s.timeouts[team] > 0 && (s.phase === 'dead' || (s.phase === 'live' && s.poss === team && s.ball.holder !== null && !s.ball.flight));
 
 function timeout(s: FloorState, team: 0 | 1): void {
   s.timeouts[team]--;
