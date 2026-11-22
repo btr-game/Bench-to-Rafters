@@ -12,7 +12,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { FLOOR } from '../../engine/balance';
 import { COURT, RIM_Y, zoneOf } from '../../engine/floor/court';
-import { floorHash, floorResult, freshEvents, isOpen, meterLoad, meterWindow, mirrorFloor, openMan, ratingK, releaseQuality, skipFloor, startFloor, stepFloor, type FloorEvent, type FloorInput, type FloorSetup, type FloorState } from '../../engine/floor/sim';
+import { canTimeout, floorHash, floorResult, freshEvents, isOpen, meterLoad, meterWindow, mirrorFloor, openMan, ratingK, releaseQuality, skipFloor, startFloor, stepFloor, type FloorEvent, type FloorInput, type FloorSetup, type FloorState } from '../../engine/floor/sim';
 import type { DramaPlay } from '../../engine/story/drama';
 import type { Kit } from '../../content/teamStyle';
 import { lookOf, shoeOf, type KitName } from '../art/Player';
@@ -352,7 +352,10 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
   const closeRef = useRef(false);
   const game = useRef<FloorState | null>(null);
   const skip = useRef(false);
-  const callTimeout = useRef(false);
+  // a timeout he asked for ('ask': just now, from the pause menu or T) and, once seen, how many he
+  // had left then: it is sent with his keys until it is granted (a timeout asked for on defence, with
+  // the ball in the air or at the line waits for the next dead ball or the ball in his team's hands)
+  const wantTimeout = useRef<'ask' | number | null>(null);
   // a substitution picked in the pause menu, sent with his next keys
   const askSub = useRef<{ out: number; in: number } | null>(null);
 
@@ -510,8 +513,13 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
         inp.sub = askSub.current;
         askSub.current = null;
       }
-      if (hit('timeout') || callTimeout.current) inp.timeout = true;
-      callTimeout.current = false;
+      if (typeof wantTimeout.current === 'number' && s.timeouts[0] !== wantTimeout.current) wantTimeout.current = null;
+      if (hit('timeout') && wantTimeout.current === null) wantTimeout.current = 'ask';
+      if (wantTimeout.current === 'ask') {
+        wantTimeout.current = s.timeouts[0] > 0 ? s.timeouts[0] : null;
+        if (wantTimeout.current !== null && !canTimeout(s, 0)) setWord({ text: t('Timeout at the next dead ball'), team: 0, id: performance.now() });
+      }
+      if (wantTimeout.current !== null) inp.timeout = true;
       pressed.clear();
       return inp;
     };
@@ -1136,13 +1144,17 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
             </button>
             <button
               className="btn"
-              disabled={!game.current || game.current.timeouts[0] <= 0}
+              disabled={!game.current || game.current.timeouts[0] <= 0 || wantTimeout.current !== null}
               onClick={() => {
-                callTimeout.current = true;
+                wantTimeout.current = 'ask';
                 setPaused(false);
               }}
             >
-              {t('Call a timeout ({n} left)', { n: hud.timeouts[0] })}
+              {wantTimeout.current !== null
+                ? t('Timeout called: at the next dead ball')
+                : game.current && !canTimeout(game.current, 0) && game.current.timeouts[0] > 0
+                  ? t('Call a timeout at the next dead ball ({n} left)', { n: hud.timeouts[0] })
+                  : t('Call a timeout ({n} left)', { n: hud.timeouts[0] })}
             </button>
             <div className="floor-pause-row">
               <button
