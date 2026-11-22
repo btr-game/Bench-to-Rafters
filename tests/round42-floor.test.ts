@@ -8,7 +8,8 @@ import { ovrOf } from '../src/engine/player/ovr';
 import { ALL_LEGENDS, fiveOvr, floorLevel, legendFive, legendRatings, legendStyle, legendTeam } from '../src/engine/floor/legends';
 import { BRACKET_ROUNDS, finishBracket, franchise, legendSetup, myGame, newBracket, playRound, winnerOf } from '../src/engine/floor/game';
 import { floorResult, freshEvents, gameScore, meterLoad, releaseQuality, startFloor, stepFloor, type FloorInput, type FloorState } from '../src/engine/floor/sim';
-import { LEGEND_TRAITS, SIGNATURES_ON } from '../src/content/legendTraits';
+import { LEGEND_TRAITS, LEGEND_TRAITS_90_OWN, OWN_90_ON, SIGNATURES_ON, legendTrait } from '../src/content/legendTraits';
+import { signatureOf } from '../src/ui/floor/traits';
 import { toRim } from '../src/engine/floor/court';
 import { NBA_TEAMS } from '../src/content/teams';
 import { LEGEND_STATS } from '../src/content/legendStats';
@@ -330,7 +331,7 @@ describe('after round 42: the legends\' signatures, the quicker meter and the ho
     // it rides onto the court with him, and not with his bench (only once the owner has passed the list)
     const set = legendSetup({ seed: 5, us: franchise('GSW', 90), them: franchise('POR', 90), user: 0, length: 'fourth' });
     expect(set.us.players.find((p) => p.name === 'Stephen Curry')!.trait).toBe(SIGNATURES_ON ? 'curry' : undefined);
-    expect(set.them.players.find((p) => p.name === 'Damian Lillard')!.trait).toBe(SIGNATURES_ON ? 'deep' : undefined);
+    expect(set.them.players.find((p) => p.name === 'Damian Lillard')!.trait).toBe(SIGNATURES_ON ? (OWN_90_ON ? 'dame' : 'deep') : undefined);
     expect(set.us.players.slice(5).every((p) => !p.trait)).toBe(true);
   });
 
@@ -405,7 +406,8 @@ describe('after round 42: the own signatures of the legends rated 95 or more', (
     for (let g = 0; g < n; g++) {
       const set = legendSetup({ seed: 700 + g * 13, us: franchise(team, 90), them: franchise(opp, 90), length: 'full' });
       for (const p of [...set.us.players, ...set.them.players]) {
-        if (traits && LEGEND_TRAITS[p.name]) p.trait = LEGEND_TRAITS[p.name].kind;
+        const live = legendTrait(p.name)?.kind;
+        if (traits && live) p.trait = live;
         else delete p.trait;
       }
       const s = startFloor(set);
@@ -458,4 +460,74 @@ describe('after round 42: the own signatures of the legends rated 95 or more', (
     expect(on).toBeGreaterThan(off * 0.95);
     expect(on).toBeLessThan(off * 1.12);
   });
+});
+
+describe('after round 42: the own moves of the legends rated 90 to 94', () => {
+  // (owner: the 90s to 94s get a move of their own as well, each smaller than a 95's; the names stay)
+  const SHARED = ['quick', 'deep', 'fade', 'hook', 'power', 'block', 'steal', 'handle', 'stepback', 'pass', 'glass', 'clutch', 'motor'];
+  const nineties = ALL_LEGENDS.filter((x) => x.spot.ovr >= 90 && x.spot.ovr <= 94).map((x) => x.spot.name);
+
+  it('each of the 46 has a kind nobody else has, neither a shared one nor a 95\'s, under his old name', () => {
+    expect(nineties).toHaveLength(46);
+    expect(Object.keys(LEGEND_TRAITS_90_OWN).sort()).toEqual([...nineties].sort());
+    const own = Object.values(LEGEND_TRAITS_90_OWN);
+    expect(new Set(own).size).toBe(46);
+    const ninetyFive = ALL_LEGENDS.filter((x) => x.spot.ovr >= 95).map((x) => LEGEND_TRAITS[x.spot.name].kind);
+    for (const k of own) {
+      expect(SHARED).not.toContain(k);
+      expect(ninetyFive).not.toContain(k);
+    }
+    // switched on: the game deals his own kind, under the name he always had, and says what it does
+    expect(OWN_90_ON).toBe(true);
+    for (const n of nineties) {
+      expect(legendTrait(n)).toEqual({ kind: LEGEND_TRAITS_90_OWN[n], name: LEGEND_TRAITS[n].name });
+      const sig = signatureOf(n)!;
+      expect(sig.name).toBe(LEGEND_TRAITS[n].name);
+      expect(sig.text.length).toBeGreaterThan(10);
+    }
+    expect(new Set(nineties.map((n) => signatureOf(n)!.text)).size).toBe(46);
+    // the 95s keep theirs
+    expect(legendTrait('Stephen Curry')!.kind).toBe('curry');
+    const set = legendSetup({ seed: 5, us: franchise('POR', 90), them: franchise('UTA', 90), length: 'fourth' });
+    expect(set.us.players.find((p) => p.name === 'Damian Lillard')!.trait).toBe('dame');
+    expect(set.them.players.find((p) => p.name === 'John Stockton')!.trait).toBe('stockton');
+    expect(set.them.players.find((p) => p.name === 'Karl Malone')!.trait).toBe('malone');
+  });
+
+  it('they lift the 90s\' scoring, less than the 95s\' own moves lift theirs', () => {
+    // fourteen games for each of thirteen match-ups, the AI playing both sides: the same games with
+    // nobody's signature, with only the 90s' own moves, and with only the 95s'
+    const PAIRS = [['NYK', 'ORL'], ['POR', 'PHI'], ['BOS', 'NOP'], ['CLE', 'IND'], ['SAC', 'UTA'], ['PHX', 'DET'], ['ATL', 'CHI'], ['BKN', 'GSW'], ['SAS', 'WAS'], ['DEN', 'LAC'], ['TOR', 'MIA'], ['HOU', 'MIN'], ['OKC', 'LAL']];
+    const SEED = 900;
+    const run = (who: 'none' | '90' | '95') => {
+      const pts = { 90: 0, 95: 0 };
+      const n = { 90: 0, 95: 0 };
+      for (let g = 0; g < 14 * PAIRS.length; g++) {
+        const [a, b] = PAIRS[g % PAIRS.length];
+        const set = legendSetup({ seed: SEED + g * 31, us: franchise(g % 2 ? b : a, 90), them: franchise(g % 2 ? a : b, 90), length: 'full' });
+        for (const p of [...set.us.players, ...set.them.players]) {
+          delete p.trait;
+          const own = LEGEND_TRAITS_90_OWN[p.name];
+          if (who === '90' && own) p.trait = own;
+          if (who === '95' && !own && LEGEND_TRAITS[p.name]) p.trait = LEGEND_TRAITS[p.name].kind;
+        }
+        const s = startFloor(set);
+        s.auto = true;
+        play(s);
+        for (const p of s.players) {
+          if (!LEGEND_TRAITS[p.name]) continue;
+          const k = LEGEND_TRAITS_90_OWN[p.name] ? 90 : 95;
+          pts[k] += p.box.pts;
+          n[k]++;
+        }
+      }
+      return { 90: pts[90] / n[90], 95: pts[95] / n[95] };
+    };
+    const none = run('none');
+    const rise90 = run('90')[90] - none[90];
+    const rise95 = run('95')[95] - none[95];
+    console.log(`points a game, nobody's / own: the 90s ${none[90].toFixed(4)} / ${(none[90] + rise90).toFixed(4)}, the 95s ${none[95].toFixed(4)} / ${(none[95] + rise95).toFixed(4)}`);
+    expect(rise90).toBeGreaterThan(0);
+    expect(rise90).toBeLessThan(rise95);
+  }, 120000);
 });

@@ -5,7 +5,7 @@
 // rated 90 or more has one: a name of his own (it stays English, as names do) and one of a dozen
 // kinds, each a small edge in the engine (balance.ts FLOOR.trait, engine/floor/sim.ts).
 
-import type { FloorTrait } from '../engine/floor/sim';
+import type { FloorOwnTrait90, FloorTrait } from '../engine/floor/sim';
 
 /** Whether the signatures are in the game (off, nobody carries one and none is shown). Held back until
  * the owner had gone through the list ("confirm the signature moves before getting them through");
@@ -88,3 +88,68 @@ export const LEGEND_TRAITS: Record<string, { kind: FloorTrait; name: string }> =
   'Pete Maravich': { kind: 'handle', name: 'Pistol Pete' },
   'Tiny Archibald': { kind: 'handle', name: 'Tiny' },
 };
+
+/** Whether the legends rated 90 to 94 play with a move of their own (LEGEND_TRAITS_90_OWN) instead of
+ * their shared kind (after round 42, owner: the 90s get their own too, each smaller than a 95's;
+ * their signature names stay as they are); on once the owner said no confirmation was needed. Off,
+ * they would keep the shared kinds above. */
+export const OWN_90_ON: boolean = true;
+
+/** The own move of each legend rated 90 to 94 (FLOOR.sig90 has what each is worth). */
+export const LEGEND_TRAITS_90_OWN: Record<string, FloorOwnTrait90> = {
+  'Bob Pettit': 'pettit',
+  'Tracy McGrady': 'tmac',
+  'Elgin Baylor': 'baylor',
+  'Moses Malone': 'moses',
+  'Chris Paul': 'cp3',
+  'Anthony Davis': 'ad',
+  'Patrick Ewing': 'ewing',
+  'Allen Iverson': 'iverson',
+  'Charles Barkley': 'barkley',
+  'Isiah Thomas': 'zeke',
+  'Dwight Howard': 'dwight',
+  'Russell Westbrook': 'russ',
+  'Rick Barry': 'barry',
+  'Steve Nash': 'nash',
+  'Dominique Wilkins': 'nique',
+  'John Havlicek': 'hondo',
+  'Jason Kidd': 'kidd',
+  'Walt Frazier': 'frazier',
+  'Scottie Pippen': 'pippen',
+  'Anthony Edwards': 'ant',
+  'Damian Lillard': 'dame',
+  'Clyde Drexler': 'glide',
+  'Bill Walton': 'walton',
+  'John Stockton': 'stockton',
+  'George Gervin': 'iceman',
+  'Bob Cousy': 'cousy',
+  'Kevin McHale': 'mchale',
+  'Bernard King': 'king',
+  'Willis Reed': 'reed',
+  'Derrick Rose': 'rose',
+  'Grant Hill': 'hill',
+  'Elvin Hayes': 'bige',
+  'Carmelo Anthony': 'melo',
+  'Bob McAdoo': 'mcadoo',
+  'Devin Booker': 'booker',
+  'Chris Webber': 'webber',
+  'Jalen Brunson': 'brunson',
+  'Vince Carter': 'vince',
+  'Kyrie Irving': 'kyrie',
+  'Donovan Mitchell': 'spida',
+  'Reggie Miller': 'reggie',
+  'Paul George': 'pg13',
+  'Alonzo Mourning': 'zo',
+  'Penny Hardaway': 'penny',
+  'Pete Maravich': 'pistol',
+  'Tiny Archibald': 'tiny',
+};
+
+/** A legend's signature as the game has it now: none while SIGNATURES_ON is off; for a legend rated 90
+ * to 94, his own move once OWN_90_ON is on; the name is always LEGEND_TRAITS'. */
+export function legendTrait(name: string): { kind: FloorTrait; name: string } | undefined {
+  const x = SIGNATURES_ON ? LEGEND_TRAITS[name] : undefined;
+  if (!x) return undefined;
+  const own = OWN_90_ON ? LEGEND_TRAITS_90_OWN[name] : undefined;
+  return own ? { kind: own, name: x.name } : x;
+}

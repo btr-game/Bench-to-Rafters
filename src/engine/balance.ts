@@ -1311,6 +1311,44 @@ export const FLOOR = {
    * share of the time. kawhiSteal. oscarPick: how often his passes are picked off. drjRange: the feet
    * from the rim his shot still counts as one at the rim. */
   sig: { mjContest: 0.1, kdContest: 0.35, lukaContest: 0.1, lukaSecs: 1.5, kgContest: 1.45, birdShot: 0.08, birdWindow: 1.6, birdSecs: 120, westShot: 0.13, westSecs: 60, duncanShot: 0.09, duncanWing: 8, kobeStep: 0.035, kobeMax: 3, feedSecs: 2, jokicPass: 0.08, magicPass: 0.09, maloneShot: 0.1, kareemHook: 0.16, russellBlock: 1.8, robinsonBlock: 1.7, wadeBlock: 1.6, wadeBreak: 2, sgaFoul: 2.3, embiidFoul: 3.5, hardenFoul: 3, lebronFoul: 2, wiltGlass: 1.9, oscarGlass: 1.6, kgGlass: 1.6, hardenMove: 0.24, shaqDrop: 0.4, hakeemMove: 0.28, hakeemSlow: 2, shaqPace: 2.2, giannisSpeed: 1.22, robinsonSpeed: 1.15, curry: 0.45, kawhiSteal: 2.2, oscarPick: 0.45, drjRange: 8 },
+  /** The own moves of the legends rated 90 to 94 (content/legendTraits.ts LEGEND_TRAITS_90_OWN, while
+   * OWN_90_ON; owner: "no confirmation needed", on), each smaller than a 95's (measured over 3 x 3,900 AI
+   * games: a 90's points a game up about 0.10, a 95's own moves about 0.16). Added to a shot: reggieShot (a three in the last reggieSecs),
+   * dameShot (a three in the last dameSecs; and no distance penalty until dameFt further out), reedShot
+   * (his team behind in the last period), tmacShot (within tmacSecs of a make of his), mcadooShot (the
+   * paint, his post shots), pistolShot (mid-range from
+   * pistolFt out), pgThree, niqueRim, glideBreak (inside on the break), pettitPut (inside within
+   * pettitSecs of his offensive rebound), meloShot (a jumper once he has stood with it meloStill), brunsonShot (at the
+   * rim within brunsonSecs of his move), dwightLob
+   * (at the rim off a pass; it cannot be blocked), antPoster (at the rim with a man within antNear),
+   * nashPass (a shot after his pass in the first nashSecs of the clock), and a shot after a pass thrown
+   * in the passer's own situation: stocktonPass (to the screener), cousyPass (out of a trap of two within
+   * cousyTrap feet), hillPass (within hillSecs of his move), waltonPass (from the high post), webberPass
+   * (from the post), barryPass (to a three), pennyPass (to the rim); Stockton's, Cousy's and Hill's are
+   * never lost. The share of a contest that counts: kingContest (within kingSecs of the catch),
+   * bookerContest (mid-range), icemanContest (at the rim and in the paint); pippenContest: what his contests on
+   * jumpers are multiplied by. Blocks: adHelp (not on his own man), ewingRim, zoHook, bigeBlock;
+   * baylorBlock, antBlock: how often he is blocked; vinceSecs: at the rim this soon after his move, never.
+   * Boards: mosesGlass (offensive), bigeGlass, barkleyReach (the feet a rebound's pull halves over, 3 for
+   * the rest). Moves: iversonMove (and his man slowed iversonSlow as long), roseMove, kyrieIso (in an
+   * isolation), mchaleMove (post). Speed: russBreak, roseBurst (within roseSecs of his move), spidaBall
+   * (with the ball, 0.92 for the rest). cp3Strip, frazierPick, pgSteal (both): his steals; zekeGrip: how
+   * often the ball is taken from him; hondoTired: the share of his tiredness that counts; kiddBreak: a
+   * break after his rebound lasts this much longer; niqueSwing: a dunk of his swings momentum this much
+   * more (in big swings); tinyFoul: fouls drawn at the rim. */
+  sig90: {
+    reggieShot: 0.04, reggieSecs: 120, dameShot: 0.025, dameSecs: 300, dameFt: 2, reedShot: 0.025, tmacShot: 0.025, tmacSecs: 30,
+    icemanContest: 0.85, mcadooShot: 0.025, pistolShot: 0.03, pistolFt: 17, pgThree: 0.01, niqueRim: 0.015, glideBreak: 0.03,
+    pettitPut: 0.04, pettitSecs: 3, meloShot: 0.02, meloStill: 2.5, dwightLob: 0.02, antPoster: 0.01, antNear: 3, nashPass: 0.03, nashSecs: 7,
+    stocktonPass: 0.05, cousyPass: 0.04, cousyTrap: 6, hillPass: 0.04, hillSecs: 1.5, waltonPass: 0.04, webberPass: 0.04, barryPass: 0.03, pennyPass: 0.04,
+    kingContest: 0.8, kingSecs: 1.5, bookerContest: 0.8, brunsonShot: 0.035, brunsonSecs: 3, pippenContest: 1.2,
+    adHelp: 1.5, ewingRim: 1.45, zoHook: 2, bigeBlock: 1.2, baylorBlock: 0.75, antBlock: 0.8, vinceSecs: 3,
+    mosesGlass: 1.2, bigeGlass: 1.15, barkleyReach: 3.6,
+    iversonMove: 0.05, iversonSlow: 1.25, roseMove: 0.025, kyrieIso: 0.06, mchaleMove: 0.08,
+    russBreak: 1.06, roseBurst: 1.08, roseSecs: 1.5, spidaBall: 0.96,
+    cp3Strip: 1.5, frazierPick: 1.7, pgSteal: 1.25, zekeGrip: 0.5, hondoTired: 0.7, kiddBreak: 1.5, niqueSwing: 1.5, tinyFoul: 1.2,
+  },
+
   trait: { quick: 0.6, deepFt: 5, deep: 0.03, fade: 0.5, stepThree: 0.6, power: 0.5, powerBlock: 0.5, hook: 0.08, hookBlock: 0.4, block: 1.6, steal: 1.5, glass: 1.35, handle: 0.12, stepMove: 0.06, passSpeed: 1.25, passPick: 0.35, clutch: 0.06, clutchSecs: 120, motor: 0.55 },
   /** Free throws: the chance from free-throw touch 0 to 100. */
   ft: [0.5, 0.95],
