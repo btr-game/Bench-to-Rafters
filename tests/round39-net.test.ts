@@ -9,6 +9,10 @@ import { FLOOR } from '../src/engine/balance';
 import { floorHash, freshEvents, startFloor, stepFloor, type FloorInput, type FloorSetup, type FloorState } from '../src/engine/floor/sim';
 import { leanRatings } from '../src/engine/floor/career';
 import { AHEAD, NetGame, type FloorMsg, type Wire } from '../src/ui/floor/net';
+import { FriendRoom, cleanPlan } from '../src/ui/floor/room';
+import { bestLeft, lineUp, picksOf, PICK_SECONDS, SNAKE, turnOf } from '../src/engine/floor/friend';
+import { ALL_LEGENDS } from '../src/engine/floor/legends';
+import { legendSetup } from '../src/engine/floor/game';
 import { makeRng, next } from '../src/engine/rng';
 
 const POS = ['PG', 'SG', 'SF', 'PF', 'C', 'PG', 'SF', 'C'] as const;
@@ -125,9 +129,9 @@ function screen(net: NetGame, make: (s: FloorState) => FloorInput) {
 }
 
 /** Plays a game between two screens over a line; returns what both saw. */
-function match(o: { lag: number; jitter?: number; loss?: number; seed?: number; clock?: number; late?: number; fast?: FastLine }) {
+function match(o: { lag: number; jitter?: number; loss?: number; seed?: number; clock?: number; late?: number; fast?: FastLine; set?: FloorSetup }) {
   const L = line(o);
-  const set = setup(o.seed ?? 21, o.clock ?? 90);
+  const set = o.set ?? setup(o.seed ?? 21, o.clock ?? 90);
   const host = new NetGame(L.a, 0, 1, set, () => L.t.ms);
   const friend = new NetGame(L.b, 1, 1, set, () => L.t.ms);
   const A = screen(host, keys(1));
@@ -308,5 +312,165 @@ describe('the Floor online: prediction between two screens', () => {
     }
     expect(host.gone).toBe(true);
     expect(friend.gone).toBe(false);
+  });
+});
+
+// After round 42 (owner: "superteam draft against a friend: nice. let's expand friend play in
+// general"): the room between two screens (room.ts), over the same line in memory.
+describe('the Floor online: a room between friends', () => {
+  const rooms = (o: { lag: number; seed?: number; drop?: (m: FloorMsg) => boolean }) => {
+    const L = line({ lag: o.lag, seed: o.seed });
+    // a line that can lose chosen messages (line() only loses keys)
+    const b: Wire = o.drop ? { ...L.b, send: (m) => (o.drop!(m) ? undefined : L.b.send(m)) } : L.b;
+    const host = new FriendRoom(L.a, true, { mode: 'draft', best: 3 }, () => L.t.ms);
+    const guest = new FriendRoom(b, false, {}, () => L.t.ms);
+    const run = (ms: number) => {
+      for (let i = 0; i < ms; i++) {
+        L.t.ms++;
+        L.pump();
+        host.tick();
+        guest.tick();
+      }
+    };
+    return { L, host, guest, run };
+  };
+
+  it('the draft goes in a snake from one pool, and both screens show the same board', () => {
+    const { host, guest, run } = rooms({ lag: 60 });
+    host.startDraft();
+    run(200);
+    expect(guest.state.mode).toBe('draft');
+    expect(guest.state.draft?.picks).toEqual([]);
+    const r = makeRng(5);
+    while (host.state.draft && turnOf(host.state.draft) !== null) {
+      const d = host.state.draft;
+      const who = turnOf(d)!;
+      const free = ALL_LEGENDS.map((_, k) => k).filter((k) => !d.picks.includes(k));
+      const k = free[Math.floor(next(r) * free.length)];
+      // out of turn: refused on either screen, nothing sent
+      expect((who === 0 ? guest : host).pick(k)).toBe(false);
+      // a man already gone: refused
+      if (d.picks.length) expect((who === 0 ? host : guest).pick(d.picks[0])).toBe(false);
+      expect((who === 0 ? host : guest).pick(k)).toBe(true);
+      run(300);
+      expect(host.state.draft!.picks.length).toBe(d.picks.length + 1);
+    }
+    run(300);
+    const d = host.state.draft!;
+    expect(d.picks.length).toBe(10);
+    expect(new Set(d.picks).size).toBe(10);
+    expect(guest.state.draft).toEqual(d);
+    expect(host.drafted && guest.drafted).toBe(true);
+    // the order: host, friend, friend, host, host, ...
+    expect(SNAKE).toEqual([0, 1, 1, 0, 0, 1, 1, 0, 0, 1]);
+    expect(picksOf(d, 0).length).toBe(5);
+    expect(picksOf(d, 1).length).toBe(5);
+    expect(host.left()).toBeNull();
+  });
+
+  it('a pick that never arrives goes again; a pick clock that runs out takes the best man left', () => {
+    let lost = 0;
+    const { host, guest, run } = rooms({ lag: 40, drop: (m) => m.k === 'pick' && lost++ < 2 });
+    host.startDraft();
+    run(100);
+    expect(host.pick(0)).toBe(true);
+    run(100);
+    expect(guest.pick(1)).toBe(true);
+    run(400);
+    // the first two tries were lost: still waiting for it
+    expect(host.state.draft!.picks).toEqual([0]);
+    run(2500);
+    expect(host.state.draft!.picks).toEqual([0, 1]);
+    expect(guest.state.draft!.picks).toEqual([0, 1]);
+    // the friend lets his clock run out: the best man left is his
+    const want = bestLeft(host.state.draft!, 1);
+    expect(ALL_LEGENDS[want].spot.ovr).toBe(99);
+    run(PICK_SECONDS * 1000 - 2000);
+    expect(host.state.draft!.picks.length).toBe(2);
+    expect(guest.left()!).toBeGreaterThan(0);
+    run(1500);
+    expect(host.state.draft!.picks).toEqual([0, 1, want]);
+    run(200);
+    expect(guest.state.draft!.picks).toEqual([0, 1, want]);
+    // and only while the friend is in the room
+    const before = host.state.draft!.picks.length;
+    for (let i = 0; i < PICK_SECONDS * 1000 + 500; i += 100) host.tick(false);
+    expect(host.state.draft!.picks.length).toBe(before);
+  });
+
+  it('a series: each game counts once on both screens, first to two takes a best of three, the next tip-off starts a new one', () => {
+    const { host, guest, run } = rooms({ lag: 50 });
+    host.announce();
+    run(100);
+    expect(guest.state.best).toBe(3);
+    // both screens see the game end; the host's count is the one, once
+    host.result(1, 0);
+    guest.result(1, 0);
+    host.result(1, 0);
+    run(200);
+    expect(host.state.wins).toEqual([1, 0]);
+    expect(guest.state.wins).toEqual([1, 0]);
+    // the friend's screen sees the end after the host's word of it has come: still one game (the bug
+    // the two-tab check found, when each screen counted for itself)
+    host.result(2, 1);
+    run(200);
+    guest.result(2, 1);
+    host.announce();
+    run(200);
+    expect(guest.state.wins).toEqual([1, 1]);
+    host.result(3, 0);
+    guest.result(3, 0);
+    run(200);
+    expect(host.state.wins).toEqual([2, 1]);
+    expect(guest.state.wins).toEqual([2, 1]);
+    // decided: the rematch starts a new series
+    host.nextGame();
+    run(200);
+    expect(guest.state.wins).toEqual([0, 0]);
+    // a series still going on is not reset
+    host.result(4, 1);
+    host.nextGame();
+    expect(host.state.wins).toEqual([0, 1]);
+    // a new best-of starts afresh
+    host.setBest(5);
+    run(200);
+    expect(guest.state).toMatchObject({ best: 5, wins: [0, 0] });
+  });
+
+  it('the drafted fives and both game plans reach both screens in the setup, and the two play the same game', () => {
+    const { host, run } = rooms({ lag: 30 });
+    host.startDraft();
+    run(50);
+    // (every pick's clock runs out: the best man left each time)
+    while (turnOf(host.state.draft!) !== null) run(PICK_SECONDS * 1000);
+    const d = host.state.draft!;
+    const mine = lineUp(picksOf(d, 0));
+    const theirs = lineUp(picksOf(d, 1));
+    expect(mine.map((l) => l.name).sort()).toEqual(picksOf(d, 0).map((l) => l.name).sort());
+    const planA = cleanPlan({ shape: 'fiveOut', style: 'runGun' })!;
+    // a plan from the line is kept only as far as the game knows it
+    const planB = cleanPlan({ shape: 'horns', style: 'motion', spots: { PG: 'leftCorner', SG: 'nowhere' } })!;
+    expect(planB.spots).toEqual({ PG: 'leftCorner' });
+    expect(cleanPlan({ shape: 'square', style: 'motion' })).toBeUndefined();
+    const set = legendSetup({ seed: 77, us: { name: 'A', short: 'BOS', color: '#070', five: mine }, them: { name: 'B', short: 'LAL', color: '#509', five: theirs }, user: 1, length: 'fourth', plan: planA });
+    set.them.plan = planB;
+    set.them.players[1].user = true;
+    expect(set.us.players.slice(0, 5).map((p) => p.name)).toEqual(mine.map((l) => l.name));
+    const m = match({ lag: 40, jitter: 15, set: JSON.parse(JSON.stringify(set)) as FloorSetup });
+    expect(m.host.over && m.friend.over).toBe(true);
+    expect(same(m)).toBeGreaterThan(300);
+    expect(m.host.conf.score).toEqual(m.friend.conf.score);
+    expect(m.host.conf.plans).toEqual([planA, planB]);
+  });
+});
+
+describe('the superteam draft: its five on the floor', () => {
+  it('lineUp puts each as near his own position as the five allows', () => {
+    const at = (name: string) => ALL_LEGENDS.find((x) => x.spot.name === name)!.spot;
+    const five = [at('Bill Russell'), at('Michael Jordan'), at('Larry Bird'), at('Bob Cousy'), at('Kevin McHale')];
+    expect(lineUp(five).map((l) => l.name)).toEqual(['Bob Cousy', 'Michael Jordan', 'Larry Bird', 'Kevin McHale', 'Bill Russell']);
+    // five centres: still five, each once
+    const bigs = ALL_LEGENDS.filter((x) => x.spot.pos === 'C').slice(0, 5).map((x) => x.spot);
+    expect(new Set(lineUp(bigs)).size).toBe(5);
   });
 });

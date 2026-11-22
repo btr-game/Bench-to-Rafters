@@ -3900,3 +3900,67 @@ Harden's step-back and fouls on threes, Robinson's blocks and speed. Over 90 ful
 with the signatures: points a team 24.7056 to 25.1722, field goals 52.374% to 54.394%, threes
 39.250% to 43.849% (7.7 tried a game), free throws tried 11.57 to 11.86, blocks 1.589 to 1.378, steals
 2.289 to 2.356; the 95s score 6.899 to 7.702 a game, the 90s to 94s 5.909 to 5.931.
+
+### Game plans, one-quarter playoffs, the bracket by conference, the 95s buffed
+
+Owner: "let's let the player choose team archetype (5 out, 1 big, ...), team style (run and gun, ball
+movement, ...), and where each player sits on offense (ex: lebron could be at top, not corner)"; then "reduce
+time in playoffs. maybe just leave it as one quarter, 2 minutes per game pace? also, make the bracket ui divide
+by east and west"; and "im fine with a little overbalance of stars. 95+ should have a bit of dominance".
+
+- **Game plans** (`FloorPlan` on a team: `shape`, `style`, `spots`; `SPOTS` and `SHAPES` in
+  `engine/floor/court.ts`, `FLOOR.play` in balance.ts; the screen in `ui/floor/GamePlan.tsx`, kept on the device).
+  Shapes: standard (as before), five out, four out one in, twin towers, horns. Styles lean every man's
+  tendencies (shots, threes, drives, post-ups, passes) and the team's patience, isolations, fast-break length
+  and contests. Each of the five can be moved to any of ten spots (taking a spot another holds swaps them).
+  It plays for the AI's teammates; whoever is steered goes where he likes. Measured over 50 full AI games
+  per plan (same opponents): run and gun 25.240 points for, 27.640 against; ball movement 22.360 and 23.460
+  with almost no isolations; isolation 3.58 isolations a game and the fewest threes; grit and grind
+  20.360 and 23.760 with the most post-ups; pace and space the most threes (28.44% of shots); twin towers
+  and horns post up 3.84 and 3.28 times a game against 1.48. Only the user's team has a plan; the other
+  plays standard and balanced. Online games do not carry plans yet.
+- **Playoff games** (`FloorLength` 'playoff', `FLOOR.ratePlayoff` 4): one quarter from 0-0, 12:00 at four
+  times the clock, about two real minutes. The bracket's simulated games are the same length.
+- **The bracket** shows the East from the left and the West from the right, the Finals between them.
+- **The 95s** (`FLOOR.sig`): every own signature a notch stronger, e.g. Jordan's mid-range contest from
+  0.25 to 0.1 of its cost, Kareem's hook 12 to 16 points, Russell's blocks 1.5 to 1.8 times, Curry's meter
+  0.5 to 0.45 of the time, West's last minute 9 to 13 points.
+
+### Sixth men, franchise faces, Jokic, stamina, a free draft, best-fit plans
+
+Owner: "add wemby to the game somehow"; "since we're adding wemby, add cooper flagg as well"; "oh yeah let's
+just have sixth man in the teams"; "each team has a franchise face player: golden state: curry, bulls: jordan,
+... often their best player. give them another buff, especially giving a slight edge to those who didnt make
+the 95+ cut (isiah thomas for detroit)"; "make jokic much stronger (developer bias. he's my favorite player)";
+"increase stamina of all players more"; "in draft your five, get rid of position constraints"; "for quick game,
+let's determine the team style and all that with their best fit or culture".
+
+- **Sixth men** (`FRANCHISE_SIXTH` in `content/franchiseFives.ts`, a stat line each in `legendStats.ts`, a
+  number in `legendNumbers.ts`): one legend for each of the 30 franchises comes off the bench first, in place of
+  the first made-up bench man (`legendTeam`'s `sixth`, carried by `FloorSide.sixth` from `franchise()`). A real
+  sixth man where the team had a famous one (Toni Kukoc, Lou Williams, Dell Curry, Tyler Herro, Naz Reid), a
+  great missing from the five otherwise (Gary Payton, Paul Pierce, Yao Ming, James Worthy, Kevin Johnson). Victor
+  Wembanyama (93) for the Spurs; Cooper Flagg for the Mavericks (88 at first, then 90: owner, "make cooper flagg a 90"; his own move, "Two-way rookie": strips and steals ×1.25, rim shots +0.015), whose line is an estimate from one season.
+  The draft's pool grows from 150 to 180. The eight sixth men at 90 or more have a shared-kind signature (Wembanyama
+  "The Alien", a block kind), until their own kinds come with the 90-94 signatures.
+- **Franchise faces** (`FRANCHISE_FACE`, `isFace`): every skill but legs and free throws `FLOOR.face.rest` (3)
+  higher for a face under 95, `FLOOR.face.star` (1.5) for one at 95 or more, so Isiah Thomas, Reggie Miller or
+  Allen Iverson gain more than Jordan or Curry. The setup page marks him "Face of the franchise".
+- **Jokic** (`FLOOR.jokic`): playmaking, IQ and rebounding set to 99, finishing +9, shooting +7, interior +3, on
+  top of the face's buff (first +5 and +4; then owner: "increase jokic's finishing and shooting a but more, and
+  change his signature to smth else(stronger)"). His signature is now the **Sombor Shuffle** in place of Point
+  centre (the pass bonus): inside the arc a contest counts only `jokicContest` 0.3 of its usual cost, and his
+  shots there gain `jokicTouch` +0.06. His passing lives on in his 99 playmaking.
+  He also looks for his own shot more (`FLOOR.jokic.use` ×1.6, `post` ×1.6 and ×1.5 on his style): measured over
+  80 full games at 90 against the Lakers, Celtics, Warriors and Bulls (AI both sides), he went from 1.9375 points a
+  game (72.6190% from the field, Denver winning 35.0000%) to 10.2000 points (83.0986%) of Denver's 28.4625, and
+  Denver won 42.5000%.
+- **Stamina** (`FLOOR.stamina`): sprint −0.012 to −0.0075, move −0.0045 to −0.0028, rest +0.004 to +0.0055,
+  timeout +0.25 to +0.3.
+- **Draft your five**: five picks from one pool of all 180, any positions; a legend picked once cannot be picked
+  twice; the five are set out guards first by their own positions.
+- **Best-fit plans** (`fitPlan` in `engine/floor/legends.ts`): the shape from the five's two bigs (a creating
+  centre plays horns, a shooting centre five out, a stretch four four-out-one-in, two post bigs twin towers),
+  the style from the franchise's culture where it is famous (Showtime Lakers and Suns run, Spurs and Nuggets move
+  the ball, Grizzlies, Pistons, Knicks and Heat grind, Warriors and Rockets space) or else from the five. The
+  computer's side always plays its fit; picking a team sets yours to its fit, changed from there as before.

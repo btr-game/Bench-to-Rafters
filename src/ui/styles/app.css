@@ -3180,6 +3180,21 @@ td > .link-btn { min-width: 44px; text-align: left; }
 .floor-line-tip { position: absolute; left: 50%; bottom: 13%; transform: translateX(-50%); padding: 4px 10px; background: #101218; border: 2px solid #000; color: #f2eee6; font: 700 14px/1.3 var(--f-body, Archivo, sans-serif); white-space: nowrap; pointer-events: none; }
 /* round 39, online: the room card keeps the page's ink on any background (the dev deck's is dark) */
 .floor-friend { color: var(--ink); }
+/* after round 42, a friend's room: the series, the game plan folded away, the superteam draft's board */
+.ff-series { margin: 0; font-weight: 700; }
+.ff-plan > summary { cursor: pointer; font-weight: 700; padding: 6px 0; }
+.dr-turn { margin: 0; font-weight: 700; padding: 6px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface-2); }
+.dr-turn.on { border-color: var(--accent); box-shadow: inset 0 0 0 2px var(--accent); }
+.dr-fives { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.dr-five ol { margin: 4px 0 0; padding-left: 22px; display: grid; gap: 2px; }
+.dr input.dr-find { min-height: 36px; width: 240px; max-width: 100%; padding: 4px 10px; }
+.dr-pool { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); grid-auto-rows: max-content; align-content: start; gap: 6px; max-height: 300px; overflow-y: auto; padding: 2px; }
+.dr-man { display: grid; grid-template-columns: 2.2em minmax(0, 1fr); gap: 0 8px; text-align: left; padding: 6px 10px; min-height: 40px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface-2); color: var(--ink); font: inherit; }
+.dr-man b { grid-row: 1 / 3; align-self: center; font-family: var(--f-mono); }
+.dr-man .muted { font-size: calc(12px * var(--ts)); }
+.dr-man:not(:disabled):hover { border-color: var(--ink); }
+.dr-man:disabled { cursor: default; opacity: 0.85; }
+.floor-pause p.floor-end-series { margin: 4px 0 0; max-width: none; font-size: 14px; font-weight: 700; color: #f2eee6; }
 /* round 39, online: the friend's keys late, the note in the menu (the game goes on behind it) */
 .floor-wait { position: absolute; left: 50%; top: 10%; transform: translateX(-50%); padding: 6px 14px; background: #101218; border: 2px solid #000; color: #ffd23f; font: 800 15px/1.3 var(--f-body, Archivo, sans-serif); white-space: nowrap; pointer-events: none; animation: floor-wait 1s steps(2) infinite; }
 @keyframes floor-wait {
@@ -3258,10 +3273,15 @@ td > .link-btn { min-width: 44px; text-align: left; }
 .floor-mo i { width: 5px; }
 .floor-mo i:nth-child(10) { box-shadow: 2px 0 0 #000; }
 .floor-hot { padding: 1px 6px; background: #ff6b2c; color: #1a0a02; font-family: var(--f-display); letter-spacing: 0.04em; }
+.floor-crowd { background: #ffd23f; }
 /* the Floor, step 3: the close-up after a big play, on the action cam */
 .floor-cam { position: absolute; left: 50%; top: 8%; width: 72%; transform: translateX(-50%); display: grid; gap: 4px; justify-items: end; }
 .floor-cam .cam { max-width: none; border: 3px solid #000; box-shadow: 5px 5px 0 #000; border-radius: 0; }
 .floor-cam-skip { padding: 2px 8px; background: #101218; color: #c9c4ba; font: 600 12px/1.3 var(--f-mono); }
+/* the buzzer-beater replay: the word over the canvas's red plate when the pixel letters cannot draw it, and the way on */
+.floor-replay { position: absolute; inset: 0; pointer-events: none; }
+.floor-replay-word { position: absolute; left: 8.6%; top: 1.4%; font: 900 clamp(14px, 2.2vw, 24px)/1 var(--f-display); text-transform: uppercase; color: #f2eee6; text-shadow: 2px 2px 0 #000; }
+.floor-replay .floor-cam-skip { position: absolute; right: 2%; bottom: 1.6%; }
 /* after round 40: a part of the page that failed to draw (components/Safe.tsx) */
 .safe-note code { display: block; white-space: pre-wrap; overflow-wrap: anywhere; user-select: all; }
 .safe-big { max-width: 720px; margin: 16px auto; }
@@ -3275,5 +3295,34 @@ td > .link-btn { min-width: 44px; text-align: left; }
 .fh-sig { display: block; margin-top: 4px; font: 700 11px/1.2 var(--f-mono); font-style: normal; letter-spacing: 0.04em; text-transform: uppercase; color: var(--accent, #b5410f); }
 .fm-starter.on .fh-sig { color: inherit; }
 .fh-sig-text { margin: 8px 0 0; }
+.fh-five .fh-sig, .fh-five .fh-face { grid-column: 1 / -1; }
+.fh-face { display: block; margin-top: 3px; font: 700 10px/1.2 var(--f-mono); font-style: normal; letter-spacing: 0.04em; text-transform: uppercase; color: inherit; opacity: 0.85; }
+.fh-sixth { margin: 8px 0 0; }
+/* the steered legend's hot spots and the team's famous duos (engine/floor/gimmicks.ts) */
+.fh-spots { margin: 6px 0 0; }
+.fh-duos { margin: 6px 0 0; display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.fh-duos span { padding: 1px 6px; border: 2px solid var(--line); }
 .lg-sig { text-align: left; white-space: nowrap; }
 .floor-sig { color: #ffd23f; }
+
+/* the Floor's game plan (after round 42): shape and style chips, the pixel half court, the spots */
+.gp { --gp-floor: #d9a066; --gp-paint: #c4803f; --gp-line: #fff7e8; --gp-rim: #e8590c; --gp-man: #1b1820; --gp-man-hi: #4a4458; }
+.gp-pick { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.gp-pick > .small { min-width: 48px; }
+.gp-body { display: grid; grid-template-columns: minmax(200px, 320px) minmax(0, 1fr); gap: 16px; align-items: start; }
+.gp-court { width: 100%; height: auto; image-rendering: pixelated; border: 2px solid var(--line); }
+.gp-pos { font: 700 7px/1 var(--f-mono); fill: #fff7e8; }
+.gp-name { font: 700 7px/1 var(--f-mono); fill: #1b1820; paint-order: stroke; stroke: #fff7e8; stroke-width: 2px; }
+.gp-spots { display: grid; gap: 8px; }
+.gp-spots label { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 170px); gap: 8px; align-items: center; }
+/* the bracket split by conference (after round 42): East | Finals | West */
+.fh-split { grid-template-columns: minmax(0, 3fr) minmax(0, 1fr) minmax(0, 3fr); align-items: stretch; }
+.fh-conf-side { display: grid; grid-template-rows: auto 1fr; gap: 6px; min-width: 0; }
+.fh-conf-side > .fh-conf { border: 0; padding: 0 0 2px; font-size: calc(13px * var(--ts)); color: var(--ink); border-bottom: 2px solid var(--line); }
+.fh-conf-side.west > .fh-conf { text-align: right; }
+.fh-rounds { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.fh-finals .fh-round-name { text-align: center; }
+.fh-tbd { min-height: 54px; border-style: dashed; background: transparent; }
+.fh-split .fh-round { grid-template-rows: auto 1fr; align-content: stretch; }
+.fh-split .fh-round-name { min-height: 2.6em; }
+.fh-ties { display: grid; gap: 8px; align-content: space-around; }

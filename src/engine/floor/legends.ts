@@ -10,17 +10,17 @@
 // scoring, passing from his assists. A team can then be played at its real level or at any overall
 // the player picks, each side on its own.
 
-import { LEGEND_TRAITS, SIGNATURES_ON } from '../../content/legendTraits';
-import { OVR_WEIGHTS } from '../balance';
+import { legendTrait } from '../../content/legendTraits';
+import { FLOOR, OVR_WEIGHTS } from '../balance';
 import { clamp } from '../rng';
 import { ovrOf } from '../player/ovr';
 import type { Pos } from '../types';
-import { FRANCHISE_FIVES, type LegendSpot } from '../../content/franchiseFives';
+import { FRANCHISE_FIVES, FRANCHISE_SIXTH, isFace, type LegendSpot } from '../../content/franchiseFives';
 import { LEGEND_STATS, type LegendStatRow } from '../../content/legendStats';
 import { LEGEND_NUMBERS } from '../../content/legendNumbers';
 import { FIRST_NAMES, LAST_NAMES } from '../../content/names';
 import { leanRatings } from './career';
-import type { FloorPlayerIn, FloorRatings, FloorStyle } from './sim';
+import type { FloorPlan, FloorPlay, FloorPlayerIn, FloorRatings, FloorShape, FloorStyle } from './sim';
 
 const GUARD = (pos: Pos) => pos === 'PG' || pos === 'SG';
 const BIG = (pos: Pos) => pos === 'PF' || pos === 'C';
@@ -93,7 +93,16 @@ export const floorLevel = (ovr: number): number => 60 + (ovr - 60) * 0.75;
 export function legendRatings(l: LegendSpot, shift = 0): FloorRatings {
   const row = legendLine(l.name);
   if (!row) return leanRatings(floorLevel(l.ovr + shift), l.pos);
-  const r = toOvr(rawRatings(l, row), l.pos, floorLevel(clamp(l.ovr + shift, 40, 99)));
+  let r = toOvr(rawRatings(l, row), l.pos, floorLevel(clamp(l.ovr + shift, 40, 99)));
+  // a franchise's face plays above his number, a face under 95 by more
+  if (isFace(l.name)) {
+    const up = l.ovr >= 95 ? FLOOR.face.star : FLOOR.face.rest;
+    r = fit({ ...r, ...Object.fromEntries(MOVED.map((a) => [a, r[a] + up])) });
+  }
+  if (l.name === 'Nikola Jokic') {
+    const j = FLOOR.jokic;
+    r = fit({ ...r, PLY: Math.max(r.PLY, j.PLY), IQ: Math.max(r.IQ, j.IQ), REB: Math.max(r.REB, j.REB), FIN: r.FIN + j.FIN, SHT: r.SHT + j.SHT, INT: r.INT + j.INT });
+  }
   // a team played well under its level loses a step too
   return shift < 0 ? { ...r, ATH: clamp(r.ATH + shift * 0.5, 25, 99) } : r;
 }
@@ -104,11 +113,13 @@ export function legendStyle(l: LegendSpot): FloorStyle {
   if (!row) return { use: 1, three: 1, drive: 1, post: POST_POS[l.pos] * 0.6, pass: 1 };
   const [ppg, , apg, , , , tp, tpa, , ath] = row;
   const three = tp === null || tpa < 0.3 ? (BIG(l.pos) ? 0 : 0.3) : clamp(tpa / 3, 0.15, 1.9);
+  // (Jokic) he looks for his own shot more, in the post above all
+  const jk = l.name === 'Nikola Jokic' ? FLOOR.jokic : { use: 1, post: 1 };
   return {
-    use: clamp(ppg / 18, 0.45, 1.8),
+    use: clamp(ppg / 18, 0.45, 1.8) * jk.use,
     three,
     drive: clamp((0.5 + (ath - 70) / 40 + (l.tag === 'scorer' || l.tag === 'creator' ? 0.2 : 0) - (three > 1.2 ? 0.2 : 0)) * (l.pos === 'C' ? 0.6 : 1), 0.3, 1.8),
-    post: clamp(POST_POS[l.pos] * clamp(ppg / 16, 0.4, 1.6) * (1 - 0.4 * Math.min(1, three)) + (l.tag === 'inside' ? 0.15 : 0), 0, 1.6),
+    post: clamp(POST_POS[l.pos] * clamp(ppg / 16, 0.4, 1.6) * (1 - 0.4 * Math.min(1, three)) + (l.tag === 'inside' ? 0.15 : 0), 0, 1.6) * jk.post,
     pass: clamp(0.5 + apg / 6 - ppg / 60, 0.4, 2),
   };
 }
@@ -117,8 +128,36 @@ export function legendStyle(l: LegendSpot): FloorStyle {
 export const legendFive = (abbr: string): LegendSpot[] => FRANCHISE_FIVES[abbr] ?? [];
 export const fiveOvr = (five: LegendSpot[]): number => five.reduce((a, l) => a + l.ovr, 0) / Math.max(1, five.length);
 
+/** The styles a franchise is known for (after round 42, owner: "for quick game, let's determine the
+ * team style and all that with their best fit or culture"): Showtime, Seven seconds or less, Grit and
+ * grind, the Beautiful Game. A team not listed plays the style its five suggests. */
+const CULTURE_STYLE: Partial<Record<string, FloorPlay>> = {
+  LAL: 'runGun', PHX: 'runGun', DEN: 'motion', SAS: 'motion', GSW: 'space', HOU: 'space', MEM: 'grind', DET: 'grind', NYK: 'grind', MIA: 'grind', CHI: 'iso', PHI: 'iso',
+};
+
+/** A franchise's best-fit plan: the shape from its two bigs, the style from its culture or its five. */
+export function fitPlan(abbr: string): FloorPlan {
+  const five = legendFive(abbr);
+  if (five.length < 5) return { shape: 'standard', style: 'balanced' };
+  const pf = legendStyle(five[3]);
+  const c = legendStyle(five[4]);
+  const shape: FloorShape =
+    five[4].tag === 'creator' ? 'horns' : c.three >= 0.8 ? 'fiveOut' : pf.three >= 0.6 ? 'fourOutOneIn' : pf.post >= 0.7 && c.post >= 0.7 ? 'twinTowers' : 'standard';
+  const tags = (t: LegendSpot['tag']) => five.filter((l) => l.tag === t).length;
+  const top = Math.max(...five.map((l) => l.ovr));
+  const ath = five.reduce((a, l) => a + (legendLine(l.name)?.[9] ?? 75), 0) / 5;
+  const threes = five.reduce((a, l) => a + legendStyle(l).three, 0);
+  const style: FloorPlay =
+    CULTURE_STYLE[abbr] ??
+    (tags('creator') >= 2 ? 'motion' : top >= 97 && tags('scorer') >= 2 ? 'iso' : ath >= 84 ? 'runGun' : threes >= 4 ? 'space' : tags('defense') >= 2 ? 'grind' : 'balanced');
+  return { shape, style };
+}
+
 /** Every legend, with his franchise (the draft's pool). */
-export const ALL_LEGENDS: { team: string; spot: LegendSpot }[] = Object.entries(FRANCHISE_FIVES).flatMap(([team, five]) => five.map((spot) => ({ team, spot })));
+export const ALL_LEGENDS: { team: string; spot: LegendSpot }[] = [
+  ...Object.entries(FRANCHISE_FIVES).flatMap(([team, five]) => five.map((spot) => ({ team, spot }))),
+  ...Object.entries(FRANCHISE_SIXTH).map(([team, spot]) => ({ team, spot })),
+];
 
 const BENCH: Pos[] = ['PG', 'SF', 'C'];
 const BENCH_NUMBERS = [1, 21, 44];
@@ -129,7 +168,7 @@ const SLOTS: Pos[] = ['PG', 'SG', 'SF', 'PF', 'C'];
  * team (their own level when not given: each keeps his distance from the team's mean), then three
  * made-up men off the bench, `gap` points under the team. `user` is the starter a person steers.
  */
-export function legendTeam(tag: string, five: LegendSpot[], opts: { ovr?: number; user?: number; seed?: number; gap?: number } = {}): FloorPlayerIn[] {
+export function legendTeam(tag: string, five: LegendSpot[], opts: { ovr?: number; user?: number; seed?: number; gap?: number; sixth?: LegendSpot } = {}): FloorPlayerIn[] {
   const real = fiveOvr(five);
   const level = opts.ovr ?? real;
   const shift = level - real;
@@ -140,7 +179,7 @@ export function legendTeam(tag: string, five: LegendSpot[], opts: { ovr?: number
     let number = LEGEND_NUMBERS[l.name] ?? 4 + i * 7;
     while (used.has(number)) number = (number + 1) % 100;
     used.add(number);
-    return { id: `${tag}${i}`, name: l.name, pos: SLOTS[i] ?? l.pos, number, r: legendRatings({ ...l, pos: SLOTS[i] ?? l.pos }, shift), style: legendStyle(l), trait: SIGNATURES_ON ? LEGEND_TRAITS[l.name]?.kind : undefined, user: opts.user === i };
+    return { id: `${tag}${i}`, name: l.name, pos: SLOTS[i] ?? l.pos, number, r: legendRatings(l, shift), style: legendStyle(l), trait: legendTrait(l.name)?.kind, user: opts.user === i };
   });
   const bench: FloorPlayerIn[] = BENCH.map((pos, k) => {
     let number = BENCH_NUMBERS[k];
@@ -148,5 +187,13 @@ export function legendTeam(tag: string, five: LegendSpot[], opts: { ovr?: number
     used.add(number);
     return { id: `${tag}${5 + k}`, name: `${FIRST_NAMES[Math.floor(rnd() * FIRST_NAMES.length)]} ${LAST_NAMES[Math.floor(rnd() * LAST_NAMES.length)]}`, pos, number, r: leanRatings(floorLevel(level - (opts.gap ?? 9)), pos, Math.round((rnd() - 0.5) * 4)) };
   });
+  // a franchise's sixth man (a legend) comes off the bench first, in place of the first made-up man
+  const sx = opts.sixth;
+  if (sx) {
+    let number = LEGEND_NUMBERS[sx.name] ?? 1;
+    while (used.has(number)) number = (number + 1) % 100;
+    used.add(number);
+    bench[0] = { id: `${tag}5`, name: sx.name, pos: sx.pos, number, r: legendRatings(sx, shift), style: legendStyle(sx), trait: legendTrait(sx.name)?.kind };
+  }
   return [...starters, ...bench];
 }

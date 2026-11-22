@@ -8,10 +8,11 @@ import { useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { NBA_TEAMS } from '../../content/teams';
 import { TEAM_STYLE } from '../../content/teamStyle';
-import type { LegendSpot } from '../../content/franchiseFives';
+import { isFace, type LegendSpot } from '../../content/franchiseFives';
 import type { Pos } from '../../engine/types';
-import { ALL_LEGENDS, fiveOvr, legendFive, legendLine } from '../../engine/floor/legends';
-import { BRACKET_ROUNDS, finishBracket, franchise, legendSetup, myGame, newBracket, playRound, winnerOf, type Bracket, type FloorSide } from '../../engine/floor/game';
+import { ALL_LEGENDS, fiveOvr, fitPlan, legendFive, legendLine, legendRatings, legendStyle } from '../../engine/floor/legends';
+import { ERAS, hotSpotsOf, pairsAmong, type FloorEra } from '../../engine/floor/gimmicks';
+import { BRACKET_ROUNDS, finishBracket, type BracketGame, franchise, legendSetup, myGame, newBracket, playRound, winnerOf, type Bracket, type FloorSide } from '../../engine/floor/game';
 import type { FloorResult, FloorSetup } from '../../engine/floor/sim';
 import { onNbaTeam, ownSetup } from '../../engine/floor/mini';
 import { teamById } from '../../engine/career/common';
@@ -23,10 +24,11 @@ import { PageTop } from '../components/PageTop';
 import { TeamArt } from '../art/Crest';
 import { Icon } from '../art/Icon';
 import { sfx } from '../sound';
-import { FloorScreen, type FloorTeamLook } from './FloorScreen';
+import { COURTS, FloorScreen, type CourtLook, type FloorTeamLook } from './FloorScreen';
 import { FloorFriend } from './FloorFriend';
 import { LegendTable } from './LegendTable';
 import { signatureOf } from './traits';
+import { GamePlan, SPOT_NAME, rememberedPlan } from './GamePlan';
 
 type Mode = 'career' | 'quick' | 'playoffs' | 'draft' | 'online';
 /** Only from a career's mini-games: his own player (owner, after round 42: "the user should be able
@@ -35,12 +37,38 @@ const CAREER_MODE: { id: Mode; name: string; text: string } = { id: 'career', na
 const MODES: { id: Mode; name: string; text: string }[] = [
   { id: 'quick', name: tx('Quick game'), text: tx('The fourth quarter from a close score, as any franchise’s all-time five. About four minutes.') },
   { id: 'playoffs', name: tx('Playoffs'), text: tx('Eight franchises from each conference, one game a round, four wins to the title. Each game is all four quarters in about four minutes.') },
-  { id: 'draft', name: tx('Draft your five'), text: tx('One legend for each position from all 150, then a quick game against a franchise.') },
+  { id: 'draft', name: tx('Draft your five'), text: tx('Any five legends from all 180, no positions needed, then a quick game against a franchise.') },
   { id: 'online', name: tx('Online'), text: tx('Head to head with a friend by room code, or a quick match with whoever is waiting.') },
 ];
 const POS: Pos[] = ['PG', 'SG', 'SF', 'PF', 'C'];
 const ALL = NBA_TEAMS.map((x) => ({ abbr: x.abbr, name: `${x.city} ${x.nick}`, color: x.color }));
 const nameOf = (abbr: string) => ALL.find((x) => x.abbr === abbr)?.name ?? abbr;
+/** The eras' rules (gimmicks.ts, FLOOR.era). */
+const ERA_NAME: Record<FloorEra, { name: string; text: string }> = {
+  modern: { name: tx('Modern'), text: tx('Today’s rules.') },
+  nineties: { name: tx('The nineties'), text: tx('Hand-checking: tougher at the rim, fewer fouls called, a slower pace.') },
+  sixties: { name: tx('The sixties'), text: tx('No three-point line: every basket is two. A faster pace.') },
+};
+/** A legend's hot spots, by name. */
+const hotSpotsFor = (l: LegendSpot): string => hotSpotsOf({ name: l.name, pos: l.pos, r: legendRatings(l), st: legendStyle(l) }).map((n) => t(SPOT_NAME[n])).join(', ');
+
+/** The era picker: one chip each. */
+function EraPick({ value, onChange }: { value: FloorEra; onChange: (e: FloorEra) => void }) {
+  return (
+    <div className="fm-row">
+      <div className="gp-pick" role="group" aria-label={t('Era')}>
+        <span className="small muted">{t('Era')}</span>
+        {ERAS.map((k) => (
+          <button key={k} className={`pick-chip${value === k ? ' on' : ''}`} aria-pressed={value === k} title={t(ERA_NAME[k].text)} onClick={() => onChange(k)}>
+            {t(ERA_NAME[k].name)}
+          </button>
+        ))}
+      </div>
+      <p className="small muted">{t(ERA_NAME[value].text)}</p>
+    </div>
+  );
+}
+
 const ROUND_NAME = [tx('First round'), tx('Conference semi-finals'), tx('Conference finals'), tx('The Finals')];
 
 /** A row of crests to pick a franchise from. */
@@ -92,8 +120,9 @@ function lineOf(name: string): string {
 }
 
 /** The five, to pick who he steers. */
-function Five({ five, slot, onPick }: { five: LegendSpot[]; slot: number; onPick: (i: number) => void }) {
+function Five({ five, slot, onPick, sixth }: { five: LegendSpot[]; slot: number; onPick: (i: number) => void; sixth?: LegendSpot }) {
   return (
+    <>
     <div className="fm-five fh-five" role="group" aria-label={t('Who you steer')}>
       {five.map((l, i) => (
         <button key={l.name} className={`fm-starter${slot === i ? ' on' : ''}`} aria-pressed={slot === i} onClick={() => onPick(i)}>
@@ -106,9 +135,33 @@ function Five({ five, slot, onPick }: { five: LegendSpot[]; slot: number; onPick
               {signatureOf(l.name)!.name}
             </em>
           )}
+          {isFace(l.name) && <em className="fh-face">{t('Face of the franchise')}</em>}
         </button>
       ))}
     </div>
+    {sixth && (
+      <p className="small muted fh-sixth">
+        {t('Sixth man')}: <b>{sixth.name}</b> · {sixth.pos} · {sixth.ovr}
+        {signatureOf(sixth.name) ? ` · ${signatureOf(sixth.name)!.name}` : ''}
+      </p>
+    )}
+    {five[slot] && (
+      <p className="small fh-spots">
+        <b>{t('Hot spots')}:</b> {hotSpotsFor(five[slot])}
+      </p>
+    )}
+    {(() => {
+      const names = [...five, ...(sixth ? [sixth] : [])].map((l) => l.name);
+      const duos = pairsAmong(names);
+      return duos.length ? (
+        <p className="small fh-duos">
+          {duos.map(([i, j]) => (
+            <span key={`${i}-${j}`}>{t('Chemistry: {a} + {b}', { a: names[i], b: names[j] })}</span>
+          ))}
+        </p>
+      ) : null;
+    })()}
+    </>
   );
 }
 
@@ -118,6 +171,46 @@ interface Plan {
   setup: FloorSetup;
   kits: [string, string];
   key: number;
+  court?: CourtLook;
+}
+
+// (owner: "more courts can be nice"): the court a game is played on, kept on this device
+const COURT_KEY = 'btr-floor-court';
+function keptCourt(): CourtLook {
+  try {
+    const v = localStorage.getItem(COURT_KEY);
+    if (COURTS.some((c) => c.id === v)) return v as CourtLook;
+  } catch {
+    // nothing kept
+  }
+  return 'arena';
+}
+
+function CourtPick({ value, onChange }: { value: CourtLook; onChange: (c: CourtLook) => void }) {
+  return (
+    <div className="fm-row">
+      <div className="sec-title">{t('Court')}</div>
+      <div className="gp-pick" role="group" aria-label={t('Court')}>
+        {COURTS.map((c) => (
+          <button
+            key={c.id}
+            className={`pick-chip${value === c.id ? ' on' : ''}`}
+            aria-pressed={value === c.id}
+            onClick={() => {
+              try {
+                localStorage.setItem(COURT_KEY, c.id);
+              } catch {
+                // storage blocked: picked again next time
+              }
+              onChange(c.id);
+            }}
+          >
+            {t(c.name)}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function Court({ plan, onDone, onAgain }: { plan: Plan; onDone: (r: FloorResult) => void; onAgain?: () => void }) {
@@ -129,36 +222,56 @@ function Court({ plan, onDone, onAgain }: { plan: Plan; onDone: (r: FloorResult)
   ];
   return createPortal(
     <div className="floor-layer" role="dialog" aria-modal="true" aria-label={t('The Floor')}>
-      <FloorScreen key={plan.key} setup={plan.setup} arena={{ c1: us.c1, c2: us.c2, c3: us.c3 }} looks={looks} onDone={onDone} onAgain={onAgain} lose={t('You lost')} />
+      <FloorScreen key={plan.key} setup={plan.setup} court={plan.court} arena={{ c1: us.c1, c2: us.c2, c3: us.c3 }} looks={looks} onDone={onDone} onAgain={onAgain} lose={t('You lost')} />
     </div>,
     document.body,
   );
 }
 
 function BracketView({ b }: { b: Bracket }) {
-  return (
-    <div className="fh-bracket" aria-label={t('The bracket')}>
-      {Array.from({ length: BRACKET_ROUNDS }, (_, r) => (
-        <div key={r} className="fh-round">
+  // (owner, after round 42: "make the bracket ui divide by east and west"): the East from the left, the
+  // West from the right, the Finals between them
+  const tie = (g: BracketGame, key: string) => {
+    const w = winnerOf(g);
+    return (
+      <div key={key} className={`fh-tie${g.a === b.me || g.b === b.me ? ' mine' : ''}`}>
+        {[g.a, g.b].map((a, i) => (
+          <div key={a} className={`fh-team${w === a ? ' won' : w ? ' lost' : ''}`}>
+            <TeamArt name={nameOf(a)} abbr={a} color={ALL.find((x) => x.abbr === a)!.color} league="NBA" size={22} />
+            <span>{a}</span>
+            <b>{g.score ? g.score[i] : ''}</b>
+          </div>
+        ))}
+      </div>
+    );
+  };
+  const side = (east: boolean) =>
+    Array.from({ length: BRACKET_ROUNDS - 1 }, (_, r) => {
+      const games = b.rounds[r] ?? [];
+      const half = Math.max(1, (4 >> r) as number);
+      const mine = east ? games.slice(0, games.length / 2) : games.slice(games.length / 2);
+      return (
+        <div key={`${east}${r}`} className="fh-round">
           <div className="fh-round-name">{t(ROUND_NAME[r])}</div>
-          {(b.rounds[r] ?? []).map((g, k) => {
-            const w = winnerOf(g);
-            const half = (b.rounds[r] ?? []).length / 2;
-            return (
-              <div key={k} className={`fh-tie${g.a === b.me || g.b === b.me ? ' mine' : ''}`}>
-                {r < 3 && (k === 0 || k === half) && <div className="fh-conf">{k === 0 ? t('East') : t('West')}</div>}
-                {[g.a, g.b].map((a, i) => (
-                  <div key={a} className={`fh-team${w === a ? ' won' : w ? ' lost' : ''}`}>
-                    <TeamArt name={nameOf(a)} abbr={a} color={ALL.find((x) => x.abbr === a)!.color} league="NBA" size={22} />
-                    <span>{a}</span>
-                    <b>{g.score ? g.score[i] : ''}</b>
-                  </div>
-                ))}
-              </div>
-            );
-          })}
+          <div className="fh-ties">{mine.length ? mine.map((g, k) => tie(g, `${r}-${k}`)) : Array.from({ length: half }, (_, k) => <div key={k} className="fh-tie fh-tbd" aria-hidden="true" />)}</div>
         </div>
-      ))}
+      );
+    });
+  const finals = b.rounds[BRACKET_ROUNDS - 1] ?? [];
+  return (
+    <div className="fh-bracket fh-split" aria-label={t('The bracket')}>
+      <div className="fh-conf-side">
+        <div className="fh-conf">{t('East')}</div>
+        <div className="fh-rounds">{side(true)}</div>
+      </div>
+      <div className="fh-round fh-finals">
+        <div className="fh-round-name">{t(ROUND_NAME[BRACKET_ROUNDS - 1])}</div>
+        <div className="fh-ties">{finals.length ? finals.map((g, k) => tie(g, `f${k}`)) : <div className="fh-tie fh-tbd" aria-hidden="true" />}</div>
+      </div>
+      <div className="fh-conf-side west">
+        <div className="fh-conf">{t('West')}</div>
+        <div className="fh-rounds">{side(false).reverse()}</div>
+      </div>
     </div>
   );
 }
@@ -197,21 +310,28 @@ export function FloorPage({ inside = false }: { inside?: boolean }) {
   const [myOvr, setMyOvr] = useState<number | null>(null);
   const [oppOvr, setOppOvr] = useState<number | null>(null);
   const [plan, setPlan] = useState<Plan | null>(null);
+  const [gamePlan, setGamePlan] = useState(rememberedPlan);
+  const [court, setCourt] = useState<CourtLook>(keptCourt);
+  const [era, setEra] = useState<FloorEra>('modern');
   const [last, setLast] = useState<FloorResult | null>(null);
   const [bracket, setBracket] = useState<Bracket | null>(null);
   // the draft: one legend for each position
   const [draft, setDraft] = useState<string[]>(() => POS.map((p) => ALL_LEGENDS.filter((x) => x.spot.pos === p).sort((a, b) => b.spot.ovr - a.spot.ovr)[0].spot.name));
-  const pool = useMemo(() => POS.map((p) => ALL_LEGENDS.filter((x) => x.spot.pos === p).sort((a, b) => b.spot.ovr - a.spot.ovr || (a.spot.name < b.spot.name ? -1 : 1))), []);
+  // (owner: "in draft your five, get rid of position constraints"): any five from one pool, set out
+  // on the floor by their own positions, guards first
+  const pool = useMemo(() => [...ALL_LEGENDS].sort((a, b) => b.spot.ovr - a.spot.ovr || (a.spot.name < b.spot.name ? -1 : 1)), []);
 
-  const drafted: LegendSpot[] = draft.map((n) => ALL_LEGENDS.find((x) => x.spot.name === n)!.spot);
+  const drafted: LegendSpot[] = draft.map((n) => ALL_LEGENDS.find((x) => x.spot.name === n)!.spot).sort((a, b) => POS.indexOf(a.pos) - POS.indexOf(b.pos));
   const five = mode === 'draft' ? drafted : legendFive(us);
   const steer = slot !== null && slot < five.length ? slot : best(five);
-  const mine: FloorSide = mode === 'draft' ? { ...franchise(us, myOvr ?? undefined), name: t('Your five'), five: drafted } : franchise(us, myOvr ?? undefined);
+  const mine: FloorSide = mode === 'draft' ? { ...franchise(us, myOvr ?? undefined), name: t('Your five'), five: drafted, sixth: drafted.some((l) => l.name === franchise(us).sixth?.name) ? undefined : franchise(us).sixth } : franchise(us, myOvr ?? undefined);
 
   const pickUs = (a: string) => {
     if (a === them) setThem(us);
     setUs(a);
     setSlot(null);
+    // a franchise starts from its own best fit (its culture or its five); changed from there as before
+    if (mode !== 'draft') setGamePlan(fitPlan(a));
   };
   const pickThem = (a: string) => {
     if (a === us) setUs(them);
@@ -221,7 +341,7 @@ export function FloorPage({ inside = false }: { inside?: boolean }) {
   const tip = () => {
     sfx('opened');
     setLast(null);
-    setPlan({ setup: legendSetup({ seed: seed(), us: mine, them: franchise(them, oppOvr ?? undefined), user: steer, length: 'fourth' }), kits: [us, them], key: Date.now() });
+    setPlan({ setup: legendSetup({ seed: seed(), us: mine, them: franchise(them, oppOvr ?? undefined), user: steer, length: 'fourth', plan: gamePlan, era }), kits: [us, them], key: Date.now(), court });
   };
   // his own game: his team's colours are his NBA team's, or the ones picked; the opponent is never his own team
   const ownUs = myTeam ? myTeam.abbr : us;
@@ -233,13 +353,13 @@ export function FloorPage({ inside = false }: { inside?: boolean }) {
     const look = (abbr: string) => ({ name: nameOf(abbr), short: abbr, color: ALL.find((x) => x.abbr === abbr)!.color });
     const opp = myTeam ? career.nba?.teams.find((x) => x.abbr === ownThem) : null;
     const setup = myTeam && opp ? ownSetup(career, { seed: seed(), oppId: opp.id }) : ownSetup(career, { seed: seed(), us: look(ownUs), them: look(ownThem) });
-    setPlan({ setup, kits: [ownUs, ownThem], key: Date.now() });
+    setPlan({ setup: { ...setup, us: { ...setup.us, plan: gamePlan } }, kits: [ownUs, ownThem], key: Date.now(), court });
   };
   const tipPlayoff = (b: Bracket) => {
     const g = myGame(b);
     if (!g) return;
     const opp = g.home ? g.game.b : g.game.a;
-    setPlan({ setup: legendSetup({ seed: b.seed + b.rounds.length * 7919, us: mine, them: franchise(opp, oppOvr ?? undefined), user: steer, length: 'full' }), kits: [us, opp], key: Date.now() });
+    setPlan({ setup: legendSetup({ seed: b.seed + b.rounds.length * 7919, us: mine, them: franchise(opp, oppOvr ?? undefined), user: steer, length: 'playoff', plan: gamePlan, era, home: g.home ? 0 : 1 }), kits: [us, opp], key: Date.now(), court });
   };
 
   if (plan)
@@ -307,6 +427,7 @@ export function FloorPage({ inside = false }: { inside?: boolean }) {
                 <Crests value={ownThem} onPick={(a) => a !== ownUs && setThem(a)} label={t('Opponent')} />
               </div>
             </div>
+            <GamePlan plan={gamePlan} onChange={setGamePlan} names={{ [career.player.pos]: career.player.name }} />
             <button className="btn primary fm-go" data-tour="floor-tip" onClick={tipOwn}>
               {t('Tip it off')}
             </button>
@@ -341,13 +462,13 @@ export function FloorPage({ inside = false }: { inside?: boolean }) {
               <div className="fm-row">
                 <div className="sec-title">{t('Your draft')}</div>
                 <div className="fh-draft">
-                  {POS.map((p, i) => (
-                    <label key={p} className="small">
-                      {p}{' '}
-                      <select value={draft[i]} onChange={(e) => setDraft(draft.map((n, k) => (k === i ? e.target.value : n)))}>
-                        {pool[i].map((x) => (
-                          <option key={x.spot.name} value={x.spot.name}>
-                            {x.spot.name} · {x.spot.ovr} · {x.team}
+                  {draft.map((pick, i) => (
+                    <label key={i} className="small">
+                      {t('Pick {n}', { n: i + 1 })}{' '}
+                      <select value={pick} onChange={(e) => setDraft(draft.map((n, k) => (k === i ? e.target.value : n)))}>
+                        {pool.map((x) => (
+                          <option key={x.spot.name} value={x.spot.name} disabled={x.spot.name !== pick && draft.includes(x.spot.name)}>
+                            {x.spot.name} · {x.spot.pos} · {x.spot.ovr} · {x.team}
                           </option>
                         ))}
                       </select>
@@ -358,7 +479,7 @@ export function FloorPage({ inside = false }: { inside?: boolean }) {
             )}
             <div className="fm-row">
               <div className="sec-title">{t('Who you steer')}</div>
-              <Five five={five} slot={steer} onPick={setSlot} />
+              <Five five={five} slot={steer} onPick={setSlot} sixth={mine.sixth} />
               {signatureOf(five[steer].name) && (
                 <p className="small fh-sig-text">
                   <b>{signatureOf(five[steer].name)!.name}.</b> {signatureOf(five[steer].name)!.text}
@@ -369,6 +490,9 @@ export function FloorPage({ inside = false }: { inside?: boolean }) {
               <summary>{t('Their real career numbers')}</summary>
               <LegendTable rows={five.map((spot) => ({ team: us, spot }))} />
             </details>
+            <GamePlan plan={gamePlan} onChange={setGamePlan} names={Object.fromEntries(five.map((l, i) => [POS[i], l.name]))} />
+            <CourtPick value={court} onChange={setCourt} />
+            <EraPick value={era} onChange={setEra} />
             <div className="fm-row fh-ovrs">
               <OvrPick label={t('Your team’s overall')} real={fiveOvr(five)} value={myOvr} onChange={setMyOvr} />
               <OvrPick label={mode === 'playoffs' ? t('Every opponent’s overall') : t('Opponent’s overall')} real={mode === 'playoffs' ? 90 : fiveOvr(legendFive(them))} value={oppOvr} onChange={setOppOvr} />

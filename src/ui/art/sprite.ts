@@ -329,8 +329,9 @@ function stamp(g: string[], x0: number, y0: number, rows: string[]) {
   });
 }
 
-/** Paint a pose in a kit with a look: a grid of colours, '' where empty, outlined. */
-export function paint(p: Pose, kit: Kit, look: Look, number: number, mirror = false): string[][] {
+/** Paint a pose in a kit with a look: a grid of colours, '' where empty, outlined. `only` paints just
+ * the head or just the body (the Floor's big-head mode draws the head again, twice the size). */
+export function paint(p: Pose, kit: Kit, look: Look, number: number, mirror = false, only?: 'head' | 'body'): string[][] {
   const w = p.w - 2;
   const h = p.h - 2;
   const g = Array.from({ length: h }, () => '.'.repeat(w));
@@ -338,7 +339,9 @@ export function paint(p: Pose, kit: Kit, look: Look, number: number, mirror = fa
 
   // the head first: hair that sits behind, the face, then hair and gear over it
   const [hy0, hair] = HAIR[look.style] ?? HAIR.short;
-  if (p.back) {
+  if (only === 'body') {
+    // the body alone: no head
+  } else if (p.back) {
     // from behind: his hair (its length too), then the back of the head over the face; a bald
     // head is skin all round
     stamp(g, hx - 2, hy + hy0, hair);
@@ -361,10 +364,10 @@ export function paint(p: Pose, kit: Kit, look: Look, number: number, mirror = fa
   }
 
   // the body over it
-  for (let y = 0; y < h; y++) stamp(g, 0, y, [p.rows[y]]);
+  if (only !== 'head') for (let y = 0; y < h; y++) stamp(g, 0, y, [p.rows[y]]);
 
   // the number (painted back to front for a player drawn turned around, so it still reads right)
-  if (number >= 0 && p.num) {
+  if (number >= 0 && p.num && only !== 'head') {
     const digits = String(Math.min(99, number));
     const x0 = p.num[0] + (digits.length === 1 ? 2 : 0);
     (mirror ? [...digits].reverse() : [...digits]).forEach((d, i) => {

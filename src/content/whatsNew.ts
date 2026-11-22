@@ -16,6 +16,22 @@ interface News {
 
 export const NEWS: News[] = [
   {
+    id: '2026-11-22-plans',
+    date: '22 November 2026',
+    items: [
+      { icon: 'cards', text: 'Game plans on the Floor: pick your team’s shape (standard, five out, four out one in, twin towers, horns), its style (balanced, run and gun, ball movement, isolation, grit and grind, pace and space), and the spot each player stands in on offence.' },
+      { icon: 'bracket', text: 'The Floor’s playoffs are quicker: each game is one quarter from 0–0, about two minutes. The bracket is split into East and West with the Finals between them.' },
+      { icon: 'spotlight', text: 'Legends rated 95 or more have stronger signatures: they should feel dominant.' },
+      { icon: 'cards', text: 'Every franchise on the Floor has a sixth man, a legend off the bench: Victor Wembanyama for the Spurs, Cooper Flagg for the Mavericks, Gary Payton, Paul Pierce, Yao Ming, James Worthy and more.' },
+      { icon: 'spotlight', text: 'Each team’s face of the franchise plays above his number (more for those under 95, such as Isiah Thomas). Nikola Jokic is much stronger, with a new signature, the Sombor Shuffle, and Cooper Flagg is a 90.' },
+      { icon: 'spotlight', text: 'Every legend rated 90 to 94 now has a signature move of his own.' },
+      { icon: 'cards', text: 'New on the Floor: players catch fire after three makes in a row, hot spots on the court, the home crowd erupting on a run (each team’s own fan culture), famous duos with chemistry, and three eras to play in.' },
+      { icon: 'cards', text: 'More courts (street, beach, a 1970s gym, a rooftop at night), big-head mode (B), and a slow-motion replay of a game-winning buzzer-beater.' },
+      { icon: 'cards', text: 'Play with friends: a superteam draft against a friend, game plans online, best-of-three and best-of-five series, and your record against each friend.' },
+      { icon: 'cards', text: 'Draft your five has no positions: any five legends. Quick games start from each team’s own style, and players tire more slowly.' },
+    ],
+  },
+  {
     id: '2026-11-17-meter',
     date: '17 November 2026',
     items: [

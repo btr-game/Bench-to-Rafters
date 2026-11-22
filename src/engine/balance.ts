@@ -1254,7 +1254,7 @@ export const FLOOR = {
   speed: [8, 14],
   sprint: 1.3,
   /** Stamina (0 to 1) a game second: sprinting, moving, standing; a timeout gives back. */
-  stamina: { sprint: -0.012, move: -0.0045, rest: 0.004, timeout: 0.25 },
+  stamina: { sprint: -0.0075, move: -0.0028, rest: 0.0055, timeout: 0.3 },
   /** A shot's base chance by zone, and how much its rating (from 70) moves it per point. After round
    * 42 (owner: "i feel like guards have an advantage over bigmen. make their rebounding/scoring just
    * a little easier"): at the rim and in the paint a bigger man shoots over a smaller one, up to
@@ -1280,14 +1280,28 @@ export const FLOOR = {
    * man. passSpeed, passPick: his passes' speed, and how often they are picked off (never thrown
    * away). clutch: added to every shot in the game's last `clutchSecs` seconds. motor: the share of
    * the legs he loses. */
-  /** The signatures of the legends rated 95 or more, one of his own each (content/legendTraits.ts;
+  /** A team's style (after round 42, owner: "team style (run and gun, ball movement, ...)"). use, three,
+   * drive, post, pass: what each man's tendency is multiplied by (use: his share of the shots away from
+   * the team's average). patience: the seconds the offence runs before an open jumper is good enough.
+   * iso: how often a star has a side cleared for him. brk: how long a fast break lasts. contest: what the
+   * team's contests on defence are multiplied by. */
+  play: {
+    balanced: { use: 1, three: 1, drive: 1, post: 1, pass: 1, patience: 1, iso: 1, brk: 1, contest: 1 },
+    runGun: { use: 1, three: 1.15, drive: 1.15, post: 0.6, pass: 1, patience: 0.45, iso: 0.8, brk: 1.7, contest: 0.95 },
+    motion: { use: 0.6, three: 1, drive: 0.9, post: 0.9, pass: 1.6, patience: 1.25, iso: 0.3, brk: 1, contest: 1 },
+    iso: { use: 1.6, three: 1, drive: 1.3, post: 1, pass: 0.7, patience: 1.1, iso: 3, brk: 0.9, contest: 1 },
+    grind: { use: 1, three: 0.75, drive: 0.9, post: 1.7, pass: 1, patience: 1.35, iso: 1, brk: 0.6, contest: 1.12 },
+    space: { use: 1, three: 1.6, drive: 1.2, post: 0.4, pass: 1.1, patience: 0.9, iso: 1, brk: 1.1, contest: 0.97 },
+  } as Record<'balanced' | 'runGun' | 'motion' | 'iso' | 'grind' | 'space', { use: number; three: number; drive: number; post: number; pass: number; patience: number; iso: number; brk: number; contest: number }>,
+  /** (Buffed a notch after the owner: "im fine with a little overbalance of stars. 95+ should have a bit
+   * of dominance".) The signatures of the legends rated 95 or more, one of his own each (content/legendTraits.ts;
    * owner: "for player up to ovr 94, they just fall in the general initial categories, but from 95,
    * they actually get their own move"). mjContest, kdContest, lukaContest: the share of a contest that
    * still counts (Jordan's mid-range, Durant's every jumper, Luka's three within `lukaSecs` of a move
    * that beat his man). kgContest: what a contest by Garnett is multiplied by. birdShot/birdWindow in
    * the last `birdSecs`, westShot in the last `westSecs` (game seconds of the last period). duncanShot:
    * mid-range more than `duncanWing` feet off the middle. kobeStep: per make in a row, up to kobeMax.
-   * feedSecs: how soon after a pass a shot counts as set up by it; jokicPass, magicPass (on the break),
+   * feedSecs: how soon after a pass a shot counts as set up by it; magicPass (on the break),
    * maloneShot (his own, inside). kareemHook: on the hook, which cannot be blocked (nor Dirk's jumper,
    * nor LeBron at the rim on the break). Blocks: russellBlock (and his blocks stay with his team),
    * robinsonBlock, wadeBlock (times wadeBreak against a break). Fouls drawn: sgaFoul, embiidFoul (his
@@ -1296,7 +1310,47 @@ export const FLOOR = {
    * long); shaqPace: his back-down. giannisSpeed (with the ball), robinsonSpeed. curry: his meter's
    * share of the time. kawhiSteal. oscarPick: how often his passes are picked off. drjRange: the feet
    * from the rim his shot still counts as one at the rim. */
-  sig: { mjContest: 0.25, kdContest: 0.5, lukaContest: 0.2, lukaSecs: 1.5, kgContest: 1.3, birdShot: 0.05, birdWindow: 1.4, birdSecs: 120, westShot: 0.09, westSecs: 60, duncanShot: 0.06, duncanWing: 8, kobeStep: 0.025, kobeMax: 3, feedSecs: 2, jokicPass: 0.06, magicPass: 0.07, maloneShot: 0.07, kareemHook: 0.12, russellBlock: 1.5, robinsonBlock: 1.4, wadeBlock: 1.4, wadeBreak: 2, sgaFoul: 1.8, embiidFoul: 3, hardenFoul: 2.5, lebronFoul: 1.6, wiltGlass: 1.6, oscarGlass: 1.4, kgGlass: 1.4, hardenMove: 0.18, shaqDrop: 0.3, hakeemMove: 0.2, hakeemSlow: 1.6, shaqPace: 1.8, giannisSpeed: 1.15, robinsonSpeed: 1.1, curry: 0.5, kawhiSteal: 1.8, oscarPick: 0.6, drjRange: 7 },
+  sig: { mjContest: 0.1, kdContest: 0.35, lukaContest: 0.1, lukaSecs: 1.5, kgContest: 1.45, birdShot: 0.08, birdWindow: 1.6, birdSecs: 120, westShot: 0.13, westSecs: 60, duncanShot: 0.09, duncanWing: 8, kobeStep: 0.035, kobeMax: 3, feedSecs: 2, jokicTouch: 0.06, jokicContest: 0.3, magicPass: 0.09, maloneShot: 0.1, kareemHook: 0.16, russellBlock: 1.8, robinsonBlock: 1.7, wadeBlock: 1.6, wadeBreak: 2, sgaFoul: 2.3, embiidFoul: 3.5, hardenFoul: 3, lebronFoul: 2, wiltGlass: 1.9, oscarGlass: 1.6, kgGlass: 1.6, hardenMove: 0.24, shaqDrop: 0.4, hakeemMove: 0.28, hakeemSlow: 2, shaqPace: 2.2, giannisSpeed: 1.22, robinsonSpeed: 1.15, curry: 0.45, kawhiSteal: 2.2, oscarPick: 0.45, drjRange: 8 },
+  /** The own moves of the legends rated 90 to 94 (content/legendTraits.ts LEGEND_TRAITS_90_OWN, while
+   * OWN_90_ON; owner: "no confirmation needed", on), each smaller than a 95's (measured over 3 x 3,900 AI
+   * games: a 90's points a game up about 0.10, a 95's own moves about 0.16). Added to a shot: reggieShot (a three in the last reggieSecs),
+   * dameShot (a three in the last dameSecs; and no distance penalty until dameFt further out), reedShot
+   * (his team behind in the last period), tmacShot (within tmacSecs of a make of his), mcadooShot (the
+   * paint, his post shots), pistolShot (mid-range from
+   * pistolFt out), pgThree, niqueRim, glideBreak (inside on the break), pettitPut (inside within
+   * pettitSecs of his offensive rebound), meloShot (a jumper once he has stood with it meloStill), brunsonShot (at the
+   * rim within brunsonSecs of his move), dwightLob
+   * (at the rim off a pass; it cannot be blocked), antPoster (at the rim with a man within antNear),
+   * nashPass (a shot after his pass in the first nashSecs of the clock), and a shot after a pass thrown
+   * in the passer's own situation: stocktonPass (to the screener), cousyPass (out of a trap of two within
+   * cousyTrap feet), hillPass (within hillSecs of his move), waltonPass (from the high post), webberPass
+   * (from the post), barryPass (to a three), pennyPass (to the rim); Stockton's, Cousy's and Hill's are
+   * never lost. The share of a contest that counts: kingContest (within kingSecs of the catch),
+   * bookerContest (mid-range), icemanContest (at the rim and in the paint); pippenContest: what his contests on
+   * jumpers are multiplied by. Blocks: adHelp (not on his own man), ewingRim, zoHook, bigeBlock;
+   * baylorBlock, antBlock: how often he is blocked; vinceSecs: at the rim this soon after his move, never.
+   * Boards: mosesGlass (offensive), bigeGlass, barkleyReach (the feet a rebound's pull halves over, 3 for
+   * the rest). Moves: iversonMove (and his man slowed iversonSlow as long), roseMove, kyrieIso (in an
+   * isolation), mchaleMove (post). Speed: russBreak, roseBurst (within roseSecs of his move), spidaBall
+   * (with the ball, 0.92 for the rest). cp3Strip, frazierPick, pgSteal (both): his steals; zekeGrip: how
+   * often the ball is taken from him; hondoTired: the share of his tiredness that counts; kiddBreak: a
+   * break after his rebound lasts this much longer; niqueSwing: a dunk of his swings momentum this much
+   * more (in big swings); tinyFoul: fouls drawn at the rim. */
+  sig90: {
+    // the sixth men at 90 to 94 (after round 42): Wembanyama, Payton, Pierce, Greer, Mullin, Worthy, Johnson, Yao
+    wembyBlock: 1.6, wembyThree: 0.02, gloveHands: 1.4, flaggHands: 1.25, flaggRim: 0.015, truthShot: 0.02, greerContest: 0.85, mullinThree: 0.015, worthyBreak: 0.03, kjMove: 0.04, yaoShot: 0.02, yaoBlock: 0.7,
+    reggieShot: 0.04, reggieSecs: 120, dameShot: 0.025, dameSecs: 300, dameFt: 2, reedShot: 0.025, tmacShot: 0.025, tmacSecs: 30,
+    icemanContest: 0.85, mcadooShot: 0.025, pistolShot: 0.03, pistolFt: 17, pgThree: 0.01, niqueRim: 0.015, glideBreak: 0.03,
+    pettitPut: 0.04, pettitSecs: 3, meloShot: 0.02, meloStill: 2.5, dwightLob: 0.02, antPoster: 0.01, antNear: 3, nashPass: 0.03, nashSecs: 7,
+    stocktonPass: 0.05, cousyPass: 0.04, cousyTrap: 6, hillPass: 0.04, hillSecs: 1.5, waltonPass: 0.04, webberPass: 0.04, barryPass: 0.03, pennyPass: 0.04,
+    kingContest: 0.8, kingSecs: 1.5, bookerContest: 0.8, brunsonShot: 0.035, brunsonSecs: 3, pippenContest: 1.2,
+    adHelp: 1.5, ewingRim: 1.45, zoHook: 2, bigeBlock: 1.2, baylorBlock: 0.75, antBlock: 0.8, vinceSecs: 3,
+    mosesGlass: 1.2, bigeGlass: 1.15, barkleyReach: 3.6,
+    iversonMove: 0.05, iversonSlow: 1.25, roseMove: 0.025, kyrieIso: 0.06, mchaleMove: 0.08,
+    russBreak: 1.06, roseBurst: 1.08, roseSecs: 1.5, spidaBall: 0.96,
+    cp3Strip: 1.5, frazierPick: 1.7, pgSteal: 1.25, zekeGrip: 0.5, hondoTired: 0.7, kiddBreak: 1.5, niqueSwing: 1.5, tinyFoul: 1.2,
+  },
+
   trait: { quick: 0.6, deepFt: 5, deep: 0.03, fade: 0.5, stepThree: 0.6, power: 0.5, powerBlock: 0.5, hook: 0.08, hookBlock: 0.4, block: 1.6, steal: 1.5, glass: 1.35, handle: 0.12, stepMove: 0.06, passSpeed: 1.25, passPick: 0.35, clutch: 0.06, clutchSecs: 120, motor: 0.55 },
   /** Free throws: the chance from free-throw touch 0 to 100. */
   ft: [0.5, 0.95],
@@ -1361,6 +1415,15 @@ export const FLOOR = {
   /** Round 42, the Floor's own game: the clock of a game of four quarters, played in the time one
    * quarter takes (the playoffs: "one full game could honestly be 4 minutes"). */
   rateFull: 8,
+  /** A playoff game: one quarter from 0-0 at this clock rate, 12:00 in two real minutes (720 / (1.5 x 4) = 120 s). */
+  ratePlayoff: 4,
+  // each franchise's face (after round 42, owner: "give them another buff, especially giving a slight
+  // edge to those who didnt make the 95+ cut"): points added to every skill but his legs and free
+  // throws, more for a face under 95 (Isiah Thomas) than for one already at 95 or more
+  face: { star: 1.5, rest: 3 },
+  // Jokic (owner: "make jokic much stronger ... he's the crack code of the game"): his passing and
+  // reading of the game at the top, his touch and rebounding raised on top of the face's buff
+  jokic: { PLY: 99, IQ: 99, REB: 99, FIN: 9, SHT: 7, INT: 3, use: 1.6, post: 1.5 },
   /** Round 42, a fast break (owner's pick: "an outlet pass and a run"): after a steal or a
    * defensive rebound the new offence runs for up to `secs` game seconds, everyone at a sprint, the
    * new defence starting `react` seconds late (less for a smart player). The man with the ball
@@ -1406,4 +1469,26 @@ export const FLOOR = {
    * a give-and-go waits `giveGo` seconds for his cut; a double team holds `double` seconds, strips
    * `strip` times as often, and an AI ball handler under it passes out `out` of the time. */
   calls: { iso: 6, clear: 20, giveGo: 3, double: 4, strip: 1.7, out: 0.75 },
+  /** After round 42, the Floor's gimmicks (the owner's picks from a list; engine/floor/gimmicks.ts).
+   * On fire: `fireMakes` makes in a row with no miss between, and every shot of his is `fireShot`
+   * better until he misses `fireMisses` times or the other team scores `fireStops` baskets in a row.
+   * Hot spots: one or two spots of his own (from his numbers), and a shot within `spotReach` feet of
+   * one is `hotSpot` better. The crowd: the home team on a run of `crowdRun` points or `crowdScores`
+   * baskets in a row, its crowd erupts for `crowdSecs` game seconds of play: its shots `crowdShot`
+   * better, the other team's passes picked off and its handler stripped up to `crowdHands` times as
+   * often; both scaled by the fans' own `crowd` (career/fanCulture.ts), from `crowdMin` of it at 0
+   * to all of it at `crowdFull`. A famous duo (content/legendPairs.ts) both on the court: a shot one
+   * sets up for the other within `pairSecs` is `pair` better, a pass between them picked off
+   * `pairPick` as often. */
+  gimmick: { fireMakes: 3, fireShot: 0.03, fireMisses: 2, fireStops: 3, hotSpot: 0.025, spotReach: 6, crowdRun: 8, crowdScores: 3, crowdSecs: 20, crowdShot: 0.03, crowdHands: 1.5, crowdMin: 0.4, crowdFull: 0.25, pair: 0.03, pairSecs: 2, pairPick: 0.5 },
+  /** After round 42, the era's rules (a setup's `era`). three: whether a shot from beyond the arc is
+   * worth three. contest: what a contest at the rim or in the paint is multiplied by (the nineties'
+   * hand-checking). foul: what the fouls called on a shot are multiplied by. patience, brk: what a
+   * team's patience and its fast breaks are multiplied by (the pace). threeUse: what every man's
+   * readiness to shoot threes is multiplied by. */
+  era: {
+    modern: { three: true, contest: 1, foul: 1, patience: 1, brk: 1, threeUse: 1 },
+    nineties: { three: true, contest: 1.35, foul: 0.7, patience: 1.3, brk: 0.8, threeUse: 0.7 },
+    sixties: { three: false, contest: 1, foul: 1, patience: 0.7, brk: 1.35, threeUse: 0.15 },
+  } as Record<'modern' | 'nineties' | 'sixties', { three: boolean; contest: number; foul: number; patience: number; brk: number; threeUse: number }>,
 } as const;
