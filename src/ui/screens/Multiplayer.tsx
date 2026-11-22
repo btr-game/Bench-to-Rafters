@@ -666,7 +666,7 @@ function Classes({ mp, open, setOpen, name }: { mp: Multiplayer; open: string | 
 /** Round 39 (owner: "can you make the game multiplayer as well?"): the one way to play a friend live,
  * the Floor head to head, lives on the Floor's own page (round 42). */
 function FloorLive() {
-  const setPage = useStore((s) => s.setPage);
+  const openFloor = useStore((s) => s.openFloor);
   const open = useStore((s) => unlocked(s.road, 'minis'));
   return (
     <section className="card stack">
@@ -676,7 +676,7 @@ function FloorLive() {
       </div>
       <p className="small muted keep">{t('The fourth quarter against a friend, both of you at the keys at once: a room code, or a quick match with whoever is waiting.')}</p>
       {open ? (
-        <button className="btn" onClick={() => setPage('floor')}>
+        <button className="btn" onClick={() => openFloor('online')}>
           {t('Play a friend on the Floor')}
         </button>
       ) : (

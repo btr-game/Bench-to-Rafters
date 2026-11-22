@@ -3331,3 +3331,7 @@ td > .link-btn { min-width: 44px; text-align: left; }
 .fh-split .fh-round { grid-template-rows: auto 1fr; align-content: stretch; }
 .fh-split .fh-round-name { min-height: 2.6em; }
 .fh-ties { display: grid; gap: 8px; align-content: space-around; }
+/* after round 42: the Floor's land, the road map's look; the hall's card is wider for its table */
+.road-pop.fl-hall { width: min(620px, 62%); }
+.fl-hall-pick { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+.fl-hall-pick select { max-width: 100%; }
