@@ -47,7 +47,9 @@ export type Theme = 'auto' | 'light' | 'dark';
 export type Court = 'classic' | 'hardwood' | 'street';
 /** Round 31: the text size, a multiplier on every font size (tokens.css, --ts). */
 export type TextSize = 'm' | 'l' | 'xl';
-type Page = 'log' | 'achievements' | 'community' | 'road' | 'multi' | 'floor';
+type Page = 'log' | 'achievements' | 'community' | 'road' | 'multi' | 'floor' | 'floorland';
+/** The way the Floor's page opens (a place on the Floor's land picks it). */
+export type FloorStart = 'quick' | 'playoffs' | 'draft' | 'online';
 export type Mini = 'hub' | 'threes' | 'legends' | 'lab' | 'dunk' | 'street' | 'rhythm' | 'daily' | 'floor';
 
 /** A short interstitial between steps (not part of the saved game). */
@@ -156,6 +158,10 @@ interface Store {
   /** Round 24: a page of its own (the career log, the community pages), over the start page or a career. */
   page: Page | null;
   setPage: (p: Page | null) => void;
+  /** After round 42 (owner: "can we add the floor as a separate roadmap, like the tutorial land?"):
+   * the Floor's page, opened on one of its ways to play. */
+  floorStart: FloorStart;
+  openFloor: (m: FloorStart) => void;
   /** What logging the career that just ended did (for the note on the retirement page). */
   logged: LogResult | null;
   /** Guide mode's tour has a step on screen (the plain next-step highlight waits for it). */
@@ -489,7 +495,13 @@ export const useStore = create<Store>((set, get) => ({
   page: linkedPage(),
   setPage: (page) =>
     later(() => {
-      set({ page });
+      set({ page, ...(page === 'floor' ? { floorStart: 'quick' as FloorStart } : {}) });
+      top();
+    }),
+  floorStart: 'quick',
+  openFloor: (floorStart) =>
+    later(() => {
+      set({ floorStart, page: 'floor' });
       top();
     }),
   logged: null,

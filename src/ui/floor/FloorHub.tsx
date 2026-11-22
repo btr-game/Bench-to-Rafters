@@ -36,7 +36,7 @@ type Mode = 'career' | 'quick' | 'playoffs' | 'draft' | 'online';
 /** Only from a career's mini-games: his own player (owner, after round 42: "the user should be able
  * to play the floor with their own character"). */
 const CAREER_MODE: { id: Mode; name: string; text: string } = { id: 'career', name: tx('Your player'), text: tx('The fourth quarter as your own player, with his own ratings. About four minutes.') };
-const MODES: { id: Mode; name: string; text: string }[] = [
+export const MODES: { id: Mode; name: string; text: string }[] = [
   { id: 'quick', name: tx('Quick game'), text: tx('The fourth quarter from a close score, as any franchise’s all-time five. About four minutes.') },
   { id: 'playoffs', name: tx('Playoffs'), text: tx('Eight franchises from each conference, one game a round, four wins to the title. Each game is one quarter in about two minutes.') },
   { id: 'draft', name: tx('Draft your five'), text: tx('Any five legends from all 180, no positions needed, then a quick game against a franchise.') },
@@ -291,7 +291,7 @@ function BracketView({ b }: { b: Bracket }) {
   );
 }
 
-/** The arena's card on the main land. */
+/** The arena's card on the main land: the way to the Floor's land (after round 42). */
 export function FloorCard() {
   const setPage = useStore((s) => s.setPage);
   return (
@@ -302,23 +302,24 @@ export function FloorCard() {
       </div>
       <p className="prose small">{t('Five on five, you steer one player. Play as the legends of all 30 teams, run the 16-team playoffs, or take on a friend online.')}</p>
       <div className="row-end">
-        <button className="btn primary" data-tour="floor-enter" onClick={() => setPage('floor')}>
-          {t('Enter the arena')}
+        <button className="btn primary" data-tour="floor-enter" onClick={() => (sfx('page'), setPage('floorland'))}>
+          {t('Go to the Floor’s land')}
         </button>
       </div>
     </section>
   );
 }
 
-/** The Floor's own page: from the arena on the main land, or (`inside`) as one of a career's
- * mini-games, where the mini-games' page gives it its top bar and its way back. */
-export function FloorPage({ inside = false }: { inside?: boolean }) {
+/** The Floor's own page: from a place on the Floor's land (`start`, the way to play it opens on), or
+ * (`inside`) as one of a career's mini-games, where the mini-games' page gives it its top bar and its
+ * way back. */
+export function FloorPage({ inside = false, start = 'quick' }: { inside?: boolean; start?: Exclude<Mode, 'career'> }) {
   const setPage = useStore((s) => s.setPage);
   const g = useStore((s) => s.game);
   // inside a career's mini-games he can play as himself: on his NBA team, or on a team at his level
   const career = inside && g && g.step !== 'retired' ? g : null;
   const myTeam = career && onNbaTeam(career) ? teamById(career.nba, career.teamId)! : null;
-  const [mode, setMode] = useState<Mode>(career ? 'career' : 'quick');
+  const [mode, setMode] = useState<Mode>(career ? 'career' : start);
   const [us, setUs] = useState('CHI');
   const [them, setThem] = useState('LAL');
   const [slot, setSlot] = useState<number | null>(null);
@@ -414,7 +415,7 @@ export function FloorPage({ inside = false }: { inside?: boolean }) {
   const game = bracket ? myGame(bracket) : null;
   return (
     <div className={inside ? undefined : 'wrap'}>
-      {!inside && <PageTop trail={[t('The Floor')]} back={() => setPage(null)} />}
+      {!inside && <PageTop trail={[t('The Floor’s land'), t('The Floor')]} back={() => setPage('floorland')} backLabel={t('Back to the Floor’s land')} />}
       <section className="stack stage-in fh">
         <div>
           <div className="kicker">{t('Five on five')}</div>
