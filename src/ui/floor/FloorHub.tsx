@@ -149,11 +149,22 @@ function Five({ five, slot, onPick, sixth }: { five: LegendSpot[]; slot: number;
       ))}
     </div>
     {sixth && (
-      <p className="small muted fh-sixth">
-        <Ico name="fl-sixth" />
-        {t('Sixth man')}: <b>{sixth.name}</b> · {sixth.pos} · {sixth.ovr}
-        {signatureOf(sixth.name) ? ` · ${signatureOf(sixth.name)!.name}` : ''}
-      </p>
+      <div className="fh-sixth-card" aria-label={`${t('Sixth man')}: ${sixth.name}`}>
+        <Ico name="fl-sixth" size={24} />
+        <div className="fh-sixth-body">
+          <small>{t('Sixth man')} · {sixth.pos}</small>
+          <b>{sixth.name}</b>
+          <i className="fh-line">{lineOf(sixth.name)}</i>
+          {signatureOf(sixth.name) && (
+            <em className="fh-sig" title={signatureOf(sixth.name)!.text}>
+              <Ico name="fl-sig" size={12} />
+              {signatureOf(sixth.name)!.name}
+            </em>
+          )}
+        </div>
+        <span className="fh-sixth-ovr">{sixth.ovr}</span>
+        <p className="small muted fh-sixth-note">{t('First off the bench: he comes on a few minutes into each period.')}</p>
+      </div>
     )}
     {five[slot] && (
       <p className="small fh-spots">

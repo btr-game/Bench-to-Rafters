@@ -193,7 +193,7 @@ export function legendTeam(tag: string, five: LegendSpot[], opts: { ovr?: number
     let number = LEGEND_NUMBERS[sx.name] ?? 1;
     while (used.has(number)) number = (number + 1) % 100;
     used.add(number);
-    bench[0] = { id: `${tag}5`, name: sx.name, pos: sx.pos, number, r: legendRatings(sx, shift), style: legendStyle(sx), trait: legendTrait(sx.name)?.kind };
+    bench[0] = { id: `${tag}5`, name: sx.name, pos: sx.pos, number, r: legendRatings(sx, shift), style: legendStyle(sx), trait: legendTrait(sx.name)?.kind, sixth: true };
   }
   return [...starters, ...bench];
 }

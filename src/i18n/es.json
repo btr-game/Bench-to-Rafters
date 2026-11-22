@@ -4490,7 +4490,9 @@
   "Beat the same friend on the Floor 10 times.": "Gana al mismo amigo en The Floor 10 veces.",
   "Take turns picking legends from one pool of all {n}, any position, until each has six: five starters and a sixth man off the bench. {first} first, then two each way. {s} seconds a pick. The two teams play at their own level.": "Elegid por turnos leyendas de un mismo grupo de las {n}, en cualquier posición, hasta tener seis cada uno: cinco titulares y un sexto hombre en el banquillo. Empieza {first}, luego dos por turno. {s} segundos por elección. Los dos equipos juegan a su propio nivel.",
   "Your pick ({n} of {all}): {s} s": "Tu elección ({n} de {all}): {s} s",
-  "{name} is picking ({n} of {all}): {s} s": "{name} está eligiendo ({n} de {all}): {s} s"
+  "{name} is picking ({n} of {all}): {s} s": "{name} está eligiendo ({n} de {all}): {s} s",
+  "Sixth man!": "¡Sexto hombre!",
+  "First off the bench: he comes on a few minutes into each period.": "El primero desde el banquillo: entra a los pocos minutos de cada periodo."
  },
  "story": {
   "f-driveway.title": "La entrada de casa",

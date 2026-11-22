@@ -4490,7 +4490,9 @@
   "Beat the same friend on the Floor 10 times.": "在 The Floor 击败同一位好友10次。",
   "Take turns picking legends from one pool of all {n}, any position, until each has six: five starters and a sixth man off the bench. {first} first, then two each way. {s} seconds a pick. The two teams play at their own level.": "从全部{n}人的同一名单中轮流挑选传奇，不限位置，直到每人有六人：五名首发和一名替补第六人。{first}先选，之后每次两人轮换。每次挑选{s}秒。两队按各自水平比赛。",
   "Your pick ({n} of {all}): {s} s": "轮到你选（第{n}/{all}选）：{s}秒",
-  "{name} is picking ({n} of {all}): {s} s": "{name}正在挑选（第{n}/{all}选）：{s}秒"
+  "{name} is picking ({n} of {all}): {s} s": "{name}正在挑选（第{n}/{all}选）：{s}秒",
+  "Sixth man!": "第六人登场！",
+  "First off the bench: he comes on a few minutes into each period.": "替补第一人：每节开始几分钟后登场。"
  },
  "story": {
   "f-driveway.title": "车道",

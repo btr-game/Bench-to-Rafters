@@ -35,3 +35,24 @@ describe('the Floor with a friend, and the hot streak', () => {
     expect(set.us.players[5].name).toBe('Victor Wembanyama');
   });
 });
+
+describe('the sixth man plays', () => {
+  // (owner: "i dont see the sixth man thing. fix")
+  it('he comes on in each quick game and each period of a full one', () => {
+    let on = 0;
+    let games = 0;
+    for (let g = 0; g < 12; g++) {
+      const s = startFloor(legendSetup({ seed: 50 + g, us: franchise('SAS'), them: franchise('DAL'), length: g % 3 === 0 ? 'full' : 'fourth' }));
+      const ids = s.players.map((p, i) => (p.sixth ? i : -1)).filter((i) => i >= 0);
+      expect(ids.length).toBe(2);
+      const seen = new Set<number>();
+      for (let i = 0; i < 400000 && s.phase !== 'over'; i++) {
+        stepFloor(s, null);
+        for (const k of ids) if (s.players[k].on) seen.add(k);
+      }
+      on += seen.size;
+      games += 2;
+    }
+    expect(on).toBe(games);
+  });
+});

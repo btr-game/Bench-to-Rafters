@@ -626,7 +626,10 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
         const w = wordFor(v, e);
         if (w) setWord({ text: w, team: e.kind === 'turnover' || e.kind === 'shotclock' || e.kind === 'lane' ? (e.team === 0 ? 1 : 0) : e.team, id: now + Math.random() });
         const tg = tagFor(e);
-        if (tg) tagAt(tg.at, tg.text);
+        // the franchise's sixth man checking in gets the big word and his name over him
+        const sixthIn = e.kind === 'sub' && e.by !== undefined && v.players[e.by]?.sixth;
+        if (sixthIn) setWord({ text: t('Sixth man!'), team: e.team, id: now + Math.random() });
+        if (tg) tagAt(tg.at, sixthIn ? `${v.players[e.by!].name.split(' ').slice(-1)[0]} · ${t('Sixth man')}` : tg.text);
         // the frames a play sets off
         if ((e.kind === 'reach' || e.kind === 'steal') && e.by !== undefined) act[e.by] = { kind: 'reach', t0: now };
         if ((e.kind === 'make' || e.kind === 'miss') && e.by !== undefined) act[e.by] = { kind: e.kind === 'make' && e.by === v.user ? 'cheer' : 'land', t0: now };
