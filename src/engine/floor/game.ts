@@ -35,13 +35,13 @@ export function franchise(abbr: string, ovr?: number): FloorSide {
   return { name: `${t.city} ${t.nick}`, short: t.abbr, color: t.color, five: legendFive(t.abbr), ovr, sixth: FRANCHISE_SIXTH[t.abbr] };
 }
 
-export const sideOvr = (s: FloorSide): number => s.ovr ?? fiveOvr(s.five);
+const sideOvr = (s: FloorSide): number => s.ovr ?? fiveOvr(s.five);
 
 /** Points a team at this level scores in a quarter (measured: 19.02 at 76, about 0.75 a point of level). */
 const perQuarter = (ovr: number): number => 19 + (floorLevel(ovr) - 76) * 0.75;
 
 /** The score after three quarters: what each side would have by then, a few points either way, close. */
-export function startScore(seed: number, us: FloorSide, them: FloorSide): [number, number] {
+function startScore(seed: number, us: FloorSide, them: FloorSide): [number, number] {
   const rng = makeRng(seed ^ 0x5f10);
   const base = Math.round(3 * (perQuarter(sideOvr(us)) + perQuarter(sideOvr(them))) * 0.5) + int(rng, -4, 4);
   return [base + int(rng, -3, 3), base];
@@ -124,7 +124,7 @@ export function myGame(b: Bracket): { round: number; game: BracketGame; home: bo
 }
 
 /** A game the engine plays by itself: the AI on both sides, the playoffs' four quarters. */
-export function simGame(a: string, b: string, seed: number, oppOvr?: number): [number, number] {
+function simGame(a: string, b: string, seed: number, oppOvr?: number): [number, number] {
   const s = startFloor(legendSetup({ seed, us: franchise(a, oppOvr), them: franchise(b, oppOvr), length: 'playoff' }));
   skipFloor(s);
   return [s.score[0], s.score[1]];

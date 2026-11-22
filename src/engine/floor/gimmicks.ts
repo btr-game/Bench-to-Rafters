@@ -109,7 +109,7 @@ export const crowdFor = (s: FloorState): 0 | 1 | null => (s.gm?.crowd && s.tick 
 const paired = (s: FloorState, a: number, b: number): boolean => !!s.gm?.pairs.some(([i, j]) => (i === a && j === b) || (i === b && j === a));
 
 /** Whether a spot is within reach of one of his hot spots. */
-export function onHotSpot(s: FloorState, i: number, at: Spot): boolean {
+function onHotSpot(s: FloorState, i: number, at: Spot): boolean {
   const p = s.players[i];
   return (s.gm?.spots[i] ?? []).some((n) => dist(at, attackSpot(p.team, SPOTS[n][0], SPOTS[n][1])) <= G.spotReach);
 }

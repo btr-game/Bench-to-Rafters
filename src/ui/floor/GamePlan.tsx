@@ -39,7 +39,7 @@ export const SPOT_NAME: Record<FloorSpot, string> = {
   rightBlock: tx('Right block'),
 };
 
-export const DEFAULT_PLAN: FloorPlan = { shape: 'standard', style: 'balanced' };
+const DEFAULT_PLAN: FloorPlan = { shape: 'standard', style: 'balanced' };
 
 /** The plan kept from last time on this device, or the standard one. */
 export function rememberedPlan(): FloorPlan {
