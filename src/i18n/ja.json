@@ -4398,7 +4398,8 @@
   "{name} is picking ({n} of 10): {s} s": "{name}が選択中（10人中{n}人目）：{s}秒",
   "{name} starts the draft when ready.": "準備ができたら{name}がドラフトを始めます。",
   "{name} takes it": "{name}の勝ち抜け",
-  "{name} won the series {a}–{b}. The next tip-off starts a new one.": "{name}がシリーズを{a}–{b}で制しました。次のティップオフから新しいシリーズです。"
+  "{name} won the series {a}–{b}. The next tip-off starts a new one.": "{name}がシリーズを{a}–{b}で制しました。次のティップオフから新しいシリーズです。",
+  "Everything else is set for you: each team plays its own style, at its own level, in a random era on a random court.": "それ以外はすべてお任せ：各チームは自分のスタイルと実力で、ランダムな時代とランダムなコートで戦います。"
  },
  "story": {
   "f-driveway.title": "家の前のゴール",

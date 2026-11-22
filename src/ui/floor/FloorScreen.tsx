@@ -1488,6 +1488,11 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
             {sig.name}
           </span>
         )}
+        {setup.era && setup.era !== 'modern' && (
+          <span className="floor-me-item" title={setup.era === 'sixties' ? t('No three-point line: every basket is two. A faster pace.') : t('Hand-checking: tougher at the rim, fewer fouls called, a slower pace.')}>
+            {setup.era === 'sixties' ? t('The sixties') : t('The nineties')}
+          </span>
+        )}
         <span className="floor-me-item">
           {t('Stamina')} <Legs n={hud.legs} />
         </span>

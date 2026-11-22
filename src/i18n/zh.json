@@ -4398,7 +4398,8 @@
   "{name} is picking ({n} of 10): {s} s": "{name} 正在挑选（第 {n}/10 选）：{s} 秒",
   "{name} starts the draft when ready.": "{name} 准备好后开始选秀。",
   "{name} takes it": "{name} 赢下系列赛",
-  "{name} won the series {a}–{b}. The next tip-off starts a new one.": "{name} 以 {a}–{b} 赢下系列赛。下次跳球开始新的系列赛。"
+  "{name} won the series {a}–{b}. The next tip-off starts a new one.": "{name} 以 {a}–{b} 赢下系列赛。下次跳球开始新的系列赛。",
+  "Everything else is set for you: each team plays its own style, at its own level, in a random era on a random court.": "其余一切都已为你设定：每队按自己的风格和水平，在随机的年代和随机的球场比赛。"
  },
  "story": {
   "f-driveway.title": "车道",

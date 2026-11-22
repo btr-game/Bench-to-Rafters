@@ -3964,3 +3964,12 @@ let's determine the team style and all that with their best fit or culture".
   the style from the franchise's culture where it is famous (Showtime Lakers and Suns run, Spurs and Nuggets move
   the ball, Grizzlies, Pistons, Knicks and Heat grind, Warriors and Rockets space) or else from the five. The
   computer's side always plays its fit; picking a team sets yours to its fit, changed from there as before.
+
+### The quick game asks only for the teams and who he steers
+
+Owner: "for quick play, try to make as little choices as possible, prollyjust as much as it is now (team and
+player) everything else is fixed (team style is based on team choice) or random (era,...)". The quick game's page
+keeps the two teams and the man he steers. The rest is set: each side plays its franchise's best fit (`fitPlan`)
+at its own level, in a random era on a random court, both drawn at tip-off; the era shows in the strip under the
+court when it is not the modern one. The game plan, court, era and overall pickers stay for the playoffs and the
+draft.

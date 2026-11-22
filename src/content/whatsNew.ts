@@ -28,7 +28,7 @@ export const NEWS: News[] = [
       { icon: 'cards', text: 'New on the Floor: players catch fire after three makes in a row, hot spots on the court, the home crowd erupting on a run (each team’s own fan culture), famous duos with chemistry, and three eras to play in.' },
       { icon: 'cards', text: 'More courts (street, beach, a 1970s gym, a rooftop at night), big-head mode (B), and a slow-motion replay of a game-winning buzzer-beater.' },
       { icon: 'cards', text: 'Play with friends: a superteam draft against a friend, game plans online, best-of-three and best-of-five series, and your record against each friend.' },
-      { icon: 'cards', text: 'Draft your five has no positions: any five legends. Quick games start from each team’s own style, and players tire more slowly.' },
+      { icon: 'cards', text: 'Draft your five has no positions: any five legends. A quick game asks only for the two teams and who you steer: each team plays its own style, in a random era on a random court. Players tire more slowly.' },
     ],
   },
   {

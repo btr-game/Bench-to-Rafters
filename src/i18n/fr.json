@@ -4398,7 +4398,8 @@
   "{name} is picking ({n} of 10): {s} s": "{name} choisit ({n} sur 10) : {s} s",
   "{name} starts the draft when ready.": "{name} lance la draft quand il est prêt.",
   "{name} takes it": "{name} la remporte",
-  "{name} won the series {a}–{b}. The next tip-off starts a new one.": "{name} a gagné la série {a}–{b}. Le prochain entre-deux en lance une nouvelle."
+  "{name} won the series {a}–{b}. The next tip-off starts a new one.": "{name} a gagné la série {a}–{b}. Le prochain entre-deux en lance une nouvelle.",
+  "Everything else is set for you: each team plays its own style, at its own level, in a random era on a random court.": "Tout le reste est décidé pour vous : chaque équipe joue à son style et à son niveau, à une époque et sur un terrain au hasard."
  },
  "story": {
   "f-driveway.title": "L’allée",

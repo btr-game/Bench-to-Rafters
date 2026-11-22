@@ -4398,7 +4398,8 @@
   "{name} is picking ({n} of 10): {s} s": "{name} está eligiendo ({n} de 10): {s} s",
   "{name} starts the draft when ready.": "{name} empieza el draft cuando esté listo.",
   "{name} takes it": "la gana {name}",
-  "{name} won the series {a}–{b}. The next tip-off starts a new one.": "{name} ha ganado la serie {a}–{b}. El próximo salto inicial empieza otra."
+  "{name} won the series {a}–{b}. The next tip-off starts a new one.": "{name} ha ganado la serie {a}–{b}. El próximo salto inicial empieza otra.",
+  "Everything else is set for you: each team plays its own style, at its own level, in a random era on a random court.": "Todo lo demás ya está decidido: cada equipo juega a su estilo y a su nivel, en una época y una cancha al azar."
  },
  "story": {
   "f-driveway.title": "La entrada de casa",
