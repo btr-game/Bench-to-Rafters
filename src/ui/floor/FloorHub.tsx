@@ -10,7 +10,8 @@ import { NBA_TEAMS } from '../../content/teams';
 import { TEAM_STYLE } from '../../content/teamStyle';
 import { isFace, type LegendSpot } from '../../content/franchiseFives';
 import type { Pos } from '../../engine/types';
-import { ALL_LEGENDS, fiveOvr, fitPlan, legendFive, legendLine } from '../../engine/floor/legends';
+import { ALL_LEGENDS, fiveOvr, fitPlan, legendFive, legendLine, legendRatings, legendStyle } from '../../engine/floor/legends';
+import { ERAS, hotSpotsOf, pairsAmong, type FloorEra } from '../../engine/floor/gimmicks';
 import { BRACKET_ROUNDS, finishBracket, type BracketGame, franchise, legendSetup, myGame, newBracket, playRound, winnerOf, type Bracket, type FloorSide } from '../../engine/floor/game';
 import type { FloorResult, FloorSetup } from '../../engine/floor/sim';
 import { onNbaTeam, ownSetup } from '../../engine/floor/mini';
@@ -27,7 +28,7 @@ import { FloorScreen, type FloorTeamLook } from './FloorScreen';
 import { FloorFriend } from './FloorFriend';
 import { LegendTable } from './LegendTable';
 import { signatureOf } from './traits';
-import { GamePlan, rememberedPlan } from './GamePlan';
+import { GamePlan, SPOT_NAME, rememberedPlan } from './GamePlan';
 
 type Mode = 'career' | 'quick' | 'playoffs' | 'draft' | 'online';
 /** Only from a career's mini-games: his own player (owner, after round 42: "the user should be able
@@ -42,6 +43,32 @@ const MODES: { id: Mode; name: string; text: string }[] = [
 const POS: Pos[] = ['PG', 'SG', 'SF', 'PF', 'C'];
 const ALL = NBA_TEAMS.map((x) => ({ abbr: x.abbr, name: `${x.city} ${x.nick}`, color: x.color }));
 const nameOf = (abbr: string) => ALL.find((x) => x.abbr === abbr)?.name ?? abbr;
+/** The eras' rules (gimmicks.ts, FLOOR.era). */
+const ERA_NAME: Record<FloorEra, { name: string; text: string }> = {
+  modern: { name: tx('Modern'), text: tx('Today’s rules.') },
+  nineties: { name: tx('The nineties'), text: tx('Hand-checking: tougher at the rim, fewer fouls called, a slower pace.') },
+  sixties: { name: tx('The sixties'), text: tx('No three-point line: every basket is two. A faster pace.') },
+};
+/** A legend's hot spots, by name. */
+const hotSpotsFor = (l: LegendSpot): string => hotSpotsOf({ name: l.name, pos: l.pos, r: legendRatings(l), st: legendStyle(l) }).map((n) => t(SPOT_NAME[n])).join(', ');
+
+/** The era picker: one chip each. */
+function EraPick({ value, onChange }: { value: FloorEra; onChange: (e: FloorEra) => void }) {
+  return (
+    <div className="fm-row">
+      <div className="gp-pick" role="group" aria-label={t('Era')}>
+        <span className="small muted">{t('Era')}</span>
+        {ERAS.map((k) => (
+          <button key={k} className={`pick-chip${value === k ? ' on' : ''}`} aria-pressed={value === k} title={t(ERA_NAME[k].text)} onClick={() => onChange(k)}>
+            {t(ERA_NAME[k].name)}
+          </button>
+        ))}
+      </div>
+      <p className="small muted">{t(ERA_NAME[value].text)}</p>
+    </div>
+  );
+}
+
 const ROUND_NAME = [tx('First round'), tx('Conference semi-finals'), tx('Conference finals'), tx('The Finals')];
 
 /** A row of crests to pick a franchise from. */
@@ -118,6 +145,22 @@ function Five({ five, slot, onPick, sixth }: { five: LegendSpot[]; slot: number;
         {signatureOf(sixth.name) ? ` · ${signatureOf(sixth.name)!.name}` : ''}
       </p>
     )}
+    {five[slot] && (
+      <p className="small fh-spots">
+        <b>{t('Hot spots')}:</b> {hotSpotsFor(five[slot])}
+      </p>
+    )}
+    {(() => {
+      const names = [...five, ...(sixth ? [sixth] : [])].map((l) => l.name);
+      const duos = pairsAmong(names);
+      return duos.length ? (
+        <p className="small fh-duos">
+          {duos.map(([i, j]) => (
+            <span key={`${i}-${j}`}>{t('Chemistry: {a} + {b}', { a: names[i], b: names[j] })}</span>
+          ))}
+        </p>
+      ) : null;
+    })()}
     </>
   );
 }
@@ -228,6 +271,7 @@ export function FloorPage({ inside = false }: { inside?: boolean }) {
   const [oppOvr, setOppOvr] = useState<number | null>(null);
   const [plan, setPlan] = useState<Plan | null>(null);
   const [gamePlan, setGamePlan] = useState(rememberedPlan);
+  const [era, setEra] = useState<FloorEra>('modern');
   const [last, setLast] = useState<FloorResult | null>(null);
   const [bracket, setBracket] = useState<Bracket | null>(null);
   // the draft: one legend for each position
@@ -256,7 +300,7 @@ export function FloorPage({ inside = false }: { inside?: boolean }) {
   const tip = () => {
     sfx('opened');
     setLast(null);
-    setPlan({ setup: legendSetup({ seed: seed(), us: mine, them: franchise(them, oppOvr ?? undefined), user: steer, length: 'fourth', plan: gamePlan }), kits: [us, them], key: Date.now() });
+    setPlan({ setup: legendSetup({ seed: seed(), us: mine, them: franchise(them, oppOvr ?? undefined), user: steer, length: 'fourth', plan: gamePlan, era }), kits: [us, them], key: Date.now() });
   };
   // his own game: his team's colours are his NBA team's, or the ones picked; the opponent is never his own team
   const ownUs = myTeam ? myTeam.abbr : us;
@@ -274,7 +318,7 @@ export function FloorPage({ inside = false }: { inside?: boolean }) {
     const g = myGame(b);
     if (!g) return;
     const opp = g.home ? g.game.b : g.game.a;
-    setPlan({ setup: legendSetup({ seed: b.seed + b.rounds.length * 7919, us: mine, them: franchise(opp, oppOvr ?? undefined), user: steer, length: 'playoff', plan: gamePlan }), kits: [us, opp], key: Date.now() });
+    setPlan({ setup: legendSetup({ seed: b.seed + b.rounds.length * 7919, us: mine, them: franchise(opp, oppOvr ?? undefined), user: steer, length: 'playoff', plan: gamePlan, era, home: g.home ? 0 : 1 }), kits: [us, opp], key: Date.now() });
   };
 
   if (plan)
@@ -406,6 +450,7 @@ export function FloorPage({ inside = false }: { inside?: boolean }) {
               <LegendTable rows={five.map((spot) => ({ team: us, spot }))} />
             </details>
             <GamePlan plan={gamePlan} onChange={setGamePlan} names={Object.fromEntries(five.map((l, i) => [POS[i], l.name]))} />
+            <EraPick value={era} onChange={setEra} />
             <div className="fm-row fh-ovrs">
               <OvrPick label={t('Your team’s overall')} real={fiveOvr(five)} value={myOvr} onChange={setMyOvr} />
               <OvrPick label={mode === 'playoffs' ? t('Every opponent’s overall') : t('Opponent’s overall')} real={mode === 'playoffs' ? 90 : fiveOvr(legendFive(them))} value={oppOvr} onChange={setOppOvr} />

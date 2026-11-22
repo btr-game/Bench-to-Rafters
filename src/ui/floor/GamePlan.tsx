@@ -26,7 +26,7 @@ const PLAY_NAME: Record<FloorPlay, { name: string; text: string }> = {
   grind: { name: tx('Grit and grind'), text: tx('Slow and physical: post-ups, patience, tougher contests.') },
   space: { name: tx('Pace and space'), text: tx('Threes and drives, few post-ups.') },
 };
-const SPOT_NAME: Record<FloorSpot, string> = {
+export const SPOT_NAME: Record<FloorSpot, string> = {
   top: tx('Top of the key'),
   leftWing: tx('Left wing'),
   rightWing: tx('Right wing'),

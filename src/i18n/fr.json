@@ -4293,7 +4293,19 @@
   "Right elbow": "Coude droit",
   "High post": "Poste haut",
   "Left block": "Poste bas gauche",
-  "Right block": "Poste bas droit"
+  "Right block": "Poste bas droit",
+  "{name} is on fire": "{name} est en feu",
+  "{name} erupts": "{name} explose",
+  "The crowd erupts": "La foule explose",
+  "Modern": "Moderne",
+  "The nineties": "Les années 90",
+  "The sixties": "Les années 60",
+  "Today’s rules.": "Les règles d’aujourd’hui.",
+  "Hand-checking: tougher at the rim, fewer fouls called, a slower pace.": "Hand-checking : plus dur au cercle, moins de fautes sifflées, un rythme plus lent.",
+  "No three-point line: every basket is two. A faster pace.": "Pas de ligne à trois points : chaque panier vaut deux. Un rythme plus rapide.",
+  "Era": "Époque",
+  "Hot spots": "Zones chaudes",
+  "Chemistry: {a} + {b}": "Complicité : {a} + {b}"
  },
  "story": {
   "f-driveway.title": "L’allée",

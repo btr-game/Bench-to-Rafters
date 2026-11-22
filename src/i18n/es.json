@@ -4293,7 +4293,19 @@
   "Right elbow": "Codo derecho",
   "High post": "Poste alto",
   "Left block": "Poste bajo izquierdo",
-  "Right block": "Poste bajo derecho"
+  "Right block": "Poste bajo derecho",
+  "{name} is on fire": "{name} está en racha",
+  "{name} erupts": "{name} estalla",
+  "The crowd erupts": "El público estalla",
+  "Modern": "Moderna",
+  "The nineties": "Los noventa",
+  "The sixties": "Los sesenta",
+  "Today’s rules.": "Las reglas de hoy.",
+  "Hand-checking: tougher at the rim, fewer fouls called, a slower pace.": "Hand-checking: más duro en el aro, menos faltas pitadas, un ritmo más lento.",
+  "No three-point line: every basket is two. A faster pace.": "Sin línea de tres: cada canasta vale dos. Un ritmo más rápido.",
+  "Era": "Época",
+  "Hot spots": "Zonas calientes",
+  "Chemistry: {a} + {b}": "Química: {a} + {b}"
  },
  "story": {
   "f-driveway.title": "La entrada de casa",

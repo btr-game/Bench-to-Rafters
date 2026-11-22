@@ -4293,7 +4293,19 @@
   "Right elbow": "右エルボー",
   "High post": "ハイポスト",
   "Left block": "左ブロック",
-  "Right block": "右ブロック"
+  "Right block": "右ブロック",
+  "{name} is on fire": "{name}が止まらない",
+  "{name} erupts": "{name}が沸く",
+  "The crowd erupts": "観客が沸く",
+  "Modern": "現代",
+  "The nineties": "90年代",
+  "The sixties": "60年代",
+  "Today’s rules.": "今のルール。",
+  "Hand-checking: tougher at the rim, fewer fouls called, a slower pace.": "ハンドチェック：ゴール下が厳しく、ファウルは少なめ、ペースは遅め。",
+  "No three-point line: every basket is two. A faster pace.": "スリーポイントラインなし：すべてのゴールが2点。ペースは速め。",
+  "Era": "時代",
+  "Hot spots": "ホットスポット",
+  "Chemistry: {a} + {b}": "相性：{a} + {b}"
  },
  "story": {
   "f-driveway.title": "家の前のゴール",

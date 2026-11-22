@@ -4293,7 +4293,19 @@
   "Right elbow": "右肘区",
   "High post": "高位",
   "Left block": "左低位",
-  "Right block": "右低位"
+  "Right block": "右低位",
+  "{name} is on fire": "{name} 手感火热",
+  "{name} erupts": "{name} 沸腾了",
+  "The crowd erupts": "全场沸腾",
+  "Modern": "现代",
+  "The nineties": "九十年代",
+  "The sixties": "六十年代",
+  "Today’s rules.": "现今的规则。",
+  "Hand-checking: tougher at the rim, fewer fouls called, a slower pace.": "手部接触防守：篮下对抗更强，吹罚更少，节奏更慢。",
+  "No three-point line: every basket is two. A faster pace.": "没有三分线：每个进球都是两分。节奏更快。",
+  "Era": "时代",
+  "Hot spots": "热区",
+  "Chemistry: {a} + {b}": "化学反应：{a} + {b}"
  },
  "story": {
   "f-driveway.title": "车道",

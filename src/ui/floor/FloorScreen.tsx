@@ -11,7 +11,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { FLOOR } from '../../engine/balance';
-import { COURT, RIM_Y, zoneOf } from '../../engine/floor/court';
+import { COURT, RIM_Y, SPOTS, attackSpot, zoneOf } from '../../engine/floor/court';
+import { crowdFor, onFire } from '../../engine/floor/gimmicks';
 import { canTimeout, floorHash, floorResult, freshEvents, isOpen, meterLoad, meterWindow, mirrorFloor, openMan, ratingK, releaseQuality, skipFloor, startFloor, stepFloor, type FloorEvent, type FloorInput, type FloorSetup, type FloorState } from '../../engine/floor/sim';
 import type { DramaPlay } from '../../engine/story/drama';
 import type { Kit } from '../../content/teamStyle';
@@ -107,6 +108,8 @@ interface Hud {
   mo: number;
   /** His free throw is up. */
   line: boolean;
+  /** The home crowd erupting (gimmicks.ts): its fans' name ('' for fans without one), or null. */
+  crowd: string | null;
 }
 const hudOf = (s: FloorState): Hud => {
   const u = s.players[s.user];
@@ -123,6 +126,7 @@ const hudOf = (s: FloorState): Hud => {
     mine: u.fouls,
     mo: Math.round(s.momentum * 10),
     line: s.phase === 'ft' && s.ft?.by === s.user,
+    crowd: crowdFor(s) !== null ? (s.gm?.fans.name ?? '') : null,
   };
 };
 
@@ -139,6 +143,10 @@ function wordFor(s: FloorState, e: FloorEvent): string | null {
       return t('Charge');
     case 'leak':
       return e.team === 0 ? t('Get back on defence') : null;
+    case 'fire':
+      return t('{name} is on fire', { name: last(s.players[e.by!].name) });
+    case 'crowd':
+      return s.gm?.fans.name ? t('{name} erupts', { name: s.gm.fans.name }) : t('The crowd erupts');
     case 'call':
       return e.call === 'iso' ? t('Isolation') : e.call === 'give' ? t('Give and go') : t('Double team');
     case 'block':
@@ -272,6 +280,12 @@ function hear(s: FloorState, e: FloorEvent, before: [number, number]): string | 
       return ours ? 'He took the charge!' : null;
     case 'break':
       return ours ? 'Fast break!' : null;
+    case 'fire':
+      sfx('roar');
+      return ours ? 'He’s on fire!' : null;
+    case 'crowd':
+      sfx('roar');
+      return ours ? 'Listen to this crowd!' : null;
     case 'ft':
       sfx(e.good ? 'net' : 'rim');
       return null;
@@ -286,6 +300,23 @@ function hear(s: FloorState, e: FloorEvent, before: [number, number]): string | 
     default:
       return null;
   }
+}
+
+/** A flame in pixels, two frames (k: outline, o: orange, y: yellow, w: white). */
+const FLAME = [
+  ['...k...', '..kok..', '..kook.', '.kooyk.', '.koyyok', 'koywyok', 'koywwok', 'kooyyok', '.kkkkk.'],
+  ['..k....', '.kok...', '.kook..', '.kooyk.', 'koyyok.', 'koywyok', 'koywwok', 'kooyyok', '.kkkkk.'],
+];
+const FLAME_INK: Record<string, string> = { k: '#1B1820', o: '#FF5A1F', y: '#FFB01F', w: '#FFF3BF' };
+function drawFlame(ctx: CanvasRenderingContext2D, x0: number, y0: number, f: number): void {
+  FLAME[f].forEach((row, y) => {
+    for (let x = 0; x < row.length; x++) {
+      const c = FLAME_INK[row[x]];
+      if (!c) continue;
+      ctx.fillStyle = c;
+      ctx.fillRect(x0 + x, y0 + y, 1, 1);
+    }
+  });
 }
 
 /** A bar of ten pixel squares (his legs). */
@@ -793,6 +824,25 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
         stride[i] += speed[i] * dt * FLOOR.tick * PACE;
       });
 
+      // his hot spots (gimmicks.ts): faint pixel squares on the floor, brighter while his team has the ball
+      const hs = s.gm?.spots[s.user] ?? [];
+      if (hs.length) {
+        ctx.fillStyle = s.poss === s.players[s.user].team ? 'rgba(255,248,214,0.62)' : 'rgba(255,248,214,0.28)';
+        const R = FLOOR.gimmick.spotReach;
+        for (const n of hs) {
+          const c = attackSpot(s.players[s.user].team, SPOTS[n][0], SPOTS[n][1]);
+          for (let gx = -R; gx <= R; gx += 1.5)
+            for (let gy = -R; gy <= R; gy += 1.5) {
+              if ((Math.round(gx / 1.5) + Math.round(gy / 1.5)) % 2 || gx * gx + gy * gy > R * R) continue;
+              const x = c.x + gx;
+              const y = c.y + gy;
+              if (x < 0 || x > COURT.w || y < 0 || y > COURT.h) continue;
+              const q = project(cam, x, y);
+              ctx.fillRect(Math.round(q.x) - 1, Math.round(q.y) - 1, 2, 2);
+            }
+        }
+      }
+
       // on the floor: the shadows, the ring under him, the man he guards, the pass he would make
       s.players.forEach((p, i) => p.on && drawShadow(ctx, project(cam, at[i].x, at[i].y), 12));
       drawShadow(ctx, project(cam, ball.x, ball.y), 4);
@@ -833,6 +883,12 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
         });
       });
       items.sort((p, q) => p.y - q.y).forEach((it) => it.draw());
+      // a player on fire (gimmicks.ts): a pixel flame beside his head, flickering in two steps
+      s.players.forEach((p, i) => {
+        if (!p.on || !onFire(s, i)) return;
+        const c = project(cam, at[i].x, at[i].y);
+        drawFlame(ctx, Math.round(c.x) - 15, Math.round(c.y) - 44, Math.floor(now / 160 + i) % 2);
+      });
       drawFrontRow(ctx, cam, tr, hype);
 
       // the man he guards: a small red marker over his head too
@@ -1256,6 +1312,11 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
           {t('Momentum')} <Momentum mo={hud.mo} us={setup.us.color} them={setup.them.color} />
           {hot && <b className="floor-hot">{t('On fire')}</b>}
         </span>
+        {hud.crowd !== null && (
+          <span className="floor-me-item">
+            <b className="floor-hot floor-crowd">{hud.crowd ? t('{name} erupts', { name: hud.crowd }) : t('The crowd erupts')}</b>
+          </span>
+        )}
         {net && line && (
           <span className={`floor-me-item floor-line${line.direct ? ' direct' : ''}`} title={line.direct ? t('Your two computers are talking straight to each other.') : t('Your keys go through the game\'s server.')}>
             {line.direct ? t('Direct line') : t('Server line')}
