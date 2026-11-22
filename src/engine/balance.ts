@@ -1429,4 +1429,26 @@ export const FLOOR = {
    * a give-and-go waits `giveGo` seconds for his cut; a double team holds `double` seconds, strips
    * `strip` times as often, and an AI ball handler under it passes out `out` of the time. */
   calls: { iso: 6, clear: 20, giveGo: 3, double: 4, strip: 1.7, out: 0.75 },
+  /** After round 42, the Floor's gimmicks (the owner's picks from a list; engine/floor/gimmicks.ts).
+   * On fire: `fireMakes` makes in a row with no miss between, and every shot of his is `fireShot`
+   * better until he misses `fireMisses` times or the other team scores `fireStops` baskets in a row.
+   * Hot spots: one or two spots of his own (from his numbers), and a shot within `spotReach` feet of
+   * one is `hotSpot` better. The crowd: the home team on a run of `crowdRun` points or `crowdScores`
+   * baskets in a row, its crowd erupts for `crowdSecs` game seconds of play: its shots `crowdShot`
+   * better, the other team's passes picked off and its handler stripped up to `crowdHands` times as
+   * often; both scaled by the fans' own `crowd` (career/fanCulture.ts), from `crowdMin` of it at 0
+   * to all of it at `crowdFull`. A famous duo (content/legendPairs.ts) both on the court: a shot one
+   * sets up for the other within `pairSecs` is `pair` better, a pass between them picked off
+   * `pairPick` as often. */
+  gimmick: { fireMakes: 3, fireShot: 0.03, fireMisses: 2, fireStops: 3, hotSpot: 0.025, spotReach: 6, crowdRun: 8, crowdScores: 3, crowdSecs: 20, crowdShot: 0.03, crowdHands: 1.5, crowdMin: 0.4, crowdFull: 0.25, pair: 0.03, pairSecs: 2, pairPick: 0.5 },
+  /** After round 42, the era's rules (a setup's `era`). three: whether a shot from beyond the arc is
+   * worth three. contest: what a contest at the rim or in the paint is multiplied by (the nineties'
+   * hand-checking). foul: what the fouls called on a shot are multiplied by. patience, brk: what a
+   * team's patience and its fast breaks are multiplied by (the pace). threeUse: what every man's
+   * readiness to shoot threes is multiplied by. */
+  era: {
+    modern: { three: true, contest: 1, foul: 1, patience: 1, brk: 1, threeUse: 1 },
+    nineties: { three: true, contest: 1.35, foul: 0.7, patience: 1.3, brk: 0.8, threeUse: 0.7 },
+    sixties: { three: false, contest: 1, foul: 1, patience: 0.7, brk: 1.35, threeUse: 0.15 },
+  } as Record<'modern' | 'nineties' | 'sixties', { three: boolean; contest: number; foul: number; patience: number; brk: number; threeUse: number }>,
 } as const;

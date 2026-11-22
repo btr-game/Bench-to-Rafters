@@ -18,6 +18,7 @@ import { FLOOR, type Mode } from '../balance';
 import { clamp, makeRng, next, type Rng } from '../rng';
 import type { Pos } from '../types';
 import { COURT, RIM_Y, SHAPES, SPOTS, SPACING, attackSpot, clampSpot, cos, dist, hyp, isThree, rimOf, sin, toLine, toRim, zoneOf, type Spot, type Zone } from './court';
+import { afterShot, eraOf, mirrorGimmicks, pickEdge, shotEdge, startGimmicks, stripEdge, type FloorEra, type FloorGimmicks } from './gimmicks';
 
 export interface FloorRatings {
   SHT: number;
@@ -113,6 +114,9 @@ export interface FloorSetup {
   timeouts?: [number, number];
   /** Who has the ball first; a coin flip if not given. */
   ball?: 0 | 1;
+  /** (gimmicks.ts) the era's rules (modern unless given), and the home team (his unless given). */
+  era?: FloorEra;
+  home?: 0 | 1;
 }
 
 export interface FloorBox {
@@ -162,7 +166,7 @@ interface FloorPlayer extends FloorPlayerIn {
   box: FloorBox;
 }
 
-export type FloorEventKind = 'make' | 'miss' | 'block' | 'steal' | 'turnover' | 'foul' | 'ft' | 'rebound' | 'timeout' | 'shotclock' | 'beat' | 'out' | 'overtime' | 'end' | 'screen' | 'reach' | 'switch' | 'help' | 'quarter' | 'break' | 'post' | 'charge' | 'sub' | 'call' | 'leak' | 'lane';
+export type FloorEventKind = 'make' | 'miss' | 'block' | 'steal' | 'turnover' | 'foul' | 'ft' | 'rebound' | 'timeout' | 'shotclock' | 'beat' | 'out' | 'overtime' | 'end' | 'screen' | 'reach' | 'switch' | 'help' | 'quarter' | 'break' | 'post' | 'charge' | 'sub' | 'call' | 'leak' | 'lane' | 'fire' | 'crowd';
 
 export interface FloorEvent {
   tick: number;
@@ -280,6 +284,8 @@ export interface FloorState {
   marks: { low: number; winner: boolean; stop: boolean };
   /** Each team's game plan, or null: the standard shape, balanced. */
   plans: [FloorPlan | null, FloorPlan | null];
+  /** The gimmicks (gimmicks.ts): on fire, hot spots, the crowd, duos, the era. */
+  gm?: FloorGimmicks;
 }
 
 /** What he does this tick. `shoot` is held (a press loads the meter, the release shoots); the rest
@@ -391,6 +397,7 @@ export function startFloor(set: FloorSetup): FloorState {
     auto: false,
     marks: { low: set.score[0] - set.score[1], winner: false, stop: false },
     plans: [set.us.plan ?? null, set.them.plan ?? null],
+    gm: startGimmicks(set, players),
   };
   matchUp(s);
   spread(s);
@@ -457,7 +464,11 @@ function planSpot(s: FloorState, p: FloorPlayer): [number, number] | null {
 }
 
 /** How a team's style shapes its play as a whole (FLOOR.play): balanced without a plan. */
-const playOf = (s: FloorState, team: 0 | 1) => FLOOR.play[s.plans?.[team]?.style ?? 'balanced'];
+const playOf = (s: FloorState, team: 0 | 1) => {
+  const k = FLOOR.play[s.plans?.[team]?.style ?? 'balanced'];
+  const E = eraOf(s);
+  return E.patience === 1 && E.brk === 1 ? k : { ...k, patience: k.patience * E.patience, brk: k.brk * E.brk };
+};
 
 function spotOf(s: FloorState, p: FloorPlayer): Spot {
   const planned = planSpot(s, p);
@@ -597,6 +608,7 @@ function shotChance(s: FloorState, p: FloorPlayer, at: Spot): number {
   if ((zone === 'rim' || zone === 'paint') && foe.p && foe.d < FLOOR.contest.within) c += S.size * clamp((p.r.REB + p.r.INT - foe.p.r.REB - foe.p.r.INT) / 2 / S.sizeFull, 0, 1);
   // five against four: a defender who leaked out left his man alone
   if (s.poss === p.team && shortHanded(s, other(p.team))) c += FLOOR.leak.shot;
+  c += shotEdge(s, p, at, zone);
   const mode = FLOOR.mode[s.mode] ?? FLOOR.mode.standard;
   c += p.team === 0 ? mode.us : mode.them;
   if ((p.team === 0 && s.momentum >= FLOOR.momentum.full) || (p.team === 1 && s.momentum <= -FLOOR.momentum.full)) c += FLOOR.momentum.edge;
@@ -629,7 +641,8 @@ function release(s: FloorState, i: number, q: number | null, dodge = 1, hook = f
   const p = s.players[i];
   const at = { x: p.x, y: p.y };
   const zone = zoneOf(p.team, at);
-  const three = isThree(p.team, at);
+  // (the sixties had no three-point line: from out there it is two)
+  const three = isThree(p.team, at) && eraOf(s).three;
   let chance = shotChance(s, p, at);
   if (q !== null) chance = clamp(chance * lerp(FLOOR.meter.worst, FLOOR.meter.best, q), FLOOR.shot.min, FLOOR.shot.max);
   const foe = nearestFoe(s, p.team, at);
@@ -676,7 +689,7 @@ function release(s: FloorState, i: number, q: number | null, dodge = 1, hook = f
   const inside = zone === 'rim' || zone === 'paint';
   // (signatures) who draws more fouls: SGA anywhere, Embiid on his jumper, Harden on a three, LeBron at the rim on the break
   const draw = (p.trait === 'sga' ? G.sgaFoul : 1) * (p.trait === 'embiid' && !inside ? G.embiidFoul : 1) * (p.trait === 'harden' && three ? G.hardenFoul : 1) * (p.trait === 'lebron' && zone === 'rim' && s.brk?.team === p.team ? G.lebronFoul : 1);
-  const fr = (inside ? FLOOR.foul.rim + FLOOR.foul.perPoint * (p.r.FIN - (foe.p?.r.INT ?? 50)) : FLOOR.foul.jumper) * draw;
+  const fr = (inside ? FLOOR.foul.rim + FLOOR.foul.perPoint * (p.r.FIN - (foe.p?.r.INT ?? 50)) : FLOOR.foul.jumper) * draw * eraOf(s).foul;
   const fouled = foe.p && foe.d < 5 && next(s.rng) < clamp(fr, 0, draw > 1 ? 0.45 : 0.35) ? foe.p : null;
   const dunk = zone === 'rim' && p.r.ATH >= 70 && made;
   const d = toRim(p.team, at);
@@ -757,6 +770,7 @@ function land(s: FloorState, f: Flight): void {
       if (f.fast) s.fast[p.team] += pts;
       emit(s, { kind: 'make', team: p.team, by: f.by, pts, zone: f.zone, dunk: f.dunk, and: f.and, hook: f.hook, fast: f.fast });
     } else emit(s, { kind: 'miss', team: p.team, by: f.by, zone: f.zone, hook: f.hook });
+    afterShot(s, f.by, !!f.made, (e) => emit(s, e));
     s.lastPass = null;
     if (f.fts) return freeThrows(s, f.by, f.fts);
     if (f.made) return dead(s, other(p.team), backcourt(other(p.team)), 1.2);
@@ -1116,7 +1130,7 @@ function aiHandler(s: FloorState, i: number): void {
   s.think = s.tick + secs(FLOOR.think);
   // his man reaches in (an AI defender; a human steals with his own key)
   const d = s.players.find((_, k) => s.guard[k] === i);
-  if (d && d.on && !driven(s, idx(s, d)) && dist(d, p) < FLOOR.steal.reach && next(s.rng) < FLOOR.strip * hands(d) * (d.r.PER / 70) * (1.3 - p.r.PLY / 100)) {
+  if (d && d.on && !driven(s, idx(s, d)) && dist(d, p) < FLOOR.steal.reach && next(s.rng) < FLOOR.strip * hands(d) * stripEdge(s, d) * (d.r.PER / 70) * (1.3 - p.r.PLY / 100)) {
     const di = idx(s, d);
     d.box.stl++;
     p.box.tov++;
@@ -1298,7 +1312,7 @@ function throwPass(s: FloorState, from: number, to: number): void {
   // a defender in the lane may pick it off (the Big O's passes are safer; Magic's on the break never)
   const safe = (p.trait === 'oscar' ? FLOOR.sig.oscarPick : 1) * (p.trait === 'magic' && s.brk?.team === p.team ? 0 : 1);
   for (const q of onCourt(s, other(p.team))) {
-    if (toLine(q, p, r) < FLOOR.pass.lane && next(s.rng) < FLOOR.pass.pick * hands(q) * (passer ? FLOOR.trait.passPick : 1) * safe * (q.r.PER / 70) * (1 - p.r.PLY / 200)) {
+    if (toLine(q, p, r) < FLOOR.pass.lane && next(s.rng) < FLOOR.pass.pick * hands(q) * (passer ? FLOOR.trait.passPick : 1) * safe * pickEdge(s, from, to, q) * (q.r.PER / 70) * (1 - p.r.PLY / 200)) {
       const qi = idx(s, q);
       q.box.stl++;
       p.box.tov++;
@@ -1839,6 +1853,7 @@ export function mirrorFloor(s: FloorState): FloorState {
     fast: sw(s.fast),
     run: { team: t(s.run.team), pts: s.run.pts },
     feed: s.feed.map((e) => ({ ...e, team: t(e.team) })),
+    gm: mirrorGimmicks(s.gm),
   };
 }
 
