@@ -11,7 +11,7 @@ import { TEAM_STYLE } from '../../content/teamStyle';
 import type { LegendSpot } from '../../content/franchiseFives';
 import type { Pos } from '../../engine/types';
 import { ALL_LEGENDS, fiveOvr, legendFive, legendLine } from '../../engine/floor/legends';
-import { BRACKET_ROUNDS, finishBracket, franchise, legendSetup, myGame, newBracket, playRound, winnerOf, type Bracket, type FloorSide } from '../../engine/floor/game';
+import { BRACKET_ROUNDS, finishBracket, type BracketGame, franchise, legendSetup, myGame, newBracket, playRound, winnerOf, type Bracket, type FloorSide } from '../../engine/floor/game';
 import type { FloorResult, FloorSetup } from '../../engine/floor/sim';
 import { onNbaTeam, ownSetup } from '../../engine/floor/mini';
 import { teamById } from '../../engine/career/common';
@@ -137,29 +137,49 @@ function Court({ plan, onDone, onAgain }: { plan: Plan; onDone: (r: FloorResult)
 }
 
 function BracketView({ b }: { b: Bracket }) {
-  return (
-    <div className="fh-bracket" aria-label={t('The bracket')}>
-      {Array.from({ length: BRACKET_ROUNDS }, (_, r) => (
-        <div key={r} className="fh-round">
+  // (owner, after round 42: "make the bracket ui divide by east and west"): the East from the left, the
+  // West from the right, the Finals between them
+  const tie = (g: BracketGame, key: string) => {
+    const w = winnerOf(g);
+    return (
+      <div key={key} className={`fh-tie${g.a === b.me || g.b === b.me ? ' mine' : ''}`}>
+        {[g.a, g.b].map((a, i) => (
+          <div key={a} className={`fh-team${w === a ? ' won' : w ? ' lost' : ''}`}>
+            <TeamArt name={nameOf(a)} abbr={a} color={ALL.find((x) => x.abbr === a)!.color} league="NBA" size={22} />
+            <span>{a}</span>
+            <b>{g.score ? g.score[i] : ''}</b>
+          </div>
+        ))}
+      </div>
+    );
+  };
+  const side = (east: boolean) =>
+    Array.from({ length: BRACKET_ROUNDS - 1 }, (_, r) => {
+      const games = b.rounds[r] ?? [];
+      const half = Math.max(1, (4 >> r) as number);
+      const mine = east ? games.slice(0, games.length / 2) : games.slice(games.length / 2);
+      return (
+        <div key={`${east}${r}`} className="fh-round">
           <div className="fh-round-name">{t(ROUND_NAME[r])}</div>
-          {(b.rounds[r] ?? []).map((g, k) => {
-            const w = winnerOf(g);
-            const half = (b.rounds[r] ?? []).length / 2;
-            return (
-              <div key={k} className={`fh-tie${g.a === b.me || g.b === b.me ? ' mine' : ''}`}>
-                {r < 3 && (k === 0 || k === half) && <div className="fh-conf">{k === 0 ? t('East') : t('West')}</div>}
-                {[g.a, g.b].map((a, i) => (
-                  <div key={a} className={`fh-team${w === a ? ' won' : w ? ' lost' : ''}`}>
-                    <TeamArt name={nameOf(a)} abbr={a} color={ALL.find((x) => x.abbr === a)!.color} league="NBA" size={22} />
-                    <span>{a}</span>
-                    <b>{g.score ? g.score[i] : ''}</b>
-                  </div>
-                ))}
-              </div>
-            );
-          })}
+          {mine.length ? mine.map((g, k) => tie(g, `${r}-${k}`)) : Array.from({ length: half }, (_, k) => <div key={k} className="fh-tie fh-tbd" aria-hidden="true" />)}
         </div>
-      ))}
+      );
+    });
+  const finals = b.rounds[BRACKET_ROUNDS - 1] ?? [];
+  return (
+    <div className="fh-bracket fh-split" aria-label={t('The bracket')}>
+      <div className="fh-conf-side">
+        <div className="fh-conf">{t('East')}</div>
+        <div className="fh-rounds">{side(true)}</div>
+      </div>
+      <div className="fh-round fh-finals">
+        <div className="fh-round-name">{t(ROUND_NAME[BRACKET_ROUNDS - 1])}</div>
+        {finals.length ? finals.map((g, k) => tie(g, `f${k}`)) : <div className="fh-tie fh-tbd" aria-hidden="true" />}
+      </div>
+      <div className="fh-conf-side west">
+        <div className="fh-conf">{t('West')}</div>
+        <div className="fh-rounds">{side(false).reverse()}</div>
+      </div>
     </div>
   );
 }
@@ -241,7 +261,7 @@ export function FloorPage({ inside = false }: { inside?: boolean }) {
     const g = myGame(b);
     if (!g) return;
     const opp = g.home ? g.game.b : g.game.a;
-    setPlan({ setup: legendSetup({ seed: b.seed + b.rounds.length * 7919, us: mine, them: franchise(opp, oppOvr ?? undefined), user: steer, length: 'full', plan: gamePlan }), kits: [us, opp], key: Date.now() });
+    setPlan({ setup: legendSetup({ seed: b.seed + b.rounds.length * 7919, us: mine, them: franchise(opp, oppOvr ?? undefined), user: steer, length: 'playoff', plan: gamePlan }), kits: [us, opp], key: Date.now() });
   };
 
   if (plan)

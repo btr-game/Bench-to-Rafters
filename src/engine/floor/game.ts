@@ -13,7 +13,10 @@ import { NBA_TEAMS } from '../../content/teams';
 import { fiveOvr, floorLevel, legendFive, legendTeam } from './legends';
 import { skipFloor, startFloor, type FloorPlan, type FloorSetup } from './sim';
 
-export type FloorLength = 'fourth' | 'full';
+/** How long a game is: the fourth quarter from a close score (a quick game), one quarter from 0-0 in about
+ * two real minutes (a playoff game; owner, after round 42: "reduce time in playoffs. maybe just leave it as
+ * one quarter, 2 minutes per game pace"), or all four quarters. */
+export type FloorLength = 'fourth' | 'playoff' | 'full';
 
 /** One side of a game: who they are, their five, and the overall they play at (their own when not given). */
 export interface FloorSide {
@@ -45,15 +48,16 @@ export function startScore(seed: number, us: FloorSide, them: FloorSide): [numbe
 /** A game between two sides: `user` is the starter he steers (none: the AI plays both, a simulation). */
 export function legendSetup(o: { seed: number; us: FloorSide; them: FloorSide; user?: number; length: FloorLength; plan?: FloorPlan }): FloorSetup {
   const full = o.length === 'full';
+  const one = o.length === 'playoff';
   return {
     seed: o.seed,
     mode: 'standard',
     us: { name: o.us.name, short: o.us.short, color: o.us.color, players: legendTeam('U', o.us.five, { ovr: o.us.ovr, user: o.user, seed: o.seed + 3 }), plan: o.plan },
     them: { name: o.them.name, short: o.them.short, color: o.them.color, players: legendTeam('T', o.them.five, { ovr: o.them.ovr, seed: o.seed + 11 }) },
-    score: full ? [0, 0] : startScore(o.seed, o.us, o.them),
+    score: full || one ? [0, 0] : startScore(o.seed, o.us, o.them),
     clock: FLOOR.quarter,
     quarter: full ? 1 : 4,
-    rate: full ? FLOOR.rateFull : FLOOR.rate,
+    rate: full ? FLOOR.rateFull : one ? FLOOR.ratePlayoff : FLOOR.rate,
   };
 }
 
@@ -117,7 +121,7 @@ export function myGame(b: Bracket): { round: number; game: BracketGame; home: bo
 
 /** A game the engine plays by itself: the AI on both sides, the playoffs' four quarters. */
 export function simGame(a: string, b: string, seed: number, oppOvr?: number): [number, number] {
-  const s = startFloor(legendSetup({ seed, us: franchise(a, oppOvr), them: franchise(b, oppOvr), length: 'full' }));
+  const s = startFloor(legendSetup({ seed, us: franchise(a, oppOvr), them: franchise(b, oppOvr), length: 'playoff' }));
   skipFloor(s);
   return [s.score[0], s.score[1]];
 }

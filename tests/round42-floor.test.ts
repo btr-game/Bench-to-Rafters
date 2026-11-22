@@ -459,3 +459,32 @@ describe('after round 42: the own signatures of the legends rated 95 or more', (
     expect(on).toBeLessThan(off * 1.12);
   });
 });
+
+describe('after round 42: shorter playoff games, and game plans', () => {
+  it('a playoff game is one quarter from 0-0 in about two real minutes', () => {
+    // (owner: "reduce time in playoffs. maybe just leave it as one quarter, 2 minutes per game pace")
+    const set = legendSetup({ seed: 9, us: franchise('BOS', 90), them: franchise('LAL', 90), length: 'playoff' });
+    expect(set.score).toEqual([0, 0]);
+    expect(set.quarter).toBe(4);
+    const s = startFloor(set);
+    s.auto = true;
+    play(s);
+    const realSecs = (s.tick * FLOOR.tick) / 1.5;
+    // 12:00 of game clock at the playoff rate, plus dead balls and free throws: about two minutes
+    expect(realSecs).toBeGreaterThan(100);
+    expect(realSecs).toBeLessThan(200);
+    expect(s.score[0] + s.score[1]).toBeGreaterThan(8);
+  });
+
+  it('a plan puts each position on its spot, and a style changes how the team plays', () => {
+    const set = legendSetup({ seed: 4, us: franchise('CLE', 90), them: franchise('BOS', 90), length: 'fourth', plan: { shape: 'fiveOut', style: 'motion', spots: { SF: 'top', PG: 'leftCorner' } } });
+    const s = startFloor(set);
+    expect(s.plans[0]).toEqual(set.us.plan);
+    expect(s.plans[1]).toBeNull();
+    // ball movement: every man more willing to pass, the star's share pulled toward the average
+    const plain = startFloor(legendSetup({ seed: 4, us: franchise('CLE', 90), them: franchise('BOS', 90), length: 'fourth' }));
+    const k = s.players.findIndex((p) => p.name === 'LeBron James');
+    expect(s.players[k].st.pass).toBeGreaterThan(plain.players[k].st.pass);
+    expect(Math.abs(s.players[k].st.use - 1)).toBeLessThan(Math.abs(plain.players[k].st.use - 1) + 1e-9);
+  });
+});

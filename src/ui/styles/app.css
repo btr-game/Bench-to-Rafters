@@ -3288,3 +3288,12 @@ td > .link-btn { min-width: 44px; text-align: left; }
 .gp-name { font: 700 7px/1 var(--f-mono); fill: #1b1820; paint-order: stroke; stroke: #fff7e8; stroke-width: 2px; }
 .gp-spots { display: grid; gap: 8px; }
 .gp-spots label { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 170px); gap: 8px; align-items: center; }
+/* the bracket split by conference (after round 42): East | Finals | West */
+.fh-split { grid-template-columns: minmax(0, 3fr) minmax(0, 1fr) minmax(0, 3fr); align-items: stretch; }
+.fh-conf-side { display: grid; grid-template-rows: auto 1fr; gap: 6px; min-width: 0; }
+.fh-conf-side > .fh-conf { border: 0; padding: 0 0 2px; font-size: calc(13px * var(--ts)); color: var(--ink); border-bottom: 2px solid var(--line); }
+.fh-conf-side.west > .fh-conf { text-align: right; }
+.fh-rounds { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.fh-finals { align-content: center; }
+.fh-finals .fh-round-name { text-align: center; }
+.fh-tbd { min-height: 54px; border-style: dashed; background: transparent; }

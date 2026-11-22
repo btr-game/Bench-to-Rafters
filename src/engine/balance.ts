@@ -1375,6 +1375,8 @@ export const FLOOR = {
   /** Round 42, the Floor's own game: the clock of a game of four quarters, played in the time one
    * quarter takes (the playoffs: "one full game could honestly be 4 minutes"). */
   rateFull: 8,
+  /** A playoff game: one quarter from 0-0 at this clock rate, 12:00 in two real minutes (720 / (1.5 x 4) = 120 s). */
+  ratePlayoff: 4,
   /** Round 42, a fast break (owner's pick: "an outlet pass and a run"): after a steal or a
    * defensive rebound the new offence runs for up to `secs` game seconds, everyone at a sprint, the
    * new defence starting `react` seconds late (less for a smart player). The man with the ball
