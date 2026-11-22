@@ -22,8 +22,9 @@ import { ink } from '../art/color';
 import { t, tx } from '../../i18n';
 import { setSfx, sfx, soundSettings } from '../sound';
 import { announce, announcerOn, setAnnouncer } from '../announcer';
-import { Backdrop, CAM_RANGE, VIEW, drawBasket, drawFrontRow, drawShadow, pixel, project, type ArenaLook } from './view';
-import { MID_X, SpriteBook, type Frame } from './sprites';
+import { Backdrop, CAM_RANGE, VIEW, drawBasket, drawFrontRow, drawShadow, padOf, pixel, project, type ArenaLook, type CourtLook } from './view';
+import { SpriteBook, type Frame } from './sprites';
+import { glyph } from '../art/pixel';
 import type { NetGame } from './net';
 import { signatureOf } from './traits';
 import { Bench, BoxScore } from './BoxScore';
@@ -34,6 +35,8 @@ export interface FloorTeamLook {
 }
 
 type FloorOutcome = ReturnType<typeof floorResult>;
+
+export { COURTS, type CourtLook } from './view';
 
 interface Props {
   setup: FloorSetup;
@@ -49,7 +52,26 @@ interface Props {
   net?: { link: NetGame; friend: string; onLeave: () => void };
   /** The end card's title for a loss (a career's playoff game: the season is over). */
   lose?: string;
+  /** Where it is played: his team's arena (the default) or another court (view.ts, COURTS). */
+  court?: CourtLook;
+  /** Big-head mode at the tip (NBA Jam's); B or the pause menu switches it, and the choice is kept. */
+  bigHeads?: boolean;
 }
+
+const BIG_KEY = 'btr-floor-bighead';
+const keptBig = (): boolean => {
+  try {
+    return localStorage.getItem(BIG_KEY) === '1';
+  } catch {
+    return false;
+  }
+};
+/** How much higher the marks over a player sit when his head is twice the size (canvas pixels). */
+const BIG_UP = 16;
+/** The buzzer-beater replay: how much of the end it shows at least (from a beat before the shot left his
+ * hands, `lead`, when that was earlier), how much the tape keeps, its speed, and
+ * how long it holds on the last frame (ms of the game as played; the speed a share of real time). */
+const REPLAY = { show: 3000, keep: 5000, speed: 0.5, hold: 700, recent: 4000, lead: 600 } as const;
 
 const KEY = {
   up: ['KeyW', 'ArrowUp'],
@@ -320,7 +342,17 @@ interface Tag {
   us: boolean;
 }
 
-export function FloorScreen({ setup: given, arena, looks: givenLooks, series, onAgain, onDone, net, lose }: Props) {
+/** One drawn moment of the court, kept for the replay: the camera, the ball, and each player on the
+ * floor where he stood, in the frame he was drawn in. */
+interface Snap {
+  cam: number;
+  tr: number;
+  hype: number;
+  ball: { x: number; y: number; h: number };
+  players: { i: number; x: number; y: number; frame: Frame; lift: number; mirror: boolean }[];
+}
+
+export function FloorScreen({ setup: given, arena, looks: givenLooks, series, onAgain, onDone, net, lose, court = 'arena', bigHeads }: Props) {
   const link = net?.link ?? null;
   const flip = link?.side === 1;
   // what this screen shows: his own team first (the friend's, against a friend on team 1)
@@ -348,6 +380,21 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
   const [snd, setSnd] = useState(soundSettings);
   const [voice, setVoice] = useState(announcerOn);
   const [over, setOver] = useState<FloorOutcome | null>(null);
+  // big-head mode, and the replay of a buzzer-beater (its word drawn over the canvas when the
+  // language's word is not one the pixel letters can draw)
+  const [big, setBig] = useState(() => bigHeads ?? keptBig());
+  const bigRef = useRef(big);
+  const [replaying, setReplaying] = useState(false);
+  const flipBig = () => {
+    const v = !bigRef.current;
+    bigRef.current = v;
+    setBig(v);
+    try {
+      localStorage.setItem(BIG_KEY, v ? '1' : '0');
+    } catch {
+      /* no storage: the choice lasts this game */
+    }
+  };
   const pausedRef = useRef(false);
   const closeRef = useRef(false);
   const game = useRef<FloorState | null>(null);
@@ -406,7 +453,8 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
       if (import.meta.env.DEV) (window as unknown as { __floor?: FloorState }).__floor = real;
     };
     look();
-    const back = new Backdrop(ctx, arena);
+    const back = new Backdrop(ctx, arena, court);
+    const pad = padOf(court, arena);
     const book = new SpriteBook();
     const lookFor: Look[] = s.players.map((p) => lookOf(p.name, shoeOf(looks[p.team].kit, looks[p.team].which)));
     const prev = s.players.map((p) => ({ x: p.x, y: p.y }));
@@ -527,7 +575,7 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
     const tagAt = (i: number, text: string) => {
       const p = s.players[i];
       const pt = project(cam, p.x, p.y);
-      const tag = { id: ++tagId, text, x: Math.round(pt.x), y: Math.round(pt.y) - 40, us: p.team === 0 };
+      const tag = { id: ++tagId, text, x: Math.round(pt.x), y: Math.round(pt.y) - 40 - (bigRef.current ? BIG_UP : 0), us: p.team === 0 };
       setTags((ts) => [...ts.slice(-3), tag]);
       window.setTimeout(() => setTags((ts) => ts.filter((x) => x.id !== tag.id)), 900);
     };
@@ -550,6 +598,13 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
         // the frames a play sets off
         if ((e.kind === 'reach' || e.kind === 'steal') && e.by !== undefined) act[e.by] = { kind: 'reach', t0: now };
         if ((e.kind === 'make' || e.kind === 'miss') && e.by !== undefined) act[e.by] = { kind: e.kind === 'make' && e.by === v.user ? 'cheer' : 'land', t0: now };
+        // a buzzer-beater in the last period: let go with a second or less left or still in the air at the
+        // horn, or a go-ahead basket in the last three seconds (the replay, once the game is over and it held up)
+        if (!link && e.kind === 'make' && v.quarter >= 4 && e.by !== undefined) {
+          const lead = (x: [number, number]) => x[e.team] - x[e.team === 0 ? 1 : 0];
+          const horn = (shotClock <= 1 || v.clock <= 0) && lastShot?.by === e.by;
+          if (horn || (v.clock <= 3 && lead(before) <= 0 && lead(v.score) > 0)) beater = { ms: playMs, shot: shotMs, team: e.team };
+        }
         // no close-ups against a friend: one would stop this screen and the other would wait for it
         const cu = link ? null : closeUpOf(v, e, before);
         if (cu && !closeRef.current) {
@@ -559,9 +614,37 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
       }
     };
 
+    // the replay's tape: what the court drew, frame by frame, for the last few seconds of play (in
+    // ms of the game as played, so a pause or a close-up leaves no gap), the shot in the air and the
+    // clock it left on, and a buzzer-beater seen
+    const tape: { ms: number; snap: Snap }[] = [];
+    let playMs = 0;
+    let lastShot: FloorState['ball']['flight'] = null;
+    let shotClock = Infinity;
+    let shotMs = 0;
+    let beater: { ms: number; shot: number; team: 0 | 1 } | null = null;
+    let replay: { t0: number; from: number; to: number } | null = null;
+    let after: FloorOutcome | null = null;
+    const endReplay = () => {
+      if (!replay) return;
+      replay = null;
+      setReplaying(false);
+      setOver(after);
+    };
     const finish = () => {
       setHud(hudOf(s));
-      setOver(floorResult(s));
+      const r = floorResult(s);
+      // a shot that won it at the horn: the last seconds again, slowly, before the final card
+      // (alone only: against a friend the other screen would wait for it)
+      const won = beater && s.score[beater.team] > s.score[beater.team === 0 ? 1 : 0];
+      if (!link && beater && won && playMs - beater.ms <= REPLAY.recent && tape.length > 1) {
+        const to = tape[tape.length - 1].ms;
+        replay = { t0: performance.now(), from: Math.max(tape[0].ms, Math.min(to - REPLAY.show, beater.shot - REPLAY.lead)), to };
+        after = r;
+        setReplaying(true);
+        return;
+      }
+      setOver(r);
     };
     // a key's direction on the court: turned round for team 1 against a friend
     const toReal = (inp: FloorInput): FloorInput => (flip && inp.dx ? { ...inp, dx: -inp.dx } : inp);
@@ -575,6 +658,13 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
     /** What every new tick on screen brings, whoever played it. */
     const afterTick = () => {
       s.players.forEach((p, i) => (openFor[i] = p.team === 0 && p.on && isOpen(s, i) ? openFor[i] + 1 : 0));
+      // a shot just let go, and the clock it left on (the replay's buzzer-beater)
+      const f = s.ball.flight;
+      if (f?.kind === 'shot' && f !== lastShot) {
+        lastShot = f;
+        shotClock = s.clock;
+        shotMs = playMs;
+      }
       // the dribble as the ball comes to him, the clock's last seconds in a close one
       if (s.ball.holder === s.user && prevHolder !== s.user && s.poss === 0 && s.phase === 'live') sfx('bounce');
       prevHolder = s.ball.holder;
@@ -695,8 +785,8 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
     const BALL_NEAR = ['...###...', '.##ooo##.', '.#oHooo#.', '#ooHoooo#', '#sssssss#', '#oooooSS#', '.#ooooS#.', '.##ooo##.', '...###...'];
     const BALL_FAR = ['..####..', '.#oHoo#.', '#oHoooo#', '#ssssss#', '#ooooSo#', '#oooSSo#', '.#oooo#.', '..####..'];
     const BALL_INK: Record<string, string> = { '#': '#1B1820', o: '#E8782A', H: '#FFB26B', S: '#B4531A', s: '#8A3A12' };
-    const drawBall = (b: { x: number; y: number; h: number }) => {
-      const p = project(cam, b.x, b.y, b.h);
+    const drawBall = (b: { x: number; y: number; h: number }, camX: number) => {
+      const p = project(camX, b.x, b.y, b.h);
       const rows = p.s >= 0.84 ? BALL_NEAR : BALL_FAR;
       const x0 = Math.round(p.x) - Math.floor(rows[0].length / 2);
       const y0 = Math.round(p.y) - Math.floor(rows.length / 2);
@@ -757,10 +847,10 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
     };
 
     /** The open man's mark: a small white bubble with a "!" over his head. */
-    const openMark = (x: number, y: number) => {
+    const openMark = (x: number, y: number, up: number) => {
       const c = project(cam, x, y);
       const bx = Math.round(c.x) - 3;
-      const by = Math.round(c.y) - 46;
+      const by = Math.round(c.y) - 46 - up;
       ctx.fillStyle = '#1B1820';
       ctx.fillRect(bx - 1, by - 1, 9, 10);
       ctx.fillRect(bx + 2, by + 9, 3, 1);
@@ -772,14 +862,44 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
       ctx.fillRect(bx + 3, by + 6, 1, 1);
     };
 
-    const render = (now: number, a: number, dt: number) => {
+    /** The court itself for one drawn moment: the stands, the floor, the shadows, what lies on the
+     * floor (`onFloor`: his rings, live only), then the baskets, the players and the ball far to near. */
+    const drawScene = (snap: Snap, onFloor?: () => void) => {
+      const cx = snap.cam;
+      back.draw(ctx, cx, snap.tr, snap.hype);
+      snap.players.forEach((q) => drawShadow(ctx, project(cx, q.x, q.y), 12));
+      drawShadow(ctx, project(cx, snap.ball.x, snap.ball.y), 4);
+      onFloor?.();
+      type Item = { y: number; draw: () => void };
+      const items: Item[] = [
+        { y: RIM_Y, draw: () => drawBasket(ctx, cx, 0, pad) },
+        { y: RIM_Y, draw: () => drawBasket(ctx, cx, 1, pad) },
+        { y: snap.ball.y + 0.05 + (snap.ball.h > 9 ? 1 : 0), draw: () => drawBall(snap.ball, cx) },
+      ];
+      for (const q of snap.players) {
+        const p = s.players[q.i];
+        items.push({
+          y: q.y,
+          draw: () => {
+            const pt = project(cx, q.x, q.y, q.lift);
+            // drawn at their own size, a sprite pixel to a canvas pixel: scaled down, the hand-drawn
+            // faces and numbers lose columns (a 23 read as 21), so the court's perspective carries the depth
+            const spr = book.get(p.id, q.frame, q.mirror, looks[p.team].kit, lookFor[q.i], p.number, bigRef.current);
+            ctx.drawImage(spr.canvas, Math.round(pt.x) - spr.mid, Math.round(pt.y) - spr.foot);
+          },
+        });
+      }
+      items.sort((p, q) => p.y - q.y).forEach((it) => it.draw());
+      drawFrontRow(ctx, cx, snap.tr, snap.hype, court);
+    };
+
+    const render = (now: number, a: number, dt: number, rec: boolean) => {
       const tr = now / 1000;
       const ball = ballAt(a, now);
       const target = clamp(ball.x + (s.poss === 0 ? 7 : -7), CAM_RANGE[0], CAM_RANGE[1]);
       cam += (target - cam) * (1 - Math.exp(-dt * 4));
       const tight = Math.abs(s.score[0] - s.score[1]) <= 6;
       const hype = clamp(0.25 + Math.abs(s.momentum) * 0.6 + (s.clock < 90 && tight ? 0.35 : 0), 0, 1);
-      back.draw(ctx, cam, tr, hype);
 
       // everyone where they are between the last tick and this one
       const at = s.players.map((_, i) => interp(i, a));
@@ -792,13 +912,28 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
         else if (Math.abs(ball.x - at[i].x) > 1.5) face[i] = ball.x > at[i].x ? 1 : -1;
         stride[i] += speed[i] * dt * FLOOR.tick * PACE;
       });
+      const snap: Snap = {
+        cam,
+        tr,
+        hype,
+        ball,
+        players: s.players.flatMap((p, i) => {
+          if (!p.on) return [];
+          const { frame, lift, turn } = frameOf(i, a, speed[i], now);
+          return [{ i, x: at[i].x, y: at[i].y, frame, lift, mirror: turn ? face[i] > 0 : face[i] < 0 }];
+        }),
+      };
+      if (rec) {
+        playMs += dt * 1000;
+        tape.push({ ms: playMs, snap });
+        while (tape.length && tape[0].ms < playMs - REPLAY.keep) tape.shift();
+      }
 
-      // on the floor: the shadows, the ring under him, the man he guards, the pass he would make
-      s.players.forEach((p, i) => p.on && drawShadow(ctx, project(cam, at[i].x, at[i].y), 12));
-      drawShadow(ctx, project(cam, ball.x, ball.y), 4);
+      // on the floor: the ring under him, the man he guards, the pass he would make
       const me = s.players[s.user];
       const mine = s.ball.holder === s.user;
-      if (me.on) {
+      drawScene(snap, () => {
+        if (!me.on) return;
         ring(at[s.user].x, at[s.user].y, '#FFD23F', false);
         const man = s.guard[s.user];
         if (s.poss === 1 && man >= 0 && s.players[man]?.on) ring(at[man].x, at[man].y, '#FF6B5E', false);
@@ -809,38 +944,15 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
           const to = aim === 'auto' ? openMan(s) : aim;
           if (to !== null && to !== s.user) ring(at[to].x, at[to].y, dx || dy ? '#FFFFFF' : 'rgba(255,255,255,0.55)', true);
         }
-      }
-
-      // the players, the baskets and the ball, far to near
-      type Item = { y: number; draw: () => void };
-      const items: Item[] = [
-        { y: RIM_Y, draw: () => drawBasket(ctx, cam, 0, arena.c1) },
-        { y: RIM_Y, draw: () => drawBasket(ctx, cam, 1, arena.c1) },
-        { y: ball.y + 0.05 + (ball.h > 9 ? 1 : 0), draw: () => drawBall(ball) },
-      ];
-      s.players.forEach((p, i) => {
-        if (!p.on) return;
-        items.push({
-          y: at[i].y,
-          draw: () => {
-            const { frame, lift, turn } = frameOf(i, a, speed[i], now);
-            const pt = project(cam, at[i].x, at[i].y, lift);
-            // drawn at their own size, a sprite pixel to a canvas pixel: scaled down, the hand-drawn
-            // faces and numbers lose columns (a 23 read as 21), so the court's perspective carries the depth
-            const spr = book.get(p.id, frame, turn ? face[i] > 0 : face[i] < 0, looks[p.team].kit, lookFor[i], p.number);
-            ctx.drawImage(spr.canvas, Math.round(pt.x) - MID_X, Math.round(pt.y) - spr.foot);
-          },
-        });
       });
-      items.sort((p, q) => p.y - q.y).forEach((it) => it.draw());
-      drawFrontRow(ctx, cam, tr, hype);
+      const up = bigRef.current ? BIG_UP : 0;
 
       // the man he guards: a small red marker over his head too
       const man = s.guard[s.user];
       if (me.on && s.poss === 1 && man >= 0 && s.players[man]?.on) {
         const c = project(cam, at[man].x, at[man].y);
         const mx = Math.round(c.x);
-        const my = Math.round(c.y) - 41;
+        const my = Math.round(c.y) - 41 - up;
         ctx.fillStyle = '#1B1820';
         for (let r = 0; r < 4; r++) ctx.fillRect(mx - 3 + r, my + r, 7 - r * 2, 1);
         ctx.fillRect(mx - 3, my - 1, 7, 1);
@@ -851,7 +963,7 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
       // the open man's mark, once he has stood open long enough for him to see it (his Basketball IQ)
       if (mine && s.phase === 'live')
         s.players.forEach((p, i) => {
-          if (p.on && p.team === 0 && i !== s.user && openFor[i] >= seeOpen) openMark(at[i].x, at[i].y);
+          if (p.on && p.team === 0 && i !== s.user && openFor[i] >= seeOpen) openMark(at[i].x, at[i].y, up);
         });
 
       // his marker over his head, and the meter beside him
@@ -860,7 +972,7 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
         const hx = Math.round(top.x);
         // the arrow over him (owner: "make the arrow ... a bit larger"): eleven pixels wide, outlined,
         // bobbing a pixel in steps
-        const hy = Math.round(top.y) - 43 - (Math.floor(now / 300) % 2);
+        const hy = Math.round(top.y) - 43 - up - (Math.floor(now / 300) % 2);
         ctx.fillStyle = '#1B1820';
         for (let r = 0; r < 7; r++) ctx.fillRect(hx - 5 + r, hy + r, 11 - r * 2, 1);
         ctx.fillRect(hx - 5, hy - 1, 11, 1);
@@ -910,6 +1022,53 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
       }
     };
 
+    // the replay's word in the pixel letters when the language's word is one they can draw (else the
+    // page draws it over the canvas)
+    const replayWord = t('Replay').toUpperCase();
+    const pixelWord = /^[A-Z ]+$/.test(replayWord);
+    /** The buzzer-beater again at half speed, from the tape: letterbox bars, a red light and the word. */
+    const drawReplay = (now: number) => {
+      const r = replay!;
+      const played = (now - r.t0) * REPLAY.speed;
+      const at = Math.min(r.to, r.from + played);
+      let k = 0;
+      while (k + 1 < tape.length && tape[k + 1].ms <= at) k++;
+      drawScene(tape[k].snap);
+      const bar = 20;
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, VIEW.w, bar);
+      ctx.fillRect(0, VIEW.h - bar, VIEW.w, bar);
+      // the banner: a red plate, a light blinking in steps, the word two pixels to a letter's pixel
+      const n = pixelWord ? replayWord.length : 0;
+      const plateW = 22 + n * 8;
+      const x0 = 8;
+      const y0 = 4;
+      ctx.fillStyle = '#7A1414';
+      ctx.fillRect(x0, y0, plateW, 13);
+      ctx.fillStyle = '#C8241E';
+      ctx.fillRect(x0 + 1, y0 + 1, plateW - 2, 11);
+      ctx.fillStyle = '#F2EEE6';
+      // a play mark: a small pixel triangle
+      for (let y = 0; y < 7; y++) ctx.fillRect(x0 + 5, y0 + 3 + y, 1 + Math.min(y, 6 - y), 1);
+      if (Math.floor(now / 400) % 2 === 0) {
+        ctx.fillStyle = '#FF4A3D';
+        ctx.fillRect(VIEW.w - 16, y0 + 3, 6, 6);
+        ctx.fillStyle = '#7A1414';
+        ctx.fillRect(VIEW.w - 16, y0 + 3, 1, 1);
+        ctx.fillRect(VIEW.w - 11, y0 + 3, 1, 1);
+        ctx.fillRect(VIEW.w - 16, y0 + 8, 1, 1);
+        ctx.fillRect(VIEW.w - 11, y0 + 8, 1, 1);
+      }
+      if (pixelWord) {
+        ctx.fillStyle = '#F2EEE6';
+        [...replayWord].forEach((ch, i) => {
+          const g = glyph(ch);
+          for (let q = 0; q < 15; q++) if (g[q] === '1') ctx.fillRect(x0 + 15 + i * 8 + (q % 3) * 2, y0 + 2 + Math.floor(q / 3) * 2, 2, 2);
+        });
+      }
+      if (now - r.t0 >= (r.to - r.from) / REPLAY.speed + REPLAY.hold) endReplay();
+    };
+
     let lineShown = '';
     const loop = (now: number) => {
       const raw = (now - lastT) / 1000;
@@ -917,6 +1076,7 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
       lastT = now;
       if (skip.current && !link) {
         skip.current = false;
+        beater = null;
         skipFloor(real);
         look();
         finish();
@@ -962,7 +1122,8 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
             }
           }
       } else acc = 0;
-      render(now, live ? clamp(acc * PACE, 0, 1) : 1, dt);
+      if (replay) drawReplay(now);
+      else render(now, live ? clamp(acc * PACE, 0, 1) : 1, dt, live && !link);
       const h = hudOf(s);
       const key = JSON.stringify(h);
       if (key !== lastHud) {
@@ -998,6 +1159,20 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
 
     const down = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement) return;
+      // the replay: Enter, Space or Esc moves on to the final card
+      if (replay) {
+        if (e.code === 'Enter' || e.code === 'Space' || e.code === 'Escape') {
+          e.preventDefault();
+          endReplay();
+        }
+        return;
+      }
+      // big heads, at any moment of the game
+      if (e.code === 'KeyB' && !e.repeat && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        flipBig();
+        return;
+      }
       // the close-up: Enter, Space or Esc moves on from it
       if (closeRef.current) {
         if (e.code === 'Enter' || e.code === 'Space' || e.code === 'Escape') {
@@ -1049,7 +1224,7 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
     };
     // the setup and the looks are fixed for a game (the props they come from are)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [given, arena, givenLooks, link]);
+  }, [given, arena, givenLooks, link, court]);
 
   // the words fade on their own, and the points
   useEffect(() => {
@@ -1111,14 +1286,20 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
             {g.text}
           </span>
         ))}
-        {pop && (
+        {pop && !replaying && (
           <div key={pop.id} className={`floor-pts${pop.team === 0 ? ' us' : ''}`} aria-hidden="true">
             +{pop.pts}
           </div>
         )}
-        {word && (
+        {word && !replaying && (
           <div key={word.id} className={`floor-word${word.team === 0 ? ' us' : ''}`} aria-live="polite">
             {word.text}
+          </div>
+        )}
+        {replaying && (
+          <div className="floor-replay" role="status">
+            {!/^[A-Z ]+$/.test(t('Replay').toUpperCase()) && <span className="floor-replay-word">{t('Replay')}</span>}
+            <span className="floor-cam-skip">{t('Enter to go on')}</span>
           </div>
         )}
         {hud.line && !close && <div className="floor-line-tip">{t('Free throw: hold J, let go in the green')}</div>}
@@ -1177,6 +1358,9 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
                 }}
               >
                 {t('Announcer')}
+              </button>
+              <button className={`chip${big ? ' on' : ''}`} aria-pressed={big} onClick={flipBig}>
+                {t('Big heads')}
               </button>
             </div>
             {game.current && <Bench s={game.current} onSub={(q) => ((askSub.current = q), setPaused(false))} />}
@@ -1273,7 +1457,7 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
         <div>
           <dt>{t('Defence')}</dt>
           <dd>
-            <kbd>J</kbd> {t('steal')} · <kbd>K</kbd> {t('block or contest')} · <kbd>L</kbd> {t('switch')} · <kbd>Space</kbd> {t('call for help')} · <kbd>U</kbd> {t('double team')} · <kbd>T</kbd> {t('timeout')} · <kbd>Esc</kbd> {t('pause')}
+            <kbd>J</kbd> {t('steal')} · <kbd>K</kbd> {t('block or contest')} · <kbd>L</kbd> {t('switch')} · <kbd>Space</kbd> {t('call for help')} · <kbd>U</kbd> {t('double team')} · <kbd>T</kbd> {t('timeout')} · <kbd>Esc</kbd> {t('pause')} · <kbd>B</kbd> {t('big heads')}
           </dd>
         </div>
       </dl>

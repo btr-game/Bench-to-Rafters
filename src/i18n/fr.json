@@ -4293,7 +4293,15 @@
   "Right elbow": "Coude droit",
   "High post": "Poste haut",
   "Left block": "Poste bas gauche",
-  "Right block": "Poste bas droit"
+  "Right block": "Poste bas droit",
+  "Team arena": "Salle de l’équipe",
+  "Street court": "Terrain de rue",
+  "Beach court": "Terrain de plage",
+  "1970s gym": "Gymnase des années 1970",
+  "Rooftop at night": "Toit-terrasse de nuit",
+  "Replay": "Ralenti",
+  "Big heads": "Grosses têtes",
+  "big heads": "grosses têtes"
  },
  "story": {
   "f-driveway.title": "L’allée",

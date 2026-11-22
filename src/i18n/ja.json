@@ -4293,7 +4293,15 @@
   "Right elbow": "右エルボー",
   "High post": "ハイポスト",
   "Left block": "左ブロック",
-  "Right block": "右ブロック"
+  "Right block": "右ブロック",
+  "Team arena": "チームのアリーナ",
+  "Street court": "ストリートコート",
+  "Beach court": "ビーチコート",
+  "1970s gym": "1970年代の体育館",
+  "Rooftop at night": "夜の屋上コート",
+  "Replay": "リプレイ",
+  "Big heads": "ビッグヘッド",
+  "big heads": "ビッグヘッド"
  },
  "story": {
   "f-driveway.title": "家の前のゴール",

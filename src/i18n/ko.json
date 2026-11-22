@@ -4293,7 +4293,15 @@
   "Right elbow": "오른쪽 엘보",
   "High post": "하이 포스트",
   "Left block": "왼쪽 블록",
-  "Right block": "오른쪽 블록"
+  "Right block": "오른쪽 블록",
+  "Team arena": "팀 홈 경기장",
+  "Street court": "길거리 코트",
+  "Beach court": "해변 코트",
+  "1970s gym": "1970년대 체육관",
+  "Rooftop at night": "밤의 옥상 코트",
+  "Replay": "리플레이",
+  "Big heads": "큰 머리",
+  "big heads": "큰 머리"
  },
  "story": {
   "f-driveway.title": "집 앞 골대",

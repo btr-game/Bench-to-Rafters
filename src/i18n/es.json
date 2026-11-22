@@ -4293,7 +4293,15 @@
   "Right elbow": "Codo derecho",
   "High post": "Poste alto",
   "Left block": "Poste bajo izquierdo",
-  "Right block": "Poste bajo derecho"
+  "Right block": "Poste bajo derecho",
+  "Team arena": "Pabellón del equipo",
+  "Street court": "Cancha callejera",
+  "Beach court": "Cancha de playa",
+  "1970s gym": "Gimnasio de los 70",
+  "Rooftop at night": "Azotea de noche",
+  "Replay": "Repetición",
+  "Big heads": "Cabezones",
+  "big heads": "cabezones"
  },
  "story": {
   "f-driveway.title": "La entrada de casa",

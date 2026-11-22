@@ -4293,7 +4293,15 @@
   "Right elbow": "右肘区",
   "High post": "高位",
   "Left block": "左低位",
-  "Right block": "右低位"
+  "Right block": "右低位",
+  "Team arena": "球队主场",
+  "Street court": "街头球场",
+  "Beach court": "海滩球场",
+  "1970s gym": "1970年代体育馆",
+  "Rooftop at night": "夜晚的屋顶球场",
+  "Replay": "回放",
+  "Big heads": "大头模式",
+  "big heads": "大头模式"
  },
  "story": {
   "f-driveway.title": "车道",
