@@ -671,7 +671,7 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
       if (!link && beater && won && playMs - beater.ms <= REPLAY.recent && tape.length > 1) {
         const to = tape[tape.length - 1].ms;
         replay = { t0: performance.now(), from: Math.max(tape[0].ms, Math.min(to - REPLAY.show, beater.shot - REPLAY.lead)), to };
-        after = r;
+        after = { ...r, replay: true };
         setReplaying(true);
         return;
       }
@@ -1472,7 +1472,7 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
                   {t('Play it again')}
                 </button>
               )}
-              <button className="btn primary" autoFocus onClick={() => onDone(over)}>
+              <button className="btn primary" autoFocus onClick={() => onDone({ ...over, big: bigRef.current })}>
                 {t('Continue')}
               </button>
             </div>

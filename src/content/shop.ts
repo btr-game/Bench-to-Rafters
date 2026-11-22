@@ -196,6 +196,11 @@ export const SHOP_ITEMS: ShopItem[] = [
   { id: 'closer-coach', name: 'A late-game shooting coach', category: 'Training', price: 5 * K, blurb: 'Five seconds on the clock, every rep, all summer. The shot you take when the building is loud.', touch: 2, attrs: { SHT: 0.3 } },
   { id: 'late-game-tape', name: 'A season of late-game tape', category: 'Training', price: 3 * K, blurb: 'Every last six minutes in the league this season, cut and tagged: who switches, who fouls, who freezes.', attrs: { IQ: 0.4, PER: 0.2 } },
   { id: 'winner-photo', name: 'A framed photo of your biggest shot', category: 'Lifestyle', price: 0.6 * K, blurb: 'The ball in the air, the clock at zero, the bench already on its feet. Hung where you see it every morning.', morale: 3, rep: 1 },
+  // after round 42: the Floor's courts, eras, sixth men and big heads
+  { id: 'rooftop-pass', name: 'A rooftop court membership', category: 'Lifestyle', price: 2 * K, blurb: 'A key card to the court on top of a downtown garage. Chain nets, city lights, a run every night at ten.', morale: 3, attrs: { ATH: 0.2 } },
+  { id: 'retro-jersey', name: 'A sixties throwback jersey', category: 'Lifestyle', price: 0.4 * K, blurb: 'Wool, short shorts, no three-point line in sight. You wear it to the arena on throwback night.', morale: 2, rep: 1 },
+  { id: 'bobblehead', name: 'A big-head bobblehead of you', category: 'Lifestyle', price: 0.08 * K, blurb: 'The head is twice the size of the body, and it nods at everything you say.', morale: 3 },
+  { id: 'sixth-man-coach', name: 'A sixth-man scoring coach', category: 'Training', price: 4 * K, blurb: 'Off the bench and scoring before your sweat dries: catch, rise, shoot, all summer.', attrs: { SHT: 0.3, FIN: 0.2 } },
   // round 34: simplification (the round's theme: fewer, better things)
   { id: 'career-scrapbook', name: 'A career scrapbook', category: 'Lifestyle', price: 0.3 * K, blurb: 'Every clipping since high school, in one fat binder.', morale: 3, rep: 1 },
   { id: 'one-move-coach', name: 'A one-move coach', category: 'Training', price: 3 * K, blurb: 'One move, a thousand times a day, until it is yours.', attrs: { FIN: 0.5 }, morale: 1 },

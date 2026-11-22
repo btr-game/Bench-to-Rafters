@@ -2444,6 +2444,83 @@ export const ICONS: Record<string, string[]> = {
     '.OMMOOOOOOOOMMO.',
     '..OO........OO..',
   ],
+  // ---- after round 42: the shop's things for the Floor's courts, eras, sixth men and big heads ----
+  // a rooftop court membership: a hoop on a roof against the night, city lights below
+  rooftop: [
+    'bbbbbbbbbbbbbbbb',
+    'bbWbbbbbbbbbWbbb',
+    'bbbbbbOOOOOOObbb',
+    'bbbbbbOWWWWWObbb',
+    'bbbbbbOWRRRWObbb',
+    'bbbbbbOOOOOOObbb',
+    'bbbbbbbbNNNbbbWb',
+    'bbbbbbbbwMwbbbbb',
+    'bbbbbbbbbOmbbbbb',
+    'KbbKKbbbbOmbbKKb',
+    'KYbKYbKKbOmbbKYK',
+    'KKbKKbKYbOmbKKKK',
+    'MMMMMMMMMMMMMMMM',
+    'mmmmWmmmmmmmWmmm',
+    'mmmmmmmmmmmmmmmm',
+    'OOOOOOOOOOOOOOOO',
+  ],
+  // a sixties throwback jersey: a short wool tank with a big old-style number
+  retrojersey: [
+    '................',
+    '...OOO....OOO...',
+    '...OGO....OGO...',
+    '..OOGGOOOOGGOO..',
+    '.OGGGWWWWWWGGGO.',
+    '.OGGGGGGGGGGGGO.',
+    '..OGGGWWWWGGGO..',
+    '..OGGGGGWWGGGO..',
+    '..OGGGGWWGGGGO..',
+    '..OGGGWWGGGGGO..',
+    '..OGGGWWGGGGGO..',
+    '..OGGGGGGGGGGO..',
+    '..OWWWWWWWWWWO..',
+    '..OGGGGGGGGGGO..',
+    '..OOOOOOOOOOOO..',
+    '................',
+  ],
+  // a big-head bobblehead: a huge head on a spring over a small body on a stand
+  bobblehead: [
+    '....OOOOOOOO....',
+    '...OKKKKKKKKO...',
+    '..OSSSSSSSSSSO..',
+    '..OSSOSSSSOSSO..',
+    '..OSSSSSSSSSSO..',
+    '..OSSSSrrSSSSO..',
+    '...OSSSSSSSSO...',
+    '....OOOOOOOO....',
+    '......OMMO......',
+    '.....ORRRRO.....',
+    '....ORRWRRRO....',
+    '.....ORRRRO.....',
+    '.....OSOOSO.....',
+    '..OOOOOOOOOOOO..',
+    '..OTTTTTTTTTTO..',
+    '..OOOOOOOOOOOO..',
+  ],
+  // a sixth-man scoring coach: a whistle, and a jersey with the number 6
+  sixthcoach: [
+    '................',
+    '.OOO......OOO...',
+    '.OBO......OBO...',
+    'OOBBOOOOOOBBOO..',
+    'OBBBBBBBBBBBBBO.',
+    'OBBBBWWWWBBBBBO.',
+    '.OBBBWBBBBBBBO..',
+    '.OBBBWWWWBBBBO..',
+    '.OBBBWBBWBBBBO..',
+    '.OBBBWWWWBBBBO..',
+    '.OBBBBBBBBBOOOO.',
+    '.OBBBBBBBBOYYYYO',
+    '.OBBBBBBBBOYOYYO',
+    '.OOOOOOOOOOYYYYO',
+    '..........OOOO..',
+    '................',
+  ],
   // ---- rounds 38 to 40: the shop's things for the Floor's last six minutes ----
   // a late-game shooting coach: the ball, and the shot clock at five
   clutchcoach: [
@@ -2889,6 +2966,11 @@ export const SHIFT_COLOR = ['#E03131', '#F76707', '#FCC419', '#2F9E44', '#1C7ED6
 export function shopIcon(id: string, name: string): string {
   const t = `${id} ${name}`.toLowerCase();
   const rules: [RegExp, string][] = [
+    // after round 42: the Floor's courts, eras, sixth men and big heads
+    [/rooftop-pass/, 'rooftop'],
+    [/retro-jersey/, 'retrojersey'],
+    [/bobblehead/, 'bobblehead'],
+    [/sixth-man-coach/, 'sixthcoach'],
     // rounds 38 to 40: the Floor's last six minutes
     [/closer-coach/, 'clutchcoach'],
     [/late-game-tape/, 'endtape'],
