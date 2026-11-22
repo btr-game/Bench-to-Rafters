@@ -4398,7 +4398,8 @@
   "{name} is picking ({n} of 10): {s} s": "{name} 님이 고르는 중 (10명 중 {n}번째): {s}초",
   "{name} starts the draft when ready.": "{name} 님이 준비되면 드래프트를 시작합니다.",
   "{name} takes it": "{name} 승리",
-  "{name} won the series {a}–{b}. The next tip-off starts a new one.": "{name} 님이 시리즈를 {a}–{b}로 이겼습니다. 다음 팁오프부터 새 시리즈가 시작됩니다."
+  "{name} won the series {a}–{b}. The next tip-off starts a new one.": "{name} 님이 시리즈를 {a}–{b}로 이겼습니다. 다음 팁오프부터 새 시리즈가 시작됩니다.",
+  "Everything else is set for you: each team plays its own style, at its own level, in a random era on a random court.": "나머지는 모두 정해져 있습니다: 각 팀은 자기 스타일과 자기 수준으로, 무작위 시대와 무작위 코트에서 경기합니다."
  },
  "story": {
   "f-driveway.title": "집 앞 골대",

@@ -341,6 +341,14 @@ export function FloorPage({ inside = false }: { inside?: boolean }) {
   const tip = () => {
     sfx('opened');
     setLast(null);
+    // (owner: "for quick play, try to make as little choices as possible ... everything else is fixed (team style
+    // is based on team choice) or random (era,...)"): a quick game asks only the team and who he steers
+    if (mode === 'quick') {
+      const pick = <T,>(xs: readonly T[]): T => xs[Math.floor(Math.random() * xs.length)];
+      const eras: FloorEra[] = ['modern', 'nineties', 'sixties'];
+      setPlan({ setup: legendSetup({ seed: seed(), us: franchise(us), them: franchise(them), user: steer, length: 'fourth', plan: fitPlan(us), era: pick(eras) }), kits: [us, them], key: Date.now(), court: pick(COURTS).id });
+      return;
+    }
     setPlan({ setup: legendSetup({ seed: seed(), us: mine, them: franchise(them, oppOvr ?? undefined), user: steer, length: 'fourth', plan: gamePlan, era }), kits: [us, them], key: Date.now(), court });
   };
   // his own game: his team's colours are his NBA team's, or the ones picked; the opponent is never his own team
@@ -490,13 +498,19 @@ export function FloorPage({ inside = false }: { inside?: boolean }) {
               <summary>{t('Their real career numbers')}</summary>
               <LegendTable rows={five.map((spot) => ({ team: us, spot }))} />
             </details>
-            <GamePlan plan={gamePlan} onChange={setGamePlan} names={Object.fromEntries(five.map((l, i) => [POS[i], l.name]))} />
-            <CourtPick value={court} onChange={setCourt} />
-            <EraPick value={era} onChange={setEra} />
-            <div className="fm-row fh-ovrs">
-              <OvrPick label={t('Your team’s overall')} real={fiveOvr(five)} value={myOvr} onChange={setMyOvr} />
-              <OvrPick label={mode === 'playoffs' ? t('Every opponent’s overall') : t('Opponent’s overall')} real={mode === 'playoffs' ? 90 : fiveOvr(legendFive(them))} value={oppOvr} onChange={setOppOvr} />
-            </div>
+            {mode === 'quick' ? (
+              <p className="small muted">{t('Everything else is set for you: each team plays its own style, at its own level, in a random era on a random court.')}</p>
+            ) : (
+              <>
+                <GamePlan plan={gamePlan} onChange={setGamePlan} names={Object.fromEntries(five.map((l, i) => [POS[i], l.name]))} />
+                <CourtPick value={court} onChange={setCourt} />
+                <EraPick value={era} onChange={setEra} />
+                <div className="fm-row fh-ovrs">
+                  <OvrPick label={t('Your team’s overall')} real={fiveOvr(five)} value={myOvr} onChange={setMyOvr} />
+                  <OvrPick label={mode === 'playoffs' ? t('Every opponent’s overall') : t('Opponent’s overall')} real={mode === 'playoffs' ? 90 : fiveOvr(legendFive(them))} value={oppOvr} onChange={setOppOvr} />
+                </div>
+              </>
+            )}
             {mode === 'playoffs' ? (
               <button className="btn primary fm-go" onClick={() => (sfx('opened'), setLast(null), setBracket(newBracket(us, seed())))}>
                 {t('Draw the bracket')}
