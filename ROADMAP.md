@@ -391,5 +391,6 @@ link, and quick match). Defaults proposed, for the owner to confirm or change:
   game can run into overtime after overtime. A held ball could pass itself after a few seconds.
 - **Signature names in other languages**: the legends' signature names stay in English (their
   descriptions are translated); they could be translated if the owner wants.
-- **Sixth men in a draft**: a drafted five has no legend off the bench. A sixth pick, or the
-  colours' franchise sixth man, could join it.
+- **Sixth men in the superteam draft**: in a superteam draft against a friend the drafted fives have
+  no legend off the bench (Draft your five brings the colours' sixth man). A sixth pick each could
+  add one.
