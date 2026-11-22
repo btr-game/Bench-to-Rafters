@@ -1280,7 +1280,21 @@ export const FLOOR = {
    * man. passSpeed, passPick: his passes' speed, and how often they are picked off (never thrown
    * away). clutch: added to every shot in the game's last `clutchSecs` seconds. motor: the share of
    * the legs he loses. */
-  /** The signatures of the legends rated 95 or more, one of his own each (content/legendTraits.ts;
+  /** A team's style (after round 42, owner: "team style (run and gun, ball movement, ...)"). use, three,
+   * drive, post, pass: what each man's tendency is multiplied by (use: his share of the shots away from
+   * the team's average). patience: the seconds the offence runs before an open jumper is good enough.
+   * iso: how often a star has a side cleared for him. brk: how long a fast break lasts. contest: what the
+   * team's contests on defence are multiplied by. */
+  play: {
+    balanced: { use: 1, three: 1, drive: 1, post: 1, pass: 1, patience: 1, iso: 1, brk: 1, contest: 1 },
+    runGun: { use: 1, three: 1.15, drive: 1.15, post: 0.6, pass: 1, patience: 0.45, iso: 0.8, brk: 1.7, contest: 0.95 },
+    motion: { use: 0.6, three: 1, drive: 0.9, post: 0.9, pass: 1.6, patience: 1.25, iso: 0.3, brk: 1, contest: 1 },
+    iso: { use: 1.6, three: 1, drive: 1.3, post: 1, pass: 0.7, patience: 1.1, iso: 3, brk: 0.9, contest: 1 },
+    grind: { use: 1, three: 0.75, drive: 0.9, post: 1.7, pass: 1, patience: 1.35, iso: 1, brk: 0.6, contest: 1.12 },
+    space: { use: 1, three: 1.6, drive: 1.2, post: 0.4, pass: 1.1, patience: 0.9, iso: 1, brk: 1.1, contest: 0.97 },
+  } as Record<'balanced' | 'runGun' | 'motion' | 'iso' | 'grind' | 'space', { use: number; three: number; drive: number; post: number; pass: number; patience: number; iso: number; brk: number; contest: number }>,
+  /** (Buffed a notch after the owner: "im fine with a little overbalance of stars. 95+ should have a bit
+   * of dominance".) The signatures of the legends rated 95 or more, one of his own each (content/legendTraits.ts;
    * owner: "for player up to ovr 94, they just fall in the general initial categories, but from 95,
    * they actually get their own move"). mjContest, kdContest, lukaContest: the share of a contest that
    * still counts (Jordan's mid-range, Durant's every jumper, Luka's three within `lukaSecs` of a move
@@ -1296,7 +1310,7 @@ export const FLOOR = {
    * long); shaqPace: his back-down. giannisSpeed (with the ball), robinsonSpeed. curry: his meter's
    * share of the time. kawhiSteal. oscarPick: how often his passes are picked off. drjRange: the feet
    * from the rim his shot still counts as one at the rim. */
-  sig: { mjContest: 0.25, kdContest: 0.5, lukaContest: 0.2, lukaSecs: 1.5, kgContest: 1.3, birdShot: 0.05, birdWindow: 1.4, birdSecs: 120, westShot: 0.09, westSecs: 60, duncanShot: 0.06, duncanWing: 8, kobeStep: 0.025, kobeMax: 3, feedSecs: 2, jokicPass: 0.06, magicPass: 0.07, maloneShot: 0.07, kareemHook: 0.12, russellBlock: 1.5, robinsonBlock: 1.4, wadeBlock: 1.4, wadeBreak: 2, sgaFoul: 1.8, embiidFoul: 3, hardenFoul: 2.5, lebronFoul: 1.6, wiltGlass: 1.6, oscarGlass: 1.4, kgGlass: 1.4, hardenMove: 0.18, shaqDrop: 0.3, hakeemMove: 0.2, hakeemSlow: 1.6, shaqPace: 1.8, giannisSpeed: 1.15, robinsonSpeed: 1.1, curry: 0.5, kawhiSteal: 1.8, oscarPick: 0.6, drjRange: 7 },
+  sig: { mjContest: 0.1, kdContest: 0.35, lukaContest: 0.1, lukaSecs: 1.5, kgContest: 1.45, birdShot: 0.08, birdWindow: 1.6, birdSecs: 120, westShot: 0.13, westSecs: 60, duncanShot: 0.09, duncanWing: 8, kobeStep: 0.035, kobeMax: 3, feedSecs: 2, jokicPass: 0.08, magicPass: 0.09, maloneShot: 0.1, kareemHook: 0.16, russellBlock: 1.8, robinsonBlock: 1.7, wadeBlock: 1.6, wadeBreak: 2, sgaFoul: 2.3, embiidFoul: 3.5, hardenFoul: 3, lebronFoul: 2, wiltGlass: 1.9, oscarGlass: 1.6, kgGlass: 1.6, hardenMove: 0.24, shaqDrop: 0.4, hakeemMove: 0.28, hakeemSlow: 2, shaqPace: 2.2, giannisSpeed: 1.22, robinsonSpeed: 1.15, curry: 0.45, kawhiSteal: 2.2, oscarPick: 0.45, drjRange: 8 },
   trait: { quick: 0.6, deepFt: 5, deep: 0.03, fade: 0.5, stepThree: 0.6, power: 0.5, powerBlock: 0.5, hook: 0.08, hookBlock: 0.4, block: 1.6, steal: 1.5, glass: 1.35, handle: 0.12, stepMove: 0.06, passSpeed: 1.25, passPick: 0.35, clutch: 0.06, clutchSecs: 120, motor: 0.55 },
   /** Free throws: the chance from free-throw touch 0 to 100. */
   ft: [0.5, 0.95],

@@ -11,7 +11,7 @@ import { int, makeRng, next } from '../rng';
 import type { LegendSpot } from '../../content/franchiseFives';
 import { NBA_TEAMS } from '../../content/teams';
 import { fiveOvr, floorLevel, legendFive, legendTeam } from './legends';
-import { skipFloor, startFloor, type FloorSetup } from './sim';
+import { skipFloor, startFloor, type FloorPlan, type FloorSetup } from './sim';
 
 export type FloorLength = 'fourth' | 'full';
 
@@ -43,12 +43,12 @@ export function startScore(seed: number, us: FloorSide, them: FloorSide): [numbe
 }
 
 /** A game between two sides: `user` is the starter he steers (none: the AI plays both, a simulation). */
-export function legendSetup(o: { seed: number; us: FloorSide; them: FloorSide; user?: number; length: FloorLength }): FloorSetup {
+export function legendSetup(o: { seed: number; us: FloorSide; them: FloorSide; user?: number; length: FloorLength; plan?: FloorPlan }): FloorSetup {
   const full = o.length === 'full';
   return {
     seed: o.seed,
     mode: 'standard',
-    us: { name: o.us.name, short: o.us.short, color: o.us.color, players: legendTeam('U', o.us.five, { ovr: o.us.ovr, user: o.user, seed: o.seed + 3 }) },
+    us: { name: o.us.name, short: o.us.short, color: o.us.color, players: legendTeam('U', o.us.five, { ovr: o.us.ovr, user: o.user, seed: o.seed + 3 }), plan: o.plan },
     them: { name: o.them.name, short: o.them.short, color: o.them.color, players: legendTeam('T', o.them.five, { ovr: o.them.ovr, seed: o.seed + 11 }) },
     score: full ? [0, 0] : startScore(o.seed, o.us, o.them),
     clock: FLOOR.quarter,

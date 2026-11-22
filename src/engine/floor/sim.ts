@@ -17,7 +17,7 @@
 import { FLOOR, type Mode } from '../balance';
 import { clamp, makeRng, next, type Rng } from '../rng';
 import type { Pos } from '../types';
-import { COURT, RIM_Y, SPACING, attackSpot, clampSpot, cos, dist, hyp, isThree, rimOf, sin, toLine, toRim, zoneOf, type Spot, type Zone } from './court';
+import { COURT, RIM_Y, SHAPES, SPOTS, SPACING, attackSpot, clampSpot, cos, dist, hyp, isThree, rimOf, sin, toLine, toRim, zoneOf, type Spot, type Zone } from './court';
 
 export interface FloorRatings {
   SHT: number;
@@ -72,12 +72,27 @@ export interface FloorPlayerIn {
   user?: boolean;
 }
 
+/** Where a man stands on offence (court.ts SPOTS: feet from the baseline, feet from the middle). */
+export type FloorSpot = keyof typeof SPOTS;
+/** A team's game plan (after round 42, owner: "let's let the player choose team archetype (5 out, 1 big,
+ * ...), team style (run and gun, ball movement, ...), and where each player sits on offense"): its
+ * shape, how it plays, and the spot each position stands in (the shape's unless changed). */
+export interface FloorPlan {
+  shape: FloorShape;
+  style: FloorPlay;
+  spots?: Partial<Record<Pos, FloorSpot>>;
+}
+export type FloorShape = keyof typeof SHAPES;
+export type FloorPlay = 'balanced' | 'runGun' | 'motion' | 'iso' | 'grind' | 'space';
+
 interface FloorTeamIn {
   name: string;
   short: string;
   color: string;
   /** The first five start; the rest come on for a player who fouls out. */
   players: FloorPlayerIn[];
+  /** Its game plan; the standard shape, played balanced, without one. */
+  plan?: FloorPlan;
 }
 
 export interface FloorSetup {
@@ -263,6 +278,8 @@ export interface FloorState {
   /** For the career's book: his team's lowest point (the margin), a go-ahead basket of his in the
    * last five seconds, and a block of his in the last ten with the game level or his team ahead. */
   marks: { low: number; winner: boolean; stop: boolean };
+  /** Each team's game plan, or null: the standard shape, balanced. */
+  plans: [FloorPlan | null, FloorPlan | null];
 }
 
 /** What he does this tick. `shoot` is held (a press loads the meter, the release shoots); the rest
@@ -313,6 +330,12 @@ export function startFloor(set: FloorSetup): FloorState {
       players.push({ ...p, team: team as 0 | 1, x: 47, y: 25, stamina: 0.85, fouls: p.fouls ?? 0, slow: 0, air: 0, st: p.style ?? { use: 1, three: 1, drive: 1, post: POSTS[p.pos], pass: 1 }, slot: p.pos, late: 0, vel: 0, still: 0, leak: 0, lane: 0, on: i < 5 && (p.fouls ?? 0) < FLOOR.foul.out, box: zeroBox() }),
     ),
   );
+  // a team's style leans every man's tendencies its way (the AI's choices; what a human does is his own)
+  for (const p of players) {
+    const play = [set.us.plan, set.them.plan][p.team]?.style;
+    const k = play ? FLOOR.play[play] : null;
+    if (k) p.st = { use: 1 + (p.st.use - 1) * k.use, three: p.st.three * k.three, drive: p.st.drive * k.drive, post: p.st.post * k.post, pass: p.st.pass * k.pass };
+  }
   for (const team of [0, 1] as const) while (onCourt({ players } as FloorState, team).length < 5 && benchOf({ players } as FloorState, team).length) benchOf({ players } as FloorState, team)[0].on = true;
   const user = Math.max(0, players.findIndex((p) => p.user && p.team === 0));
   const two = players.findIndex((p) => p.user && p.team === 1);
@@ -367,6 +390,7 @@ export function startFloor(set: FloorSetup): FloorState {
     periods: 0,
     auto: false,
     marks: { low: set.score[0] - set.score[1], winner: false, stop: false },
+    plans: [set.us.plan ?? null, set.them.plan ?? null],
   };
   matchUp(s);
   spread(s);
@@ -424,13 +448,27 @@ function spread(s: FloorState): void {
   }
 }
 
+/** The spot his team's plan gives his position, if it has one. */
+function planSpot(s: FloorState, p: FloorPlayer): [number, number] | null {
+  const plan = s.plans?.[p.team];
+  if (!plan) return null;
+  const name = plan.spots?.[p.slot] ?? SHAPES[plan.shape]?.[p.slot];
+  return name ? [SPOTS[name][0], SPOTS[name][1]] : null;
+}
+
+/** How a team's style shapes its play as a whole (FLOOR.play): balanced without a plan. */
+const playOf = (s: FloorState, team: 0 | 1) => FLOOR.play[s.plans?.[team]?.style ?? 'balanced'];
+
 function spotOf(s: FloorState, p: FloorPlayer): Spot {
-  let [ahead, side] = SPACING[p.slot] ?? [20, 0];
+  const planned = planSpot(s, p);
+  let [ahead, side] = planned ?? SPACING[p.slot] ?? [20, 0];
   // a side cleared for one man (round 42): the other four stand on the far side from him
   if (s.iso && s.iso.team === p.team && s.iso.by !== idx(s, p)) {
     const far = s.players[s.iso.by].y >= RIM_Y ? -1 : 1;
     const k = onCourt(s, p.team).filter((q) => idx(s, q) !== s.iso!.by).indexOf(p);
     [ahead, side] = [CLEAR[k % 4][0], CLEAR[k % 4][1] * far];
+  } else if (planned) {
+    // a spot the plan chose is kept as it is
   } else if (p.slot === 'PF' && p.st.post >= 0.6) {
     // a forward who lives in the post takes the block across from the centre's
     [ahead, side] = [9, -9];
@@ -551,7 +589,8 @@ function shotChance(s: FloorState, p: FloorPlayer, at: Spot): number {
     (p.trait === 'mj' && zone === 'mid' ? G.mjContest : 1) *
     (p.trait === 'kd' && zone !== 'rim' ? G.kdContest : 1) *
     (p.trait === 'luka' && zone === 'three' && p.shook !== undefined && s.tick - p.shook <= secs(G.lukaSecs) ? G.lukaContest : 1) *
-    (foe.p?.trait === 'kg' ? G.kgContest : 1);
+    (foe.p?.trait === 'kg' ? G.kgContest : 1) *
+    (foe.p ? playOf(s, foe.p.team).contest : 1);
   c -= Math.max(0, (FLOOR.contest.within - foe.d) / FLOOR.contest.within) * FLOOR.contest.max * inside * tough;
   c -= (1 - p.stamina) * FLOOR.contest.tired;
   // inside, a bigger man shoots over a smaller one (rebounding and interior defence stand for size)
@@ -786,7 +825,7 @@ function change(s: FloorState, to: 0 | 1, live = true): void {
   // he keeps the man he switched to only for the possession
   matchUp(s);
   // off a steal or a rebound, the new offence runs (round 42): the new defence starts late
-  s.brk = live ? { team: to, until: s.tick + secs(FLOOR.fastBreak.secs), told: false } : null;
+  s.brk = live ? { team: to, until: s.tick + secs(FLOOR.fastBreak.secs * playOf(s, to).brk), told: false } : null;
   if (live) {
     for (const d of onCourt(s, other(to))) if (!driven(s, idx(s, d))) d.late = FLOOR.fastBreak.react * (1.5 - d.r.IQ / 100);
     s.think = Math.min(s.think, s.tick + secs(0.3));
@@ -1108,7 +1147,8 @@ function aiHandler(s: FloorState, i: number): void {
   const want = zone === 'three' ? clamp(0.36 - 0.07 * (st.three - 1), 0.28, 0.5) : zone === 'rim' ? 0.5 : clamp(0.42 - 0.03 * (st.use - 1), 0.36, 0.5);
   const never = zone === 'three' && st.three <= 0.05;
   // an open jumper only once the offense has run a little of the shot clock; a layup any time
-  const settled = FLOOR.shotClock - s.shot >= FLOOR.patience / (zone === 'three' ? Math.max(1, st.three) : 1 + 0.3 * Math.max(0, st.use - 1));
+  const tempo = playOf(s, p.team);
+  const settled = FLOOR.shotClock - s.shot >= (FLOOR.patience * tempo.patience) / (zone === 'three' ? Math.max(1, st.three) : 1 + 0.3 * Math.max(0, st.use - 1));
   if (inRange(p) && (s.shot < 3 || (!never && here >= want && open >= FLOOR.open - (st.use - 1) && settled) || (zone === 'rim' && here >= 0.45))) {
     s.gather = { by: i, t: secs(zone === 'rim' ? 0.5 : 1.1 * (meterLoad(p) / FLOOR.meter.load)) };
     return;
@@ -1161,7 +1201,7 @@ function aiHandler(s: FloorState, i: number): void {
     return;
   }
   // a star has a side cleared for him now and then
-  if (!s.iso && st.use >= 1.3 && settled && s.shot > 8 && far > 14 && next(s.rng) < 0.1) {
+  if (!s.iso && st.use >= 1.3 && settled && s.shot > 8 && far > 14 && next(s.rng) < 0.1 * tempo.iso) {
     s.iso = { team: p.team, by: i, t: K.iso };
     emit(s, { kind: 'call', team: p.team, by: i, call: 'iso' });
   }
@@ -1772,6 +1812,7 @@ export function mirrorFloor(s: FloorState): FloorState {
     ...s,
     score: sw(s.score),
     teams: sw(s.teams),
+    plans: sw(s.plans),
     teamFouls: sw(s.teamFouls),
     timeouts: sw(s.timeouts),
     players: s.players.map((p) => ({ ...p, team: t(p.team), ...fx(p), dash: p.dash ? { ...p.dash, to: fx(p.dash.to) } : p.dash })),

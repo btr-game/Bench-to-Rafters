@@ -65,6 +65,31 @@ export const SPACING: Record<string, [number, number]> = {
   C: [6, 8],
 };
 
+/** The spots a man can be given on offence (feet out from the baseline, feet from the middle; left
+ * and right as the offence faces the basket). */
+export const SPOTS = {
+  top: [29, 0],
+  leftWing: [22, -17],
+  rightWing: [22, 17],
+  leftCorner: [5, -22],
+  rightCorner: [5, 22],
+  leftElbow: [17, -7],
+  rightElbow: [17, 7],
+  highPost: [18, 0],
+  leftBlock: [8, -8],
+  rightBlock: [6, 8],
+} as const satisfies Record<string, readonly [number, number]>;
+
+/** The team shapes (after round 42, owner: "let's let the player choose team archetype (5 out, 1 big,
+ * ...)"): where each position stands. Standard is the spacing above, as before. */
+export const SHAPES = {
+  standard: { PG: 'top', SG: 'rightWing', SF: 'leftCorner', PF: 'leftWing', C: 'rightBlock' },
+  fiveOut: { PG: 'top', SG: 'rightWing', SF: 'leftCorner', PF: 'leftWing', C: 'rightCorner' },
+  fourOutOneIn: { PG: 'top', SG: 'rightWing', SF: 'leftWing', PF: 'leftCorner', C: 'rightBlock' },
+  twinTowers: { PG: 'top', SG: 'rightWing', SF: 'leftCorner', PF: 'leftBlock', C: 'rightBlock' },
+  horns: { PG: 'top', SG: 'rightCorner', SF: 'leftCorner', PF: 'leftElbow', C: 'rightElbow' },
+} as const satisfies Record<string, Record<'PG' | 'SG' | 'SF' | 'PF' | 'C', keyof typeof SPOTS>>;
+
 /** Keeps a spot on the court. */
 export const clampSpot = (p: Spot): Spot => ({ x: Math.max(0.5, Math.min(COURT.w - 0.5, p.x)), y: Math.max(0.5, Math.min(COURT.h - 0.5, p.y)) });
 

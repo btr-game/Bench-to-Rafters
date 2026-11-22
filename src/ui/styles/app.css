@@ -3277,3 +3277,14 @@ td > .link-btn { min-width: 44px; text-align: left; }
 .fh-sig-text { margin: 8px 0 0; }
 .lg-sig { text-align: left; white-space: nowrap; }
 .floor-sig { color: #ffd23f; }
+
+/* the Floor's game plan (after round 42): shape and style chips, the pixel half court, the spots */
+.gp { --gp-floor: #d9a066; --gp-paint: #c4803f; --gp-line: #fff7e8; --gp-rim: #e8590c; --gp-man: #1b1820; --gp-man-hi: #4a4458; }
+.gp-pick { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.gp-pick > .small { min-width: 48px; }
+.gp-body { display: grid; grid-template-columns: minmax(200px, 320px) minmax(0, 1fr); gap: 16px; align-items: start; }
+.gp-court { width: 100%; height: auto; image-rendering: pixelated; border: 2px solid var(--line); }
+.gp-pos { font: 700 7px/1 var(--f-mono); fill: #fff7e8; }
+.gp-name { font: 700 7px/1 var(--f-mono); fill: #1b1820; paint-order: stroke; stroke: #fff7e8; stroke-width: 2px; }
+.gp-spots { display: grid; gap: 8px; }
+.gp-spots label { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 170px); gap: 8px; align-items: center; }

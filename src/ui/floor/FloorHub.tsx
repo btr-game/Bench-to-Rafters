@@ -27,6 +27,7 @@ import { FloorScreen, type FloorTeamLook } from './FloorScreen';
 import { FloorFriend } from './FloorFriend';
 import { LegendTable } from './LegendTable';
 import { signatureOf } from './traits';
+import { GamePlan, rememberedPlan } from './GamePlan';
 
 type Mode = 'career' | 'quick' | 'playoffs' | 'draft' | 'online';
 /** Only from a career's mini-games: his own player (owner, after round 42: "the user should be able
@@ -197,6 +198,7 @@ export function FloorPage({ inside = false }: { inside?: boolean }) {
   const [myOvr, setMyOvr] = useState<number | null>(null);
   const [oppOvr, setOppOvr] = useState<number | null>(null);
   const [plan, setPlan] = useState<Plan | null>(null);
+  const [gamePlan, setGamePlan] = useState(rememberedPlan);
   const [last, setLast] = useState<FloorResult | null>(null);
   const [bracket, setBracket] = useState<Bracket | null>(null);
   // the draft: one legend for each position
@@ -221,7 +223,7 @@ export function FloorPage({ inside = false }: { inside?: boolean }) {
   const tip = () => {
     sfx('opened');
     setLast(null);
-    setPlan({ setup: legendSetup({ seed: seed(), us: mine, them: franchise(them, oppOvr ?? undefined), user: steer, length: 'fourth' }), kits: [us, them], key: Date.now() });
+    setPlan({ setup: legendSetup({ seed: seed(), us: mine, them: franchise(them, oppOvr ?? undefined), user: steer, length: 'fourth', plan: gamePlan }), kits: [us, them], key: Date.now() });
   };
   // his own game: his team's colours are his NBA team's, or the ones picked; the opponent is never his own team
   const ownUs = myTeam ? myTeam.abbr : us;
@@ -233,13 +235,13 @@ export function FloorPage({ inside = false }: { inside?: boolean }) {
     const look = (abbr: string) => ({ name: nameOf(abbr), short: abbr, color: ALL.find((x) => x.abbr === abbr)!.color });
     const opp = myTeam ? career.nba?.teams.find((x) => x.abbr === ownThem) : null;
     const setup = myTeam && opp ? ownSetup(career, { seed: seed(), oppId: opp.id }) : ownSetup(career, { seed: seed(), us: look(ownUs), them: look(ownThem) });
-    setPlan({ setup, kits: [ownUs, ownThem], key: Date.now() });
+    setPlan({ setup: { ...setup, us: { ...setup.us, plan: gamePlan } }, kits: [ownUs, ownThem], key: Date.now() });
   };
   const tipPlayoff = (b: Bracket) => {
     const g = myGame(b);
     if (!g) return;
     const opp = g.home ? g.game.b : g.game.a;
-    setPlan({ setup: legendSetup({ seed: b.seed + b.rounds.length * 7919, us: mine, them: franchise(opp, oppOvr ?? undefined), user: steer, length: 'full' }), kits: [us, opp], key: Date.now() });
+    setPlan({ setup: legendSetup({ seed: b.seed + b.rounds.length * 7919, us: mine, them: franchise(opp, oppOvr ?? undefined), user: steer, length: 'full', plan: gamePlan }), kits: [us, opp], key: Date.now() });
   };
 
   if (plan)
@@ -307,6 +309,7 @@ export function FloorPage({ inside = false }: { inside?: boolean }) {
                 <Crests value={ownThem} onPick={(a) => a !== ownUs && setThem(a)} label={t('Opponent')} />
               </div>
             </div>
+            <GamePlan plan={gamePlan} onChange={setGamePlan} names={{ [career.player.pos]: career.player.name }} />
             <button className="btn primary fm-go" data-tour="floor-tip" onClick={tipOwn}>
               {t('Tip it off')}
             </button>
@@ -369,6 +372,7 @@ export function FloorPage({ inside = false }: { inside?: boolean }) {
               <summary>{t('Their real career numbers')}</summary>
               <LegendTable rows={five.map((spot) => ({ team: us, spot }))} />
             </details>
+            <GamePlan plan={gamePlan} onChange={setGamePlan} names={Object.fromEntries(five.map((l, i) => [POS[i], l.name]))} />
             <div className="fm-row fh-ovrs">
               <OvrPick label={t('Your team’s overall')} real={fiveOvr(five)} value={myOvr} onChange={setMyOvr} />
               <OvrPick label={mode === 'playoffs' ? t('Every opponent’s overall') : t('Opponent’s overall')} real={mode === 'playoffs' ? 90 : fiveOvr(legendFive(them))} value={oppOvr} onChange={setOppOvr} />
