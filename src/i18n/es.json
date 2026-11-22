@@ -4122,7 +4122,6 @@
   "Playoffs": "Playoffs",
   "Sixteen franchises, one game a round, four wins to the title. Each game is all four quarters in about four minutes.": "Dieciséis franquicias, un partido por ronda, cuatro victorias para el título. Cada partido son los cuatro cuartos en unos cuatro minutos.",
   "Draft your five": "Elige tu quinteto",
-  "One legend for each position from all 150, then a quick game against a franchise.": "Una leyenda por posición de entre las 150, y luego un partido rápido contra una franquicia.",
   "Online": "En línea",
   "Head to head with a friend by room code, or a quick match with whoever is waiting.": "Cara a cara con un amigo con un código de sala, o un partido rápido con quien esté esperando.",
   "Quarter-finals": "Cuartos de final",
@@ -4293,7 +4292,11 @@
   "Right elbow": "Codo derecho",
   "High post": "Poste alto",
   "Left block": "Poste bajo izquierdo",
-  "Right block": "Poste bajo derecho"
+  "Right block": "Poste bajo derecho",
+  "Any five legends from all 180, no positions needed, then a quick game against a franchise.": "Cinco leyendas cualesquiera de las 180, sin posiciones, y luego un partido rápido contra una franquicia.",
+  "Pick {n}": "Elección {n}",
+  "Face of the franchise": "Cara de la franquicia",
+  "Sixth man": "Sexto hombre"
  },
  "story": {
   "f-driveway.title": "La entrada de casa",

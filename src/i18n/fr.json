@@ -4122,7 +4122,6 @@
   "Playoffs": "Playoffs",
   "Sixteen franchises, one game a round, four wins to the title. Each game is all four quarters in about four minutes.": "Seize franchises, un match par tour, quatre victoires pour le titre. Chaque match fait les quatre quart-temps en quatre minutes environ.",
   "Draft your five": "Draftez votre cinq",
-  "One legend for each position from all 150, then a quick game against a franchise.": "Une légende par poste parmi les 150, puis un match rapide contre une franchise.",
   "Online": "En ligne",
   "Head to head with a friend by room code, or a quick match with whoever is waiting.": "Face à face avec un ami par code de salle, ou un match rapide avec quelqu’un qui attend.",
   "Quarter-finals": "Quarts de finale",
@@ -4293,7 +4292,11 @@
   "Right elbow": "Coude droit",
   "High post": "Poste haut",
   "Left block": "Poste bas gauche",
-  "Right block": "Poste bas droit"
+  "Right block": "Poste bas droit",
+  "Any five legends from all 180, no positions needed, then a quick game against a franchise.": "Cinq légendes au choix parmi les 180, sans contrainte de poste, puis un match rapide contre une franchise.",
+  "Pick {n}": "Choix {n}",
+  "Face of the franchise": "Visage de la franchise",
+  "Sixth man": "Sixième homme"
  },
  "story": {
   "f-driveway.title": "L’allée",

@@ -4122,7 +4122,6 @@
   "Playoffs": "플레이오프",
   "Sixteen franchises, one game a round, four wins to the title. Each game is all four quarters in about four minutes.": "16개 구단, 라운드마다 단판, 4승이면 우승. 한 경기는 4쿼터 전체를 약 4분에 치릅니다.",
   "Draft your five": "나만의 5인 드래프트",
-  "One legend for each position from all 150, then a quick game against a franchise.": "150명 전체에서 포지션마다 레전드 한 명씩, 그리고 한 구단과 빠른 경기.",
   "Online": "온라인",
   "Head to head with a friend by room code, or a quick match with whoever is waiting.": "방 코드로 친구와 맞대결하거나, 기다리는 누군가와 빠른 매치.",
   "Quarter-finals": "8강",
@@ -4293,7 +4292,11 @@
   "Right elbow": "오른쪽 엘보",
   "High post": "하이 포스트",
   "Left block": "왼쪽 블록",
-  "Right block": "오른쪽 블록"
+  "Right block": "오른쪽 블록",
+  "Any five legends from all 180, no positions needed, then a quick game against a franchise.": "180명 중 아무 레전드나 다섯 명, 포지션 상관없이, 그리고 한 구단과 빠른 경기.",
+  "Pick {n}": "{n}순위 픽",
+  "Face of the franchise": "프랜차이즈의 얼굴",
+  "Sixth man": "식스맨"
  },
  "story": {
   "f-driveway.title": "집 앞 골대",

@@ -4122,7 +4122,6 @@
   "Playoffs": "季后赛",
   "Sixteen franchises, one game a round, four wins to the title. Each game is all four quarters in about four minutes.": "十六支球队，每轮一场，四连胜夺冠。每场是完整的四节，约四分钟。",
   "Draft your five": "选秀你的五人",
-  "One legend for each position from all 150, then a quick game against a franchise.": "从全部150位传奇中每个位置选一人，然后与一支球队打一场快速比赛。",
   "Online": "在线",
   "Head to head with a friend by room code, or a quick match with whoever is waiting.": "用房间码与朋友对决，或与正在等待的玩家快速匹配。",
   "Quarter-finals": "四分之一决赛",
@@ -4293,7 +4292,11 @@
   "Right elbow": "右肘区",
   "High post": "高位",
   "Left block": "左低位",
-  "Right block": "右低位"
+  "Right block": "右低位",
+  "Any five legends from all 180, no positions needed, then a quick game against a franchise.": "从全部180人中任选五位传奇，不限位置，然后与一支球队打一场快速比赛。",
+  "Pick {n}": "第{n}选",
+  "Face of the franchise": "队史门面",
+  "Sixth man": "第六人"
  },
  "story": {
   "f-driveway.title": "车道",

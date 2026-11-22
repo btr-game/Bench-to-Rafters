@@ -22,6 +22,9 @@ export const NEWS: News[] = [
       { icon: 'cards', text: 'Game plans on the Floor: pick your team’s shape (standard, five out, four out one in, twin towers, horns), its style (balanced, run and gun, ball movement, isolation, grit and grind, pace and space), and the spot each player stands in on offence.' },
       { icon: 'bracket', text: 'The Floor’s playoffs are quicker: each game is one quarter from 0–0, about two minutes. The bracket is split into East and West with the Finals between them.' },
       { icon: 'spotlight', text: 'Legends rated 95 or more have stronger signatures: they should feel dominant.' },
+      { icon: 'cards', text: 'Every franchise on the Floor has a sixth man, a legend off the bench: Victor Wembanyama for the Spurs, Cooper Flagg for the Mavericks, Gary Payton, Paul Pierce, Yao Ming, James Worthy and more.' },
+      { icon: 'spotlight', text: 'Each team’s face of the franchise plays above his number (more for those under 95, such as Isiah Thomas), and Nikola Jokic is much stronger.' },
+      { icon: 'cards', text: 'Draft your five has no positions: any five legends. Quick games start from each team’s own style, and players tire more slowly.' },
     ],
   },
   {

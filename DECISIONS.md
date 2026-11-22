@@ -3925,3 +3925,35 @@ by east and west"; and "im fine with a little overbalance of stars. 95+ should h
 - **The 95s** (`FLOOR.sig`): every own signature a notch stronger, e.g. Jordan's mid-range contest from
   0.25 to 0.1 of its cost, Kareem's hook 12 to 16 points, Russell's blocks 1.5 to 1.8 times, Curry's meter
   0.5 to 0.45 of the time, West's last minute 9 to 13 points.
+
+### Sixth men, franchise faces, Jokic, stamina, a free draft, best-fit plans
+
+Owner: "add wemby to the game somehow"; "since we're adding wemby, add cooper flagg as well"; "oh yeah let's
+just have sixth man in the teams"; "each team has a franchise face player: golden state: curry, bulls: jordan,
+... often their best player. give them another buff, especially giving a slight edge to those who didnt make
+the 95+ cut (isiah thomas for detroit)"; "make jokic much stronger (developer bias. he's my favorite player)";
+"increase stamina of all players more"; "in draft your five, get rid of position constraints"; "for quick game,
+let's determine the team style and all that with their best fit or culture".
+
+- **Sixth men** (`FRANCHISE_SIXTH` in `content/franchiseFives.ts`, a stat line each in `legendStats.ts`, a
+  number in `legendNumbers.ts`): one legend for each of the 30 franchises comes off the bench first, in place of
+  the first made-up bench man (`legendTeam`'s `sixth`, carried by `FloorSide.sixth` from `franchise()`). A real
+  sixth man where the team had a famous one (Toni Kukoc, Lou Williams, Dell Curry, Tyler Herro, Naz Reid), a
+  great missing from the five otherwise (Gary Payton, Paul Pierce, Yao Ming, James Worthy, Kevin Johnson). Victor
+  Wembanyama (93) for the Spurs; Cooper Flagg (88) for the Mavericks, whose line is an estimate from one season.
+  The draft's pool grows from 150 to 180. The eight sixth men at 90 or more have a shared-kind signature (Wembanyama
+  "The Alien", a block kind), until their own kinds come with the 90-94 signatures.
+- **Franchise faces** (`FRANCHISE_FACE`, `isFace`): every skill but legs and free throws `FLOOR.face.rest` (3)
+  higher for a face under 95, `FLOOR.face.star` (1.5) for one at 95 or more, so Isiah Thomas, Reggie Miller or
+  Allen Iverson gain more than Jordan or Curry. The setup page marks him "Face of the franchise".
+- **Jokic** (`FLOOR.jokic`): playmaking, IQ and rebounding set to 99, finishing +5, shooting +4, interior +3, on
+  top of the face's buff; his passing signature `FLOOR.sig.jokicPass` 0.08 to 0.14.
+- **Stamina** (`FLOOR.stamina`): sprint −0.012 to −0.0075, move −0.0045 to −0.0028, rest +0.004 to +0.0055,
+  timeout +0.25 to +0.3.
+- **Draft your five**: five picks from one pool of all 180, any positions; a legend picked once cannot be picked
+  twice; the five are set out guards first by their own positions.
+- **Best-fit plans** (`fitPlan` in `engine/floor/legends.ts`): the shape from the five's two bigs (a creating
+  centre plays horns, a shooting centre five out, a stretch four four-out-one-in, two post bigs twin towers),
+  the style from the franchise's culture where it is famous (Showtime Lakers and Suns run, Spurs and Nuggets move
+  the ball, Grizzlies, Pistons, Knicks and Heat grind, Warriors and Rockets space) or else from the five. The
+  computer's side always plays its fit; picking a team sets yours to its fit, changed from there as before.

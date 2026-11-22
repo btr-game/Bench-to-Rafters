@@ -4122,7 +4122,6 @@
   "Playoffs": "プレーオフ",
   "Sixteen franchises, one game a round, four wins to the title. Each game is all four quarters in about four minutes.": "16球団、各ラウンド1試合、4勝で優勝。1試合は4クォーターすべてを約4分で。",
   "Draft your five": "自分の5人をドラフト",
-  "One legend for each position from all 150, then a quick game against a franchise.": "全150人から各ポジションにレジェンドを1人ずつ選び、球団とクイックゲーム。",
   "Online": "オンライン",
   "Head to head with a friend by room code, or a quick match with whoever is waiting.": "ルームコードで友だちと直接対決、または待っている誰かとクイックマッチ。",
   "Quarter-finals": "準々決勝",
@@ -4293,7 +4292,11 @@
   "Right elbow": "右エルボー",
   "High post": "ハイポスト",
   "Left block": "左ブロック",
-  "Right block": "右ブロック"
+  "Right block": "右ブロック",
+  "Any five legends from all 180, no positions needed, then a quick game against a franchise.": "180人の中から好きなレジェンドを5人、ポジションは問わず、そしてフランチャイズとクイックゲーム。",
+  "Pick {n}": "{n}人目",
+  "Face of the franchise": "フランチャイズの顔",
+  "Sixth man": "シックスマン"
  },
  "story": {
   "f-driveway.title": "家の前のゴール",
