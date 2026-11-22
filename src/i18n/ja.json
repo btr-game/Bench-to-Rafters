@@ -4233,7 +4233,6 @@
   "His mid-range jumper: a hand in his face barely bothers it.": "ミドルレンジのジャンプシュート：手が顔の前にあってもほとんど乱れない。",
   "On the break, his shot at the rim cannot be blocked and draws more fouls.": "速攻でのリム際のシュートはブロックされず、ファウルも多くもらう。",
   "The skyhook: it cannot be blocked, and it falls far more often.": "スカイフック：ブロックできず、はるかに入りやすい。",
-  "A teammate who shoots right after his pass shoots better.": "彼のパスを受けてすぐ打つチームメイトのシュートが入りやすくなる。",
   "The biggest rebounder in the game, at both ends.": "攻守両方でゲーム最強のリバウンダー。",
   "He backs his man down much faster, and his drop step almost always works.": "はるかに速く押し込み、ドロップステップはほぼ必ず決まる。",
   "In the last two minutes his shots fall more and his meter's green window widens.": "最後の2分間、シュートが入りやすくなり、メーターの緑の幅が広がる。",
@@ -4370,7 +4369,11 @@
   "No three-point line: every basket is two. A faster pace.": "スリーポイントラインなし：すべてのゴールが2点。ペースは速め。",
   "Era": "時代",
   "Hot spots": "ホットスポット",
-  "Chemistry: {a} + {b}": "相性：{a} + {b}"
+  "Chemistry: {a} + {b}": "相性：{a} + {b}",
+  "His one-legged fadeaway: inside the arc a hand in his face barely bothers him, and his shots there fall more.": "片足フェイドアウェイ：3ポイントラインの内側ではチェックをほとんど気にせず、そこでのシュートが入りやすい。",
+  "His strips and steals work more, and his shots at the rim fall a little more.": "スティールが決まりやすく、リング付近のシュートも少し入りやすい。",
+  "Sombor Shuffle": "ソンボル・シャッフル",
+  "Two-way rookie": "攻守両面のルーキー"
  },
  "story": {
   "f-driveway.title": "家の前のゴール",

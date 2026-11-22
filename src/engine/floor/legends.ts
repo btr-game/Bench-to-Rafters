@@ -113,11 +113,13 @@ export function legendStyle(l: LegendSpot): FloorStyle {
   if (!row) return { use: 1, three: 1, drive: 1, post: POST_POS[l.pos] * 0.6, pass: 1 };
   const [ppg, , apg, , , , tp, tpa, , ath] = row;
   const three = tp === null || tpa < 0.3 ? (BIG(l.pos) ? 0 : 0.3) : clamp(tpa / 3, 0.15, 1.9);
+  // (Jokic) he looks for his own shot more, in the post above all
+  const jk = l.name === 'Nikola Jokic' ? FLOOR.jokic : { use: 1, post: 1 };
   return {
-    use: clamp(ppg / 18, 0.45, 1.8),
+    use: clamp(ppg / 18, 0.45, 1.8) * jk.use,
     three,
     drive: clamp((0.5 + (ath - 70) / 40 + (l.tag === 'scorer' || l.tag === 'creator' ? 0.2 : 0) - (three > 1.2 ? 0.2 : 0)) * (l.pos === 'C' ? 0.6 : 1), 0.3, 1.8),
-    post: clamp(POST_POS[l.pos] * clamp(ppg / 16, 0.4, 1.6) * (1 - 0.4 * Math.min(1, three)) + (l.tag === 'inside' ? 0.15 : 0), 0, 1.6),
+    post: clamp(POST_POS[l.pos] * clamp(ppg / 16, 0.4, 1.6) * (1 - 0.4 * Math.min(1, three)) + (l.tag === 'inside' ? 0.15 : 0), 0, 1.6) * jk.post,
     pass: clamp(0.5 + apg / 6 - ppg / 60, 0.4, 2),
   };
 }

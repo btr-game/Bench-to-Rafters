@@ -3940,14 +3940,21 @@ let's determine the team style and all that with their best fit or culture".
   the first made-up bench man (`legendTeam`'s `sixth`, carried by `FloorSide.sixth` from `franchise()`). A real
   sixth man where the team had a famous one (Toni Kukoc, Lou Williams, Dell Curry, Tyler Herro, Naz Reid), a
   great missing from the five otherwise (Gary Payton, Paul Pierce, Yao Ming, James Worthy, Kevin Johnson). Victor
-  Wembanyama (93) for the Spurs; Cooper Flagg (88) for the Mavericks, whose line is an estimate from one season.
+  Wembanyama (93) for the Spurs; Cooper Flagg for the Mavericks (88 at first, then 90: owner, "make cooper flagg a 90"; his own move, "Two-way rookie": strips and steals ×1.25, rim shots +0.015), whose line is an estimate from one season.
   The draft's pool grows from 150 to 180. The eight sixth men at 90 or more have a shared-kind signature (Wembanyama
   "The Alien", a block kind), until their own kinds come with the 90-94 signatures.
 - **Franchise faces** (`FRANCHISE_FACE`, `isFace`): every skill but legs and free throws `FLOOR.face.rest` (3)
   higher for a face under 95, `FLOOR.face.star` (1.5) for one at 95 or more, so Isiah Thomas, Reggie Miller or
   Allen Iverson gain more than Jordan or Curry. The setup page marks him "Face of the franchise".
-- **Jokic** (`FLOOR.jokic`): playmaking, IQ and rebounding set to 99, finishing +5, shooting +4, interior +3, on
-  top of the face's buff; his passing signature `FLOOR.sig.jokicPass` 0.08 to 0.14.
+- **Jokic** (`FLOOR.jokic`): playmaking, IQ and rebounding set to 99, finishing +9, shooting +7, interior +3, on
+  top of the face's buff (first +5 and +4; then owner: "increase jokic's finishing and shooting a but more, and
+  change his signature to smth else(stronger)"). His signature is now the **Sombor Shuffle** in place of Point
+  centre (the pass bonus): inside the arc a contest counts only `jokicContest` 0.3 of its usual cost, and his
+  shots there gain `jokicTouch` +0.06. His passing lives on in his 99 playmaking.
+  He also looks for his own shot more (`FLOOR.jokic.use` ×1.6, `post` ×1.6 and ×1.5 on his style): measured over
+  80 full games at 90 against the Lakers, Celtics, Warriors and Bulls (AI both sides), he went from 1.9375 points a
+  game (72.6190% from the field, Denver winning 35.0000%) to 10.2000 points (83.0986%) of Denver's 28.4625, and
+  Denver won 42.5000%.
 - **Stamina** (`FLOOR.stamina`): sprint −0.012 to −0.0075, move −0.0045 to −0.0028, rest +0.004 to +0.0055,
   timeout +0.25 to +0.3.
 - **Draft your five**: five picks from one pool of all 180, any positions; a legend picked once cannot be picked

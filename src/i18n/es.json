@@ -4233,7 +4233,6 @@
   "His mid-range jumper: a hand in his face barely bothers it.": "Su tiro de media distancia: una mano en la cara apenas le molesta.",
   "On the break, his shot at the rim cannot be blocked and draws more fouls.": "En la contra, su tiro en el aro no se puede taponar y provoca más faltas.",
   "The skyhook: it cannot be blocked, and it falls far more often.": "El gancho del cielo: no se puede taponar y entra mucho más.",
-  "A teammate who shoots right after his pass shoots better.": "Un compañero que tira justo después de su pase tira mejor.",
   "The biggest rebounder in the game, at both ends.": "El mejor reboteador del juego, en las dos canastas.",
   "He backs his man down much faster, and his drop step almost always works.": "Empuja a su defensor mucho más rápido, y su drop step casi siempre funciona.",
   "In the last two minutes his shots fall more and his meter's green window widens.": "En los dos últimos minutos sus tiros entran más y la zona verde del medidor se ensancha.",
@@ -4370,7 +4369,11 @@
   "No three-point line: every basket is two. A faster pace.": "Sin línea de tres: cada canasta vale dos. Un ritmo más rápido.",
   "Era": "Época",
   "Hot spots": "Zonas calientes",
-  "Chemistry: {a} + {b}": "Química: {a} + {b}"
+  "Chemistry: {a} + {b}": "Química: {a} + {b}",
+  "His one-legged fadeaway: inside the arc a hand in his face barely bothers him, and his shots there fall more.": "Su fadeaway a una pierna: dentro de la línea de tres una mano en la cara apenas le molesta y sus tiros allí entran más.",
+  "His strips and steals work more, and his shots at the rim fall a little more.": "Sus robos funcionan más y sus tiros junto al aro entran un poco más.",
+  "Sombor Shuffle": "Sombor Shuffle",
+  "Two-way rookie": "Novato de doble vía"
  },
  "story": {
   "f-driveway.title": "La entrada de casa",

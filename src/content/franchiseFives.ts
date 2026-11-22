@@ -90,7 +90,7 @@ export const isFace = (name: string): boolean => Object.values(FRANCHISE_FACE).i
 
 export const FRANCHISE_SIXTH: Record<string, LegendSpot> = {
   SAS: L('Victor Wembanyama', 'C', 93, '2024-25', 'defense'),
-  DAL: L('Cooper Flagg', 'SF', 88, '2025-26', 'scorer'),
+  DAL: L('Cooper Flagg', 'SF', 90, '2025-26', 'scorer'),
   ATL: L('Lou Hudson', 'SF', 88, '1967-77', 'scorer'),
   BOS: L('Paul Pierce', 'SF', 92, '2002-08', 'scorer'),
   BKN: L('Derrick Coleman', 'PF', 85, '1991-95', 'inside'),

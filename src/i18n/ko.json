@@ -4233,7 +4233,6 @@
   "His mid-range jumper: a hand in his face barely bothers it.": "미드레인지 점프슛: 손이 얼굴 앞에 있어도 거의 흔들리지 않습니다.",
   "On the break, his shot at the rim cannot be blocked and draws more fouls.": "속공에서 림 앞의 슛은 블록당하지 않고, 파울을 더 많이 얻어냅니다.",
   "The skyhook: it cannot be blocked, and it falls far more often.": "스카이훅: 블록할 수 없고, 훨씬 더 잘 들어갑니다.",
-  "A teammate who shoots right after his pass shoots better.": "그의 패스를 받고 바로 쏘는 동료의 슛이 더 잘 들어갑니다.",
   "The biggest rebounder in the game, at both ends.": "양쪽 골밑 모두에서 게임 최고의 리바운더입니다.",
   "He backs his man down much faster, and his drop step almost always works.": "훨씬 빠르게 포스트업하고, 드롭 스텝이 거의 항상 통합니다.",
   "In the last two minutes his shots fall more and his meter's green window widens.": "마지막 2분 동안 슛이 더 잘 들어가고 미터의 초록 구간이 넓어집니다.",
@@ -4370,7 +4369,11 @@
   "No three-point line: every basket is two. A faster pace.": "3점 라인이 없습니다: 모든 득점이 2점입니다. 템포가 더 빠릅니다.",
   "Era": "시대",
   "Hot spots": "핫 스팟",
-  "Chemistry: {a} + {b}": "케미: {a} + {b}"
+  "Chemistry: {a} + {b}": "케미: {a} + {b}",
+  "His one-legged fadeaway: inside the arc a hand in his face barely bothers him, and his shots there fall more.": "외발 페이드어웨이: 3점 라인 안에서는 수비 손이 거의 방해되지 않고, 그곳의 슛이 더 잘 들어간다.",
+  "His strips and steals work more, and his shots at the rim fall a little more.": "스트립과 스틸이 더 잘 되고, 림 근처 슛이 조금 더 잘 들어간다.",
+  "Sombor Shuffle": "솜보르 셔플",
+  "Two-way rookie": "양방향 신인"
  },
  "story": {
   "f-driveway.title": "집 앞 골대",

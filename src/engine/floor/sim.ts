@@ -65,7 +65,7 @@ export type FloorOwnTrait90 =
   | 'nique' | 'hondo' | 'kidd' | 'frazier' | 'pippen' | 'ant' | 'dame' | 'glide' | 'walton' | 'stockton' | 'iceman' | 'cousy' | 'mchale'
   | 'king' | 'reed' | 'rose' | 'hill' | 'bige' | 'melo' | 'mcadoo' | 'booker' | 'webber' | 'brunson' | 'vince' | 'kyrie' | 'spida'
   | 'reggie' | 'pg13' | 'zo' | 'penny' | 'pistol' | 'tiny'
-  | 'wemby' | 'glove' | 'truth' | 'greer' | 'mullin' | 'worthy' | 'kj' | 'yao';
+  | 'wemby' | 'flagg' | 'glove' | 'truth' | 'greer' | 'mullin' | 'worthy' | 'kj' | 'yao';
 
 export interface FloorPlayerIn {
   id: string;
@@ -568,6 +568,7 @@ function hands(p: FloorPlayer, how: 'strip' | 'pick'): number {
   if (p.trait === 'frazier') return how === 'pick' ? H.frazierPick : 1;
   if (p.trait === 'pg13') return H.pgSteal;
   if (p.trait === 'glove') return H.gloveHands;
+  if (p.trait === 'flagg') return H.flaggHands;
   return p.trait === 'steal' ? FLOOR.trait.steal : p.trait === 'kawhi' ? FLOOR.sig.kawhiSteal : 1;
 }
 /** (Isiah) what a strip of the ball from him, or losing it on a move, is multiplied by. */
@@ -664,7 +665,8 @@ function shotChance(s: FloorState, p: FloorPlayer, at: Spot): number {
   if (p.trait === 'duncan' && zone === 'mid' && Math.abs(at.y - RIM_Y) > G.duncanWing) c += G.duncanShot;
   if (p.trait === 'kobe') c += G.kobeStep * Math.min(p.hot ?? 0, G.kobeMax);
   const fed = fedBy(s, p, G.feedSecs);
-  if (fed?.trait === 'jokic') c += G.jokicPass;
+  // (Jokic, the Sombor Shuffle: owner, "change his signature to smth else (stronger)") inside the arc his one-legged fadeaway falls more
+  if (p.trait === 'jokic' && zone !== 'three') c += G.jokicTouch;
   if (fed?.trait === 'magic' && s.brk?.team === p.team) c += G.magicPass;
   if (p.trait === 'malone' && fed && (zone === 'rim' || zone === 'paint')) c += G.maloneShot;
   // (the 90s to 94s, each his own, smaller) the clock: Miller's threes in the last two minutes, Lillard's
@@ -686,6 +688,7 @@ function shotChance(s: FloorState, p: FloorPlayer, at: Spot): number {
   if (p.trait === 'truth' && end) c += H.truthShot;
   if (p.trait === 'worthy' && inPaint && s.brk?.team === p.team) c += H.worthyBreak;
   if (p.trait === 'yao' && inPaint) c += H.yaoShot;
+  if (p.trait === 'flagg' && zone === 'rim') c += H.flaggRim;
   if (p.trait === 'nique' && zone === 'rim') c += H.niqueRim;
   if (p.trait === 'glide' && inPaint && s.brk?.team === p.team) c += H.glideBreak;
   if (p.trait === 'pettit' && inPaint && p.oreb !== undefined && s.tick - p.oreb <= secs(H.pettitSecs)) c += H.pettitPut;
@@ -707,6 +710,7 @@ function shotChance(s: FloorState, p: FloorPlayer, at: Spot): number {
     (p.trait === 'stepback' && zone === 'three' ? X.stepThree : 1) *
     (p.trait === 'power' && zone === 'rim' ? X.power : 1) *
     (p.trait === 'mj' && zone === 'mid' ? G.mjContest : 1) *
+    (p.trait === 'jokic' && zone !== 'three' ? G.jokicContest : 1) *
     (p.trait === 'kd' && zone !== 'rim' ? G.kdContest : 1) *
     (p.trait === 'luka' && zone === 'three' && p.shook !== undefined && s.tick - p.shook <= secs(G.lukaSecs) ? G.lukaContest : 1) *
     (foe.p?.trait === 'kg' ? G.kgContest : 1) *

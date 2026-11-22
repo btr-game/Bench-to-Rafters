@@ -4233,7 +4233,6 @@
   "His mid-range jumper: a hand in his face barely bothers it.": "Son tir à mi-distance : une main devant le visage le gêne à peine.",
   "On the break, his shot at the rim cannot be blocked and draws more fouls.": "En contre-attaque, son tir au cercle ne peut être contré et provoque plus de fautes.",
   "The skyhook: it cannot be blocked, and it falls far more often.": "Le skyhook : impossible à contrer, et il rentre bien plus souvent.",
-  "A teammate who shoots right after his pass shoots better.": "Un coéquipier qui tire juste après sa passe tire mieux.",
   "The biggest rebounder in the game, at both ends.": "Le meilleur rebondeur du jeu, des deux côtés.",
   "He backs his man down much faster, and his drop step almost always works.": "Il recule bien plus vite sur son défenseur, et son drop step passe presque toujours.",
   "In the last two minutes his shots fall more and his meter's green window widens.": "Dans les deux dernières minutes, ses tirs rentrent davantage et la zone verte de sa jauge s’élargit.",
@@ -4370,7 +4369,11 @@
   "No three-point line: every basket is two. A faster pace.": "Pas de ligne à trois points : chaque panier vaut deux. Un rythme plus rapide.",
   "Era": "Époque",
   "Hot spots": "Zones chaudes",
-  "Chemistry: {a} + {b}": "Complicité : {a} + {b}"
+  "Chemistry: {a} + {b}": "Complicité : {a} + {b}",
+  "His one-legged fadeaway: inside the arc a hand in his face barely bothers him, and his shots there fall more.": "Son fadeaway sur une jambe : à l’intérieur de l’arc, une main devant les yeux le gêne à peine, et ses tirs y rentrent plus.",
+  "His strips and steals work more, and his shots at the rim fall a little more.": "Ses interceptions réussissent plus, et ses tirs près du cercle rentrent un peu plus.",
+  "Sombor Shuffle": "Sombor Shuffle",
+  "Two-way rookie": "Rookie des deux côtés"
  },
  "story": {
   "f-driveway.title": "L’allée",

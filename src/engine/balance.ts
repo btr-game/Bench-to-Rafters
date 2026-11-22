@@ -1301,7 +1301,7 @@ export const FLOOR = {
    * that beat his man). kgContest: what a contest by Garnett is multiplied by. birdShot/birdWindow in
    * the last `birdSecs`, westShot in the last `westSecs` (game seconds of the last period). duncanShot:
    * mid-range more than `duncanWing` feet off the middle. kobeStep: per make in a row, up to kobeMax.
-   * feedSecs: how soon after a pass a shot counts as set up by it; jokicPass, magicPass (on the break),
+   * feedSecs: how soon after a pass a shot counts as set up by it; magicPass (on the break),
    * maloneShot (his own, inside). kareemHook: on the hook, which cannot be blocked (nor Dirk's jumper,
    * nor LeBron at the rim on the break). Blocks: russellBlock (and his blocks stay with his team),
    * robinsonBlock, wadeBlock (times wadeBreak against a break). Fouls drawn: sgaFoul, embiidFoul (his
@@ -1310,7 +1310,7 @@ export const FLOOR = {
    * long); shaqPace: his back-down. giannisSpeed (with the ball), robinsonSpeed. curry: his meter's
    * share of the time. kawhiSteal. oscarPick: how often his passes are picked off. drjRange: the feet
    * from the rim his shot still counts as one at the rim. */
-  sig: { mjContest: 0.1, kdContest: 0.35, lukaContest: 0.1, lukaSecs: 1.5, kgContest: 1.45, birdShot: 0.08, birdWindow: 1.6, birdSecs: 120, westShot: 0.13, westSecs: 60, duncanShot: 0.09, duncanWing: 8, kobeStep: 0.035, kobeMax: 3, feedSecs: 2, jokicPass: 0.14, magicPass: 0.09, maloneShot: 0.1, kareemHook: 0.16, russellBlock: 1.8, robinsonBlock: 1.7, wadeBlock: 1.6, wadeBreak: 2, sgaFoul: 2.3, embiidFoul: 3.5, hardenFoul: 3, lebronFoul: 2, wiltGlass: 1.9, oscarGlass: 1.6, kgGlass: 1.6, hardenMove: 0.24, shaqDrop: 0.4, hakeemMove: 0.28, hakeemSlow: 2, shaqPace: 2.2, giannisSpeed: 1.22, robinsonSpeed: 1.15, curry: 0.45, kawhiSteal: 2.2, oscarPick: 0.45, drjRange: 8 },
+  sig: { mjContest: 0.1, kdContest: 0.35, lukaContest: 0.1, lukaSecs: 1.5, kgContest: 1.45, birdShot: 0.08, birdWindow: 1.6, birdSecs: 120, westShot: 0.13, westSecs: 60, duncanShot: 0.09, duncanWing: 8, kobeStep: 0.035, kobeMax: 3, feedSecs: 2, jokicTouch: 0.06, jokicContest: 0.3, magicPass: 0.09, maloneShot: 0.1, kareemHook: 0.16, russellBlock: 1.8, robinsonBlock: 1.7, wadeBlock: 1.6, wadeBreak: 2, sgaFoul: 2.3, embiidFoul: 3.5, hardenFoul: 3, lebronFoul: 2, wiltGlass: 1.9, oscarGlass: 1.6, kgGlass: 1.6, hardenMove: 0.24, shaqDrop: 0.4, hakeemMove: 0.28, hakeemSlow: 2, shaqPace: 2.2, giannisSpeed: 1.22, robinsonSpeed: 1.15, curry: 0.45, kawhiSteal: 2.2, oscarPick: 0.45, drjRange: 8 },
   /** The own moves of the legends rated 90 to 94 (content/legendTraits.ts LEGEND_TRAITS_90_OWN, while
    * OWN_90_ON; owner: "no confirmation needed", on), each smaller than a 95's (measured over 3 x 3,900 AI
    * games: a 90's points a game up about 0.10, a 95's own moves about 0.16). Added to a shot: reggieShot (a three in the last reggieSecs),
@@ -1338,7 +1338,7 @@ export const FLOOR = {
    * more (in big swings); tinyFoul: fouls drawn at the rim. */
   sig90: {
     // the sixth men at 90 to 94 (after round 42): Wembanyama, Payton, Pierce, Greer, Mullin, Worthy, Johnson, Yao
-    wembyBlock: 1.6, wembyThree: 0.02, gloveHands: 1.4, truthShot: 0.02, greerContest: 0.85, mullinThree: 0.015, worthyBreak: 0.03, kjMove: 0.04, yaoShot: 0.02, yaoBlock: 0.7,
+    wembyBlock: 1.6, wembyThree: 0.02, gloveHands: 1.4, flaggHands: 1.25, flaggRim: 0.015, truthShot: 0.02, greerContest: 0.85, mullinThree: 0.015, worthyBreak: 0.03, kjMove: 0.04, yaoShot: 0.02, yaoBlock: 0.7,
     reggieShot: 0.04, reggieSecs: 120, dameShot: 0.025, dameSecs: 300, dameFt: 2, reedShot: 0.025, tmacShot: 0.025, tmacSecs: 30,
     icemanContest: 0.85, mcadooShot: 0.025, pistolShot: 0.03, pistolFt: 17, pgThree: 0.01, niqueRim: 0.015, glideBreak: 0.03,
     pettitPut: 0.04, pettitSecs: 3, meloShot: 0.02, meloStill: 2.5, dwightLob: 0.02, antPoster: 0.01, antNear: 3, nashPass: 0.03, nashSecs: 7,
@@ -1423,7 +1423,7 @@ export const FLOOR = {
   face: { star: 1.5, rest: 3 },
   // Jokic (owner: "make jokic much stronger ... he's the crack code of the game"): his passing and
   // reading of the game at the top, his touch and rebounding raised on top of the face's buff
-  jokic: { PLY: 99, IQ: 99, REB: 99, FIN: 5, SHT: 4, INT: 3 },
+  jokic: { PLY: 99, IQ: 99, REB: 99, FIN: 9, SHT: 7, INT: 3, use: 1.6, post: 1.5 },
   /** Round 42, a fast break (owner's pick: "an outlet pass and a run"): after a steal or a
    * defensive rebound the new offence runs for up to `secs` game seconds, everyone at a sprint, the
    * new defence starting `react` seconds late (less for a smart player). The man with the ball

@@ -473,11 +473,11 @@ describe('after round 42: the own moves of the legends rated 90 to 94', () => {
   const SHARED = ['quick', 'deep', 'fade', 'hook', 'power', 'block', 'steal', 'handle', 'stepback', 'pass', 'glass', 'clutch', 'motor'];
   const nineties = ALL_LEGENDS.filter((x) => x.spot.ovr >= 90 && x.spot.ovr <= 94).map((x) => x.spot.name);
 
-  it('each of the 54 has a kind nobody else has, neither a shared one nor a 95\'s, under his old name', () => {
-    expect(nineties).toHaveLength(54);
+  it('each of the 55 has a kind nobody else has, neither a shared one nor a 95\'s, under his old name', () => {
+    expect(nineties).toHaveLength(55);
     expect(Object.keys(LEGEND_TRAITS_90_OWN).sort()).toEqual([...nineties].sort());
     const own = Object.values(LEGEND_TRAITS_90_OWN);
-    expect(new Set(own).size).toBe(54);
+    expect(new Set(own).size).toBe(55);
     const ninetyFive = ALL_LEGENDS.filter((x) => x.spot.ovr >= 95).map((x) => LEGEND_TRAITS[x.spot.name].kind);
     for (const k of own) {
       expect(SHARED).not.toContain(k);
@@ -491,7 +491,7 @@ describe('after round 42: the own moves of the legends rated 90 to 94', () => {
       expect(sig.name).toBe(LEGEND_TRAITS[n].name);
       expect(sig.text.length).toBeGreaterThan(10);
     }
-    expect(new Set(nineties.map((n) => signatureOf(n)!.text)).size).toBe(54);
+    expect(new Set(nineties.map((n) => signatureOf(n)!.text)).size).toBe(55);
     // the 95s keep theirs
     expect(legendTrait('Stephen Curry')!.kind).toBe('curry');
     const set = legendSetup({ seed: 5, us: franchise('POR', 90), them: franchise('UTA', 90), length: 'fourth' });
