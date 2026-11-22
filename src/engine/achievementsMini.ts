@@ -10,6 +10,7 @@ import type { CareerTotals, AchTier } from './achievements';
 import type { GameState } from './types';
 import type { MiniId, MiniResult } from './career/miniBonus';
 import { FLOOR_MINI } from './balance';
+import { addFloorMore, type FloorGameRec, type FloorMore } from './achievements42';
 
 /** Every finished mini-game run on this device: runs, best result and wins, per game. */
 export interface MiniTotals {
@@ -31,6 +32,8 @@ interface FloorTotals {
   /** Round 42: playoffs won, and wins with a drafted five. */
   titles?: number;
   draft?: number;
+  /** After round 42: franchises, faces, eras, courts, on fire, the crowd, duos and more (achievements42.ts). */
+  more?: FloorMore;
 }
 // a device's totals from before round 39 may still count Front Office runs under 'office': they
 // stay in the number of runs, and count for no game of today's
@@ -75,7 +78,7 @@ export function addMiniResult(t: MiniTotals | undefined, r: MiniResult): MiniTot
 
 /** Round 42: a game on the Floor (its own game now, no mini-game): the totals after it. `kind` is
  * a quick game, a playoff game (`title`: it won the final) or one with a drafted five. */
-export function addFloorGame(t: MiniTotals | undefined, r: { margin: number; pts: number; low: number; kind: 'quick' | 'playoff' | 'draft'; title?: boolean }): MiniTotals {
+export function addFloorGame(t: MiniTotals | undefined, r: { margin: number; pts: number; low: number; kind: 'quick' | 'playoff' | 'draft'; title?: boolean; more?: FloorGameRec }): MiniTotals {
   const m = t ?? NO_MINI;
   const f = m.floor ?? NO_FLOOR;
   const won = r.margin > 0;
@@ -85,7 +88,7 @@ export function addFloorGame(t: MiniTotals | undefined, r: { margin: number; pts
     // (a first result below -1, a loss, keeps the -1 that means nothing yet: the marks are wins)
     best: { ...m.best, floor: Math.max(m.best.floor ?? -1, r.margin) },
     wins: { ...m.wins, floor: (m.wins.floor ?? 0) + (won ? 1 : 0) },
-    floor: { ...f, pts: Math.max(f.pts, r.pts), back: f.back + (won && r.low <= -FLOOR_MINI.back ? 1 : 0), titles: (f.titles ?? 0) + (r.title ? 1 : 0), draft: (f.draft ?? 0) + (won && r.kind === 'draft' ? 1 : 0) },
+    floor: { ...f, pts: Math.max(f.pts, r.pts), back: f.back + (won && r.low <= -FLOOR_MINI.back ? 1 : 0), titles: (f.titles ?? 0) + (r.title ? 1 : 0), draft: (f.draft ?? 0) + (won && r.kind === 'draft' ? 1 : 0), more: r.more ? addFloorMore(f.more, r.more) : f.more },
   };
 }
 

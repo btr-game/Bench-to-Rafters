@@ -19,10 +19,12 @@ import { teamById } from '../../engine/career/common';
 import { ovrOf } from '../../engine/player/ovr';
 import { achievementsNow, useStore } from '../../store';
 import { recordFloorGame } from '../achievements';
+import { floorGameRec } from '../../engine/achievements42';
 import { t, tx } from '../../i18n';
 import { PageTop } from '../components/PageTop';
 import { TeamArt } from '../art/Crest';
 import { Icon } from '../art/Icon';
+import { Ico } from './Ico';
 import { sfx } from '../sound';
 import { COURTS, FloorScreen, type CourtLook, type FloorTeamLook } from './FloorScreen';
 import { FloorFriend } from './FloorFriend';
@@ -36,7 +38,7 @@ type Mode = 'career' | 'quick' | 'playoffs' | 'draft' | 'online';
 const CAREER_MODE: { id: Mode; name: string; text: string } = { id: 'career', name: tx('Your player'), text: tx('The fourth quarter as your own player, with his own ratings. About four minutes.') };
 const MODES: { id: Mode; name: string; text: string }[] = [
   { id: 'quick', name: tx('Quick game'), text: tx('The fourth quarter from a close score, as any franchise’s all-time five. About four minutes.') },
-  { id: 'playoffs', name: tx('Playoffs'), text: tx('Eight franchises from each conference, one game a round, four wins to the title. Each game is all four quarters in about four minutes.') },
+  { id: 'playoffs', name: tx('Playoffs'), text: tx('Eight franchises from each conference, one game a round, four wins to the title. Each game is one quarter in about two minutes.') },
   { id: 'draft', name: tx('Draft your five'), text: tx('Any five legends from all 180, no positions needed, then a quick game against a franchise.') },
   { id: 'online', name: tx('Online'), text: tx('Head to head with a friend by room code, or a quick match with whoever is waiting.') },
 ];
@@ -44,7 +46,7 @@ const POS: Pos[] = ['PG', 'SG', 'SF', 'PF', 'C'];
 const ALL = NBA_TEAMS.map((x) => ({ abbr: x.abbr, name: `${x.city} ${x.nick}`, color: x.color }));
 const nameOf = (abbr: string) => ALL.find((x) => x.abbr === abbr)?.name ?? abbr;
 /** The eras' rules (gimmicks.ts, FLOOR.era). */
-const ERA_NAME: Record<FloorEra, { name: string; text: string }> = {
+export const ERA_NAME: Record<FloorEra, { name: string; text: string }> = {
   modern: { name: tx('Modern'), text: tx('Today’s rules.') },
   nineties: { name: tx('The nineties'), text: tx('Hand-checking: tougher at the rim, fewer fouls called, a slower pace.') },
   sixties: { name: tx('The sixties'), text: tx('No three-point line: every basket is two. A faster pace.') },
@@ -60,6 +62,7 @@ function EraPick({ value, onChange }: { value: FloorEra; onChange: (e: FloorEra)
         <span className="small muted">{t('Era')}</span>
         {ERAS.map((k) => (
           <button key={k} className={`pick-chip${value === k ? ' on' : ''}`} aria-pressed={value === k} title={t(ERA_NAME[k].text)} onClick={() => onChange(k)}>
+            <Ico name={`fl-${k}`} />
             {t(ERA_NAME[k].name)}
           </button>
         ))}
@@ -132,21 +135,29 @@ function Five({ five, slot, onPick, sixth }: { five: LegendSpot[]; slot: number;
           <i className="fh-line">{lineOf(l.name)}</i>
           {signatureOf(l.name) && (
             <em className="fh-sig" title={signatureOf(l.name)!.text}>
+              <Ico name="fl-sig" size={12} />
               {signatureOf(l.name)!.name}
             </em>
           )}
-          {isFace(l.name) && <em className="fh-face">{t('Face of the franchise')}</em>}
+          {isFace(l.name) && (
+            <em className="fh-face">
+              <Ico name="fl-face" size={12} />
+              {t('Face of the franchise')}
+            </em>
+          )}
         </button>
       ))}
     </div>
     {sixth && (
       <p className="small muted fh-sixth">
+        <Ico name="fl-sixth" />
         {t('Sixth man')}: <b>{sixth.name}</b> · {sixth.pos} · {sixth.ovr}
         {signatureOf(sixth.name) ? ` · ${signatureOf(sixth.name)!.name}` : ''}
       </p>
     )}
     {five[slot] && (
       <p className="small fh-spots">
+        <Ico name="fl-hotspot" />
         <b>{t('Hot spots')}:</b> {hotSpotsFor(five[slot])}
       </p>
     )}
@@ -156,7 +167,10 @@ function Five({ five, slot, onPick, sixth }: { five: LegendSpot[]; slot: number;
       return duos.length ? (
         <p className="small fh-duos">
           {duos.map(([i, j]) => (
-            <span key={`${i}-${j}`}>{t('Chemistry: {a} + {b}', { a: names[i], b: names[j] })}</span>
+            <span key={`${i}-${j}`}>
+              <Ico name="fl-duo" />
+              {t('Chemistry: {a} + {b}', { a: names[i], b: names[j] })}
+            </span>
           ))}
         </p>
       ) : null;
@@ -205,6 +219,7 @@ function CourtPick({ value, onChange }: { value: CourtLook; onChange: (c: CourtL
               onChange(c.id);
             }}
           >
+            <Ico name={`fl-${c.id}`} />
             {t(c.name)}
           </button>
         ))}
@@ -379,13 +394,18 @@ export function FloorPage({ inside = false }: { inside?: boolean }) {
           setPlan(null);
           setLast(r);
           let title = false;
+          // (after round 42) the book's marks: the franchises, the court, the plan, a conference won, a drafted five
+          const played = mode === 'playoffs' && bracket ? myGame(bracket) : null;
+          const opp = played ? (played.home ? played.game.b : played.game.a) : mode === 'career' ? undefined : them;
+          const conf = played && r.win && played.round === BRACKET_ROUNDS - 2 ? NBA_TEAMS.find((x) => x.abbr === us)?.conf : undefined;
           if (mode === 'playoffs' && bracket) {
             const b = playRound(bracket, [r.us, r.them], oppOvr ?? undefined);
             title = b.champion === b.me;
             setBracket(b.out !== null && !b.champion ? finishBracket(b, oppOvr ?? undefined) : b);
           }
           // the book (achievements) keeps games played to their end
-          recordFloorGame({ margin: r.us - r.them, pts: r.line.pts, low: Math.min(r.marks.low, r.us - r.them), kind: mode === 'playoffs' ? 'playoff' : mode === 'draft' ? 'draft' : 'quick', title });
+          const more = floorGameRec(r, { team: mode === 'quick' || mode === 'playoffs' ? us : undefined, opp, court: plan.court, plan: plan.setup.us.plan, conf, drafted: mode === 'draft' ? drafted : undefined });
+          recordFloorGame({ margin: r.us - r.them, pts: r.line.pts, low: Math.min(r.marks.low, r.us - r.them), kind: mode === 'playoffs' ? 'playoff' : mode === 'draft' ? 'draft' : 'quick', title, more });
           achievementsNow();
         }}
       />
@@ -405,7 +425,7 @@ export function FloorPage({ inside = false }: { inside?: boolean }) {
         </div>
         <div className="fh-modes" role="tablist" aria-label={t('How to play')}>
           {(career ? [CAREER_MODE, ...MODES] : MODES).map((m) => (
-            <button key={m.id} role="tab" aria-selected={mode === m.id} className={`fh-mode${mode === m.id ? ' on' : ''}`} onClick={() => (setMode(m.id), setLast(null))}>
+            <button key={m.id} role="tab" data-mode={m.id} aria-selected={mode === m.id} className={`fh-mode${mode === m.id ? ' on' : ''}`} onClick={() => (setMode(m.id), setLast(null))}>
               <b>{t(m.name)}</b>
               <span className="prose small">{t(m.text)}</span>
             </button>
@@ -490,6 +510,7 @@ export function FloorPage({ inside = false }: { inside?: boolean }) {
               <Five five={five} slot={steer} onPick={setSlot} sixth={mine.sixth} />
               {signatureOf(five[steer].name) && (
                 <p className="small fh-sig-text">
+                  <Ico name="fl-sig" />
                   <b>{signatureOf(five[steer].name)!.name}.</b> {signatureOf(five[steer].name)!.text}
                 </p>
               )}

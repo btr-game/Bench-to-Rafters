@@ -3304,6 +3304,11 @@ td > .link-btn { min-width: 44px; text-align: left; }
 .fh-duos span { padding: 1px 6px; border: 2px solid var(--line); }
 .lg-sig { text-align: left; white-space: nowrap; }
 .floor-sig { color: #ffd23f; }
+/* round 42 end of round: the Floor's pixel icons before a line's words (art/floorIcons.ts, floor/Ico.tsx) */
+.fl-ico { display: inline-block; vertical-align: -3px; margin-right: 5px; line-height: 0; }
+.fl-ico .art-icon { display: inline-block; }
+.floor-me-item .fl-ico, .floor-hot .fl-ico { vertical-align: -1px; margin-right: 4px; }
+.fh-sig .fl-ico, .fh-face .fl-ico { vertical-align: -2px; margin-right: 4px; }
 
 /* the Floor's game plan (after round 42): shape and style chips, the pixel half court, the spots */
 .gp { --gp-floor: #d9a066; --gp-paint: #c4803f; --gp-line: #fff7e8; --gp-rim: #e8590c; --gp-man: #1b1820; --gp-man-hi: #4a4458; }

@@ -5,7 +5,7 @@ import type { FloorTrait } from '../../engine/floor/sim';
 import { legendTrait } from '../../content/legendTraits';
 import { t, tx } from '../../i18n';
 
-const TRAIT_TEXT: Record<FloorTrait, string> = {
+export const TRAIT_TEXT: Record<FloorTrait, string> = {
   quick: tx('Quick release: his shot meter fills much faster.'),
   deep: tx('Deep range: threes from far out cost him nothing, and all his threes fall a little more.'),
   fade: tx('Tough shot maker: a hand in his face bothers his jumper far less.'),

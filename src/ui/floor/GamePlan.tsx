@@ -11,14 +11,14 @@ import { t, tx } from '../../i18n';
 const POS: Pos[] = ['PG', 'SG', 'SF', 'PF', 'C'];
 const KEY = 'btr-floor-plan';
 
-const SHAPE_NAME: Record<FloorShape, { name: string; text: string }> = {
+export const SHAPE_NAME: Record<FloorShape, { name: string; text: string }> = {
   standard: { name: tx('Standard'), text: tx('Guards up top and on a wing, a forward in the corner, the centre at the rim.') },
   fiveOut: { name: tx('Five out'), text: tx('All five beyond the arc: the paint left open for drives.') },
   fourOutOneIn: { name: tx('Four out, one in'), text: tx('Four shooters around one big on the block.') },
   twinTowers: { name: tx('Twin towers'), text: tx('Two bigs on the blocks, three on the perimeter.') },
   horns: { name: tx('Horns'), text: tx('Both bigs at the elbows, shooters in the corners: picks and posts.') },
 };
-const PLAY_NAME: Record<FloorPlay, { name: string; text: string }> = {
+export const PLAY_NAME: Record<FloorPlay, { name: string; text: string }> = {
   balanced: { name: tx('Balanced'), text: tx('A bit of everything.') },
   runGun: { name: tx('Run and gun'), text: tx('Longer fast breaks, early shots, more threes and drives.') },
   motion: { name: tx('Ball movement'), text: tx('More passes, shots shared out, almost no isolations.') },
@@ -39,7 +39,7 @@ export const SPOT_NAME: Record<FloorSpot, string> = {
   rightBlock: tx('Right block'),
 };
 
-export const DEFAULT_PLAN: FloorPlan = { shape: 'standard', style: 'balanced' };
+const DEFAULT_PLAN: FloorPlan = { shape: 'standard', style: 'balanced' };
 
 /** The plan kept from last time on this device, or the standard one. */
 export function rememberedPlan(): FloorPlan {
@@ -62,8 +62,9 @@ function remember(p: FloorPlan): void {
 /** Where each position stands under a plan. */
 export const spotsOf = (p: FloorPlan): Record<Pos, FloorSpot> => Object.fromEntries(POS.map((pos) => [pos, p.spots?.[pos] ?? SHAPES[p.shape][pos]])) as Record<Pos, FloorSpot>;
 
-/** The half court: the basket at the bottom, the five on their spots (pixel art, a 2-pixel grid). */
-function Court({ at, names }: { at: Record<Pos, FloorSpot>; names: Partial<Record<Pos, string>> }) {
+/** The half court: the basket at the bottom, the five on their spots (pixel art, a 2-pixel grid). Also
+ * the dev deck Catalog's picture of each shape and each franchise's best fit. */
+export function PlanCourt({ at, names }: { at: Record<Pos, FloorSpot>; names: Partial<Record<Pos, string>> }) {
   // court feet to the picture: 50 feet wide, 32 deep from the baseline, 4 pixels a foot
   const X = (side: number) => Math.round((25 + side) * 4);
   const Y = (ahead: number) => Math.round(136 - ahead * 4);
@@ -157,7 +158,7 @@ export function GamePlan({ plan, onChange, names }: { plan: FloorPlan; onChange:
         {t(SHAPE_NAME[plan.shape].text)} {t(PLAY_NAME[plan.style].text)}
       </p>
       <div className="gp-body">
-        <Court at={at} names={names} />
+        <PlanCourt at={at} names={names} />
         <div className="gp-spots">
           {POS.map((pos) => (
             <label key={pos} className="small">

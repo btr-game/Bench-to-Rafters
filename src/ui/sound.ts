@@ -86,6 +86,13 @@ export const SFX = [
   ['squeak', 'The Floor: a sneaker squeak on a crossover, a spin, a step-back or a steal'],
   ['bounce', 'The Floor: the dribble as the ball comes to him'],
   ['roar', 'The Floor: the crowd on its feet after a big play'],
+  // round 42 end of round: the Floor's gimmicks, its replay and the friend draft
+  ['ignite', 'The Floor: a man catches fire (a match struck, the flame whooshing up)'],
+  ['erupt', 'The Floor: the home crowd erupts (stamping feet, then the roar and a horn)'],
+  ['replay', 'The Floor: the buzzer-beater replay starts (a tape rewinding, then the red light)'],
+  ['pickus', 'The friend draft: your pick is in (a card slapped down, a bright note)'],
+  ['pickthem', 'The friend draft: your friend picks (a card down, a low note)'],
+  ['series', 'Play with friends: a series won (a fanfare and the crowd)'],
 ] as const;
 type Sfx = (typeof SFX)[number][0];
 
@@ -474,6 +481,40 @@ export function sfx(name: Sfx, always = false): void {
       noise(t, 1.1, 0.22);
       noise(t + 0.15, 0.9, 0.16);
       tone(N(-12), t, 0.9, 'triangle', 0.12);
+      break;
+    // ---- round 42 end of round: the Floor ----
+    case 'ignite': // a match struck, then the flame whooshes up the scale
+      noise(t, 0.05, 0.45);
+      seq([7, 12, 16, 19, 24, 28, 31, 36], 0.03, 'sawtooth', 0.22);
+      noise(t + 0.08, 0.4, 0.18);
+      tone(N(43), t + 0.3, 0.18, 'square', 0.25);
+      break;
+    case 'erupt': // stamping feet, three beats, then the roar and a horn over it
+      for (let i = 0; i < 3; i++) {
+        tone(N(-17), t + i * 0.13, 0.08, 'triangle', 0.6);
+        noise(t + i * 0.13, 0.04, 0.3);
+      }
+      noise(t + 0.4, 1.0, 0.3);
+      tone(N(7), t + 0.42, 0.45, 'square', 0.22);
+      tone(N(11), t + 0.42, 0.45, 'square', 0.16);
+      break;
+    case 'replay': // the tape rewinds (a fast fall), clicks, and the red light comes on with a beep
+      for (let i = 0; i < 8; i++) tone(N(36 - i * 3), t + i * 0.025, 0.03, 'square', 0.22);
+      noise(t + 0.22, 0.03, 0.3);
+      tone(N(24), t + 0.3, 0.16, 'square', 0.3);
+      break;
+    case 'pickus': // a card slapped down, a bright note
+      noise(t, 0.03, 0.4);
+      seq([19, 26], 0.06, 'square', 0.4);
+      break;
+    case 'pickthem': // a card down across the table, a lower note
+      noise(t, 0.03, 0.3);
+      tone(N(7), t + 0.03, 0.1, 'triangle', 0.45);
+      break;
+    case 'series': // a series won: the fanfare, the crowd
+      seq([12, 16, 19, 24, 19, 24, 28], 0.08, 'square', 0.45);
+      tone(N(0), t, 0.6, 'triangle', 0.5);
+      noise(t + 0.5, 0.6, 0.22);
       break;
     case 'react': // a pop and a bright note: one reaction on a friend's season
       noise(t, 0.02, 0.2);

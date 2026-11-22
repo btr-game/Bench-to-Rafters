@@ -332,7 +332,7 @@ export function recordFloorGame(r: Parameters<typeof addFloorGame>[1]): void {
 
 /** Round 39, online: a game on the Floor against a friend, played to its end (ui/floor/FloorFriend.tsx).
  * True when the book has something new to read. */
-export function recordFloorFriend(win: boolean, margin: number, pts: number): boolean {
+export function recordFloorFriend(win: boolean, margin: number, pts: number, more: { draft?: boolean; friend?: string } = {}): boolean {
   const d = loadAch();
   const was = JSON.stringify(d.totals.floorFriend ?? null);
   const f = d.totals.floorFriend ?? { games: 0, wins: 0, losses: 0, streak: 0, best: 0, rout: false, close: false, pts: 0 };
@@ -343,6 +343,9 @@ export function recordFloorFriend(win: boolean, margin: number, pts: number): bo
     f.best = Math.max(f.best, f.streak);
     if (margin >= R39_MARKS.friendRout) f.rout = true;
     if (margin <= 2) f.close = true;
+    // after round 42: a win with drafted fives, and the wins over this friend
+    if (more.draft) f.draftWins = (f.draftWins ?? 0) + 1;
+    if (more.friend) f.vs = { ...f.vs, [more.friend]: (f.vs?.[more.friend] ?? 0) + 1 };
   } else {
     f.losses++;
     f.streak = 0;
@@ -351,6 +354,20 @@ export function recordFloorFriend(win: boolean, margin: number, pts: number): bo
   d.totals.floorFriend = f;
   saveAch(d);
   return JSON.stringify(f) !== was;
+}
+
+/** After round 42: a series against a friend decided (best of 3 or 5): won or lost, swept (the loser
+ * won none of a best-of-five), with drafted fives. True when the book has something new to read. */
+export function recordFloorSeries(r: { won: boolean; best: number; sweep: boolean; draft: boolean }): boolean {
+  if (!r.won || r.best < 3) return false;
+  const d = loadAch();
+  const f = d.totals.floorFriend ?? { games: 0, wins: 0, losses: 0, streak: 0, best: 0, rout: false, close: false, pts: 0 };
+  f.series = (f.series ?? 0) + 1;
+  if (r.sweep && r.best >= 5) f.sweeps = (f.sweeps ?? 0) + 1;
+  if (r.draft) f.draftSeries = (f.draftSeries ?? 0) + 1;
+  d.totals.floorFriend = f;
+  saveAch(d);
+  return true;
 }
 
 /** Round 29: cards locked in the career log right now (the most at once is kept). */

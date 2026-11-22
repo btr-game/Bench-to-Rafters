@@ -379,3 +379,18 @@ link, and quick match). Defaults proposed, for the owner to confirm or change:
 - **Values built in English**: a few values are put together in the code ("Name's", " 3 times",
   "your handle and passing, your assists"). Building them from the language's own pieces would end
   the last mixed sentences.
+
+## Kept from the Floor's legends batch (after round 42)
+
+- **Eras for friend games and the career**: the era picker is on the Floor's own page only. Friend
+  games always play the modern era, and the career's own-player Floor has none. The host could pick
+  the era in the room, sent with the setup like the plans.
+- **A blocked shot and the hot streak**: a block does not count as a miss for being on fire. Counting
+  it would cool a hot shooter a little faster.
+- **Idle online games**: with neither player pressing a key, the two steered men hold the ball and a
+  game can run into overtime after overtime. A held ball could pass itself after a few seconds.
+- **Signature names in other languages**: the legends' signature names stay in English (their
+  descriptions are translated); they could be translated if the owner wants.
+- **Sixth men in the superteam draft**: in a superteam draft against a friend the drafted fives have
+  no legend off the bench (Draft your five brings the colours' sixth man). A sixth pick each could
+  add one.

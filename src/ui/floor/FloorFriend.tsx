@@ -21,7 +21,7 @@ import { ALL_LEGENDS, legendFive } from '../../engine/floor/legends';
 import { BESTS, PICK_SECONDS, lineUp, picksOf, seriesWinner, toWin, type Best } from '../../engine/floor/friend';
 import type { FloorPlan, FloorSetup } from '../../engine/floor/sim';
 import { username } from '../names';
-import { recordFloorFriend } from '../achievements';
+import { recordFloorFriend, recordFloorSeries } from '../achievements';
 import { achievementsNow } from '../../store';
 import { SITE } from '../multiplayer';
 import { t } from '../../i18n';
@@ -30,6 +30,8 @@ import { withDirect } from './rtc';
 import { LOBBY, NetGame, ME, ROOM_RE, canPlayOnline, cleanRoom, openWire, roomCode, type FloorMsg, type Wire } from './net';
 import { FriendRoom, cleanPlan, type RoomMode, type RoomState } from './room';
 import { DraftBoard } from './DraftBoard';
+import { Ico } from './Ico';
+import { sfx } from '../sound';
 import { GamePlan, rememberedPlan } from './GamePlan';
 
 const POS: Pos[] = ['PG', 'SG', 'SF', 'PF', 'C'];
@@ -183,6 +185,20 @@ export function FloorFriend() {
     [],
   );
 
+  // (after round 42) a series decided counts in the book once: won, swept, with drafted fives
+  const seriesDone = useRef(false);
+  useEffect(() => {
+    const won = rs ? seriesWinner(rs.best, rs.wins) : null;
+    if (won === null || !rs) {
+      seriesDone.current = false;
+      return;
+    }
+    if (seriesDone.current || !settled.current.size) return;
+    seriesDone.current = true;
+    const side: 0 | 1 = host.current ? 0 : 1;
+    if (recordFloorSeries({ won: won === side, best: rs.best, sweep: rs.wins[1 - won] === 0, draft: rs.mode === 'draft' })) achievementsNow();
+  }, [rs]);
+
   // a quick match tips off by itself once the other player is in the room
   useEffect(() => {
     if (phase === 'host' && peer && quick.current && !game && !last) tipOff();
@@ -229,6 +245,14 @@ export function FloorFriend() {
     return () => clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [game]);
+
+  // a series decided: his fanfare when it is his, the sad notes when it is his friend's
+  const decided = rs && rs.best > 1 ? seriesWinner(rs.best, rs.wins) : null;
+  const decidedRef = useRef(decided);
+  useEffect(() => {
+    if (decided !== null && decidedRef.current === null) sfx(decided === (hosting ? 0 : 1) ? 'series' : 'lose');
+    decidedRef.current = decided;
+  }, [decided, hosting]);
 
   const hear = (m: FloorMsg) => {
     if (m.id === ME) return;
@@ -339,7 +363,7 @@ export function FloorFriend() {
           series={seriesLine(rs, game.link.side, game.friend)}
           onDone={(r) => {
             // a game played to its end counts in the book (one left early does not)
-            if (recordFloorFriend(r.win, r.us - r.them, r.line.pts)) achievementsNow();
+            if (recordFloorFriend(r.win, r.us - r.them, r.line.pts, { draft: rs?.mode === 'draft', friend: game.friend })) achievementsNow();
             done(t('{us} – {them}, {result}', { us: r.us, them: r.them, result: r.win ? t('you won') : t('you lost') }));
           }}
           onAgain={host.current && peer ? again : undefined}
@@ -510,6 +534,7 @@ export function FloorFriend() {
               )}
               {rs.best > 1 && (
                 <p className="ff-series" role="status">
+                  <Ico name="fl-series" />
                   {won === null
                     ? t('Series, first to {n}: you {a}, {name} {b}.', { n: toWin(rs.best), a: rs.wins[side], b: rs.wins[1 - side], name: friend })
                     : won === side

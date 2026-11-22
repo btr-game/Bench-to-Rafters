@@ -28,6 +28,7 @@ import { SpriteBook, type Frame } from './sprites';
 import { glyph } from '../art/pixel';
 import type { NetGame } from './net';
 import { signatureOf } from './traits';
+import { Ico } from './Ico';
 import { Bench, BoxScore } from './BoxScore';
 
 export interface FloorTeamLook {
@@ -303,10 +304,10 @@ function hear(s: FloorState, e: FloorEvent, before: [number, number]): string | 
     case 'break':
       return ours ? 'Fast break!' : null;
     case 'fire':
-      sfx('roar');
+      sfx('ignite');
       return ours ? 'He’s on fire!' : null;
     case 'crowd':
-      sfx('roar');
+      sfx('erupt');
       return ours ? 'Listen to this crowd!' : null;
     case 'ft':
       sfx(e.good ? 'net' : 'rim');
@@ -484,7 +485,7 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
       if (import.meta.env.DEV) (window as unknown as { __floor?: FloorState }).__floor = real;
     };
     look();
-    const back = new Backdrop(ctx, arena, court);
+    const back = new Backdrop(ctx, arena, court, setup.era !== 'sixties');
     const pad = padOf(court, arena);
     const book = new SpriteBook();
     const lookFor: Look[] = s.players.map((p) => lookOf(p.name, shoeOf(looks[p.team].kit, looks[p.team].which)));
@@ -671,7 +672,8 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
       if (!link && beater && won && playMs - beater.ms <= REPLAY.recent && tape.length > 1) {
         const to = tape[tape.length - 1].ms;
         replay = { t0: performance.now(), from: Math.max(tape[0].ms, Math.min(to - REPLAY.show, beater.shot - REPLAY.lead)), to };
-        after = r;
+        after = { ...r, replay: true };
+        sfx('replay');
         setReplaying(true);
         return;
       }
@@ -1459,7 +1461,12 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
             <div className="floor-final">
               <span>{setup.us.short}</span> {over.us} – {over.them} <span>{setup.them.short}</span>
             </div>
-            {net && series && <p className="floor-end-series">{t('Series {s}', { s: series })}</p>}
+            {net && series && (
+              <p className="floor-end-series">
+                <Ico name="fl-series" />
+                {t('Series {s}', { s: series })}
+              </p>
+            )}
             {me && (
               <p className="floor-line">
                 {me.name}: {over.line.pts} PTS · {over.line.reb} REB · {over.line.ast} AST · {over.line.stl} STL · {over.line.blk} BLK · {over.line.fgm}/{over.line.fga} FG
@@ -1472,7 +1479,7 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
                   {t('Play it again')}
                 </button>
               )}
-              <button className="btn primary" autoFocus onClick={() => onDone(over)}>
+              <button className="btn primary" autoFocus onClick={() => onDone({ ...over, big: bigRef.current })}>
                 {t('Continue')}
               </button>
             </div>
@@ -1485,11 +1492,13 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
         </b>
         {sig && (
           <span className="floor-me-item floor-sig" title={sig.text}>
+            <Ico name="fl-sig" size={12} />
             {sig.name}
           </span>
         )}
         {setup.era && setup.era !== 'modern' && (
           <span className="floor-me-item" title={setup.era === 'sixties' ? t('No three-point line: every basket is two. A faster pace.') : t('Hand-checking: tougher at the rim, fewer fouls called, a slower pace.')}>
+            <Ico name={`fl-${setup.era}`} size={12} />
             {setup.era === 'sixties' ? t('The sixties') : t('The nineties')}
           </span>
         )}
@@ -1499,11 +1508,19 @@ export function FloorScreen({ setup: given, arena, looks: givenLooks, series, on
         <span className={`floor-me-item${hud.mine >= 5 ? ' warn' : ''}`}>{t('His fouls: {n}', { n: hud.mine })}</span>
         <span className="floor-me-item">
           {t('Momentum')} <Momentum mo={hud.mo} us={setup.us.color} them={setup.them.color} />
-          {hot && <b className="floor-hot">{t('On fire')}</b>}
+          {hot && (
+            <b className="floor-hot">
+              <Ico name="flame" size={12} />
+              {t('On fire')}
+            </b>
+          )}
         </span>
         {hud.crowd !== null && (
           <span className="floor-me-item">
-            <b className="floor-hot floor-crowd">{hud.crowd ? t('{name} erupts', { name: hud.crowd }) : t('The crowd erupts')}</b>
+            <b className="floor-hot floor-crowd">
+              <Ico name="fl-erupt" size={12} />
+              {hud.crowd ? t('{name} erupts', { name: hud.crowd }) : t('The crowd erupts')}
+            </b>
           </span>
         )}
         {net && line && (

@@ -1,5 +1,5 @@
 // The dev deck's legends page (round 42, owner: "can i look at each legend's stats? maybe add that
-// to the dev deck"): all 150, their real career averages (content/legendStats.ts), the ratings the
+// to the dev deck"): all 180 (the fives and the sixth men), their real career averages (content/legendStats.ts), the ratings the
 // Floor gives them and how it has them play. Filter by franchise or name; sort by a click.
 
 import { useMemo, useState } from 'react';
@@ -22,7 +22,7 @@ export function Legends() {
         <div className="kicker on-dark">Bench to Rafters · dev deck</div>
         <h1>The Floor’s legends</h1>
         <p className="on-dark">
-          Every franchise’s all-time five: career regular-season averages on the left, then the overall from the list and the ratings the Floor plays him at (the list’s 80 to 99 is played as 75 to 89.25), then how
+          Every franchise’s all-time five and its sixth man: career regular-season averages on the left, then the overall from the list and the ratings the Floor plays him at (the list’s 80 to 99 is played as 75 to 89.25), then how
           it has him play (1 is a player like any other).
         </p>
       </header>
@@ -34,7 +34,7 @@ export function Legends() {
               {k === 'team' ? 'By franchise' : k === 'ovr' ? 'By overall' : 'By name'}
             </button>
           ))}
-          <span className="small muted">{rows.length} of 150</span>
+          <span className="small muted">{rows.length} of {ALL_LEGENDS.length}</span>
         </div>
         <LegendTable rows={rows} wide />
       </section>

@@ -90,7 +90,7 @@ interface Ground {
   crack?: string;
   pad: string;
 }
-const GROUND: Record<Exclude<CourtLook, 'arena'>, Ground> = {
+export const GROUND: Record<Exclude<CourtLook, 'arena'>, Ground> = {
   street: { tones: ['#4B4E54', '#46494F', '#515459'], seam: '#3C3F44', paint: '#3F5E86', centre: null, apron: '#414449', apronEdge: '#33363B', line: '#E4E1D6', dark: '#8A867D', side: '#7B776F', grain: 'speckle', crack: '#2E3135', pad: '#5E636B' },
   beach: { tones: ['#E6CF97', '#DEC58A', '#ECD7A4'], seam: '#D2B87C', paint: null, centre: null, apron: '#E0C88F', apronEdge: '#D6BC82', line: '#2E6FB5', dark: '#E3CB92', side: '#DCC389', grain: 'speckle', pad: '#2E6FB5' },
   gym: { tones: ['#B5713C', '#AA6835', '#BC7943'], seam: '#8A4F26', paint: '#7A2630', centre: '#C9962E', apron: '#5B3A21', apronEdge: '#422A18', line: '#EFE4CB', dark: '#1D140D', side: '#24180F', grain: 'planks', pad: '#7A2630' },
@@ -123,12 +123,15 @@ function palette(a: ArenaLook, court: CourtLook) {
   };
 }
 
+/** The planks of a team's arena. */
+export const ARENA_WOOD = ['#D9A46A', '#CF995F', '#DDAD76'];
+
 function arenaPalette(a: ArenaLook) {
   // the paint takes the team's main colour unless it is near black, then its second
   const paint = luma(a.c1) < 0.12 ? a.c2 : a.c1;
   const apron = mix(a.c1, '#000000', 0.45);
   return {
-    wood: ['#D9A46A', '#CF995F', '#DDAD76'].map(word),
+    wood: ARENA_WOOD.map(word),
     seam: word('#B9834E'),
     paint: [word(mix(paint, '#000000', 0.06)), word(mix(paint, '#000000', 0.18))],
     paintSeam: word(mix(paint, '#000000', 0.32)),
@@ -172,8 +175,8 @@ function arc(cx: number, cy: number, r: number, a0: number, a1: number, n = 28):
   });
 }
 
-/** Every line on the court, as polylines in feet. */
-function courtLines(): Line[] {
+/** Every line on the court, as polylines in feet (`three` false: the sixties, with no three-point line). */
+function courtLines(three: boolean): Line[] {
   const L: Line[] = [
     [[0, 0], [COURT.w, 0], [COURT.w, COURT.h], [0, COURT.h], [0, 0]],
     [[COURT.w / 2, 0], [COURT.w / 2, COURT.h]],
@@ -188,19 +191,22 @@ function courtLines(): Line[] {
     // the key and the free-throw circle
     L.push([[base, RIM_Y - 8], [ftX, RIM_Y - 8], [ftX, RIM_Y + 8], [base, RIM_Y + 8]]);
     L.push(side === 0 ? arc(ftX, RIM_Y, 6, -Math.PI / 2, Math.PI / 2, 20) : arc(ftX, RIM_Y, 6, Math.PI / 2, (Math.PI * 3) / 2, 20));
-    // the three-point line: the corners, then the arc round the rim
-    const cornerEnd = base + dir * THREE.cornerLen;
-    const a0 = Math.acos((THREE.cornerLen - Math.abs(rim - base)) / THREE.arc);
-    // both arcs run from the far corner (y 3) to the near one (y 47), the way the polyline goes; the
-    // right one the other way round drew a straight line up the court through the key
-    const arcPts = side === 0 ? arc(rim, RIM_Y, THREE.arc, -a0, a0, 36) : arc(rim, RIM_Y, THREE.arc, Math.PI + a0, Math.PI - a0, 36);
-    L.push([[base, RIM_Y - THREE.corner], [cornerEnd, RIM_Y - THREE.corner], ...arcPts.filter((_, i) => i > 0 && i < arcPts.length - 1), [cornerEnd, RIM_Y + THREE.corner], [base, RIM_Y + THREE.corner]]);
+    // the three-point line: the corners, then the arc round the rim (none in the sixties)
+    if (three) {
+      const cornerEnd = base + dir * THREE.cornerLen;
+      const a0 = Math.acos((THREE.cornerLen - Math.abs(rim - base)) / THREE.arc);
+      // both arcs run from the far corner (y 3) to the near one (y 47), the way the polyline goes; the
+      // right one the other way round drew a straight line up the court through the key
+      const arcPts = side === 0 ? arc(rim, RIM_Y, THREE.arc, -a0, a0, 36) : arc(rim, RIM_Y, THREE.arc, Math.PI + a0, Math.PI - a0, 36);
+      L.push([[base, RIM_Y - THREE.corner], [cornerEnd, RIM_Y - THREE.corner], ...arcPts.filter((_, i) => i > 0 && i < arcPts.length - 1), [cornerEnd, RIM_Y + THREE.corner], [base, RIM_Y + THREE.corner]]);
+    }
     // the restricted area under the rim
     L.push(side === 0 ? arc(rim, RIM_Y, 4, -Math.PI / 2, Math.PI / 2, 14) : arc(rim, RIM_Y, 4, Math.PI / 2, (Math.PI * 3) / 2, 14));
   }
   return L;
 }
-const LINES = courtLines();
+const LINES = courtLines(true);
+const LINES_NO_THREE = courtLines(false);
 
 // ---------------- the backdrop: stands, floor and lines, a pixel at a time ----------------
 
@@ -219,7 +225,7 @@ export class Backdrop {
   /** The first floor row: everything above it is the stands. */
   readonly floorTop: number;
 
-  constructor(ctx: CanvasRenderingContext2D, arena: ArenaLook, private court: CourtLook = 'arena') {
+  constructor(ctx: CanvasRenderingContext2D, arena: ArenaLook, private court: CourtLook = 'arena', private three = true) {
     this.img = ctx.createImageData(VIEW.w, VIEW.h);
     this.buf = new Uint32Array(this.img.data.buffer);
     this.pal = palette(arena, court);
@@ -312,7 +318,7 @@ export class Backdrop {
   }
 
   private lines(camX: number): void {
-    for (const line of LINES) {
+    for (const line of this.three ? LINES : LINES_NO_THREE) {
       let prev: ScreenPt | null = null;
       for (const [x, y] of line) {
         const p = project(camX, x, y);

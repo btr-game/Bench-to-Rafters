@@ -3973,3 +3973,37 @@ keeps the two teams and the man he steers. The rest is set: each side plays its 
 at its own level, in a random era on a random court, both drawn at tip-off; the era shows in the strip under the
 court when it is not the modern one. The game plan, court, era and overall pickers stay for the playoffs and the
 draft.
+
+### End of round for the Floor's legends batch
+
+Owner: "let's do the end of round checklist and publish". Split across three helpers (art and sound;
+achievements, events and shop; guide, dev deck and summary), merged here.
+
+- **Graphics**: 17 pixel icons in `src/ui/art/floorIcons.ts` (eras, courts, the franchise face, the sixth man,
+  duos, hot spots, the crowd, the signature star, the draft's turn marks, the series badge), each set before its
+  text with `Ico` (decorative, hidden from screen readers). The sixties court draws no three-point line
+  (`courtLines(three)` in `view.ts`).
+- **Sound**: `ignite` (catching fire), `erupt` (the crowd), `replay`, `pickus` / `pickthem` (draft picks) and
+  `series` (a series won), synthesised like the rest and listed in the dev deck's sound board.
+- **Fast break, sim mode, simple text**: the Floor's own page is outside a career; the career's Floor follows the
+  existing rules (fast break and sim play it out). The new setup lines are short labels.
+- **Contrast and keyboard**: the visual check ran clean on all 200 cards in both looks; class contrast: 216
+  combinations, none under AA. The new chips are buttons, reachable by Tab.
+- **Achievements**: 45 for the Floor (`src/engine/achievements42.ts`), earned from the device's totals: franchises
+  and faces won with, Jokic, eras and courts, fire and the crowd, duos, the buzzer-beater replay, big heads, styles
+  and shapes, the East and the West, drafted superteams, series and friends. The book has 980.
+- **Events and shop**: five career events (`src/engine/events/round42.ts`: a rooftop pickup, a throwback night,
+  the franchise's sixth man, a hot spot of his own, the franchise face) and four shop items (a rooftop court
+  membership, a sixties throwback jersey, a big-head bobblehead, a sixth-man scoring coach).
+- **Harness**: no new decision kinds; the new events are ordinary events `smartChoice` already handles.
+- **Dead code**: no unused locals; five exports only their own file used are no longer exported.
+- **Tests**: 616 pass (60 files). Vitest reports one worker timeout on its own RPC during the 51-second signature
+  test, not a failed test.
+- **Balance**: not run; careers play as before (the Floor is a mini-game and its own page).
+- **Guide**: the manual's Floor items rewritten and five added (game plans, legends and signatures, on the
+  court, calls and rules, with a friend); one Guide mode step updated.
+- **Dev deck**: 14 cards (five start a game in a moment: on fire, the sixties, the beach, big heads, a tied game
+  with 10 seconds left) and three Catalog lists (the legends' faces, sixth men and signatures; plans and fits;
+  gimmicks, eras, courts, duos and crowds): 200 cards, 41 lists.
+- **Summary**: a chapter, "The Floor: five on five", written by `scripts/summaryFloor.ts` from the code.
+- **dev-apart**: the deck changed none of the game's own keys.

@@ -37,6 +37,11 @@ export interface FloorGimmicks {
   /** The crowd erupting (for whom, until which tick), and whether it already has for this run. */
   crowd: { team: 0 | 1; until: number } | null;
   roared: boolean;
+  /** For the book (achievements): the times each team's men caught fire and its crowd erupted, and
+   * each player's most makes in a row. */
+  lit: [number, number];
+  roars: [number, number];
+  most: number[];
 }
 
 const G = FLOOR.gimmick;
@@ -98,7 +103,7 @@ export function startGimmicks(set: FloorSetup, players: Player[]): FloorGimmicks
     const at = players.map((p, i) => (p.team === team ? i : -1)).filter((i) => i >= 0);
     for (const [i, j] of pairsAmong(at.map((i) => players[i].name))) pairs.push([at[i], at[j]]);
   }
-  return { era, home, fans: fansOf((home === 0 ? set.us : set.them).short), spots, pairs, row: players.map(() => 0), fire: players.map(() => -1), scores: [0, 0], crowd: null, roared: false };
+  return { era, home, fans: fansOf((home === 0 ? set.us : set.them).short), spots, pairs, row: players.map(() => 0), fire: players.map(() => -1), scores: [0, 0], crowd: null, roared: false, lit: [0, 0], roars: [0, 0], most: players.map(() => 0) };
 }
 
 /** The era's rules in this game. */
@@ -109,7 +114,7 @@ export const crowdFor = (s: FloorState): 0 | 1 | null => (s.gm?.crowd && s.tick 
 const paired = (s: FloorState, a: number, b: number): boolean => !!s.gm?.pairs.some(([i, j]) => (i === a && j === b) || (i === b && j === a));
 
 /** Whether a spot is within reach of one of his hot spots. */
-export function onHotSpot(s: FloorState, i: number, at: Spot): boolean {
+function onHotSpot(s: FloorState, i: number, at: Spot): boolean {
   const p = s.players[i];
   return (s.gm?.spots[i] ?? []).some((n) => dist(at, attackSpot(p.team, SPOTS[n][0], SPOTS[n][1])) <= G.spotReach);
 }
@@ -151,8 +156,10 @@ export function afterShot(s: FloorState, by: number, made: boolean, emit: (e: Om
   const p = s.players[by];
   if (made) {
     g.row[by]++;
+    g.most[by] = Math.max(g.most[by], g.row[by]);
     if (g.fire[by] < 0 && g.row[by] >= G.fireMakes) {
       g.fire[by] = 0;
+      g.lit[p.team]++;
       emit({ kind: 'fire', team: p.team, by });
     }
     g.scores[p.team]++;
@@ -174,11 +181,12 @@ export function afterShot(s: FloorState, by: number, made: boolean, emit: (e: Om
   else if (made && !g.roared && p.team === g.home && (s.run.pts >= G.crowdRun || g.scores[g.home] >= G.crowdScores)) {
     g.roared = true;
     g.crowd = { team: g.home, until: s.tick + ticks(G.crowdSecs) };
+    g.roars[g.home]++;
     emit({ kind: 'crowd', team: g.home });
   }
 }
 
 /** The gimmicks seen from the other end (mirrorFloor): the teams swapped. */
 export function mirrorGimmicks(g: FloorGimmicks | undefined): FloorGimmicks | undefined {
-  return g && { ...g, home: flip(g.home), scores: [g.scores[1], g.scores[0]], crowd: g.crowd ? { ...g.crowd, team: flip(g.crowd.team) } : null };
+  return g && { ...g, home: flip(g.home), scores: [g.scores[1], g.scores[0]], lit: [g.lit[1], g.lit[0]], roars: [g.roars[1], g.roars[0]], crowd: g.crowd ? { ...g.crowd, team: flip(g.crowd.team) } : null };
 }

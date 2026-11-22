@@ -1946,6 +1946,12 @@ export interface FloorResult {
   start: [number, number];
   overtimes: number;
   fast: [number, number];
+  /** The gimmicks' marks for the book (achievements): the era, the times his team's men caught fire
+   * and its crowd erupted, his own most makes in a row, and whether his team had a famous duo. */
+  gm: { era: FloorEra; lit: number; roars: number; row: number; duo: boolean };
+  /** Set by the screen: the game was won on a buzzer-beater it replayed, and big-head mode was on. */
+  replay?: boolean;
+  big?: boolean;
 }
 
 export function floorResult(s: FloorState): FloorResult {
@@ -1964,6 +1970,7 @@ export function floorResult(s: FloorState): FloorResult {
     start: [...s.start] as [number, number],
     overtimes: s.periods,
     fast: [...s.fast] as [number, number],
+    gm: { era: s.gm?.era ?? 'modern', lit: s.gm?.lit[0] ?? 0, roars: s.gm?.roars[0] ?? 0, row: s.gm?.most[s.user] ?? 0, duo: !!s.gm?.pairs.some(([i]) => s.players[i].team === 0) },
   };
 }
 
