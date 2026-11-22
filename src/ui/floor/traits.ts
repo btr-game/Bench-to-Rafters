@@ -2,7 +2,7 @@
 // engine's numbers are FLOOR.trait). Shown beside the signature's name, in the player's language.
 
 import type { FloorTrait } from '../../engine/floor/sim';
-import { LEGEND_TRAITS, SIGNATURES_ON } from '../../content/legendTraits';
+import { legendTrait } from '../../content/legendTraits';
 import { t, tx } from '../../i18n';
 
 const TRAIT_TEXT: Record<FloorTrait, string> = {
@@ -47,11 +47,65 @@ const TRAIT_TEXT: Record<FloorTrait, string> = {
   dirk: tx("His jumpers cannot be blocked."),
   harden: tx("His step-back works far more, and he draws fouls on threes."),
   robinson: tx("He blocks more, and runs the floor faster than any other centre."),
+  pettit: tx("A putback right after his own offensive rebound falls more."),
+  tmac: tx("A shot soon after a make of his falls more."),
+  baylor: tx("He hangs in the air inside: he is blocked far less often."),
+  moses: tx("He comes down with far more offensive rebounds."),
+  cp3: tx("His reach-ins strip the ball handler far more often."),
+  ad: tx("He blocks far more shots coming over from the weak side."),
+  ewing: tx("He blocks far more shots at the rim."),
+  iverson: tx("His crossover beats his man more often and leaves him slowed longer."),
+  barkley: tx("He wins rebounds from further away than his size should allow."),
+  zeke: tx("The ball is rarely stripped from him or lost on a move."),
+  dwight: tx("Off a pass at the rim, his shot cannot be blocked and falls a little more."),
+  russ: tx("He runs the floor faster on the break."),
+  barry: tx("A three right after his pass falls more."),
+  nash: tx("Early in the shot clock, a shot right after his pass falls more."),
+  nique: tx("His shots at the rim fall a little more, and his dunks swing the game harder."),
+  hondo: tx("Tiredness slows him and costs his shot less."),
+  kidd: tx("After his own defensive rebound, the break lasts longer."),
+  frazier: tx("He picks off far more passes."),
+  pippen: tx("His contests bother jumpers and threes more."),
+  ant: tx("At the rim with a man right on him, he goes up through him: it falls more and is blocked less."),
+  dame: tx("Deep threes cost him nothing, and in the last five minutes his threes fall more."),
+  glide: tx("On the break, his shots inside fall more."),
+  walton: tx("A shot right after his pass from the high post falls more."),
+  stockton: tx("His pass to the man who set the pick is never lost, and that man shoots better."),
+  iceman: tx("The finger roll: near the basket, a hand in his face bothers him less."),
+  cousy: tx("Trapped by two, his pass out is never lost and sets up a better shot."),
+  mchale: tx("His post moves beat his man more often."),
+  king: tx("Shooting right off the catch, a contest bothers him half as much."),
+  reed: tx("In the last period with his team behind, his shots fall more."),
+  rose: tx("His moves work a little more, and after one he bursts away faster."),
+  hill: tx("Right after his move beats his man, his pass is never lost and sets up a better shot."),
+  bige: tx("He blocks more shots and wins more rebounds."),
+  melo: tx("After sizing his man up with the ball, his jumper falls more."),
+  mcadoo: tx("His shots from the post fall more."),
+  booker: tx("A hand in his face bothers his mid-range jumper far less."),
+  webber: tx("A shot right after his pass from the post falls more."),
+  brunson: tx("At the rim right after his move beats his man, his shot falls more."),
+  vince: tx("At the rim right after his move beats his man, his shot cannot be blocked."),
+  kyrie: tx("In an isolation, his moves beat his man far more often."),
+  spida: tx("With the ball he loses half the speed others do."),
+  reggie: tx("In the last two minutes, his threes fall far more."),
+  pg13: tx("More steals of every kind, and his threes fall a little more."),
+  zo: tx("He blocks far more hook shots."),
+  penny: tx("A shot inside right after his pass falls more."),
+  pistol: tx("His long two-point jumpers fall more."),
+  tiny: tx("He draws far more fouls at the rim."),
+  wemby: tx("He blocks far more shots, jumpers included, and his threes fall a little more."),
+  glove: tx("He takes the ball more: strips and picked-off passes."),
+  truth: tx("In the last period his shots fall more."),
+  greer: tx("A hand in his face bothers his mid-range jumper less."),
+  mullin: tx("His threes fall a little more."),
+  worthy: tx("Inside shots on the break fall more."),
+  kj: tx("His moves beat his man more."),
+  yao: tx("Inside shots fall more, and he is blocked less."),
 };
 
 
 /** A legend's signature for the screen: its name and what it does; null for a player without one. */
 export function signatureOf(name: string): { name: string; text: string } | null {
-  const x = SIGNATURES_ON ? LEGEND_TRAITS[name] : undefined;
+  const x = legendTrait(name);
   return x ? { name: x.name, text: t(TRAIT_TEXT[x.kind]) } : null;
 }

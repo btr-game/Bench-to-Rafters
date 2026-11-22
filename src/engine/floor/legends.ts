@@ -10,7 +10,7 @@
 // scoring, passing from his assists. A team can then be played at its real level or at any overall
 // the player picks, each side on its own.
 
-import { LEGEND_TRAITS, SIGNATURES_ON } from '../../content/legendTraits';
+import { legendTrait } from '../../content/legendTraits';
 import { FLOOR, OVR_WEIGHTS } from '../balance';
 import { clamp } from '../rng';
 import { ovrOf } from '../player/ovr';
@@ -177,7 +177,7 @@ export function legendTeam(tag: string, five: LegendSpot[], opts: { ovr?: number
     let number = LEGEND_NUMBERS[l.name] ?? 4 + i * 7;
     while (used.has(number)) number = (number + 1) % 100;
     used.add(number);
-    return { id: `${tag}${i}`, name: l.name, pos: SLOTS[i] ?? l.pos, number, r: legendRatings(l, shift), style: legendStyle(l), trait: SIGNATURES_ON ? LEGEND_TRAITS[l.name]?.kind : undefined, user: opts.user === i };
+    return { id: `${tag}${i}`, name: l.name, pos: SLOTS[i] ?? l.pos, number, r: legendRatings(l, shift), style: legendStyle(l), trait: legendTrait(l.name)?.kind, user: opts.user === i };
   });
   const bench: FloorPlayerIn[] = BENCH.map((pos, k) => {
     let number = BENCH_NUMBERS[k];
@@ -191,7 +191,7 @@ export function legendTeam(tag: string, five: LegendSpot[], opts: { ovr?: number
     let number = LEGEND_NUMBERS[sx.name] ?? 1;
     while (used.has(number)) number = (number + 1) % 100;
     used.add(number);
-    bench[0] = { id: `${tag}5`, name: sx.name, pos: sx.pos, number, r: legendRatings(sx, shift), style: legendStyle(sx), trait: SIGNATURES_ON ? LEGEND_TRAITS[sx.name]?.kind : undefined };
+    bench[0] = { id: `${tag}5`, name: sx.name, pos: sx.pos, number, r: legendRatings(sx, shift), style: legendStyle(sx), trait: legendTrait(sx.name)?.kind };
   }
   return [...starters, ...bench];
 }

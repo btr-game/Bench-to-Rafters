@@ -6,14 +6,17 @@ import { describe, expect, it } from 'vitest';
 import { franchise, legendSetup } from '../src/engine/floor/game';
 import { canTimeout, freshEvents, startFloor, stepFloor, type FloorState } from '../src/engine/floor/sim';
 
-const game = () => startFloor(legendSetup({ seed: 11, us: franchise('BOS'), them: franchise('LAL'), length: 'fourth' }));
+const game = (seed: number) => startFloor(legendSetup({ seed, us: franchise('BOS'), them: franchise('LAL'), length: 'fourth' }));
 
-/** The game played on (his keys idle) until `when` holds; a copy of that moment. */
+/** The game played on (his keys idle) until `when` holds; a copy of that moment (the next seed's game
+ * when one never has it, a quarter without a trip to the line, say). */
 function find(when: (s: FloorState) => boolean): FloorState {
-  const s = game();
-  for (let i = 0; i < 20000 && s.phase !== 'over'; i++) {
-    if (when(s)) return structuredClone(s);
-    stepFloor(s, {});
+  for (let seed = 11; seed < 41; seed++) {
+    const s = game(seed);
+    for (let i = 0; i < 20000 && s.phase !== 'over'; i++) {
+      if (when(s)) return structuredClone(s);
+      stepFloor(s, {});
+    }
   }
   throw new Error('never reached');
 }
