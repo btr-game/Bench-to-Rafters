@@ -23,6 +23,7 @@ import { t, tx } from '../../i18n';
 import { PageTop } from '../components/PageTop';
 import { TeamArt } from '../art/Crest';
 import { Icon } from '../art/Icon';
+import { Ico } from './Ico';
 import { sfx } from '../sound';
 import { COURTS, FloorScreen, type CourtLook, type FloorTeamLook } from './FloorScreen';
 import { FloorFriend } from './FloorFriend';
@@ -60,6 +61,7 @@ function EraPick({ value, onChange }: { value: FloorEra; onChange: (e: FloorEra)
         <span className="small muted">{t('Era')}</span>
         {ERAS.map((k) => (
           <button key={k} className={`pick-chip${value === k ? ' on' : ''}`} aria-pressed={value === k} title={t(ERA_NAME[k].text)} onClick={() => onChange(k)}>
+            <Ico name={`fl-${k}`} />
             {t(ERA_NAME[k].name)}
           </button>
         ))}
@@ -132,21 +134,29 @@ function Five({ five, slot, onPick, sixth }: { five: LegendSpot[]; slot: number;
           <i className="fh-line">{lineOf(l.name)}</i>
           {signatureOf(l.name) && (
             <em className="fh-sig" title={signatureOf(l.name)!.text}>
+              <Ico name="fl-sig" size={12} />
               {signatureOf(l.name)!.name}
             </em>
           )}
-          {isFace(l.name) && <em className="fh-face">{t('Face of the franchise')}</em>}
+          {isFace(l.name) && (
+            <em className="fh-face">
+              <Ico name="fl-face" size={12} />
+              {t('Face of the franchise')}
+            </em>
+          )}
         </button>
       ))}
     </div>
     {sixth && (
       <p className="small muted fh-sixth">
+        <Ico name="fl-sixth" />
         {t('Sixth man')}: <b>{sixth.name}</b> · {sixth.pos} · {sixth.ovr}
         {signatureOf(sixth.name) ? ` · ${signatureOf(sixth.name)!.name}` : ''}
       </p>
     )}
     {five[slot] && (
       <p className="small fh-spots">
+        <Ico name="fl-hotspot" />
         <b>{t('Hot spots')}:</b> {hotSpotsFor(five[slot])}
       </p>
     )}
@@ -156,7 +166,10 @@ function Five({ five, slot, onPick, sixth }: { five: LegendSpot[]; slot: number;
       return duos.length ? (
         <p className="small fh-duos">
           {duos.map(([i, j]) => (
-            <span key={`${i}-${j}`}>{t('Chemistry: {a} + {b}', { a: names[i], b: names[j] })}</span>
+            <span key={`${i}-${j}`}>
+              <Ico name="fl-duo" />
+              {t('Chemistry: {a} + {b}', { a: names[i], b: names[j] })}
+            </span>
           ))}
         </p>
       ) : null;
@@ -205,6 +218,7 @@ function CourtPick({ value, onChange }: { value: CourtLook; onChange: (c: CourtL
               onChange(c.id);
             }}
           >
+            <Ico name={`fl-${c.id}`} />
             {t(c.name)}
           </button>
         ))}
@@ -490,6 +504,7 @@ export function FloorPage({ inside = false }: { inside?: boolean }) {
               <Five five={five} slot={steer} onPick={setSlot} sixth={mine.sixth} />
               {signatureOf(five[steer].name) && (
                 <p className="small fh-sig-text">
+                  <Ico name="fl-sig" />
                   <b>{signatureOf(five[steer].name)!.name}.</b> {signatureOf(five[steer].name)!.text}
                 </p>
               )}

@@ -30,6 +30,8 @@ import { withDirect } from './rtc';
 import { LOBBY, NetGame, ME, ROOM_RE, canPlayOnline, cleanRoom, openWire, roomCode, type FloorMsg, type Wire } from './net';
 import { FriendRoom, cleanPlan, type RoomMode, type RoomState } from './room';
 import { DraftBoard } from './DraftBoard';
+import { Ico } from './Ico';
+import { sfx } from '../sound';
 import { GamePlan, rememberedPlan } from './GamePlan';
 
 const POS: Pos[] = ['PG', 'SG', 'SF', 'PF', 'C'];
@@ -229,6 +231,14 @@ export function FloorFriend() {
     return () => clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [game]);
+
+  // a series decided: his fanfare when it is his, the sad notes when it is his friend's
+  const decided = rs && rs.best > 1 ? seriesWinner(rs.best, rs.wins) : null;
+  const decidedRef = useRef(decided);
+  useEffect(() => {
+    if (decided !== null && decidedRef.current === null) sfx(decided === (hosting ? 0 : 1) ? 'series' : 'lose');
+    decidedRef.current = decided;
+  }, [decided, hosting]);
 
   const hear = (m: FloorMsg) => {
     if (m.id === ME) return;
@@ -510,6 +520,7 @@ export function FloorFriend() {
               )}
               {rs.best > 1 && (
                 <p className="ff-series" role="status">
+                  <Ico name="fl-series" />
                   {won === null
                     ? t('Series, first to {n}: you {a}, {name} {b}.', { n: toWin(rs.best), a: rs.wins[side], b: rs.wins[1 - side], name: friend })
                     : won === side

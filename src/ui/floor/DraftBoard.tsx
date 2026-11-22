@@ -2,11 +2,13 @@
 // it is and the seconds left on it, the two fives as they fill, and the pool of every legend still
 // there, best first, to pick from on his turn. The same board on both screens (room.ts).
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Pos } from '../../engine/types';
 import { picksOf, SNAKE, turnOf, type Draft } from '../../engine/floor/friend';
 import { ALL_LEGENDS, fiveOvr } from '../../engine/floor/legends';
 import { t } from '../../i18n';
+import { sfx } from '../sound';
+import { Ico } from './Ico';
 
 const POS: Pos[] = ['PG', 'SG', 'SF', 'PF', 'C'];
 /** The pool best first (between equals, the list's own order). */
@@ -43,10 +45,17 @@ export function DraftBoard({ d, me, names, left, onPick }: { d: Draft; me: 0 | 1
   const turn = turnOf(d);
   const mine = turn === me;
   const q = find.trim().toLowerCase();
+  // a sound for each pick as it lands on the board, his own brighter than his friend's
+  const seen = useRef(d.picks.length);
+  useEffect(() => {
+    if (d.picks.length > seen.current) sfx(SNAKE[d.picks.length - 1] === me ? 'pickus' : 'pickthem');
+    seen.current = d.picks.length;
+  }, [d.picks.length, me]);
   const pool = POOL.filter((x) => !d.picks.includes(x.k) && (!pos || x.spot.pos === pos) && (!q || x.spot.name.toLowerCase().includes(q)));
   return (
     <div className="dr stack" style={{ gap: 10 }}>
       <p className={`dr-turn${mine ? ' on' : ''}`} role="status">
+        {turn !== null && <Ico name={mine ? 'fl-mypick' : 'fl-theirpick'} />}
         {turn === null
           ? t('The draft is done.')
           : mine
