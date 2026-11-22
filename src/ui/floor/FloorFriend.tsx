@@ -18,7 +18,8 @@ import { TEAM_STYLE } from '../../content/teamStyle';
 import type { Pos } from '../../engine/types';
 import { franchise, legendSetup, type FloorSide } from '../../engine/floor/game';
 import { ALL_LEGENDS, legendFive } from '../../engine/floor/legends';
-import { BESTS, PICK_SECONDS, lineUp, picksOf, seriesWinner, toWin, type Best } from '../../engine/floor/friend';
+import { BESTS, DRAFT_SIZE, PICK_SECONDS, lineUp, picksOf, seriesWinner, toWin, type Best } from '../../engine/floor/friend';
+import type { FloorEra } from '../../engine/floor/gimmicks';
 import type { FloorPlan, FloorSetup } from '../../engine/floor/sim';
 import { username } from '../names';
 import { recordFloorFriend, recordFloorSeries } from '../achievements';
@@ -69,18 +70,18 @@ function remember(m: Me): void {
   }
 }
 
-function keptRoom(): { mode: RoomMode; best: Best } {
+function keptRoom(): { mode: RoomMode; best: Best; era: FloorEra } {
   try {
-    const v = JSON.parse(localStorage.getItem(ROOM) ?? 'null') as { mode: RoomMode; best: Best } | null;
-    if (v && (v.mode === 'franchise' || v.mode === 'draft') && BESTS.includes(v.best)) return v;
+    const v = JSON.parse(localStorage.getItem(ROOM) ?? 'null') as { mode: RoomMode; best: Best; era?: FloorEra } | null;
+    if (v && (v.mode === 'franchise' || v.mode === 'draft') && BESTS.includes(v.best)) return { mode: v.mode, best: v.best, era: ERAS.some((e) => e.id === v.era) ? v.era! : 'modern' };
   } catch {
     // nothing kept
   }
-  return { mode: 'franchise', best: 1 };
+  return { mode: 'franchise', best: 1, era: 'modern' };
 }
-function keepRoom(r: { mode: RoomMode; best: Best }): void {
+function keepRoom(r: { mode: RoomMode; best: Best; era: FloorEra }): void {
   try {
-    localStorage.setItem(ROOM, JSON.stringify({ mode: r.mode, best: r.best }));
+    localStorage.setItem(ROOM, JSON.stringify({ mode: r.mode, best: r.best, era: r.era }));
   } catch {
     // storage blocked: picked again next time
   }
@@ -110,17 +111,24 @@ function h2hAdd(name: string, win: boolean): void {
 const teamOf = (abbr: string) => NBA_TEAMS.find((x) => x.abbr === abbr) ?? NBA_TEAMS[0];
 const nameOf = (abbr: string) => `${teamOf(abbr).city} ${teamOf(abbr).nick}`;
 
-/** A side's five in the room: his franchise's, or the five he drafted (once he has five), each at the slot he plays. */
+/** A side's five in the room: his franchise's, or the first five he drafted (once he has all six), each at the slot he plays. */
 function fiveIn(room: RoomState | null, side: 0 | 1, team: string) {
   if (room?.mode !== 'draft') return legendFive(team);
-  return room.draft && picksOf(room.draft, side).length === 5 ? lineUp(picksOf(room.draft, side)) : [];
+  return room.draft && picksOf(room.draft, side).length === DRAFT_SIZE ? lineUp(picksOf(room.draft, side).slice(0, 5)) : [];
 }
+/** His drafted sixth man: his last pick, off the bench. */
+const sixthIn = (room: RoomState, side: 0 | 1) => (room.draft ? picksOf(room.draft, side)[DRAFT_SIZE - 1] : undefined);
+const ERAS: { id: FloorEra; name: string }[] = [
+  { id: 'modern', name: 'Modern' },
+  { id: 'nineties', name: 'The nineties' },
+  { id: 'sixties', name: 'The sixties' },
+];
 
 /** The game the host tips off: his team at home, the friend's on the road, each with his game plan.
  * In a draft each side is the five he drafted at its own level, in the colours of the franchise he picked. */
 function makeSetup(room: RoomState, host: Me & { name: string; plan: FloorPlan }, guest: Peer, seed: number): FloorSetup {
-  const side = (who: 0 | 1, p: Me, name: string): FloorSide => (room.mode === 'draft' ? { name, short: p.team, color: teamOf(p.team).color, five: fiveIn(room, who, p.team) } : franchise(p.team, LEVEL));
-  const s = legendSetup({ seed, us: side(0, host, host.name), them: side(1, guest, guest.name), user: POS.indexOf(host.pos), length: 'fourth', plan: host.plan });
+  const side = (who: 0 | 1, p: Me, name: string): FloorSide => (room.mode === 'draft' ? { name, short: p.team, color: teamOf(p.team).color, five: fiveIn(room, who, p.team), sixth: sixthIn(room, who) } : franchise(p.team, LEVEL));
+  const s = legendSetup({ seed, us: side(0, host, host.name), them: side(1, guest, guest.name), user: POS.indexOf(host.pos), length: 'fourth', plan: host.plan, era: room.era });
   s.them.plan = guest.plan;
   s.them.players[POS.indexOf(guest.pos)].user = true;
   // level at the start: neither side is handed a lead
@@ -430,10 +438,11 @@ export function FloorFriend() {
   const side: 0 | 1 = hosting ? 0 : 1;
   const five = fiveIn(inRoom ? rs : null, side, me.team);
   const friend = peer?.name ?? t('Your friend');
-  const setRoom = (mode: RoomMode, best: Best) => {
-    keepRoom({ mode, best });
+  const setRoom = (mode: RoomMode, best: Best, era: FloorEra = rs?.era ?? 'modern') => {
+    keepRoom({ mode, best, era });
     room.current?.setMode(mode);
     room.current?.setBest(best);
+    room.current?.setEra(era);
   };
   const won = rs ? seriesWinner(rs.best, rs.wins) : null;
   const record = peer ? h2hOf(peer.name) : [0, 0];
@@ -521,15 +530,23 @@ export function FloorFriend() {
                       </button>
                     ))}
                   </div>
+                  <div className="row" role="group" aria-label={t('Era')} style={{ gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+                    <span className="small muted">{t('Era')}</span>
+                    {ERAS.map((e) => (
+                      <button key={e.id} className={`pick-chip${rs.era === e.id ? ' on' : ''}`} aria-pressed={rs.era === e.id} onClick={() => setRoom(rs.mode, rs.best, e.id)}>
+                        {t(e.name)}
+                      </button>
+                    ))}
+                  </div>
                 </>
               ) : (
                 <p className="small">
-                  {rs.mode === 'draft' ? t('Superteam draft') : t('Your franchises')} · {rs.best === 1 ? t('One game') : t('Best of {n}', { n: rs.best })}
+                  {rs.mode === 'draft' ? t('Superteam draft') : t('Your franchises')} · {rs.best === 1 ? t('One game') : t('Best of {n}', { n: rs.best })} · {t(ERAS.find((e) => e.id === rs.era)?.name ?? 'Modern')}
                 </p>
               )}
               {rs.mode === 'draft' && (
                 <p className="small muted">
-                  {t('Take turns picking legends from one pool of all {n}, any position, until each has five: {first} first, then two each way. {s} seconds a pick. The two fives play at their own level.', { n: ALL_LEGENDS.length, first: hosting ? t('you') : friend, s: PICK_SECONDS })}
+                  {t('Take turns picking legends from one pool of all {n}, any position, until each has six: five starters and a sixth man off the bench. {first} first, then two each way. {s} seconds a pick. The two teams play at their own level.', { n: ALL_LEGENDS.length, first: hosting ? t('you') : friend, s: PICK_SECONDS })}
                 </p>
               )}
               {rs.best > 1 && (

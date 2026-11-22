@@ -4007,3 +4007,31 @@ achievements, events and shop; guide, dev deck and summary), merged here.
   gimmicks, eras, courts, duos and crowds): 200 cards, 41 lists.
 - **Summary**: a chapter, "The Floor: five on five", written by `scripts/summaryFloor.ts` from the code.
 - **dev-apart**: the deck changed none of the game's own keys.
+
+### Eras with a friend, a blocked shot, idle online games, a sixth man in the superteam draft
+
+Owner, on the ideas kept for later: "eras for friend games and in the career; -> yes for friend games, no in
+career", "blocked shots cooling a hot streak; yes", "online games that can go to endless overtime if nobody
+touches the keys -> prevent", "a sixth man for superteam drafts. yes".
+
+- **Eras with a friend**: the host picks Modern, the nineties or the sixties in the room (`RoomState.era`, sent
+  with the room and kept on his device with the mode and the series); the friend sees it; the setup carries it.
+  A quick match plays the modern era. The career's Floor keeps the modern era.
+- **A blocked shot** counts as a miss for the shooter's streak and his fire (`afterShot(..., false)` at the block).
+- **Idle online games**: in a game against a friend, a man whose player presses no key for `FLOOR.idleSecs` (6)
+  game seconds is played by the AI until he presses one again (`FloorState.idle`, mirrored for the other screen,
+  so both screens decide alike). Two idle players no longer trade shot-clock violations into overtime after
+  overtime: a test plays such a game to its end.
+- **The superteam draft** is twelve picks in the snake (H F F H H F F H H F F H): each side's first five start,
+  his sixth comes off the bench as the sixth man; the board shows six places and the pick count of 12.
+
+### The Floor's land
+
+Owner: "can we add the floor as a separate roadmap, like the tutorial land? no eor session, just visual change
+and very few visual checks". `src/ui/floor/FloorLand.tsx`, built the way the tutorial road map is (same size,
+keys and pop-out cards): five places on one road to a dock (the boat from the main land): the street court
+(quick game), the playoff arena (an East/West banner), the draft room, the versus room (online) and the hall of
+legends (each franchise's five and sixth man with their real numbers). Each card opens the Floor page in its
+mode (`openFloor(mode)` in the store); the Floor page's Back goes to the land, and the main land's Floor island
+opens the land. No end-of-round items, by the owner's word; checks: type check, translations, the two main-land
+tests, the visual check on the land's two cards, the Floor page and the start page.

@@ -16,6 +16,14 @@ interface News {
 
 export const NEWS: News[] = [
   {
+    id: '2026-11-22-floorland',
+    date: '22 November 2026',
+    items: [
+      { icon: 'map', text: 'The Floor has a land of its own: walk to the street court, the playoff arena, the draft room, the versus room or the hall of legends, the way the tutorial land works.' },
+      { icon: 'cards', text: 'Against a friend: the host picks the era, and a superteam draft gives each side a sixth man. A blocked shot now cools a hot streak, and an idle player in an online game is played by the computer until he presses a key.' },
+    ],
+  },
+  {
     id: '2026-11-22-plans',
     date: '22 November 2026',
     items: [

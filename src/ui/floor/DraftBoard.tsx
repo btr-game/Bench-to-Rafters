@@ -4,7 +4,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import type { Pos } from '../../engine/types';
-import { picksOf, SNAKE, turnOf, type Draft } from '../../engine/floor/friend';
+import { DRAFT_SIZE, picksOf, SNAKE, turnOf, type Draft } from '../../engine/floor/friend';
 import { ALL_LEGENDS, fiveOvr } from '../../engine/floor/legends';
 import { t } from '../../i18n';
 import { sfx } from '../sound';
@@ -20,14 +20,15 @@ function Five({ d, side, title }: { d: Draft; side: 0 | 1; title: string }) {
     <div className="dr-five">
       <div className="small">
         <b>{title}</b>
-        {five.length > 0 && <span className="muted"> · {t('{n} overall', { n: fiveOvr(five).toFixed(1) })}</span>}
+        {five.length > 0 && <span className="muted"> · {t('{n} overall', { n: fiveOvr(five.slice(0, 5)).toFixed(1) })}</span>}
       </div>
       <ol>
-        {Array.from({ length: 5 }, (_, i) => (
+        {Array.from({ length: DRAFT_SIZE }, (_, i) => (
           <li key={i} className={five[i] ? '' : 'muted'}>
             {five[i] ? (
               <>
                 <b>{five[i].ovr}</b> {five[i].name} <span className="muted">{five[i].pos}</span>
+                {i === DRAFT_SIZE - 1 && <span className="muted"> · {t('Sixth man')}</span>}
               </>
             ) : (
               '–'
@@ -59,12 +60,12 @@ export function DraftBoard({ d, me, names, left, onPick }: { d: Draft; me: 0 | 1
         {turn === null
           ? t('The draft is done.')
           : mine
-            ? t('Your pick ({n} of 10): {s} s', { n: d.picks.length + 1, s: Math.ceil((left ?? 0) / 1000) })
-            : t('{name} is picking ({n} of 10): {s} s', { name: names[1 - me], n: d.picks.length + 1, s: Math.ceil((left ?? 0) / 1000) })}
+            ? t('Your pick ({n} of {all}): {s} s', { all: SNAKE.length, n: d.picks.length + 1, s: Math.ceil((left ?? 0) / 1000) })
+            : t('{name} is picking ({n} of {all}): {s} s', { all: SNAKE.length, name: names[1 - me], n: d.picks.length + 1, s: Math.ceil((left ?? 0) / 1000) })}
       </p>
       <p className="small muted">{t('Order: {order}. When the clock runs out, the best legend left is picked.', { order: SNAKE.map((s) => (s === me ? t('you') : names[1 - me])).join(', ') })}</p>
       <div className="dr-fives">
-        <Five d={d} side={me} title={t('Your five')} />
+        <Five d={d} side={me} title={t('Your team')} />
         <Five d={d} side={(1 - me) as 0 | 1} title={names[1 - me]} />
       </div>
       {turn !== null && (

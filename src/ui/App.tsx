@@ -22,6 +22,7 @@ import { AchievementBook } from './screens/Achievements';
 import { CommunityPage } from './screens/Community';
 import { MpBoard, MultiplayerPage } from './screens/Multiplayer';
 import { FloorPage } from './floor/FloorHub';
+import { FloorLand } from './floor/FloorLand';
 import { FootBar } from './components/FootBar';
 import { Intro } from './screens/Intro';
 import { Finale } from './screens/Finale';
@@ -204,6 +205,7 @@ export function App() {
   const tab = useStore((s) => s.tab);
   const mini = useStore((s) => s.mini);
   const page = useStore((s) => s.page);
+  const floorStart = useStore((s) => s.floorStart);
   const intro = useStore((s) => s.intro);
   const finale = useStore((s) => s.finale);
   const simple = useStore((s) => s.simple);
@@ -288,7 +290,8 @@ export function App() {
   if (page === 'achievements') return <AchievementBook />;
   if (page === 'community') return <CommunityPage />;
   if (page === 'multi') return <MultiplayerPage />;
-  if (page === 'floor' && !game) return <FloorPage />;
+  if (page === 'floorland' && !game) return <FloorLand />;
+  if (page === 'floor' && !game) return <FloorPage key={floorStart} start={floorStart} />;
   if (mini) return <MiniGames />;
   if (!game) return <Create />;
 
