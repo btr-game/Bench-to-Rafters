@@ -9,6 +9,7 @@
 import { bestLeft, newDraft, pickIn, PICK_SECONDS, seriesWinner, turnOf, type Best, type Draft } from '../../engine/floor/friend';
 import { SHAPES, SPOTS } from '../../engine/floor/court';
 import type { FloorPlan, FloorPlay } from '../../engine/floor/sim';
+import type { FloorEra } from '../../engine/floor/gimmicks';
 import type { Pos } from '../../engine/types';
 import { ME, type FloorMsg, type Wire } from './net';
 
@@ -28,6 +29,8 @@ export type RoomMode = 'franchise' | 'draft';
 export interface RoomState {
   mode: RoomMode;
   best: Best;
+  /** The era the room plays in (owner: "eras for friend games": yes), the host's pick. */
+  era: FloorEra;
   /** Games won in this series (a new one once one is decided and the host tips off again): the host's, the friend's. */
   wins: [number, number];
   draft: Draft | null;
@@ -51,11 +54,11 @@ export class FriendRoom {
   /** The friend's pick on its way to the host: sent again until the board has it. */
   private pending: { draft: number; at: number; legend: number; sent: number } | null = null;
 
-  constructor(wire: Wire, host: boolean, init: Partial<Pick<RoomState, 'mode' | 'best'>> = {}, clock: () => number = () => Date.now()) {
+  constructor(wire: Wire, host: boolean, init: Partial<Pick<RoomState, 'mode' | 'best' | 'era'>> = {}, clock: () => number = () => Date.now()) {
     this.wire = wire;
     this.host = host;
     this.clock = clock;
-    this.state = { mode: init.mode ?? 'franchise', best: init.best ?? 1, wins: [0, 0], draft: null };
+    this.state = { mode: init.mode ?? 'franchise', best: init.best ?? 1, era: init.era ?? 'modern', wins: [0, 0], draft: null };
     this.stop = wire.listen((m) => this.hear(m));
   }
 
@@ -91,6 +94,12 @@ export class FriendRoom {
   setMode(mode: RoomMode): void {
     if (!this.host || mode === this.state.mode) return;
     this.state = { ...this.state, mode, wins: [0, 0] };
+    this.changed();
+  }
+
+  setEra(era: FloorEra): void {
+    if (!this.host || era === this.state.era) return;
+    this.state = { ...this.state, era };
     this.changed();
   }
 
@@ -187,7 +196,7 @@ export class FriendRoom {
       const mine = this.state;
       // the board: the host's, unless it is an older look at the same draft
       const draft = r.draft && mine.draft && r.draft.n === mine.draft.n && r.draft.picks.length < mine.draft.picks.length ? mine.draft : r.draft;
-      this.state = { mode: r.mode, best: r.best, wins: [r.wins[0], r.wins[1]], draft };
+      this.state = { mode: r.mode, best: r.best, era: r.era === 'nineties' || r.era === 'sixties' ? r.era : 'modern', wins: [r.wins[0], r.wins[1]], draft };
       this.due = m.ms === null ? null : this.clock() + m.ms;
       if (this.pending && (!draft || draft.n !== this.pending.draft || draft.picks.length > this.pending.at)) this.pending = null;
       this.subs.forEach((f) => f());

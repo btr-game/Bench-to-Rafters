@@ -1243,6 +1243,10 @@ export const FLOOR = {
    * move keep their pace. Overtime is five minutes on whichever clock. */
   rate: 2,
   overtime: 300,
+  // (owner: "online games that can go to endless overtime if nobody touches the keys -> prevent") in a game
+  // against a friend, a man whose player presses no key for this many game seconds is played by the AI until
+  // he presses one again, so two idle players never trade shot-clock violations into overtime after overtime
+  idleSecs: 6,
   /** Between quarters: the legs a rest gives back (0 to 1), the wait before the ball comes in (game
    * seconds), and how much of the momentum carries over. A half starts with the timeouts back. */
   breaks: { quarter: 0.15, half: 0.35, wait: 2.5, momentum: 0.5 },

@@ -300,6 +300,8 @@ export interface FloorState {
   plans: [FloorPlan | null, FloorPlan | null];
   /** The gimmicks (gimmicks.ts): on fire, hot spots, the crowd, duos, the era. */
   gm?: FloorGimmicks;
+  /** Online: game ticks each human has pressed nothing (the AI takes his man over at FLOOR.idleSecs). */
+  idle?: [number, number];
 }
 
 /** What he does this tick. `shoot` is held (a press loads the meter, the release shoots); the rest
@@ -377,6 +379,7 @@ export function startFloor(set: FloorSetup): FloorState {
     players,
     user,
     two: two >= 0 ? { user: two, load: -1, call: -99, auto: false } : null,
+    idle: two >= 0 ? [0, 0] : undefined,
     ball: { holder: null, x: 47, y: 25, flight: null },
     poss,
     phase: 'dead',
@@ -808,6 +811,8 @@ function release(s: FloorState, i: number, q: number | null, dodge = 1, hook = f
       if (three) p.box.tpa++;
       blocker.box.blk++;
       emit(s, { kind: 'block', team: blocker.team, by: idx(s, blocker), on: i, zone });
+      // (owner: "blocked shots cooling a hot streak": yes) a blocked shot counts as a miss for his streak and his fire
+      afterShot(s, i, false, (e) => emit(s, e));
       s.momentum = clamp(s.momentum + (blocker.team === 0 ? 1 : -1) * FLOOR.momentum.big, -1, 1);
       // (Russell) his blocks go to his own team: he keeps it
       if (blocker.trait === 'russell') {
@@ -1637,6 +1642,13 @@ export function stepFloor(s: FloorState, inp: FloorInput | null, inp2: FloorInpu
   s.fresh = s.feed.length;
   if (s.phase === 'over') return;
   s.tick++;
+  // online, a player who touches nothing for a while is played by the AI until he presses a key
+  if (s.two && s.idle) {
+    const busy = (x: FloorInput | null): boolean => !!x && Object.entries(x).some(([k, v]) => k !== 'load' && v !== undefined && v !== null && v !== false && v !== 0);
+    s.idle = [busy(inp) ? 0 : s.idle[0] + 1, busy(inp2) ? 0 : s.idle[1] + 1];
+    if (s.idle[0] >= secs(FLOOR.idleSecs)) inp = null;
+    if (s.idle[1] >= secs(FLOOR.idleSecs)) inp2 = null;
+  }
   const u = s.players[s.user];
   const auto = inp === null || !u.on;
   s.auto = auto;
@@ -2014,6 +2026,7 @@ export function mirrorFloor(s: FloorState): FloorState {
     fast: sw(s.fast),
     run: { team: t(s.run.team), pts: s.run.pts },
     feed: s.feed.map((e) => ({ ...e, team: t(e.team) })),
+    idle: s.idle ? [s.idle[1], s.idle[0]] : undefined,
     gm: mirrorGimmicks(s.gm),
   };
 }

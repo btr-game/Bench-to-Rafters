@@ -2,8 +2,9 @@
 // let's expand friend play in general"): the superteam draft and the series, as rules both screens
 // apply alike.
 //
-// The draft: one pool of every legend (ALL_LEGENDS, any position, no limits), ten picks in a snake,
-// host first: H F F H H F F H H F. Whoever picks first gets the best man; the friend then has two in a
+// The draft: one pool of every legend (ALL_LEGENDS, any position, no limits), twelve picks in a snake,
+// host first: H F F H H F F H H F F H (six each: five starters and a sixth man off the bench; owner, "a
+// sixth man for superteam drafts": yes). Whoever picks first gets the best man; the friend then has two in a
 // row, and so on, so neither seat is the better one over the five rounds. A pick has PICK_SECONDS on its
 // clock; when it runs out the best man left is taken for him. The two fives then play at their own
 // level (not one level for both, as the franchise game does): both drafted from the same pool in turn,
@@ -17,7 +18,7 @@ import type { Pos } from '../types';
 import { ALL_LEGENDS } from './legends';
 
 /** Who picks at each turn of the draft: 0 the host, 1 his friend. */
-export const SNAKE: readonly (0 | 1)[] = [0, 1, 1, 0, 0, 1, 1, 0, 0, 1];
+export const SNAKE: readonly (0 | 1)[] = [0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0];
 export const PICK_SECONDS = 20;
 
 /** A draft in a room: `n` tells one draft from the next, `picks` are places in ALL_LEGENDS, in order. */
@@ -27,6 +28,9 @@ export interface Draft {
 }
 
 export const newDraft = (n: number): Draft => ({ n, picks: [] });
+
+/** Each side's picks: the first five start, the last comes off the bench. */
+export const DRAFT_SIZE = 6;
 
 /** Whose pick it is, or null once both have five. */
 export const turnOf = (d: Draft): 0 | 1 | null => (d.picks.length < SNAKE.length ? SNAKE[d.picks.length] : null);

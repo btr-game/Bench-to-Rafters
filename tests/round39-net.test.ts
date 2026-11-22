@@ -357,14 +357,15 @@ describe('the Floor online: a room between friends', () => {
     }
     run(300);
     const d = host.state.draft!;
-    expect(d.picks.length).toBe(10);
-    expect(new Set(d.picks).size).toBe(10);
+    expect(d.picks.length).toBe(12);
+    expect(new Set(d.picks).size).toBe(12);
     expect(guest.state.draft).toEqual(d);
     expect(host.drafted && guest.drafted).toBe(true);
     // the order: host, friend, friend, host, host, ...
-    expect(SNAKE).toEqual([0, 1, 1, 0, 0, 1, 1, 0, 0, 1]);
-    expect(picksOf(d, 0).length).toBe(5);
-    expect(picksOf(d, 1).length).toBe(5);
+    // six each (owner: "a sixth man for superteam drafts": yes)
+    expect(SNAKE).toEqual([0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0]);
+    expect(picksOf(d, 0).length).toBe(6);
+    expect(picksOf(d, 1).length).toBe(6);
     expect(host.left()).toBeNull();
   });
 
@@ -444,9 +445,9 @@ describe('the Floor online: a room between friends', () => {
     // (every pick's clock runs out: the best man left each time)
     while (turnOf(host.state.draft!) !== null) run(PICK_SECONDS * 1000);
     const d = host.state.draft!;
-    const mine = lineUp(picksOf(d, 0));
-    const theirs = lineUp(picksOf(d, 1));
-    expect(mine.map((l) => l.name).sort()).toEqual(picksOf(d, 0).map((l) => l.name).sort());
+    const mine = lineUp(picksOf(d, 0).slice(0, 5));
+    const theirs = lineUp(picksOf(d, 1).slice(0, 5));
+    expect(mine.map((l) => l.name).sort()).toEqual(picksOf(d, 0).slice(0, 5).map((l) => l.name).sort());
     const planA = cleanPlan({ shape: 'fiveOut', style: 'runGun' })!;
     // a plan from the line is kept only as far as the game knows it
     const planB = cleanPlan({ shape: 'horns', style: 'motion', spots: { PG: 'leftCorner', SG: 'nowhere' } })!;
