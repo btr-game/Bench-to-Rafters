@@ -4296,7 +4296,15 @@
   "Any five legends from all 180, no positions needed, then a quick game against a franchise.": "180명 중 아무 레전드나 다섯 명, 포지션 상관없이, 그리고 한 구단과 빠른 경기.",
   "Pick {n}": "{n}순위 픽",
   "Face of the franchise": "프랜차이즈의 얼굴",
-  "Sixth man": "식스맨"
+  "Sixth man": "식스맨",
+  "Team arena": "팀 홈 경기장",
+  "Street court": "길거리 코트",
+  "Beach court": "해변 코트",
+  "1970s gym": "1970년대 체육관",
+  "Rooftop at night": "밤의 옥상 코트",
+  "Replay": "리플레이",
+  "Big heads": "큰 머리",
+  "big heads": "큰 머리"
  },
  "story": {
   "f-driveway.title": "집 앞 골대",

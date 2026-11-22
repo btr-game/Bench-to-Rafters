@@ -4296,7 +4296,15 @@
   "Any five legends from all 180, no positions needed, then a quick game against a franchise.": "Cinco leyendas cualesquiera de las 180, sin posiciones, y luego un partido rápido contra una franquicia.",
   "Pick {n}": "Elección {n}",
   "Face of the franchise": "Cara de la franquicia",
-  "Sixth man": "Sexto hombre"
+  "Sixth man": "Sexto hombre",
+  "Team arena": "Pabellón del equipo",
+  "Street court": "Cancha callejera",
+  "Beach court": "Cancha de playa",
+  "1970s gym": "Gimnasio de los 70",
+  "Rooftop at night": "Azotea de noche",
+  "Replay": "Repetición",
+  "Big heads": "Cabezones",
+  "big heads": "cabezones"
  },
  "story": {
   "f-driveway.title": "La entrada de casa",

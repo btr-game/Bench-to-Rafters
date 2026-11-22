@@ -4296,7 +4296,15 @@
   "Any five legends from all 180, no positions needed, then a quick game against a franchise.": "180人の中から好きなレジェンドを5人、ポジションは問わず、そしてフランチャイズとクイックゲーム。",
   "Pick {n}": "{n}人目",
   "Face of the franchise": "フランチャイズの顔",
-  "Sixth man": "シックスマン"
+  "Sixth man": "シックスマン",
+  "Team arena": "チームのアリーナ",
+  "Street court": "ストリートコート",
+  "Beach court": "ビーチコート",
+  "1970s gym": "1970年代の体育館",
+  "Rooftop at night": "夜の屋上コート",
+  "Replay": "リプレイ",
+  "Big heads": "ビッグヘッド",
+  "big heads": "ビッグヘッド"
  },
  "story": {
   "f-driveway.title": "家の前のゴール",
